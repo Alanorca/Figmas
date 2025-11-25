@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nodo Branching - Flujos Paralelos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #68d391 0%, #48bb78 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .node-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .node-header {
+            background: linear-gradient(135deg, #68d391, #48bb78);
+            padding: 25px;
+            color: white;
+            text-align: center;
+        }
+
+        .node-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .node-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .node-subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .node-body {
+            padding: 30px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #68d391;
+            box-shadow: 0 0 0 3px rgba(104, 211, 145, 0.1);
+        }
+
+        .description {
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .branch-item {
+            background: #f0fff4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #48bb78;
+        }
+
+        .branch-header {
+            font-weight: 600;
+            color: #22543d;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .branch-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #c6f6d5;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .branch-input:focus {
+            outline: none;
+            border-color: #48bb78;
+        }
+
+        .branches-container {
+            margin-top: 15px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 20px 0;
+        }
+
+        .strategy-info {
+            background: #e6fffa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #234e52;
+        }
+
+        .execution-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #e6fffa;
+            border-radius: 8px;
+            border-left: 4px solid #48bb78;
+        }
+
+        .execution-container.show {
+            display: block;
+        }
+
+        .execution-title {
+            font-weight: 600;
+            color: #234e52;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1em;
+        }
+
+        .branch-status {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .branch-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95em;
+        }
+
+        .branch-state {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .state-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .state-completed {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .state-progress {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .state-waiting {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .progress-bar-mini {
+            width: 60px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill-mini {
+            height: 100%;
+            background: #48bb78;
+            transition: width 0.3s ease;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0fff4;
+            border-radius: 8px;
+            border-left: 4px solid #48bb78;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #22543d;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1em;
+        }
+
+        .result-stats {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .stat-value {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="node-container">
+        <div class="node-header">
+            <div class="node-icon">🌿</div>
+            <div class="node-title">Nodo Branching</div>
+            <div class="node-subtitle">Flujos Paralelos</div>
+        </div>
+
+        <div class="node-body">
+            <div class="description">
+                Define ramas paralelas de operación con diferentes estrategias de ejecución.
+            </div>
+
+            <div class="form-group">
+                <label>Número de ramas</label>
+                <input type="number" id="branchCount" value="2" min="2" max="10">
+            </div>
+
+            <div class="branches-container" id="branchesContainer"></div>
+
+            <div class="divider"></div>
+
+            <div class="form-group">
+                <label>Estrategia de ejecución</label>
+                <select id="strategySelect">
+                    <option value="parallel">⚡ Paralela (todas a la vez)</option>
+                    <option value="sequential">➡️ Secuencial (una tras otra)</option>
+                    <option value="priority">🎯 Por Prioridad (orden definido)</option>
+                    <option value="race">🏁 Race (primera que termine)</option>
+                </select>
+                <div class="strategy-info" id="strategyInfo"></div>
+            </div>
+
+            <button class="btn btn-primary" id="executeBtn">
+                🌿 Ejecutar Branching
+            </button>
+
+            <div class="execution-container" id="executionContainer">
+                <div class="execution-title">
+                    <span>▶️</span>
+                    <span>Ejecutando: <span id="executionStrategy">Paralela</span></span>
+                </div>
+                <div id="branchesStatus"></div>
+            </div>
+
+            <div class="result-container" id="resultContainer">
+                <div class="result-title">
+                    <span>✅</span>
+                    <span>Branching completado</span>
+                </div>
+
+                <div class="result-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Estrategia utilizada:</span>
+                        <span class="stat-value" id="resultStrategy">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Ramas ejecutadas:</span>
+                        <span class="stat-value" id="resultBranches">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Tiempo total:</span>
+                        <span class="stat-value" id="resultTime">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Estado final:</span>
+                        <span class="stat-value" id="resultStatus">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const branchCountInput = document.getElementById('branchCount');
+        const branchesContainer = document.getElementById('branchesContainer');
+        const strategySelect = document.getElementById('strategySelect');
+        const strategyInfo = document.getElementById('strategyInfo');
+        const executeBtn = document.getElementById('executeBtn');
+        const executionContainer = document.getElementById('executionContainer');
+        const resultContainer = document.getElementById('resultContainer');
+
+        const strategyDescriptions = {
+            parallel: 'Todas las ramas se ejecutan simultáneamente. Tiempo total = rama más lenta.',
+            sequential: 'Las ramas se ejecutan en orden, una tras otra. Tiempo total = suma de todas.',
+            priority: 'Ejecuta según orden de importancia definido. Control de recursos optimizado.',
+            race: 'La primera rama que completa gana. Otras se cancelan automáticamente.'
+        };
+
+        const strategyNames = {
+            parallel: 'Paralela',
+            sequential: 'Secuencial',
+            priority: 'Por Prioridad',
+            race: 'Race'
+        };
+
+        // Generar ramas
+        function generateBranches() {
+            const count = parseInt(branchCountInput.value);
+            branchesContainer.innerHTML = '';
+
+            for (let i = 1; i <= count; i++) {
+                const branch = document.createElement('div');
+                branch.className = 'branch-item';
+                branch.innerHTML = `
+                    <div class="branch-header">▸ Rama ${i}</div>
+                    <input type="text" class="branch-input" placeholder="Nombre rama ${i}" value="Rama ${i}">
+                `;
+                branchesContainer.appendChild(branch);
+            }
+        }
+
+        // Actualizar info de estrategia
+        function updateStrategyInfo() {
+            const strategy = strategySelect.value;
+            strategyInfo.textContent = strategyDescriptions[strategy];
+        }
+
+        // Event listeners
+        branchCountInput.addEventListener('change', generateBranches);
+        strategySelect.addEventListener('change', () => {
+            updateStrategyInfo();
+            resultContainer.classList.remove('show');
+            executionContainer.classList.remove('show');
+        });
+
+        executeBtn.addEventListener('click', () => {
+            const strategy = strategySelect.value;
+            const branchInputs = document.querySelectorAll('.branch-input');
+            const branches = Array.from(branchInputs).map(input => input.value || 'Rama');
+
+            executeBtn.disabled = true;
+            resultContainer.classList.remove('show');
+            executionContainer.classList.add('show');
+            document.getElementById('executionStrategy').textContent = strategyNames[strategy];
+
+            executeStrategy(strategy, branches);
+        });
+
+        function executeStrategy(strategy, branches) {
+            const branchesStatus = document.getElementById('branchesStatus');
+            branchesStatus.innerHTML = '';
+
+            // Crear elementos de estado
+            const statusElements = branches.map((name, index) => {
+                const div = document.createElement('div');
+                div.className = 'branch-status';
+                div.innerHTML = `
+                    <span class="branch-name">${name}</span>
+                    <div class="branch-state">
+                        <span class="state-badge state-waiting" id="badge-${index}">En espera</span>
+                        <div class="progress-bar-mini">
+                            <div class="progress-fill-mini" id="progress-${index}" style="width: 0%"></div>
+                        </div>
+                    </div>
+                `;
+                branchesStatus.appendChild(div);
+                return { badge: document.getElementById(`badge-${index}`), progress: document.getElementById(`progress-${index}`) };
+            });
+
+            if (strategy === 'parallel') {
+                executeParallel(branches, statusElements);
+            } else if (strategy === 'sequential') {
+                executeSequential(branches, statusElements);
+            } else if (strategy === 'race') {
+                executeRace(branches, statusElements);
+            } else {
+                executePriority(branches, statusElements);
+            }
+        }
+
+        function executeParallel(branches, statusElements) {
+            const startTime = Date.now();
+            let completed = 0;
+            const durations = branches.map(() => Math.random() * 3000 + 1000);
+
+            branches.forEach((name, index) => {
+                const duration = durations[index];
+                const badge = statusElements[index].badge;
+                const progress = statusElements[index].progress;
+
+                badge.textContent = 'En progreso';
+                badge.className = 'state-badge state-progress';
+
+                const interval = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const percent = Math.min((elapsed / duration) * 100, 100);
+                    progress.style.width = percent + '%';
+
+                    if (percent >= 100) {
+                        clearInterval(interval);
+                        badge.textContent = 'Completada';
+                        badge.className = 'state-badge state-completed';
+                        completed++;
+
+                        if (completed === branches.length) {
+                            showResults('Paralela', branches.length, ((Date.now() - startTime) / 1000).toFixed(1));
+                        }
+                    }
+                }, 50);
+            });
+        }
+
+        function executeSequential(branches, statusElements) {
+            const startTime = Date.now();
+            let currentIndex = 0;
+
+            function executeNext() {
+                if (currentIndex >= branches.length) {
+                    showResults('Secuencial', branches.length, ((Date.now() - startTime) / 1000).toFixed(1));
+                    return;
+                }
+
+                const badge = statusElements[currentIndex].badge;
+                const progress = statusElements[currentIndex].progress;
+                const duration = Math.random() * 2000 + 1000;
+                const branchStart = Date.now();
+
+                badge.textContent = 'En progreso';
+                badge.className = 'state-badge state-progress';
+
+                const interval = setInterval(() => {
+                    const elapsed = Date.now() - branchStart;
+                    const percent = Math.min((elapsed / duration) * 100, 100);
+                    progress.style.width = percent + '%';
+
+                    if (percent >= 100) {
+                        clearInterval(interval);
+                        badge.textContent = 'Completada';
+                        badge.className = 'state-badge state-completed';
+                        currentIndex++;
+                        executeNext();
+                    }
+                }, 50);
+            }
+
+            executeNext();
+        }
+
+        function executeRace(branches, statusElements) {
+            const startTime = Date.now();
+            let winner = null;
+
+            branches.forEach((name, index) => {
+                const badge = statusElements[index].badge;
+                const progress = statusElements[index].progress;
+                const duration = Math.random() * 3000 + 1000;
+
+                badge.textContent = 'En progreso';
+                badge.className = 'state-badge state-progress';
+
+                const interval = setInterval(() => {
+                    if (winner !== null && winner !== index) {
+                        clearInterval(interval);
+                        badge.textContent = 'Cancelada';
+                        badge.className = 'state-badge state-waiting';
+                        return;
+                    }
+
+                    const elapsed = Date.now() - startTime;
+                    const percent = Math.min((elapsed / duration) * 100, 100);
+                    progress.style.width = percent + '%';
+
+                    if (percent >= 100 && winner === null) {
+                        winner = index;
+                        clearInterval(interval);
+                        badge.textContent = '🏆 Ganador';
+                        badge.className = 'state-badge state-completed';
+                        
+                        setTimeout(() => {
+                            showResults('Race', branches.length, ((Date.now() - startTime) / 1000).toFixed(1), `Rama ${index + 1} ganadora`);
+                        }, 500);
+                    }
+                }, 50);
+            });
+        }
+
+        function executePriority(branches, statusElements) {
+            executeSequential(branches, statusElements);
+        }
+
+        function showResults(strategy, branchCount, time, extra = null) {
+            executionContainer.classList.remove('show');
+            resultContainer.classList.add('show');
+            executeBtn.disabled = false;
+
+            document.getElementById('resultStrategy').textContent = strategy;
+            document.getElementById('resultBranches').textContent = branchCount;
+            document.getElementById('resultTime').textContent = time + 's';
+            document.getElementById('resultStatus').textContent = extra || '✅ Todas completadas';
+        }
+
+        // Inicializar
+        generateBranches();
+        updateStrategyInfo();
+    </script>
+</body>
+</html>

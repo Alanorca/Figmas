@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nodo Matemático - Cálculos y Fórmulas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .node-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 550px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .node-header {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            padding: 25px;
+            color: white;
+            text-align: center;
+        }
+
+        .node-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .node-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .node-subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .node-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ed8936;
+            box-shadow: 0 0 0 3px rgba(237, 137, 54, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #718096;
+            font-size: 0.85em;
+        }
+
+        .operator-buttons {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .operator-btn {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            color: #2d3748;
+        }
+
+        .operator-btn:hover {
+            background: #ed8936;
+            color: white;
+            border-color: #ed8936;
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .description {
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .validation {
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .validation.show {
+            display: block;
+        }
+
+        .validation.valid {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .validation.invalid {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0fff4;
+            border-radius: 8px;
+            border-left: 4px solid #48bb78;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #22543d;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 20px 0;
+        }
+
+        .formula-examples {
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #4a5568;
+            margin-top: 10px;
+        }
+
+        .formula-examples strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .formula-examples code {
+            display: block;
+            background: white;
+            padding: 6px;
+            border-radius: 4px;
+            margin: 4px 0;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="node-container">
+        <div class="node-header">
+            <div class="node-icon">🔢</div>
+            <div class="node-title">Nodo Matemático</div>
+            <div class="node-subtitle">Cálculos y Fórmulas</div>
+        </div>
+
+        <div class="node-body">
+            <div class="description">
+                Realiza operaciones matemáticas y cálculos personalizados sobre tus datos.
+            </div>
+
+            <div class="form-group">
+                <label>Nombre del Nodo</label>
+                <input type="text" id="nodeName" placeholder="Ej: Calcular riesgo">
+            </div>
+
+            <div class="form-group">
+                <label>Fórmula</label>
+                <input type="text" id="formula" placeholder="(impacto * probabilidad) / 100">
+                <small>Variables disponibles del nodo anterior</small>
+                <div id="validation" class="validation"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Operadores rápidos</label>
+                <div class="operator-buttons">
+                    <button class="operator-btn" data-op="+">+</button>
+                    <button class="operator-btn" data-op="-">−</button>
+                    <button class="operator-btn" data-op="*">×</button>
+                    <button class="operator-btn" data-op="/">/</button>
+                    <button class="operator-btn" data-op="**">^</button>
+                    <button class="operator-btn" data-op="sqrt">√</button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="form-group">
+                <label>Campo de salida</label>
+                <input type="text" id="outputField" placeholder="riesgo_calculado">
+                <small>Nombre del campo que contendrá el resultado</small>
+            </div>
+
+            <div class="formula-examples">
+                <strong>Ejemplos de fórmulas:</strong>
+                <code>precio * cantidad</code>
+                <code>(impacto * probabilidad) / 100</code>
+                <code>sqrt(x^2 + y^2)</code>
+                <code>(total - descuento) * 1.16</code>
+            </div>
+
+            <button class="btn btn-primary" id="calculateBtn" disabled>
+                🧮 Calcular
+            </button>
+
+            <div class="result-container" id="resultContainer">
+                <div class="result-title">
+                    <span>✅</span>
+                    <span>Cálculo completado</span>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Registros procesados</div>
+                        <div class="stat-value" id="recordCount">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Campo generado</div>
+                        <div class="stat-value" id="generatedField">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Rango de valores</div>
+                        <div class="stat-value" id="valueRange">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Promedio</div>
+                        <div class="stat-value" id="avgValue">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const formulaInput = document.getElementById('formula');
+        const outputFieldInput = document.getElementById('outputField');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const validation = document.getElementById('validation');
+        const resultContainer = document.getElementById('resultContainer');
+
+        // Operadores
+        document.querySelectorAll('.operator-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const op = btn.dataset.op;
+                const formula = formulaInput.value;
+                const cursorPos = formulaInput.selectionStart || formula.length;
+                
+                let insertion = op;
+                if (op === 'sqrt') {
+                    insertion = 'sqrt()';
+                } else if (op === '**') {
+                    insertion = '^';
+                } else {
+                    insertion = ` ${op} `;
+                }
+
+                const newFormula = formula.substring(0, cursorPos) + insertion + formula.substring(cursorPos);
+                formulaInput.value = newFormula;
+                formulaInput.focus();
+                validateFormula();
+            });
+        });
+
+        // Validación en tiempo real
+        formulaInput.addEventListener('input', validateFormula);
+        outputFieldInput.addEventListener('input', validateFormula);
+
+        function validateFormula() {
+            const formula = formulaInput.value.trim();
+            const outputField = outputFieldInput.value.trim();
+
+            if (formula === '' || outputField === '') {
+                calculateBtn.disabled = true;
+                validation.classList.remove('show');
+                return;
+            }
+
+            // Validación simple
+            const validChars = /^[a-zA-Z0-9\s\+\-\*\/\(\)\.\^]+$/;
+            const hasOperators = /[\+\-\*\/\^]/.test(formula);
+            const balanced = checkBalancedParentheses(formula);
+
+            if (!validChars.test(formula)) {
+                validation.textContent = '❌ La fórmula contiene caracteres no válidos';
+                validation.className = 'validation invalid show';
+                calculateBtn.disabled = true;
+                return;
+            }
+
+            if (!balanced) {
+                validation.textContent = '❌ Paréntesis no balanceados';
+                validation.className = 'validation invalid show';
+                calculateBtn.disabled = true;
+                return;
+            }
+
+            if (!hasOperators) {
+                validation.textContent = '⚠️ La fórmula debe contener al menos un operador';
+                validation.className = 'validation invalid show';
+                calculateBtn.disabled = true;
+                return;
+            }
+
+            validation.textContent = '✓ Fórmula válida';
+            validation.className = 'validation valid show';
+            calculateBtn.disabled = false;
+        }
+
+        function checkBalancedParentheses(str) {
+            let count = 0;
+            for (let char of str) {
+                if (char === '(') count++;
+                if (char === ')') count--;
+                if (count < 0) return false;
+            }
+            return count === 0;
+        }
+
+        calculateBtn.addEventListener('click', () => {
+            const formula = formulaInput.value;
+            const outputField = outputFieldInput.value || 'resultado';
+
+            // Simular cálculo
+            const records = Math.floor(Math.random() * 3000) + 1000;
+            const min = Math.floor(Math.random() * 50);
+            const max = min + Math.floor(Math.random() * 100) + 20;
+            const avg = ((min + max) / 2).toFixed(1);
+
+            document.getElementById('recordCount').textContent = records.toLocaleString();
+            document.getElementById('generatedField').textContent = outputField;
+            document.getElementById('valueRange').textContent = `${min} - ${max}`;
+            document.getElementById('avgValue').textContent = avg;
+
+            resultContainer.classList.add('show');
+        });
+    </script>
+</body>
+</html>
