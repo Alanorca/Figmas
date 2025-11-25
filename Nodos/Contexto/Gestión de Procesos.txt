@@ -1,0 +1,181 @@
+Historia de Usuario: Gestión de Procesos
+📋 Información General
+ID: US-PROC-001 Módulo: Gestión de Procesos Prioridad: Alta Sprint: Sprint 1
+
+👤 Historia de Usuario
+Como usuario administrador Quiero crear, modificar, eliminar y consultar procesos donde intervienen activos e información externa Para poder mapear la manera como opera mi organización mediante nodos interactivos que representen datos, decisiones y relaciones.
+
+✅ Criterios de Aceptación
+Feature: Creación de Procesos
+
+  Scenario: Creación exitosa de proceso
+    Given no existe un proceso con el mismo nombre
+    And el usuario tiene permisos de administrador
+    When el usuario ingresa nombre, descripción, apetito de riesgo y objetivos/KPIs del proceso
+    And crea los nodos correspondientes al proceso
+    And hace clic en guardar
+    Then el sistema crea el proceso
+    And muestra un mensaje de confirmación
+    And el proceso aparece en el listado
+
+  Scenario: Validación de datos obligatorios
+    Given el usuario está creando un proceso
+    When intenta guardar sin completar campos obligatorios ni crear al menos un nodo
+    Then el sistema muestra mensajes de validación
+    And no permite guardar hasta completar los datos requeridos
+
+Feature: Modificación de procesos
+
+  Scenario: Edición exitosa de proceso
+    Given existe un proceso en el sistema
+    When el usuario selecciona editar
+    And modifica el nombre, descripción o los nodos del proceso
+    And guarda los cambios
+    Then el sistema actualiza el proceso
+    And persiste los cambios correctamente
+    And muestra un mensaje de confirmación
+
+  Scenario: Prevención de nombres duplicados
+    Given existe un proceso con el nombre "ventas"
+    When el usuario intenta cambiar el nombre de otro proceso a "ventas"
+    Then el sistema muestra un error de nombre duplicado
+    And no permite guardar el cambio
+
+Feature: Eliminación física de procesos
+
+  Scenario: Eliminación física exitosa
+    Given existe un proceso
+    When el usuario selecciona eliminar
+    And confirma la acción en el diálogo
+    Then el sistema elimina el proceso permanentemente
+    And muestra un mensaje de confirmación
+
+  Scenario: Inactivación de proceso
+    Given existe un proceso
+    When el usuario intenta inactivar
+    Then el sistema muestra advertencia de configuración existente
+    And al inactivar, el proceso deja de estar activo
+
+Feature: Consulta y listado de procesos
+
+  Scenario: Listado con paginación
+    Given existen múltiples procesos en el sistema
+    When el usuario accede al módulo
+    Then el sistema muestra los procesos paginados
+    And permite ordenar por las columnas mostradas
+    And muestra estado activo/inactivo de cada tipo
+
+  Scenario: Consulta de proceso específico
+    Given existe un proceso con ID específico
+    When el usuario accede al detalle
+    Then el sistema muestra toda la información del proceso
+    And muestra todos los nodos conectados definidos
+
+🔄 Flujo de Usuario
+Flujo de Gestión de Procesos
+🔍+
+🔍-
+🔄
+🖥️
+100%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+📌 Tips: Use mouse wheel to zoom, click and drag to pan, or use the controls above
+🎨 Mockups / Diseños
+Diseños disponibles en Figma (aprobados por UX/UI Designer: Alan Franco)
+
+🔧 Documentación Técnica Relacionada
+API Endpoints
+Referencia para documentación técnica:
+
+GET /processes/{id}
+GET /processes
+POST /processes
+PUT /processes/{id}
+DELETE /processes/{id}
+PATCH /processes/{id}/deactivate
+
+Reglas de Negocio
+Los nombres de procesos deben ser únicos.
+El estado isActive controla la operación o estado idle de los procesos.
+Los tipos de nodos que deben incluirse son: Activo, Integración, Branching, Decisión, Prompt, Transformación, ML, Matemático.
+El riesgo de un proceso se calcula a partir del riesgo agrupado de los activos que lo componen.
+Debe ser posible definir las relaciones del proceso con otros procesos definidos.
+Un proceso debe tener al menos un nodo para ser válido.
+Los procesos pueden ser eliminados físicamente solo si no tienen configuraciones asociadas.
+Los procesos con configuraciones existentes deben ser inactivados en lugar de eliminados.
+Modelo de Datos
+Tablas relacionadas: processes, process_nodes, process_relationships, assets, risk_calculations
+
+Campos principales del proceso:
+
+id: Identificador único
+name: Nombre del proceso (único)
+description: Descripción detallada
+risk_appetite: Apetito de riesgo asociado
+objectives_kpis: Objetivos y KPIs relacionados
+isActive: Estado activo/inactivo del proceso
+created_at: Fecha de creación
+updated_at: Fecha de última actualización
+Tipos de nodos soportados:
+
+Activo: Representa un activo involucrado en el proceso
+Integración: Conexión con sistemas externos
+Branching: Punto de ramificación condicional
+Decisión: Nodo de decisión lógica
+Prompt: Interacción con el usuario
+Transformación: Transformación de datos
+ML: Modelo de Machine Learning
+Matemático: Operación matemática
+📝 Notas Adicionales
+Equipo
+Product Owner: Francisco Puente
+UX/UI Designer: Alan Franco
+Frontend Developers: Cesar Gonzalez, Juan Martinez
+Backend Developer: Josue Cardenas
+QA Engineer: Emmanuel Vazquez
+Alcance
+✅ Fase 1 incluye:
+
+Funcionalidad CRUD completa de procesos
+Gestión de nodos conectados
+Validación de nombres únicos
+Sistema de inactivación para procesos con configuraciones
+Eliminación física para procesos sin configuraciones
+Consulta de detalles y relaciones
+❌ No incluye (Fase 2):
+
+Creación de procesos automatizada por IA
+Análisis predictivo de riesgos
+Sugerencias automáticas de optimización

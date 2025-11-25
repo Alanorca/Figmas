@@ -1,0 +1,1180 @@
+<html lang="es"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema GRC - Gestión Estratégica de Activos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f9fafb;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .form-section {
+            margin-bottom: 32px;
+        }
+        
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .form-grid.single {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .form-label.required::after {
+            content: " *";
+            color: #ef4444;
+        }
+        
+        .form-input,
+        .form-select,
+        .form-textarea {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #111827;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-help {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        /* Risk Level Indicator */
+        .risk-indicator-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        .risk-indicator {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .risk-indicator:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .risk-indicator.selected {
+            border-color: #111827;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .risk-indicator.bajo {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .risk-indicator.medio {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .risk-indicator.alto {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .risk-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        
+        .risk-dot.bajo {
+            background: #10b981;
+        }
+        
+        .risk-dot.medio {
+            background: #f59e0b;
+        }
+        
+        .risk-dot.alto {
+            background: #ef4444;
+        }
+        
+        /* Radio Button Group */
+        .radio-group {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .radio-option label {
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+        }
+        
+        /* Container */
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            transition: width 0.3s ease;
+            flex-shrink: 0;
+        }
+        
+        .sidebar.expanded {
+            width: 256px;
+        }
+        
+        .sidebar.collapsed {
+            width: 64px;
+        }
+        
+        .sidebar-header {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .sidebar-title {
+            display: none;
+        }
+        
+        .sidebar.expanded .sidebar-title {
+            display: block;
+        }
+        
+        .sidebar h1 {
+            font-size: 18px;
+            font-weight: bold;
+            color: #111827;
+        }
+        
+        .sidebar-id {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .toggle-sidebar {
+            padding: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        
+        .toggle-sidebar:hover {
+            background: #f3f4f6;
+        }
+        
+        .nav-button {
+            width: calc(100% - 32px);
+            margin: 0 16px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            position: relative;
+        }
+        
+        .nav-button:hover {
+            background: #f3f4f6;
+        }
+        
+        .nav-button.active {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+        
+        .nav-button .icon {
+            font-size: 20px;
+            min-width: 20px;
+        }
+        
+        .nav-button .text {
+            display: none;
+            white-space: nowrap;
+        }
+        
+        .sidebar.expanded .nav-button .text {
+            display: block;
+        }
+        
+        .nav-button .badge {
+            display: none;
+            position: absolute;
+            right: 12px;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        .sidebar.expanded .nav-button .badge {
+            display: inline-block;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow: auto;
+            background: #f9fafb;
+        }
+        
+        .content-header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .content-body {
+            padding: 32px;
+        }
+        
+        /* Tab Navigation */
+        .tab-navigation {
+            background: white;
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .tab-button {
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+        
+        .tab-button:hover {
+            background: #f3f4f6;
+        }
+        
+        .tab-button.active {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-red {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-yellow {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-green {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-orange {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+        
+        /* Risk Level */
+        .risk-level {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+        
+        .risk-level-alto {
+            background: #ef4444;
+        }
+        
+        .risk-level-medio {
+            background: #f59e0b;
+        }
+        
+        .risk-level-bajo {
+            background: #10b981;
+        }
+        
+        /* Grid */
+        .grid {
+            display: grid;
+        }
+        
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .grid-cols-3 {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        
+        .col-span-2 {
+            grid-column: span 2;
+        }
+        
+        /* Clickable tags */
+        .clickable-tag {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .clickable-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal para crear riesgo -->
+    <div class="modal-overlay" id="modalNuevoRiesgo">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">➕ Nuevo Riesgo</h2>
+                <button class="modal-close" onclick="cerrarModal('modalNuevoRiesgo')">&times;</button>
+            </div>
+            <form id="formNuevoRiesgo" onsubmit="guardarRiesgo(event)">
+                <div class="modal-body">
+                    <!-- Sección 1: Información Básica -->
+                    <div class="form-section">
+                        <h3 class="section-title">📋 Información Básica</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label required">ID del Riesgo</label>
+                                <input type="text" class="form-input" id="riesgoId" placeholder="R004" required>
+                                <p class="form-help">Código único de identificación</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Responsable</label>
+                                <input type="text" class="form-input" id="riesgoResponsable" placeholder="Nombre del responsable" required>
+                            </div>
+                        </div>
+                        <div class="form-grid single">
+                            <div class="form-group">
+                                <label class="form-label required">Descripción del Riesgo</label>
+                                <textarea class="form-textarea" id="riesgoDescripcion" placeholder="Describe el riesgo identificado..." required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección 2: Evaluación del Riesgo -->
+                    <div class="form-section">
+                        <h3 class="section-title">📊 Evaluación del Riesgo</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label required">Probabilidad</label>
+                                <select class="form-select" id="riesgoProbabilidad" required onchange="calcularNivelRiesgo()">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Baja">Baja</option>
+                                    <option value="Media">Media</option>
+                                    <option value="Alta">Alta</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Impacto</label>
+                                <select class="form-select" id="riesgoImpacto" required onchange="calcularNivelRiesgo()">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Bajo">Bajo</option>
+                                    <option value="Medio">Medio</option>
+                                    <option value="Alto">Alto</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nivel de Riesgo (Calculado Automáticamente)</label>
+                            <div class="risk-indicator-grid">
+                                <div class="risk-indicator bajo" id="nivelBajo">
+                                    <span class="risk-dot bajo"></span>
+                                    <strong>Bajo</strong>
+                                </div>
+                                <div class="risk-indicator medio" id="nivelMedio">
+                                    <span class="risk-dot medio"></span>
+                                    <strong>Medio</strong>
+                                </div>
+                                <div class="risk-indicator alto" id="nivelAlto">
+                                    <span class="risk-dot alto"></span>
+                                    <strong>Alto</strong>
+                                </div>
+                            </div>
+                            <p class="form-help">El nivel se calcula automáticamente según probabilidad e impacto</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección 3: Apetito y Tolerancia al Riesgo -->
+                    <div class="form-section">
+                        <h3 class="section-title">🎯 Apetito y Tolerancia al Riesgo</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Apetito de Riesgo (Monetario)</label>
+                                <input type="number" class="form-input" id="riesgoApetitoMonetario" placeholder="0.00" step="0.01">
+                                <p class="form-help">Valor máximo de exposición tolerada en pesos</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Apetito de Riesgo (Porcentual)</label>
+                                <input type="number" class="form-input" id="riesgoApetitoPorcentual" placeholder="0" min="0" max="100" step="1">
+                                <p class="form-help">Porcentaje del valor del activo</p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tolerancia al Riesgo</label>
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" id="toleranciaAuto" name="tolerancia" value="auto" checked>
+                                    <label for="toleranciaAuto">Automática (cero sin datos históricos)</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" id="toleranciaManual" name="tolerancia" value="manual">
+                                    <label for="toleranciaManual">Manual</label>
+                                </div>
+                            </div>
+                            <p class="form-help">La tolerancia se inicializa en cero si no hay datos disponibles (Historia 3.2)</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección 4: Velocidad de Propagación -->
+                    <div class="form-section">
+                        <h3 class="section-title">⚡ Velocidad de Propagación</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label required">Velocidad de Propagación</label>
+                                <select class="form-select" id="riesgoVelocidad" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Rápida (< 1 hora)">Rápida (< 1 hora)</option>
+                                    <option value="Media (1-4 horas)">Media (1-4 horas)</option>
+                                    <option value="Lenta (> 4 horas)">Lenta (> 4 horas)</option>
+                                </select>
+                                <p class="form-help">Rapidez con la que el riesgo se propaga en el sistema (Épica 8)</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Urgencia</label>
+                                <select class="form-select" id="riesgoUrgencia">
+                                    <option value="Baja">Baja</option>
+                                    <option value="Media">Media</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Muy Alta">Muy Alta</option>
+                                    <option value="Crítica">Crítica</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección 5: Estado y Clasificación -->
+                    <div class="form-section">
+                        <h3 class="section-title">🏷️ Estado y Clasificación</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label required">Estado</label>
+                                <select class="form-select" id="riesgoEstado" required>
+                                    <option value="Abierto">Abierto</option>
+                                    <option value="En tratamiento">En tratamiento</option>
+                                    <option value="Mitigado">Mitigado</option>
+                                    <option value="Cerrado">Cerrado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Con Pérdida</label>
+                                <div class="radio-group">
+                                    <div class="radio-option">
+                                        <input type="radio" id="perdidaSi" name="perdida" value="si">
+                                        <label for="perdidaSi">Sí</label>
+                                    </div>
+                                    <div class="radio-option">
+                                        <input type="radio" id="perdidaNo" name="perdida" value="no" checked>
+                                        <label for="perdidaNo">No</label>
+                                    </div>
+                                </div>
+                                <p class="form-help">Diferencia entre incidentes con y sin pérdida (Historia 3.4)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección 6: Relaciones (Correspondencias) -->
+                    <div class="form-section">
+                        <h3 class="section-title">🔗 Correspondencias</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Activos Relacionados</label>
+                                <input type="text" class="form-input" id="riesgoActivos" placeholder="ACT-001, ACT-002">
+                                <p class="form-help">IDs de activos separados por comas</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Procesos Relacionados</label>
+                                <input type="text" class="form-input" id="riesgoProcesos" placeholder="PRO-001, PRO-003">
+                                <p class="form-help">IDs de procesos separados por comas</p>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Incidentes Relacionados</label>
+                                <input type="text" class="form-input" id="riesgoIncidentes" placeholder="INC-001, INC-002">
+                                <p class="form-help">IDs de incidentes o sucesos</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Respuestas Asociadas</label>
+                                <input type="text" class="form-input" id="riesgoRespuestas" placeholder="MIT-001, OPP-001">
+                                <p class="form-help">Mitigaciones u oportunidades (MIT, OPP)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección 7: Impacto en Objetivos Estratégicos -->
+                    <div class="form-section">
+                        <h3 class="section-title">🎯 Impacto en Objetivos Estratégicos</h3>
+                        <div class="form-grid single">
+                            <div class="form-group">
+                                <label class="form-label">Objetivos Estratégicos Afectados</label>
+                                <textarea class="form-textarea" id="riesgoObjetivos" placeholder="Describe cómo este riesgo impacta los objetivos estratégicos de la organización..." style="min-height: 80px;"></textarea>
+                                <p class="form-help">Vinculación con objetivos estratégicos para priorizar mitigación (Historia 3.3)</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalNuevoRiesgo')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">💾 Guardar Riesgo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar expanded" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <h1>Sistema GRC</h1>
+                    <div class="sidebar-id">Sistema Estratégico</div>
+                </div>
+                <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+            </div>
+            
+            <button class="nav-button" onclick="switchTab('dashboard')">
+                <span class="icon">📊</span>
+                <span class="text">Dashboard</span>
+            </button>
+            
+            <button class="nav-button" onclick="switchTab('assets')">
+                <span class="icon">🏦</span>
+                <span class="text">Activos</span>
+            </button>
+            
+            <button class="nav-button active" onclick="switchTab('risks')">
+                <span class="icon">⚠️</span>
+                <span class="text">Riesgos</span>
+                <span class="badge">5</span>
+            </button>
+            
+            <button class="nav-button" onclick="switchTab('incidents')">
+                <span class="icon">🚨</span>
+                <span class="text">Incidentes</span>
+                <span class="badge">3</span>
+            </button>
+            
+            <button class="nav-button" onclick="switchTab('controls')">
+                <span class="icon">🛡️</span>
+                <span class="text">Controles</span>
+            </button>
+            
+            <button class="nav-button" onclick="switchTab('mitigation')">
+                <span class="icon">✅</span>
+                <span class="text">Mitigación</span>
+            </button>
+            
+            <button class="nav-button" onclick="switchTab('opportunities')">
+                <span class="icon">💡</span>
+                <span class="text">Oportunidades</span>
+            </button>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="content-header">
+                <div>
+                    <div class="breadcrumb">
+                        GRC / Gestión de Riesgos
+                    </div>
+                    <h2 class="page-title">Riesgos Identificados</h2>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportarRiesgos()">📥 Exportar</button>
+                    <button class="btn btn-danger" onclick="abrirModal('modalNuevoRiesgo')">➕ Nuevo Riesgo</button>
+                </div>
+            </div>
+            
+            <div class="content-body">
+                <!-- Tab: Riesgos -->
+                <div class="tab-content active" id="tab-risks">
+                    <div id="risks-container">
+                        <!-- Riesgo 1 -->
+                        <div class="card" id="item-R001">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div class="risk-level risk-level-alto"></div>
+                                    <div>
+                                        <span style="font-weight: 600; font-size: 18px;">R001</span>
+                                        <span class="badge badge-red" style="margin-left: 12px;">Abierto</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="text-align: right; font-size: 14px;">
+                                        <div style="color: #6b7280;">Responsable</div>
+                                        <div style="font-weight: 500;">María González</div>
+                                    </div>
+                                    <span class="badge badge-orange">Rápida (< 1 hora)</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3">
+                                <div class="col-span-2">
+                                    <p style="color: #374151; margin-bottom: 16px;">Acceso no autorizado a datos financieros</p>
+                                    <div style="display: flex; gap: 24px; font-size: 14px;">
+                                        <span>Probabilidad: <strong>Media</strong></span>
+                                        <span>Impacto: <strong>Alto</strong></span>
+                                        <span>Nivel: <strong>Alto</strong></span>
+                                    </div>
+                                </div>
+                                <div style="background: #f9fafb; border-radius: 8px; padding: 16px;">
+                                    <h4 style="font-weight: 500; margin-bottom: 12px;">📊 Correspondencias</h4>
+                                    <div style="font-size: 14px;">
+                                        <div style="margin-bottom: 8px;">
+                                            <span style="color: #6b7280;">Sucesos:</span>
+                                            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                                                <button onclick="navigateToItem('INC-001')" class="clickable-tag badge badge-orange">INC-001 ↗</button>
+                                                <button onclick="navigateToItem('INC-003')" class="clickable-tag badge badge-orange">INC-003 ↗</button>
+                                            </div>
+                                        </div>
+                                        <div style="margin-bottom: 8px;">
+                                            <span style="color: #6b7280;">Respuestas:</span>
+                                            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                                                <button onclick="navigateToItem('MIT-001')" class="clickable-tag badge badge-green">MIT-001 ↗</button>
+                                                <button onclick="navigateToItem('OPP-001')" class="clickable-tag badge badge-blue">OPP-001 ↗</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Riesgo 2 -->
+                        <div class="card" id="item-R002">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div class="risk-level risk-level-medio"></div>
+                                    <div>
+                                        <span style="font-weight: 600; font-size: 18px;">R002</span>
+                                        <span class="badge badge-yellow" style="margin-left: 12px;">En tratamiento</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="text-align: right; font-size: 14px;">
+                                        <div style="color: #6b7280;">Responsable</div>
+                                        <div style="font-weight: 500;">Carlos López</div>
+                                    </div>
+                                    <span class="badge badge-orange">Media (1-4 horas)</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3">
+                                <div class="col-span-2">
+                                    <p style="color: #374151; margin-bottom: 16px;">Fallo del sistema durante cierre contable</p>
+                                    <div style="display: flex; gap: 24px; font-size: 14px;">
+                                        <span>Probabilidad: <strong>Baja</strong></span>
+                                        <span>Impacto: <strong>Alto</strong></span>
+                                        <span>Nivel: <strong>Medio</strong></span>
+                                    </div>
+                                </div>
+                                <div style="background: #f9fafb; border-radius: 8px; padding: 16px;">
+                                    <h4 style="font-weight: 500; margin-bottom: 12px;">📊 Correspondencias</h4>
+                                    <div style="font-size: 14px;">
+                                        <div style="margin-bottom: 8px;">
+                                            <span style="color: #6b7280;">Sucesos:</span>
+                                            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                                                <button onclick="navigateToItem('INC-002')" class="clickable-tag badge badge-orange">INC-002 ↗</button>
+                                            </div>
+                                        </div>
+                                        <div style="margin-bottom: 8px;">
+                                            <span style="color: #6b7280;">Respuestas:</span>
+                                            <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                                                <button onclick="navigateToItem('MIT-002')" class="clickable-tag badge badge-green">MIT-002 ↗</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('expanded');
+            sidebar.classList.toggle('collapsed');
+        }
+        
+        // Switch tabs
+        function switchTab(tabName) {
+            const buttons = document.querySelectorAll('.nav-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.nav-button').classList.add('active');
+        }
+        
+        // Modal functions
+        function abrirModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function cerrarModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = 'auto';
+            // Reset form
+            if (modalId === 'modalNuevoRiesgo') {
+                document.getElementById('formNuevoRiesgo').reset();
+                document.querySelectorAll('.risk-indicator').forEach(el => el.classList.remove('selected'));
+            }
+        }
+        
+        // Calcular nivel de riesgo automáticamente
+        function calcularNivelRiesgo() {
+            const probabilidad = document.getElementById('riesgoProbabilidad').value;
+            const impacto = document.getElementById('riesgoImpacto').value;
+            
+            // Remover selección anterior
+            document.querySelectorAll('.risk-indicator').forEach(el => el.classList.remove('selected'));
+            
+            // Matriz de riesgo
+            const matriz = {
+                'Baja-Bajo': 'bajo',
+                'Baja-Medio': 'bajo',
+                'Baja-Alto': 'medio',
+                'Media-Bajo': 'bajo',
+                'Media-Medio': 'medio',
+                'Media-Alto': 'alto',
+                'Alta-Bajo': 'medio',
+                'Alta-Medio': 'alto',
+                'Alta-Alto': 'alto'
+            };
+            
+            if (probabilidad && impacto) {
+                const nivel = matriz[`${probabilidad}-${impacto}`];
+                const elemento = document.getElementById(`nivel${nivel.charAt(0).toUpperCase() + nivel.slice(1)}`);
+                if (elemento) {
+                    elemento.classList.add('selected');
+                }
+            }
+        }
+        
+        // Guardar riesgo
+        function guardarRiesgo(event) {
+            event.preventDefault();
+            
+            // Obtener valores del formulario
+            const nuevoRiesgo = {
+                id: document.getElementById('riesgoId').value,
+                responsable: document.getElementById('riesgoResponsable').value,
+                descripcion: document.getElementById('riesgoDescripcion').value,
+                probabilidad: document.getElementById('riesgoProbabilidad').value,
+                impacto: document.getElementById('riesgoImpacto').value,
+                velocidad: document.getElementById('riesgoVelocidad').value,
+                urgencia: document.getElementById('riesgoUrgencia').value,
+                estado: document.getElementById('riesgoEstado').value,
+                apetitoMonetario: document.getElementById('riesgoApetitoMonetario').value,
+                apetitoPorcentual: document.getElementById('riesgoApetitoPorcentual').value,
+                perdida: document.querySelector('input[name="perdida"]:checked').value,
+                activos: document.getElementById('riesgoActivos').value,
+                procesos: document.getElementById('riesgoProcesos').value,
+                incidentes: document.getElementById('riesgoIncidentes').value,
+                respuestas: document.getElementById('riesgoRespuestas').value,
+                objetivos: document.getElementById('riesgoObjetivos').value
+            };
+            
+            // Calcular nivel de riesgo
+            const matriz = {
+                'Baja-Bajo': 'Bajo',
+                'Baja-Medio': 'Bajo',
+                'Baja-Alto': 'Medio',
+                'Media-Bajo': 'Bajo',
+                'Media-Medio': 'Medio',
+                'Media-Alto': 'Alto',
+                'Alta-Bajo': 'Medio',
+                'Alta-Medio': 'Alto',
+                'Alta-Alto': 'Alto'
+            };
+            
+            const nivel = matriz[`${nuevoRiesgo.probabilidad}-${nuevoRiesgo.impacto}`];
+            const nivelClass = nivel.toLowerCase();
+            
+            // Crear el HTML del nuevo riesgo
+            const riesgoHTML = `
+                <div class="card" id="item-${nuevoRiesgo.id}">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div class="risk-level risk-level-${nivelClass}"></div>
+                            <div>
+                                <span style="font-weight: 600; font-size: 18px;">${nuevoRiesgo.id}</span>
+                                <span class="badge ${nuevoRiesgo.estado === 'Abierto' ? 'badge-red' : nuevoRiesgo.estado === 'En tratamiento' ? 'badge-yellow' : 'badge-green'}" style="margin-left: 12px;">${nuevoRiesgo.estado}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="text-align: right; font-size: 14px;">
+                                <div style="color: #6b7280;">Responsable</div>
+                                <div style="font-weight: 500;">${nuevoRiesgo.responsable}</div>
+                            </div>
+                            <span class="badge badge-orange">${nuevoRiesgo.velocidad}</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3">
+                        <div class="col-span-2">
+                            <p style="color: #374151; margin-bottom: 16px;">${nuevoRiesgo.descripcion}</p>
+                            <div style="display: flex; gap: 24px; font-size: 14px;">
+                                <span>Probabilidad: <strong>${nuevoRiesgo.probabilidad}</strong></span>
+                                <span>Impacto: <strong>${nuevoRiesgo.impacto}</strong></span>
+                                <span>Nivel: <strong>${nivel}</strong></span>
+                            </div>
+                            ${nuevoRiesgo.apetitoMonetario || nuevoRiesgo.apetitoPorcentual ? `
+                            <div style="margin-top: 12px; font-size: 14px; color: #6b7280;">
+                                <span>Apetito: ${nuevoRiesgo.apetitoMonetario ? '$' + nuevoRiesgo.apetitoMonetario : ''}${nuevoRiesgo.apetitoMonetario && nuevoRiesgo.apetitoPorcentual ? ' / ' : ''}${nuevoRiesgo.apetitoPorcentual ? nuevoRiesgo.apetitoPorcentual + '%' : ''}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div style="background: #f9fafb; border-radius: 8px; padding: 16px;">
+                            <h4 style="font-weight: 500; margin-bottom: 12px;">📊 Correspondencias</h4>
+                            <div style="font-size: 14px;">
+                                ${nuevoRiesgo.incidentes ? `
+                                <div style="margin-bottom: 8px;">
+                                    <span style="color: #6b7280;">Sucesos:</span>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                                        ${nuevoRiesgo.incidentes.split(',').map(inc => `
+                                            <button onclick="navigateToItem('${inc.trim()}')" class="clickable-tag badge badge-orange">${inc.trim()} ↗</button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
+                                ${nuevoRiesgo.respuestas ? `
+                                <div style="margin-bottom: 8px;">
+                                    <span style="color: #6b7280;">Respuestas:</span>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                                        ${nuevoRiesgo.respuestas.split(',').map(resp => `
+                                            <button onclick="navigateToItem('${resp.trim()}')" class="clickable-tag badge ${resp.trim().startsWith('MIT') ? 'badge-green' : 'badge-blue'}">${resp.trim()} ↗</button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Agregar el nuevo riesgo al contenedor
+            document.getElementById('risks-container').insertAdjacentHTML('beforeend', riesgoHTML);
+            
+            // Mostrar mensaje de éxito
+            alert(`✅ Riesgo ${nuevoRiesgo.id} creado exitosamente\n\n` +
+                  `Descripción: ${nuevoRiesgo.descripcion}\n` +
+                  `Nivel de Riesgo: ${nivel}\n` +
+                  `Responsable: ${nuevoRiesgo.responsable}\n` +
+                  `Estado: ${nuevoRiesgo.estado}\n\n` +
+                  `El riesgo ha sido registrado en el sistema y está listo para su gestión.`);
+            
+            // Cerrar modal
+            cerrarModal('modalNuevoRiesgo');
+            
+            // Actualizar badge de riesgos
+            const badge = document.querySelector('.nav-button.active .badge');
+            if (badge) {
+                badge.textContent = parseInt(badge.textContent) + 1;
+            }
+        }
+        
+        // Exportar riesgos
+        function exportarRiesgos() {
+            alert('📥 Exportando riesgos...\n\nFormatos disponibles:\n• Excel (.xlsx)\n• PDF\n• CSV\n\nEsta funcionalidad estará disponible próximamente.');
+        }
+        
+        // Navigate to item
+        function navigateToItem(itemId) {
+            alert(`Navegando a: ${itemId}\n\nEsta funcionalidad permitirá navegar entre elementos relacionados del sistema GRC.`);
+        }
+        
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('modalNuevoRiesgo').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModal('modalNuevoRiesgo');
+            }
+        });
+    </script>
+</body>
+</html>
