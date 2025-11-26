@@ -435,6 +435,24 @@
             margin-top: 4px;
         }
 
+        /* Mini operator buttons for Math node */
+        .operator-btn-mini {
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            color: #c05621;
+        }
+
+        .operator-btn-mini:hover {
+            background: #feebc8;
+            border-color: #c05621;
+        }
+
         /* File Upload */
         .file-upload-area {
             border: 2px dashed #e0e0e0;
@@ -1624,6 +1642,42 @@
                     </div>
                 </div>
 
+                <!-- Nodo Branching -->
+                <div class="node-item" onclick="addNode('branching')">
+                    <div class="node-item-header">
+                        <span class="node-icon">🌿</span>
+                        <span class="node-name">Nodo Branching</span>
+                        <span class="node-drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="node-description">
+                        Define ramas paralelas con estrategias de ejecución.
+                    </div>
+                </div>
+
+                <!-- Nodo Matemático -->
+                <div class="node-item" onclick="addNode('math')">
+                    <div class="node-item-header">
+                        <span class="node-icon">🔢</span>
+                        <span class="node-name">Nodo Matemático</span>
+                        <span class="node-drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="node-description">
+                        Cálculos y fórmulas personalizadas sobre datos.
+                    </div>
+                </div>
+
+                <!-- Nodo ML -->
+                <div class="node-item" onclick="addNode('ml')">
+                    <div class="node-item-header">
+                        <span class="node-icon">🧠</span>
+                        <span class="node-name">Nodo Machine Learning</span>
+                        <span class="node-drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="node-description">
+                        Modelos ML para predicción, clasificación y análisis.
+                    </div>
+                </div>
+
                 <!-- Nodo Integración (futuro) -->
                 <div class="node-item" onclick="alert('Nodo en desarrollo - Disponible próximamente')" style="opacity: 0.5;">
                     <div class="node-item-header">
@@ -2461,7 +2515,10 @@ Datos del empleado:
                 asset: { icon: '🏦', color: '#e8f5e9', iconColor: '#2e7d32', title: 'Nodo Activo', desc: 'Vincula activos al proceso' },
                 transform: { icon: '🔄', color: '#f3e5f5', iconColor: '#7b1fa2', title: 'Nodo Transformación', desc: 'Mapeo y filtrado de datos' },
                 llm: { icon: '🤖', color: '#e0f7fa', iconColor: '#00838f', title: 'Nodo Prompt LLM', desc: 'Procesa con modelos de lenguaje' },
-                state: { icon: '📊', color: '#ede7f6', iconColor: '#5e35b1', title: 'Nodo Estado', desc: 'Cambia el estado del proceso' }
+                state: { icon: '📊', color: '#ede7f6', iconColor: '#5e35b1', title: 'Nodo Estado', desc: 'Cambia el estado del proceso' },
+                branching: { icon: '🌿', color: '#c6f6d5', iconColor: '#22543d', title: 'Nodo Branching', desc: 'Flujos paralelos con estrategias' },
+                math: { icon: '🔢', color: '#feebc8', iconColor: '#c05621', title: 'Nodo Matemático', desc: 'Cálculos y fórmulas' },
+                ml: { icon: '🧠', color: '#b2f5ea', iconColor: '#234e52', title: 'Nodo ML', desc: 'Machine Learning' }
             };
 
             const config = nodeConfigs[mappedType];
@@ -2614,6 +2671,73 @@ Datos del empleado:
                         0 transformaciones configuradas
                     </div>
                     <div style="font-size: 11px; color: #10b981; margin-top: 8px; text-align: center; cursor: pointer;" onclick="openNodeConfig(this.closest('.node-card'))">⚙️ Configurar...</div>
+                `;
+            } else if (mappedType === 'branching') {
+                if (typeof nodeDataStore !== 'undefined') nodeDataStore[nodeId].config = { branchCount: 2, strategy: 'parallel', branches: ['Rama 1', 'Rama 2'] };
+                customContent = `
+                    <div class="form-group">
+                        <label class="form-label">Número de ramas</label>
+                        <input type="number" class="form-input" id="branchCount-${nodeId}" value="2" min="2" max="10" onchange="updateNodeBranchCount('${nodeId}', this.value)" style="text-align: center;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Estrategia</label>
+                        <select class="form-select" id="branchStrategy-${nodeId}" onchange="updateNodeBranchStrategy('${nodeId}', this.value)">
+                            <option value="parallel">⚡ Paralela</option>
+                            <option value="sequential">➡️ Secuencial</option>
+                            <option value="priority">🎯 Por Prioridad</option>
+                            <option value="race">🏁 Race</option>
+                        </select>
+                    </div>
+                    <div id="branchPreview-${nodeId}" style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px;">
+                        <span style="padding: 4px 8px; background: #c6f6d5; border-radius: 4px; font-size: 11px;">Rama 1</span>
+                        <span style="padding: 4px 8px; background: #c6f6d5; border-radius: 4px; font-size: 11px;">Rama 2</span>
+                    </div>
+                    <div style="font-size: 11px; color: #10b981; margin-top: 8px; text-align: center; cursor: pointer;" onclick="openNodeConfig(this.closest('.node-card'))">⚙️ Configurar ramas...</div>
+                `;
+            } else if (mappedType === 'math') {
+                if (typeof nodeDataStore !== 'undefined') nodeDataStore[nodeId].config = { formula: '', outputField: 'resultado' };
+                customContent = `
+                    <div class="form-group">
+                        <label class="form-label">Fórmula</label>
+                        <input type="text" class="form-input" id="mathFormula-${nodeId}" placeholder="(impacto * probabilidad) / 100" style="font-family: monospace; font-size: 12px;" onchange="updateNodeMathFormula('${nodeId}', this.value)">
+                    </div>
+                    <div style="display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px;">
+                        <button class="operator-btn-mini" onclick="insertMathOp('${nodeId}', '+')">+</button>
+                        <button class="operator-btn-mini" onclick="insertMathOp('${nodeId}', '-')">−</button>
+                        <button class="operator-btn-mini" onclick="insertMathOp('${nodeId}', '*')">×</button>
+                        <button class="operator-btn-mini" onclick="insertMathOp('${nodeId}', '/')">÷</button>
+                        <button class="operator-btn-mini" onclick="insertMathOp('${nodeId}', '^')">^</button>
+                        <button class="operator-btn-mini" onclick="insertMathOp('${nodeId}', 'sqrt')">√</button>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label class="form-label">Campo de salida</label>
+                        <input type="text" class="form-input" id="mathOutput-${nodeId}" placeholder="resultado" style="font-size: 12px;">
+                    </div>
+                    <div style="font-size: 11px; color: #10b981; margin-top: 8px; text-align: center; cursor: pointer;" onclick="openNodeConfig(this.closest('.node-card'))">⚙️ Más opciones...</div>
+                `;
+            } else if (mappedType === 'ml') {
+                if (typeof nodeDataStore !== 'undefined') nodeDataStore[nodeId].config = { model: '', confidence: 0.85 };
+                customContent = `
+                    <div class="form-group">
+                        <label class="form-label">Modelo ML</label>
+                        <select class="form-select" id="mlModel-${nodeId}" onchange="updateNodeMLModel('${nodeId}', this.value)">
+                            <option value="">Seleccionar modelo...</option>
+                            <option value="risk_predictor">🎯 Predictor de Riesgos</option>
+                            <option value="anomaly_detector">🔍 Detector de Anomalías</option>
+                            <option value="classifier">📊 Clasificador de Incidentes</option>
+                            <option value="regression">📈 Regresión</option>
+                            <option value="clustering">🎲 Clustering</option>
+                        </select>
+                    </div>
+                    <div id="mlModelInfo-${nodeId}" style="display: none; padding: 8px; background: #e6fffa; border-radius: 6px; margin-top: 8px; font-size: 11px; color: #234e52;"></div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label class="form-label">Confianza mínima</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="range" id="mlConfidence-${nodeId}" min="0" max="100" value="85" style="flex: 1;" onchange="document.getElementById('mlConfVal-${nodeId}').textContent = this.value + '%'">
+                            <span id="mlConfVal-${nodeId}" style="font-size: 12px; font-weight: 600; color: #234e52;">85%</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 11px; color: #10b981; margin-top: 8px; text-align: center; cursor: pointer;" onclick="openNodeConfig(this.closest('.node-card'))">⚙️ Configurar modelo...</div>
                 `;
             }
 
@@ -3580,6 +3704,96 @@ Datos del empleado:
         }
 
         // =====================================================
+        // BRANCHING NODE FUNCTIONS
+        // =====================================================
+
+        function updateNodeBranchCount(nodeId, count) {
+            const numBranches = parseInt(count);
+            if (nodeDataStore[nodeId]) {
+                nodeDataStore[nodeId].config.branchCount = numBranches;
+                const branches = [];
+                for (let i = 1; i <= numBranches; i++) {
+                    branches.push('Rama ' + i);
+                }
+                nodeDataStore[nodeId].config.branches = branches;
+            }
+
+            // Update preview
+            const preview = document.getElementById('branchPreview-' + nodeId);
+            if (preview) {
+                preview.innerHTML = branches.map(b =>
+                    '<span style="padding: 4px 8px; background: #c6f6d5; border-radius: 4px; font-size: 11px;">' + b + '</span>'
+                ).join('');
+            }
+            syncToSidebar(nodeId);
+        }
+
+        function updateNodeBranchStrategy(nodeId, strategy) {
+            if (nodeDataStore[nodeId]) {
+                nodeDataStore[nodeId].config.strategy = strategy;
+            }
+            syncToSidebar(nodeId);
+        }
+
+        // =====================================================
+        // MATH NODE FUNCTIONS
+        // =====================================================
+
+        function updateNodeMathFormula(nodeId, formula) {
+            if (nodeDataStore[nodeId]) {
+                nodeDataStore[nodeId].config.formula = formula;
+            }
+            syncToSidebar(nodeId);
+        }
+
+        function insertMathOp(nodeId, op) {
+            const input = document.getElementById('mathFormula-' + nodeId);
+            if (input) {
+                const cursorPos = input.selectionStart || input.value.length;
+                let insertion = op;
+                if (op === 'sqrt') {
+                    insertion = 'sqrt()';
+                } else if (op === '*') {
+                    insertion = ' * ';
+                } else if (op === '/') {
+                    insertion = ' / ';
+                } else if (op === '+' || op === '-') {
+                    insertion = ' ' + op + ' ';
+                }
+                input.value = input.value.substring(0, cursorPos) + insertion + input.value.substring(cursorPos);
+                input.focus();
+                updateNodeMathFormula(nodeId, input.value);
+            }
+        }
+
+        // =====================================================
+        // ML NODE FUNCTIONS
+        // =====================================================
+
+        const mlModelInfoData = {
+            risk_predictor: { title: '🎯 Predictor de Riesgos', text: 'Calcula probabilidad de riesgo basándose en múltiples variables.' },
+            anomaly_detector: { title: '🔍 Detector de Anomalías', text: 'Identifica patrones inusuales con Isolation Forest.' },
+            classifier: { title: '📊 Clasificador', text: 'Categoriza registros en clases predefinidas.' },
+            regression: { title: '📈 Regresión', text: 'Predice valores numéricos continuos.' },
+            clustering: { title: '🎲 Clustering', text: 'Agrupa elementos similares en clusters.' }
+        };
+
+        function updateNodeMLModel(nodeId, model) {
+            if (nodeDataStore[nodeId]) {
+                nodeDataStore[nodeId].config.model = model;
+            }
+
+            const infoDiv = document.getElementById('mlModelInfo-' + nodeId);
+            if (infoDiv && model && mlModelInfoData[model]) {
+                infoDiv.style.display = 'block';
+                infoDiv.innerHTML = '<strong>' + mlModelInfoData[model].title + '</strong><br>' + mlModelInfoData[model].text;
+            } else if (infoDiv) {
+                infoDiv.style.display = 'none';
+            }
+            syncToSidebar(nodeId);
+        }
+
+        // =====================================================
         // FILE UPLOAD SIMULATION FUNCTIONS
         // =====================================================
 
@@ -4115,6 +4329,12 @@ Texto:
                 configBody.innerHTML = generateStateConfigContent(nodeId, nodeData);
             } else if (nodeType === 'transform') {
                 configBody.innerHTML = generateTransformConfigContent(nodeId, nodeData);
+            } else if (nodeType === 'branching') {
+                configBody.innerHTML = generateBranchingConfigContent(nodeId, nodeData);
+            } else if (nodeType === 'math') {
+                configBody.innerHTML = generateMathConfigContent(nodeId, nodeData);
+            } else if (nodeType === 'ml') {
+                configBody.innerHTML = generateMLConfigContent(nodeId, nodeData);
             } else {
                 configBody.innerHTML = generateDefaultConfigContent(nodeId, nodeData);
             }
@@ -4575,6 +4795,212 @@ Texto:
                     '<button class="icon-button" onclick="this.closest(\'.mapping-row\').remove()" style="width: 28px; height: 28px;">×</button>';
                 container.appendChild(row);
             }
+        }
+
+        // Generate Branching node config content
+        function generateBranchingConfigContent(nodeId, nodeData) {
+            const config = nodeData.config || {};
+            const branches = config.branches || ['Rama 1', 'Rama 2'];
+            return `
+                <div class="config-section">
+                    <div class="config-section-title">Configuración de ramas</div>
+                    <div class="form-group">
+                        <label class="form-label">Número de ramas paralelas</label>
+                        <input type="number" class="form-input" id="sidebarBranchCount" value="${config.branchCount || 2}" min="2" max="10" onchange="updateSidebarBranches('${nodeId}', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Estrategia de ejecución</label>
+                        <select class="form-select" id="sidebarBranchStrategy">
+                            <option value="parallel" ${config.strategy === 'parallel' ? 'selected' : ''}>⚡ Paralela - Todas a la vez</option>
+                            <option value="sequential" ${config.strategy === 'sequential' ? 'selected' : ''}>➡️ Secuencial - Una tras otra</option>
+                            <option value="priority" ${config.strategy === 'priority' ? 'selected' : ''}>🎯 Por Prioridad - Orden definido</option>
+                            <option value="race" ${config.strategy === 'race' ? 'selected' : ''}>🏁 Race - Primera que termine</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="config-section-title">Nombres de ramas</div>
+                    <div id="sidebarBranchList">
+                        ${branches.map((b, i) => `
+                            <div class="form-group" style="margin-bottom: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="padding: 4px 8px; background: #c6f6d5; border-radius: 4px; font-size: 11px; color: #22543d;">▸ ${i + 1}</span>
+                                    <input type="text" class="form-input" value="${b}" placeholder="Nombre rama ${i + 1}" style="flex: 1;">
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="config-section-title">Info de estrategia</div>
+                    <div style="padding: 12px; background: #e6fffa; border-radius: 8px; font-size: 12px; color: #234e52;">
+                        <strong id="strategyTitle">⚡ Paralela</strong>
+                        <p id="strategyDesc" style="margin-top: 6px;">Todas las ramas se ejecutan simultáneamente. Tiempo total = rama más lenta.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate Math node config content
+        function generateMathConfigContent(nodeId, nodeData) {
+            const config = nodeData.config || {};
+            return `
+                <div class="config-section">
+                    <div class="config-section-title">Fórmula matemática</div>
+                    <div class="form-group">
+                        <label class="form-label">Expresión</label>
+                        <input type="text" class="form-input" id="sidebarMathFormula" value="${config.formula || ''}" placeholder="(impacto * probabilidad) / 100" style="font-family: monospace;">
+                        <small style="color: #757575; font-size: 11px; display: block; margin-top: 6px;">Variables disponibles del nodo anterior</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Operadores rápidos</label>
+                        <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;">
+                            <button class="operator-btn-mini" onclick="insertSidebarMathOp('+')">+</button>
+                            <button class="operator-btn-mini" onclick="insertSidebarMathOp('-')">−</button>
+                            <button class="operator-btn-mini" onclick="insertSidebarMathOp('*')">×</button>
+                            <button class="operator-btn-mini" onclick="insertSidebarMathOp('/')">÷</button>
+                            <button class="operator-btn-mini" onclick="insertSidebarMathOp('^')">^</button>
+                            <button class="operator-btn-mini" onclick="insertSidebarMathOp('sqrt')">√</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="config-section-title">Campo de salida</div>
+                    <div class="form-group">
+                        <label class="form-label">Nombre del campo resultado</label>
+                        <input type="text" class="form-input" id="sidebarMathOutput" value="${config.outputField || 'resultado'}" placeholder="riesgo_calculado">
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="config-section-title">Ejemplos de fórmulas</div>
+                    <div style="padding: 12px; background: #feebc8; border-radius: 8px; font-size: 11px; color: #744210;">
+                        <code style="display: block; background: white; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px;">precio * cantidad</code>
+                        <code style="display: block; background: white; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px;">(impacto * probabilidad) / 100</code>
+                        <code style="display: block; background: white; padding: 4px 8px; border-radius: 4px;">sqrt(x^2 + y^2)</code>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate ML node config content
+        function generateMLConfigContent(nodeId, nodeData) {
+            const config = nodeData.config || {};
+            return `
+                <div class="config-section">
+                    <div class="config-section-title">Modelo de Machine Learning</div>
+                    <div class="form-group">
+                        <label class="form-label">Seleccionar modelo</label>
+                        <select class="form-select" id="sidebarMLModel" onchange="updateSidebarMLInfo(this.value)">
+                            <option value="">Seleccionar modelo...</option>
+                            <option value="risk_predictor" ${config.model === 'risk_predictor' ? 'selected' : ''}>🎯 Predictor de Riesgos</option>
+                            <option value="anomaly_detector" ${config.model === 'anomaly_detector' ? 'selected' : ''}>🔍 Detector de Anomalías</option>
+                            <option value="classifier" ${config.model === 'classifier' ? 'selected' : ''}>📊 Clasificador de Incidentes</option>
+                            <option value="regression" ${config.model === 'regression' ? 'selected' : ''}>📈 Regresión</option>
+                            <option value="clustering" ${config.model === 'clustering' ? 'selected' : ''}>🎲 Clustering</option>
+                        </select>
+                    </div>
+                    <div id="sidebarMLModelInfo" style="display: ${config.model ? 'block' : 'none'}; padding: 12px; background: #e6fffa; border-radius: 8px; margin-top: 10px; border-left: 4px solid #38b2ac;">
+                        <div style="font-weight: 600; color: #234e52; margin-bottom: 4px;" id="mlInfoTitle">-</div>
+                        <div style="font-size: 12px; color: #2c7a7b;" id="mlInfoDesc">-</div>
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="config-section-title">Parámetros</div>
+                    <div class="form-group">
+                        <label class="form-label">Nivel de confianza mínimo</label>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <input type="range" id="sidebarMLConfidence" min="0" max="100" value="${(config.confidence || 0.85) * 100}" style="flex: 1;" oninput="document.getElementById('sidebarMLConfVal').textContent = this.value + '%'">
+                            <span id="sidebarMLConfVal" style="font-weight: 600; color: #234e52; min-width: 40px;">${Math.round((config.confidence || 0.85) * 100)}%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Acción si confianza baja</label>
+                        <select class="form-select" id="sidebarMLLowConfAction">
+                            <option value="alert">🔔 Generar alerta</option>
+                            <option value="manual">👤 Revisión manual</option>
+                            <option value="skip">⏭️ Omitir predicción</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="config-section" id="sidebarClusterConfig" style="display: ${config.model === 'clustering' ? 'block' : 'none'};">
+                    <div class="config-section-title">Configuración de Clustering</div>
+                    <div class="form-group">
+                        <label class="form-label">Número de clusters</label>
+                        <input type="number" class="form-input" id="sidebarNumClusters" value="3" min="2" max="10">
+                    </div>
+                </div>
+
+                <div class="config-section">
+                    <div class="config-section-title">Variables de entrada (JSON)</div>
+                    <textarea class="form-textarea" id="sidebarMLInput" style="font-family: monospace; font-size: 11px;" placeholder='{"activos": 3, "severidad": "alta", "impacto": 8}'></textarea>
+                </div>
+            `;
+        }
+
+        function updateSidebarMLInfo(model) {
+            const infoDiv = document.getElementById('sidebarMLModelInfo');
+            const titleEl = document.getElementById('mlInfoTitle');
+            const descEl = document.getElementById('mlInfoDesc');
+            const clusterConfig = document.getElementById('sidebarClusterConfig');
+
+            const mlInfo = {
+                risk_predictor: { title: '🎯 Predictor de Riesgos', desc: 'Calcula la probabilidad de riesgo basándose en múltiples variables. Ideal para análisis preventivo.' },
+                anomaly_detector: { title: '🔍 Detector de Anomalías', desc: 'Identifica patrones inusuales en datos temporales o métricas. Utiliza Isolation Forest.' },
+                classifier: { title: '📊 Clasificador de Incidentes', desc: 'Categoriza automáticamente registros en clases predefinidas con alta precisión.' },
+                regression: { title: '📈 Regresión', desc: 'Predice valores numéricos continuos basándose en variables independientes.' },
+                clustering: { title: '🎲 Clustering', desc: 'Agrupa elementos similares en clusters. Útil para segmentación y análisis exploratorio.' }
+            };
+
+            if (model && mlInfo[model]) {
+                infoDiv.style.display = 'block';
+                titleEl.textContent = mlInfo[model].title;
+                descEl.textContent = mlInfo[model].desc;
+                clusterConfig.style.display = model === 'clustering' ? 'block' : 'none';
+            } else {
+                infoDiv.style.display = 'none';
+                clusterConfig.style.display = 'none';
+            }
+        }
+
+        function insertSidebarMathOp(op) {
+            const input = document.getElementById('sidebarMathFormula');
+            if (input) {
+                const cursorPos = input.selectionStart || input.value.length;
+                let insertion = op;
+                if (op === 'sqrt') insertion = 'sqrt()';
+                else if (op === '*') insertion = ' * ';
+                else if (op === '/') insertion = ' / ';
+                else if (op === '+' || op === '-') insertion = ' ' + op + ' ';
+                input.value = input.value.substring(0, cursorPos) + insertion + input.value.substring(cursorPos);
+                input.focus();
+            }
+        }
+
+        function updateSidebarBranches(nodeId, count) {
+            const numBranches = parseInt(count);
+            const branchList = document.getElementById('sidebarBranchList');
+            if (branchList) {
+                let html = '';
+                for (let i = 1; i <= numBranches; i++) {
+                    html += `
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="padding: 4px 8px; background: #c6f6d5; border-radius: 4px; font-size: 11px; color: #22543d;">▸ ${i}</span>
+                                <input type="text" class="form-input" value="Rama ${i}" placeholder="Nombre rama ${i}" style="flex: 1;">
+                            </div>
+                        </div>
+                    `;
+                }
+                branchList.innerHTML = html;
+            }
+            // Sync to canvas node
+            updateNodeBranchCount(nodeId, count);
         }
 
         // Generate default config content
