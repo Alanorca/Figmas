@@ -760,6 +760,23 @@
             color: #9d174d;
         }
 
+        /* Transform Config Sections - Show/Hide Animation */
+        .config-section.show {
+            display: block;
+            animation: fadeSlideIn 0.3s ease;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Right Sidebar Panel */
         .right-sidebar {
             width: 480px;
@@ -4789,13 +4806,24 @@ Texto:
                     <div class="form-group">
                         <label class="form-label">Operación</label>
                         <select class="form-select" id="sidebarTransformOp" onchange="updateTransformConfig('${nodeId}', this.value)">
-                            <option value="filter" ${config.transformType === 'filter' ? 'selected' : ''}>🔍 Filtrar registros</option>
+                            <option value="filter" ${config.transformType === 'filter' || !config.transformType ? 'selected' : ''}>🔍 Filtrar registros</option>
                             <option value="map" ${config.transformType === 'map' ? 'selected' : ''}>🔄 Mapear campos</option>
                             <option value="enrich" ${config.transformType === 'enrich' ? 'selected' : ''}>➕ Enriquecer datos</option>
                             <option value="aggregate" ${config.transformType === 'aggregate' ? 'selected' : ''}>📊 Agregar valores</option>
                             <option value="sort" ${config.transformType === 'sort' ? 'selected' : ''}>↕️ Ordenar</option>
                             <option value="deduplicate" ${config.transformType === 'deduplicate' ? 'selected' : ''}>🔃 Eliminar duplicados</option>
                         </select>
+                    </div>
+
+                    <!-- Info Banner - Shows description of selected operation -->
+                    <div id="transformInfoBanner-${nodeId}" style="padding: 12px; background: linear-gradient(135deg, #fdf4ff, #f3e5f5); border-radius: 8px; border-left: 3px solid #7b1fa2; margin-top: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 20px;">🔍</span>
+                            <div>
+                                <div style="font-weight: 600; color: #7b1fa2; font-size: 12px;">Filtrar registros</div>
+                                <div style="font-size: 11px; color: #64748b;">Selecciona solo los registros que cumplan la condición</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -5092,28 +5120,56 @@ Texto:
 
         // Helper function for transform config
         function updateTransformConfig(nodeId, operation) {
-            // Hide all configs
-            ['Filter', 'Map', 'Enrich', 'Agg', 'Sort', 'Deduplicate'].forEach(type => {
-                const el = document.getElementById('sidebar' + type + 'Config');
-                if (el) el.style.display = 'none';
-            });
-
-            // Show selected config
-            const configMap = {
-                'filter': 'Filter',
-                'map': 'Map',
-                'enrich': 'Enrich',
-                'aggregate': 'Agg',
-                'sort': 'Sort',
-                'deduplicate': 'Deduplicate'
+            // Hide all configs - similar to nodo_transformacion.html pattern
+            const configs = {
+                filter: document.getElementById('sidebarFilterConfig'),
+                map: document.getElementById('sidebarMapConfig'),
+                enrich: document.getElementById('sidebarEnrichConfig'),
+                aggregate: document.getElementById('sidebarAggConfig'),
+                sort: document.getElementById('sidebarSortConfig'),
+                deduplicate: document.getElementById('sidebarDeduplicateConfig')
             };
 
-            if (configMap[operation]) {
-                const el = document.getElementById('sidebar' + configMap[operation] + 'Config');
-                if (el) el.style.display = 'block';
+            // Hide all configurations
+            Object.values(configs).forEach(config => {
+                if (config) {
+                    config.style.display = 'none';
+                    config.classList.remove('show');
+                }
+            });
+
+            // Show the selected configuration
+            if (configs[operation]) {
+                configs[operation].style.display = 'block';
+                configs[operation].classList.add('show');
             }
 
-            // Update node summary
+            // Update operation info banner
+            const opInfo = {
+                'filter': { icon: '🔍', name: 'Filtrar registros', desc: 'Selecciona solo los registros que cumplan la condición' },
+                'map': { icon: '🔄', name: 'Mapear campos', desc: 'Renombra las columnas de origen a destino' },
+                'enrich': { icon: '➕', name: 'Enriquecer datos', desc: 'Crea nuevas columnas con valores calculados' },
+                'aggregate': { icon: '📊', name: 'Agregar valores', desc: 'Agrupa y calcula estadísticas (SUM, AVG, etc.)' },
+                'sort': { icon: '↕️', name: 'Ordenar', desc: 'Ordena los registros de forma ascendente o descendente' },
+                'deduplicate': { icon: '🔃', name: 'Eliminar duplicados', desc: 'Elimina registros repetidos según campos clave' }
+            };
+
+            const infoBanner = document.getElementById('transformInfoBanner-' + nodeId);
+            if (infoBanner && opInfo[operation]) {
+                const info = opInfo[operation];
+                infoBanner.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">${info.icon}</span>
+                        <div>
+                            <div style="font-weight: 600; color: #7b1fa2; font-size: 12px;">${info.name}</div>
+                            <div style="font-size: 11px; color: #64748b;">${info.desc}</div>
+                        </div>
+                    </div>
+                `;
+                infoBanner.style.display = 'block';
+            }
+
+            // Update node summary on the card
             const summaryEl = document.getElementById('transformSummary-' + nodeId);
             if (summaryEl) {
                 const opNames = {
@@ -5127,10 +5183,13 @@ Texto:
                 summaryEl.textContent = opNames[operation] + ' configurado';
             }
 
-            // Update node data
+            // Update node data store
             if (nodeDataStore[nodeId]) {
                 nodeDataStore[nodeId].config.transformType = operation;
             }
+
+            // Auto-execute preview to show results for selected operation
+            runTransformPreview(nodeId);
         }
 
         // Add mapping row for transform
