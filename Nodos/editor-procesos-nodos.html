@@ -5008,20 +5008,82 @@ Texto:
                     </div>
                 </div>
 
-                <!-- Preview -->
+                <!-- Preview Stats -->
                 <div class="config-section">
                     <div class="config-section-title">Vista previa de transformación</div>
-                    <div style="display: flex; gap: 12px;">
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
                         <div style="flex: 1; padding: 12px; background: #fafafa; border-radius: 8px; text-align: center;">
                             <div style="font-size: 11px; color: #757575;">Entrada</div>
-                            <div style="font-size: 20px; font-weight: 600; color: #1a1a1a;" id="sidebarTransformIn">1,250</div>
+                            <div style="font-size: 20px; font-weight: 600; color: #1a1a1a;" id="sidebarTransformIn-${nodeId}">8</div>
                             <div style="font-size: 10px; color: #757575;">registros</div>
                         </div>
                         <div style="display: flex; align-items: center; color: #7b1fa2; font-size: 20px;">→</div>
                         <div style="flex: 1; padding: 12px; background: #f0fdf4; border-radius: 8px; text-align: center;">
                             <div style="font-size: 11px; color: #757575;">Salida</div>
-                            <div style="font-size: 20px; font-weight: 600; color: #059669;" id="sidebarTransformOut">~450</div>
+                            <div style="font-size: 20px; font-weight: 600; color: #059669;" id="sidebarTransformOut-${nodeId}">8</div>
                             <div style="font-size: 10px; color: #757575;">registros</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Preview Tables -->
+                <div class="config-section">
+                    <div class="config-section-title" style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>📊 Datos de prueba</span>
+                        <button onclick="runTransformPreview('${nodeId}')" style="font-size: 10px; padding: 4px 10px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer;">▶ Ejecutar prueba</button>
+                    </div>
+
+                    <!-- Input Data Table -->
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase;">Datos de entrada</div>
+                        <div style="max-height: 180px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <thead style="background: #f8fafc; position: sticky; top: 0;">
+                                    <tr>
+                                        <th style="padding: 8px 6px; text-align: left; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #475569;">ID</th>
+                                        <th style="padding: 8px 6px; text-align: left; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Nombre</th>
+                                        <th style="padding: 8px 6px; text-align: right; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Monto</th>
+                                        <th style="padding: 8px 6px; text-align: left; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Estado</th>
+                                        <th style="padding: 8px 6px; text-align: left; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Fecha</th>
+                                        <th style="padding: 8px 6px; text-align: right; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inputDataTable-${nodeId}">
+                                    <tr style="background: white;"><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">1</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">Proyecto Alpha</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">$15,000</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 6px; background: #d1fae5; color: #065f46; border-radius: 4px; font-size: 10px;">Activo</span></td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">2024-01-15</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">25</td></tr>
+                                    <tr style="background: #fafafa;"><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">2</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">Proyecto Beta</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">$8,500</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 6px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 10px;">Pendiente</span></td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">2024-02-20</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">12</td></tr>
+                                    <tr style="background: white;"><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">3</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">Proyecto Gamma</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">$22,000</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 6px; background: #d1fae5; color: #065f46; border-radius: 4px; font-size: 10px;">Activo</span></td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">2024-01-10</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">40</td></tr>
+                                    <tr style="background: #fafafa;"><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">4</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">Proyecto Delta</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">$5,200</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 6px; background: #fee2e2; color: #991b1b; border-radius: 4px; font-size: 10px;">Cerrado</span></td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">2023-12-05</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">8</td></tr>
+                                    <tr style="background: white;"><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">5</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">Proyecto Alpha</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">$15,000</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 6px; background: #d1fae5; color: #065f46; border-radius: 4px; font-size: 10px;">Activo</span></td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">2024-01-15</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">25</td></tr>
+                                    <tr style="background: #fafafa;"><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">6</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">Proyecto Epsilon</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">$18,750</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 6px; background: #d1fae5; color: #065f46; border-radius: 4px; font-size: 10px;">Activo</span></td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">2024-03-01</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">30</td></tr>
+                                    <tr style="background: white;"><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">7</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">Proyecto Zeta</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">$3,400</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 6px; background: #fef3c7; color: #92400e; border-radius: 4px; font-size: 10px;">Pendiente</span></td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">2024-02-28</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">5</td></tr>
+                                    <tr style="background: #fafafa;"><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">8</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">Proyecto Eta</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">$12,300</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 6px; background: #d1fae5; color: #065f46; border-radius: 4px; font-size: 10px;">Activo</span></td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9;">2024-01-25</td><td style="padding: 6px; border-bottom: 1px solid #f1f5f9; text-align: right;">18</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Output Data Table -->
+                    <div>
+                        <div style="font-size: 11px; font-weight: 600; color: #059669; margin-bottom: 6px; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                            <span>✓ Resultado de la transformación</span>
+                            <span id="transformResultBadge-${nodeId}" style="padding: 2px 8px; background: #d1fae5; color: #065f46; border-radius: 10px; font-size: 10px;">8 registros</span>
+                        </div>
+                        <div id="outputDataContainer-${nodeId}" style="max-height: 180px; overflow: auto; border: 2px solid #86efac; border-radius: 6px; background: #f0fdf4;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                <thead style="background: #d1fae5; position: sticky; top: 0;">
+                                    <tr id="outputHeaderRow-${nodeId}">
+                                        <th style="padding: 8px 6px; text-align: left; border-bottom: 1px solid #86efac; font-weight: 600; color: #065f46;">ID</th>
+                                        <th style="padding: 8px 6px; text-align: left; border-bottom: 1px solid #86efac; font-weight: 600; color: #065f46;">Nombre</th>
+                                        <th style="padding: 8px 6px; text-align: right; border-bottom: 1px solid #86efac; font-weight: 600; color: #065f46;">Monto</th>
+                                        <th style="padding: 8px 6px; text-align: left; border-bottom: 1px solid #86efac; font-weight: 600; color: #065f46;">Estado</th>
+                                        <th style="padding: 8px 6px; text-align: left; border-bottom: 1px solid #86efac; font-weight: 600; color: #065f46;">Fecha</th>
+                                        <th style="padding: 8px 6px; text-align: right; border-bottom: 1px solid #86efac; font-weight: 600; color: #065f46;">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="outputDataTable-${nodeId}">
+                                    <tr><td colspan="6" style="padding: 20px; text-align: center; color: #6b7280; font-style: italic;">Haz clic en "Ejecutar prueba" para ver el resultado</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -5266,6 +5328,213 @@ Texto:
                 textarea.addEventListener('input', updateFullscreenPreview);
             }
         });
+
+        // =====================================================
+        // TRANSFORM PREVIEW - TEST DATA AND SIMULATION
+        // =====================================================
+
+        // Sample test data
+        const transformTestData = [
+            { id: 1, nombre: 'Proyecto Alpha', monto: 15000, estado: 'Activo', fecha: '2024-01-15', cantidad: 25 },
+            { id: 2, nombre: 'Proyecto Beta', monto: 8500, estado: 'Pendiente', fecha: '2024-02-20', cantidad: 12 },
+            { id: 3, nombre: 'Proyecto Gamma', monto: 22000, estado: 'Activo', fecha: '2024-01-10', cantidad: 40 },
+            { id: 4, nombre: 'Proyecto Delta', monto: 5200, estado: 'Cerrado', fecha: '2023-12-05', cantidad: 8 },
+            { id: 5, nombre: 'Proyecto Alpha', monto: 15000, estado: 'Activo', fecha: '2024-01-15', cantidad: 25 },
+            { id: 6, nombre: 'Proyecto Epsilon', monto: 18750, estado: 'Activo', fecha: '2024-03-01', cantidad: 30 },
+            { id: 7, nombre: 'Proyecto Zeta', monto: 3400, estado: 'Pendiente', fecha: '2024-02-28', cantidad: 5 },
+            { id: 8, nombre: 'Proyecto Eta', monto: 12300, estado: 'Activo', fecha: '2024-01-25', cantidad: 18 }
+        ];
+
+        // Get status badge HTML
+        function getStatusBadge(estado) {
+            const colors = {
+                'Activo': { bg: '#d1fae5', color: '#065f46' },
+                'Pendiente': { bg: '#fef3c7', color: '#92400e' },
+                'Cerrado': { bg: '#fee2e2', color: '#991b1b' }
+            };
+            const c = colors[estado] || { bg: '#e2e8f0', color: '#475569' };
+            return `<span style="padding: 2px 6px; background: ${c.bg}; color: ${c.color}; border-radius: 4px; font-size: 10px;">${estado}</span>`;
+        }
+
+        // Format money
+        function formatMoney(num) {
+            return '$' + num.toLocaleString();
+        }
+
+        // Run transform preview simulation
+        function runTransformPreview(nodeId) {
+            const opSelect = document.getElementById('sidebarTransformOp');
+            const operation = opSelect ? opSelect.value : 'filter';
+
+            let resultData = [];
+            let resultHeaders = [];
+            let resultMessage = '';
+
+            switch(operation) {
+                case 'filter':
+                    // Filter: Show only Activo status (simulating estado = 'Activo')
+                    resultData = transformTestData.filter(row => row.estado === 'Activo');
+                    resultHeaders = ['ID', 'Nombre', 'Monto', 'Estado', 'Fecha', 'Cantidad'];
+                    resultMessage = `Filtrado: ${resultData.length} registros donde estado = 'Activo'`;
+                    break;
+
+                case 'map':
+                    // Map: Rename columns
+                    resultData = transformTestData.map(row => ({
+                        id: row.id,
+                        project_name: row.nombre,
+                        amount: row.monto,
+                        status: row.estado,
+                        date: row.fecha,
+                        qty: row.cantidad
+                    }));
+                    resultHeaders = ['ID', 'project_name', 'amount', 'status', 'date', 'qty'];
+                    resultMessage = `Mapeado: Columnas renombradas (nombre→project_name, monto→amount, etc.)`;
+                    break;
+
+                case 'enrich':
+                    // Enrich: Add calculated column (total = monto * cantidad / 100)
+                    resultData = transformTestData.map(row => ({
+                        ...row,
+                        total: Math.round(row.monto * row.cantidad / 100)
+                    }));
+                    resultHeaders = ['ID', 'Nombre', 'Monto', 'Cantidad', 'Total (calculado)'];
+                    resultMessage = `Enriquecido: Nueva columna "total" = monto × cantidad / 100`;
+                    break;
+
+                case 'aggregate':
+                    // Aggregate: Sum monto by estado
+                    const grouped = {};
+                    transformTestData.forEach(row => {
+                        if (!grouped[row.estado]) {
+                            grouped[row.estado] = { estado: row.estado, total_monto: 0, count: 0, avg_cantidad: 0 };
+                        }
+                        grouped[row.estado].total_monto += row.monto;
+                        grouped[row.estado].count++;
+                        grouped[row.estado].avg_cantidad += row.cantidad;
+                    });
+                    Object.values(grouped).forEach(g => {
+                        g.avg_cantidad = Math.round(g.avg_cantidad / g.count);
+                    });
+                    resultData = Object.values(grouped);
+                    resultHeaders = ['Estado', 'SUM(Monto)', 'COUNT', 'AVG(Cantidad)'];
+                    resultMessage = `Agregado: Agrupado por estado con SUM, COUNT y AVG`;
+                    break;
+
+                case 'sort':
+                    // Sort: Order by monto descending
+                    resultData = [...transformTestData].sort((a, b) => b.monto - a.monto);
+                    resultHeaders = ['ID', 'Nombre', 'Monto ↓', 'Estado', 'Fecha', 'Cantidad'];
+                    resultMessage = `Ordenado: Por monto en orden descendente`;
+                    break;
+
+                case 'deduplicate':
+                    // Deduplicate: Remove duplicates by nombre
+                    const seen = new Set();
+                    resultData = transformTestData.filter(row => {
+                        if (seen.has(row.nombre)) return false;
+                        seen.add(row.nombre);
+                        return true;
+                    });
+                    resultHeaders = ['ID', 'Nombre', 'Monto', 'Estado', 'Fecha', 'Cantidad'];
+                    resultMessage = `Deduplicado: Eliminado 1 duplicado (Proyecto Alpha)`;
+                    break;
+
+                default:
+                    resultData = transformTestData;
+                    resultHeaders = ['ID', 'Nombre', 'Monto', 'Estado', 'Fecha', 'Cantidad'];
+            }
+
+            // Update output count
+            const outCount = document.getElementById('sidebarTransformOut-' + nodeId);
+            if (outCount) outCount.textContent = resultData.length;
+
+            const badge = document.getElementById('transformResultBadge-' + nodeId);
+            if (badge) badge.textContent = resultData.length + ' registros';
+
+            // Update header row
+            const headerRow = document.getElementById('outputHeaderRow-' + nodeId);
+            if (headerRow) {
+                headerRow.innerHTML = resultHeaders.map(h =>
+                    `<th style="padding: 8px 6px; text-align: ${h.includes('Monto') || h.includes('Cantidad') || h.includes('Total') || h.includes('SUM') || h.includes('COUNT') || h.includes('AVG') ? 'right' : 'left'}; border-bottom: 1px solid #86efac; font-weight: 600; color: #065f46;">${h}</th>`
+                ).join('');
+            }
+
+            // Update output table
+            const outputTable = document.getElementById('outputDataTable-' + nodeId);
+            if (outputTable) {
+                if (operation === 'aggregate') {
+                    // Special rendering for aggregate results
+                    outputTable.innerHTML = resultData.map((row, i) => `
+                        <tr style="background: ${i % 2 === 0 ? 'white' : '#f0fdf4'};">
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${getStatusBadge(row.estado)}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; font-weight: 600; color: #059669;">${formatMoney(row.total_monto)}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${row.count}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${row.avg_cantidad}</td>
+                        </tr>
+                    `).join('');
+                } else if (operation === 'enrich') {
+                    // Show enriched data with new column highlighted
+                    outputTable.innerHTML = resultData.map((row, i) => `
+                        <tr style="background: ${i % 2 === 0 ? 'white' : '#f0fdf4'};">
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.id}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.nombre}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${formatMoney(row.monto)}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${row.cantidad}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; font-weight: 600; color: #7b1fa2; background: #f3e5f5;">${formatMoney(row.total)}</td>
+                        </tr>
+                    `).join('');
+                } else if (operation === 'map') {
+                    // Show mapped data with new column names
+                    outputTable.innerHTML = resultData.map((row, i) => `
+                        <tr style="background: ${i % 2 === 0 ? 'white' : '#f0fdf4'};">
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.id}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; color: #7b1fa2;">${row.project_name}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; color: #7b1fa2;">${formatMoney(row.amount)}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${getStatusBadge(row.status)}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; color: #7b1fa2;">${row.date}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; color: #7b1fa2;">${row.qty}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    // Standard rendering for filter, sort, deduplicate
+                    outputTable.innerHTML = resultData.map((row, i) => `
+                        <tr style="background: ${i % 2 === 0 ? 'white' : '#f0fdf4'};">
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.id}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.nombre}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${formatMoney(row.monto)}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${getStatusBadge(row.estado)}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.fecha}</td>
+                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${row.cantidad}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Show result message
+                const container = document.getElementById('outputDataContainer-' + nodeId);
+                if (container) {
+                    // Add result message banner
+                    let banner = container.querySelector('.result-banner');
+                    if (!banner) {
+                        banner = document.createElement('div');
+                        banner.className = 'result-banner';
+                        banner.style.cssText = 'padding: 8px 12px; background: #059669; color: white; font-size: 11px; font-weight: 500;';
+                        container.insertBefore(banner, container.firstChild);
+                    }
+                    banner.innerHTML = '✓ ' + resultMessage;
+                }
+            }
+
+            // Flash effect to show update
+            const outputContainer = document.getElementById('outputDataContainer-' + nodeId);
+            if (outputContainer) {
+                outputContainer.style.transition = 'box-shadow 0.3s';
+                outputContainer.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.4)';
+                setTimeout(() => {
+                    outputContainer.style.boxShadow = 'none';
+                }, 500);
+            }
+        }
 
         // Generate Branching node config content
         function generateBranchingConfigContent(nodeId, nodeData) {
