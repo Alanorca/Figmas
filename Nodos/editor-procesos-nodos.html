@@ -5422,158 +5422,187 @@ Texto:
 
         // Run transform preview simulation
         function runTransformPreview(nodeId) {
-            const opSelect = document.getElementById('sidebarTransformOp');
-            const operation = opSelect ? opSelect.value : 'filter';
+            var opSelect = document.getElementById('sidebarTransformOp');
+            var operation = opSelect ? opSelect.value : 'filter';
 
-            let resultData = [];
-            let resultHeaders = [];
-            let resultMessage = '';
+            var resultData = [];
+            var resultHeaders = [];
+            var resultMessage = '';
+            var grouped, seen, i, row, sortedData;
 
             switch(operation) {
-                case 'filter':
+                case 'filter': {
                     // Filter: Show only Activo status (simulating estado = 'Activo')
-                    resultData = transformTestData.filter(row => row.estado === 'Activo');
+                    resultData = transformTestData.filter(function(row) { return row.estado === 'Activo'; });
                     resultHeaders = ['ID', 'Nombre', 'Monto', 'Estado', 'Fecha', 'Cantidad'];
-                    resultMessage = `Filtrado: ${resultData.length} registros donde estado = 'Activo'`;
+                    resultMessage = 'Filtrado: ' + resultData.length + ' registros donde estado = \'Activo\'';
                     break;
+                }
 
-                case 'map':
+                case 'map': {
                     // Map: Rename columns
-                    resultData = transformTestData.map(row => ({
-                        id: row.id,
-                        project_name: row.nombre,
-                        amount: row.monto,
-                        status: row.estado,
-                        date: row.fecha,
-                        qty: row.cantidad
-                    }));
+                    resultData = transformTestData.map(function(row) {
+                        return {
+                            id: row.id,
+                            project_name: row.nombre,
+                            amount: row.monto,
+                            status: row.estado,
+                            date: row.fecha,
+                            qty: row.cantidad
+                        };
+                    });
                     resultHeaders = ['ID', 'project_name', 'amount', 'status', 'date', 'qty'];
-                    resultMessage = `Mapeado: Columnas renombradas (nombre→project_name, monto→amount, etc.)`;
+                    resultMessage = 'Mapeado: Columnas renombradas (nombre→project_name, monto→amount, etc.)';
                     break;
+                }
 
-                case 'enrich':
+                case 'enrich': {
                     // Enrich: Add calculated column (total = monto * cantidad / 100)
-                    resultData = transformTestData.map(row => ({
-                        ...row,
-                        total: Math.round(row.monto * row.cantidad / 100)
-                    }));
+                    resultData = transformTestData.map(function(row) {
+                        return {
+                            id: row.id,
+                            nombre: row.nombre,
+                            monto: row.monto,
+                            estado: row.estado,
+                            fecha: row.fecha,
+                            cantidad: row.cantidad,
+                            total: Math.round(row.monto * row.cantidad / 100)
+                        };
+                    });
                     resultHeaders = ['ID', 'Nombre', 'Monto', 'Cantidad', 'Total (calculado)'];
-                    resultMessage = `Enriquecido: Nueva columna "total" = monto × cantidad / 100`;
+                    resultMessage = 'Enriquecido: Nueva columna "total" = monto × cantidad / 100';
                     break;
+                }
 
-                case 'aggregate':
+                case 'aggregate': {
                     // Aggregate: Sum monto by estado
-                    const grouped = {};
-                    transformTestData.forEach(row => {
+                    grouped = {};
+                    for (i = 0; i < transformTestData.length; i++) {
+                        row = transformTestData[i];
                         if (!grouped[row.estado]) {
                             grouped[row.estado] = { estado: row.estado, total_monto: 0, count: 0, avg_cantidad: 0 };
                         }
                         grouped[row.estado].total_monto += row.monto;
                         grouped[row.estado].count++;
                         grouped[row.estado].avg_cantidad += row.cantidad;
-                    });
-                    Object.values(grouped).forEach(g => {
-                        g.avg_cantidad = Math.round(g.avg_cantidad / g.count);
-                    });
-                    resultData = Object.values(grouped);
+                    }
+                    var groupedValues = Object.values(grouped);
+                    for (i = 0; i < groupedValues.length; i++) {
+                        groupedValues[i].avg_cantidad = Math.round(groupedValues[i].avg_cantidad / groupedValues[i].count);
+                    }
+                    resultData = groupedValues;
                     resultHeaders = ['Estado', 'SUM(Monto)', 'COUNT', 'AVG(Cantidad)'];
-                    resultMessage = `Agregado: Agrupado por estado con SUM, COUNT y AVG`;
+                    resultMessage = 'Agregado: Agrupado por estado con SUM, COUNT y AVG';
                     break;
+                }
 
-                case 'sort':
+                case 'sort': {
                     // Sort: Order by monto descending
-                    resultData = [...transformTestData].sort((a, b) => b.monto - a.monto);
+                    sortedData = transformTestData.slice();
+                    sortedData.sort(function(a, b) { return b.monto - a.monto; });
+                    resultData = sortedData;
                     resultHeaders = ['ID', 'Nombre', 'Monto ↓', 'Estado', 'Fecha', 'Cantidad'];
-                    resultMessage = `Ordenado: Por monto en orden descendente`;
+                    resultMessage = 'Ordenado: Por monto en orden descendente';
                     break;
+                }
 
-                case 'deduplicate':
+                case 'deduplicate': {
                     // Deduplicate: Remove duplicates by nombre
-                    const seen = new Set();
-                    resultData = transformTestData.filter(row => {
-                        if (seen.has(row.nombre)) return false;
-                        seen.add(row.nombre);
-                        return true;
-                    });
+                    seen = {};
+                    resultData = [];
+                    for (i = 0; i < transformTestData.length; i++) {
+                        row = transformTestData[i];
+                        if (!seen[row.nombre]) {
+                            seen[row.nombre] = true;
+                            resultData.push(row);
+                        }
+                    }
                     resultHeaders = ['ID', 'Nombre', 'Monto', 'Estado', 'Fecha', 'Cantidad'];
-                    resultMessage = `Deduplicado: Eliminado 1 duplicado (Proyecto Alpha)`;
+                    resultMessage = 'Deduplicado: Eliminado 1 duplicado (Proyecto Alpha)';
                     break;
+                }
 
-                default:
+                default: {
                     resultData = transformTestData;
                     resultHeaders = ['ID', 'Nombre', 'Monto', 'Estado', 'Fecha', 'Cantidad'];
+                }
             }
 
             // Update output count
-            const outCount = document.getElementById('sidebarTransformOut-' + nodeId);
+            var outCount = document.getElementById('sidebarTransformOut-' + nodeId);
             if (outCount) outCount.textContent = resultData.length;
 
-            const badge = document.getElementById('transformResultBadge-' + nodeId);
+            var badge = document.getElementById('transformResultBadge-' + nodeId);
             if (badge) badge.textContent = resultData.length + ' registros';
 
             // Update header row
-            const headerRow = document.getElementById('outputHeaderRow-' + nodeId);
+            var headerRow = document.getElementById('outputHeaderRow-' + nodeId);
             if (headerRow) {
-                headerRow.innerHTML = resultHeaders.map(h =>
-                    `<th style="padding: 8px 6px; text-align: ${h.includes('Monto') || h.includes('Cantidad') || h.includes('Total') || h.includes('SUM') || h.includes('COUNT') || h.includes('AVG') ? 'right' : 'left'}; border-bottom: 1px solid #86efac; font-weight: 600; color: #065f46;">${h}</th>`
-                ).join('');
+                headerRow.innerHTML = resultHeaders.map(function(h) {
+                    var align = (h.indexOf('Monto') >= 0 || h.indexOf('Cantidad') >= 0 || h.indexOf('Total') >= 0 || h.indexOf('SUM') >= 0 || h.indexOf('COUNT') >= 0 || h.indexOf('AVG') >= 0) ? 'right' : 'left';
+                    return '<th style="padding: 8px 6px; text-align: ' + align + '; border-bottom: 1px solid #86efac; font-weight: 600; color: #065f46;">' + h + '</th>';
+                }).join('');
             }
 
             // Update output table
-            const outputTable = document.getElementById('outputDataTable-' + nodeId);
+            var outputTable = document.getElementById('outputDataTable-' + nodeId);
             if (outputTable) {
                 if (operation === 'aggregate') {
                     // Special rendering for aggregate results
-                    outputTable.innerHTML = resultData.map((row, i) => `
-                        <tr style="background: ${i % 2 === 0 ? 'white' : '#f0fdf4'};">
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${getStatusBadge(row.estado)}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; font-weight: 600; color: #059669;">${formatMoney(row.total_monto)}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${row.count}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${row.avg_cantidad}</td>
-                        </tr>
-                    `).join('');
+                    outputTable.innerHTML = resultData.map(function(row, i) {
+                        var bg = i % 2 === 0 ? 'white' : '#f0fdf4';
+                        return '<tr style="background: ' + bg + ';">' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5;">' + getStatusBadge(row.estado) + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; font-weight: 600; color: #059669;">' + formatMoney(row.total_monto) + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">' + row.count + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">' + row.avg_cantidad + '</td>' +
+                            '</tr>';
+                    }).join('');
                 } else if (operation === 'enrich') {
                     // Show enriched data with new column highlighted
-                    outputTable.innerHTML = resultData.map((row, i) => `
-                        <tr style="background: ${i % 2 === 0 ? 'white' : '#f0fdf4'};">
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.id}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.nombre}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${formatMoney(row.monto)}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${row.cantidad}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; font-weight: 600; color: #7b1fa2; background: #f3e5f5;">${formatMoney(row.total)}</td>
-                        </tr>
-                    `).join('');
+                    outputTable.innerHTML = resultData.map(function(row, i) {
+                        var bg = i % 2 === 0 ? 'white' : '#f0fdf4';
+                        return '<tr style="background: ' + bg + ';">' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5;">' + row.id + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5;">' + row.nombre + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">' + formatMoney(row.monto) + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">' + row.cantidad + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; font-weight: 600; color: #7b1fa2; background: #f3e5f5;">' + formatMoney(row.total) + '</td>' +
+                            '</tr>';
+                    }).join('');
                 } else if (operation === 'map') {
                     // Show mapped data with new column names
-                    outputTable.innerHTML = resultData.map((row, i) => `
-                        <tr style="background: ${i % 2 === 0 ? 'white' : '#f0fdf4'};">
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.id}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; color: #7b1fa2;">${row.project_name}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; color: #7b1fa2;">${formatMoney(row.amount)}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${getStatusBadge(row.status)}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; color: #7b1fa2;">${row.date}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; color: #7b1fa2;">${row.qty}</td>
-                        </tr>
-                    `).join('');
+                    outputTable.innerHTML = resultData.map(function(row, i) {
+                        var bg = i % 2 === 0 ? 'white' : '#f0fdf4';
+                        return '<tr style="background: ' + bg + ';">' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5;">' + row.id + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; color: #7b1fa2;">' + row.project_name + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; color: #7b1fa2;">' + formatMoney(row.amount) + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5;">' + getStatusBadge(row.status) + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; color: #7b1fa2;">' + row.date + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right; color: #7b1fa2;">' + row.qty + '</td>' +
+                            '</tr>';
+                    }).join('');
                 } else {
                     // Standard rendering for filter, sort, deduplicate
-                    outputTable.innerHTML = resultData.map((row, i) => `
-                        <tr style="background: ${i % 2 === 0 ? 'white' : '#f0fdf4'};">
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.id}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.nombre}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${formatMoney(row.monto)}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${getStatusBadge(row.estado)}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5;">${row.fecha}</td>
-                            <td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">${row.cantidad}</td>
-                        </tr>
-                    `).join('');
+                    outputTable.innerHTML = resultData.map(function(row, i) {
+                        var bg = i % 2 === 0 ? 'white' : '#f0fdf4';
+                        return '<tr style="background: ' + bg + ';">' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5;">' + row.id + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5;">' + row.nombre + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">' + formatMoney(row.monto) + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5;">' + getStatusBadge(row.estado) + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5;">' + row.fecha + '</td>' +
+                            '<td style="padding: 6px; border-bottom: 1px solid #d1fae5; text-align: right;">' + row.cantidad + '</td>' +
+                            '</tr>';
+                    }).join('');
                 }
 
                 // Show result message
-                const container = document.getElementById('outputDataContainer-' + nodeId);
+                var container = document.getElementById('outputDataContainer-' + nodeId);
                 if (container) {
                     // Add result message banner
-                    let banner = container.querySelector('.result-banner');
+                    var banner = container.querySelector('.result-banner');
                     if (!banner) {
                         banner = document.createElement('div');
                         banner.className = 'result-banner';
@@ -5585,11 +5614,11 @@ Texto:
             }
 
             // Flash effect to show update
-            const outputContainer = document.getElementById('outputDataContainer-' + nodeId);
+            var outputContainer = document.getElementById('outputDataContainer-' + nodeId);
             if (outputContainer) {
                 outputContainer.style.transition = 'box-shadow 0.3s';
                 outputContainer.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.4)';
-                setTimeout(() => {
+                setTimeout(function() {
                     outputContainer.style.boxShadow = 'none';
                 }, 500);
             }
