@@ -591,6 +591,175 @@
             margin-right: 8px;
         }
 
+        /* Fullscreen Editor Modal */
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-modal.hidden {
+            display: none;
+        }
+
+        .fullscreen-editor-container {
+            width: 90vw;
+            height: 85vh;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .fullscreen-editor-header {
+            padding: 16px 24px;
+            background: #1a1a1a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .fullscreen-editor-title {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .fullscreen-editor-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .fullscreen-editor-sidebar {
+            width: 280px;
+            background: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .fullscreen-editor-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .fullscreen-textarea {
+            flex: 1;
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        .fullscreen-textarea:focus {
+            outline: none;
+            border-color: #7b1fa2;
+            box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.1);
+        }
+
+        .fullscreen-editor-footer {
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Field Tree Selector */
+        .field-tree {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .field-tree-header {
+            padding: 10px 12px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .field-tree-item {
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .field-tree-item:last-child {
+            border-bottom: none;
+        }
+
+        .field-tree-item:hover {
+            background: #f0fdf4;
+        }
+
+        .field-tree-item.selected {
+            background: #d1fae5;
+        }
+
+        .field-tree-item input[type="checkbox"] {
+            margin: 0;
+        }
+
+        .field-type-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .field-type-badge.string {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .field-type-badge.number {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .field-type-badge.date {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .field-type-badge.boolean {
+            background: #fce7f3;
+            color: #9d174d;
+        }
+
         /* Right Sidebar Panel */
         .right-sidebar {
             width: 480px;
@@ -4630,9 +4799,62 @@ Texto:
                     </div>
                 </div>
 
+                <!-- Field Selector Tree -->
+                <div class="config-section">
+                    <div class="config-section-title" style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>Campos de entrada</span>
+                        <button onclick="toggleAllFields('${nodeId}')" style="font-size: 10px; padding: 4px 8px; background: #f3e5f5; border: 1px solid #e1bee7; border-radius: 4px; cursor: pointer; color: #7b1fa2;">Seleccionar todos</button>
+                    </div>
+                    <div class="field-tree" id="sidebarFieldTree-${nodeId}">
+                        <div class="field-tree-header">
+                            <span>📁 Propiedades disponibles</span>
+                            <span style="font-size: 10px; color: #94a3b8;" id="fieldCount-${nodeId}">0 seleccionados</span>
+                        </div>
+                        <div class="field-tree-item">
+                            <input type="checkbox" id="field-nombre-${nodeId}" checked onchange="updateFieldCount('${nodeId}')">
+                            <span style="color: #7b1fa2;">📄</span>
+                            <span style="flex: 1; font-size: 13px;">nombre</span>
+                            <span class="field-type-badge string">string</span>
+                        </div>
+                        <div class="field-tree-item">
+                            <input type="checkbox" id="field-monto-${nodeId}" checked onchange="updateFieldCount('${nodeId}')">
+                            <span style="color: #7b1fa2;">🔢</span>
+                            <span style="flex: 1; font-size: 13px;">monto</span>
+                            <span class="field-type-badge number">number</span>
+                        </div>
+                        <div class="field-tree-item">
+                            <input type="checkbox" id="field-fecha-${nodeId}" checked onchange="updateFieldCount('${nodeId}')">
+                            <span style="color: #7b1fa2;">📅</span>
+                            <span style="flex: 1; font-size: 13px;">fecha</span>
+                            <span class="field-type-badge date">date</span>
+                        </div>
+                        <div class="field-tree-item">
+                            <input type="checkbox" id="field-precio-${nodeId}" onchange="updateFieldCount('${nodeId}')">
+                            <span style="color: #7b1fa2;">🔢</span>
+                            <span style="flex: 1; font-size: 13px;">precio</span>
+                            <span class="field-type-badge number">number</span>
+                        </div>
+                        <div class="field-tree-item">
+                            <input type="checkbox" id="field-cantidad-${nodeId}" onchange="updateFieldCount('${nodeId}')">
+                            <span style="color: #7b1fa2;">🔢</span>
+                            <span style="flex: 1; font-size: 13px;">cantidad</span>
+                            <span class="field-type-badge number">number</span>
+                        </div>
+                        <div class="field-tree-item">
+                            <input type="checkbox" id="field-estado-${nodeId}" onchange="updateFieldCount('${nodeId}')">
+                            <span style="color: #7b1fa2;">📄</span>
+                            <span style="flex: 1; font-size: 13px;">estado</span>
+                            <span class="field-type-badge string">string</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Filter Config -->
                 <div class="config-section" id="sidebarFilterConfig" style="display: ${config.transformType === 'filter' || !config.transformType ? 'block' : 'none'};">
-                    <div class="config-section-title">Regla de filtrado</div>
+                    <div class="config-section-title" style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>Regla de filtrado</span>
+                        <button onclick="openFullscreenEditor('${nodeId}', 'filter')" style="font-size: 10px; padding: 4px 8px; background: #7b1fa2; color: white; border: none; border-radius: 4px; cursor: pointer;">⛶ Pantalla completa</button>
+                    </div>
                     <div class="form-group">
                         <input type="text" class="form-input" id="sidebarFilterRule" value="${config.filterRule || ''}" placeholder="prioridad = 'Alta' AND estado != 'Cerrado'">
                         <small style="color: #757575; font-size: 11px; display: block; margin-top: 6px;">Usa sintaxis SQL o expresiones lógicas</small>
@@ -4669,15 +4891,29 @@ Texto:
 
                 <!-- Enrich Config -->
                 <div class="config-section" id="sidebarEnrichConfig" style="display: ${config.transformType === 'enrich' ? 'block' : 'none'};">
-                    <div class="config-section-title">Enriquecer datos</div>
+                    <div class="config-section-title" style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>Enriquecer datos</span>
+                        <button onclick="openFullscreenEditor('${nodeId}', 'enrich')" style="font-size: 10px; padding: 4px 8px; background: #7b1fa2; color: white; border: none; border-radius: 4px; cursor: pointer;">⛶ Pantalla completa</button>
+                    </div>
                     <div class="form-group">
                         <label class="form-label">Nueva columna</label>
                         <input type="text" class="form-input" id="sidebarNewColumn" value="${config.newColumn || ''}" placeholder="total">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Fórmula</label>
-                        <input type="text" class="form-input" id="sidebarFormula" value="${config.formula || ''}" placeholder="precio * cantidad">
+                        <input type="text" class="form-input" id="sidebarFormula" value="${config.formula || ''}" placeholder="precio * cantidad" style="font-family: monospace;">
                         <small style="color: #757575; font-size: 11px; display: block; margin-top: 6px;">Usa nombres de campos existentes</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Operadores rápidos</label>
+                        <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px;">
+                            <button class="operator-btn-mini" onclick="insertToEnrichFormula('+')">+</button>
+                            <button class="operator-btn-mini" onclick="insertToEnrichFormula('-')">−</button>
+                            <button class="operator-btn-mini" onclick="insertToEnrichFormula('*')">×</button>
+                            <button class="operator-btn-mini" onclick="insertToEnrichFormula('/')">÷</button>
+                            <button class="operator-btn-mini" onclick="insertToEnrichFormula('^')">^</button>
+                            <button class="operator-btn-mini" onclick="insertToEnrichFormula('SQRT()')">√</button>
+                        </div>
                     </div>
                 </div>
 
@@ -4692,15 +4928,36 @@ Texto:
                             <option value="count">COUNT - Contar</option>
                             <option value="min">MIN - Mínimo</option>
                             <option value="max">MAX - Máximo</option>
+                            <option value="stdev">STDEV - Desviación estándar</option>
+                            <option value="variance">VAR - Varianza</option>
+                            <option value="median">MEDIAN - Mediana</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Campo a agregar</label>
-                        <input type="text" class="form-input" id="sidebarAggField" value="" placeholder="ventas">
+                        <select class="form-select" id="sidebarAggField">
+                            <option value="">Seleccionar campo...</option>
+                            <option value="monto">monto (number)</option>
+                            <option value="precio">precio (number)</option>
+                            <option value="cantidad">cantidad (number)</option>
+                            <option value="impacto">impacto (number)</option>
+                            <option value="probabilidad">probabilidad (number)</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Agrupar por</label>
-                        <input type="text" class="form-input" id="sidebarGroupBy" value="" placeholder="mes, region">
+                        <select class="form-select" id="sidebarGroupBy" multiple style="min-height: 80px;">
+                            <option value="nombre">nombre</option>
+                            <option value="estado">estado</option>
+                            <option value="fecha">fecha</option>
+                            <option value="categoria">categoria</option>
+                            <option value="region">region</option>
+                        </select>
+                        <small style="color: #757575; font-size: 11px; display: block; margin-top: 6px;">Ctrl+Click para selección múltiple</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Guardar resultado en</label>
+                        <input type="text" class="form-input" id="sidebarAggOutput" value="" placeholder="total_ventas">
                     </div>
                 </div>
 
@@ -4709,13 +4966,44 @@ Texto:
                     <div class="config-section-title">Ordenar</div>
                     <div class="form-group">
                         <label class="form-label">Campo</label>
-                        <input type="text" class="form-input" id="sidebarSortField" value="" placeholder="fecha">
+                        <select class="form-select" id="sidebarSortField">
+                            <option value="">Seleccionar campo...</option>
+                            <option value="nombre">nombre</option>
+                            <option value="monto">monto</option>
+                            <option value="fecha">fecha</option>
+                            <option value="precio">precio</option>
+                            <option value="cantidad">cantidad</option>
+                            <option value="estado">estado</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Orden</label>
                         <select class="form-select" id="sidebarSortOrder">
-                            <option value="asc">↑ Ascendente</option>
-                            <option value="desc">↓ Descendente</option>
+                            <option value="asc">↑ Ascendente (A-Z, 0-9)</option>
+                            <option value="desc">↓ Descendente (Z-A, 9-0)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Deduplicate Config -->
+                <div class="config-section" id="sidebarDeduplicateConfig" style="display: ${config.transformType === 'deduplicate' ? 'block' : 'none'};">
+                    <div class="config-section-title">Eliminar duplicados</div>
+                    <div class="form-group">
+                        <label class="form-label">Campos para comparar</label>
+                        <select class="form-select" id="sidebarDedupeFields" multiple style="min-height: 100px;">
+                            <option value="nombre" selected>nombre</option>
+                            <option value="monto">monto</option>
+                            <option value="fecha">fecha</option>
+                            <option value="precio">precio</option>
+                            <option value="estado">estado</option>
+                        </select>
+                        <small style="color: #757575; font-size: 11px; display: block; margin-top: 6px;">Los registros con valores iguales en estos campos se consideran duplicados</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Conservar</label>
+                        <select class="form-select" id="sidebarDedupeKeep">
+                            <option value="first">Primera ocurrencia</option>
+                            <option value="last">Última ocurrencia</option>
                         </select>
                     </div>
                 </div>
@@ -4743,7 +5031,7 @@ Texto:
         // Helper function for transform config
         function updateTransformConfig(nodeId, operation) {
             // Hide all configs
-            ['Filter', 'Map', 'Enrich', 'Agg', 'Sort'].forEach(type => {
+            ['Filter', 'Map', 'Enrich', 'Agg', 'Sort', 'Deduplicate'].forEach(type => {
                 const el = document.getElementById('sidebar' + type + 'Config');
                 if (el) el.style.display = 'none';
             });
@@ -4754,7 +5042,8 @@ Texto:
                 'map': 'Map',
                 'enrich': 'Enrich',
                 'aggregate': 'Agg',
-                'sort': 'Sort'
+                'sort': 'Sort',
+                'deduplicate': 'Deduplicate'
             };
 
             if (configMap[operation]) {
@@ -4796,6 +5085,187 @@ Texto:
                 container.appendChild(row);
             }
         }
+
+        // =====================================================
+        // TRANSFORM NODE - FIELD SELECTOR FUNCTIONS
+        // =====================================================
+
+        // Toggle all field checkboxes
+        function toggleAllFields(nodeId) {
+            const tree = document.getElementById('sidebarFieldTree-' + nodeId);
+            if (!tree) return;
+
+            const checkboxes = tree.querySelectorAll('input[type="checkbox"]');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+            checkboxes.forEach(cb => {
+                cb.checked = !allChecked;
+            });
+
+            updateFieldCount(nodeId);
+        }
+
+        // Update field count display
+        function updateFieldCount(nodeId) {
+            const tree = document.getElementById('sidebarFieldTree-' + nodeId);
+            const countEl = document.getElementById('fieldCount-' + nodeId);
+            if (!tree || !countEl) return;
+
+            const checkboxes = tree.querySelectorAll('input[type="checkbox"]');
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            countEl.textContent = checkedCount + ' seleccionados';
+        }
+
+        // Insert operator to enrich formula
+        function insertToEnrichFormula(op) {
+            const input = document.getElementById('sidebarFormula');
+            if (input) {
+                const cursorPos = input.selectionStart || input.value.length;
+                let insertion = op;
+                if (op === '*') insertion = ' * ';
+                else if (op === '/') insertion = ' / ';
+                else if (op === '+' || op === '-') insertion = ' ' + op + ' ';
+                input.value = input.value.substring(0, cursorPos) + insertion + input.value.substring(cursorPos);
+                input.focus();
+            }
+        }
+
+        // =====================================================
+        // FULLSCREEN EDITOR FUNCTIONS
+        // =====================================================
+
+        let fullscreenEditorNodeId = null;
+        let fullscreenEditorType = null;
+
+        // Open fullscreen editor
+        function openFullscreenEditor(nodeId, editorType) {
+            fullscreenEditorNodeId = nodeId;
+            fullscreenEditorType = editorType;
+
+            const modal = document.getElementById('fullscreenEditorModal');
+            const textarea = document.getElementById('fullscreenEditorTextarea');
+            const typeLabel = document.getElementById('fullscreenEditorType');
+
+            // Set type label
+            const typeLabels = {
+                'filter': '- Regla de filtrado',
+                'enrich': '- Fórmula de enriquecimiento'
+            };
+            typeLabel.textContent = typeLabels[editorType] || '';
+
+            // Load current value
+            if (editorType === 'filter') {
+                const filterInput = document.getElementById('sidebarFilterRule');
+                textarea.value = filterInput ? filterInput.value : '';
+                textarea.placeholder = 'Escribe tu regla de filtrado aquí...\n\nEjemplos:\n  monto > 1000\n  estado = \'Activo\' AND fecha >= \'2024-01-01\'\n  categoria IN (\'A\', \'B\', \'C\')';
+            } else if (editorType === 'enrich') {
+                const formulaInput = document.getElementById('sidebarFormula');
+                textarea.value = formulaInput ? formulaInput.value : '';
+                textarea.placeholder = 'Escribe tu fórmula aquí...\n\nEjemplos:\n  precio * cantidad\n  (impacto * probabilidad) / 100\n  SQRT(monto^2 + cantidad^2)';
+            }
+
+            modal.classList.remove('hidden');
+            textarea.focus();
+
+            // Update preview
+            updateFullscreenPreview();
+        }
+
+        // Close fullscreen editor
+        function closeFullscreenEditor() {
+            const modal = document.getElementById('fullscreenEditorModal');
+            modal.classList.add('hidden');
+            fullscreenEditorNodeId = null;
+            fullscreenEditorType = null;
+        }
+
+        // Apply fullscreen editor changes
+        function applyFullscreenEditor() {
+            const textarea = document.getElementById('fullscreenEditorTextarea');
+            const value = textarea.value;
+
+            if (fullscreenEditorType === 'filter') {
+                const filterInput = document.getElementById('sidebarFilterRule');
+                if (filterInput) filterInput.value = value;
+            } else if (fullscreenEditorType === 'enrich') {
+                const formulaInput = document.getElementById('sidebarFormula');
+                if (formulaInput) formulaInput.value = value;
+            }
+
+            closeFullscreenEditor();
+        }
+
+        // Insert field to fullscreen editor
+        function insertFieldToFullscreen(fieldName) {
+            const textarea = document.getElementById('fullscreenEditorTextarea');
+            if (textarea) {
+                const cursorPos = textarea.selectionStart || textarea.value.length;
+                textarea.value = textarea.value.substring(0, cursorPos) + fieldName + textarea.value.substring(cursorPos);
+                textarea.focus();
+                textarea.selectionStart = textarea.selectionEnd = cursorPos + fieldName.length;
+                updateFullscreenPreview();
+            }
+        }
+
+        // Insert operator to fullscreen editor
+        function insertOpToFullscreen(op) {
+            const textarea = document.getElementById('fullscreenEditorTextarea');
+            if (textarea) {
+                const cursorPos = textarea.selectionStart || textarea.value.length;
+                let insertion = op;
+
+                // Format operators with spaces
+                if (['*', '/', '+', '-', '%'].includes(op)) {
+                    insertion = ' ' + (op === '*' ? '*' : op === '/' ? '/' : op) + ' ';
+                }
+
+                textarea.value = textarea.value.substring(0, cursorPos) + insertion + textarea.value.substring(cursorPos);
+                textarea.focus();
+
+                // Position cursor inside parentheses for functions
+                if (op.endsWith('()')) {
+                    textarea.selectionStart = textarea.selectionEnd = cursorPos + insertion.length - 1;
+                } else {
+                    textarea.selectionStart = textarea.selectionEnd = cursorPos + insertion.length;
+                }
+
+                updateFullscreenPreview();
+            }
+        }
+
+        // Update fullscreen preview
+        function updateFullscreenPreview() {
+            const textarea = document.getElementById('fullscreenEditorTextarea');
+            const preview = document.getElementById('fullscreenFormulaPreview');
+
+            if (!textarea || !preview) return;
+
+            const value = textarea.value.trim();
+            if (!value) {
+                preview.textContent = '-';
+                return;
+            }
+
+            // Simple preview - show the expression with syntax highlighting
+            if (fullscreenEditorType === 'filter') {
+                preview.innerHTML = value
+                    .replace(/AND|OR|NOT|IN|LIKE/gi, '<span style="color: #1e40af; font-weight: 600;">$&</span>')
+                    .replace(/'[^']*'/g, '<span style="color: #15803d;">$&</span>')
+                    .replace(/[<>=!]+/g, '<span style="color: #dc2626;">$&</span>');
+            } else {
+                preview.innerHTML = value
+                    .replace(/SUM|AVG|MIN|MAX|SQRT|ABS|ROUND|STDEV|VAR|MEDIAN/gi, '<span style="color: #7b1fa2; font-weight: 600;">$&</span>')
+                    .replace(/[+\-*/^%]/g, '<span style="color: #dc2626;">$&</span>');
+            }
+        }
+
+        // Add event listener for textarea to update preview
+        document.addEventListener('DOMContentLoaded', function() {
+            const textarea = document.getElementById('fullscreenEditorTextarea');
+            if (textarea) {
+                textarea.addEventListener('input', updateFullscreenPreview);
+            }
+        });
 
         // Generate Branching node config content
         function generateBranchingConfigContent(nodeId, nodeData) {
@@ -5716,5 +6186,112 @@ Texto:
             document.getElementById('schemaBuilder')?.addEventListener('input', updateSchemaPreview);
         });
     </script>
+
+    <!-- Fullscreen Editor Modal for Transform Node -->
+    <div id="fullscreenEditorModal" class="fullscreen-modal hidden">
+        <div class="fullscreen-editor-container">
+            <div class="fullscreen-editor-header">
+                <div class="fullscreen-editor-title">
+                    <span>🔄</span>
+                    <span>Editor de Transformación</span>
+                    <span id="fullscreenEditorType" style="font-size: 12px; font-weight: 400; color: #a0aec0; margin-left: 8px;">- Fórmula</span>
+                </div>
+                <button onclick="closeFullscreenEditor()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 4px 8px;">&times;</button>
+            </div>
+            <div class="fullscreen-editor-body">
+                <div class="fullscreen-editor-sidebar">
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px; text-transform: uppercase;">Campos disponibles</div>
+                        <div class="field-tree" id="fullscreenFieldTree">
+                            <div class="field-tree-header">
+                                <span>📁 Datos de entrada</span>
+                                <span style="font-size: 10px; color: #94a3b8;">Click para insertar</span>
+                            </div>
+                            <div class="field-tree-item" onclick="insertFieldToFullscreen('nombre')">
+                                <span style="color: #7b1fa2;">📄</span>
+                                <span style="flex: 1; font-size: 13px;">nombre</span>
+                                <span class="field-type-badge string">string</span>
+                            </div>
+                            <div class="field-tree-item" onclick="insertFieldToFullscreen('monto')">
+                                <span style="color: #7b1fa2;">🔢</span>
+                                <span style="flex: 1; font-size: 13px;">monto</span>
+                                <span class="field-type-badge number">number</span>
+                            </div>
+                            <div class="field-tree-item" onclick="insertFieldToFullscreen('fecha')">
+                                <span style="color: #7b1fa2;">📅</span>
+                                <span style="flex: 1; font-size: 13px;">fecha</span>
+                                <span class="field-type-badge date">date</span>
+                            </div>
+                            <div class="field-tree-item" onclick="insertFieldToFullscreen('precio')">
+                                <span style="color: #7b1fa2;">🔢</span>
+                                <span style="flex: 1; font-size: 13px;">precio</span>
+                                <span class="field-type-badge number">number</span>
+                            </div>
+                            <div class="field-tree-item" onclick="insertFieldToFullscreen('cantidad')">
+                                <span style="color: #7b1fa2;">🔢</span>
+                                <span style="flex: 1; font-size: 13px;">cantidad</span>
+                                <span class="field-type-badge number">number</span>
+                            </div>
+                            <div class="field-tree-item" onclick="insertFieldToFullscreen('activo')">
+                                <span style="color: #7b1fa2;">✓</span>
+                                <span style="flex: 1; font-size: 13px;">activo</span>
+                                <span class="field-type-badge boolean">bool</span>
+                            </div>
+                            <div class="field-tree-item" onclick="insertFieldToFullscreen('impacto')">
+                                <span style="color: #7b1fa2;">🔢</span>
+                                <span style="flex: 1; font-size: 13px;">impacto</span>
+                                <span class="field-type-badge number">number</span>
+                            </div>
+                            <div class="field-tree-item" onclick="insertFieldToFullscreen('probabilidad')">
+                                <span style="color: #7b1fa2;">🔢</span>
+                                <span style="flex: 1; font-size: 13px;">probabilidad</span>
+                                <span class="field-type-badge number">number</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px; text-transform: uppercase;">Operadores</div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                            <button class="operator-btn-mini" onclick="insertOpToFullscreen('+')">+</button>
+                            <button class="operator-btn-mini" onclick="insertOpToFullscreen('-')">−</button>
+                            <button class="operator-btn-mini" onclick="insertOpToFullscreen('*')">×</button>
+                            <button class="operator-btn-mini" onclick="insertOpToFullscreen('/')">÷</button>
+                            <button class="operator-btn-mini" onclick="insertOpToFullscreen('^')">^</button>
+                            <button class="operator-btn-mini" onclick="insertOpToFullscreen('%')">%</button>
+                            <button class="operator-btn-mini" onclick="insertOpToFullscreen('(')">(</button>
+                            <button class="operator-btn-mini" onclick="insertOpToFullscreen(')')">)</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px; text-transform: uppercase;">Funciones</div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <button style="padding: 8px 12px; background: #f3e5f5; border: 1px solid #e1bee7; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px;" onclick="insertOpToFullscreen('SUM()')">SUM() - Suma</button>
+                            <button style="padding: 8px 12px; background: #f3e5f5; border: 1px solid #e1bee7; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px;" onclick="insertOpToFullscreen('AVG()')">AVG() - Promedio</button>
+                            <button style="padding: 8px 12px; background: #f3e5f5; border: 1px solid #e1bee7; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px;" onclick="insertOpToFullscreen('MIN()')">MIN() - Mínimo</button>
+                            <button style="padding: 8px 12px; background: #f3e5f5; border: 1px solid #e1bee7; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px;" onclick="insertOpToFullscreen('MAX()')">MAX() - Máximo</button>
+                            <button style="padding: 8px 12px; background: #f3e5f5; border: 1px solid #e1bee7; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px;" onclick="insertOpToFullscreen('SQRT()')">SQRT() - Raíz cuadrada</button>
+                            <button style="padding: 8px 12px; background: #f3e5f5; border: 1px solid #e1bee7; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px;" onclick="insertOpToFullscreen('ABS()')">ABS() - Valor absoluto</button>
+                            <button style="padding: 8px 12px; background: #f3e5f5; border: 1px solid #e1bee7; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px;" onclick="insertOpToFullscreen('ROUND()')">ROUND() - Redondear</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="fullscreen-editor-main">
+                    <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                        <label style="font-size: 13px; font-weight: 500; color: #374151;">Expresión</label>
+                        <span style="font-size: 11px; color: #6b7280;">Tip: Haz clic en los campos o funciones para insertarlos</span>
+                    </div>
+                    <textarea id="fullscreenEditorTextarea" class="fullscreen-textarea" placeholder="Escribe tu fórmula aquí...&#10;&#10;Ejemplos:&#10;  precio * cantidad&#10;  (impacto * probabilidad) / 100&#10;  SQRT(monto^2 + cantidad^2)"></textarea>
+                    <div style="margin-top: 12px; padding: 12px; background: #fefce8; border: 1px solid #fde047; border-radius: 8px;">
+                        <div style="font-size: 11px; font-weight: 600; color: #a16207; margin-bottom: 6px;">Vista previa del resultado</div>
+                        <div id="fullscreenFormulaPreview" style="font-family: monospace; font-size: 13px; color: #1a1a1a;">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="fullscreen-editor-footer">
+                <button class="btn btn-secondary" onclick="closeFullscreenEditor()">Cancelar</button>
+                <button class="btn btn-primary" onclick="applyFullscreenEditor()">✓ Aplicar cambios</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
