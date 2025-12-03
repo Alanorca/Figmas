@@ -1,0 +1,179 @@
+<div class="p-4">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="text-3xl font-bold text-900 m-0">Gestion de Riesgos</h1>
+      <p class="text-500 mt-1">Identifica, evalua y gestiona los riesgos de tus activos</p>
+    </div>
+    <p-button label="Nuevo Riesgo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
+  </div>
+
+  <!-- Matriz de Riesgos Visual -->
+  <div class="grid mb-4">
+    <div class="col-12 lg:col-4">
+      <p-card styleClass="h-full bg-red-50">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-red-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-red-500">dangerous</span>
+          </div>
+          <div>
+            <p class="text-red-700 text-sm font-medium m-0">Riesgos Criticos</p>
+            <p class="text-3xl font-bold text-red-500 m-0">
+              {{ riesgosCriticos() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    <div class="col-12 lg:col-4">
+      <p-card styleClass="h-full bg-orange-50">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-orange-500">warning</span>
+          </div>
+          <div>
+            <p class="text-orange-700 text-sm font-medium m-0">Riesgos Altos</p>
+            <p class="text-3xl font-bold text-orange-500 m-0">
+              {{ riesgosAltos() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    <div class="col-12 lg:col-4">
+      <p-card styleClass="h-full bg-green-50">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-green-500">check_circle</span>
+          </div>
+          <div>
+            <p class="text-green-700 text-sm font-medium m-0">Riesgos Controlados</p>
+            <p class="text-3xl font-bold text-green-500 m-0">
+              {{ riesgosControlados() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <p-card>
+    <p-table [value]="riesgos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
+             styleClass="p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+          <th pSortableColumn="activoNombre">Activo <p-sortIcon field="activoNombre"></p-sortIcon></th>
+          <th pSortableColumn="descripcion">Descripcion <p-sortIcon field="descripcion"></p-sortIcon></th>
+          <th pSortableColumn="probabilidad">Probabilidad <p-sortIcon field="probabilidad"></p-sortIcon></th>
+          <th pSortableColumn="impacto">Impacto <p-sortIcon field="impacto"></p-sortIcon></th>
+          <th>Nivel</th>
+          <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+          <th pSortableColumn="responsable">Responsable <p-sortIcon field="responsable"></p-sortIcon></th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-riesgo>
+        <tr>
+          <td class="font-mono text-sm">{{ riesgo.id }}</td>
+          <td class="font-medium">{{ riesgo.activoNombre }}</td>
+          <td>{{ riesgo.descripcion }}</td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <div class="w-6rem bg-gray-200 border-round" style="height: 8px;">
+                <div class="bg-primary border-round" [style.width.%]="riesgo.probabilidad * 20" style="height: 100%;"></div>
+              </div>
+              <span class="font-bold">{{ riesgo.probabilidad }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <div class="w-6rem bg-gray-200 border-round" style="height: 8px;">
+                <div class="bg-orange-500 border-round" [style.width.%]="riesgo.impacto * 20" style="height: 100%;"></div>
+              </div>
+              <span class="font-bold">{{ riesgo.impacto }}</span>
+            </div>
+          </td>
+          <td>
+            <p-tag [value]="getNivelLabel(getNivelRiesgo(riesgo.probabilidad, riesgo.impacto)) + ' (' + getNivelRiesgo(riesgo.probabilidad, riesgo.impacto) + ')'"
+                   [severity]="getNivelSeverity(getNivelRiesgo(riesgo.probabilidad, riesgo.impacto))"></p-tag>
+          </td>
+          <td>
+            <p-tag [value]="riesgo.estado" [severity]="getEstadoSeverity(riesgo.estado)"></p-tag>
+          </td>
+          <td>{{ riesgo.responsable }}</td>
+          <td>
+            <div class="flex gap-1">
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"></p-button>
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"></p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center py-4">
+            <span class="text-500">No hay riesgos registrados</span>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Dialog Nuevo Riesgo -->
+<p-dialog header="Nuevo Riesgo" [modal]="true" [(visible)]="showDialog" [style]="{width: '550px'}">
+  <div class="flex flex-column gap-4">
+    <div class="flex flex-column gap-2">
+      <label for="activo" class="font-medium">Activo Asociado *</label>
+      <p-select id="activo" [options]="activosOptions()" [(ngModel)]="nuevoRiesgo().activoId"
+                  placeholder="Seleccionar activo" [style]="{width: '100%'}"></p-select>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="descripcion" class="font-medium">Descripcion del Riesgo *</label>
+      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoRiesgo().descripcion" rows="3"
+                placeholder="Describe el riesgo identificado"></textarea>
+    </div>
+    <div class="grid">
+      <div class="col-6">
+        <div class="flex flex-column gap-2">
+          <label class="font-medium">Probabilidad: {{ nuevoRiesgo().probabilidad }}</label>
+          <p-slider [(ngModel)]="nuevoRiesgo().probabilidad" [min]="1" [max]="5" [step]="1"></p-slider>
+          <div class="flex justify-content-between text-xs text-500">
+            <span>Muy Baja</span>
+            <span>Muy Alta</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="flex flex-column gap-2">
+          <label class="font-medium">Impacto: {{ nuevoRiesgo().impacto }}</label>
+          <p-slider [(ngModel)]="nuevoRiesgo().impacto" [min]="1" [max]="5" [step]="1"></p-slider>
+          <div class="flex justify-content-between text-xs text-500">
+            <span>Muy Bajo</span>
+            <span>Muy Alto</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-3 surface-100 border-round text-center">
+      <p class="text-500 text-sm m-0 mb-1">Nivel de Riesgo Calculado</p>
+      <p-tag [value]="getNivelLabel(nuevoRiesgo().probabilidad * nuevoRiesgo().impacto) + ' (' + (nuevoRiesgo().probabilidad * nuevoRiesgo().impacto) + ')'"
+             [severity]="getNivelSeverity(nuevoRiesgo().probabilidad * nuevoRiesgo().impacto)"
+             styleClass="text-lg"></p-tag>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="estado" class="font-medium">Estado</label>
+      <p-select id="estado" [options]="estadosRiesgo" [(ngModel)]="nuevoRiesgo().estado"
+                  [style]="{width: '100%'}"></p-select>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="responsable" class="font-medium">Responsable *</label>
+      <input pInputText id="responsable" [(ngModel)]="nuevoRiesgo().responsable" placeholder="Nombre del responsable" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showDialog.set(false)"></p-button>
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveRiesgo()"></p-button>
+  </ng-template>
+</p-dialog>

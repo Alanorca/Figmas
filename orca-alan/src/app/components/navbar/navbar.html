@@ -1,0 +1,37 @@
+<div class="navbar surface-card shadow-2 px-4 py-2">
+  <div class="flex align-items-center justify-content-between">
+    <!-- Logo y Nombre -->
+    <div class="flex align-items-center gap-3">
+      <a routerLink="/dashboard" class="flex align-items-center gap-2 no-underline">
+        <span class="material-icons text-primary" style="font-size: 2.5rem;">security</span>
+        <span class="text-xl font-bold text-primary">ORCA</span>
+        <span class="text-xl font-light text-600">ALAN</span>
+      </a>
+    </div>
+
+    <!-- Menu Principal -->
+    <nav class="flex align-items-center gap-1">
+      @for (item of menuItems; track item.label) {
+        <a [routerLink]="item.routerLink"
+           routerLinkActive="active-link"
+           class="nav-link flex align-items-center gap-2 px-3 py-2 border-round text-700 no-underline transition-colors transition-duration-200">
+          <i [class]="item.icon"></i>
+          <span class="font-medium">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <!-- Usuario -->
+    <div class="flex align-items-center gap-3">
+      <p-button icon="pi pi-bell" [rounded]="true" [text]="true" severity="secondary" pBadge value="3" badgeSeverity="danger"></p-button>
+      <p-button icon="pi pi-cog" [rounded]="true" [text]="true" severity="secondary"></p-button>
+      <div class="flex align-items-center gap-2 cursor-pointer">
+        <p-avatar icon="pi pi-user" shape="circle" [style]="{ 'background-color': 'var(--primary-color)', 'color': 'white' }"></p-avatar>
+        <div class="hidden md:block">
+          <p class="m-0 text-sm font-medium text-900">Alan Franco</p>
+          <p class="m-0 text-xs text-500">Administrador</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

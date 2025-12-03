@@ -1,0 +1,234 @@
+<div class="p-4">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="text-3xl font-bold text-900 m-0">Gestion de Activos</h1>
+      <p class="text-500 mt-1">Administra los activos de la organizacion</p>
+    </div>
+    <p-button label="Nuevo Activo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
+  </div>
+
+  <p-card>
+    <p-table [value]="activos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} activos"
+             [globalFilterFields]="['nombre', 'tipo', 'departamento', 'responsable']"
+             styleClass="p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre"></p-sortIcon></th>
+          <th pSortableColumn="tipo">Tipo <p-sortIcon field="tipo"></p-sortIcon></th>
+          <th pSortableColumn="criticidad">Criticidad <p-sortIcon field="criticidad"></p-sortIcon></th>
+          <th pSortableColumn="departamento">Departamento <p-sortIcon field="departamento"></p-sortIcon></th>
+          <th pSortableColumn="responsable">Responsable <p-sortIcon field="responsable"></p-sortIcon></th>
+          <th>Riesgos</th>
+          <th>Incidentes</th>
+          <th>Defectos</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-activo>
+        <tr>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <span class="material-icons text-500">{{ getTipoIcon(activo.tipo) }}</span>
+              <span class="font-medium">{{ activo.nombre }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="capitalize">{{ activo.tipo }}</span>
+          </td>
+          <td>
+            <p-tag [value]="activo.criticidad" [severity]="getCriticidadSeverity(activo.criticidad)"></p-tag>
+          </td>
+          <td>{{ activo.departamento }}</td>
+          <td>{{ activo.responsable }}</td>
+          <td>
+            <span class="font-bold" [class]="activo.riesgos.length > 0 ? 'text-orange-500' : 'text-500'">
+              {{ activo.riesgos.length }}
+            </span>
+          </td>
+          <td>
+            <span class="font-bold" [class]="activo.incidentes.length > 0 ? 'text-red-500' : 'text-500'">
+              {{ activo.incidentes.length }}
+            </span>
+          </td>
+          <td>
+            <span class="font-bold" [class]="activo.defectos.length > 0 ? 'text-purple-500' : 'text-500'">
+              {{ activo.defectos.length }}
+            </span>
+          </td>
+          <td>
+            <div class="flex gap-1">
+              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info"
+                        pTooltip="Ver detalle" (onClick)="viewDetail(activo)"></p-button>
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
+                        pTooltip="Editar"></p-button>
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                        pTooltip="Eliminar"></p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center py-4">
+            <span class="text-500">No hay activos registrados</span>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Dialog Nuevo Activo -->
+<p-dialog header="Nuevo Activo" [modal]="true" [(visible)]="showDialog" [style]="{width: '500px'}">
+  <div class="flex flex-column gap-3">
+    <div class="flex flex-column gap-2">
+      <label for="nombre" class="font-medium">Nombre *</label>
+      <input pInputText id="nombre" [(ngModel)]="nuevoActivo().nombre" placeholder="Nombre del activo" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="descripcion" class="font-medium">Descripcion</label>
+      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoActivo().descripcion" rows="3"
+                placeholder="Descripcion del activo"></textarea>
+    </div>
+    <div class="grid">
+      <div class="col-6">
+        <div class="flex flex-column gap-2">
+          <label for="tipo" class="font-medium">Tipo *</label>
+          <p-select id="tipo" [options]="tiposActivo" [(ngModel)]="nuevoActivo().tipo"
+                      placeholder="Seleccionar tipo" [style]="{width: '100%'}"></p-select>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="flex flex-column gap-2">
+          <label for="criticidad" class="font-medium">Criticidad *</label>
+          <p-select id="criticidad" [options]="criticidades" [(ngModel)]="nuevoActivo().criticidad"
+                      placeholder="Seleccionar criticidad" [style]="{width: '100%'}"></p-select>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="responsable" class="font-medium">Responsable *</label>
+      <input pInputText id="responsable" [(ngModel)]="nuevoActivo().responsable" placeholder="Nombre del responsable" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="departamento" class="font-medium">Departamento *</label>
+      <input pInputText id="departamento" [(ngModel)]="nuevoActivo().departamento" placeholder="Departamento" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showDialog.set(false)"></p-button>
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveActivo()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog Detalle Activo -->
+<p-dialog [header]="selectedActivo()?.nombre || 'Detalle'" [modal]="true" [(visible)]="showDetailDialog" [style]="{width: '800px'}">
+  @if (selectedActivo(); as activo) {
+    <div class="flex flex-column gap-4">
+      <!-- Info General -->
+      <div class="grid">
+        <div class="col-6">
+          <p class="text-500 text-sm m-0">Tipo</p>
+          <p class="font-medium m-0 capitalize">{{ activo.tipo }}</p>
+        </div>
+        <div class="col-6">
+          <p class="text-500 text-sm m-0">Criticidad</p>
+          <p-tag [value]="activo.criticidad" [severity]="getCriticidadSeverity(activo.criticidad)"></p-tag>
+        </div>
+        <div class="col-6">
+          <p class="text-500 text-sm m-0">Responsable</p>
+          <p class="font-medium m-0">{{ activo.responsable }}</p>
+        </div>
+        <div class="col-6">
+          <p class="text-500 text-sm m-0">Departamento</p>
+          <p class="font-medium m-0">{{ activo.departamento }}</p>
+        </div>
+        <div class="col-12">
+          <p class="text-500 text-sm m-0">Descripcion</p>
+          <p class="m-0">{{ activo.descripcion }}</p>
+        </div>
+      </div>
+
+      <!-- Secciones de Riesgos, Incidentes y Defectos -->
+      <div class="flex flex-column gap-4">
+        <!-- Riesgos -->
+        <div>
+          <h4 class="text-lg font-bold m-0 mb-2">Riesgos ({{ activo.riesgos.length }})</h4>
+          @if (activo.riesgos.length > 0) {
+            <div class="flex flex-column gap-2">
+              @for (riesgo of activo.riesgos; track riesgo.id) {
+                <div class="p-3 surface-100 border-round">
+                  <div class="flex justify-content-between align-items-start">
+                    <div>
+                      <p class="font-medium m-0">{{ riesgo.descripcion }}</p>
+                      <p class="text-sm text-500 m-0 mt-1">
+                        Nivel: {{ riesgo.probabilidad * riesgo.impacto }} (P:{{ riesgo.probabilidad }} x I:{{ riesgo.impacto }})
+                      </p>
+                    </div>
+                    <p-tag [value]="riesgo.estado"></p-tag>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-500 py-2">No hay riesgos registrados</p>
+          }
+        </div>
+
+        <!-- Incidentes -->
+        <div>
+          <h4 class="text-lg font-bold m-0 mb-2">Incidentes ({{ activo.incidentes.length }})</h4>
+          @if (activo.incidentes.length > 0) {
+            <div class="flex flex-column gap-2">
+              @for (incidente of activo.incidentes; track incidente.id) {
+                <div class="p-3 surface-100 border-round">
+                  <div class="flex justify-content-between align-items-start">
+                    <div>
+                      <p class="font-medium m-0">{{ incidente.titulo }}</p>
+                      <p class="text-sm text-500 m-0 mt-1">{{ incidente.descripcion }}</p>
+                    </div>
+                    <div class="flex gap-2">
+                      <p-tag [value]="incidente.severidad" [severity]="getCriticidadSeverity(incidente.severidad)"></p-tag>
+                      <p-tag [value]="incidente.estado" severity="info"></p-tag>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-500 py-2">No hay incidentes registrados</p>
+          }
+        </div>
+
+        <!-- Defectos -->
+        <div>
+          <h4 class="text-lg font-bold m-0 mb-2">Defectos ({{ activo.defectos.length }})</h4>
+          @if (activo.defectos.length > 0) {
+            <div class="flex flex-column gap-2">
+              @for (defecto of activo.defectos; track defecto.id) {
+                <div class="p-3 surface-100 border-round">
+                  <div class="flex justify-content-between align-items-start">
+                    <div>
+                      <p class="font-medium m-0">{{ defecto.titulo }}</p>
+                      <p class="text-sm text-500 m-0 mt-1">{{ defecto.descripcion }}</p>
+                    </div>
+                    <div class="flex gap-2">
+                      <p-tag [value]="defecto.tipo"></p-tag>
+                      <p-tag [value]="defecto.estado" severity="secondary"></p-tag>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-500 py-2">No hay defectos registrados</p>
+          }
+        </div>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" severity="secondary" (onClick)="showDetailDialog.set(false)"></p-button>
+  </ng-template>
+</p-dialog>

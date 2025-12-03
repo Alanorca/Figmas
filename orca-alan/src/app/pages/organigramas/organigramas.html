@@ -1,0 +1,110 @@
+<div class="p-4">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="text-3xl font-bold text-900 m-0">Organigrama</h1>
+      <p class="text-500 mt-1">{{ organigrama().nombre }} - {{ organigrama().descripcion }}</p>
+    </div>
+    <div class="flex gap-2">
+      <p-button label="Agregar Persona" icon="pi pi-user-plus" severity="secondary"></p-button>
+      <p-button label="Exportar" icon="pi pi-download"></p-button>
+    </div>
+  </div>
+
+  <p-card>
+    <div class="org-chart-container overflow-auto">
+      <p-organizationChart [value]="orgChartData" selectionMode="single" (onNodeSelect)="onNodeSelect($event)">
+        <ng-template let-node pTemplate="person">
+          <div class="org-node-content p-3 surface-card border-round shadow-2 cursor-pointer text-center"
+               style="min-width: 180px;">
+            <p-avatar icon="pi pi-user" size="large" shape="circle"
+                      [style]="{ 'background-color': 'var(--primary-color)', 'color': 'white' }"></p-avatar>
+            <p class="font-bold text-900 m-0 mt-2">{{ node.data.nombre }}</p>
+            <p class="text-primary text-sm m-0">{{ node.data.cargo }}</p>
+            <p class="text-500 text-xs m-0 mt-1">{{ node.data.departamento }}</p>
+          </div>
+        </ng-template>
+      </p-organizationChart>
+    </div>
+  </p-card>
+
+  <!-- Leyenda -->
+  <div class="mt-4">
+    <p-card header="Estadisticas del Organigrama">
+      <div class="grid">
+        <div class="col-12 md:col-3">
+          <div class="text-center p-3 surface-100 border-round">
+            <p class="text-3xl font-bold text-primary m-0">8</p>
+            <p class="text-500 m-0">Total Empleados</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-3">
+          <div class="text-center p-3 surface-100 border-round">
+            <p class="text-3xl font-bold text-orange-500 m-0">4</p>
+            <p class="text-500 m-0">Departamentos</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-3">
+          <div class="text-center p-3 surface-100 border-round">
+            <p class="text-3xl font-bold text-green-500 m-0">3</p>
+            <p class="text-500 m-0">Niveles Jerarquicos</p>
+          </div>
+        </div>
+        <div class="col-12 md:col-3">
+          <div class="text-center p-3 surface-100 border-round">
+            <p class="text-3xl font-bold text-purple-500 m-0">1</p>
+            <p class="text-500 m-0">Direccion General</p>
+          </div>
+        </div>
+      </div>
+    </p-card>
+  </div>
+</div>
+
+<!-- Dialog Detalle Persona -->
+<p-dialog header="Detalle del Empleado" [modal]="true" [(visible)]="showDetailDialog" [style]="{width: '450px'}">
+  @if (selectedNode(); as persona) {
+    <div class="flex flex-column align-items-center gap-4">
+      <p-avatar icon="pi pi-user" size="xlarge" shape="circle"
+                [style]="{ 'background-color': 'var(--primary-color)', 'color': 'white', 'width': '80px', 'height': '80px', 'font-size': '2rem' }"></p-avatar>
+      <div class="text-center">
+        <h2 class="text-2xl font-bold text-900 m-0">{{ persona.nombre }}</h2>
+        <p class="text-xl text-primary m-0 mt-1">{{ persona.cargo }}</p>
+      </div>
+
+      <div class="w-full">
+        <div class="flex align-items-center gap-3 p-3 surface-100 border-round mb-2">
+          <span class="material-icons text-500">business</span>
+          <div>
+            <p class="text-500 text-sm m-0">Departamento</p>
+            <p class="font-medium m-0">{{ persona.departamento }}</p>
+          </div>
+        </div>
+        <div class="flex align-items-center gap-3 p-3 surface-100 border-round mb-2">
+          <span class="material-icons text-500">email</span>
+          <div>
+            <p class="text-500 text-sm m-0">Email</p>
+            <p class="font-medium m-0">{{ persona.email }}</p>
+          </div>
+        </div>
+        <div class="flex align-items-center gap-3 p-3 surface-100 border-round mb-2">
+          <span class="material-icons text-500">phone</span>
+          <div>
+            <p class="text-500 text-sm m-0">Telefono</p>
+            <p class="font-medium m-0">{{ persona.telefono }}</p>
+          </div>
+        </div>
+        <div class="flex align-items-center gap-3 p-3 surface-100 border-round">
+          <span class="material-icons text-500">people</span>
+          <div>
+            <p class="text-500 text-sm m-0">Subordinados Directos</p>
+            <p class="font-medium m-0">{{ persona.subordinados.length }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button label="Editar" icon="pi pi-pencil" severity="secondary" [text]="true"></p-button>
+    <p-button label="Cerrar" (onClick)="showDetailDialog.set(false)"></p-button>
+  </ng-template>
+</p-dialog>

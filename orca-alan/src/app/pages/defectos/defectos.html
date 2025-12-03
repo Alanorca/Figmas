@@ -1,0 +1,187 @@
+<div class="p-4">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="text-3xl font-bold text-900 m-0">Gestion de Defectos</h1>
+      <p class="text-500 mt-1">Registra y da seguimiento a defectos y no conformidades</p>
+    </div>
+    <p-button label="Registrar Defecto" icon="pi pi-plus" severity="help" (onClick)="openNewDialog()"></p-button>
+  </div>
+
+  <!-- KPIs por Tipo -->
+  <div class="grid mb-4">
+    <div class="col-12 md:col-3">
+      <p-card styleClass="h-full">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-blue-500">build</span>
+          </div>
+          <div>
+            <p class="text-500 text-sm m-0">Funcionales</p>
+            <p class="text-2xl font-bold text-blue-500 m-0">
+              {{ defectosFuncionales() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-3">
+      <p-card styleClass="h-full">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-red-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-red-500">security</span>
+          </div>
+          <div>
+            <p class="text-500 text-sm m-0">Seguridad</p>
+            <p class="text-2xl font-bold text-red-500 m-0">
+              {{ defectosSeguridad() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-3">
+      <p-card styleClass="h-full">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-orange-500">speed</span>
+          </div>
+          <div>
+            <p class="text-500 text-sm m-0">Rendimiento</p>
+            <p class="text-2xl font-bold text-orange-500 m-0">
+              {{ defectosRendimiento() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-3">
+      <p-card styleClass="h-full">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-purple-500">touch_app</span>
+          </div>
+          <div>
+            <p class="text-500 text-sm m-0">Usabilidad</p>
+            <p class="text-2xl font-bold text-purple-500 m-0">
+              {{ defectosUsabilidad() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <p-card>
+    <p-table [value]="defectos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} defectos"
+             styleClass="p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+          <th pSortableColumn="titulo">Titulo <p-sortIcon field="titulo"></p-sortIcon></th>
+          <th pSortableColumn="activoNombre">Activo <p-sortIcon field="activoNombre"></p-sortIcon></th>
+          <th pSortableColumn="tipo">Tipo <p-sortIcon field="tipo"></p-sortIcon></th>
+          <th pSortableColumn="prioridad">Prioridad <p-sortIcon field="prioridad"></p-sortIcon></th>
+          <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+          <th pSortableColumn="detectadoPor">Detectado Por <p-sortIcon field="detectadoPor"></p-sortIcon></th>
+          <th pSortableColumn="fechaDeteccion">Fecha <p-sortIcon field="fechaDeteccion"></p-sortIcon></th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-defecto>
+        <tr>
+          <td class="font-mono text-sm">{{ defecto.id }}</td>
+          <td>
+            <div>
+              <p class="font-medium m-0">{{ defecto.titulo }}</p>
+              <p class="text-sm text-500 m-0 mt-1">{{ defecto.descripcion | slice:0:50 }}...</p>
+            </div>
+          </td>
+          <td class="font-medium">{{ defecto.activoNombre }}</td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <span class="material-icons text-500 text-sm">{{ getTipoIcon(defecto.tipo) }}</span>
+              <span class="capitalize">{{ defecto.tipo }}</span>
+            </div>
+          </td>
+          <td>
+            <p-tag [value]="defecto.prioridad" [severity]="getPrioridadSeverity(defecto.prioridad)"></p-tag>
+          </td>
+          <td>
+            <p-tag [value]="defecto.estado" [severity]="getEstadoSeverity(defecto.estado)"></p-tag>
+          </td>
+          <td>{{ defecto.detectadoPor }}</td>
+          <td>{{ defecto.fechaDeteccion | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <div class="flex gap-1">
+              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info"></p-button>
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"></p-button>
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"></p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center py-4">
+            <div class="flex flex-column align-items-center gap-2">
+              <span class="material-icons text-4xl text-green-500">thumb_up</span>
+              <span class="text-500">No hay defectos registrados</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Dialog Nuevo Defecto -->
+<p-dialog header="Registrar Defecto" [modal]="true" [(visible)]="showDialog" [style]="{width: '550px'}">
+  <div class="flex flex-column gap-3">
+    <div class="flex flex-column gap-2">
+      <label for="activo" class="font-medium">Activo Afectado *</label>
+      <p-select id="activo" [options]="activosOptions()" [(ngModel)]="nuevoDefecto().activoId"
+                  placeholder="Seleccionar activo" [style]="{width: '100%'}"></p-select>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="titulo" class="font-medium">Titulo del Defecto *</label>
+      <input pInputText id="titulo" [(ngModel)]="nuevoDefecto().titulo" placeholder="Titulo descriptivo del defecto" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="descripcion" class="font-medium">Descripcion</label>
+      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoDefecto().descripcion" rows="4"
+                placeholder="Describe el defecto en detalle, pasos para reproducir, etc."></textarea>
+    </div>
+    <div class="grid">
+      <div class="col-4">
+        <div class="flex flex-column gap-2">
+          <label for="tipo" class="font-medium">Tipo *</label>
+          <p-select id="tipo" [options]="tiposDefecto" [(ngModel)]="nuevoDefecto().tipo"
+                      [style]="{width: '100%'}"></p-select>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="flex flex-column gap-2">
+          <label for="prioridad" class="font-medium">Prioridad *</label>
+          <p-select id="prioridad" [options]="prioridades" [(ngModel)]="nuevoDefecto().prioridad"
+                      [style]="{width: '100%'}"></p-select>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="flex flex-column gap-2">
+          <label for="estado" class="font-medium">Estado</label>
+          <p-select id="estado" [options]="estados" [(ngModel)]="nuevoDefecto().estado"
+                      [style]="{width: '100%'}"></p-select>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="detectadoPor" class="font-medium">Detectado Por *</label>
+      <input pInputText id="detectadoPor" [(ngModel)]="nuevoDefecto().detectadoPor" placeholder="Nombre o equipo que detecto el defecto" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showDialog.set(false)"></p-button>
+    <p-button label="Registrar" icon="pi pi-check" severity="help" (onClick)="saveDefecto()"></p-button>
+  </ng-template>
+</p-dialog>

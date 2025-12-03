@@ -1,0 +1,174 @@
+<div class="p-4">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <div>
+      <h1 class="text-3xl font-bold text-900 m-0">Gestion de Incidentes</h1>
+      <p class="text-500 mt-1">Reporta y gestiona incidentes de seguridad</p>
+    </div>
+    <p-button label="Reportar Incidente" icon="pi pi-plus" severity="danger" (onClick)="openNewDialog()"></p-button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid mb-4">
+    <div class="col-12 md:col-3">
+      <p-card styleClass="h-full">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-red-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-red-500">error</span>
+          </div>
+          <div>
+            <p class="text-500 text-sm m-0">Abiertos</p>
+            <p class="text-2xl font-bold text-red-500 m-0">
+              {{ incidentesAbiertos() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-3">
+      <p-card styleClass="h-full">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-orange-500">sync</span>
+          </div>
+          <div>
+            <p class="text-500 text-sm m-0">En Proceso</p>
+            <p class="text-2xl font-bold text-orange-500 m-0">
+              {{ incidentesEnProceso() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-3">
+      <p-card styleClass="h-full">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-green-500">check_circle</span>
+          </div>
+          <div>
+            <p class="text-500 text-sm m-0">Resueltos</p>
+            <p class="text-2xl font-bold text-green-500 m-0">
+              {{ incidentesResueltos() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    <div class="col-12 md:col-3">
+      <p-card styleClass="h-full">
+        <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center justify-content-center bg-gray-100 border-round" style="width: 3rem; height: 3rem;">
+            <span class="material-icons text-gray-500">lock</span>
+          </div>
+          <div>
+            <p class="text-500 text-sm m-0">Cerrados</p>
+            <p class="text-2xl font-bold text-gray-500 m-0">
+              {{ incidentesCerrados() }}
+            </p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <p-card>
+    <p-table [value]="incidentes()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} incidentes"
+             styleClass="p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+          <th pSortableColumn="titulo">Titulo <p-sortIcon field="titulo"></p-sortIcon></th>
+          <th pSortableColumn="activoNombre">Activo <p-sortIcon field="activoNombre"></p-sortIcon></th>
+          <th pSortableColumn="severidad">Severidad <p-sortIcon field="severidad"></p-sortIcon></th>
+          <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+          <th pSortableColumn="reportadoPor">Reportado Por <p-sortIcon field="reportadoPor"></p-sortIcon></th>
+          <th pSortableColumn="fechaReporte">Fecha <p-sortIcon field="fechaReporte"></p-sortIcon></th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-incidente>
+        <tr>
+          <td class="font-mono text-sm">{{ incidente.id }}</td>
+          <td>
+            <div>
+              <p class="font-medium m-0">{{ incidente.titulo }}</p>
+              <p class="text-sm text-500 m-0 mt-1">{{ incidente.descripcion | slice:0:50 }}...</p>
+            </div>
+          </td>
+          <td class="font-medium">{{ incidente.activoNombre }}</td>
+          <td>
+            <p-tag [value]="incidente.severidad" [severity]="getSeveridadSeverity(incidente.severidad)"></p-tag>
+          </td>
+          <td>
+            <p-tag [value]="incidente.estado" [severity]="getEstadoSeverity(incidente.estado)"
+                   [icon]="getEstadoIcon(incidente.estado)"></p-tag>
+          </td>
+          <td>{{ incidente.reportadoPor }}</td>
+          <td>{{ incidente.fechaReporte | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <div class="flex gap-1">
+              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info"></p-button>
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"></p-button>
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"></p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="text-center py-4">
+            <div class="flex flex-column align-items-center gap-2">
+              <span class="material-icons text-4xl text-green-500">verified</span>
+              <span class="text-500">No hay incidentes registrados</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Dialog Nuevo Incidente -->
+<p-dialog header="Reportar Incidente" [modal]="true" [(visible)]="showDialog" [style]="{width: '550px'}">
+  <div class="flex flex-column gap-3">
+    <div class="flex flex-column gap-2">
+      <label for="activo" class="font-medium">Activo Afectado *</label>
+      <p-select id="activo" [options]="activosOptions()" [(ngModel)]="nuevoIncidente().activoId"
+                  placeholder="Seleccionar activo" [style]="{width: '100%'}"></p-select>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="titulo" class="font-medium">Titulo del Incidente *</label>
+      <input pInputText id="titulo" [(ngModel)]="nuevoIncidente().titulo" placeholder="Titulo breve del incidente" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="descripcion" class="font-medium">Descripcion</label>
+      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoIncidente().descripcion" rows="4"
+                placeholder="Describe el incidente en detalle"></textarea>
+    </div>
+    <div class="grid">
+      <div class="col-6">
+        <div class="flex flex-column gap-2">
+          <label for="severidad" class="font-medium">Severidad *</label>
+          <p-select id="severidad" [options]="severidades" [(ngModel)]="nuevoIncidente().severidad"
+                      [style]="{width: '100%'}"></p-select>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="flex flex-column gap-2">
+          <label for="estado" class="font-medium">Estado</label>
+          <p-select id="estado" [options]="estados" [(ngModel)]="nuevoIncidente().estado"
+                      [style]="{width: '100%'}"></p-select>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="reportadoPor" class="font-medium">Reportado Por *</label>
+      <input pInputText id="reportadoPor" [(ngModel)]="nuevoIncidente().reportadoPor" placeholder="Nombre de quien reporta" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showDialog.set(false)"></p-button>
+    <p-button label="Reportar" icon="pi pi-send" severity="danger" (onClick)="saveIncidente()"></p-button>
+  </ng-template>
+</p-dialog>

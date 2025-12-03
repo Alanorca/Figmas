@@ -1,0 +1,125 @@
+import { Component, inject, signal, computed } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { TableModule } from 'primeng/table';
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { TextareaModule } from 'primeng/textarea';
+import { TagModule } from 'primeng/tag';
+import { SliderModule } from 'primeng/slider';
+import { MockDataService } from '../../services/mock-data.service';
+import { Riesgo, EstadoRiesgo } from '../../models';
+
+interface RiesgoConActivo extends Riesgo {
+  activoNombre: string;
+}
+
+@Component({
+  selector: 'app-riesgos',
+  standalone: true,
+  imports: [
+    FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
+    InputTextModule, SelectModule, TextareaModule, TagModule, SliderModule
+  ],
+  templateUrl: './riesgos.html',
+  styleUrl: './riesgos.scss'
+})
+export class RiesgosComponent {
+  private mockData = inject(MockDataService);
+
+  activos = this.mockData.activos;
+  showDialog = signal(false);
+
+  riesgos = computed<RiesgoConActivo[]>(() => {
+    return this.activos().flatMap(activo =>
+      activo.riesgos.map(riesgo => ({
+        ...riesgo,
+        activoNombre: activo.nombre
+      }))
+    );
+  });
+
+  // Computed properties for KPIs (arrow functions not allowed in templates)
+  riesgosCriticos = computed(() => this.riesgos().filter(r => this.getNivelRiesgo(r.probabilidad, r.impacto) >= 15).length);
+  riesgosAltos = computed(() => this.riesgos().filter(r => {
+    const nivel = this.getNivelRiesgo(r.probabilidad, r.impacto);
+    return nivel >= 10 && nivel < 15;
+  }).length);
+  riesgosControlados = computed(() => this.riesgos().filter(r => r.estado === 'mitigado' || r.estado === 'aceptado').length);
+
+  nuevoRiesgo = signal({
+    activoId: '',
+    descripcion: '',
+    probabilidad: 3 as 1 | 2 | 3 | 4 | 5,
+    impacto: 3 as 1 | 2 | 3 | 4 | 5,
+    estado: 'identificado' as EstadoRiesgo,
+    responsable: ''
+  });
+
+  activosOptions = computed(() =>
+    this.activos().map(a => ({ label: a.nombre, value: a.id }))
+  );
+
+  estadosRiesgo = [
+    { label: 'Identificado', value: 'identificado' },
+    { label: 'Evaluado', value: 'evaluado' },
+    { label: 'Mitigado', value: 'mitigado' },
+    { label: 'Aceptado', value: 'aceptado' }
+  ];
+
+  getNivelRiesgo(probabilidad: number, impacto: number): number {
+    return probabilidad * impacto;
+  }
+
+  getNivelSeverity(nivel: number): 'danger' | 'warn' | 'success' | 'info' {
+    if (nivel >= 15) return 'danger';
+    if (nivel >= 10) return 'warn';
+    if (nivel >= 5) return 'info';
+    return 'success';
+  }
+
+  getNivelLabel(nivel: number): string {
+    if (nivel >= 15) return 'Critico';
+    if (nivel >= 10) return 'Alto';
+    if (nivel >= 5) return 'Medio';
+    return 'Bajo';
+  }
+
+  getEstadoSeverity(estado: string): 'danger' | 'warn' | 'success' | 'info' | 'secondary' {
+    switch (estado) {
+      case 'identificado': return 'danger';
+      case 'evaluado': return 'warn';
+      case 'mitigado': return 'success';
+      case 'aceptado': return 'info';
+      default: return 'secondary';
+    }
+  }
+
+  openNewDialog(): void {
+    this.nuevoRiesgo.set({
+      activoId: '',
+      descripcion: '',
+      probabilidad: 3,
+      impacto: 3,
+      estado: 'identificado',
+      responsable: ''
+    });
+    this.showDialog.set(true);
+  }
+
+  saveRiesgo(): void {
+    const riesgo = this.nuevoRiesgo();
+    if (riesgo.activoId && riesgo.descripcion && riesgo.responsable) {
+      this.mockData.addRiesgo(riesgo.activoId, {
+        descripcion: riesgo.descripcion,
+        probabilidad: riesgo.probabilidad,
+        impacto: riesgo.impacto,
+        estado: riesgo.estado,
+        responsable: riesgo.responsable
+      });
+      this.showDialog.set(false);
+    }
+  }
+}
