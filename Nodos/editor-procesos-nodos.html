@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Procesos - Sistema de Nodos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Layout Container */
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar izquierda oscura */
+        .sidebar {
+            width: 280px;
+            background: #1a1a1a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #333;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+
+        .close-panel {
+            float: right;
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-panel:hover {
+            color: white;
+        }
+
+        .nodes-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .node-item {
+            padding: 14px;
+            margin-bottom: 8px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            cursor: grab;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            user-select: none;
+        }
+
+        .node-item:hover {
+            background: #333;
+            border-color: #10b981;
+        }
+
+        .node-item:active {
+            cursor: grabbing;
+        }
+
+        .node-item.dragging {
+            opacity: 0.5;
+        }
+
+        .node-item-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .node-icon {
+            font-size: 18px;
+        }
+
+        .node-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .node-drag-handle {
+            margin-left: auto;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .node-description {
+            font-size: 12px;
+            color: #999;
+            line-height: 1.4;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        .top-header {
+            background: white;
+            padding: 16px 32px;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #757575;
+        }
+
+        .breadcrumb-separator {
+            color: #bdbdbd;
+        }
+
+        .page-title-section h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-top: 4px;
+        }
+
+        .page-subtitle {
+            font-size: 12px;
+            color: #757575;
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1a1a1a;
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #fafafa;
+            border-color: #bdbdbd;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: white;
+            padding: 12px 32px;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toolbar select {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .toolbar-button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #757575;
+            transition: all 0.2s;
+        }
+
+        .toolbar-button:hover {
+            background: #fafafa;
+            color: #1a1a1a;
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            overflow: auto;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .canvas {
+            position: relative;
+            min-width: 2000px;
+            min-height: 2000px;
+            padding: 40px;
+        }
+
+        /* Node Card */
+        .node-card {
+            position: absolute;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            width: 520px;
+            cursor: move;
+            user-select: none;
+            transition: box-shadow 0.2s;
+        }
+
+        .node-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .node-card.dragging {
+            opacity: 0.8;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            cursor: grabbing;
+            z-index: 1000;
+        }
+
+        .node-card .node-card-header {
+            cursor: grab;
+        }
+
+        .node-card.dragging .node-card-header {
+            cursor: grabbing;
+        }
+
+        .node-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .node-card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .node-card-title-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .node-card-title-text h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .node-card-title-text p {
+            font-size: 12px;
+            color: #757575;
+            margin-top: 2px;
+        }
+
+        .node-card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #fafafa;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #757575;
+            transition: all 0.2s;
+        }
+
+        .icon-button:hover {
+            background: #f0f0f0;
+            color: #1a1a1a;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #1a1a1a;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .form-help {
+            font-size: 12px;
+            color: #757575;
+            margin-top: 4px;
+        }
+
+        /* File Upload */
+        .file-upload-area {
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload-area:hover {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .file-upload-icon {
+            font-size: 40px;
+            color: #bdbdbd;
+            margin-bottom: 12px;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+
+        .file-icon {
+            font-size: 32px;
+        }
+
+        .file-details {
+            flex: 1;
+            text-align: left;
+        }
+
+        .file-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #757575;
+        }
+
+        .file-status {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .file-remove {
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        /* Condition Item */
+        .condition-item {
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 3px solid #10b981;
+        }
+
+        .condition-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .condition-label {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1a1a1a;
+        }
+
+        .remove-condition {
+            color: #e74c3c;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+        }
+
+        .add-condition-btn {
+            width: 100%;
+            padding: 12px;
+            background: #fafafa;
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #757575;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .add-condition-btn:hover {
+            border-color: #10b981;
+            color: #10b981;
+            background: #f0fdf4;
+        }
+
+        /* Tree Selector */
+        .tree-selector {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .tree-item {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .tree-item:hover {
+            background: #fafafa;
+        }
+
+        .tree-item-checkbox {
+            margin-right: 8px;
+        }
+
+        /* Right Sidebar Panel */
+        .right-sidebar {
+            width: 480px;
+            background: white;
+            border-left: 1px solid #e8e8e8;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .right-sidebar.hidden {
+            display: none;
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            width: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .preview-header {
+            padding: 20px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .preview-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .preview-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .preview-table {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+        }
+
+        .preview-table th {
+            padding: 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #757575;
+            border-bottom: 2px solid #e8e8e8;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .preview-table td {
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #1a1a1a;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-badge.active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.pending {
+            background: #fff3e0;
+            color: #92400e;
+        }
+
+        .status-badge.complete {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-badge.fail {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Formula Editor */
+        .formula-editor {
+            position: relative;
+        }
+
+        .formula-editor-fullscreen {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #757575;
+        }
+
+        .formula-editor-fullscreen:hover {
+            background: #fafafa;
+            color: #1a1a1a;
+        }
+
+        /* Operator Buttons */
+        .operator-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .operator-btn {
+            padding: 6px 12px;
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .operator-btn:hover {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #757575;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f0f0;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #bdbdbd;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        /* Connection Points & Lines */
+        .node-card {
+            position: relative;
+        }
+
+        .connection-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: crosshair;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .connection-point.output {
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .connection-point.input {
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .node-card:hover .connection-point {
+            opacity: 1;
+        }
+
+        .connection-point:hover {
+            transform: translateY(-50%) scale(1.3);
+            background: #059669;
+            box-shadow: 0 2px 12px rgba(16, 185, 129, 0.6);
+        }
+
+        .connection-point.active {
+            opacity: 1 !important;
+            transform: translateY(-50%) scale(1.5);
+            animation: pulse 1s infinite;
+        }
+
+        .connection-point.highlight {
+            opacity: 1 !important;
+            transform: translateY(-50%) scale(1.4);
+            background: #fbbf24;
+            border-color: #f59e0b;
+            box-shadow: 0 2px 12px rgba(251, 191, 36, 0.8);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+            }
+            50% {
+                box-shadow: 0 2px 16px rgba(16, 185, 129, 0.8);
+            }
+        }
+
+        /* Connection Lines SVG Container */
+        #connectionsSvg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .connection-line {
+            stroke: #10b981;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+        }
+
+        .connection-line.dragging {
+            stroke: #60a5fa;
+            stroke-width: 2;
+            stroke-dasharray: 5, 5;
+            animation: dash 0.5s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -10;
+            }
+        }
+
+        .connection-line-arrow {
+            fill: #10b981;
+        }
+
+        /* Connection Labels */
+        .connection-label {
+            position: absolute;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #1a1a1a;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar with Node Types -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    Nodos
+                    <button class="close-panel" onclick="toggleSidebar()">×</button>
+                </div>
+            </div>
+            <div class="nodes-list">
+                <!-- Nodo Condicional -->
+                <div class="node-item" onclick="addNode('conditional')">
+                    <div class="node-item-header">
+                        <span class="node-icon">⚡</span>
+                        <span class="node-name">Nodo Condicional (If / Case)</span>
+                        <span class="node-drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="node-description">
+                        Permite bifurcar el flujo según condiciones definidas por el usuario.
+                    </div>
+                </div>
+
+                <!-- Nodo Archivos -->
+                <div class="node-item" onclick="addNode('file')">
+                    <div class="node-item-header">
+                        <span class="node-icon">📁</span>
+                        <span class="node-name">Nodo Archivos (CSV / Excel)</span>
+                        <span class="node-drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="node-description">
+                        Gestiona la carga o selección de archivos para alimentar el proceso.
+                    </div>
+                </div>
+
+                <!-- Nodo Activos -->
+                <div class="node-item" onclick="addNode('asset')">
+                    <div class="node-item-header">
+                        <span class="node-icon">🏦</span>
+                        <span class="node-name">Nodo Activos</span>
+                        <span class="node-drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="node-description">
+                        Integra activos del negocio al flujo del proceso.
+                    </div>
+                </div>
+
+                <!-- Nodo Transformación -->
+                <div class="node-item" onclick="addNode('transformation')">
+                    <div class="node-item-header">
+                        <span class="node-icon">🔄</span>
+                        <span class="node-name">Nodo Transformación</span>
+                        <span class="node-drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="node-description">
+                        Realiza operaciones sobre datos para adaptarlos al contexto.
+                    </div>
+                </div>
+
+                <!-- Nodo Prompt LLM -->
+                <div class="node-item" onclick="addNode('prompt')">
+                    <div class="node-item-header">
+                        <span class="node-icon">🤖</span>
+                        <span class="node-name">Nodo Prompt LLM</span>
+                        <span class="node-drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="node-description">
+                        Invoca modelos de lenguaje para generar respuestas basadas en contexto.
+                    </div>
+                </div>
+
+                <!-- Nodo Cambio de Estado -->
+                <div class="node-item" onclick="addNode('status')">
+                    <div class="node-item-header">
+                        <span class="node-icon">🔄</span>
+                        <span class="node-name">Nodo Cambio de Estado del Proceso</span>
+                        <span class="node-drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="node-description">
+                        Actualiza el estado del proceso en ejecución.
+                    </div>
+                </div>
+
+                <!-- Nodo Integración (futuro) -->
+                <div class="node-item" onclick="alert('Nodo en desarrollo - Disponible próximamente')" style="opacity: 0.5;">
+                    <div class="node-item-header">
+                        <span class="node-icon">🔗</span>
+                        <span class="node-name">Nodo Integración (futuro)</span>
+                        <span class="node-drag-handle">⋮⋮</span>
+                    </div>
+                    <div class="node-description">
+                        Conexión con sistemas externos y bases de datos relacionales.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <div class="top-header">
+                <div class="page-title-section">
+                    <div class="breadcrumb">
+                        🏠 <span class="breadcrumb-separator">›</span> Electronics <span class="breadcrumb-separator">›</span> Computer <span class="breadcrumb-separator">›</span> Accessories <span class="breadcrumb-separator">›</span> Keyboard <span class="breadcrumb-separator">›</span> Wireless
+                    </div>
+                    <h1>Procesos</h1>
+                    <p class="page-subtitle">Orca@SecurityBy Design</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">🔍 Buscar</button>
+                    <button class="btn btn-primary" onclick="saveProcess()">💾 Guardar</button>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <select id="nodeTypeSelect">
+                    <option value="">Seleccionar nodo</option>
+                    <option value="conditional">Nodo Condicional</option>
+                    <option value="file">Nodo Archivos</option>
+                    <option value="asset">Nodo Activos</option>
+                    <option value="transformation">Nodo Transformación</option>
+                    <option value="prompt">Nodo Prompt LLM</option>
+                    <option value="status">Nodo Cambio de Estado</option>
+                </select>
+                <button class="toolbar-button" title="Validar flujo">✓</button>
+                <button class="toolbar-button" title="Zoom in">+</button>
+                <button class="toolbar-button" title="Zoom out">-</button>
+                <button class="toolbar-button" title="Ajustar vista">⊡</button>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Buscar">
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="canvas-area">
+                <div class="canvas" id="canvas">
+                    <!-- SVG for connection lines -->
+                    <svg id="connectionsSvg">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                <polygon points="0 0, 10 3, 0 6" class="connection-line-arrow" />
+                            </marker>
+                        </defs>
+                    </svg>
+
+                    <!-- Empty State -->
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-title">Adquisición de Créditos Hipotecarios</div>
+                        <div class="empty-state-text">
+                            Selecciona un tipo de nodo desde el panel izquierdo o el menú desplegable para comenzar a construir tu proceso.
+                        </div>
+                    </div>
+
+                    <!-- Los nodos se agregarán dinámicamente aquí -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar Panel -->
+        <div class="right-sidebar" id="rightSidebar">
+            <div class="preview-panel">
+                <div class="preview-header">
+                    <div class="preview-title">
+                        Previsualizador
+                        <button class="close-panel" onclick="closeRightSidebar()">×</button>
+                    </div>
+                </div>
+                <div class="preview-body" id="previewBody">
+                    <div style="padding: 20px; text-align: center; color: #757575;">
+                        <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;">👁️</div>
+                        <p>Selecciona "Previsualizar" en un nodo de archivo para ver los datos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Node templates
+        const nodeTemplates = {
+            conditional: `
+                <div class="node-card">
+                    <div class="node-card-header">
+                        <div class="node-card-title">
+                            <div class="node-card-title-icon" style="background: #e3f2fd; color: #1976d2;">⚡</div>
+                            <div class="node-card-title-text">
+                                <h3>Nodo Condicional</h3>
+                                <p>Define condiciones para ramificación del flujo</p>
+                            </div>
+                        </div>
+                        <div class="node-card-actions">
+                            <button class="icon-button" onclick="editNode(this)">✏️</button>
+                            <button class="icon-button" onclick="deleteNode(this)">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo de estructura</label>
+                        <select class="form-select">
+                            <option value="if">If (simple)</option>
+                            <option value="case">Case (múltiples casos)</option>
+                        </select>
+                        <p class="form-help">Selecciona el tipo de lógica condicional</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Condiciones</label>
+                        <div id="conditionsList">
+                            <div class="condition-item">
+                                <div class="condition-header">
+                                    <span class="condition-label">Condición 1</span>
+                                    <button class="remove-condition">×</button>
+                                </div>
+                                <input type="text" class="form-input" placeholder="Variable o expresión (ej: monto > 1000)" style="margin-bottom: 8px;">
+                                <select class="form-select" style="margin-bottom: 8px;">
+                                    <option value="">Selecciona nodo destino</option>
+                                    <option value="node2">Nodo Transformación</option>
+                                    <option value="node3">Nodo Prompt LLM</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="add-condition-btn">+ Agregar condición</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Caso por defecto (default)</label>
+                        <select class="form-select">
+                            <option value="">Seleccionar acción...</option>
+                            <option value="node">Conectar a nodo específico</option>
+                            <option value="complete">Completar proceso</option>
+                            <option value="fail">Marcar como fallido</option>
+                            <option value="cancel">Cancelar proceso</option>
+                        </select>
+                        <p class="form-help">Acción cuando ninguna condición se cumple</p>
+                    </div>
+                </div>
+            `,
+            file: `
+                <div class="node-card">
+                    <div class="node-card-header">
+                        <div class="node-card-title">
+                            <div class="node-card-title-icon" style="background: #fff3e0; color: #ef6c00;">📁</div>
+                            <div class="node-card-title-text">
+                                <h3>Nodo Radio Archivo</h3>
+                                <p>Integra archivos delimitados (XLS, CSV) como fuente de datos</p>
+                            </div>
+                        </div>
+                        <div class="node-card-actions">
+                            <button class="icon-button" onclick="showPreview()">👁️</button>
+                            <button class="icon-button" onclick="editNode(this)">✏️</button>
+                            <button class="icon-button" onclick="deleteNode(this)">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nombre del Nodo</label>
+                        <input type="text" class="form-input" placeholder="Datos Bancarios" value="Datos Bancarios">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Seleccionar archivo</label>
+                        <div class="file-upload-area">
+                            <div class="file-upload-icon">📄</div>
+                            <p style="margin-bottom: 8px; font-weight: 500;">Choose | Upload | Cancel</p>
+                            <p style="font-size: 12px; color: #757575;">Arrastra y suelta tus archivos aquí para subirlos</p>
+                        </div>
+                        <div class="file-info">
+                            <span class="file-icon">📊</span>
+                            <div class="file-details">
+                                <div class="file-name">5mmj7jgQg8u81.png</div>
+                                <div class="file-size">124.488 KB</div>
+                            </div>
+                            <span class="file-status">Pending</span>
+                            <span class="file-remove">×</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Delimitador (CSV)</label>
+                        <select class="form-select">
+                            <option value=",">Coma (,)</option>
+                            <option value=";">Punto y coma (;)</option>
+                            <option value="|">Pipe (|)</option>
+                            <option value="tab">Tabulación</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Columna clasificadora</label>
+                        <select class="form-select">
+                            <option value="">Selecciona una opción</option>
+                            <option value="col1">Nombre</option>
+                            <option value="col2">Email</option>
+                            <option value="col3">Position</option>
+                        </select>
+                        <p class="form-help">Define la columna para agrupar/clasificar los datos</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Selecciona las columnas para analizar</label>
+                        <select class="form-select" multiple style="min-height: 100px;">
+                            <option value="col1">Nombre</option>
+                            <option value="col2">Email</option>
+                            <option value="col3">Position</option>
+                            <option value="col4">Status</option>
+                            <option value="col5">Rol</option>
+                        </select>
+                        <p class="form-help">Mantén presionado Ctrl/Cmd para seleccionar múltiples</p>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" style="flex: 1;">Previsualizar</button>
+                        <button class="btn btn-primary" style="flex: 1;">Siguiente</button>
+                    </div>
+                </div>
+            `,
+            asset: `
+                <div class="node-card">
+                    <div class="node-card-header">
+                        <div class="node-card-title">
+                            <div class="node-card-title-icon" style="background: #e8f5e9; color: #2e7d32;">🏦</div>
+                            <div class="node-card-title-text">
+                                <h3>Nodo Activo</h3>
+                                <p>Vincula un activo específico del área correspondiente al flujo del proceso</p>
+                            </div>
+                        </div>
+                        <div class="node-card-actions">
+                            <button class="icon-button" onclick="editNode(this)">✏️</button>
+                            <button class="icon-button" onclick="deleteNode(this)">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Área del Activo</label>
+                        <select class="form-select" onchange="loadAssets(this.value)">
+                            <option value="">Selecciona un área...</option>
+                            <option value="finanzas">Finanzas</option>
+                            <option value="operaciones">Operaciones</option>
+                            <option value="ti">Tecnología</option>
+                            <option value="rrhh">Recursos Humanos</option>
+                        </select>
+                        <p class="form-help">Selecciona el área organizacional del activo</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Activo</label>
+                        <select class="form-select">
+                            <option value="">Primero selecciona un área...</option>
+                        </select>
+                        <p class="form-help">El activo incluirá todas sus propiedades y metadatos automáticamente</p>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;">Vincular activos</button>
+                </div>
+            `,
+            transformation: `
+                <div class="node-card">
+                    <div class="node-card-header">
+                        <div class="node-card-title">
+                            <div class="node-card-title-icon" style="background: #f3e5f5; color: #7b1fa2;">🔄</div>
+                            <div class="node-card-title-text">
+                                <h3>Nodo Transformación</h3>
+                                <p>Mapeo, filtrado y enriquecimiento de datos</p>
+                            </div>
+                        </div>
+                        <div class="node-card-actions">
+                            <button class="icon-button" onclick="editNode(this)">✏️</button>
+                            <button class="icon-button" onclick="deleteNode(this)">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo de operación</label>
+                        <select class="form-select" onchange="showTransformOperation(this.value)">
+                            <option value="">Seleccionar...</option>
+                            <option value="map">Mapeo de campos</option>
+                            <option value="filter">Filtrado</option>
+                            <option value="enrich">Enriquecimiento (cálculos)</option>
+                            <option value="sort">Ordenar</option>
+                            <option value="dedupe">Eliminar duplicados</option>
+                            <option value="aggregate">Agregación (sum, promedio, etc.)</option>
+                        </select>
+                    </div>
+                    <div id="transformOperationArea">
+                        <div class="form-group">
+                            <label class="form-label">Propiedad de entrada</label>
+                            <input type="text" class="form-input" placeholder="Selecciona o escribe el nombre del campo">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fórmula / Expresión</label>
+                            <div class="formula-editor">
+                                <button class="formula-editor-fullscreen" onclick="openFullscreenEditor()">⛶ Pantalla completa</button>
+                                <textarea class="form-textarea" placeholder="Ej: campo1 + campo2 * 0.16&#10;Ej: IF(monto > 1000, 'alto', 'bajo')&#10;Ej: SUM(valores)"></textarea>
+                            </div>
+                            <div class="operator-buttons">
+                                <button class="operator-btn">+</button>
+                                <button class="operator-btn">-</button>
+                                <button class="operator-btn">*</button>
+                                <button class="operator-btn">/</button>
+                                <button class="operator-btn">SUM</button>
+                                <button class="operator-btn">AVG</button>
+                                <button class="operator-btn">MIN</button>
+                                <button class="operator-btn">MAX</button>
+                                <button class="operator-btn">STDEV</button>
+                                <button class="operator-btn">IF</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Guardar resultado en</label>
+                            <input type="text" class="form-input" placeholder="Nombre de la nueva propiedad">
+                            <p class="form-help">Nombre de la variable donde se guardará el resultado</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+            prompt: `
+                <div class="node-card">
+                    <div class="node-card-header">
+                        <div class="node-card-title">
+                            <div class="node-card-title-icon" style="background: #e0f7fa; color: #00838f;">🤖</div>
+                            <div class="node-card-title-text">
+                                <h3>Nodo Prompt LLM</h3>
+                                <p>Procesa información con modelos de lenguaje</p>
+                            </div>
+                        </div>
+                        <div class="node-card-actions">
+                            <button class="icon-button" onclick="editNode(this)">✏️</button>
+                            <button class="icon-button" onclick="deleteNode(this)">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Seleccionar modelo</label>
+                        <select class="form-select">
+                            <option value="grok">Grok (xAI)</option>
+                            <option value="gpt4">GPT-4 (OpenAI)</option>
+                            <option value="gpt35">GPT-3.5 (OpenAI)</option>
+                            <option value="gemini">Gemini (Google)</option>
+                            <option value="claude">Claude (Anthropic)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Prompt</label>
+                        <textarea class="form-textarea" placeholder="Escribe tu prompt aquí...&#10;&#10;Puedes referenciar variables del contexto usando {{variable}}"></textarea>
+                        <p class="form-help">Usa {{nombreVariable}} para insertar datos del contexto</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Formato de salida</label>
+                        <select class="form-select">
+                            <option value="json">JSON</option>
+                            <option value="text">Texto plano</option>
+                            <option value="table">Tabla de datos</option>
+                            <option value="markdown">Markdown</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Guardar respuesta en</label>
+                        <input type="text" class="form-input" placeholder="Nombre de la variable">
+                        <p class="form-help">Variable donde se almacenará la respuesta del LLM</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Propiedades del contexto a enviar</label>
+                        <div class="tree-selector">
+                            <div class="tree-item">
+                                <input type="checkbox" class="tree-item-checkbox" id="selectAll">
+                                <label for="selectAll"><strong>Select All</strong></label>
+                            </div>
+                            <div class="tree-item" style="padding-left: 20px;">
+                                <input type="checkbox" class="tree-item-checkbox">
+                                <label>activo.nombre</label>
+                            </div>
+                            <div class="tree-item" style="padding-left: 20px;">
+                                <input type="checkbox" class="tree-item-checkbox">
+                                <label>activo.valor</label>
+                            </div>
+                            <div class="tree-item" style="padding-left: 20px;">
+                                <input type="checkbox" class="tree-item-checkbox">
+                                <label>proceso.descripcion</label>
+                            </div>
+                            <div class="tree-item" style="padding-left: 20px;">
+                                <input type="checkbox" class="tree-item-checkbox">
+                                <label>datos.columnas</label>
+                            </div>
+                        </div>
+                        <p class="form-help">El sistema paginará automáticamente si excede el tamaño del contexto</p>
+                    </div>
+                </div>
+            `,
+            status: `
+                <div class="node-card">
+                    <div class="node-card-header">
+                        <div class="node-card-title">
+                            <div class="node-card-title-icon" style="background: #ede7f6; color: #5e35b1;">🔄</div>
+                            <div class="node-card-title-text">
+                                <h3>Nodo Cambio de Estado</h3>
+                                <p>Actualiza el estado del proceso en ejecución</p>
+                            </div>
+                        </div>
+                        <div class="node-card-actions">
+                            <button class="icon-button" onclick="editNode(this)">✏️</button>
+                            <button class="icon-button" onclick="deleteNode(this)">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nuevo estado</label>
+                        <select class="form-select">
+                            <option value="pending">Pending - En espera</option>
+                            <option value="running">Running - En ejecución</option>
+                            <option value="complete">Complete - Completado</option>
+                            <option value="fail">Fail - Fallido</option>
+                            <option value="post">Post - Post procesamiento</option>
+                            <option value="canceled">Canceled - Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Motivo del cambio</label>
+                        <textarea class="form-textarea" placeholder="Describe el motivo del cambio de estado (ej: condición no cumplida, error en validación, etc.)" style="min-height: 80px;"></textarea>
+                        <p class="form-help">Este texto se registrará en el log de ejecución</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Acción después del cambio</label>
+                        <select class="form-select">
+                            <option value="continue">Continuar flujo normal</option>
+                            <option value="stop">Detener proceso</option>
+                            <option value="notify">Enviar notificación</option>
+                            <option value="rollback">Revertir cambios</option>
+                        </select>
+                    </div>
+                </div>
+            `
+        };
+
+        // Connection state
+        let isDraggingConnection = false;
+        let currentLine = null;
+        let sourcePoint = null;
+        let connections = [];
+        let nodeIdCounter = 0;
+
+        // Node dragging state
+        let isDraggingNode = false;
+        let draggedNode = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        // Sidebar drag state
+        let draggedNodeType = null;
+
+        // Add node to canvas
+        function addNode(type, x = null, y = null) {
+            const canvas = document.getElementById('canvas');
+            const emptyState = document.getElementById('emptyState');
+
+            // Hide empty state
+            if (emptyState) {
+                emptyState.style.display = 'none';
+            }
+
+            // Add node
+            const nodeHTML = nodeTemplates[type];
+            if (nodeHTML) {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.innerHTML = nodeHTML;
+                const nodeCard = nodeDiv.firstElementChild;
+
+                // Assign unique ID
+                nodeCard.setAttribute('data-node-id', 'node-' + (++nodeIdCounter));
+
+                // Set position (absolute)
+                if (x !== null && y !== null) {
+                    nodeCard.style.left = x + 'px';
+                    nodeCard.style.top = y + 'px';
+                } else {
+                    // Default position with offset
+                    const defaultX = 100 + (nodeIdCounter * 30);
+                    const defaultY = 100 + (nodeIdCounter * 30);
+                    nodeCard.style.left = defaultX + 'px';
+                    nodeCard.style.top = defaultY + 'px';
+                }
+
+                // Add connection points
+                const inputPoint = document.createElement('div');
+                inputPoint.className = 'connection-point input';
+                inputPoint.setAttribute('data-type', 'input');
+                inputPoint.setAttribute('data-node-id', nodeCard.getAttribute('data-node-id'));
+
+                const outputPoint = document.createElement('div');
+                outputPoint.className = 'connection-point output';
+                outputPoint.setAttribute('data-type', 'output');
+                outputPoint.setAttribute('data-node-id', nodeCard.getAttribute('data-node-id'));
+
+                nodeCard.appendChild(inputPoint);
+                nodeCard.appendChild(outputPoint);
+
+                // Add event listeners for connection points
+                outputPoint.addEventListener('mousedown', startConnection);
+                inputPoint.addEventListener('mouseenter', highlightConnectionPoint);
+                inputPoint.addEventListener('mouseleave', unhighlightConnectionPoint);
+
+                // Add event listeners for node dragging
+                const header = nodeCard.querySelector('.node-card-header');
+                header.addEventListener('mousedown', startNodeDrag);
+
+                canvas.appendChild(nodeCard);
+
+                // Update connections after adding
+                setTimeout(updateAllConnections, 10);
+
+                return nodeCard;
+            }
+        }
+
+        // Start dragging node from sidebar
+        function initSidebarDrag() {
+            const nodeItems = document.querySelectorAll('.node-item');
+
+            nodeItems.forEach(item => {
+                item.setAttribute('draggable', 'true');
+
+                item.addEventListener('dragstart', (e) => {
+                    const type = e.currentTarget.getAttribute('onclick');
+                    if (type) {
+                        const match = type.match(/addNode\('(.+?)'\)/);
+                        if (match) {
+                            draggedNodeType = match[1];
+                            e.currentTarget.classList.add('dragging');
+                            e.dataTransfer.effectAllowed = 'copy';
+                        }
+                    }
+                });
+
+                item.addEventListener('dragend', (e) => {
+                    e.currentTarget.classList.remove('dragging');
+                    draggedNodeType = null;
+                });
+            });
+        }
+
+        // Setup canvas drop zone
+        function initCanvasDropZone() {
+            const canvas = document.getElementById('canvas');
+
+            canvas.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            });
+
+            canvas.addEventListener('drop', (e) => {
+                e.preventDefault();
+
+                if (draggedNodeType) {
+                    const canvasRect = canvas.getBoundingClientRect();
+                    const x = e.clientX - canvasRect.left;
+                    const y = e.clientY - canvasRect.top;
+
+                    addNode(draggedNodeType, x, y);
+                    draggedNodeType = null;
+                }
+            });
+        }
+
+        // Start dragging existing node
+        function startNodeDrag(e) {
+            // Prevent if clicking on buttons
+            if (e.target.closest('.icon-button') || e.target.closest('.btn')) {
+                return;
+            }
+
+            // Prevent if dragging connection
+            if (e.target.classList.contains('connection-point')) {
+                return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            isDraggingNode = true;
+            draggedNode = e.currentTarget.closest('.node-card');
+            draggedNode.classList.add('dragging');
+
+            const canvasArea = document.querySelector('.canvas-area');
+
+            // Calculate offset relative to node's current position
+            const nodeX = parseInt(draggedNode.style.left) || 0;
+            const nodeY = parseInt(draggedNode.style.top) || 0;
+
+            const rect = draggedNode.getBoundingClientRect();
+            const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+
+            dragOffsetX = e.clientX - canvasRect.left - nodeX + canvasArea.scrollLeft;
+            dragOffsetY = e.clientY - canvasRect.top - nodeY + canvasArea.scrollTop;
+
+            document.addEventListener('mousemove', dragNode);
+            document.addEventListener('mouseup', endNodeDrag);
+        }
+
+        // Drag node
+        function dragNode(e) {
+            if (!isDraggingNode || !draggedNode) return;
+
+            const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+            const canvasArea = document.querySelector('.canvas-area');
+
+            let x = e.clientX - canvasRect.left - dragOffsetX + canvasArea.scrollLeft;
+            let y = e.clientY - canvasRect.top - dragOffsetY + canvasArea.scrollTop;
+
+            // Keep within canvas bounds
+            x = Math.max(0, Math.min(x, 2000 - draggedNode.offsetWidth));
+            y = Math.max(0, Math.min(y, 2000 - draggedNode.offsetHeight));
+
+            draggedNode.style.left = x + 'px';
+            draggedNode.style.top = y + 'px';
+
+            // Update connection lines
+            updateAllConnections();
+        }
+
+        // End dragging node
+        function endNodeDrag(e) {
+            if (!isDraggingNode) return;
+
+            isDraggingNode = false;
+            if (draggedNode) {
+                draggedNode.classList.remove('dragging');
+                draggedNode = null;
+            }
+
+            document.removeEventListener('mousemove', dragNode);
+            document.removeEventListener('mouseup', endNodeDrag);
+        }
+
+        // Start dragging connection
+        function startConnection(e) {
+            // Prevent if already dragging a node
+            if (isDraggingNode) {
+                return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            isDraggingConnection = true;
+            sourcePoint = e.target;
+            sourcePoint.classList.add('active');
+
+            const svg = document.getElementById('connectionsSvg');
+            currentLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            currentLine.setAttribute('class', 'connection-line dragging');
+            currentLine.setAttribute('marker-end', 'url(#arrowhead)');
+            svg.appendChild(currentLine);
+
+            document.addEventListener('mousemove', dragConnection);
+            document.addEventListener('mouseup', endConnection);
+
+            updateConnectionLine(e);
+        }
+
+        // Drag connection line
+        function dragConnection(e) {
+            if (!isDraggingConnection) return;
+            updateConnectionLine(e);
+            checkProximityToNodes(e);
+        }
+
+        // Update connection line path
+        function updateConnectionLine(e) {
+            if (!currentLine || !sourcePoint) return;
+
+            const sourceRect = sourcePoint.getBoundingClientRect();
+            const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+
+            const startX = sourceRect.left + sourceRect.width / 2 - canvasRect.left;
+            const startY = sourceRect.top + sourceRect.height / 2 - canvasRect.top;
+            const endX = e.clientX - canvasRect.left;
+            const endY = e.clientY - canvasRect.top;
+
+            // Create smooth bezier curve
+            const controlPointOffset = Math.abs(endX - startX) / 2;
+            const path = `M ${startX} ${startY} C ${startX + controlPointOffset} ${startY}, ${endX - controlPointOffset} ${endY}, ${endX} ${endY}`;
+
+            currentLine.setAttribute('d', path);
+        }
+
+        // Check proximity to other nodes
+        function checkProximityToNodes(e) {
+            const allInputPoints = document.querySelectorAll('.connection-point.input');
+            let nearestPoint = null;
+            let minDistance = 50; // pixels
+
+            allInputPoints.forEach(point => {
+                if (point.getAttribute('data-node-id') === sourcePoint.getAttribute('data-node-id')) {
+                    return; // Skip same node
+                }
+
+                const rect = point.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                const distance = Math.sqrt(
+                    Math.pow(e.clientX - centerX, 2) +
+                    Math.pow(e.clientY - centerY, 2)
+                );
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestPoint = point;
+                }
+            });
+
+            // Highlight nearest point
+            document.querySelectorAll('.connection-point.highlight').forEach(p => {
+                p.classList.remove('highlight');
+            });
+
+            if (nearestPoint) {
+                nearestPoint.classList.add('highlight');
+            }
+        }
+
+        // End connection drag
+        function endConnection(e) {
+            if (!isDraggingConnection) return;
+
+            isDraggingConnection = false;
+            sourcePoint.classList.remove('active');
+
+            document.removeEventListener('mousemove', dragConnection);
+            document.removeEventListener('mouseup', endConnection);
+
+            // Check if we're near a valid input point
+            const highlightedPoint = document.querySelector('.connection-point.highlight');
+
+            if (highlightedPoint) {
+                // Create permanent connection
+                createConnection(sourcePoint, highlightedPoint);
+                highlightedPoint.classList.remove('highlight');
+            } else {
+                // Remove temporary line
+                if (currentLine) {
+                    currentLine.remove();
+                }
+            }
+
+            currentLine = null;
+            sourcePoint = null;
+        }
+
+        // Create permanent connection
+        function createConnection(fromPoint, toPoint) {
+            const svg = document.getElementById('connectionsSvg');
+
+            // Remove temporary dragging line
+            if (currentLine) {
+                currentLine.remove();
+            }
+
+            // Create permanent line
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            line.setAttribute('class', 'connection-line');
+            line.setAttribute('marker-end', 'url(#arrowhead)');
+            line.setAttribute('data-from', fromPoint.getAttribute('data-node-id'));
+            line.setAttribute('data-to', toPoint.getAttribute('data-node-id'));
+
+            svg.appendChild(line);
+
+            // Store connection
+            connections.push({
+                line: line,
+                from: fromPoint,
+                to: toPoint
+            });
+
+            // Update line position
+            updateAllConnections();
+
+            console.log('Connection created:', fromPoint.getAttribute('data-node-id'), '->', toPoint.getAttribute('data-node-id'));
+        }
+
+        // Update all connection lines
+        function updateAllConnections() {
+            connections.forEach(conn => {
+                const fromRect = conn.from.getBoundingClientRect();
+                const toRect = conn.to.getBoundingClientRect();
+                const canvasRect = document.getElementById('canvas').getBoundingClientRect();
+
+                const startX = fromRect.left + fromRect.width / 2 - canvasRect.left;
+                const startY = fromRect.top + fromRect.height / 2 - canvasRect.top;
+                const endX = toRect.left + toRect.width / 2 - canvasRect.left;
+                const endY = toRect.top + toRect.height / 2 - canvasRect.top;
+
+                const controlPointOffset = Math.abs(endX - startX) / 2;
+                const path = `M ${startX} ${startY} C ${startX + controlPointOffset} ${startY}, ${endX - controlPointOffset} ${endY}, ${endX} ${endY}`;
+
+                conn.line.setAttribute('d', path);
+            });
+        }
+
+        // Highlight connection point
+        function highlightConnectionPoint(e) {
+            if (isDraggingConnection && sourcePoint) {
+                e.target.classList.add('highlight');
+            }
+        }
+
+        // Remove highlight from connection point
+        function unhighlightConnectionPoint(e) {
+            e.target.classList.remove('highlight');
+        }
+
+        // Update connections when canvas is scrolled or resized
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(updateAllConnections, 100);
+        });
+
+        document.querySelector('.canvas-area').addEventListener('scroll', updateAllConnections);
+
+        // Delete node
+        function deleteNode(button) {
+            if (confirm('¿Estás seguro de eliminar este nodo?')) {
+                const nodeCard = button.closest('.node-card');
+                const nodeId = nodeCard.getAttribute('data-node-id');
+
+                // Remove connections associated with this node
+                connections = connections.filter(conn => {
+                    const fromId = conn.from.getAttribute('data-node-id');
+                    const toId = conn.to.getAttribute('data-node-id');
+
+                    if (fromId === nodeId || toId === nodeId) {
+                        conn.line.remove();
+                        return false;
+                    }
+                    return true;
+                });
+
+                // Remove node
+                nodeCard.remove();
+
+                // Show empty state if no nodes left
+                const canvas = document.getElementById('canvas');
+                const nodes = canvas.querySelectorAll('.node-card');
+                if (nodes.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                }
+            }
+        }
+
+        // Show/hide right sidebar
+        function showRightSidebar() {
+            const rightSidebar = document.getElementById('rightSidebar');
+            rightSidebar.classList.remove('hidden');
+        }
+
+        function closeRightSidebar() {
+            const rightSidebar = document.getElementById('rightSidebar');
+            rightSidebar.classList.add('hidden');
+        }
+
+        // Show preview panel
+        function showPreview() {
+            const rightSidebar = document.getElementById('rightSidebar');
+            const previewBody = document.getElementById('previewBody');
+
+            rightSidebar.classList.remove('hidden');
+
+            // Sample data for preview
+            previewBody.innerHTML = `
+                <div class="preview-body">
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Position</th>
+                                <th>Status</th>
+                                <th>Rol</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Alice Johnson Smith</td>
+                                <td>alice@sns.com</td>
+                                <td>Financial Analyst</td>
+                                <td><span class="status-badge active">Activo</span></td>
+                                <td>Gerente de riesgos</td>
+                            </tr>
+                            <tr>
+                                <td>Bob Miller Scott</td>
+                                <td>bob@sns.com</td>
+                                <td>Software Engineer</td>
+                                <td><span class="status-badge pending">Pendiente</span></td>
+                                <td>Especialista en seguridad</td>
+                            </tr>
+                            <tr>
+                                <td>Charlie Brown Davis</td>
+                                <td>charlie@sns.com</td>
+                                <td>Marketing Specialist</td>
+                                <td><span class="status-badge fail">Inactivo</span></td>
+                                <td>Consultor estratégico</td>
+                            </tr>
+                            <tr>
+                                <td>Diana White Thompson</td>
+                                <td>diana@sns.com</td>
+                                <td>Product Designer</td>
+                                <td><span class="status-badge active">Activo</span></td>
+                                <td>Oficial de Cumplimiento</td>
+                            </tr>
+                            <tr>
+                                <td>Ethan Miller Clark</td>
+                                <td>ethan@sns.com</td>
+                                <td>Data Scientist</td>
+                                <td><span class="status-badge pending">Pendiente</span></td>
+                                <td>Desarrollador de software</td>
+                            </tr>
+                            <tr>
+                                <td>Fiona Green Taylor</td>
+                                <td>fiona@sns.com</td>
+                                <td>HR Coordinator</td>
+                                <td><span class="status-badge fail">Inactivo</span></td>
+                                <td>Desarrollador de software</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="form-label">Columna clasificadora</label>
+                        <select class="form-select">
+                            <option value="">Selecciona una opción</option>
+                            <option value="col1">Nombre</option>
+                            <option value="col2">Email</option>
+                            <option value="col3">Position</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Selecciona las columnas para analizar</label>
+                        <select class="form-select" multiple style="min-height: 120px;">
+                            <option value="col1" selected>Nombre</option>
+                            <option value="col2" selected>Email</option>
+                            <option value="col3" selected>Position</option>
+                            <option value="col4">Status</option>
+                            <option value="col5">Rol</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;">Guardar</button>
+                </div>
+            `;
+        }
+
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.style.display = sidebar.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        // Save process
+        function saveProcess() {
+            alert('Proceso guardado exitosamente!\\n\\nSe han validado:\\n• Conexiones entre nodos\\n• Configuración de cada nodo\\n• Flujo lógico del proceso');
+        }
+
+        // Open fullscreen editor
+        function openFullscreenEditor() {
+            alert('Editor de fórmulas en pantalla completa\\n(Por implementar con Monaco Editor)');
+        }
+
+        // Load assets based on area
+        function loadAssets(area) {
+            const assetSelect = event.target.closest('.node-card').querySelector('.form-group:nth-child(3) select');
+
+            const assets = {
+                'finanzas': [
+                    'Sistema ERP Financiero',
+                    'Base de datos contable',
+                    'Servidor de reportes'
+                ],
+                'operaciones': [
+                    'Sistema de gestión operativa',
+                    'Almacén de datos',
+                    'Plataforma de logística'
+                ],
+                'ti': [
+                    'Infraestructura de servidores',
+                    'Red corporativa',
+                    'Sistema de respaldos'
+                ],
+                'rrhh': [
+                    'Sistema de nómina',
+                    'Base de datos de empleados',
+                    'Plataforma de capacitación'
+                ]
+            };
+
+            if (area && assets[area]) {
+                assetSelect.innerHTML = '<option value="">Selecciona un activo...</option>' +
+                    assets[area].map(asset => `<option value="${asset}">${asset}</option>`).join('');
+            } else {
+                assetSelect.innerHTML = '<option value="">Primero selecciona un área...</option>';
+            }
+        }
+
+        // Add node from dropdown
+        document.getElementById('nodeTypeSelect').addEventListener('change', function(e) {
+            if (e.target.value) {
+                addNode(e.target.value);
+                e.target.value = '';
+            }
+        });
+
+        // Initialize drag & drop
+        window.addEventListener('load', function() {
+            // Initialize sidebar drag
+            initSidebarDrag();
+
+            // Initialize canvas drop zone
+            initCanvasDropZone();
+
+            // You can uncomment this to show a sample node on load
+            // addNode('file', 100, 100);
+        });
+    </script>
+</body>
+</html>

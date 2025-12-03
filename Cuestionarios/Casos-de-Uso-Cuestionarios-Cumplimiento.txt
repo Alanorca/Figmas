@@ -1,0 +1,1021 @@
+CASOS DE USO - CUESTIONARIOS Y CUMPLIMIENTO
+Sistema de Gestión de Riesgos ORCA GRC
+================================================
+
+ÉPICA: AUDITORÍA Y CUMPLIMIENTO
+Objetivo: Asegurar la trazabilidad, evidencia y conformidad regulatoria del sistema de gestión de riesgos mediante cuestionarios estructurados y monitoreo de cumplimiento normativo.
+
+================================================
+ÍNDICE DE CASOS DE USO
+================================================
+
+1. GESTIÓN DE CUESTIONARIOS
+   CU-01: Crear Cuestionario de Cumplimiento
+   CU-02: Diseñar Estructura de Cuestionario
+   CU-03: Asignar Cuestionario a Área/Proceso
+   CU-04: Responder Cuestionario
+   CU-05: Revisar y Validar Respuestas
+   CU-06: Generar Reporte de Cuestionario
+
+2. GESTIÓN DE CUMPLIMIENTO NORMATIVO
+   CU-07: Registrar Marco Normativo Aplicable
+   CU-08: Mapear Controles a Requisitos Normativos
+   CU-09: Evaluar Estado de Cumplimiento
+   CU-10: Generar Alertas de Incumplimiento
+   CU-11: Gestionar Evidencia Documental
+   CU-12: Auditar Historial de Cumplimiento
+
+3. INTEGRACIÓN CON CONTROLES
+   CU-13: Validar Controles desde Cuestionarios
+   CU-14: Detectar Controles Faltantes
+   CU-15: Recomendar Acciones Correctivas
+
+================================================
+CASOS DE USO DETALLADOS
+================================================
+
+========================================
+1. GESTIÓN DE CUESTIONARIOS
+========================================
+
+CU-01: CREAR CUESTIONARIO DE CUMPLIMIENTO
+------------------------------------------
+Actor Principal: Administrador de Cumplimiento, Auditor
+Precondiciones:
+  - Usuario autenticado con permisos de gestión de cuestionarios
+  - Marco normativo registrado en el sistema
+
+Flujo Principal:
+1. El usuario accede al módulo de "Cuestionarios"
+2. El sistema muestra el catálogo de cuestionarios existentes
+3. El usuario selecciona "Nuevo Cuestionario"
+4. El sistema solicita:
+   - Nombre del cuestionario
+   - Marco normativo asociado (ISO 27001, SOC 2, GDPR, etc.)
+   - Tipo de cuestionario (Autoevaluación, Auditoría Externa, Revisión de Controles)
+   - Periodicidad (Única, Mensual, Trimestral, Anual)
+   - Áreas/Procesos objetivo
+   - Responsables
+5. El usuario ingresa la información requerida
+6. El sistema valida los datos y crea el cuestionario base
+7. El sistema redirige al editor de cuestionarios (Builder)
+
+Flujos Alternos:
+3a. El usuario selecciona "Crear desde Plantilla"
+    - El sistema muestra plantillas predefinidas por marco normativo
+    - El usuario selecciona una plantilla
+    - El sistema crea el cuestionario con las preguntas predefinidas
+
+Postcondiciones:
+  - Cuestionario creado y listo para diseño
+  - Registro en log de auditoría
+
+Reglas de Negocio:
+  - RN-CU01-01: Cada cuestionario debe estar asociado a al menos un marco normativo
+  - RN-CU01-02: Los cuestionarios periódicos generan instancias automáticas según su frecuencia
+  - RN-CU01-03: Solo usuarios con rol de Administrador o Auditor pueden crear cuestionarios
+
+
+CU-02: DISEÑAR ESTRUCTURA DE CUESTIONARIO
+------------------------------------------
+Actor Principal: Administrador de Cumplimiento, Auditor
+Precondiciones:
+  - Cuestionario creado (CU-01)
+  - Usuario en vista de Builder
+
+Flujo Principal:
+1. El usuario accede al Builder del cuestionario
+2. El sistema muestra:
+   - Panel izquierdo: Tipos de preguntas disponibles
+   - Panel central: Canvas de diseño
+   - Panel derecho: Configuración de pregunta
+3. El usuario arrastra un tipo de pregunta al canvas
+4. El sistema crea la pregunta y muestra sus opciones de configuración
+5. El usuario configura:
+   - Texto de la pregunta
+   - Ayuda/Descripción
+   - Requisito normativo asociado (referencia)
+   - Control(es) relacionado(s)
+   - Obligatoriedad
+   - Ponderación/Peso (para scoring)
+   - Lógica condicional (si aplica)
+   - Opciones de respuesta (según tipo)
+   - Solicitud de evidencia (adjuntos)
+6. El usuario repite los pasos 3-5 para cada pregunta
+7. El usuario organiza las preguntas en secciones
+8. El usuario guarda el cuestionario
+9. El sistema valida la estructura y guarda los cambios
+
+Tipos de Preguntas Soportados:
+  - Texto corto
+  - Texto largo
+  - Opción única (radio)
+  - Opción múltiple (checkbox)
+  - Escala numérica (1-5, 1-10)
+  - Escala Likert (Muy bajo - Muy alto)
+  - Fecha
+  - Adjunto de archivo
+  - Sí/No/N/A
+  - Tabla de datos
+
+Flujos Alternos:
+3a. El usuario selecciona "Importar Sección"
+    - El sistema muestra secciones de otros cuestionarios
+    - El usuario selecciona una sección
+    - El sistema copia las preguntas al cuestionario actual
+
+8a. Validación falla
+    - El sistema muestra errores de validación
+    - El usuario corrige los errores
+    - Continúa en paso 8
+
+Postcondiciones:
+  - Cuestionario estructurado y listo para asignación
+  - Estructura guardada en base de datos
+
+Reglas de Negocio:
+  - RN-CU02-01: Cada pregunta debe tener al menos un requisito normativo asociado
+  - RN-CU02-02: Las preguntas obligatorias no pueden omitirse en la respuesta
+  - RN-CU02-03: El peso total de las preguntas debe sumar 100% por sección
+  - RN-CU02-04: Las preguntas con lógica condicional solo se muestran si se cumple la condición
+
+
+CU-03: ASIGNAR CUESTIONARIO A ÁREA/PROCESO
+-------------------------------------------
+Actor Principal: Administrador de Cumplimiento, Auditor
+Precondiciones:
+  - Cuestionario diseñado y validado (CU-02)
+  - Áreas/Procesos registrados en el sistema
+
+Flujo Principal:
+1. El usuario accede al cuestionario
+2. El usuario selecciona "Asignar"
+3. El sistema muestra formulario de asignación:
+   - Selección de áreas/procesos objetivo
+   - Selección de responsables (usuarios)
+   - Fecha de inicio
+   - Fecha de vencimiento
+   - Instrucciones adicionales
+   - Configuración de recordatorios
+4. El usuario completa la información
+5. El usuario confirma la asignación
+6. El sistema:
+   - Crea instancias del cuestionario para cada área/responsable
+   - Envía notificaciones a los responsables
+   - Programa recordatorios automáticos
+   - Registra la asignación en el log
+
+Flujos Alternos:
+4a. El usuario selecciona "Asignación Masiva"
+    - El sistema permite cargar archivo CSV con asignaciones
+    - El sistema valida el archivo
+    - El sistema crea las asignaciones en lote
+
+Postcondiciones:
+  - Cuestionario asignado y visible para responsables
+  - Notificaciones enviadas
+  - Recordatorios programados
+
+Reglas de Negocio:
+  - RN-CU03-01: La fecha de vencimiento debe ser posterior a la fecha de inicio
+  - RN-CU03-02: Los responsables deben tener permisos de respuesta en sus áreas
+  - RN-CU03-03: Se envían recordatorios a 7, 3 y 1 día(s) antes del vencimiento
+  - RN-CU03-04: Los cuestionarios vencidos se marcan automáticamente como "Fuera de tiempo"
+
+
+CU-04: RESPONDER CUESTIONARIO
+------------------------------
+Actor Principal: Responsable de Área, Responsable de Proceso
+Precondiciones:
+  - Cuestionario asignado al usuario (CU-03)
+  - Usuario autenticado
+
+Flujo Principal:
+1. El usuario accede a "Mis Cuestionarios Pendientes"
+2. El sistema muestra lista de cuestionarios asignados con:
+   - Nombre del cuestionario
+   - Marco normativo
+   - Fecha de vencimiento
+   - Estado (Pendiente, En progreso, Completado)
+   - Progreso (% respondido)
+3. El usuario selecciona un cuestionario
+4. El sistema muestra el cuestionario con:
+   - Instrucciones
+   - Progreso visual
+   - Secciones y preguntas
+   - Indicadores de obligatoriedad
+5. El usuario responde cada pregunta
+6. Para preguntas que requieren evidencia:
+   6.1. El usuario adjunta archivo(s)
+   6.2. El usuario agrega descripción del adjunto
+   6.3. El sistema valida formato y tamaño
+   6.4. El sistema guarda el adjunto
+7. El usuario puede:
+   - Guardar borrador (respuestas parciales)
+   - Agregar comentarios a sus respuestas
+   - Marcar preguntas para revisión posterior
+8. El usuario completa todas las preguntas obligatorias
+9. El usuario selecciona "Enviar Cuestionario"
+10. El sistema valida que:
+    - Todas las preguntas obligatorias están respondidas
+    - Las evidencias requeridas están adjuntas
+    - El formato de las respuestas es correcto
+11. El sistema marca el cuestionario como "Completado"
+12. El sistema notifica al auditor/revisor asignado
+13. El sistema muestra confirmación de envío
+
+Flujos Alternos:
+7a. El usuario selecciona "Guardar y Salir"
+    - El sistema guarda el progreso como borrador
+    - El usuario puede continuar después
+
+10a. Validación falla
+     - El sistema muestra errores específicos
+     - El usuario corrige las respuestas
+     - Continúa en paso 9
+
+11a. Cuestionario fuera de fecha de vencimiento
+     - El sistema marca el cuestionario como "Completado fuera de tiempo"
+     - El sistema notifica al auditor sobre el retraso
+
+Postcondiciones:
+  - Cuestionario respondido y en estado "Pendiente de Revisión"
+  - Notificación enviada al revisor
+  - Respuestas y evidencias almacenadas
+
+Reglas de Negocio:
+  - RN-CU04-01: Solo el responsable asignado puede responder el cuestionario
+  - RN-CU04-02: Las respuestas pueden editarse hasta el momento de envío
+  - RN-CU04-03: Los adjuntos no deben exceder 10MB por archivo
+  - RN-CU04-04: Formatos permitidos: PDF, DOCX, XLSX, PNG, JPG
+  - RN-CU04-05: El sistema guarda automáticamente cada 3 minutos
+
+
+CU-05: REVISAR Y VALIDAR RESPUESTAS
+------------------------------------
+Actor Principal: Auditor, Administrador de Cumplimiento
+Precondiciones:
+  - Cuestionario completado (CU-04)
+  - Usuario autenticado con permisos de revisión
+
+Flujo Principal:
+1. El usuario accede a "Cuestionarios para Revisión"
+2. El sistema muestra lista de cuestionarios completados pendientes de revisión
+3. El usuario selecciona un cuestionario
+4. El sistema muestra:
+   - Vista completa del cuestionario respondido
+   - Respuestas con evidencias adjuntas
+   - Referencias normativas por pregunta
+   - Controles relacionados
+   - Scoring automático (si aplica)
+   - Timeline de respuestas
+5. El usuario revisa cada respuesta
+6. Para cada respuesta, el usuario puede:
+   - Aprobar
+   - Rechazar con comentarios
+   - Solicitar aclaración
+   - Solicitar evidencia adicional
+   - Marcar como observación menor/mayor
+7. El usuario evalúa el cumplimiento general del cuestionario
+8. El usuario registra:
+   - Hallazgos (conformidades y no conformidades)
+   - Observaciones
+   - Recomendaciones
+   - Acciones correctivas requeridas
+9. El usuario define estado final:
+   - Aprobado
+   - Aprobado con observaciones
+   - Rechazado (requiere re-trabajo)
+10. El usuario guarda la revisión
+11. El sistema:
+    - Actualiza el estado del cuestionario
+    - Calcula el nivel de cumplimiento (%)
+    - Genera hallazgos automáticos para incumplimientos
+    - Notifica al responsable del resultado
+    - Actualiza tablero de cumplimiento
+
+Flujos Alternos:
+9a. El usuario selecciona "Rechazado"
+    - El sistema solicita especificar preguntas rechazadas
+    - El sistema envía el cuestionario de vuelta al responsable
+    - El responsable recibe notificación con comentarios
+    - El cuestionario vuelve a estado "En progreso"
+
+Postcondiciones:
+  - Cuestionario revisado y con estado final
+  - Hallazgos registrados en el sistema
+  - Cumplimiento actualizado en tablero
+  - Notificaciones enviadas
+
+Reglas de Negocio:
+  - RN-CU05-01: Solo auditores asignados pueden revisar cuestionarios
+  - RN-CU05-02: Un cuestionario rechazado puede re-enviarse máximo 3 veces
+  - RN-CU05-03: Las no conformidades generan automáticamente hallazgos
+  - RN-CU05-04: El scoring se calcula según pesos asignados en el diseño
+
+
+CU-06: GENERAR REPORTE DE CUESTIONARIO
+---------------------------------------
+Actor Principal: Auditor, Administrador de Cumplimiento, Gerencia
+Precondiciones:
+  - Cuestionario completado y revisado (CU-05)
+
+Flujo Principal:
+1. El usuario accede a la vista del cuestionario
+2. El usuario selecciona "Generar Reporte"
+3. El sistema solicita:
+   - Formato de reporte (PDF, Excel, Word)
+   - Secciones a incluir:
+     * Resumen ejecutivo
+     * Detalle de respuestas
+     * Evidencias adjuntas
+     * Hallazgos y observaciones
+     * Scoring y cumplimiento
+     * Recomendaciones
+     * Anexos
+   - Incluir/excluir comentarios internos
+   - Marca de agua (Confidencial, Borrador, Final)
+4. El usuario confirma
+5. El sistema genera el reporte con:
+   - Carátula con información del cuestionario
+   - Índice automático
+   - Todas las secciones seleccionadas
+   - Gráficos de cumplimiento
+   - Tablas de hallazgos
+   - Referencias normativas
+   - Firmas digitales (si aplica)
+6. El sistema descarga el reporte
+7. El sistema registra la generación en el log de auditoría
+
+Flujos Alternos:
+2a. El usuario selecciona "Reporte Comparativo"
+    - El sistema solicita seleccionar múltiples cuestionarios del mismo tipo
+    - El sistema genera un reporte comparativo de evolución
+
+2b. El usuario selecciona "Reporte Consolidado de Área"
+    - El sistema genera un reporte con todos los cuestionarios de un área/proceso
+    - El sistema incluye análisis de tendencias
+
+Postcondiciones:
+  - Reporte generado y descargado
+  - Generación registrada en log
+
+Reglas de Negocio:
+  - RN-CU06-01: Los reportes incluyen sello de fecha y hora de generación
+  - RN-CU06-02: Los reportes pueden incluir firma digital del auditor
+  - RN-CU06-03: Los reportes confidenciales incluyen marca de agua en cada página
+
+
+========================================
+2. GESTIÓN DE CUMPLIMIENTO NORMATIVO
+========================================
+
+CU-07: REGISTRAR MARCO NORMATIVO APLICABLE
+-------------------------------------------
+Actor Principal: Administrador de Cumplimiento, Oficial de Cumplimiento
+Precondiciones:
+  - Usuario autenticado con permisos de administración de cumplimiento
+
+Flujo Principal:
+1. El usuario accede a "Marcos Normativos"
+2. El usuario selecciona "Nuevo Marco Normativo"
+3. El sistema solicita:
+   - Nombre del marco normativo
+   - Acrónimo (ISO 27001, SOC 2, GDPR, etc.)
+   - Versión
+   - Fecha de vigencia
+   - Alcance organizacional
+   - Áreas/Procesos aplicables
+   - Controles relacionados
+   - Documentación de referencia
+4. El usuario ingresa la información
+5. El usuario puede:
+   5.1. Importar estructura de controles desde biblioteca
+   5.2. Definir requisitos manualmente
+6. El sistema valida y guarda el marco normativo
+7. El sistema hace disponible el marco para cuestionarios y mapeo de controles
+
+Flujos Alternos:
+2a. El usuario selecciona "Importar desde Biblioteca"
+    - El sistema muestra marcos normativos predefinidos
+    - El usuario selecciona uno
+    - El sistema importa la estructura completa de requisitos
+
+Postcondiciones:
+  - Marco normativo registrado en el sistema
+  - Disponible para mapeo de controles y cuestionarios
+
+Reglas de Negocio:
+  - RN-CU07-01: Cada marco normativo debe tener una versión específica
+  - RN-CU07-02: Los marcos normativos pueden tener múltiples versiones activas
+  - RN-CU07-03: El sistema alerta sobre nuevas versiones disponibles de marcos estándar
+
+
+CU-08: MAPEAR CONTROLES A REQUISITOS NORMATIVOS
+------------------------------------------------
+Actor Principal: Administrador de Cumplimiento
+Precondiciones:
+  - Marco normativo registrado (CU-07)
+  - Controles registrados en el sistema (Épica 6: Controles)
+
+Flujo Principal:
+1. El usuario accede a "Mapeo de Cumplimiento"
+2. El sistema muestra:
+   - Panel izquierdo: Marcos normativos y sus requisitos
+   - Panel central: Controles existentes
+   - Panel derecho: Mapeo actual
+3. El usuario selecciona un marco normativo
+4. El sistema expande los requisitos del marco
+5. El usuario selecciona un requisito específico
+6. El sistema muestra:
+   - Descripción del requisito
+   - Controles ya mapeados (si existen)
+   - Controles sugeridos (por IA/similitud)
+   - Estado de cumplimiento actual
+7. El usuario arrastra controles al requisito o selecciona de la lista
+8. El usuario especifica:
+   - Nivel de cobertura (Completo, Parcial, Compensatorio)
+   - Comentarios de mapeo
+   - Responsable de implementación
+   - Evidencias asociadas
+9. El sistema guarda el mapeo
+10. El sistema actualiza el estado de cumplimiento del requisito
+11. El sistema recalcula el cumplimiento global del marco
+
+Flujos Alternos:
+7a. No existen controles adecuados
+    - El usuario marca el requisito como "Sin control asociado"
+    - El sistema genera alerta de brecha de cumplimiento
+    - El usuario puede crear un nuevo control directamente
+
+7b. El usuario selecciona "Auto-mapeo por IA"
+    - El sistema analiza requisitos y controles
+    - El sistema sugiere mapeos automáticos
+    - El usuario revisa y aprueba las sugerencias
+
+Postcondiciones:
+  - Controles mapeados a requisitos normativos
+  - Estado de cumplimiento actualizado
+  - Brechas identificadas (si existen)
+
+Reglas de Negocio:
+  - RN-CU08-01: Un control puede cubrir múltiples requisitos normativos
+  - RN-CU08-02: Un requisito puede requerir múltiples controles para cumplimiento completo
+  - RN-CU08-03: Los controles parciales reducen el % de cumplimiento proporcional
+  - RN-CU08-04: El sistema compara controles implementados vs. requisitos normativos (no riesgos vs. requisitos)
+
+
+CU-09: EVALUAR ESTADO DE CUMPLIMIENTO
+--------------------------------------
+Actor Principal: Administrador de Cumplimiento, Auditor, Gerencia
+Precondiciones:
+  - Marcos normativos registrados y mapeados (CU-07, CU-08)
+  - Controles implementados y monitoreados
+
+Flujo Principal:
+1. El usuario accede a "Dashboard de Cumplimiento"
+2. El sistema muestra:
+   - Vista general de marcos normativos aplicables
+   - % de cumplimiento por marco
+   - Estado de controles por marco
+   - Tendencia de cumplimiento (histórico)
+   - Alertas activas de incumplimiento
+   - Próximas auditorías/revisiones
+3. El usuario selecciona un marco normativo específico
+4. El sistema muestra detalle:
+   - Requisitos del marco con estado individual
+   - Controles asociados y su efectividad
+   - Evidencias documentales disponibles
+   - Brechas de cumplimiento identificadas
+   - Cuestionarios completados relacionados
+5. El usuario puede:
+   - Ver detalle de cada requisito
+   - Acceder a evidencias documentales
+   - Exportar reporte de cumplimiento
+   - Programar evaluación/auditoría
+   - Asignar acciones correctivas
+
+Estados de Cumplimiento:
+  - Completo (100%): Todos los controles implementados y efectivos
+  - Cumplimiento alto (80-99%): Mayoría de controles implementados
+  - Cumplimiento medio (60-79%): Controles parciales o con brechas menores
+  - Cumplimiento bajo (40-59%): Brechas significativas
+  - No cumple (<40%): Incumplimiento crítico
+  - Sin evaluar: No hay datos suficientes
+
+Flujos Alternos:
+3a. El usuario selecciona "Vista Comparativa"
+    - El sistema muestra comparación entre múltiples marcos
+    - El sistema identifica controles compartidos
+    - El sistema muestra eficiencia de cumplimiento
+
+5a. El usuario detecta brecha crítica
+    - El usuario selecciona "Crear Plan de Acción"
+    - El sistema guía la creación de acciones correctivas
+    - El sistema programa seguimiento
+
+Postcondiciones:
+  - Estado de cumplimiento consultado
+  - Información actualizada visible
+  - Decisiones de gestión informadas
+
+Reglas de Negocio:
+  - RN-CU09-01: El cumplimiento se calcula basado en controles implementados vs. requisitos
+  - RN-CU09-02: Los controles inactivos o sin evidencia reducen el % de cumplimiento
+  - RN-CU09-03: El sistema actualiza el cumplimiento en tiempo real al registrar evidencias
+  - RN-CU09-04: Las brechas críticas generan alertas automáticas a gerencia
+
+
+CU-10: GENERAR ALERTAS DE INCUMPLIMIENTO
+-----------------------------------------
+Actor Principal: Sistema (automatizado)
+Actores Secundarios: Administrador de Cumplimiento, Responsables de Área
+Precondiciones:
+  - Marcos normativos y controles configurados
+  - Monitoreo de cumplimiento activo
+
+Flujo Principal:
+1. El sistema ejecuta evaluación automática periódica (diaria, semanal)
+2. El sistema identifica situaciones de alerta:
+   - Controles sin evidencia documental
+   - Controles vencidos (sin actualización en período requerido)
+   - Cuestionarios pendientes próximos a vencer
+   - Cuestionarios vencidos sin responder
+   - Brechas de cumplimiento nuevas
+   - Deterioro de nivel de cumplimiento
+   - Auditorías próximas sin preparación
+3. Para cada alerta identificada, el sistema:
+   3.1. Evalúa la severidad (Crítica, Alta, Media, Baja)
+   3.2. Identifica responsables
+   3.3. Genera descripción de la alerta con contexto
+   3.4. Determina plazo de respuesta
+4. El sistema registra la alerta en el tablero de cumplimiento
+5. El sistema envía notificaciones a:
+   - Responsables directos
+   - Administrador de cumplimiento
+   - Gerencia (si es crítica)
+6. El sistema incluye en la notificación:
+   - Descripción de la situación
+   - Marco normativo afectado
+   - Requisito específico en riesgo
+   - Acciones recomendadas
+   - Plazo de respuesta
+   - Enlace directo para resolución
+
+Severidad de Alertas:
+  - Crítica: Incumplimiento que puede resultar en sanciones regulatorias
+  - Alta: Brecha significativa que afecta cumplimiento de marco normativo
+  - Media: Control sin evidencia o cuestionario próximo a vencer
+  - Baja: Recordatorio de actualización o revisión programada
+
+Flujos Alternos:
+2a. No se identifican alertas
+    - El sistema registra evaluación exitosa
+    - No se envían notificaciones
+
+6a. Alerta crítica recurrente ignorada
+    - El sistema escala la alerta a nivel superior
+    - El sistema notifica a gerencia ejecutiva
+    - El sistema registra el incumplimiento de respuesta
+
+Postcondiciones:
+  - Alertas registradas y visibles en tablero
+  - Notificaciones enviadas a responsables
+  - Acciones de seguimiento programadas
+
+Reglas de Negocio:
+  - RN-CU10-01: Las alertas críticas requieren confirmación de recepción
+  - RN-CU10-02: Las alertas no atendidas escalan automáticamente después de 3 días
+  - RN-CU10-03: El sistema consolida alertas similares para evitar spam
+  - RN-CU10-04: Las alertas resueltas se archivan con timestamp de resolución
+
+
+CU-11: GESTIONAR EVIDENCIA DOCUMENTAL
+--------------------------------------
+Actor Principal: Responsable de Área, Administrador de Cumplimiento
+Precondiciones:
+  - Control registrado en el sistema
+  - Usuario autenticado con permisos de gestión de evidencias
+
+Flujo Principal:
+1. El usuario accede a un control específico
+2. El usuario selecciona "Gestionar Evidencias"
+3. El sistema muestra:
+   - Evidencias actuales del control
+   - Requisitos normativos que requieren evidencia
+   - Tipo de evidencia requerida
+   - Periodicidad de actualización
+   - Estado de cada evidencia (Vigente, Próximo a vencer, Vencida)
+4. El usuario selecciona "Agregar Evidencia"
+5. El sistema solicita:
+   - Tipo de evidencia (Política, Procedimiento, Registro, Certificado, Captura de pantalla, etc.)
+   - Descripción
+   - Fecha de generación
+   - Período de vigencia
+   - Archivo(s) adjunto(s)
+   - Responsable de la evidencia
+   - Marco(s) normativo(s) que cubre
+6. El usuario adjunta el archivo
+7. El sistema valida:
+   - Formato permitido
+   - Tamaño del archivo
+   - Metadata del documento
+8. El sistema guarda la evidencia
+9. El sistema:
+   - Actualiza el estado del control a "Con evidencia"
+   - Recalcula el cumplimiento de los marcos normativos asociados
+   - Programa alerta de renovación (si tiene vigencia)
+   - Registra en log de auditoría
+
+Flujos Alternos:
+4a. El usuario selecciona una evidencia existente
+    - El sistema muestra opciones:
+      * Ver evidencia
+      * Descargar
+      * Actualizar versión
+      * Marcar como obsoleta
+      * Eliminar (con justificación)
+
+6a. La evidencia es un enlace externo (URL)
+    - El usuario ingresa la URL
+    - El sistema valida accesibilidad del enlace
+    - El sistema programa verificación periódica del enlace
+
+7a. Validación falla
+    - El sistema muestra mensaje de error específico
+    - El usuario corrige y reintenta
+
+Postcondiciones:
+  - Evidencia registrada y asociada a controles
+  - Cumplimiento actualizado
+  - Alertas de renovación programadas
+
+Reglas de Negocio:
+  - RN-CU11-01: Toda evidencia debe tener una fecha de vigencia o ser marcada como "Permanente"
+  - RN-CU11-02: Las evidencias vencidas no cuentan para el cálculo de cumplimiento
+  - RN-CU11-03: El sistema alerta 30 días antes del vencimiento de evidencias
+  - RN-CU11-04: Formatos permitidos: PDF, DOCX, XLSX, PNG, JPG, MSG, EML
+  - RN-CU11-05: Tamaño máximo por archivo: 25MB
+  - RN-CU11-06: Las evidencias son versionadas (se mantiene histórico)
+
+
+CU-12: AUDITAR HISTORIAL DE CUMPLIMIENTO
+-----------------------------------------
+Actor Principal: Auditor, Oficial de Cumplimiento, Gerencia
+Precondiciones:
+  - Eventos de cumplimiento registrados en el sistema
+  - Usuario autenticado con permisos de auditoría
+
+Flujo Principal:
+1. El usuario accede a "Auditoría de Cumplimiento"
+2. El sistema muestra filtros:
+   - Rango de fechas
+   - Marco normativo
+   - Área/Proceso
+   - Tipo de evento
+   - Usuario responsable
+   - Severidad
+3. El usuario aplica filtros deseados
+4. El sistema muestra timeline de eventos:
+   - Creación/modificación de controles
+   - Adjunto/actualización de evidencias
+   - Cambios en mapeo normativo
+   - Completado de cuestionarios
+   - Generación de alertas
+   - Acciones correctivas
+   - Cambios de estado de cumplimiento
+5. Para cada evento, el sistema muestra:
+   - Timestamp exacto
+   - Usuario que realizó la acción
+   - Descripción del cambio
+   - Valores antes/después (si aplica)
+   - Justificación (si fue proporcionada)
+   - IP y metadata de sesión
+6. El usuario puede:
+   - Ver detalle completo del evento
+   - Exportar log de auditoría
+   - Generar reporte de trazabilidad
+   - Filtrar por usuario específico
+   - Buscar eventos por palabra clave
+7. El usuario puede seleccionar "Generar Reporte de Auditoría"
+8. El sistema genera reporte con:
+   - Resumen de actividades
+   - Eventos críticos
+   - Cambios en cumplimiento
+   - Anomalías detectadas
+   - Gráficos de tendencias
+
+Tipos de Eventos Auditados:
+  - Gestión de Controles: Creación, modificación, eliminación
+  - Evidencias: Adjuntos, actualizaciones, eliminaciones
+  - Cuestionarios: Asignación, respuesta, revisión
+  - Cumplimiento: Cambios de estado, alertas, escalaciones
+  - Mapeos: Asociación de controles a requisitos
+  - Accesos: Consultas a información sensible
+
+Flujos Alternos:
+4a. El usuario selecciona "Vista de Anomalías"
+    - El sistema muestra solo eventos inusuales:
+      * Accesos fuera de horario
+      * Eliminaciones de evidencias
+      * Cambios masivos
+      * Intentos de acceso no autorizado
+
+7a. El usuario selecciona un evento específico
+    - El sistema muestra contexto completo del evento
+    - El sistema puede restaurar estado anterior (si aplica)
+
+Postcondiciones:
+  - Historial de cumplimiento consultado
+  - Trazabilidad completa disponible
+  - Reporte generado (si se solicitó)
+
+Reglas de Negocio:
+  - RN-CU12-01: Todos los eventos de cumplimiento son inmutables (no pueden editarse)
+  - RN-CU12-02: El log de auditoría se mantiene por mínimo 7 años
+  - RN-CU12-03: Los eventos críticos se replican en sistema de respaldo
+  - RN-CU12-04: Las consultas al log de auditoría también se registran
+
+
+========================================
+3. INTEGRACIÓN CON CONTROLES
+========================================
+
+CU-13: VALIDAR CONTROLES DESDE CUESTIONARIOS
+---------------------------------------------
+Actor Principal: Sistema (automatizado), Auditor
+Actores Secundarios: Responsable de Control
+Precondiciones:
+  - Cuestionario completado y revisado
+  - Controles asociados a preguntas del cuestionario
+
+Flujo Principal:
+1. El sistema detecta que un cuestionario ha sido completado
+2. El sistema identifica todos los controles asociados a las preguntas
+3. Para cada control, el sistema:
+   3.1. Evalúa las respuestas relacionadas
+   3.2. Analiza evidencias adjuntas
+   3.3. Compara con criterios de efectividad del control
+   3.4. Calcula nivel de efectividad:
+        - Efectivo: Control operando según diseño
+        - Parcialmente efectivo: Control con deficiencias menores
+        - Inefectivo: Control no está operando adecuadamente
+        - No evaluado: Información insuficiente
+4. El sistema actualiza el estado del control
+5. Si el control es marcado como "Inefectivo" o "Parcialmente efectivo":
+   5.1. El sistema genera un hallazgo automático
+   5.2. El sistema recalcula el riesgo de los activos/procesos asociados
+   5.3. El sistema actualiza el cumplimiento normativo
+   5.4. El sistema notifica al responsable del control
+6. El sistema registra la evaluación en el historial del control
+7. El sistema actualiza tableros de control y cumplimiento
+
+Flujos Alternos:
+3a. La respuesta indica que el control no está implementado
+    - El sistema marca el control como "No implementado"
+    - El sistema genera alerta de brecha crítica
+    - El sistema recomienda acciones correctivas
+
+5a. Múltiples cuestionarios evalúan el mismo control
+    - El sistema consolida las evaluaciones
+    - El sistema calcula efectividad promedio ponderada
+    - El sistema identifica discrepancias entre evaluaciones
+
+Postcondiciones:
+  - Controles validados y actualizados
+  - Efectividad calculada y registrada
+  - Hallazgos generados (si aplica)
+  - Tableros actualizados
+
+Reglas de Negocio:
+  - RN-CU13-01: La efectividad del control se basa en respuestas y evidencias objetivas
+  - RN-CU13-02: Un control inefectivo incrementa automáticamente el riesgo residual
+  - RN-CU13-03: Los controles preventivos críticos requieren validación trimestral mínimo
+  - RN-CU13-04: La efectividad del control afecta directamente el cumplimiento normativo
+
+
+CU-14: DETECTAR CONTROLES FALTANTES
+------------------------------------
+Actor Principal: Sistema (automatizado), Administrador de Cumplimiento
+Precondiciones:
+  - Marcos normativos mapeados (CU-08)
+  - Cuestionarios completados con respuestas
+
+Flujo Principal:
+1. El sistema analiza cuestionarios completados
+2. El sistema identifica requisitos normativos con respuestas que indican:
+   - Control no implementado
+   - Control inadecuado
+   - Brecha de cobertura
+3. El sistema compara con controles existentes de activos/procesos similares
+4. El sistema identifica controles implementados en áreas similares que:
+   - Cubren el mismo tipo de riesgo
+   - Aplican al mismo marco normativo
+   - Tienen efectividad comprobada
+5. El sistema genera recomendaciones:
+   - Control faltante detectado
+   - Requisito normativo afectado
+   - Riesgo sin mitigación
+   - Controles implementados en áreas similares (referencia)
+   - Descripción del control recomendado
+   - Prioridad de implementación
+6. El sistema registra la recomendación en "Brechas de Control"
+7. El sistema notifica al administrador de cumplimiento
+8. El administrador revisa la recomendación y puede:
+   - Aceptar: Crear plan de implementación
+   - Aceptar con modificaciones
+   - Rechazar con justificación (control no aplicable)
+   - Asignar control compensatorio alternativo
+
+Criterios de Detección:
+  - Ausencia de control para requisito normativo obligatorio
+  - Respuesta "No" a pregunta de implementación de control
+  - Activo/proceso sin control del tipo requerido
+  - Comparación con activos similares que sí tienen el control
+
+Flujos Alternos:
+3a. No existen activos similares para comparación
+    - El sistema busca en biblioteca de controles estándar
+    - El sistema recomienda controles según marco normativo
+    - El sistema sugiere consultar benchmarks de industria
+
+8a. El administrador acepta la recomendación
+    - El sistema crea un nuevo control en estado "Planificado"
+    - El sistema asocia el control al requisito normativo
+    - El sistema permite asignar responsable e implementación
+
+Postcondiciones:
+  - Brechas de control identificadas
+  - Recomendaciones generadas y notificadas
+  - Plan de acción iniciado (si se acepta)
+
+Reglas de Negocio:
+  - RN-CU14-01: El sistema solo recomienda controles de activos del mismo tipo o similares
+  - RN-CU14-02: Las recomendaciones rechazadas requieren justificación documentada
+  - RN-CU14-03: Los controles faltantes críticos generan alertas a gerencia
+  - RN-CU14-04: El sistema prioriza recomendaciones según riesgo e impacto en cumplimiento
+
+
+CU-15: RECOMENDAR ACCIONES CORRECTIVAS
+---------------------------------------
+Actor Principal: Sistema (automatizado), Auditor
+Actores Secundarios: Responsable de Área, Administrador de Cumplimiento
+Precondiciones:
+  - Cuestionarios revisados con hallazgos de incumplimiento
+  - Controles evaluados como inefectivos o parcialmente efectivos
+
+Flujo Principal:
+1. El sistema identifica hallazgos de incumplimiento o controles inefectivos
+2. El sistema analiza:
+   - Tipo de hallazgo (falta de evidencia, control no implementado, control inefectivo)
+   - Severidad del incumplimiento
+   - Marco normativo afectado
+   - Requisitos específicos incumplidos
+   - Historial de hallazgos similares
+3. El sistema consulta base de conocimiento:
+   - Acciones correctivas previas exitosas
+   - Mejores prácticas de la industria
+   - Recomendaciones por marco normativo
+   - Patrones de ML de incidentes similares
+4. El sistema genera recomendaciones de acciones correctivas:
+   - Acción recomendada (descripción)
+   - Tipo (Inmediata, Corto plazo, Mediano plazo)
+   - Prioridad (Crítica, Alta, Media)
+   - Recursos requeridos
+   - Tiempo estimado de implementación
+   - Responsable sugerido
+   - Resultado esperado
+   - Métricas de verificación
+5. El sistema presenta las recomendaciones al auditor/administrador
+6. El auditor revisa y puede:
+   - Aprobar recomendación
+   - Modificar recomendación
+   - Agregar recomendaciones adicionales
+   - Rechazar recomendación
+7. El auditor asigna la acción correctiva a un responsable
+8. El sistema:
+   - Crea el plan de acción correctiva
+   - Establece fechas de seguimiento
+   - Programa recordatorios
+   - Notifica al responsable
+   - Vincula la acción al hallazgo origen
+9. El responsable recibe la asignación y acepta/rechaza
+10. El sistema monitorea el progreso de la acción correctiva
+
+Tipos de Acciones Correctivas:
+  - Actualización de documentación/evidencia
+  - Implementación de control faltante
+  - Mejora de control existente
+  - Capacitación del personal
+  - Actualización de procedimientos
+  - Cambio de responsable/roles
+  - Inversión en tecnología/herramientas
+
+Flujos Alternos:
+9a. El responsable rechaza la asignación
+    - El sistema solicita justificación
+    - El sistema notifica al auditor
+    - El auditor reasigna o modifica la acción
+
+10a. Acción correctiva completada
+     - El responsable marca como completada
+     - El responsable adjunta evidencia de implementación
+     - El auditor verifica la efectividad
+     - El sistema cierra el hallazgo si es efectiva
+     - El sistema actualiza el cumplimiento
+
+10b. Acción correctiva vencida sin completar
+     - El sistema escala automáticamente
+     - El sistema notifica a gerencia
+     - El sistema mantiene el hallazgo abierto
+
+Postcondiciones:
+  - Acciones correctivas recomendadas y asignadas
+  - Planes de acción creados y en seguimiento
+  - Responsables notificados
+  - Progreso monitoreable
+
+Reglas de Negocio:
+  - RN-CU15-01: Las acciones críticas deben completarse en máximo 30 días
+  - RN-CU15-02: Las acciones correctivas vencidas escalan automáticamente
+  - RN-CU15-03: La efectividad de acciones correctivas se valida en el siguiente ciclo de auditoría
+  - RN-CU15-04: El sistema aprende de acciones exitosas para mejorar recomendaciones futuras
+
+
+================================================
+MATRIZ DE TRAZABILIDAD
+================================================
+
+Caso de Uso                              | Épica         | Historia    | Prioridad
+-----------------------------------------|---------------|-------------|----------
+CU-01: Crear Cuestionario                | Épica 9       | 9.1, 9.2    | Alta
+CU-02: Diseñar Cuestionario              | Épica 9       | 9.1         | Alta
+CU-03: Asignar Cuestionario              | Épica 9       | 9.1         | Alta
+CU-04: Responder Cuestionario            | Épica 9       | 9.1         | Alta
+CU-05: Revisar Respuestas                | Épica 9       | 9.1, 9.2    | Alta
+CU-06: Generar Reporte                   | Épica 9       | 9.1         | Media
+CU-07: Registrar Marco Normativo         | Épica 9       | 9.1         | Alta
+CU-08: Mapear Controles                  | Épica 9       | 9.1         | Alta
+CU-09: Evaluar Cumplimiento              | Épica 9       | 9.1         | Alta
+CU-10: Alertas de Incumplimiento         | Épica 9       | 9.2         | Alta
+CU-11: Gestionar Evidencia               | Épica 9       | 9.2         | Alta
+CU-12: Auditar Historial                 | Épica 9       | 9.1         | Media
+CU-13: Validar Controles                 | Épica 6, 9    | 6.1, 9.1    | Alta
+CU-14: Detectar Controles Faltantes      | Épica 6, 9    | 6.2, 9.1    | Media
+CU-15: Recomendar Acciones Correctivas   | Épica 9       | 9.2         | Alta
+
+
+================================================
+REQUISITOS NO FUNCIONALES
+================================================
+
+RNF-01: SEGURIDAD
+- Todas las evidencias documentales deben ser encriptadas en reposo
+- Los accesos a información de cumplimiento deben ser auditados
+- Las firmas digitales deben cumplir con estándares PKI
+
+RNF-02: DESEMPEÑO
+- La generación de reportes no debe exceder 30 segundos
+- El cálculo de cumplimiento debe ser en tiempo real (< 2 segundos)
+- El sistema debe soportar 100 usuarios concurrentes
+
+RNF-03: USABILIDAD
+- La interfaz de cuestionarios debe ser responsive (móvil, tablet, desktop)
+- El sistema debe soportar múltiples idiomas (español, inglés)
+- La navegación debe ser intuitiva sin requerir capacitación extensa
+
+RNF-04: DISPONIBILIDAD
+- El sistema debe tener disponibilidad de 99.5% (SLA)
+- Los backups deben realizarse diariamente
+- El RPO (Recovery Point Objective) debe ser < 24 horas
+
+RNF-05: INTEGRIDAD
+- Todas las respuestas de cuestionarios son inmutables después de envío
+- El log de auditoría no puede ser modificado ni eliminado
+- El sistema debe mantener versionado de evidencias
+
+RNF-06: CUMPLIMIENTO
+- El sistema debe cumplir con GDPR para protección de datos
+- El sistema debe mantener logs de auditoría por mínimo 7 años
+- El sistema debe soportar exportación de datos para auditorías externas
+
+
+================================================
+GLOSARIO
+================================================
+
+- Cuestionario: Conjunto estructurado de preguntas para evaluar cumplimiento
+- Marco Normativo: Estándar, regulación o framework de cumplimiento (ISO, SOC, GDPR)
+- Hallazgo: Resultado de auditoría que identifica conformidad o no conformidad
+- Evidencia: Documento o registro que prueba la implementación de un control
+- Control: Medida implementada para mitigar riesgos o cumplir requisitos
+- Cumplimiento: Grado en que la organización cumple con requisitos normativos
+- Brecha: Diferencia entre estado actual y requisito normativo
+- Scoring: Puntuación calculada basada en respuestas ponderadas
+- Trazabilidad: Capacidad de rastrear historial de cambios y decisiones
+- Acción Correctiva: Medida tomada para remediar un incumplimiento o deficiencia
+
+
+================================================
+FIN DEL DOCUMENTO
+================================================
