@@ -6,11 +6,20 @@
 
 ## Tech Stack
 
+### Prototipos (este repo)
 - **HTML5** - Semantic structure
 - **CSS3** - Modern styles with flexbox/grid
 - **Vanilla JavaScript** - No external dependencies
 - **SVG** - Dynamic connection lines
 - Standalone HTML files that work offline
+
+### Desarrollo Principal
+- **Angular** - Framework principal
+- **PrimeNG** - Componentes UI
+- **PrimeBlocks** - Bloques de diseño pre-construidos
+- **PrimeFlex** - Utilidades CSS flexbox
+- **Material Icons** - Iconografía principal
+- **PrimeIcons** - Iconos complementarios
 
 ## Project Structure
 
@@ -102,3 +111,10 @@ PATCH  /processes/{id}/deactivate
 - A process must have at least one node to be valid
 - Risk is calculated from aggregated asset risks
 - Processes with configurations should be deactivated, not deleted
+
+## Git Configuration
+
+- **Repository**: https://github.com/Alanorca/Figmas.git
+- **Branch**: main
+- **Author**: Alan Franco <afranco@gcpglobal.com>
+- **Environment**: WSL2 (Windows Subsystem for Linux)
