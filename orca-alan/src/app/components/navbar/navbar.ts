@@ -49,6 +49,11 @@ export class NavbarComponent {
       label: 'Procesos',
       icon: 'pi pi-sitemap',
       routerLink: '/procesos'
+    },
+    {
+      label: 'Cuestionarios',
+      icon: 'pi pi-list-check',
+      routerLink: '/cuestionarios'
     }
   ];
 }

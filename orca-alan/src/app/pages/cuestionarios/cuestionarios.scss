@@ -1,0 +1,52 @@
+// Estilos específicos para cuestionarios
+
+:host {
+  display: block;
+}
+
+// Drag & Drop visual feedback
+[pDraggable] {
+  &:hover {
+    transform: scale(1.02);
+  }
+}
+
+[pDroppable] {
+  transition: background-color 0.2s;
+
+  &.p-draggable-enter {
+    background-color: var(--primary-100);
+    border-color: var(--primary-500);
+  }
+}
+
+// Accordion customization
+::ng-deep .p-accordion-panel {
+  margin-bottom: 0.5rem;
+
+  .p-accordion-header-link {
+    border-radius: 0.5rem;
+  }
+}
+
+// Card hover effects
+::ng-deep .p-card {
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+}
+
+// Stats cards top border
+::ng-deep .border-top-3 {
+  border-top-width: 3px !important;
+  border-top-style: solid !important;
+}
+
+// Chip clickable
+::ng-deep .p-chip {
+  &.cursor-pointer:hover {
+    background-color: var(--primary-100);
+  }
+}
