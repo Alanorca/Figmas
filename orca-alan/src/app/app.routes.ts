@@ -39,6 +39,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/cuestionarios/cuestionarios').then(m => m.CuestionariosComponent)
   },
   {
+    path: 'cumplimiento',
+    loadComponent: () => import('./pages/cumplimiento/cumplimiento').then(m => m.CumplimientoComponent)
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }

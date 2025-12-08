@@ -3,153 +3,791 @@
 
 <!-- ==================== VISTA: LISTA DE CUESTIONARIOS ==================== -->
 @if (vistaActual() === 'lista') {
-<div class="surface-ground p-4">
-  <!-- Header -->
-  <div class="flex justify-content-between align-items-start mb-4">
-    <div>
-      <h1 class="text-3xl font-bold text-900 m-0 mb-2">Gestión de Cuestionarios</h1>
-      <p class="text-500 m-0">Crea, gestiona y analiza cuestionarios de cumplimiento y evaluación</p>
-    </div>
-    <div class="flex flex-wrap gap-2">
-      <p-button label="Dashboard" icon="pi pi-chart-bar" severity="secondary" [outlined]="true" (onClick)="irADashboard()" />
-      <p-button label="Reportes" icon="pi pi-file-pdf" severity="secondary" [outlined]="true" (onClick)="irAReportes()" />
-      <p-button label="Evidencias" icon="pi pi-folder" severity="secondary" [outlined]="true" (onClick)="irAEvidencias()" />
-      <p-button label="Mapeo" icon="pi pi-sitemap" severity="secondary" [outlined]="true" (onClick)="irAMapeo()" />
-      <p-button label="Historial" icon="pi pi-history" severity="secondary" [outlined]="true" (onClick)="irAHistorial()" />
-      <p-button label="Marcos" icon="pi pi-book" severity="secondary" [outlined]="true" (onClick)="irAMarcos()" />
-      <p-button label="Nuevo" icon="pi pi-plus" (onClick)="crearNuevoCuestionario()" />
+<div class="surface-ground min-h-screen">
+  <!-- Header Principal -->
+  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
+    <div class="flex justify-content-between align-items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-900 m-0">Cuestionarios</h1>
+        <p class="text-500 text-sm m-0 mt-1">Orca&#64;Securityby Design</p>
+      </div>
+      <div class="flex align-items-center gap-3">
+        <p-button label="Ir a Cumplimiento" icon="pi pi-chart-line" severity="secondary" [outlined]="true" (onClick)="irACumplimiento()" />
+      </div>
     </div>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="grid mb-4">
-    <div class="col-12 md:col-6 lg:col-3">
-      <p-card styleClass="h-full border-top-3 border-blue-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Total Cuestionarios</span>
-          <span class="text-3xl font-bold text-900">{{ totalCuestionarios() }}</span>
-          <span class="text-green-500 text-sm mt-2"><i class="pi pi-arrow-up mr-1"></i>{{ totalActivos() }} activos</span>
-        </div>
-      </p-card>
+  <!-- Barra de herramientas -->
+  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
+    <div class="flex justify-content-between align-items-center">
+      <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" severity="secondary" />
+      <p-iconfield style="width: 300px">
+        <p-inputicon styleClass="pi pi-search" />
+        <input type="text" pInputText placeholder="Buscar" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" class="w-full" />
+      </p-iconfield>
+      <p-button label="Nuevo Cuestionario" icon="pi pi-plus" (onClick)="crearNuevoCuestionario()" styleClass="bg-teal-500 border-teal-500" />
     </div>
-    <div class="col-12 md:col-6 lg:col-3">
-      <p-card styleClass="h-full border-top-3 border-purple-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Asignaciones Pendientes</span>
-          <span class="text-3xl font-bold text-900">{{ asignacionesPendientes() }}</span>
-          @if (asignacionesVencidas() > 0) {
-            <span class="text-red-500 text-sm mt-2"><i class="pi pi-exclamation-triangle mr-1"></i>{{ asignacionesVencidas() }} vencidas</span>
+  </div>
+
+  <!-- Contenido Principal: Split Layout -->
+  <div class="flex" style="height: calc(100vh - 140px);">
+    <!-- Panel Izquierdo: Lista de Cuestionarios -->
+    <div class="w-5 border-right-1 surface-border surface-card overflow-y-auto">
+      @for (cuestionario of cuestionariosFiltrados(); track cuestionario.id) {
+        <div
+          class="cuestionario-item px-4 py-3 border-bottom-1 surface-border cursor-pointer"
+          [class.cuestionario-item-selected]="cuestionarioSeleccionado()?.id === cuestionario.id"
+          [class.border-left-3]="cuestionarioSeleccionado()?.id === cuestionario.id"
+          [class.border-left-primary]="cuestionarioSeleccionado()?.id === cuestionario.id"
+          (click)="cuestionarioSeleccionado.set(cuestionario)">
+
+          <!-- Título y Tags -->
+          <div class="flex align-items-start justify-content-between mb-2">
+            <span class="font-semibold text-900">{{ cuestionario.nombre }}</span>
+            <div class="flex gap-2">
+              <p-tag [value]="getMarcoNombre(cuestionario.marcoNormativo)" styleClass="text-xs" />
+              <p-tag [value]="cuestionario.estado | titlecase" [severity]="getEstadoSeverity(cuestionario.estado)" styleClass="text-xs" />
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <p class="text-500 text-sm m-0 mb-2 line-height-3">{{ cuestionario.descripcion || 'Sin descripción' }}</p>
+
+          <!-- Info footer -->
+          <div class="flex align-items-center justify-content-between text-500 text-xs">
+            <div class="flex align-items-center gap-1">
+              <i class="pi pi-question-circle"></i>
+              <span>{{ cuestionario.preguntas }} preguntas</span>
+            </div>
+            <span>{{ cuestionario.fechaModificacion | date:'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+      } @empty {
+        <div class="flex flex-column align-items-center justify-content-center h-full py-8">
+          <i class="pi pi-inbox text-4xl text-300 mb-3"></i>
+          <span class="text-500">No se encontraron cuestionarios</span>
+          <p-button label="Crear cuestionario" icon="pi pi-plus" class="mt-3" (onClick)="crearNuevoCuestionario()" />
+        </div>
+      }
+    </div>
+
+    <!-- Panel Derecho: Preview del Cuestionario -->
+    <div class="w-7 surface-ground overflow-y-auto p-4">
+      @if (cuestionarioSeleccionado()) {
+        <!-- Header del Preview -->
+        <div class="surface-card border-round-lg p-4 mb-4">
+          <div class="flex justify-content-between align-items-start mb-3">
+            <div>
+              <h2 class="text-xl font-bold text-900 m-0 mb-2">{{ cuestionarioSeleccionado()!.nombre }}</h2>
+              <p class="text-500 m-0">{{ cuestionarioSeleccionado()!.descripcion || 'Sin descripción' }}</p>
+            </div>
+            <div class="flex align-items-center gap-2">
+              <p-tag [value]="cuestionarioSeleccionado()!.estado | titlecase" [severity]="getEstadoSeverity(cuestionarioSeleccionado()!.estado)" />
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="editarCuestionario(cuestionarioSeleccionado()!)" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="eliminarCuestionario(cuestionarioSeleccionado()!)" />
+            </div>
+          </div>
+
+          <!-- Info Grid -->
+          <div class="grid">
+            <div class="col-4">
+              <span class="text-500 text-sm block mb-1">Creado por</span>
+              <div class="flex align-items-center gap-2">
+                <p-avatar icon="pi pi-user" styleClass="bg-primary" shape="circle" />
+                <span class="text-900">Alice Johnson Smith</span>
+              </div>
+            </div>
+            <div class="col-4">
+              <span class="text-500 text-sm block mb-1">Fecha de creación</span>
+              <span class="text-900">{{ cuestionarioSeleccionado()!.fechaCreacion | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="col-4">
+              <span class="text-500 text-sm block mb-1">Última modificación</span>
+              <span class="text-900">{{ cuestionarioSeleccionado()!.fechaModificacion | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+
+          <!-- Métricas -->
+          <div class="grid mt-3">
+            <div class="col-3">
+              <div class="flex align-items-center gap-2">
+                <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width: 36px; height: 36px;">
+                  <i class="pi pi-check-circle text-blue-500"></i>
+                </div>
+                <div>
+                  <span class="text-500 text-xs block">Preguntas</span>
+                  <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.preguntas }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="flex align-items-center gap-2">
+                <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width: 36px; height: 36px;">
+                  <i class="pi pi-file text-green-500"></i>
+                </div>
+                <div>
+                  <span class="text-500 text-xs block">Respuestas</span>
+                  <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.respuestas }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="flex align-items-center gap-2">
+                <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width: 36px; height: 36px;">
+                  <i class="pi pi-cog text-purple-500"></i>
+                </div>
+                <div>
+                  <span class="text-500 text-xs block">Tipo</span>
+                  <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.tipo === 'ia' ? 'IA' : 'Manual' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="flex align-items-center gap-2">
+                <div class="flex align-items-center justify-content-center bg-teal-100 border-round" style="width: 36px; height: 36px;">
+                  <i class="pi pi-chart-line text-teal-500"></i>
+                </div>
+                <div>
+                  <span class="text-500 text-xs block">Cumplimiento</span>
+                  <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.tasaCompletado }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra de progreso verde -->
+          <div class="mt-3">
+            <div class="border-round overflow-hidden" style="height: 8px; background-color: var(--green-200);">
+              <div class="h-full bg-green-500" [style.width.%]="cuestionarioSeleccionado()!.tasaCompletado < 50 ? 50 : cuestionarioSeleccionado()!.tasaCompletado"></div>
+            </div>
+            <div class="text-center mt-1">
+              <span class="text-green-500 text-sm font-medium">{{ cuestionarioSeleccionado()!.tasaCompletado < 50 ? 50 : cuestionarioSeleccionado()!.tasaCompletado }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid: Información General y Secciones -->
+        <div class="grid">
+          <!-- Información General -->
+          <div class="col-6">
+            <div class="surface-card border-round-lg p-4 h-full">
+              <h3 class="text-lg font-semibold text-900 m-0 mb-4">Información General</h3>
+
+              <div class="flex align-items-start gap-3 mb-3">
+                <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width: 32px; height: 32px;">
+                  <i class="pi pi-book text-blue-500 text-sm"></i>
+                </div>
+                <div>
+                  <span class="text-500 text-sm block">Marco Normativo</span>
+                  <span class="text-900">{{ getMarcoNombre(cuestionarioSeleccionado()!.marcoNormativo) }}</span>
+                </div>
+              </div>
+
+              <div class="flex align-items-start gap-3 mb-4">
+                <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 32px; height: 32px;">
+                  <i class="pi pi-tag text-orange-500 text-sm"></i>
+                </div>
+                <div>
+                  <span class="text-500 text-sm block">Categoría</span>
+                  <span class="text-900">{{ cuestionarioSeleccionado()!.categoria | titlecase }}</span>
+                </div>
+              </div>
+
+              <!-- Porcentaje grande -->
+              <div class="text-center my-4">
+                <span class="text-5xl font-bold text-900">{{ cuestionarioSeleccionado()!.tasaCompletado }}.7%</span>
+              </div>
+
+              <!-- Barra de progreso con gradiente -->
+              <div class="border-round overflow-hidden mb-4" style="height: 10px; background: linear-gradient(to right, var(--red-500), var(--orange-500), var(--green-500));">
+                <div class="h-full bg-transparent" [style.width.%]="cuestionarioSeleccionado()!.tasaCompletado"></div>
+              </div>
+
+              <!-- Leyenda de umbrales -->
+              <div class="text-sm">
+                <h4 class="font-medium text-900 m-0 mb-2">Details</h4>
+                <div class="flex align-items-center gap-2 mb-2">
+                  <span class="inline-block border-circle bg-green-500" style="width: 10px; height: 10px;"></span>
+                  <span class="text-600">Sobresaliente</span>
+                  <span class="text-500 ml-auto">70% - 100%</span>
+                </div>
+                <div class="flex align-items-center gap-2 mb-2">
+                  <span class="inline-block border-circle bg-orange-500" style="width: 10px; height: 10px;"></span>
+                  <span class="text-600">Aceptable</span>
+                  <span class="text-500 ml-auto">50% - 70%</span>
+                </div>
+                <div class="flex align-items-center gap-2">
+                  <span class="inline-block border-circle bg-red-500" style="width: 10px; height: 10px;"></span>
+                  <span class="text-600">Deficiente</span>
+                  <span class="text-500 ml-auto">0% - 50%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secciones del cuestionario -->
+          <div class="col-6">
+            <div class="surface-card border-round-lg p-4 h-full">
+              <div class="flex justify-content-between align-items-center mb-4">
+                <h3 class="text-lg font-semibold text-900 m-0">Secciones</h3>
+                <span class="text-500 text-sm">{{ cuestionarioSeleccionado()!.secciones.length }} secciones</span>
+              </div>
+
+              <!-- Lista de secciones -->
+              <div class="flex flex-column gap-3">
+                @for (seccion of cuestionarioSeleccionado()!.secciones; track seccion.id; let i = $index) {
+                  <div class="flex align-items-center justify-content-between p-3 surface-100 border-round">
+                    <div class="flex align-items-center gap-3">
+                      <span class="flex align-items-center justify-content-center w-2rem h-2rem border-circle bg-primary text-white text-sm font-semibold">{{ i + 1 }}</span>
+                      <div>
+                        <span class="text-900 font-medium">{{ seccion.nombre }}</span>
+                        <span class="text-500 text-xs block">{{ seccion.preguntas.length }} preguntas</span>
+                      </div>
+                    </div>
+                    <p-tag [value]="seccion.peso + '%'" severity="info" styleClass="text-xs" />
+                  </div>
+                } @empty {
+                  <div class="text-center py-4">
+                    <i class="pi pi-list text-3xl text-300 mb-2"></i>
+                    <p class="text-500 m-0">Sin secciones definidas</p>
+                  </div>
+                }
+              </div>
+
+              <!-- Ver en editor -->
+              <div class="text-center mt-4">
+                <p-button label="Editar en Editor" [text]="true" severity="secondary" (onClick)="editarCuestionario(cuestionarioSeleccionado()!)" />
+              </div>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <!-- Estado vacío -->
+        <div class="flex flex-column align-items-center justify-content-center h-full">
+          <div class="flex align-items-center justify-content-center bg-primary-100 border-circle mb-4" style="width: 100px; height: 100px;">
+            <span class="material-icons text-primary" style="font-size: 3rem;">visibility</span>
+          </div>
+          <h3 class="text-900 font-semibold m-0 mb-2">Vista previa</h3>
+          <p class="text-500 text-center m-0">Selecciona un cuestionario de la lista para ver sus detalles</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+}
+
+<!-- ==================== VISTA: WIZARD NUEVO CUESTIONARIO (Página completa) ==================== -->
+@if (vistaActual() === 'wizard') {
+<div class="surface-ground min-h-screen">
+  <!-- Header con breadcrumb y título -->
+  <div class="surface-card border-bottom-1 surface-border px-4 py-3">
+    <div class="flex align-items-center gap-2 mb-3">
+      <span class="material-icons text-500 cursor-pointer" style="font-size: 1.25rem;" (click)="cancelarWizard()">home</span>
+      <span class="text-400">•</span>
+      <span class="text-500 text-sm">Cuestionarios</span>
+      <span class="text-400">•</span>
+      <span class="text-500 text-sm">Nuevo</span>
+    </div>
+    <div class="flex justify-content-between align-items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-900 m-0">Nuevo Cuestionario</h1>
+        <p class="text-500 text-sm m-0 mt-1">Orca&#64;Securityby Design</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor principal -->
+  <div class="p-4">
+    <!-- Stepper horizontal -->
+    <div class="surface-card border-round-xl p-4 mb-4">
+      <div class="flex align-items-start justify-content-center gap-6">
+        <!-- Paso 1: Método -->
+        <div class="flex align-items-start gap-3">
+          <div class="flex flex-column align-items-center">
+            <div class="wizard-step-icon flex align-items-center justify-content-center border-circle"
+                 [class]="wizardPaso() >= 0 ? 'bg-primary' : 'surface-200'"
+                 style="width: 40px; height: 40px;">
+              <span class="material-icons text-white" style="font-size: 1.25rem;">looks_one</span>
+            </div>
+            <div class="wizard-step-line mt-2" [class]="wizardPaso() >= 1 ? 'bg-primary' : 'surface-200'" style="width: 2px; height: 40px;"></div>
+          </div>
+          <div class="flex flex-column">
+            <span class="font-semibold text-900" [class]="wizardPaso() >= 0 ? 'text-900' : 'text-500'">Método</span>
+            <span class="text-500 text-sm">Selecciona cómo deseas crear tu cuestionario con IA o manualmente</span>
+          </div>
+        </div>
+
+        <!-- Paso 2: Datos -->
+        <div class="flex align-items-start gap-3">
+          <div class="flex flex-column align-items-center">
+            <div class="wizard-step-icon flex align-items-center justify-content-center border-circle"
+                 [class]="wizardPaso() >= 1 ? 'bg-primary' : 'surface-200'"
+                 style="width: 40px; height: 40px;">
+              <span class="material-icons" [class]="wizardPaso() >= 1 ? 'text-white' : 'text-500'" style="font-size: 1.25rem;">looks_two</span>
+            </div>
+            <div class="wizard-step-line mt-2" [class]="wizardPaso() >= 2 ? 'bg-primary' : 'surface-200'" style="width: 2px; height: 40px;"></div>
+          </div>
+          <div class="flex flex-column">
+            <span class="font-semibold" [class]="wizardPaso() >= 1 ? 'text-900' : 'text-500'">Datos</span>
+            <span class="text-500 text-sm">Nombre y marco normativo</span>
+          </div>
+        </div>
+
+        <!-- Paso 3: Umbrales -->
+        <div class="flex align-items-start gap-3">
+          <div class="flex flex-column align-items-center">
+            <div class="wizard-step-icon flex align-items-center justify-content-center border-circle"
+                 [class]="wizardPaso() >= 2 ? 'bg-primary' : 'surface-200'"
+                 style="width: 40px; height: 40px;">
+              <span class="material-icons" [class]="wizardPaso() >= 2 ? 'text-white' : 'text-500'" style="font-size: 1.25rem;">looks_3</span>
+            </div>
+          </div>
+          <div class="flex flex-column">
+            <span class="font-semibold" [class]="wizardPaso() >= 2 ? 'text-900' : 'text-500'">Umbrales</span>
+            <span class="text-500 text-sm">Define rangos de calificación</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta de contexto (Contenedor o proceso) -->
+    <div class="surface-card border-round-xl p-4 mb-4 shadow-1">
+      <div class="flex align-items-center gap-3">
+        <div>
+          <h3 class="text-lg font-semibold text-900 m-0">Contenedor o proceso</h3>
+          <p class="text-500 text-sm m-0 mt-1">Severidad: Alta | Impacto Financiero: $45,000 | Estado: En Resolución</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 0: Selección de Método -->
+    @if (wizardPaso() === 0) {
+    <div class="grid">
+      <!-- Opción Cuestionario IA -->
+      <div class="col-12 md:col-6">
+        <div class="wizard-method-card h-full border-round-xl p-4 cursor-pointer transition-all"
+             [class]="metodoCreacion() === 'ia' ? 'wizard-method-selected bg-purple-50' : 'surface-card shadow-1 hover:shadow-3'"
+             style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);"
+             (click)="seleccionarMetodoCreacion('ia')">
+          <!-- Icono decorativo -->
+          <div class="flex justify-content-center mb-4">
+            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle bg-purple-100"
+                 style="width: 80px; height: 80px;">
+              <span class="material-icons text-purple-500" style="font-size: 2.5rem;">psychology</span>
+            </div>
+          </div>
+
+          <!-- Título y descripción -->
+          <div class="text-center mb-4">
+            <h3 class="text-xl font-bold text-900 m-0 mb-2">Cuestionario IA</h3>
+            <p class="text-500 text-sm m-0 line-height-3">Genera preguntas automáticamente con IA o sube un documento</p>
+          </div>
+
+          <!-- Stats cards -->
+          <div class="flex gap-2 mb-4">
+            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+              <div class="text-center">
+                <span class="text-xl font-bold text-900">89%</span>
+                <p class="text-500 text-xs m-0 mt-1">Precisión</p>
+              </div>
+            </div>
+            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+              <div class="text-center">
+                <span class="text-xl font-bold text-900">&lt; 30 seg</span>
+                <p class="text-500 text-xs m-0 mt-1">Tiempo Promedio</p>
+              </div>
+            </div>
+            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+              <div class="text-center">
+                <span class="text-xl font-bold text-900">5-50</span>
+                <p class="text-500 text-xs m-0 mt-1">Preguntas</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón de acción -->
+          <p-button label="Generar análisis con IA" icon="pi pi-sparkles" iconPos="right"
+                    severity="help" styleClass="w-full"
+                    (onClick)="seleccionarMetodoCreacion('ia'); continuarWizard()" />
+        </div>
+      </div>
+
+      <!-- Opción Manual -->
+      <div class="col-12 md:col-6">
+        <div class="wizard-method-card h-full border-round-xl p-4 cursor-pointer transition-all"
+             [class]="metodoCreacion() === 'manual' ? 'wizard-method-selected' : 'surface-card shadow-1 hover:shadow-3'"
+             style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);"
+             (click)="seleccionarMetodoCreacion('manual')">
+          <!-- Icono decorativo -->
+          <div class="flex justify-content-center mb-4">
+            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle bg-blue-100"
+                 style="width: 80px; height: 80px;">
+              <span class="material-icons text-blue-500" style="font-size: 2.5rem;">edit_note</span>
+            </div>
+          </div>
+
+          <!-- Título y descripción -->
+          <div class="text-center mb-4">
+            <h3 class="text-xl font-bold text-900 m-0 mb-2">Manual</h3>
+            <p class="text-500 text-sm m-0 line-height-3">Diseña tu cuestionario desde cero agregando secciones y preguntas</p>
+          </div>
+
+          <!-- Stats cards -->
+          <div class="flex gap-2 mb-4">
+            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+              <div class="text-center">
+                <span class="text-xl font-bold text-900">100%</span>
+                <p class="text-500 text-xs m-0 mt-1">Control</p>
+              </div>
+            </div>
+            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+              <div class="text-center">
+                <span class="text-xl font-bold text-900">10 tipos</span>
+                <p class="text-500 text-xs m-0 mt-1">de preguntas</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón de acción -->
+          <p-button label="Crear respuesta manual" icon="pi pi-pencil" iconPos="right"
+                    severity="contrast" styleClass="w-full"
+                    (onClick)="seleccionarMetodoCreacion('manual'); continuarWizard()" />
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Paso 1: Datos Generales -->
+    @if (wizardPaso() === 1) {
+    <div class="surface-card border-round-xl p-4 shadow-1">
+      <div class="flex align-items-center gap-3 mb-4">
+        <div class="flex align-items-center justify-content-center border-circle bg-blue-100" style="width: 48px; height: 48px;">
+          <span class="material-icons text-blue-500">description</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-900 m-0">Datos Generales</h3>
+          <p class="text-500 text-sm m-0">Información básica del cuestionario</p>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="col-12">
+          <label class="block font-medium mb-2 text-900">Nombre del cuestionario *</label>
+          <input pInputText [ngModel]="wizardDatosGenerales().nombre"
+                 (ngModelChange)="actualizarDatosGenerales('nombre', $event)"
+                 class="w-full" placeholder="Ej: Evaluación de Controles ISO 27001" />
+        </div>
+        <div class="col-12">
+          <label class="block font-medium mb-2 text-900">Descripción</label>
+          <textarea pTextarea [ngModel]="wizardDatosGenerales().descripcion"
+                    (ngModelChange)="actualizarDatosGenerales('descripcion', $event)"
+                    class="w-full" rows="3" placeholder="Descripción breve del cuestionario..."></textarea>
+        </div>
+        <div class="col-12 md:col-6">
+          <label class="block font-medium mb-2 text-900">Marco Normativo</label>
+          <p-select [options]="marcosNormativos()" optionLabel="acronimo" optionValue="id"
+                    [ngModel]="wizardDatosGenerales().marcoNormativo"
+                    (ngModelChange)="actualizarDatosGenerales('marcoNormativo', $event)"
+                    placeholder="Seleccionar marco" styleClass="w-full" [showClear]="true" />
+        </div>
+        <div class="col-12 md:col-6">
+          <label class="block font-medium mb-2 text-900">Tipo de Evaluación</label>
+          <p-select [options]="tipoEvaluacionOptions" optionLabel="label" optionValue="value"
+                    [ngModel]="wizardDatosGenerales().tipoEvaluacion"
+                    (ngModelChange)="actualizarDatosGenerales('tipoEvaluacion', $event)"
+                    styleClass="w-full" />
+        </div>
+      </div>
+
+      <!-- Botones de navegación -->
+      <div class="flex justify-content-between mt-4 pt-4 border-top-1 surface-border">
+        <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="volverPasoWizard()" />
+        <p-button label="Continuar" icon="pi pi-arrow-right" iconPos="right" (onClick)="continuarWizard()" [disabled]="!puedeAvanzarWizard()" />
+      </div>
+    </div>
+    }
+
+    <!-- Paso 2: Umbrales -->
+    @if (wizardPaso() === 2) {
+    <div class="surface-card border-round-xl p-4 shadow-1">
+      <!-- Header con título -->
+      <div class="flex align-items-center gap-3 mb-4">
+        <div class="flex align-items-center justify-content-center border-circle bg-orange-100" style="width: 48px; height: 48px;">
+          <span class="material-icons text-orange-500">tune</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-900 m-0">Definición de Umbrales</h3>
+          <p class="text-500 text-sm m-0">Configura los niveles de cumplimiento</p>
+        </div>
+      </div>
+
+      <!-- Vista previa de progreso (como en Figma) -->
+      <div class="surface-card border-round-lg p-4 mb-4">
+        <div class="flex justify-content-between align-items-center mb-3">
+          <span class="text-2xl font-semibold text-900">85.7%</span>
+          <span class="text-500 text-sm">8571 / 10000</span>
+        </div>
+        <div class="flex w-full border-round overflow-hidden" style="height: 10px; background: linear-gradient(to right, var(--red-500) 0%, var(--red-500) 50%, var(--orange-500) 50%, var(--orange-500) 70%, var(--green-500) 70%, var(--green-500) 100%);">
+        </div>
+      </div>
+
+      <!-- Cards de umbrales con sliders (diseño Figma) -->
+      <div class="flex flex-column gap-3">
+        <!-- Deficiente -->
+        <div class="surface-card border-round-lg border-1 surface-border flex overflow-hidden">
+          <div class="bg-red-500" style="width: 4px;"></div>
+          <div class="flex-1 p-3">
+            <div class="flex align-items-center justify-content-between">
+              <div class="flex-1">
+                <span class="font-medium text-900 block mb-1">Deficiente</span>
+                <span class="text-500 text-sm block mb-3">Hasta (%)</span>
+                <div class="flex align-items-center gap-3">
+                  <p-inputNumber [ngModel]="wizardUmbrales().deficiente"
+                                 (ngModelChange)="actualizarUmbrales('deficiente', $event)"
+                                 [min]="0" [max]="100" styleClass="w-5rem" [showButtons]="false" />
+                  <p-slider [ngModel]="wizardUmbrales().deficiente"
+                            (ngModelChange)="actualizarUmbrales('deficiente', $event)"
+                            [min]="0" [max]="100" styleClass="flex-1" />
+                </div>
+              </div>
+              <div class="text-right ml-4">
+                <span class="text-900 font-bold">0% - {{ wizardUmbrales().deficiente }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aceptable -->
+        <div class="surface-card border-round-lg border-1 surface-border flex overflow-hidden">
+          <div class="bg-orange-500" style="width: 4px;"></div>
+          <div class="flex-1 p-3">
+            <div class="flex align-items-center justify-content-between">
+              <div class="flex-1">
+                <span class="font-medium text-900 block mb-1">Aceptable</span>
+                <span class="text-500 text-sm block mb-3">Hasta (%)</span>
+                <div class="flex align-items-center gap-3">
+                  <p-inputNumber [ngModel]="wizardUmbrales().aceptable"
+                                 (ngModelChange)="actualizarUmbrales('aceptable', $event)"
+                                 [min]="0" [max]="100" styleClass="w-5rem" [showButtons]="false" />
+                  <p-slider [ngModel]="wizardUmbrales().aceptable"
+                            (ngModelChange)="actualizarUmbrales('aceptable', $event)"
+                            [min]="0" [max]="100" styleClass="flex-1" />
+                </div>
+              </div>
+              <div class="text-right ml-4">
+                <span class="text-900 font-bold">{{ wizardUmbrales().deficiente }}% - {{ wizardUmbrales().aceptable }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sobresaliente -->
+        <div class="surface-card border-round-lg border-1 surface-border flex overflow-hidden">
+          <div class="bg-green-500" style="width: 4px;"></div>
+          <div class="flex-1 p-3">
+            <div class="flex align-items-center justify-content-between">
+              <div class="flex-1">
+                <span class="font-medium text-900 block mb-1">Sobresaliente</span>
+                <span class="text-500 text-sm block mb-3">Desde (%)</span>
+                <div class="flex align-items-center gap-3">
+                  <p-inputNumber [ngModel]="wizardUmbrales().sobresaliente"
+                                 (ngModelChange)="actualizarUmbrales('sobresaliente', $event)"
+                                 [min]="0" [max]="100" styleClass="w-5rem" [showButtons]="false" />
+                  <p-slider [ngModel]="wizardUmbrales().sobresaliente"
+                            (ngModelChange)="actualizarUmbrales('sobresaliente', $event)"
+                            [min]="0" [max]="100" styleClass="flex-1" />
+                </div>
+              </div>
+              <div class="text-right ml-4">
+                <span class="text-900 font-bold">{{ wizardUmbrales().aceptable }}% - 100%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de navegación -->
+      <div class="flex justify-content-between mt-4 pt-4 border-top-1 surface-border">
+        <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="volverPasoWizard()" />
+        <div class="flex gap-2">
+          @if (metodoCreacion() === 'manual') {
+            <p-button label="Crear cuestionario" icon="pi pi-check" (onClick)="continuarWizard()" />
+          } @else {
+            <p-button label="Continuar a IA" icon="pi pi-sparkles" iconPos="right" severity="help" (onClick)="continuarWizard()" />
           }
         </div>
-      </p-card>
+      </div>
     </div>
-    <div class="col-12 md:col-6 lg:col-3">
-      <p-card styleClass="h-full border-top-3 border-green-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Total Respuestas</span>
-          <span class="text-3xl font-bold text-900">{{ totalRespuestas() }}</span>
-          <span class="text-500 text-sm mt-2">Recibidas este periodo</span>
+    }
+
+    <!-- Paso 3: Configuración IA (solo si eligió IA) -->
+    @if (wizardPaso() === 3 && metodoCreacion() === 'ia') {
+    <div class="surface-card border-round-xl p-4 shadow-1">
+      <div class="flex align-items-center gap-3 mb-4">
+        <div class="flex align-items-center justify-content-center border-circle bg-purple-100" style="width: 48px; height: 48px;">
+          <span class="material-icons text-purple-500">psychology</span>
         </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-6 lg:col-3">
-      <p-card styleClass="h-full border-top-3 border-orange-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Promedio Cumplimiento</span>
-          <span class="text-3xl font-bold text-900">{{ promedioCompletado() }}%</span>
-          <p-progressBar [value]="promedioCompletado()" [showValue]="false" styleClass="mt-2" />
+        <div>
+          <h3 class="text-lg font-semibold text-900 m-0">Generación con IA</h3>
+          <p class="text-500 text-sm m-0">Elige cómo generar las preguntas</p>
         </div>
-      </p-card>
+      </div>
+
+      <!-- Selector de método IA -->
+      <div class="flex gap-3 mb-4">
+        <div class="flex-1 p-3 border-round-lg cursor-pointer transition-all"
+             [class]="wizardIAMetodo() === 'prompt' ? 'border-2 border-purple-500 bg-purple-50' : 'border-1 surface-border'"
+             (click)="wizardIAMetodo.set('prompt')">
+          <div class="flex align-items-center gap-2">
+            <span class="material-icons text-purple-500">chat</span>
+            <span class="font-medium" [class]="wizardIAMetodo() === 'prompt' ? 'text-purple-700' : 'text-700'">Describir con texto</span>
+          </div>
+        </div>
+        <div class="flex-1 p-3 border-round-lg cursor-pointer transition-all"
+             [class]="wizardIAMetodo() === 'documento' ? 'border-2 border-purple-500 bg-purple-50' : 'border-1 surface-border'"
+             (click)="wizardIAMetodo.set('documento')">
+          <div class="flex align-items-center gap-2">
+            <span class="material-icons text-purple-500">upload_file</span>
+            <span class="font-medium" [class]="wizardIAMetodo() === 'documento' ? 'text-purple-700' : 'text-700'">Subir documento</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Opción: Prompt -->
+      @if (wizardIAMetodo() === 'prompt') {
+        <div class="mb-4">
+          <label class="block font-medium mb-2 text-900">Describe las preguntas que necesitas</label>
+          <textarea pTextarea [(ngModel)]="promptIA" class="w-full" rows="4"
+                    placeholder="Ej: Genera 15 preguntas para evaluar el control de accesos según ISO 27001, incluyendo preguntas sobre gestión de contraseñas, autenticación y revisión de permisos..."></textarea>
+        </div>
+        <div>
+          <label class="block text-500 text-sm mb-2">Sugerencias</label>
+          <div class="flex flex-wrap gap-2">
+            <p-chip label="ISO 27001" styleClass="cursor-pointer" (click)="promptIA.set(promptIA() + ' ISO 27001')" />
+            <p-chip label="SOX" styleClass="cursor-pointer" (click)="promptIA.set(promptIA() + ' SOX')" />
+            <p-chip label="GDPR" styleClass="cursor-pointer" (click)="promptIA.set(promptIA() + ' GDPR')" />
+            <p-chip label="15 preguntas" styleClass="cursor-pointer" (click)="promptIA.set(promptIA() + ' 15 preguntas')" />
+          </div>
+        </div>
+      }
+
+      <!-- Opción: Documento -->
+      @if (wizardIAMetodo() === 'documento') {
+        <div>
+          <label class="block font-medium mb-2 text-900">Sube un documento normativo o de referencia</label>
+          <p class="text-500 text-sm mb-3 m-0">La IA analizará el documento y generará preguntas basadas en su contenido.</p>
+
+          @if (!wizardDocumento()) {
+            <div class="upload-zone p-4 border-2 border-dashed border-round-lg text-center cursor-pointer transition-all"
+                 style="border-color: var(--surface-300);"
+                 (click)="fileInputDocumentoWizard.click()">
+              <input #fileInputDocumentoWizard type="file" accept=".pdf,.doc,.docx,.txt"
+                     style="display: none" (change)="onFileInputChange($event)">
+              <span class="material-icons text-4xl text-purple-300 mb-3">cloud_upload</span>
+              <p class="m-0 mb-2 font-medium text-700">Arrastra un documento aquí</p>
+              <p class="m-0 text-500 text-sm">o haz clic para seleccionar</p>
+              <p class="m-0 text-400 text-xs mt-2">PDF, Word, TXT (máx. 10MB)</p>
+            </div>
+          } @else {
+            <div class="flex align-items-center gap-3 p-3 surface-100 border-round">
+              <span class="material-icons text-2xl text-red-500">picture_as_pdf</span>
+              <div class="flex-1">
+                <p class="m-0 font-medium text-900">{{ wizardDocumento()?.name }}</p>
+                <p class="m-0 text-500 text-sm">{{ (wizardDocumento()?.size || 0) / 1024 | number:'1.0-0' }} KB</p>
+              </div>
+              <p-button icon="pi pi-times" severity="danger" [rounded]="true" [text]="true" (onClick)="limpiarDocumentoIA()" />
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Botones de navegación -->
+      <div class="flex justify-content-between mt-4 pt-4 border-top-1 surface-border">
+        <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="volverPasoWizard()" />
+        <p-button label="Generar con IA" icon="pi pi-sparkles" severity="help" [loading]="generandoIA()" (onClick)="generarConIAWizard()" />
+      </div>
     </div>
+    }
+
+    <!-- Paso 4: Preview del cuestionario generado (IA) -->
+    @if (wizardPaso() === 4 && wizardPreviewCuestionario()) {
+    <div class="surface-card border-round-xl p-4 shadow-1">
+      <div class="flex align-items-center gap-3 mb-4">
+        <div class="flex align-items-center justify-content-center border-circle bg-green-100" style="width: 48px; height: 48px;">
+          <span class="material-icons text-green-500">check_circle</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-900 m-0">Cuestionario Generado</h3>
+          <p class="text-500 text-sm m-0">Revisa el resultado antes de continuar</p>
+        </div>
+      </div>
+
+      <!-- Resumen general -->
+      <div class="p-3 surface-100 border-round mb-4">
+        <div class="flex align-items-center justify-content-between mb-3">
+          <h5 class="m-0 text-900">{{ wizardPreviewCuestionario()?.nombre }}</h5>
+          <p-tag severity="info" [value]="(wizardPreviewCuestionario()?.marcoNormativo || '') | uppercase" />
+        </div>
+        <p class="text-500 text-sm m-0 mb-3">{{ wizardPreviewCuestionario()?.descripcion }}</p>
+        <div class="flex gap-4">
+          <div class="flex align-items-center gap-2">
+            <span class="material-icons text-500" style="font-size: 1.25rem;">list</span>
+            <span class="text-sm text-700">{{ wizardPreviewCuestionario()?.secciones?.length || 0 }} secciones</span>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <span class="material-icons text-500" style="font-size: 1.25rem;">help_outline</span>
+            <span class="text-sm text-700">{{ wizardPreviewCuestionario()?.preguntas || 0 }} preguntas</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista previa de secciones -->
+      <div class="flex flex-column gap-3" style="max-height: 350px; overflow-y: auto;">
+        @for (seccion of wizardPreviewCuestionario()?.secciones || []; track seccion.id; let i = $index) {
+          <div class="p-3 border-1 surface-border border-round">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <div class="flex align-items-center gap-2">
+                <span class="flex align-items-center justify-content-center border-circle bg-primary text-white text-xs font-bold" style="width: 24px; height: 24px;">{{ i + 1 }}</span>
+                <span class="font-medium text-900">{{ seccion.nombre }}</span>
+              </div>
+              <span class="text-xs text-500">Peso: {{ seccion.peso }}%</span>
+            </div>
+            <p class="text-500 text-sm m-0 mb-2">{{ seccion.descripcion }}</p>
+            <div class="flex flex-column gap-2">
+              @for (pregunta of seccion.preguntas; track pregunta.id; let j = $index) {
+                <div class="flex align-items-start gap-2 p-2 surface-50 border-round">
+                  <span class="text-xs text-500 font-medium" style="min-width: 1.5rem">{{ j + 1 }}.</span>
+                  <div class="flex-1">
+                    <p class="m-0 text-sm text-700">{{ pregunta.texto }}</p>
+                    <div class="flex align-items-center gap-2 mt-1">
+                      <p-tag [severity]="pregunta.tipo === 'siNoNa' ? 'success' : pregunta.tipo === 'escala' ? 'info' : 'secondary'"
+                             [value]="getTipoPreguntaLabel(pregunta.tipo)" styleClass="text-xs" />
+                      @if (pregunta.requerida) {
+                        <span class="text-xs text-red-500">Requerida</span>
+                      }
+                      @if (tieneLogicaCondicional(pregunta)) {
+                        <span class="flex align-items-center gap-1 text-xs text-blue-500">
+                          <i class="pi pi-sitemap text-xs"></i>
+                          Condicional
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Botones de navegación -->
+      <div class="flex justify-content-between mt-4 pt-4 border-top-1 surface-border">
+        <p-button label="Regenerar" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="regenerarConIA()" />
+        <p-button label="Editar cuestionario" icon="pi pi-pencil" (onClick)="irAEditorDesdePreview()" />
+      </div>
+    </div>
+    }
   </div>
-
-  <!-- Alertas activas -->
-  @if (alertasCriticas() > 0) {
-    <p-message severity="warn" styleClass="mb-4 w-full">
-      <span class="font-semibold">{{ alertasCriticas() }} alerta(s) crítica(s) requieren atención inmediata.</span>
-      <p-button label="Ver alertas" [text]="true" size="small" (onClick)="irADashboard()" class="ml-2" />
-    </p-message>
-  }
-
-  <!-- Filtros -->
-  <div class="flex flex-wrap gap-3 mb-4">
-    <p-iconfield class="flex-1" style="min-width: 280px">
-      <p-inputicon styleClass="pi pi-search" />
-      <input type="text" pInputText placeholder="Buscar cuestionarios..." [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" class="w-full" />
-    </p-iconfield>
-    <p-select [options]="estadoOptions" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)" placeholder="Estado" class="w-auto" />
-    <p-select [options]="categoriaOptions" [ngModel]="filtroCategoria()" (ngModelChange)="filtroCategoria.set($event)" placeholder="Categoría" class="w-auto" />
-    <p-select [options]="marcosNormativos()" optionLabel="acronimo" optionValue="id" [ngModel]="filtroMarco()" (ngModelChange)="filtroMarco.set($event)" placeholder="Marco Normativo" [showClear]="true" class="w-auto" />
-  </div>
-
-  <!-- Tabla -->
-  <p-card>
-    <p-table [value]="cuestionariosFiltrados()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
-             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} cuestionarios"
-             [rowsPerPageOptions]="[5, 10, 25, 50]" styleClass="p-datatable-striped">
-      <ng-template #header>
-        <tr>
-          <th pSortableColumn="nombre" style="width: 25%">Cuestionario <p-sortIcon field="nombre" /></th>
-          <th style="width: 10%">Marco</th>
-          <th style="width: 10%">Tipo</th>
-          <th pSortableColumn="estado" style="width: 10%">Estado <p-sortIcon field="estado" /></th>
-          <th style="width: 10%">Periodicidad</th>
-          <th pSortableColumn="preguntas" style="width: 8%">Preguntas</th>
-          <th style="width: 12%">Cumplimiento</th>
-          <th style="width: 15%">Acciones</th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-cuestionario>
-        <tr>
-          <td>
-            <div class="flex flex-column">
-              <span class="font-semibold text-900">{{ cuestionario.nombre }}</span>
-              <span class="text-500 text-sm">{{ cuestionario.categoria | titlecase }} · {{ cuestionario.fechaModificacion | date:'dd/MM/yyyy' }}</span>
-            </div>
-          </td>
-          <td>
-            <p-tag [value]="getMarcoNombre(cuestionario.marcoNormativo)" severity="info" />
-          </td>
-          <td>
-            <p-tag [value]="cuestionario.tipo === 'ia' ? 'IA' : 'Manual'" [severity]="getTipoSeverity(cuestionario.tipo)" [icon]="cuestionario.tipo === 'ia' ? 'pi pi-sparkles' : 'pi pi-user'" />
-          </td>
-          <td>
-            <p-tag [value]="cuestionario.estado | titlecase" [severity]="getEstadoSeverity(cuestionario.estado)" />
-          </td>
-          <td>
-            <span class="text-sm">{{ cuestionario.periodicidad | titlecase }}</span>
-          </td>
-          <td class="text-center font-semibold">{{ cuestionario.preguntas }}</td>
-          <td>
-            <div class="flex align-items-center gap-2">
-              <p-progressBar [value]="cuestionario.tasaCompletado" [showValue]="false" styleClass="flex-1" style="height: 8px" />
-              <span class="text-sm font-semibold" style="min-width: 40px">{{ cuestionario.tasaCompletado }}%</span>
-            </div>
-          </td>
-          <td>
-            <div class="flex gap-1">
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" pTooltip="Editar" (onClick)="editarCuestionario(cuestionario)" />
-              <p-button icon="pi pi-users" [rounded]="true" [text]="true" severity="success" pTooltip="Asignar" (onClick)="abrirAsignarDialog(cuestionario)" [disabled]="cuestionario.estado !== 'activo'" />
-              <p-button icon="pi pi-list" [rounded]="true" [text]="true" severity="secondary" pTooltip="Ver asignaciones" (onClick)="verAsignaciones(cuestionario)" />
-              <p-button icon="pi pi-copy" [rounded]="true" [text]="true" severity="secondary" pTooltip="Duplicar" (onClick)="duplicarCuestionario(cuestionario)" />
-              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="eliminarCuestionario(cuestionario)" />
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template #emptymessage>
-        <tr>
-          <td colspan="8" class="text-center p-4">
-            <div class="flex flex-column align-items-center gap-3 py-5">
-              <i class="pi pi-inbox text-4xl text-300"></i>
-              <span class="text-500">No se encontraron cuestionarios</span>
-              <p-button label="Crear cuestionario" icon="pi pi-plus" (onClick)="crearNuevoCuestionario()" />
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </p-card>
 </div>
 }
 
@@ -320,6 +958,28 @@
             </div>
             <i class="pi pi-plus text-primary"></i>
           </div>
+          <div class="flex align-items-center justify-content-between p-2 border-round hover:surface-100 cursor-pointer"
+               pDraggable="pregunta" (onDragStart)="iniciarArrastre('calculado')">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-calculator text-500"></i>
+              <div>
+                <span class="text-sm font-medium">Calculated Field</span>
+                <p class="text-xs text-500 m-0">Auto-calculated values</p>
+              </div>
+            </div>
+            <i class="pi pi-plus text-primary"></i>
+          </div>
+          <div class="flex align-items-center justify-content-between p-2 border-round hover:surface-100 cursor-pointer"
+               pDraggable="pregunta" (onDragStart)="iniciarArrastre('url')">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-link text-500"></i>
+              <div>
+                <span class="text-sm font-medium">URL</span>
+                <p class="text-xs text-500 m-0">Website link field</p>
+              </div>
+            </div>
+            <i class="pi pi-plus text-primary"></i>
+          </div>
         </div>
       </div>
     </div>
@@ -356,6 +1016,12 @@
                   <div class="flex-1">
                     <div class="flex align-items-center gap-2 mb-2">
                       <span class="text-xs font-semibold text-500 uppercase">{{ getTipoPreguntaLabel(pregunta.tipo) }}</span>
+                      @if (tieneLogicaCondicional(pregunta)) {
+                        <span class="flex align-items-center gap-1 text-xs text-blue-500" pTooltip="{{ getTextoCondicion(pregunta) }}" tooltipPosition="top">
+                          <i class="pi pi-sitemap text-xs"></i>
+                          Condicional
+                        </span>
+                      }
                       <i class="pi pi-trash text-400 hover:text-red-500 cursor-pointer ml-auto" (click)="eliminarPregunta(seccion.id, pIdx); $event.stopPropagation()"></i>
                     </div>
                     <p class="text-sm text-900 mb-2">{{ pregunta.texto || 'Sin texto de pregunta' }}</p>
@@ -468,11 +1134,41 @@
 
           <p-divider />
 
+          <h4 class="text-xs font-semibold text-900 m-0">Logica Condicional</h4>
           <div class="flex align-items-center justify-content-between">
-            <span class="text-sm font-medium">Visualizacion Condicional</span>
-            <p-toggleSwitch />
+            <span class="text-sm">Mostrar solo si se cumple condicion</span>
+            <p-toggleSwitch [ngModel]="!!preguntaSeleccionada()!.displayConditionQuestionId"
+                            (ngModelChange)="toggleLogicaCondicional($event)" />
           </div>
-          <p-select [options]="[{label: 'Mostar este campo si', value: 'show'}]" optionLabel="label" styleClass="w-full" placeholder="Mostar este campo si" />
+
+          @if (preguntaSeleccionada()!.displayConditionQuestionId || logicaCondicionalActiva()) {
+            <div class="p-3 surface-100 border-round flex flex-column gap-2">
+              <div>
+                <label class="block text-xs font-medium text-500 mb-1">Mostrar si la pregunta:</label>
+                <p-select [options]="getPreguntasDisponiblesParaCondicion()"
+                          optionLabel="label" optionValue="value" styleClass="w-full"
+                          [ngModel]="preguntaSeleccionada()!.displayConditionQuestionId"
+                          (ngModelChange)="setCondicionPreguntaId($event)"
+                          placeholder="Seleccionar pregunta" />
+              </div>
+              @if (preguntaSeleccionada()!.displayConditionQuestionId) {
+                <div>
+                  <label class="block text-xs font-medium text-500 mb-1">Es igual a:</label>
+                  <p-select [options]="getOpcionesRespuestaCondicion()"
+                            optionLabel="label" optionValue="value" styleClass="w-full"
+                            [ngModel]="preguntaSeleccionada()!.displayConditionAnswer"
+                            (ngModelChange)="setCondicionRespuesta($event)"
+                            placeholder="Seleccionar respuesta" />
+                </div>
+              }
+              @if (preguntaSeleccionada()!.displayConditionQuestionId && preguntaSeleccionada()!.displayConditionAnswer) {
+                <div class="p-2 bg-blue-50 border-round text-xs text-blue-700">
+                  <i class="pi pi-info-circle mr-1"></i>
+                  Esta pregunta solo se mostrara cuando la condicion se cumpla
+                </div>
+              }
+            </div>
+          }
         </div>
       } @else {
         <!-- Sin seleccion - mostrar config general -->
@@ -486,10 +1182,6 @@
           <div>
             <label class="block text-xs font-medium text-500 mb-1">Tipo de Evaluacion</label>
             <p-select [options]="tipoEvaluacionOptions" [(ngModel)]="cuestionarioSeleccionado()!.tipoEvaluacion" styleClass="w-full" />
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-500 mb-1">Periodicidad</label>
-            <p-select [options]="periodicidadOptions" [(ngModel)]="cuestionarioSeleccionado()!.periodicidad" styleClass="w-full" />
           </div>
 
           <p-divider />
@@ -525,1329 +1217,7 @@
 </div>
 }
 
-<!-- ==================== VISTA: RESPONDER CUESTIONARIO ==================== -->
-@if (vistaActual() === 'responder' && cuestionarioSeleccionado() && asignacionSeleccionada()) {
-<div class="surface-ground min-h-screen">
-  <div class="surface-card border-bottom-1 surface-border px-4 py-3">
-    <div class="flex justify-content-between align-items-center">
-      <div class="flex align-items-center gap-3">
-        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volverALista()" />
-        <div>
-          <h2 class="text-xl font-semibold text-900 m-0">{{ cuestionarioSeleccionado()!.nombre }}</h2>
-          <span class="text-500 text-sm">Respondiendo como {{ asignacionSeleccionada()!.responsableNombre }}</span>
-        </div>
-      </div>
-      <div class="flex align-items-center gap-3">
-        <span class="text-500">Vence: {{ asignacionSeleccionada()!.fechaVencimiento | date:'dd/MM/yyyy' }}</span>
-        <p-button label="Guardar borrador" icon="pi pi-save" severity="secondary" [outlined]="true" (onClick)="guardarRespuestaBorrador()" />
-        <p-button label="Enviar" icon="pi pi-send" (onClick)="enviarRespuesta()" />
-      </div>
-    </div>
-  </div>
-
-  <div class="p-4">
-    @for (seccion of cuestionarioSeleccionado()!.secciones; track seccion.id) {
-      <p-card styleClass="mb-4">
-        <ng-template #header>
-          <div class="p-3 border-bottom-1 surface-border">
-            <h3 class="text-lg font-semibold text-900 m-0">{{ seccion.nombre }}</h3>
-          </div>
-        </ng-template>
-        <div class="flex flex-column gap-4">
-          @for (pregunta of seccion.preguntas; track pregunta.id; let j = $index) {
-            <div class="p-3 border-round surface-50">
-              <div class="flex gap-2 mb-3">
-                <span class="font-semibold text-primary">{{ j + 1 }}.</span>
-                <span class="font-medium">{{ pregunta.texto }}</span>
-                @if (pregunta.requerida) { <span class="text-red-500">*</span> }
-              </div>
-              @switch (pregunta.tipo) {
-                @case ('texto') {
-                  <textarea pTextarea class="w-full" rows="3" [ngModel]="getRespuestaPregunta(pregunta.id)?.valor" (ngModelChange)="actualizarRespuesta(pregunta.id, $event)"></textarea>
-                }
-                @case ('siNoNa') {
-                  <div class="flex gap-4">
-                    @for (opcion of pregunta.opciones; track $index) {
-                      <div class="flex align-items-center gap-2">
-                        <p-radioButton [name]="pregunta.id" [value]="opcion" [ngModel]="getRespuestaPregunta(pregunta.id)?.valor" (ngModelChange)="actualizarRespuesta(pregunta.id, $event)" />
-                        <label>{{ opcion }}</label>
-                      </div>
-                    }
-                  </div>
-                }
-                @case ('seleccionUnica') {
-                  <div class="flex flex-column gap-2">
-                    @for (opcion of pregunta.opciones; track $index) {
-                      <div class="flex align-items-center gap-2">
-                        <p-radioButton [name]="pregunta.id" [value]="opcion" [ngModel]="getRespuestaPregunta(pregunta.id)?.valor" (ngModelChange)="actualizarRespuesta(pregunta.id, $event)" />
-                        <label>{{ opcion }}</label>
-                      </div>
-                    }
-                  </div>
-                }
-                @case ('escala') {
-                  <div class="flex align-items-center gap-3">
-                    <span>{{ pregunta.escalaMin }}</span>
-                    <p-slider [min]="pregunta.escalaMin || 1" [max]="pregunta.escalaMax || 10" styleClass="flex-1" [ngModel]="getRespuestaPregunta(pregunta.id)?.valor" (ngModelChange)="actualizarRespuesta(pregunta.id, $event)" />
-                    <span>{{ pregunta.escalaMax }}</span>
-                    <span class="font-semibold ml-2">{{ getRespuestaPregunta(pregunta.id)?.valor || '-' }}</span>
-                  </div>
-                }
-                @case ('numero') {
-                  <p-inputNumber styleClass="w-20rem" [ngModel]="getRespuestaPregunta(pregunta.id)?.valor" (ngModelChange)="actualizarRespuesta(pregunta.id, $event)" />
-                }
-              }
-              @if (pregunta.requiereEvidencia) {
-                <div class="mt-3 p-3 border-round surface-100">
-                  <span class="flex align-items-center gap-2 mb-2"><i class="pi pi-paperclip text-primary"></i> Evidencia requerida</span>
-                  <p-fileUpload mode="basic" chooseLabel="Adjuntar" [auto]="true" [maxFileSize]="10000000" />
-                </div>
-              }
-            </div>
-          }
-        </div>
-      </p-card>
-    }
-  </div>
-</div>
-}
-
-<!-- ==================== VISTA: ASIGNACIONES ==================== -->
-@if (vistaActual() === 'asignar' && cuestionarioSeleccionado()) {
-<div class="surface-ground p-4">
-  <div class="flex align-items-center gap-3 mb-4">
-    <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volverALista()" />
-    <div>
-      <h2 class="text-xl font-semibold text-900 m-0">{{ cuestionarioSeleccionado()!.nombre }}</h2>
-      <span class="text-500 text-sm">Gestión de asignaciones</span>
-    </div>
-    <div class="ml-auto">
-      <p-button label="Nueva Asignación" icon="pi pi-plus" (onClick)="abrirAsignarDialog(cuestionarioSeleccionado()!)" [disabled]="cuestionarioSeleccionado()!.estado !== 'activo'" />
-    </div>
-  </div>
-
-  <p-card>
-    <p-table [value]="getAsignacionesCuestionario(cuestionarioSeleccionado()!.id)">
-      <ng-template #header>
-        <tr>
-          <th>Área</th>
-          <th>Responsable</th>
-          <th>Vencimiento</th>
-          <th>Estado</th>
-          <th>Progreso</th>
-          <th>Acciones</th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-asignacion>
-        <tr>
-          <td class="font-semibold">{{ asignacion.areaNombre }}</td>
-          <td>{{ asignacion.responsableNombre }}</td>
-          <td [class]="asignacion.estado === 'vencido' ? 'text-red-500' : ''">{{ asignacion.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
-          <td><p-tag [value]="asignacion.estado | titlecase" [severity]="getEstadoSeverity(asignacion.estado)" /></td>
-          <td>
-            <div class="flex align-items-center gap-2">
-              <p-progressBar [value]="asignacion.progreso" [showValue]="false" style="height: 8px; width: 100px" />
-              <span>{{ asignacion.progreso }}%</span>
-            </div>
-          </td>
-          <td>
-            <div class="flex gap-1">
-              @if (asignacion.estado === 'pendiente' || asignacion.estado === 'en_progreso') {
-                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" pTooltip="Responder" (onClick)="responderCuestionario(asignacion)" />
-              }
-              @if (asignacion.estado === 'completado') {
-                <p-button icon="pi pi-check-circle" [rounded]="true" [text]="true" severity="success" pTooltip="Revisar" (onClick)="revisarCuestionario(asignacion)" />
-              }
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template #emptymessage>
-        <tr><td colspan="6" class="text-center p-4 text-500">No hay asignaciones</td></tr>
-      </ng-template>
-    </p-table>
-  </p-card>
-</div>
-}
-
-<!-- ==================== VISTA: DASHBOARD ==================== -->
-@if (vistaActual() === 'dashboard') {
-<div class="surface-ground p-4">
-  <div class="flex align-items-center gap-3 mb-4">
-    <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volverALista()" />
-    <h1 class="text-2xl font-bold text-900 m-0">Dashboard de Cumplimiento</h1>
-  </div>
-
-  <div class="grid mb-4">
-    <div class="col-12 md:col-6 lg:col-3">
-      <p-card styleClass="h-full bg-blue-50">
-        <div class="text-center">
-          <i class="pi pi-file text-4xl text-blue-500 mb-2"></i>
-          <h3 class="text-3xl font-bold text-900 m-0">{{ totalCuestionarios() }}</h3>
-          <span class="text-500">Cuestionarios</span>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-6 lg:col-3">
-      <p-card styleClass="h-full bg-green-50">
-        <div class="text-center">
-          <i class="pi pi-check-circle text-4xl text-green-500 mb-2"></i>
-          <h3 class="text-3xl font-bold text-900 m-0">{{ promedioCompletado() }}%</h3>
-          <span class="text-500">Cumplimiento</span>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-6 lg:col-3">
-      <p-card styleClass="h-full bg-orange-50">
-        <div class="text-center">
-          <i class="pi pi-clock text-4xl text-orange-500 mb-2"></i>
-          <h3 class="text-3xl font-bold text-900 m-0">{{ asignacionesPendientes() }}</h3>
-          <span class="text-500">Pendientes</span>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-6 lg:col-3">
-      <p-card styleClass="h-full bg-red-50">
-        <div class="text-center">
-          <i class="pi pi-exclamation-triangle text-4xl text-red-500 mb-2"></i>
-          <h3 class="text-3xl font-bold text-900 m-0">{{ alertasCriticas() }}</h3>
-          <span class="text-500">Alertas Críticas</span>
-        </div>
-      </p-card>
-    </div>
-  </div>
-
-  <div class="grid">
-    <div class="col-12 lg:col-6">
-      <p-card header="Cumplimiento por Marco">
-        <p-chart type="bar" [data]="chartData()" [options]="chartOptions" height="300" />
-      </p-card>
-    </div>
-    <div class="col-12 lg:col-6">
-      <p-card header="Estado de Asignaciones">
-        <p-chart type="pie" [data]="pieChartData()" [options]="pieChartOptions" height="300" />
-      </p-card>
-    </div>
-    <div class="col-12">
-      <p-card header="Alertas Activas">
-        @if (alertasActivas().length === 0) {
-          <div class="text-center py-4"><i class="pi pi-check-circle text-4xl text-green-500 mb-2"></i><p class="text-500">No hay alertas activas</p></div>
-        } @else {
-          <div class="flex flex-column gap-3">
-            @for (alerta of alertasActivas(); track alerta.id) {
-              <div class="p-3 border-round surface-50 flex align-items-center gap-3">
-                <p-tag [value]="alerta.severidad | uppercase" [severity]="getSeveridadAlerta(alerta.severidad)" />
-                <div class="flex-1">
-                  <span class="font-semibold">{{ alerta.titulo }}</span>
-                  <p class="text-500 m-0 mt-1 text-sm">{{ alerta.descripcion }}</p>
-                </div>
-                <p-button label="Atender" size="small" severity="secondary" [outlined]="true" (onClick)="atenderAlerta(alerta)" />
-              </div>
-            }
-          </div>
-        }
-      </p-card>
-    </div>
-  </div>
-</div>
-}
-
-<!-- ==================== VISTA: MARCOS NORMATIVOS ==================== -->
-@if (vistaActual() === 'marcos') {
-<div class="surface-ground p-4">
-  <div class="flex justify-content-between align-items-center mb-4">
-    <div class="flex align-items-center gap-3">
-      <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volverALista()" />
-      <h1 class="text-2xl font-bold text-900 m-0">Marcos Normativos</h1>
-    </div>
-    <p-button label="Nuevo Marco" icon="pi pi-plus" (onClick)="abrirMarcoDialog()" />
-  </div>
-
-  <div class="grid">
-    @for (marco of marcosNormativos(); track marco.id) {
-      <div class="col-12 md:col-6 lg:col-4">
-        <p-card styleClass="h-full">
-          <ng-template #header>
-            <div class="p-3 border-bottom-1 surface-border">
-              <h3 class="text-lg font-bold text-900 m-0">{{ marco.acronimo }}</h3>
-              <span class="text-500 text-sm">{{ marco.nombre }}</span>
-            </div>
-          </ng-template>
-          <p class="text-500 mb-3">{{ marco.descripcion }}</p>
-          <div class="flex flex-column gap-2">
-            <div class="flex justify-content-between"><span class="text-500">Versión:</span><span class="font-semibold">{{ marco.version }}</span></div>
-            <div class="flex justify-content-between"><span class="text-500">Requisitos:</span><span class="font-semibold">{{ marco.requisitos.length }}</span></div>
-          </div>
-        </p-card>
-      </div>
-    }
-  </div>
-</div>
-}
-
-<!-- ==================== VISTA: REPORTES ==================== -->
-@if (vistaActual() === 'reportes') {
-<div class="surface-ground p-4">
-  <div class="flex justify-content-between align-items-center mb-4">
-    <div class="flex align-items-center gap-3">
-      <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volverALista()" />
-      <h1 class="text-2xl font-bold text-900 m-0">Reportes de Cumplimiento</h1>
-    </div>
-  </div>
-
-  <!-- Formulario de generación -->
-  <p-card header="Generar Nuevo Reporte" styleClass="mb-4">
-    <div class="grid">
-      <div class="col-12 md:col-3">
-        <label class="block font-medium mb-2">Nombre del Reporte *</label>
-        <input pInputText [(ngModel)]="nuevoReporte().nombre" class="w-full" placeholder="Ej: Reporte Q1 2025" />
-      </div>
-      <div class="col-12 md:col-2">
-        <label class="block font-medium mb-2">Tipo</label>
-        <p-select [options]="tiposReporte" [(ngModel)]="nuevoReporte().tipo" optionLabel="label" optionValue="value" styleClass="w-full" />
-      </div>
-      <div class="col-12 md:col-2">
-        <label class="block font-medium mb-2">Formato</label>
-        <p-select [options]="formatosReporte" [(ngModel)]="nuevoReporte().formato" optionLabel="label" optionValue="value" styleClass="w-full" />
-      </div>
-      <div class="col-12 md:col-2">
-        <label class="block font-medium mb-2">Marco Normativo *</label>
-        <p-select [options]="marcosNormativos()" optionLabel="acronimo" optionValue="id" [(ngModel)]="nuevoReporte().marcoNormativo" styleClass="w-full" />
-      </div>
-      <div class="col-12 md:col-3 flex align-items-end">
-        <p-button label="Generar Reporte" icon="pi pi-file-export" [loading]="reporteEnGeneracion()" (onClick)="generarReporte()" styleClass="w-full" />
-      </div>
-    </div>
-  </p-card>
-
-  <!-- Lista de reportes -->
-  <p-card header="Reportes Generados">
-    <p-table [value]="reportes()" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
-      <ng-template #header>
-        <tr>
-          <th>Nombre</th>
-          <th>Tipo</th>
-          <th>Marco</th>
-          <th>Fecha Generación</th>
-          <th>Estado</th>
-          <th>Cumplimiento</th>
-          <th class="text-center" style="width: 120px">Acciones</th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-reporte>
-        <tr>
-          <td>
-            <div class="flex align-items-center gap-2">
-              <i [class]="getFormatoIcon(reporte.formato)" class="text-xl"></i>
-              <span class="font-semibold">{{ reporte.nombre }}</span>
-            </div>
-          </td>
-          <td><p-tag [value]="getTipoReporteLabel(reporte.tipo)" severity="info" /></td>
-          <td>{{ reporte.marcoNormativo | uppercase }}</td>
-          <td>{{ reporte.fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</td>
-          <td>
-            @if (reporte.estado === 'completado') {
-              <p-tag value="Completado" severity="success" />
-            } @else if (reporte.estado === 'generando') {
-              <p-tag value="Generando..." severity="warn" icon="pi pi-spin pi-spinner" />
-            } @else {
-              <p-tag value="Error" severity="danger" />
-            }
-          </td>
-          <td>
-            @if (reporte.estado === 'completado') {
-              <span class="font-bold" [class]="reporte.contenido.cumplimientoGeneral >= 80 ? 'text-green-600' : reporte.contenido.cumplimientoGeneral >= 60 ? 'text-yellow-600' : 'text-red-600'">
-                {{ reporte.contenido.cumplimientoGeneral }}%
-              </span>
-            } @else {
-              <span class="text-500">-</span>
-            }
-          </td>
-          <td class="text-center">
-            <p-button icon="pi pi-download" [rounded]="true" [text]="true" pTooltip="Descargar" (onClick)="descargarReporte(reporte)" [disabled]="reporte.estado !== 'completado'" />
-            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="eliminarReporte(reporte)" />
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template #emptymessage>
-        <tr>
-          <td colspan="7" class="text-center py-4">
-            <i class="pi pi-file-pdf text-4xl text-300 mb-2"></i>
-            <p class="text-500">No hay reportes generados</p>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </p-card>
-</div>
-}
-
-<!-- ==================== VISTA: HISTORIAL DE AUDITORÍA ==================== -->
-@if (vistaActual() === 'historial') {
-<div class="surface-ground p-4">
-  <div class="flex justify-content-between align-items-center mb-4">
-    <div class="flex align-items-center gap-3">
-      <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volverALista()" />
-      <h1 class="text-2xl font-bold text-900 m-0">Historial de Auditoría</h1>
-    </div>
-  </div>
-
-  <!-- Filtros -->
-  <p-card styleClass="mb-4">
-    <div class="grid">
-      <div class="col-12 md:col-3">
-        <label class="block font-medium mb-2">Acción</label>
-        <p-select [options]="accionesHistorial" [(ngModel)]="filtroHistorialAccion" optionLabel="label" optionValue="value" styleClass="w-full" placeholder="Todas las acciones" [showClear]="true" />
-      </div>
-      <div class="col-12 md:col-3">
-        <label class="block font-medium mb-2">Tipo de Entidad</label>
-        <p-select [options]="entidadesHistorial" [(ngModel)]="filtroHistorialEntidad" optionLabel="label" optionValue="value" styleClass="w-full" placeholder="Todas las entidades" [showClear]="true" />
-      </div>
-      <div class="col-12 md:col-3">
-        <label class="block font-medium mb-2">Fecha Desde</label>
-        <p-datepicker [(ngModel)]="filtroHistorialFechaInicio" styleClass="w-full" [showClear]="true" />
-      </div>
-      <div class="col-12 md:col-3">
-        <label class="block font-medium mb-2">Fecha Hasta</label>
-        <p-datepicker [(ngModel)]="filtroHistorialFechaFin" styleClass="w-full" [showClear]="true" />
-      </div>
-    </div>
-  </p-card>
-
-  <!-- Timeline de historial -->
-  <p-card header="Registro de Actividades">
-    <p-timeline [value]="historialFiltrado()" align="left">
-      <ng-template #content let-evento>
-        <div class="p-3 surface-50 border-round">
-          <div class="flex justify-content-between align-items-start mb-2">
-            <p-tag [value]="getAccionLabel(evento.accion)" [severity]="getAccionSeverity(evento.accion)" />
-            <span class="text-500 text-sm">{{ evento.fecha | date:'dd/MM/yyyy HH:mm:ss' }}</span>
-          </div>
-          <h4 class="font-semibold text-900 m-0 mb-1">{{ evento.entidadNombre }}</h4>
-          <p class="text-500 m-0 mb-2">{{ evento.detalles }}</p>
-          <div class="flex gap-4 text-sm text-500">
-            <span><i class="pi pi-user mr-1"></i>{{ evento.usuario }}</span>
-            @if (evento.ipAddress) {
-              <span><i class="pi pi-globe mr-1"></i>{{ evento.ipAddress }}</span>
-            }
-          </div>
-          @if (evento.cambiosAnteriores || evento.cambiosNuevos) {
-            <div class="mt-2 p-2 surface-100 border-round text-sm">
-              @if (evento.cambiosAnteriores) {
-                <div class="text-red-500"><i class="pi pi-minus-circle mr-1"></i>{{ evento.cambiosAnteriores }}</div>
-              }
-              @if (evento.cambiosNuevos) {
-                <div class="text-green-500"><i class="pi pi-plus-circle mr-1"></i>{{ evento.cambiosNuevos }}</div>
-              }
-            </div>
-          }
-        </div>
-      </ng-template>
-      <ng-template #marker let-evento>
-        <span class="flex w-2rem h-2rem align-items-center justify-content-center border-circle surface-200">
-          @switch (evento.accion) {
-            @case ('creacion') { <i class="pi pi-plus text-green-500"></i> }
-            @case ('modificacion') { <i class="pi pi-pencil text-blue-500"></i> }
-            @case ('eliminacion') { <i class="pi pi-trash text-red-500"></i> }
-            @case ('asignacion') { <i class="pi pi-send text-orange-500"></i> }
-            @case ('respuesta') { <i class="pi pi-check text-purple-500"></i> }
-            @case ('validacion') { <i class="pi pi-verified text-green-500"></i> }
-            @case ('exportacion') { <i class="pi pi-download text-blue-500"></i> }
-          }
-        </span>
-      </ng-template>
-    </p-timeline>
-  </p-card>
-</div>
-}
-
-<!-- ==================== VISTA: MAPEO DE CONTROLES ==================== -->
-@if (vistaActual() === 'mapeo') {
-<div class="surface-ground p-4">
-  <div class="flex justify-content-between align-items-center mb-4">
-    <div class="flex align-items-center gap-3">
-      <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volverALista()" />
-      <h1 class="text-2xl font-bold text-900 m-0">Mapeo de Controles</h1>
-    </div>
-  </div>
-
-  <!-- Stats -->
-  <div class="grid mb-4">
-    <div class="col-12 md:col-4">
-      <p-card styleClass="h-full border-top-3 border-green-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Controles Implementados</span>
-          <span class="text-3xl font-bold text-green-600">{{ totalControlesImplementados() }}</span>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-4">
-      <p-card styleClass="h-full border-top-3 border-yellow-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Implementación Parcial</span>
-          <span class="text-3xl font-bold text-yellow-600">{{ totalControlesParciales() }}</span>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-4">
-      <p-card styleClass="h-full border-top-3 border-blue-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Efectividad Promedio</span>
-          <span class="text-3xl font-bold" [class]="getEfectividadClass(promedioEfectividad())">{{ promedioEfectividad() }}%</span>
-        </div>
-      </p-card>
-    </div>
-  </div>
-
-  <!-- Tabla de mapeo -->
-  <p-card header="Mapeo Requisitos - Controles">
-    <p-table [value]="mapeoControles()" [paginator]="true" [rows]="10" styleClass="p-datatable-sm" [rowsPerPageOptions]="[5, 10, 20]">
-      <ng-template #header>
-        <tr>
-          <th>Código</th>
-          <th>Requisito Normativo</th>
-          <th>Marco</th>
-          <th>Control Asociado</th>
-          <th>Tipo</th>
-          <th>Estado</th>
-          <th>Efectividad</th>
-          <th>Última Evaluación</th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-mapeo>
-        <tr>
-          <td class="font-semibold">{{ mapeo.requisitoNormativoCodigo }}</td>
-          <td>{{ mapeo.requisitoNormativoNombre }}</td>
-          <td><p-tag [value]="mapeo.marcoNormativo" severity="info" /></td>
-          <td>{{ mapeo.controlNombre }}</td>
-          <td><p-tag [value]="getTipoControlLabel(mapeo.tipoControl)" [severity]="getTipoControlSeverity(mapeo.tipoControl)" /></td>
-          <td><p-tag [value]="getEstadoImplementacionLabel(mapeo.estadoImplementacion)" [severity]="getEstadoImplementacionSeverity(mapeo.estadoImplementacion)" /></td>
-          <td>
-            <div class="flex align-items-center gap-2">
-              <p-progressBar [value]="mapeo.efectividad" [showValue]="false" styleClass="w-6rem h-0.5rem" />
-              <span class="font-bold" [class]="getEfectividadClass(mapeo.efectividad)">{{ mapeo.efectividad }}%</span>
-            </div>
-          </td>
-          <td class="text-500">{{ mapeo.ultimaEvaluacion | date:'dd/MM/yyyy' }}</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </p-card>
-
-  <!-- CU-14: Controles Faltantes -->
-  <p-card styleClass="mt-4">
-    <ng-template #header>
-      <div class="flex justify-content-between align-items-center p-3">
-        <span class="font-bold text-xl">Controles Faltantes Detectados (CU-14)</span>
-        <p-button label="Detectar Brechas" icon="pi pi-search" severity="secondary" [outlined]="true" (onClick)="detectarControlesFaltantes()" />
-      </div>
-    </ng-template>
-    @if (controlesFaltantes().length === 0) {
-      <div class="text-center py-4">
-        <i class="pi pi-check-circle text-4xl text-green-500 mb-2"></i>
-        <p class="text-500">No se han detectado controles faltantes</p>
-        <p class="text-sm text-400">Ejecute "Detectar Brechas" para analizar los requisitos normativos</p>
-      </div>
-    } @else {
-      <p-table [value]="controlesFaltantes()" styleClass="p-datatable-sm">
-        <ng-template #header>
-          <tr>
-            <th>Código</th>
-            <th>Requisito</th>
-            <th>Marco</th>
-            <th>Riesgo Asociado</th>
-            <th>Control Sugerido</th>
-            <th>Prioridad</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-control>
-          <tr>
-            <td class="font-semibold">{{ control.requisitoNormativoCodigo }}</td>
-            <td>{{ control.requisitoNormativoNombre }}</td>
-            <td><p-tag [value]="control.marcoNormativo" severity="info" /></td>
-            <td class="text-500">{{ control.riesgoAsociado }}</td>
-            <td class="font-medium">{{ control.controlSugerido }}</td>
-            <td><p-tag [value]="getPrioridadControlLabel(control.prioridadImplementacion)" [severity]="getPrioridadControlSeverity(control.prioridadImplementacion)" /></td>
-            <td><p-tag [value]="getEstadoControlFaltanteLabel(control.estado)" [severity]="getEstadoControlFaltanteSeverity(control.estado)" /></td>
-            <td>
-              @if (control.estado === 'pendiente' || control.estado === 'en_evaluacion') {
-                <div class="flex gap-1">
-                  <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success" pTooltip="Aceptar" (onClick)="aceptarControlFaltante(control)" />
-                  <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="danger" pTooltip="Rechazar" (onClick)="rechazarControlFaltante(control)" />
-                </div>
-              }
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    }
-  </p-card>
-
-  <!-- CU-15: Acciones Correctivas -->
-  <p-card styleClass="mt-4">
-    <ng-template #header>
-      <div class="flex justify-content-between align-items-center p-3">
-        <div class="flex align-items-center gap-3">
-          <span class="font-bold text-xl">Acciones Correctivas (CU-15)</span>
-          <div class="flex gap-2">
-            <p-tag value="Pendientes: {{ accionesCorrectivasPendientes() }}" severity="warn" />
-            <p-tag value="En Progreso: {{ accionesCorrectivasEnProgreso() }}" severity="info" />
-            <p-tag value="Completadas: {{ accionesCorrectivasCompletadas() }}" severity="success" />
-          </div>
-        </div>
-      </div>
-    </ng-template>
-    @if (accionesCorrectivas().length === 0) {
-      <div class="text-center py-4">
-        <i class="pi pi-check-circle text-4xl text-green-500 mb-2"></i>
-        <p class="text-500">No hay acciones correctivas pendientes</p>
-      </div>
-    } @else {
-      <p-table [value]="accionesCorrectivas()" styleClass="p-datatable-sm" [paginator]="true" [rows]="5">
-        <ng-template #header>
-          <tr>
-            <th>Acción</th>
-            <th>Tipo</th>
-            <th>Prioridad</th>
-            <th>Marco</th>
-            <th>Responsable</th>
-            <th>Vencimiento</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-accion>
-          <tr>
-            <td>
-              <div class="font-semibold">{{ accion.titulo }}</div>
-              <div class="text-500 text-sm">{{ accion.hallazgoOrigen }}</div>
-            </td>
-            <td><p-tag [value]="getTipoAccionLabel(accion.tipoAccion)" [severity]="getTipoAccionSeverity(accion.tipoAccion)" /></td>
-            <td><p-tag [value]="getPrioridadControlLabel(accion.prioridad)" [severity]="getPrioridadControlSeverity(accion.prioridad)" /></td>
-            <td><p-tag [value]="accion.marcoNormativo" severity="info" /></td>
-            <td>{{ accion.responsable }}</td>
-            <td class="text-500">{{ accion.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
-            <td><p-tag [value]="getEstadoAccionLabel(accion.estado)" [severity]="getEstadoAccionSeverity(accion.estado)" /></td>
-            <td>
-              <div class="flex gap-1">
-                @if (accion.estado === 'pendiente') {
-                  <p-button icon="pi pi-play" [rounded]="true" [text]="true" severity="info" pTooltip="Iniciar" (onClick)="iniciarAccionCorrectiva(accion)" />
-                }
-                @if (accion.estado === 'en_progreso') {
-                  <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success" pTooltip="Completar" (onClick)="completarAccionCorrectiva(accion)" />
-                }
-                @if (accion.estado === 'completada' && !accion.efectividadVerificada) {
-                  <p-button icon="pi pi-verified" [rounded]="true" [text]="true" severity="help" pTooltip="Verificar Efectividad" (onClick)="verificarEfectividadAccion(accion)" />
-                }
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    }
-  </p-card>
-</div>
-}
-
-<!-- ==================== VISTA: GESTIÓN DE EVIDENCIAS ==================== -->
-@if (vistaActual() === 'evidencias') {
-<div class="surface-ground p-4">
-  <div class="flex justify-content-between align-items-center mb-4">
-    <div class="flex align-items-center gap-3">
-      <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volverALista()" />
-      <h1 class="text-2xl font-bold text-900 m-0">Gestión de Evidencias Documentales</h1>
-    </div>
-  </div>
-
-  <!-- Stats -->
-  <div class="grid mb-4">
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full border-top-3 border-blue-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Total Evidencias</span>
-          <span class="text-3xl font-bold text-900">{{ totalEvidencias() }}</span>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full border-top-3 border-green-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Vigentes</span>
-          <span class="text-3xl font-bold text-green-600">{{ evidenciasVigentes() }}</span>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full border-top-3 border-yellow-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Próximas a Vencer</span>
-          <span class="text-3xl font-bold text-yellow-600">{{ evidenciasProximasVencer() }}</span>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full border-top-3 border-red-500">
-        <div class="flex flex-column">
-          <span class="text-500 text-sm mb-2">Vencidas</span>
-          <span class="text-3xl font-bold text-red-600">{{ evidenciasVencidas() }}</span>
-        </div>
-      </p-card>
-    </div>
-  </div>
-
-  <!-- Upload y filtros -->
-  <p-card styleClass="mb-4">
-    <div class="grid align-items-center">
-      <div class="col-12 md:col-6">
-        <p-fileUpload mode="basic" name="evidencias" [multiple]="true" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg"
-          chooseLabel="Subir Evidencias" [auto]="true" (onSelect)="subirEvidencia($event)" chooseIcon="pi pi-upload" />
-      </div>
-      <div class="col-12 md:col-3">
-        <p-iconfield>
-          <p-inputicon styleClass="pi pi-search" />
-          <input pInputText [(ngModel)]="busquedaEvidencia" placeholder="Buscar evidencia..." class="w-full" />
-        </p-iconfield>
-      </div>
-      <div class="col-12 md:col-3">
-        <p-select [options]="estadosEvidencia" [(ngModel)]="filtroEvidenciaEstado" optionLabel="label" optionValue="value"
-          styleClass="w-full" placeholder="Filtrar por estado" [showClear]="true" />
-      </div>
-    </div>
-  </p-card>
-
-  <!-- Lista de evidencias -->
-  <p-card header="Repositorio de Evidencias">
-    <p-table [value]="evidenciasFiltradas()" [paginator]="true" [rows]="10" styleClass="p-datatable-sm" [rowsPerPageOptions]="[5, 10, 20]">
-      <ng-template #header>
-        <tr>
-          <th style="width: 50px"></th>
-          <th>Nombre</th>
-          <th>Descripción</th>
-          <th>Tamaño</th>
-          <th>Fecha Carga</th>
-          <th>Vigencia</th>
-          <th>Estado</th>
-          <th class="text-center" style="width: 120px">Acciones</th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-evidencia>
-        <tr>
-          <td><i [class]="getTipoArchivoIcon(evidencia.tipo)" class="text-2xl text-500"></i></td>
-          <td class="font-semibold">{{ evidencia.nombre }}</td>
-          <td class="text-500">{{ evidencia.descripcion || '-' }}</td>
-          <td>{{ formatFileSize(evidencia.tamano) }}</td>
-          <td>{{ evidencia.fechaCarga | date:'dd/MM/yyyy' }}</td>
-          <td>
-            @if (evidencia.vigencia) {
-              {{ evidencia.vigencia | date:'dd/MM/yyyy' }}
-            } @else {
-              <span class="text-500">Sin vigencia</span>
-            }
-          </td>
-          <td><p-tag [value]="getEstadoEvidenciaLabel(evidencia.estado)" [severity]="getEstadoEvidenciaSeverity(evidencia.estado)" /></td>
-          <td class="text-center">
-            <p-button icon="pi pi-download" [rounded]="true" [text]="true" pTooltip="Descargar" (onClick)="descargarEvidencia(evidencia)" />
-            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="eliminarEvidencia(evidencia)" />
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template #emptymessage>
-        <tr>
-          <td colspan="8" class="text-center py-4">
-            <i class="pi pi-folder-open text-4xl text-300 mb-2"></i>
-            <p class="text-500">No hay evidencias cargadas</p>
-            <p class="text-sm text-400">Use el botón "Subir Evidencias" para agregar archivos</p>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </p-card>
-</div>
-}
-
 <!-- ==================== DIALOGS ==================== -->
-
-<p-dialog header="Nuevo Cuestionario" [(visible)]="showNuevoDialog" [modal]="true" [style]="{width: '700px'}" [draggable]="false">
-  <!-- Step Indicator -->
-  <div class="flex align-items-center justify-content-center gap-2 mb-4 pb-3 border-bottom-1 surface-border">
-    <div class="flex align-items-center gap-2">
-      <div class="flex align-items-center justify-content-center w-2rem h-2rem border-circle"
-           [ngClass]="pasoNuevoCuestionario() >= 0 ? 'bg-primary text-white' : 'surface-200 text-500'">1</div>
-      <span class="text-sm" [ngClass]="pasoNuevoCuestionario() === 0 ? 'font-semibold text-primary' : 'text-500'">Datos Generales</span>
-    </div>
-    <div class="w-3rem border-top-1 surface-border"></div>
-    <div class="flex align-items-center gap-2">
-      <div class="flex align-items-center justify-content-center w-2rem h-2rem border-circle"
-           [ngClass]="pasoNuevoCuestionario() >= 1 ? 'bg-primary text-white' : 'surface-200 text-500'">2</div>
-      <span class="text-sm" [ngClass]="pasoNuevoCuestionario() === 1 ? 'font-semibold text-primary' : 'text-500'">Configuracion</span>
-    </div>
-    <div class="w-3rem border-top-1 surface-border"></div>
-    <div class="flex align-items-center gap-2">
-      <div class="flex align-items-center justify-content-center w-2rem h-2rem border-circle"
-           [ngClass]="pasoNuevoCuestionario() >= 2 ? 'bg-primary text-white' : 'surface-200 text-500'">3</div>
-      <span class="text-sm" [ngClass]="pasoNuevoCuestionario() === 2 ? 'font-semibold text-primary' : 'text-500'">Umbrales</span>
-    </div>
-  </div>
-
-  <!-- Step 1: Datos Generales -->
-  @if (pasoNuevoCuestionario() === 0) {
-    <div class="flex flex-column gap-4">
-      <div class="p-3 surface-50 border-round border-left-3 border-primary">
-        <div class="flex align-items-center gap-2 mb-1">
-          <i class="pi pi-info-circle text-primary"></i>
-          <span class="font-semibold">Datos Generales</span>
-        </div>
-        <p class="text-500 m-0 text-sm">Ingresa la informacion basica del cuestionario</p>
-      </div>
-      <div>
-        <label class="block font-medium mb-2">Nombre del Cuestionario <span class="text-red-500">*</span></label>
-        <input pInputText [(ngModel)]="nuevoCuestionario().nombre" class="w-full" placeholder="Ej: Evaluacion de Seguridad ISO 27001" />
-      </div>
-      <div>
-        <label class="block font-medium mb-2">Descripcion</label>
-        <textarea pTextarea [(ngModel)]="nuevoCuestionario().descripcion" class="w-full" rows="3"
-                  placeholder="Describe el proposito y alcance de este cuestionario"></textarea>
-      </div>
-      <div>
-        <label class="block font-medium mb-2">Marco Normativo <span class="text-red-500">*</span></label>
-        <p-select [options]="marcosNormativos()" optionLabel="acronimo" optionValue="id"
-                  [(ngModel)]="nuevoCuestionario().marcoNormativo" styleClass="w-full"
-                  placeholder="Selecciona un marco normativo" />
-      </div>
-    </div>
-  }
-
-  <!-- Step 2: Configuracion -->
-  @if (pasoNuevoCuestionario() === 1) {
-    <div class="flex flex-column gap-4">
-      <div class="p-3 surface-50 border-round border-left-3 border-purple-500">
-        <div class="flex align-items-center gap-2 mb-1">
-          <i class="pi pi-cog text-purple-500"></i>
-          <span class="font-semibold">Configuracion</span>
-        </div>
-        <p class="text-500 m-0 text-sm">Define la categoria, tipo y periodicidad</p>
-      </div>
-      <div class="grid">
-        <div class="col-6">
-          <label class="block font-medium mb-2">Categoria</label>
-          <p-select [options]="categoriaOptions.slice(1)" [(ngModel)]="nuevoCuestionario().categoria"
-                    optionLabel="label" optionValue="value" styleClass="w-full" placeholder="Seleccionar" />
-        </div>
-        <div class="col-6">
-          <label class="block font-medium mb-2">Tipo de Evaluacion</label>
-          <p-select [options]="tipoEvaluacionOptions" [(ngModel)]="nuevoCuestionario().tipoEvaluacion" styleClass="w-full" />
-        </div>
-      </div>
-      <div class="grid">
-        <div class="col-6">
-          <label class="block font-medium mb-2">Periodicidad</label>
-          <p-select [options]="periodicidadOptions" [(ngModel)]="nuevoCuestionario().periodicidad" styleClass="w-full" />
-        </div>
-        <div class="col-6">
-          <label class="block font-medium mb-2">Areas Objetivo</label>
-          <p-multiSelect [options]="areasOptions" [(ngModel)]="nuevoCuestionario().areasObjetivo"
-                         optionLabel="label" optionValue="value" styleClass="w-full"
-                         placeholder="Seleccionar areas" [showClear]="true" />
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Step 3: Umbrales -->
-  @if (pasoNuevoCuestionario() === 2) {
-    <div class="flex flex-column gap-4">
-      <div class="p-3 surface-50 border-round border-left-3 border-green-500">
-        <div class="flex align-items-center gap-2 mb-1">
-          <i class="pi pi-chart-bar text-green-500"></i>
-          <span class="font-semibold">Umbrales de Evaluacion</span>
-        </div>
-        <p class="text-500 m-0 text-sm">Define los rangos de calificacion para la evaluacion</p>
-      </div>
-
-      <div class="grid">
-        <div class="col-4">
-          <div class="p-3 border-round surface-50">
-            <div class="flex align-items-center gap-2 mb-3">
-              <span class="w-1rem h-1rem border-circle bg-red-500"></span>
-              <span class="font-medium">Deficiente</span>
-            </div>
-            <label class="block text-500 text-sm mb-2">Hasta (%)</label>
-            <p-inputNumber [(ngModel)]="nuevoCuestionario().umbrales!.deficiente"
-                           [min]="0" [max]="100" styleClass="w-full" suffix="%" />
-            <p class="text-500 text-xs mt-2 m-0">0% - {{ nuevoCuestionario().umbrales?.deficiente }}%</p>
-          </div>
-        </div>
-        <div class="col-4">
-          <div class="p-3 border-round surface-50">
-            <div class="flex align-items-center gap-2 mb-3">
-              <span class="w-1rem h-1rem border-circle bg-yellow-500"></span>
-              <span class="font-medium">Aceptable</span>
-            </div>
-            <label class="block text-500 text-sm mb-2">Hasta (%)</label>
-            <p-inputNumber [(ngModel)]="nuevoCuestionario().umbrales!.aceptable"
-                           [min]="0" [max]="100" styleClass="w-full" suffix="%" />
-            <p class="text-500 text-xs mt-2 m-0">{{ (nuevoCuestionario().umbrales?.deficiente || 0) + 1 }}% - {{ nuevoCuestionario().umbrales?.aceptable }}%</p>
-          </div>
-        </div>
-        <div class="col-4">
-          <div class="p-3 border-round surface-50">
-            <div class="flex align-items-center gap-2 mb-3">
-              <span class="w-1rem h-1rem border-circle bg-green-500"></span>
-              <span class="font-medium">Sobresaliente</span>
-            </div>
-            <label class="block text-500 text-sm mb-2">Desde (%)</label>
-            <p-inputNumber [(ngModel)]="nuevoCuestionario().umbrales!.sobresaliente"
-                           [min]="0" [max]="100" styleClass="w-full" suffix="%" />
-            <p class="text-500 text-xs mt-2 m-0">{{ nuevoCuestionario().umbrales?.sobresaliente }}% - 100%</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview visual -->
-      <div class="mt-2">
-        <label class="block text-500 text-sm mb-2">Vista previa de umbrales</label>
-        <div class="flex w-full h-2rem border-round overflow-hidden">
-          <div class="bg-red-500" [style.width.%]="nuevoCuestionario().umbrales?.deficiente"></div>
-          <div class="bg-yellow-500" [style.width.%]="(nuevoCuestionario().umbrales?.aceptable || 0) - (nuevoCuestionario().umbrales?.deficiente || 0)"></div>
-          <div class="bg-green-500" [style.width.%]="100 - (nuevoCuestionario().umbrales?.aceptable || 0)"></div>
-        </div>
-        <div class="flex justify-content-between mt-1">
-          <span class="text-xs text-500">0%</span>
-          <span class="text-xs text-red-500">{{ nuevoCuestionario().umbrales?.deficiente }}%</span>
-          <span class="text-xs text-yellow-600">{{ nuevoCuestionario().umbrales?.aceptable }}%</span>
-          <span class="text-xs text-500">100%</span>
-        </div>
-      </div>
-    </div>
-  }
-
-  <ng-template #footer>
-    <div class="flex justify-content-end gap-2 w-full">
-      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showNuevoDialog.set(false)" />
-      <p-button label="Crear Cuestionario" icon="pi pi-check" (onClick)="crearCuestionario()" />
-    </div>
-  </ng-template>
-</p-dialog>
-
-<!-- ==================== WIZARD NUEVO CUESTIONARIO ==================== -->
-<p-dialog header="Crear nuevo cuestionario" [(visible)]="showWizardDialog" [modal]="true" [style]="{width: '750px'}" [draggable]="false">
-  <!-- Indicador de pasos -->
-  <div class="flex align-items-center justify-content-center mb-4 pb-3 border-bottom-1 surface-border">
-    <div class="flex align-items-center gap-1">
-      <!-- Paso 1: Método -->
-      <div class="flex align-items-center gap-2">
-        <div class="flex align-items-center justify-content-center w-2rem h-2rem border-round-xl"
-             [class]="wizardPaso() >= 0 ? 'bg-primary text-white' : 'surface-200 text-500'">
-          <span class="text-sm font-medium">1</span>
-        </div>
-        <span class="text-xs" [class]="wizardPaso() >= 0 ? 'text-900 font-medium' : 'text-500'">Método</span>
-      </div>
-      <div class="w-2rem h-1px mx-1" [class]="wizardPaso() >= 1 ? 'bg-primary' : 'surface-200'"></div>
-      <!-- Paso 2: Datos -->
-      <div class="flex align-items-center gap-2">
-        <div class="flex align-items-center justify-content-center w-2rem h-2rem border-round-xl"
-             [class]="wizardPaso() >= 1 ? 'bg-primary text-white' : 'surface-200 text-500'">
-          <span class="text-sm font-medium">2</span>
-        </div>
-        <span class="text-xs" [class]="wizardPaso() >= 1 ? 'text-900 font-medium' : 'text-500'">Datos</span>
-      </div>
-      <div class="w-2rem h-1px mx-1" [class]="wizardPaso() >= 2 ? 'bg-primary' : 'surface-200'"></div>
-      <!-- Paso 3: Umbrales -->
-      <div class="flex align-items-center gap-2">
-        <div class="flex align-items-center justify-content-center w-2rem h-2rem border-round-xl"
-             [class]="wizardPaso() >= 2 ? 'bg-primary text-white' : 'surface-200 text-500'">
-          <span class="text-sm font-medium">3</span>
-        </div>
-        <span class="text-xs" [class]="wizardPaso() >= 2 ? 'text-900 font-medium' : 'text-500'">Umbrales</span>
-      </div>
-      @if (metodoCreacion() === 'ia') {
-        <div class="w-2rem h-1px mx-1" [class]="wizardPaso() >= 3 ? 'bg-primary' : 'surface-200'"></div>
-        <!-- Paso 4: IA -->
-        <div class="flex align-items-center gap-2">
-          <div class="flex align-items-center justify-content-center w-2rem h-2rem border-round-xl"
-               [class]="wizardPaso() >= 3 ? 'bg-purple-500 text-white' : 'surface-200 text-500'">
-            <span class="text-sm font-medium">4</span>
-          </div>
-          <span class="text-xs" [class]="wizardPaso() >= 3 ? 'text-purple-700 font-medium' : 'text-500'">IA</span>
-        </div>
-        <div class="w-2rem h-1px mx-1" [class]="wizardPaso() >= 4 ? 'bg-primary' : 'surface-200'"></div>
-        <!-- Paso 5: Preview -->
-        <div class="flex align-items-center gap-2">
-          <div class="flex align-items-center justify-content-center w-2rem h-2rem border-round-xl"
-               [class]="wizardPaso() >= 4 ? 'bg-green-500 text-white' : 'surface-200 text-500'">
-            <span class="text-sm font-medium">5</span>
-          </div>
-          <span class="text-xs" [class]="wizardPaso() >= 4 ? 'text-green-700 font-medium' : 'text-500'">Preview</span>
-        </div>
-      }
-    </div>
-  </div>
-
-  <!-- Paso 0: Selector de método -->
-  @if (wizardPaso() === 0) {
-    <div class="flex flex-column gap-4">
-      <p class="text-500 text-center m-0">Selecciona cómo deseas crear tu cuestionario</p>
-
-      <div class="grid">
-        <!-- Opción Manual -->
-        <div class="col-12 md:col-6">
-          <div class="p-4 border-round-xl cursor-pointer transition-all transition-duration-200 h-full"
-               [class]="metodoCreacion() === 'manual' ? 'border-2 border-primary bg-primary-50' : 'border-1 surface-border hover:border-primary'"
-               (click)="seleccionarMetodoCreacion('manual')">
-            <div class="flex flex-column align-items-center text-center gap-3">
-              <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl"
-                   [class]="metodoCreacion() === 'manual' ? 'bg-primary' : 'bg-blue-100'">
-                <i class="pi pi-pencil text-2xl" [class]="metodoCreacion() === 'manual' ? 'text-white' : 'text-primary'"></i>
-              </div>
-              <div>
-                <h4 class="m-0 mb-2 text-900 font-semibold">Creación Manual</h4>
-                <p class="m-0 text-500 text-sm line-height-3">Diseña tu cuestionario desde cero agregando secciones y preguntas</p>
-              </div>
-              @if (metodoCreacion() === 'manual') {
-                <i class="pi pi-check-circle text-primary text-xl"></i>
-              }
-            </div>
-          </div>
-        </div>
-
-        <!-- Opción IA -->
-        <div class="col-12 md:col-6">
-          <div class="p-4 border-round-xl cursor-pointer transition-all transition-duration-200 h-full"
-               [class]="metodoCreacion() === 'ia' ? 'border-2 border-purple-500 bg-purple-50' : 'border-1 surface-border hover:border-purple-500'"
-               (click)="seleccionarMetodoCreacion('ia')">
-            <div class="flex flex-column align-items-center text-center gap-3">
-              <div class="flex align-items-center justify-content-center w-4rem h-4rem border-round-xl"
-                   [class]="metodoCreacion() === 'ia' ? 'bg-purple-500' : 'bg-purple-100'">
-                <i class="pi pi-sparkles text-2xl" [class]="metodoCreacion() === 'ia' ? 'text-white' : 'text-purple-500'"></i>
-              </div>
-              <div>
-                <h4 class="m-0 mb-2 text-900 font-semibold">Asistente con IA</h4>
-                <p class="m-0 text-500 text-sm line-height-3">Genera preguntas automáticamente con IA o sube un documento</p>
-              </div>
-              @if (metodoCreacion() === 'ia') {
-                <i class="pi pi-check-circle text-purple-500 text-xl"></i>
-              }
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Paso 1: Datos Generales -->
-  @if (wizardPaso() === 1) {
-    <div class="flex flex-column gap-4">
-      <div class="flex align-items-center gap-2 mb-2">
-        <div class="flex align-items-center justify-content-center w-2rem h-2rem border-round bg-blue-100">
-          <i class="pi pi-file-edit text-primary"></i>
-        </div>
-        <div>
-          <h4 class="m-0 text-900 font-semibold">Datos Generales</h4>
-          <p class="m-0 text-500 text-xs">Información básica del cuestionario</p>
-        </div>
-      </div>
-
-      <div class="grid">
-        <div class="col-12">
-          <label class="block font-medium mb-2 text-900">Nombre del cuestionario *</label>
-          <input pInputText [ngModel]="wizardDatosGenerales().nombre"
-                 (ngModelChange)="actualizarDatosGenerales('nombre', $event)"
-                 class="w-full" placeholder="Ej: Evaluación de Controles ISO 27001" />
-        </div>
-        <div class="col-12">
-          <label class="block font-medium mb-2 text-900">Descripción</label>
-          <textarea pTextarea [ngModel]="wizardDatosGenerales().descripcion"
-                    (ngModelChange)="actualizarDatosGenerales('descripcion', $event)"
-                    class="w-full" rows="2" placeholder="Descripción breve del cuestionario..."></textarea>
-        </div>
-        <div class="col-12 md:col-6">
-          <label class="block font-medium mb-2 text-900">Marco Normativo</label>
-          <p-select [options]="marcosNormativos()" optionLabel="acronimo" optionValue="id"
-                    [ngModel]="wizardDatosGenerales().marcoNormativo"
-                    (ngModelChange)="actualizarDatosGenerales('marcoNormativo', $event)"
-                    placeholder="Seleccionar marco" styleClass="w-full" [showClear]="true" />
-        </div>
-        <div class="col-12 md:col-6">
-          <label class="block font-medium mb-2 text-900">Tipo de Evaluación</label>
-          <p-select [options]="tipoEvaluacionOptions" optionLabel="label" optionValue="value"
-                    [ngModel]="wizardDatosGenerales().tipoEvaluacion"
-                    (ngModelChange)="actualizarDatosGenerales('tipoEvaluacion', $event)"
-                    styleClass="w-full" />
-        </div>
-        <div class="col-12 md:col-6">
-          <label class="block font-medium mb-2 text-900">Periodicidad</label>
-          <p-select [options]="periodicidadOptions" optionLabel="label" optionValue="value"
-                    [ngModel]="wizardDatosGenerales().periodicidad"
-                    (ngModelChange)="actualizarDatosGenerales('periodicidad', $event)"
-                    styleClass="w-full" />
-        </div>
-        <div class="col-12 md:col-6">
-          <label class="block font-medium mb-2 text-900">Áreas Objetivo</label>
-          <p-multiselect [options]="areasOptions" optionLabel="label" optionValue="value"
-                         [ngModel]="wizardDatosGenerales().areasObjetivo"
-                         (ngModelChange)="actualizarDatosGenerales('areasObjetivo', $event)"
-                         placeholder="Seleccionar áreas" styleClass="w-full" />
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Paso 2: Umbrales -->
-  @if (wizardPaso() === 2) {
-    <div class="flex flex-column gap-4">
-      <div class="flex align-items-center gap-2 mb-2">
-        <div class="flex align-items-center justify-content-center w-2rem h-2rem border-round bg-orange-100">
-          <i class="pi pi-sliders-h text-orange-500"></i>
-        </div>
-        <div>
-          <h4 class="m-0 text-900 font-semibold">Definición de Umbrales</h4>
-          <p class="m-0 text-500 text-xs">Configura los niveles de cumplimiento</p>
-        </div>
-      </div>
-
-      <div class="grid">
-        <div class="col-12 md:col-4">
-          <div class="p-3 border-round-xl border-1 border-red-200 bg-red-50">
-            <div class="flex align-items-center gap-2 mb-3">
-              <i class="pi pi-times-circle text-red-500"></i>
-              <span class="font-semibold text-red-700">Deficiente</span>
-            </div>
-            <label class="block text-500 text-sm mb-2">Hasta (%)</label>
-            <p-inputNumber [ngModel]="wizardUmbrales().deficiente"
-                           (ngModelChange)="actualizarUmbrales('deficiente', $event)"
-                           [min]="0" [max]="100" styleClass="w-full" suffix="%" />
-            <p class="text-red-600 text-xs mt-2 m-0">0% - {{ wizardUmbrales().deficiente }}%</p>
-          </div>
-        </div>
-        <div class="col-12 md:col-4">
-          <div class="p-3 border-round-xl border-1 border-yellow-200 bg-yellow-50">
-            <div class="flex align-items-center gap-2 mb-3">
-              <i class="pi pi-exclamation-circle text-yellow-600"></i>
-              <span class="font-semibold text-yellow-700">Aceptable</span>
-            </div>
-            <label class="block text-500 text-sm mb-2">Hasta (%)</label>
-            <p-inputNumber [ngModel]="wizardUmbrales().aceptable"
-                           (ngModelChange)="actualizarUmbrales('aceptable', $event)"
-                           [min]="0" [max]="100" styleClass="w-full" suffix="%" />
-            <p class="text-yellow-700 text-xs mt-2 m-0">{{ wizardUmbrales().deficiente }}% - {{ wizardUmbrales().aceptable }}%</p>
-          </div>
-        </div>
-        <div class="col-12 md:col-4">
-          <div class="p-3 border-round-xl border-1 border-green-200 bg-green-50">
-            <div class="flex align-items-center gap-2 mb-3">
-              <i class="pi pi-check-circle text-green-500"></i>
-              <span class="font-semibold text-green-700">Sobresaliente</span>
-            </div>
-            <label class="block text-500 text-sm mb-2">Desde (%)</label>
-            <p-inputNumber [ngModel]="wizardUmbrales().sobresaliente"
-                           (ngModelChange)="actualizarUmbrales('sobresaliente', $event)"
-                           [min]="0" [max]="100" styleClass="w-full" suffix="%" />
-            <p class="text-green-600 text-xs mt-2 m-0">{{ wizardUmbrales().sobresaliente }}% - 100%</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Vista previa de umbrales -->
-      <div class="mt-2">
-        <label class="block text-500 text-sm mb-2">Vista previa</label>
-        <div class="flex w-full h-2rem border-round overflow-hidden">
-          <div class="bg-red-500" [style.width.%]="wizardUmbrales().deficiente"></div>
-          <div class="bg-yellow-500" [style.width.%]="wizardUmbrales().aceptable - wizardUmbrales().deficiente"></div>
-          <div class="bg-green-500" [style.width.%]="100 - wizardUmbrales().aceptable"></div>
-        </div>
-        <div class="flex justify-content-between mt-1">
-          <span class="text-xs text-500">0%</span>
-          <span class="text-xs text-red-500">{{ wizardUmbrales().deficiente }}%</span>
-          <span class="text-xs text-yellow-600">{{ wizardUmbrales().aceptable }}%</span>
-          <span class="text-xs text-500">100%</span>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Paso 3: Configuración IA (solo si eligió IA) -->
-  @if (wizardPaso() === 3) {
-    <div class="flex flex-column gap-4">
-      <div class="flex align-items-center gap-2 mb-2">
-        <div class="flex align-items-center justify-content-center w-2rem h-2rem border-round bg-purple-100">
-          <i class="pi pi-sparkles text-purple-500"></i>
-        </div>
-        <div>
-          <h4 class="m-0 text-900 font-semibold">Generación con IA</h4>
-          <p class="m-0 text-500 text-xs">Elige cómo generar las preguntas</p>
-        </div>
-      </div>
-
-      <!-- Selector de método IA -->
-      <div class="flex gap-3 mb-3">
-        <div class="flex-1 p-3 border-round-lg cursor-pointer transition-all"
-             [class]="wizardIAMetodo() === 'prompt' ? 'border-2 border-purple-500 bg-purple-50' : 'border-1 surface-border'"
-             (click)="wizardIAMetodo.set('prompt')">
-          <div class="flex align-items-center gap-2">
-            <i class="pi pi-comment text-purple-500"></i>
-            <span class="font-medium" [class]="wizardIAMetodo() === 'prompt' ? 'text-purple-700' : 'text-700'">Describir con texto</span>
-          </div>
-        </div>
-        <div class="flex-1 p-3 border-round-lg cursor-pointer transition-all"
-             [class]="wizardIAMetodo() === 'documento' ? 'border-2 border-purple-500 bg-purple-50' : 'border-1 surface-border'"
-             (click)="wizardIAMetodo.set('documento')">
-          <div class="flex align-items-center gap-2">
-            <i class="pi pi-file-pdf text-purple-500"></i>
-            <span class="font-medium" [class]="wizardIAMetodo() === 'documento' ? 'text-purple-700' : 'text-700'">Subir documento</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Opción: Prompt -->
-      @if (wizardIAMetodo() === 'prompt') {
-        <div>
-          <label class="block font-medium mb-2 text-900">Describe las preguntas que necesitas</label>
-          <textarea pTextarea [(ngModel)]="promptIA" class="w-full" rows="4"
-                    placeholder="Ej: Genera 15 preguntas para evaluar el control de accesos según ISO 27001, incluyendo preguntas sobre gestión de contraseñas, autenticación y revisión de permisos..."></textarea>
-        </div>
-        <div>
-          <label class="block text-500 text-sm mb-2">Sugerencias</label>
-          <div class="flex flex-wrap gap-2">
-            <p-chip label="ISO 27001" styleClass="cursor-pointer" (click)="promptIA.set(promptIA() + ' ISO 27001')" />
-            <p-chip label="SOX" styleClass="cursor-pointer" (click)="promptIA.set(promptIA() + ' SOX')" />
-            <p-chip label="GDPR" styleClass="cursor-pointer" (click)="promptIA.set(promptIA() + ' GDPR')" />
-            <p-chip label="15 preguntas" styleClass="cursor-pointer" (click)="promptIA.set(promptIA() + ' 15 preguntas')" />
-          </div>
-        </div>
-      }
-
-      <!-- Opción: Documento -->
-      @if (wizardIAMetodo() === 'documento') {
-        <div>
-          <label class="block font-medium mb-2 text-900">Sube un documento normativo o de referencia</label>
-          <p class="text-500 text-sm mb-3 m-0">La IA analizará el documento y generará preguntas basadas en su contenido.</p>
-
-          @if (!wizardDocumento()) {
-            <!-- Zona de drag and drop con input nativo -->
-            <div class="upload-zone p-4 border-2 border-dashed border-round-lg text-center cursor-pointer transition-all"
-                 style="border-color: var(--surface-300);"
-                 (click)="fileInputDocumento.click()"
-                 (dragover)="$event.preventDefault(); $event.stopPropagation()"
-                 (dragenter)="$event.preventDefault(); $event.stopPropagation()"
-                 (drop)="$event.preventDefault(); $event.stopPropagation(); onDropDocumento($event)">
-              <input #fileInputDocumento type="file" accept=".pdf,.doc,.docx,.txt"
-                     style="display: none" (change)="onFileInputChange($event)">
-              <i class="pi pi-cloud-upload text-4xl text-purple-300 mb-3"></i>
-              <p class="m-0 mb-2 font-medium text-700">Arrastra un documento aquí</p>
-              <p class="m-0 text-500 text-sm">o haz clic para seleccionar</p>
-              <p class="m-0 text-400 text-xs mt-2">PDF, Word, TXT (máx. 10MB)</p>
-            </div>
-          } @else {
-            <div class="flex align-items-center gap-3 p-3 surface-100 border-round">
-              <i class="pi pi-file-pdf text-2xl text-red-500"></i>
-              <div class="flex-1">
-                <p class="m-0 font-medium text-900">{{ wizardDocumento()?.name }}</p>
-                <p class="m-0 text-500 text-sm">{{ (wizardDocumento()?.size || 0) / 1024 | number:'1.0-0' }} KB</p>
-              </div>
-              <p-button icon="pi pi-times" severity="danger" [rounded]="true" [text]="true" (onClick)="limpiarDocumentoIA()" />
-            </div>
-          }
-        </div>
-      }
-    </div>
-  }
-
-  <!-- Paso 4: Preview del cuestionario generado -->
-  @if (wizardPaso() === 4 && wizardPreviewCuestionario()) {
-    <div class="flex flex-column gap-4">
-      <div class="flex align-items-center gap-2 mb-2">
-        <div class="flex align-items-center justify-content-center w-2rem h-2rem border-round bg-green-100">
-          <i class="pi pi-check-circle text-green-500"></i>
-        </div>
-        <div>
-          <h4 class="m-0 text-900 font-semibold">Cuestionario Generado</h4>
-          <p class="m-0 text-500 text-xs">Revisa el resultado antes de continuar</p>
-        </div>
-      </div>
-
-      <!-- Resumen general -->
-      <div class="p-3 surface-100 border-round">
-        <div class="flex align-items-center justify-content-between mb-3">
-          <h5 class="m-0 text-900">{{ wizardPreviewCuestionario()?.nombre }}</h5>
-          <p-tag severity="info" [value]="(wizardPreviewCuestionario()?.marcoNormativo || '') | uppercase" />
-        </div>
-        <p class="text-500 text-sm m-0 mb-3">{{ wizardPreviewCuestionario()?.descripcion }}</p>
-        <div class="flex gap-4">
-          <div class="flex align-items-center gap-2">
-            <i class="pi pi-list text-500"></i>
-            <span class="text-sm text-700">{{ wizardPreviewCuestionario()?.secciones?.length || 0 }} secciones</span>
-          </div>
-          <div class="flex align-items-center gap-2">
-            <i class="pi pi-question-circle text-500"></i>
-            <span class="text-sm text-700">{{ wizardPreviewCuestionario()?.preguntas || 0 }} preguntas</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Vista previa de secciones -->
-      <div class="flex flex-column gap-3" style="max-height: 300px; overflow-y: auto;">
-        @for (seccion of wizardPreviewCuestionario()?.secciones || []; track seccion.id; let i = $index) {
-          <div class="p-3 border-1 surface-border border-round">
-            <div class="flex align-items-center justify-content-between mb-2">
-              <div class="flex align-items-center gap-2">
-                <span class="flex align-items-center justify-content-center w-1.5rem h-1.5rem border-round bg-primary text-white text-xs font-bold">{{ i + 1 }}</span>
-                <span class="font-medium text-900">{{ seccion.nombre }}</span>
-              </div>
-              <span class="text-xs text-500">Peso: {{ seccion.peso }}%</span>
-            </div>
-            <p class="text-500 text-sm m-0 mb-2">{{ seccion.descripcion }}</p>
-            <div class="flex flex-column gap-2">
-              @for (pregunta of seccion.preguntas; track pregunta.id; let j = $index) {
-                <div class="flex align-items-start gap-2 p-2 surface-50 border-round">
-                  <span class="text-xs text-500 font-medium" style="min-width: 1.5rem">{{ j + 1 }}.</span>
-                  <div class="flex-1">
-                    <p class="m-0 text-sm text-700">{{ pregunta.texto }}</p>
-                    <div class="flex align-items-center gap-2 mt-1">
-                      <p-tag [severity]="pregunta.tipo === 'siNoNa' ? 'success' : pregunta.tipo === 'escala' ? 'info' : 'secondary'"
-                             [value]="getTipoPreguntaLabel(pregunta.tipo)" styleClass="text-xs" />
-                      @if (pregunta.requerida) {
-                        <span class="text-xs text-red-500">Requerida</span>
-                      }
-                      @if (pregunta.requiereEvidencia) {
-                        <span class="text-xs text-purple-500"><i class="pi pi-paperclip mr-1"></i>Evidencia</span>
-                      }
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  }
-
-  <ng-template #footer>
-    <div class="flex justify-content-between w-full">
-      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showWizardDialog.set(false)" />
-      <div class="flex gap-2">
-        @if (wizardPaso() > 0 && wizardPaso() < 4) {
-          <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="volverPasoWizard()" />
-        }
-        @if (wizardPaso() < 2 || (wizardPaso() === 2 && metodoCreacion() === 'ia')) {
-          <p-button label="Continuar" icon="pi pi-arrow-right" iconPos="right" (onClick)="continuarWizard()" [disabled]="!puedeAvanzarWizard()" />
-        }
-        @if (wizardPaso() === 2 && metodoCreacion() === 'manual') {
-          <p-button label="Crear cuestionario" icon="pi pi-check" (onClick)="continuarWizard()" />
-        }
-        @if (wizardPaso() === 3) {
-          <p-button label="Generar con IA" icon="pi pi-sparkles" [loading]="generandoIA()" (onClick)="generarConIAWizard()" [disabled]="!puedeAvanzarWizard()" />
-        }
-        @if (wizardPaso() === 4) {
-          <p-button label="Regenerar" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="regenerarConIA()" />
-          <p-button label="Editar cuestionario" icon="pi pi-pencil" (onClick)="irAEditorDesdePreview()" />
-        }
-      </div>
-    </div>
-  </ng-template>
-</p-dialog>
 
 <p-dialog header="Generar con IA" [(visible)]="showIADialog" [modal]="true" [style]="{width: '600px'}" [draggable]="false">
   <div class="flex flex-column gap-4">
@@ -1869,67 +1239,5 @@
   <ng-template #footer>
     <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showIADialog.set(false)" />
     <p-button label="Generar" icon="pi pi-sparkles" [loading]="generandoIA()" (onClick)="generarConIA()" />
-  </ng-template>
-</p-dialog>
-
-<p-dialog header="Asignar Cuestionario" [(visible)]="showAsignarDialog" [modal]="true" [style]="{width: '500px'}" [draggable]="false">
-  <div class="flex flex-column gap-4">
-    <div>
-      <label class="block font-medium mb-2">Área *</label>
-      <p-select [options]="areasOptions" [(ngModel)]="nuevaAsignacion().areaId" optionLabel="label" optionValue="value" styleClass="w-full" />
-    </div>
-    <div>
-      <label class="block font-medium mb-2">Responsable *</label>
-      <p-select [options]="responsablesOptions" [(ngModel)]="nuevaAsignacion().responsableId" optionLabel="label" optionValue="value" styleClass="w-full" />
-    </div>
-    <div class="grid">
-      <div class="col-6">
-        <label class="block font-medium mb-2">Fecha inicio</label>
-        <p-datepicker [(ngModel)]="nuevaAsignacion().fechaInicio" styleClass="w-full" />
-      </div>
-      <div class="col-6">
-        <label class="block font-medium mb-2">Fecha vencimiento *</label>
-        <p-datepicker [(ngModel)]="nuevaAsignacion().fechaVencimiento" styleClass="w-full" />
-      </div>
-    </div>
-    <div>
-      <label class="block font-medium mb-2">Instrucciones</label>
-      <textarea pTextarea [(ngModel)]="nuevaAsignacion().instrucciones" class="w-full" rows="3"></textarea>
-    </div>
-    <div class="flex align-items-center gap-2">
-      <p-checkbox [(ngModel)]="nuevaAsignacion().recordatorios" [binary]="true" inputId="recordatorios" />
-      <label for="recordatorios">Enviar recordatorios</label>
-    </div>
-  </div>
-  <ng-template #footer>
-    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showAsignarDialog.set(false)" />
-    <p-button label="Asignar" icon="pi pi-check" (onClick)="crearAsignacion()" />
-  </ng-template>
-</p-dialog>
-
-<p-dialog header="Nuevo Marco Normativo" [(visible)]="showMarcoDialog" [modal]="true" [style]="{width: '500px'}" [draggable]="false">
-  <div class="flex flex-column gap-4">
-    <div>
-      <label class="block font-medium mb-2">Nombre *</label>
-      <input pInputText [(ngModel)]="nuevoMarco().nombre" class="w-full" />
-    </div>
-    <div class="grid">
-      <div class="col-6">
-        <label class="block font-medium mb-2">Acrónimo *</label>
-        <input pInputText [(ngModel)]="nuevoMarco().acronimo" class="w-full" />
-      </div>
-      <div class="col-6">
-        <label class="block font-medium mb-2">Versión</label>
-        <input pInputText [(ngModel)]="nuevoMarco().version" class="w-full" />
-      </div>
-    </div>
-    <div>
-      <label class="block font-medium mb-2">Descripción</label>
-      <textarea pTextarea [(ngModel)]="nuevoMarco().descripcion" class="w-full" rows="3"></textarea>
-    </div>
-  </div>
-  <ng-template #footer>
-    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showMarcoDialog.set(false)" />
-    <p-button label="Crear" icon="pi pi-check" (onClick)="crearMarco()" />
   </ng-template>
 </p-dialog>

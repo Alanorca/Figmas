@@ -54,6 +54,11 @@ export class NavbarComponent {
       label: 'Cuestionarios',
       icon: 'pi pi-list-check',
       routerLink: '/cuestionarios'
+    },
+    {
+      label: 'Cumplimiento',
+      icon: 'pi pi-check-circle',
+      routerLink: '/cumplimiento'
     }
   ];
 }
