@@ -59,7 +59,8 @@ import {
   MapeoControl,
   ControlFaltante,
   AccionCorrectiva,
-  EvaluadoExterno
+  EvaluadoExterno,
+  MensajeChat
 } from '../../models/cuestionarios.models';
 
 type VistasCumplimiento = 'dashboard' | 'asignar' | 'responder' | 'revisar' | 'marcos' | 'reportes' | 'historial' | 'mapeo' | 'evidencias' | 'portal-externo';
@@ -151,6 +152,7 @@ export class CumplimientoComponent {
   nuevaAsignacion = signal<Partial<AsignacionCuestionario>>({
     titulo: '',
     tipoRevision: 'interna',
+    cuestionarioIds: [],
     usuariosAsignados: [],
     emailsExternos: [],
     activosObjetivo: [],
@@ -176,9 +178,125 @@ export class CumplimientoComponent {
     email: ''
   });
 
+  // Tipo de alcance seleccionado para la evaluación (activos u objetivos/procesos)
+  tipoAlcanceSeleccionado = signal<'activos' | 'objetivos'>('activos');
+
   // Portal externo
   loginExterno = signal<{ email: string; password: string }>({ email: '', password: '' });
   usuarioExternoAutenticado = signal<EvaluadoExterno | null>(null);
+
+  // =============================================
+  // REVISION DE RESPUESTAS
+  // =============================================
+  respuestaRevision = signal<RespuestaCuestionario | null>(null);
+  showDialogRechazo = signal(false);
+  showDialogAccionMasiva = signal(false);
+  preguntaRechazoId = signal<string | null>(null);
+  comentarioRechazo = signal<string>('');
+  comentarioAccionMasiva = signal<string>('');
+  comentarioGeneralRevisor = signal<string>('');
+  accionMasivaAprobacion = signal(true); // true = aprobar, false = rechazar
+
+  // Sidebar de revision - cuestionarios y activos/procesos
+  cuestionarioRevisionSeleccionadoId = signal<string | null>(null);
+  activoProcesoSeleccionadoId = signal<string | null>(null);
+
+  // Chat sidebar
+  showChatSidebar = signal(false);
+  mensajeChat = signal('');
+  mensajesChat = signal<MensajeChat[]>([]);
+
+  // Usuarios del chat (evaluadores y aprobadores)
+  usuarioActual = signal({ id: 'current', nombre: 'Usuario Actual', rol: 'evaluador' as 'evaluador' | 'aprobador' });
+
+  // Computed: lista de cuestionarios en la revision actual
+  cuestionariosEnRevision = computed(() => {
+    const asignacion = this.asignacionSeleccionada();
+    if (!asignacion) return [];
+
+    const ids = asignacion.cuestionarioIds?.length
+      ? asignacion.cuestionarioIds
+      : asignacion.cuestionarioId
+        ? [asignacion.cuestionarioId]
+        : [];
+
+    return ids.map(id => this.cuestionarios().find(c => c.id === id)).filter(c => c !== undefined);
+  });
+
+  // Computed: lista de activos o procesos siendo evaluados en la revision actual
+  activosProcesosEnRevision = computed(() => {
+    const asignacion = this.asignacionSeleccionada();
+    if (!asignacion) return [];
+
+    const items: { id: string; nombre: string; tipo: 'activo' | 'proceso'; progreso: number; estado: string }[] = [];
+
+    // Activos objetivo
+    asignacion.activosObjetivo?.forEach((activoId, idx) => {
+      const nombre = asignacion.activosObjetivoNombres?.[idx] || 'Activo ' + (idx + 1);
+      const respuesta = this.respuestasCuestionarios().find(
+        r => r.asignacionId === asignacion.id && (r as any).activoProcesoId === activoId
+      );
+      items.push({
+        id: activoId,
+        nombre: nombre,
+        tipo: 'activo',
+        progreso: respuesta ? this.calcularProgresoRespuesta(respuesta) : 0,
+        estado: respuesta?.estado || 'pendiente'
+      });
+    });
+
+    // Procesos objetivo
+    asignacion.procesosObjetivo?.forEach((procesoId, idx) => {
+      const nombre = asignacion.procesosObjetivoNombres?.[idx] || 'Proceso ' + (idx + 1);
+      const respuesta = this.respuestasCuestionarios().find(
+        r => r.asignacionId === asignacion.id && (r as any).activoProcesoId === procesoId
+      );
+      items.push({
+        id: procesoId,
+        nombre: nombre,
+        tipo: 'proceso',
+        progreso: respuesta ? this.calcularProgresoRespuesta(respuesta) : 0,
+        estado: respuesta?.estado || 'pendiente'
+      });
+    });
+
+    return items;
+  });
+
+  // Computed: participantes del chat (evaluadores y aprobadores)
+  participantesChat = computed(() => {
+    const asignacion = this.asignacionSeleccionada();
+    if (!asignacion) return [];
+
+    const participantes: { id: string; nombre: string; rol: 'evaluador' | 'aprobador' }[] = [];
+
+    // Evaluadores (personas que realizan la evaluacion)
+    asignacion.usuariosAsignados?.forEach((userId, idx) => {
+      participantes.push({
+        id: userId,
+        nombre: asignacion.usuariosAsignadosNombres?.[idx] || 'Evaluador ' + (idx + 1),
+        rol: 'evaluador'
+      });
+    });
+
+    // Aprobadores
+    asignacion.aprobadores?.forEach((aprobadorId, idx) => {
+      participantes.push({
+        id: aprobadorId,
+        nombre: asignacion.aprobadoresNombres?.[idx] || 'Aprobador ' + (idx + 1),
+        rol: 'aprobador'
+      });
+    });
+
+    return participantes;
+  });
+
+  // Cuestionario seleccionado en sidebar
+  cuestionarioRevisionSeleccionado = computed(() => {
+    const id = this.cuestionarioRevisionSeleccionadoId();
+    if (!id) return null;
+    return this.cuestionarios().find(c => c.id === id) || null;
+  });
 
   // =============================================
   // REPORTES
@@ -904,6 +1022,44 @@ export class CumplimientoComponent {
   ]);
 
   // =============================================
+  // DATOS MOCK - RESPUESTAS DE CUESTIONARIOS
+  // =============================================
+  respuestasCuestionarios = signal<RespuestaCuestionario[]>([
+    {
+      id: 'resp1',
+      asignacionId: 'a1',
+      cuestionarioId: '1',
+      respondidoPor: 'user1',
+      fechaInicio: new Date('2024-11-20'),
+      fechaEnvio: new Date('2024-11-25'),
+      estado: 'enviado',
+      respuestas: [
+        { preguntaId: 'p1', valor: 'Si', comentario: 'El codigo de etica fue actualizado en enero 2024', evidencias: [], marcadaParaRevision: false, estadoRevision: 'pendiente', comentarioRevisor: '' },
+        { preguntaId: 'p2', valor: 'Si', comentario: 'Capacitacion anual completada en marzo', evidencias: [], marcadaParaRevision: false, estadoRevision: 'aprobada', comentarioRevisor: 'Evidencia verificada correctamente' },
+        { preguntaId: 'p3', valor: 'Se utilizan correos corporativos, reuniones trimestrales y la intranet para comunicar el codigo', comentario: '', evidencias: [], marcadaParaRevision: false, estadoRevision: 'pendiente', comentarioRevisor: '' },
+        { preguntaId: 'p4', valor: 'Si', comentario: 'Evaluacion realizada en Q2 2024', evidencias: [], marcadaParaRevision: false, estadoRevision: 'rechazada', comentarioRevisor: 'Falta el documento de la evaluacion de riesgos' },
+        { preguntaId: 'p5', valor: 'Trimestral', comentario: '', evidencias: [], marcadaParaRevision: false, estadoRevision: 'pendiente', comentarioRevisor: '' }
+      ],
+      puntuacionTotal: 85,
+      nivelCumplimiento: 'sobresaliente',
+      comentariosGenerales: 'Evaluacion completada satisfactoriamente'
+    },
+    {
+      id: 'resp2',
+      asignacionId: 'a2',
+      cuestionarioId: '2',
+      respondidoPor: 'user3',
+      fechaInicio: new Date('2024-11-10'),
+      fechaEnvio: null,
+      estado: 'borrador',
+      respuestas: [],
+      puntuacionTotal: 0,
+      nivelCumplimiento: 'deficiente',
+      comentariosGenerales: ''
+    }
+  ]);
+
+  // =============================================
   // ESTADISTICAS COMPUTADAS
   // =============================================
   totalCuestionarios = computed(() => this.cuestionarios().length);
@@ -1148,10 +1304,9 @@ export class CumplimientoComponent {
 
   guardarAsignacion() {
     const nueva = this.nuevaAsignacion();
-    const cuestionario = this.cuestionarioSeleccionado();
 
-    if (!nueva.titulo || !nueva.cuestionarioId) {
-      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Complete los campos requeridos (título y cuestionario)' });
+    if (!nueva.titulo || !nueva.cuestionarioIds || nueva.cuestionarioIds.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Complete los campos requeridos (título y al menos un cuestionario)' });
       return;
     }
 
@@ -1178,7 +1333,8 @@ export class CumplimientoComponent {
         if (a.id === this.asignacionEditandoId()) {
           return {
             ...a,
-            cuestionarioId: nueva.cuestionarioId!,
+            cuestionarioId: nueva.cuestionarioIds![0],
+            cuestionarioIds: nueva.cuestionarioIds,
             titulo: nueva.titulo!,
             tipoRevision: nueva.tipoRevision as 'interna' | 'externa',
             usuariosAsignados: nueva.usuariosAsignados || [],
@@ -1213,7 +1369,8 @@ export class CumplimientoComponent {
       // Modo creación
       const asignacion: AsignacionCuestionario = {
         id: crypto.randomUUID(),
-        cuestionarioId: nueva.cuestionarioId!,
+        cuestionarioId: nueva.cuestionarioIds![0],
+        cuestionarioIds: nueva.cuestionarioIds,
         titulo: nueva.titulo!,
         tipoRevision: nueva.tipoRevision as 'interna' | 'externa',
         usuariosAsignados: nueva.usuariosAsignados || [],
@@ -1272,15 +1429,6 @@ export class CumplimientoComponent {
     };
     this.respuestaActual.set(respuesta);
     this.vistaActual.set('responder');
-  }
-
-  revisarCuestionario(asignacion: AsignacionCuestionario) {
-    this.asignacionSeleccionada.set(asignacion);
-    const cuestionario = this.getCuestionario(asignacion.cuestionarioId);
-    if (cuestionario) {
-      this.cuestionarioSeleccionado.set(cuestionario);
-    }
-    this.vistaActual.set('revisar');
   }
 
   // =============================================
@@ -1768,12 +1916,26 @@ export class CumplimientoComponent {
     }
   }
 
+  actualizarAsignacionCuestionarios(valor: string[]) {
+    this.nuevaAsignacion.update(a => ({ ...a, cuestionarioIds: valor }));
+  }
+
   actualizarAsignacionActivos(valor: string[]) {
     this.nuevaAsignacion.update(a => ({ ...a, activosObjetivo: valor }));
   }
 
   actualizarAsignacionProcesos(valor: string[]) {
     this.nuevaAsignacion.update(a => ({ ...a, procesosObjetivo: valor }));
+  }
+
+  actualizarTipoAlcance(valor: 'activos' | 'objetivos') {
+    this.tipoAlcanceSeleccionado.set(valor);
+    // Limpiar el campo no seleccionado
+    if (valor === 'activos') {
+      this.nuevaAsignacion.update(a => ({ ...a, procesosObjetivo: [] }));
+    } else {
+      this.nuevaAsignacion.update(a => ({ ...a, activosObjetivo: [] }));
+    }
   }
 
   actualizarAsignacionAprobadores(valor: string[]) {
@@ -1838,10 +2000,14 @@ export class CumplimientoComponent {
       return;
     }
 
+    // Generar contraseña aleatoria visible para el creador
+    const password = this.generarPasswordAleatorio();
+
     const evaluado: EvaluadoExterno = {
       id: crypto.randomUUID(),
       nombre: nuevo.nombre,
       email: nuevo.email,
+      password: password,
       invitacionEnviada: false,
       haRespondido: false
     };
@@ -1851,6 +2017,94 @@ export class CumplimientoComponent {
       evaluadosExternos: [...(a.evaluadosExternos || []), evaluado]
     }));
     this.nuevoEvaluadoExterno.set({ nombre: '', email: '' });
+    this.messageService.add({ severity: 'success', summary: 'Agregado', detail: `Evaluado agregado. Contraseña: ${password}` });
+  }
+
+  // Genera una contraseña aleatoria de 8 caracteres
+  generarPasswordAleatorio(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  }
+
+  // Copiar contraseña al portapapeles
+  copiarPassword(password: string) {
+    navigator.clipboard.writeText(password);
+    this.messageService.add({ severity: 'info', summary: 'Copiado', detail: 'Contraseña copiada al portapapeles' });
+  }
+
+  // Descargar template de Excel para evaluados externos
+  descargarTemplateExcel() {
+    // Crear contenido CSV como template
+    const headers = 'Nombre,Email';
+    const ejemplo1 = 'Juan Perez,juan.perez@ejemplo.com';
+    const ejemplo2 = 'Maria Garcia,maria.garcia@ejemplo.com';
+    const contenido = `${headers}\n${ejemplo1}\n${ejemplo2}`;
+
+    const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'template_evaluados_externos.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+
+    this.messageService.add({ severity: 'success', summary: 'Descargado', detail: 'Template descargado. Complete los datos y suba el archivo.' });
+  }
+
+  // Procesar archivo Excel/CSV subido con evaluados externos
+  onUploadEvaluadosExcel(event: any) {
+    const file = event.files?.[0] || event.currentFiles?.[0];
+    if (!file) {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo leer el archivo' });
+      return;
+    }
+
+    this.messageService.add({ severity: 'info', summary: 'Procesando', detail: `Procesando archivo ${file.name}...` });
+
+    // Leer el archivo CSV
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const contenido = e.target.result as string;
+      const lineas = contenido.split('\n').filter(l => l.trim());
+
+      // Saltar la primera línea (encabezados)
+      const datosEvaluados = lineas.slice(1);
+      let agregados = 0;
+
+      datosEvaluados.forEach(linea => {
+        const [nombre, email] = linea.split(',').map(s => s.trim());
+        if (nombre && email && email.includes('@')) {
+          const evaluado: EvaluadoExterno = {
+            id: crypto.randomUUID(),
+            nombre: nombre,
+            email: email,
+            password: this.generarPasswordAleatorio(),
+            invitacionEnviada: false,
+            haRespondido: false
+          };
+          this.nuevaAsignacion.update(a => ({
+            ...a,
+            evaluadosExternos: [...(a.evaluadosExternos || []), evaluado]
+          }));
+          agregados++;
+        }
+      });
+
+      if (agregados > 0) {
+        this.messageService.add({ severity: 'success', summary: 'Importado', detail: `${agregados} evaluados importados exitosamente` });
+      } else {
+        this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'No se encontraron datos válidos en el archivo' });
+      }
+    };
+
+    reader.onerror = () => {
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al leer el archivo' });
+    };
+
+    reader.readAsText(file);
   }
 
   eliminarEvaluadoExterno(evaluadoId: string) {
@@ -1935,4 +2189,541 @@ export class CumplimientoComponent {
       a.emailsExternos?.includes(usuario.email)
     );
   });
+
+  // =============================================
+  // METODOS - REVISION DE CUESTIONARIOS
+  // =============================================
+
+  // Modificar revisarCuestionario para cargar respuestas
+  revisarCuestionario(asignacion: AsignacionCuestionario) {
+    this.asignacionSeleccionada.set(asignacion);
+
+    // Obtener lista de cuestionarios
+    const cuestionarioIds = asignacion.cuestionarioIds?.length
+      ? asignacion.cuestionarioIds
+      : asignacion.cuestionarioId
+        ? [asignacion.cuestionarioId]
+        : [];
+
+    // Seleccionar primer cuestionario
+    if (cuestionarioIds.length > 0) {
+      this.cuestionarioRevisionSeleccionadoId.set(cuestionarioIds[0]);
+      const cuestionario = this.getCuestionario(cuestionarioIds[0]);
+      if (cuestionario) {
+        this.cuestionarioSeleccionado.set(cuestionario);
+      }
+    }
+
+    // Seleccionar primer activo/proceso
+    const activosProcesos = this.activosProcesosEnRevision();
+    if (activosProcesos.length > 0) {
+      this.activoProcesoSeleccionadoId.set(activosProcesos[0].id);
+      this.cargarRespuestaActivoProceso(activosProcesos[0].id, cuestionarioIds[0]);
+    } else {
+      this.respuestaRevision.set(null);
+    }
+
+    this.comentarioGeneralRevisor.set('');
+    this.vistaActual.set('revisar');
+  }
+
+  // Seleccionar cuestionario en sidebar
+  seleccionarCuestionarioRevision(cuestionarioId: string) {
+    this.cuestionarioRevisionSeleccionadoId.set(cuestionarioId);
+    const cuestionario = this.getCuestionario(cuestionarioId);
+    if (cuestionario) {
+      this.cuestionarioSeleccionado.set(cuestionario);
+    }
+    // Recargar respuesta del activo/proceso actual con el nuevo cuestionario
+    const activoProcesoId = this.activoProcesoSeleccionadoId();
+    if (activoProcesoId) {
+      this.cargarRespuestaActivoProceso(activoProcesoId, cuestionarioId);
+    }
+  }
+
+  // Cargar respuesta de un activo/proceso para un cuestionario (legacy - no usar)
+  cargarRespuestaActivoProcesoLegacy(activoProcesoId: string, cuestionarioId: string) {
+    const asignacion = this.asignacionSeleccionada();
+    if (!asignacion) return;
+
+    // Buscar respuesta existente
+    let respuesta = this.respuestasCuestionarios().find(
+      r => r.asignacionId === asignacion.id &&
+           r.cuestionarioId === cuestionarioId &&
+           r.respondidoPor === activoProcesoId
+    );
+
+    if (!respuesta) {
+      // Crear respuesta mock con datos de ejemplo si no existe
+      const cuestionario = this.getCuestionario(cuestionarioId);
+      respuesta = {
+        id: crypto.randomUUID(),
+        asignacionId: asignacion.id,
+        cuestionarioId: cuestionarioId,
+        respondidoPor: activoProcesoId,
+        fechaInicio: new Date(),
+        fechaEnvio: new Date(),
+        estado: 'enviado',
+        respuestas: cuestionario?.secciones.flatMap(s => s.preguntas.map(p => ({
+          preguntaId: p.id,
+          valor: this.generarRespuestaMock(p.tipo),
+          comentario: '',
+          evidencias: [],
+          marcadaParaRevision: false,
+          estadoRevision: 'pendiente' as const,
+          comentarioRevisor: ''
+        }))) || [],
+        puntuacionTotal: Math.floor(Math.random() * 40) + 60,
+        nivelCumplimiento: 'aceptable',
+        comentariosGenerales: ''
+      };
+    }
+
+    this.respuestaRevision.set(respuesta);
+  }
+
+  // Generar respuesta mock segun tipo de pregunta
+  generarRespuestaMock(tipo: string): string | number | null {
+    switch (tipo) {
+      case 'siNoNa': return ['Si', 'No', 'N/A'][Math.floor(Math.random() * 3)];
+      case 'texto': return 'Respuesta de ejemplo para esta pregunta';
+      case 'textoLargo': return 'Esta es una respuesta mas detallada que incluye multiples puntos de informacion relevante para la evaluacion.';
+      case 'numero': return Math.floor(Math.random() * 100);
+      case 'escala': return Math.floor(Math.random() * 5) + 1;
+      case 'seleccionUnica': return 'Opcion seleccionada';
+      case 'fecha': return new Date().toISOString();
+      default: return 'Respuesta generica';
+    }
+  }
+
+  // Calcular progreso de una respuesta
+  calcularProgresoRespuesta(respuesta: RespuestaCuestionario): number {
+    if (!respuesta.respuestas || respuesta.respuestas.length === 0) return 0;
+    const respondidas = respuesta.respuestas.filter(r => r.valor !== null && r.valor !== '').length;
+    return Math.round((respondidas / respuesta.respuestas.length) * 100);
+  }
+
+  // Obtener estado badge para activo/proceso
+  getEstadoActivoProcesoSeverity(estado: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    switch (estado) {
+      case 'aprobado': return 'success';
+      case 'enviado': return 'info';
+      case 'en_revision': return 'info';
+      case 'borrador': return 'warn';
+      case 'rechazado': return 'danger';
+      default: return 'secondary';
+    }
+  }
+
+  // Seleccionar activo/proceso en sidebar
+  seleccionarActivoProceso(id: string) {
+    this.activoProcesoSeleccionadoId.set(id);
+    const cuestionarioId = this.cuestionarioRevisionSeleccionadoId();
+    if (cuestionarioId) {
+      this.cargarRespuestaActivoProceso(id, cuestionarioId);
+    }
+    // Cargar mensajes del chat para este activo/proceso
+    this.cargarMensajesChat();
+  }
+
+  // Obtener nombre del activo/proceso seleccionado
+  getActivoProcesoNombre(): string {
+    const id = this.activoProcesoSeleccionadoId();
+    if (!id) return 'Sin seleccionar';
+    const item = this.activosProcesosEnRevision().find(ap => ap.id === id);
+    return item?.nombre || 'Sin nombre';
+  }
+
+  // Obtener tipo del activo/proceso seleccionado
+  getActivoProcesoSeleccionadoTipo(): 'activo' | 'proceso' | null {
+    const id = this.activoProcesoSeleccionadoId();
+    if (!id) return null;
+    const item = this.activosProcesosEnRevision().find(ap => ap.id === id);
+    return item?.tipo || null;
+  }
+
+  // Cargar respuesta para un activo/proceso
+  cargarRespuestaActivoProceso(activoProcesoId: string, cuestionarioId: string) {
+    const asignacion = this.asignacionSeleccionada();
+    if (!asignacion) return;
+
+    let respuesta = this.respuestasCuestionarios().find(
+      r => r.asignacionId === asignacion.id &&
+           r.cuestionarioId === cuestionarioId &&
+           (r as any).activoProcesoId === activoProcesoId
+    );
+
+    if (!respuesta) {
+      const cuestionario = this.getCuestionario(cuestionarioId);
+      respuesta = {
+        id: crypto.randomUUID(),
+        asignacionId: asignacion.id,
+        cuestionarioId: cuestionarioId,
+        respondidoPor: asignacion.usuariosAsignados?.[0] || 'user1',
+        fechaInicio: new Date(),
+        fechaEnvio: new Date(),
+        estado: 'enviado',
+        respuestas: cuestionario?.secciones.flatMap(s => s.preguntas.map(p => ({
+          preguntaId: p.id,
+          valor: this.generarRespuestaMock(p.tipo),
+          comentario: '',
+          evidencias: [],
+          marcadaParaRevision: false,
+          estadoRevision: 'pendiente' as const,
+          comentarioRevisor: ''
+        }))) || [],
+        puntuacionTotal: Math.floor(Math.random() * 40) + 60,
+        nivelCumplimiento: 'aceptable',
+        comentariosGenerales: ''
+      } as any;
+      (respuesta as any).activoProcesoId = activoProcesoId;
+    }
+
+    this.respuestaRevision.set(respuesta || null);
+  }
+
+  // =============================================
+  // METODOS - CHAT
+  // =============================================
+
+  toggleChatSidebar() {
+    this.showChatSidebar.update(v => !v);
+    if (this.showChatSidebar()) {
+      this.cargarMensajesChat();
+    }
+  }
+
+  cargarMensajesChat() {
+    const asignacion = this.asignacionSeleccionada();
+    const cuestionarioId = this.cuestionarioRevisionSeleccionadoId();
+    const activoProcesoId = this.activoProcesoSeleccionadoId();
+
+    if (!asignacion) return;
+
+    // Cargar mensajes mock o existentes
+    const mensajesMock: MensajeChat[] = [
+      {
+        id: '1',
+        asignacionId: asignacion.id,
+        cuestionarioId: cuestionarioId || undefined,
+        activoProcesoId: activoProcesoId || undefined,
+        usuarioId: 'user1',
+        usuarioNombre: 'Maria Garcia',
+        usuarioRol: 'evaluador',
+        mensaje: 'He completado la evaluacion del primer control. Adjunte las evidencias correspondientes.',
+        fecha: new Date(Date.now() - 3600000 * 2),
+        leido: true
+      },
+      {
+        id: '2',
+        asignacionId: asignacion.id,
+        cuestionarioId: cuestionarioId || undefined,
+        activoProcesoId: activoProcesoId || undefined,
+        usuarioId: 'user2',
+        usuarioNombre: 'Carlos Lopez',
+        usuarioRol: 'aprobador',
+        mensaje: 'Gracias Maria. Revise la evidencia del control 3, parece que falta el documento de aprobacion.',
+        fecha: new Date(Date.now() - 3600000),
+        leido: true
+      },
+      {
+        id: '3',
+        asignacionId: asignacion.id,
+        cuestionarioId: cuestionarioId || undefined,
+        activoProcesoId: activoProcesoId || undefined,
+        usuarioId: 'user1',
+        usuarioNombre: 'Maria Garcia',
+        usuarioRol: 'evaluador',
+        mensaje: 'Tiene razon, lo adjunto ahora mismo.',
+        fecha: new Date(Date.now() - 1800000),
+        leido: true
+      }
+    ];
+
+    this.mensajesChat.set(mensajesMock);
+  }
+
+  enviarMensajeChat() {
+    const mensaje = this.mensajeChat().trim();
+    if (!mensaje) return;
+
+    const asignacion = this.asignacionSeleccionada();
+    if (!asignacion) return;
+
+    const nuevoMensaje: MensajeChat = {
+      id: crypto.randomUUID(),
+      asignacionId: asignacion.id,
+      cuestionarioId: this.cuestionarioRevisionSeleccionadoId() || undefined,
+      activoProcesoId: this.activoProcesoSeleccionadoId() || undefined,
+      usuarioId: this.usuarioActual().id,
+      usuarioNombre: this.usuarioActual().nombre,
+      usuarioRol: this.usuarioActual().rol,
+      mensaje: mensaje,
+      fecha: new Date(),
+      leido: false
+    };
+
+    this.mensajesChat.update(msgs => [...msgs, nuevoMensaje]);
+    this.mensajeChat.set('');
+  }
+
+  getMensajeHora(fecha: Date): string {
+    return new Date(fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  esMensajePropio(mensaje: MensajeChat): boolean {
+    return mensaje.usuarioId === this.usuarioActual().id;
+  }
+
+  getMensajesNoLeidos(): number {
+    return this.mensajesChat().filter(m => !m.leido && m.usuarioId !== this.usuarioActual().id).length;
+  }
+
+  // Obtener respuesta de una pregunta especifica
+  getRespuestaRevisionPregunta(preguntaId: string): RespuestaPregunta | undefined {
+    const respuesta = this.respuestaRevision();
+    if (!respuesta) return undefined;
+    return respuesta.respuestas.find(r => r.preguntaId === preguntaId);
+  }
+
+  // Obtener nombre del evaluado
+  getEvaluadoNombre(): string {
+    const asignacion = this.asignacionSeleccionada();
+    if (!asignacion) return 'Desconocido';
+
+    if (asignacion.usuariosAsignadosNombres?.length > 0) {
+      return asignacion.usuariosAsignadosNombres[0];
+    }
+    if (asignacion.evaluadosExternos?.length > 0) {
+      return asignacion.evaluadosExternos[0].nombre;
+    }
+    return 'Evaluado';
+  }
+
+  // Estadisticas de respuestas
+  getRespuestasContestadas(): number {
+    const respuesta = this.respuestaRevision();
+    if (!respuesta) return 0;
+    return respuesta.respuestas.filter(r => r.valor !== null && r.valor !== '').length;
+  }
+
+  getRespuestasAprobadas(): number {
+    const respuesta = this.respuestaRevision();
+    if (!respuesta) return 0;
+    return respuesta.respuestas.filter(r => r.estadoRevision === 'aprobada').length;
+  }
+
+  getRespuestasRechazadas(): number {
+    const respuesta = this.respuestaRevision();
+    if (!respuesta) return 0;
+    return respuesta.respuestas.filter(r => r.estadoRevision === 'rechazada').length;
+  }
+
+  getRespuestasPendientesRevision(): number {
+    const respuesta = this.respuestaRevision();
+    if (!respuesta) return 0;
+    return respuesta.respuestas.filter(r => r.estadoRevision === 'pendiente' || !r.estadoRevision).length;
+  }
+
+  // Obtener label del tipo de pregunta
+  getTipoPreguntaLabel(tipo: string): string {
+    const labels: Record<string, string> = {
+      'texto': 'Texto',
+      'textoLargo': 'Texto Largo',
+      'siNoNa': 'Si/No/N.A.',
+      'seleccionUnica': 'Seleccion Unica',
+      'opcionMultiple': 'Opcion Multiple',
+      'escala': 'Escala',
+      'fecha': 'Fecha',
+      'numero': 'Numero',
+      'archivo': 'Archivo',
+      'matriz': 'Matriz',
+      'grupo': 'Grupo',
+      'radioButtons': 'Radio Buttons',
+      'calculado': 'Calculado',
+      'url': 'URL'
+    };
+    return labels[tipo] || tipo;
+  }
+
+  // Aprobar una respuesta individual
+  aprobarRespuesta(preguntaId: string) {
+    const respuesta = this.respuestaRevision();
+    if (!respuesta) return;
+
+    const respuestaPregunta = respuesta.respuestas.find(r => r.preguntaId === preguntaId);
+    if (respuestaPregunta) {
+      respuestaPregunta.estadoRevision = 'aprobada';
+      respuestaPregunta.comentarioRevisor = '';
+      this.respuestaRevision.set({ ...respuesta });
+      this.messageService.add({ severity: 'success', summary: 'Aprobada', detail: 'Respuesta aprobada correctamente' });
+    }
+  }
+
+  // Abrir dialog de rechazo
+  abrirDialogRechazo(preguntaId: string) {
+    this.preguntaRechazoId.set(preguntaId);
+    this.comentarioRechazo.set('');
+    this.showDialogRechazo.set(true);
+  }
+
+  cerrarDialogRechazo() {
+    this.showDialogRechazo.set(false);
+    this.preguntaRechazoId.set(null);
+    this.comentarioRechazo.set('');
+  }
+
+  confirmarRechazo() {
+    const preguntaId = this.preguntaRechazoId();
+    const comentario = this.comentarioRechazo();
+    const respuesta = this.respuestaRevision();
+
+    if (!preguntaId || !comentario || !respuesta) return;
+
+    const respuestaPregunta = respuesta.respuestas.find(r => r.preguntaId === preguntaId);
+    if (respuestaPregunta) {
+      respuestaPregunta.estadoRevision = 'rechazada';
+      respuestaPregunta.comentarioRevisor = comentario;
+      this.respuestaRevision.set({ ...respuesta });
+      this.messageService.add({ severity: 'warn', summary: 'Rechazada', detail: 'Respuesta rechazada con comentario' });
+    }
+
+    this.cerrarDialogRechazo();
+  }
+
+  // Solicitar aclaracion
+  solicitarAclaracion(preguntaId: string) {
+    const respuesta = this.respuestaRevision();
+    if (!respuesta) return;
+
+    const respuestaPregunta = respuesta.respuestas.find(r => r.preguntaId === preguntaId);
+    if (respuestaPregunta) {
+      respuestaPregunta.estadoRevision = 'requiere_aclaracion';
+      this.respuestaRevision.set({ ...respuesta });
+      this.messageService.add({ severity: 'info', summary: 'Aclaracion', detail: 'Se ha solicitado aclaracion al evaluado' });
+    }
+  }
+
+  // Resetear estado de respuesta
+  resetearEstadoRespuesta(preguntaId: string) {
+    const respuesta = this.respuestaRevision();
+    if (!respuesta) return;
+
+    const respuestaPregunta = respuesta.respuestas.find(r => r.preguntaId === preguntaId);
+    if (respuestaPregunta) {
+      respuestaPregunta.estadoRevision = 'pendiente';
+      respuestaPregunta.comentarioRevisor = '';
+      this.respuestaRevision.set({ ...respuesta });
+      this.messageService.add({ severity: 'info', summary: 'Resetado', detail: 'Estado de respuesta restablecido' });
+    }
+  }
+
+  // Acciones masivas
+  abrirDialogAprobarTodo() {
+    this.accionMasivaAprobacion.set(true);
+    this.comentarioAccionMasiva.set('');
+    this.showDialogAccionMasiva.set(true);
+  }
+
+  abrirDialogRechazarTodo() {
+    this.accionMasivaAprobacion.set(false);
+    this.comentarioAccionMasiva.set('');
+    this.showDialogAccionMasiva.set(true);
+  }
+
+  cerrarDialogAccionMasiva() {
+    this.showDialogAccionMasiva.set(false);
+    this.comentarioAccionMasiva.set('');
+  }
+
+  confirmarAccionMasiva() {
+    const respuesta = this.respuestaRevision();
+    if (!respuesta) return;
+
+    const esAprobacion = this.accionMasivaAprobacion();
+    const comentario = this.comentarioAccionMasiva();
+
+    respuesta.respuestas.forEach(r => {
+      if (r.estadoRevision === 'pendiente' || !r.estadoRevision) {
+        r.estadoRevision = esAprobacion ? 'aprobada' : 'rechazada';
+        r.comentarioRevisor = comentario;
+      }
+    });
+
+    this.respuestaRevision.set({ ...respuesta });
+
+    if (esAprobacion) {
+      this.messageService.add({ severity: 'success', summary: 'Aprobado', detail: 'Todas las respuestas pendientes han sido aprobadas' });
+    } else {
+      this.messageService.add({ severity: 'warn', summary: 'Rechazado', detail: 'Todas las respuestas pendientes han sido rechazadas' });
+    }
+
+    this.cerrarDialogAccionMasiva();
+  }
+
+  // Guardar revision
+  guardarRevision() {
+    const respuesta = this.respuestaRevision();
+    if (!respuesta) return;
+
+    // Actualizar en la lista de respuestas
+    this.respuestasCuestionarios.update(lista => {
+      const idx = lista.findIndex(r => r.id === respuesta.id);
+      if (idx >= 0) {
+        lista[idx] = { ...respuesta };
+      } else {
+        lista.push(respuesta);
+      }
+      return [...lista];
+    });
+
+    this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Revision guardada correctamente' });
+  }
+
+  // Finalizar revision
+  finalizarRevision() {
+    const respuesta = this.respuestaRevision();
+    const asignacion = this.asignacionSeleccionada();
+
+    if (!respuesta || !asignacion) return;
+
+    // Verificar que no hay respuestas pendientes
+    if (this.getRespuestasPendientesRevision() > 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Debe revisar todas las respuestas antes de finalizar' });
+      return;
+    }
+
+    // Actualizar estado de respuesta
+    respuesta.estado = this.getRespuestasRechazadas() > 0 ? 'rechazado' : 'aprobado';
+
+    // Actualizar asignacion
+    asignacion.estado = 'revisado';
+
+    // Guardar cambios
+    this.respuestasCuestionarios.update(lista => {
+      const idx = lista.findIndex(r => r.id === respuesta.id);
+      if (idx >= 0) {
+        lista[idx] = { ...respuesta };
+      }
+      return [...lista];
+    });
+
+    this.asignaciones.update(lista => lista.map(a => a.id === asignacion.id ? { ...asignacion } : a));
+
+    // Registrar en historial
+    const nuevoRegistro: HistorialAuditoria = {
+      id: crypto.randomUUID(),
+      fecha: new Date(),
+      accion: 'validacion',
+      entidadTipo: 'respuesta',
+      entidadId: respuesta.id,
+      entidadNombre: asignacion.titulo,
+      usuario: 'Revisor Actual',
+      detalles: `Revision finalizada. Aprobadas: ${this.getRespuestasAprobadas()}, Rechazadas: ${this.getRespuestasRechazadas()}`
+    };
+    this.historial.update(lista => [nuevoRegistro, ...lista]);
+
+    this.messageService.add({ severity: 'success', summary: 'Finalizado', detail: 'Revision completada exitosamente' });
+    this.irADashboard();
+  }
 }

@@ -83,6 +83,7 @@ export interface Pregunta {
 export interface AsignacionCuestionario {
   id: string;
   cuestionarioId: string;
+  cuestionarioIds?: string[]; // Múltiples cuestionarios
   titulo: string;
   tipoRevision: 'interna' | 'externa';
   usuariosAsignados: string[];
@@ -126,6 +127,7 @@ export interface EvaluadoExterno {
   id: string;
   nombre: string;
   email: string;
+  password?: string; // Contraseña generada visible para el creador
   invitacionEnviada: boolean;
   fechaInvitacion?: Date;
   haRespondido: boolean;
@@ -283,4 +285,17 @@ export interface AccionCorrectiva {
   metricasVerificacion: string;
   evidenciaImplementacion: string | null;
   efectividadVerificada: boolean;
+}
+
+export interface MensajeChat {
+  id: string;
+  asignacionId: string;
+  cuestionarioId?: string;
+  activoProcesoId?: string;
+  usuarioId: string;
+  usuarioNombre: string;
+  usuarioRol: 'evaluador' | 'aprobador';
+  mensaje: string;
+  fecha: Date;
+  leido: boolean;
 }
