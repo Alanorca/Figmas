@@ -29,248 +29,101 @@
     </div>
   </div>
 
-  <!-- Contenido Principal: Split Layout -->
-  <div class="flex" style="height: calc(100vh - 140px);">
-    <!-- Panel Izquierdo: Lista de Cuestionarios -->
-    <div class="w-5 border-right-1 surface-border surface-card overflow-y-auto">
-      @for (cuestionario of cuestionariosFiltrados(); track cuestionario.id) {
-        <div
-          class="cuestionario-item px-4 py-3 border-bottom-1 surface-border cursor-pointer"
-          [class.cuestionario-item-selected]="cuestionarioSeleccionado()?.id === cuestionario.id"
-          [class.border-left-3]="cuestionarioSeleccionado()?.id === cuestionario.id"
-          [class.border-left-primary]="cuestionarioSeleccionado()?.id === cuestionario.id"
-          (click)="cuestionarioSeleccionado.set(cuestionario)">
+  <!-- Contenido Principal: Tabla de Cuestionarios -->
+  <div class="p-4">
+    <div class="surface-card border-round-lg">
+      <p-table
+        [value]="cuestionariosFiltrados()"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} cuestionarios"
+        styleClass="p-datatable-sm"
+        selectionMode="single"
+        (onRowSelect)="verDetalleCuestionario($any($event).data)">
 
-          <!-- Título y Tags -->
-          <div class="flex align-items-start justify-content-between mb-2">
-            <span class="font-semibold text-900">{{ cuestionario.nombre }}</span>
-            <div class="flex gap-2">
+        <ng-template #header>
+          <tr>
+            <th pSortableColumn="nombre" style="width: 25%">
+              Nombre <p-sortIcon field="nombre" />
+            </th>
+            <th pSortableColumn="marcoNormativo" style="width: 12%">
+              Marco <p-sortIcon field="marcoNormativo" />
+            </th>
+            <th pSortableColumn="categoria" style="width: 12%">
+              Categoría <p-sortIcon field="categoria" />
+            </th>
+            <th pSortableColumn="tipo" style="width: 8%">
+              Tipo <p-sortIcon field="tipo" />
+            </th>
+            <th pSortableColumn="preguntas" style="width: 10%">
+              Preguntas <p-sortIcon field="preguntas" />
+            </th>
+            <th pSortableColumn="tasaCompletado" style="width: 12%">
+              Cumplimiento <p-sortIcon field="tasaCompletado" />
+            </th>
+            <th pSortableColumn="estado" style="width: 10%">
+              Estado <p-sortIcon field="estado" />
+            </th>
+            <th style="width: 11%">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-cuestionario>
+          <tr class="cursor-pointer" (click)="verDetalleCuestionario(cuestionario)">
+            <td>
+              <div class="flex flex-column">
+                <span class="font-semibold text-900">{{ cuestionario.nombre }}</span>
+                <span class="text-500 text-xs">{{ cuestionario.descripcion | slice:0:50 }}{{ cuestionario.descripcion?.length > 50 ? '...' : '' }}</span>
+              </div>
+            </td>
+            <td>
               <p-tag [value]="getMarcoNombre(cuestionario.marcoNormativo)" styleClass="text-xs" />
+            </td>
+            <td>
+              <span class="text-900">{{ cuestionario.categoria | titlecase }}</span>
+            </td>
+            <td>
+              <p-tag [value]="cuestionario.tipo === 'ia' ? 'IA' : 'Manual'" [severity]="getTipoSeverity(cuestionario.tipo)" styleClass="text-xs" />
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-question-circle text-500"></i>
+                <span>{{ cuestionario.preguntas }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <p-progressBar [value]="cuestionario.tasaCompletado" [showValue]="false" styleClass="h-1rem flex-1" />
+                <span class="text-sm font-medium">{{ cuestionario.tasaCompletado }}%</span>
+              </div>
+            </td>
+            <td>
               <p-tag [value]="cuestionario.estado | titlecase" [severity]="getEstadoSeverity(cuestionario.estado)" styleClass="text-xs" />
-            </div>
-          </div>
-
-          <!-- Descripción -->
-          <p class="text-500 text-sm m-0 mb-2 line-height-3">{{ cuestionario.descripcion || 'Sin descripción' }}</p>
-
-          <!-- Info footer -->
-          <div class="flex align-items-center justify-content-between text-500 text-xs">
-            <div class="flex align-items-center gap-1">
-              <i class="pi pi-question-circle"></i>
-              <span>{{ cuestionario.preguntas }} preguntas</span>
-            </div>
-            <span>{{ cuestionario.fechaModificacion | date:'dd/MM/yyyy' }}</span>
-          </div>
-        </div>
-      } @empty {
-        <div class="flex flex-column align-items-center justify-content-center h-full py-8">
-          <i class="pi pi-inbox text-4xl text-300 mb-3"></i>
-          <span class="text-500">No se encontraron cuestionarios</span>
-          <p-button label="Crear cuestionario" icon="pi pi-plus" class="mt-3" (onClick)="crearNuevoCuestionario()" />
-        </div>
-      }
-    </div>
-
-    <!-- Panel Derecho: Preview del Cuestionario -->
-    <div class="w-7 surface-ground overflow-y-auto p-4">
-      @if (cuestionarioSeleccionado()) {
-        <!-- Header del Preview -->
-        <div class="surface-card border-round-lg p-4 mb-4">
-          <div class="flex justify-content-between align-items-start mb-3">
-            <div>
-              <h2 class="text-xl font-bold text-900 m-0 mb-2">{{ cuestionarioSeleccionado()!.nombre }}</h2>
-              <p class="text-500 m-0">{{ cuestionarioSeleccionado()!.descripcion || 'Sin descripción' }}</p>
-            </div>
-            <div class="flex align-items-center gap-2">
-              <p-tag [value]="cuestionarioSeleccionado()!.estado | titlecase" [severity]="getEstadoSeverity(cuestionarioSeleccionado()!.estado)" />
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="editarCuestionario(cuestionarioSeleccionado()!)" />
-              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="eliminarCuestionario(cuestionarioSeleccionado()!)" />
-            </div>
-          </div>
-
-          <!-- Info Grid -->
-          <div class="grid">
-            <div class="col-4">
-              <span class="text-500 text-sm block mb-1">Creado por</span>
-              <div class="flex align-items-center gap-2">
-                <p-avatar icon="pi pi-user" styleClass="bg-primary" shape="circle" />
-                <span class="text-900">Alice Johnson Smith</span>
+            </td>
+            <td>
+              <div class="flex gap-1" (click)="$event.stopPropagation()">
+                <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info" size="small" pTooltip="Ver detalle" (onClick)="verDetalleCuestionario(cuestionario)" />
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" size="small" pTooltip="Editar" (onClick)="editarCuestionario(cuestionario)" />
+                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" pTooltip="Eliminar" (onClick)="eliminarCuestionario(cuestionario)" />
               </div>
-            </div>
-            <div class="col-4">
-              <span class="text-500 text-sm block mb-1">Fecha de creación</span>
-              <span class="text-900">{{ cuestionarioSeleccionado()!.fechaCreacion | date:'dd/MM/yyyy' }}</span>
-            </div>
-            <div class="col-4">
-              <span class="text-500 text-sm block mb-1">Última modificación</span>
-              <span class="text-900">{{ cuestionarioSeleccionado()!.fechaModificacion | date:'dd/MM/yyyy' }}</span>
-            </div>
-          </div>
+            </td>
+          </tr>
+        </ng-template>
 
-          <!-- Métricas -->
-          <div class="grid mt-3">
-            <div class="col-3">
-              <div class="flex align-items-center gap-2">
-                <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width: 36px; height: 36px;">
-                  <i class="pi pi-check-circle text-blue-500"></i>
-                </div>
-                <div>
-                  <span class="text-500 text-xs block">Preguntas</span>
-                  <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.preguntas }}</span>
-                </div>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="8">
+              <div class="flex flex-column align-items-center justify-content-center py-6">
+                <i class="pi pi-inbox text-4xl text-300 mb-3"></i>
+                <span class="text-500">No se encontraron cuestionarios</span>
+                <p-button label="Crear cuestionario" icon="pi pi-plus" class="mt-3" (onClick)="crearNuevoCuestionario()" />
               </div>
-            </div>
-            <div class="col-3">
-              <div class="flex align-items-center gap-2">
-                <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width: 36px; height: 36px;">
-                  <i class="pi pi-file text-green-500"></i>
-                </div>
-                <div>
-                  <span class="text-500 text-xs block">Respuestas</span>
-                  <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.respuestas }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="col-3">
-              <div class="flex align-items-center gap-2">
-                <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width: 36px; height: 36px;">
-                  <i class="pi pi-cog text-purple-500"></i>
-                </div>
-                <div>
-                  <span class="text-500 text-xs block">Tipo</span>
-                  <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.tipo === 'ia' ? 'IA' : 'Manual' }}</span>
-                </div>
-              </div>
-            </div>
-            <div class="col-3">
-              <div class="flex align-items-center gap-2">
-                <div class="flex align-items-center justify-content-center bg-teal-100 border-round" style="width: 36px; height: 36px;">
-                  <i class="pi pi-chart-line text-teal-500"></i>
-                </div>
-                <div>
-                  <span class="text-500 text-xs block">Cumplimiento</span>
-                  <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.tasaCompletado }}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Barra de progreso verde -->
-          <div class="mt-3">
-            <div class="border-round overflow-hidden" style="height: 8px; background-color: var(--green-200);">
-              <div class="h-full bg-green-500" [style.width.%]="cuestionarioSeleccionado()!.tasaCompletado < 50 ? 50 : cuestionarioSeleccionado()!.tasaCompletado"></div>
-            </div>
-            <div class="text-center mt-1">
-              <span class="text-green-500 text-sm font-medium">{{ cuestionarioSeleccionado()!.tasaCompletado < 50 ? 50 : cuestionarioSeleccionado()!.tasaCompletado }}%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Grid: Información General y Secciones -->
-        <div class="grid">
-          <!-- Información General -->
-          <div class="col-6">
-            <div class="surface-card border-round-lg p-4 h-full">
-              <h3 class="text-lg font-semibold text-900 m-0 mb-4">Información General</h3>
-
-              <div class="flex align-items-start gap-3 mb-3">
-                <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width: 32px; height: 32px;">
-                  <i class="pi pi-book text-blue-500 text-sm"></i>
-                </div>
-                <div>
-                  <span class="text-500 text-sm block">Marco Normativo</span>
-                  <span class="text-900">{{ getMarcoNombre(cuestionarioSeleccionado()!.marcoNormativo) }}</span>
-                </div>
-              </div>
-
-              <div class="flex align-items-start gap-3 mb-4">
-                <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 32px; height: 32px;">
-                  <i class="pi pi-tag text-orange-500 text-sm"></i>
-                </div>
-                <div>
-                  <span class="text-500 text-sm block">Categoría</span>
-                  <span class="text-900">{{ cuestionarioSeleccionado()!.categoria | titlecase }}</span>
-                </div>
-              </div>
-
-              <!-- Porcentaje grande -->
-              <div class="text-center my-4">
-                <span class="text-5xl font-bold text-900">{{ cuestionarioSeleccionado()!.tasaCompletado }}.7%</span>
-              </div>
-
-              <!-- Barra de progreso con gradiente -->
-              <div class="border-round overflow-hidden mb-4" style="height: 10px; background: linear-gradient(to right, var(--red-500), var(--orange-500), var(--green-500));">
-                <div class="h-full bg-transparent" [style.width.%]="cuestionarioSeleccionado()!.tasaCompletado"></div>
-              </div>
-
-              <!-- Leyenda de umbrales -->
-              <div class="text-sm">
-                <h4 class="font-medium text-900 m-0 mb-2">Details</h4>
-                <div class="flex align-items-center gap-2 mb-2">
-                  <span class="inline-block border-circle bg-green-500" style="width: 10px; height: 10px;"></span>
-                  <span class="text-600">Sobresaliente</span>
-                  <span class="text-500 ml-auto">70% - 100%</span>
-                </div>
-                <div class="flex align-items-center gap-2 mb-2">
-                  <span class="inline-block border-circle bg-orange-500" style="width: 10px; height: 10px;"></span>
-                  <span class="text-600">Aceptable</span>
-                  <span class="text-500 ml-auto">50% - 70%</span>
-                </div>
-                <div class="flex align-items-center gap-2">
-                  <span class="inline-block border-circle bg-red-500" style="width: 10px; height: 10px;"></span>
-                  <span class="text-600">Deficiente</span>
-                  <span class="text-500 ml-auto">0% - 50%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Secciones del cuestionario -->
-          <div class="col-6">
-            <div class="surface-card border-round-lg p-4 h-full">
-              <div class="flex justify-content-between align-items-center mb-4">
-                <h3 class="text-lg font-semibold text-900 m-0">Secciones</h3>
-                <span class="text-500 text-sm">{{ cuestionarioSeleccionado()!.secciones.length }} secciones</span>
-              </div>
-
-              <!-- Lista de secciones -->
-              <div class="flex flex-column gap-3">
-                @for (seccion of cuestionarioSeleccionado()!.secciones; track seccion.id; let i = $index) {
-                  <div class="flex align-items-center justify-content-between p-3 surface-100 border-round">
-                    <div class="flex align-items-center gap-3">
-                      <span class="flex align-items-center justify-content-center w-2rem h-2rem border-circle bg-primary text-white text-sm font-semibold">{{ i + 1 }}</span>
-                      <div>
-                        <span class="text-900 font-medium">{{ seccion.nombre }}</span>
-                        <span class="text-500 text-xs block">{{ seccion.preguntas.length }} preguntas</span>
-                      </div>
-                    </div>
-                    <p-tag [value]="seccion.peso + '%'" severity="info" styleClass="text-xs" />
-                  </div>
-                } @empty {
-                  <div class="text-center py-4">
-                    <i class="pi pi-list text-3xl text-300 mb-2"></i>
-                    <p class="text-500 m-0">Sin secciones definidas</p>
-                  </div>
-                }
-              </div>
-
-              <!-- Ver en editor -->
-              <div class="text-center mt-4">
-                <p-button label="Editar en Editor" [text]="true" severity="secondary" (onClick)="editarCuestionario(cuestionarioSeleccionado()!)" />
-              </div>
-            </div>
-          </div>
-        </div>
-      } @else {
-        <!-- Estado vacío -->
-        <div class="flex flex-column align-items-center justify-content-center h-full">
-          <div class="flex align-items-center justify-content-center bg-primary-100 border-circle mb-4" style="width: 100px; height: 100px;">
-            <span class="material-icons text-primary" style="font-size: 3rem;">visibility</span>
-          </div>
-          <h3 class="text-900 font-semibold m-0 mb-2">Vista previa</h3>
-          <p class="text-500 text-center m-0">Selecciona un cuestionario de la lista para ver sus detalles</p>
-        </div>
-      }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
   </div>
 </div>
@@ -787,6 +640,366 @@
       </div>
     </div>
     }
+  </div>
+</div>
+}
+
+<!-- ==================== VISTA: DETALLE DEL CUESTIONARIO ==================== -->
+@if (vistaActual() === 'detalle' && cuestionarioSeleccionado()) {
+<div class="surface-ground min-h-screen">
+  <!-- Header con breadcrumb -->
+  <div class="surface-card border-bottom-1 surface-border px-4 py-3">
+    <div class="flex align-items-center gap-2 mb-3">
+      <span class="material-icons text-500 cursor-pointer" style="font-size: 1.25rem;" (click)="volverALista()">home</span>
+      <span class="text-400">•</span>
+      <span class="text-500 text-sm cursor-pointer" (click)="volverALista()">Cuestionarios</span>
+      <span class="text-400">•</span>
+      <span class="text-primary text-sm font-medium">Detalle</span>
+    </div>
+    <div class="flex justify-content-between align-items-center">
+      <div class="flex align-items-center gap-3">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volverALista()" pTooltip="Volver a lista" />
+        <div>
+          <h1 class="text-2xl font-bold text-900 m-0">Cuestionarios</h1>
+          <p class="text-500 text-sm m-0 mt-1">Orca&#64;Securityby Design</p>
+        </div>
+      </div>
+      <div class="flex align-items-center gap-3">
+        <p-button label="Información general" icon="pi pi-info-circle" [outlined]="true" severity="secondary" />
+        <p-button label="Reglas" icon="pi pi-list" [outlined]="true" severity="secondary" />
+        <p-button label="Riesgos" icon="pi pi-exclamation-triangle" [outlined]="true" severity="secondary" />
+        <p-button label="Auditoría" icon="pi pi-user" [outlined]="true" severity="secondary" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="p-4">
+    <div class="grid">
+      <!-- Columna izquierda: Información del cuestionario -->
+      <div class="col-12 lg:col-5">
+        <!-- Card principal con título y estado -->
+        <div class="surface-card border-round-lg p-4 mb-4">
+          <!-- Header con título, estado y botón editar -->
+          <div class="flex align-items-start justify-content-between mb-3">
+            <div class="flex-1">
+              @if (editandoDetalle()) {
+                <input pInputText [(ngModel)]="cuestionarioSeleccionado()!.nombre" class="w-full text-xl font-bold mb-2" />
+              } @else {
+                <h2 class="text-xl font-bold text-900 m-0 mb-1">{{ cuestionarioSeleccionado()!.nombre }}</h2>
+              }
+            </div>
+            <div class="flex align-items-center gap-2 ml-3">
+              <p-tag [value]="cuestionarioSeleccionado()!.estado | titlecase" [severity]="getEstadoSeverity(cuestionarioSeleccionado()!.estado)" />
+              @if (editandoDetalle()) {
+                <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="danger" (onClick)="cancelarEdicionDetalle()" pTooltip="Cancelar" />
+                <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success" (onClick)="guardarYCerrarEdicion()" pTooltip="Guardar" />
+              } @else {
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="toggleEditarDetalle()" pTooltip="Editar" />
+              }
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          @if (editandoDetalle()) {
+            <textarea pTextarea [(ngModel)]="cuestionarioSeleccionado()!.descripcion" class="w-full mb-3" rows="2" placeholder="Descripción del cuestionario"></textarea>
+          } @else {
+            <p class="text-500 m-0 mb-4">{{ cuestionarioSeleccionado()!.descripcion || 'Sin descripción' }}</p>
+          }
+
+          <!-- Responsable -->
+          <div class="mb-3">
+            <span class="text-500 text-sm block mb-1">Responsable</span>
+            <div class="flex align-items-center gap-2">
+              <p-avatar icon="pi pi-user" styleClass="bg-primary" shape="circle" size="normal" />
+              <span class="text-900 font-medium">Alice Johnson Smith</span>
+            </div>
+          </div>
+
+          <!-- Fechas -->
+          <div class="grid mb-3">
+            <div class="col-6">
+              <span class="text-500 text-sm block mb-1">Creación</span>
+              <span class="text-900">{{ cuestionarioSeleccionado()!.fechaCreacion | date:'yyyy-MM-dd' }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-500 text-sm block mb-1">Tiempo activo</span>
+              <span class="text-900">1 Año</span>
+            </div>
+          </div>
+
+          <!-- Barra de progreso -->
+          <div class="mb-4">
+            <div class="flex border-round overflow-hidden" style="height: 24px;">
+              <div class="bg-red-500 flex align-items-center justify-content-center text-white text-xs font-bold" [style.width.%]="cuestionarioSeleccionado()!.umbrales.deficiente">
+                {{ cuestionarioSeleccionado()!.umbrales.deficiente }}%
+              </div>
+              <div class="bg-orange-400 flex align-items-center justify-content-center text-white text-xs font-bold" [style.width.%]="cuestionarioSeleccionado()!.umbrales.aceptable - cuestionarioSeleccionado()!.umbrales.deficiente">
+              </div>
+              <div class="bg-green-500 flex align-items-center justify-content-center text-white text-xs font-bold" [style.width.%]="100 - cuestionarioSeleccionado()!.umbrales.aceptable">
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de cuestionario -->
+          <div class="surface-100 border-round p-3 mb-4">
+            <h4 class="text-sm font-semibold text-700 m-0 mb-3">Información de cuestionario</h4>
+            <div class="grid">
+              <div class="col-6">
+                <div class="flex align-items-center gap-2 mb-3">
+                  <i class="pi pi-check-circle text-primary"></i>
+                  <div>
+                    <span class="text-500 text-xs block">Preguntas</span>
+                    <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.preguntas }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="flex align-items-center gap-2 mb-3">
+                  <i class="pi pi-file text-primary"></i>
+                  <div>
+                    <span class="text-500 text-xs block">Respuestas</span>
+                    <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.respuestas }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-cog text-primary"></i>
+                  <div>
+                    <span class="text-500 text-xs block">Tipo</span>
+                    <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.tipo === 'ia' ? 'IA' : 'Manual' }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-chart-line text-primary"></i>
+                  <div>
+                    <span class="text-500 text-xs block">Cumplimiento</span>
+                    <span class="text-900 font-semibold">{{ cuestionarioSeleccionado()!.tasaCompletado }}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información General -->
+          <div class="surface-100 border-round p-3">
+            <h4 class="text-sm font-semibold text-700 m-0 mb-3">Información General</h4>
+
+            @if (editandoDetalle()) {
+              <!-- Modo edición -->
+              <div class="flex flex-column gap-3">
+                <div>
+                  <label class="block text-500 text-xs mb-1">Marco Normativo</label>
+                  <p-select [options]="marcosNormativos()" optionLabel="acronimo" optionValue="id" [(ngModel)]="cuestionarioSeleccionado()!.marcoNormativo" placeholder="Seleccionar" styleClass="w-full" [showClear]="true" />
+                </div>
+                <div>
+                  <label class="block text-500 text-xs mb-1">Categoría</label>
+                  <p-select [options]="categoriaOptions" optionLabel="label" optionValue="value" [(ngModel)]="cuestionarioSeleccionado()!.categoria" styleClass="w-full" />
+                </div>
+                <div>
+                  <label class="block text-500 text-xs mb-1">Tipo de Evaluación</label>
+                  <p-select [options]="tipoEvaluacionOptions" optionLabel="label" optionValue="value" [(ngModel)]="cuestionarioSeleccionado()!.tipoEvaluacion" styleClass="w-full" />
+                </div>
+                <div>
+                  <label class="block text-500 text-xs mb-1">Periodicidad</label>
+                  <p-select [options]="periodicidadOptions" optionLabel="label" optionValue="value" [(ngModel)]="cuestionarioSeleccionado()!.periodicidad" styleClass="w-full" />
+                </div>
+              </div>
+            } @else {
+              <!-- Modo lectura -->
+              <div class="flex align-items-center gap-2 mb-3">
+                <i class="pi pi-book text-primary"></i>
+                <div>
+                  <span class="text-500 text-xs block">Marco Normativo</span>
+                  <span class="text-900">{{ getMarcoNombre(cuestionarioSeleccionado()!.marcoNormativo) }}</span>
+                </div>
+              </div>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-tag text-primary"></i>
+                <div>
+                  <span class="text-500 text-xs block">Categoría</span>
+                  <span class="text-900">{{ cuestionarioSeleccionado()!.categoria | titlecase }}</span>
+                </div>
+              </div>
+            }
+
+            <!-- Porcentaje grande y barra gradiente -->
+            <div class="text-center my-4">
+              <span class="text-4xl font-bold text-900">{{ cuestionarioSeleccionado()!.tasaCompletado }}.7%</span>
+            </div>
+            <div class="border-round overflow-hidden mb-4" style="height: 10px; background: linear-gradient(to right, var(--red-500) 0%, var(--red-500) 33%, var(--orange-400) 33%, var(--orange-400) 66%, var(--green-500) 66%, var(--green-500) 100%);">
+            </div>
+
+            <!-- Details - Umbrales -->
+            <h5 class="text-sm font-medium text-900 m-0 mb-2">Details</h5>
+            @if (editandoDetalle()) {
+              <div class="flex flex-column gap-2">
+                <div class="flex align-items-center gap-2">
+                  <span class="inline-block border-circle bg-green-500" style="width: 10px; height: 10px;"></span>
+                  <span class="text-600 text-sm flex-1">Sobresaliente</span>
+                  <p-inputNumber [(ngModel)]="cuestionarioSeleccionado()!.umbrales.sobresaliente" [min]="0" [max]="100" suffix="%" styleClass="w-4rem" size="small" />
+                  <span class="text-500 text-sm">- 100%</span>
+                </div>
+                <div class="flex align-items-center gap-2">
+                  <span class="inline-block border-circle bg-orange-500" style="width: 10px; height: 10px;"></span>
+                  <span class="text-600 text-sm flex-1">Aceptable</span>
+                  <p-inputNumber [(ngModel)]="cuestionarioSeleccionado()!.umbrales.deficiente" [min]="0" [max]="100" suffix="%" styleClass="w-4rem" size="small" />
+                  <span class="text-500 text-sm">-</span>
+                  <p-inputNumber [(ngModel)]="cuestionarioSeleccionado()!.umbrales.aceptable" [min]="0" [max]="100" suffix="%" styleClass="w-4rem" size="small" />
+                </div>
+                <div class="flex align-items-center gap-2">
+                  <span class="inline-block border-circle bg-red-500" style="width: 10px; height: 10px;"></span>
+                  <span class="text-600 text-sm flex-1">Deficiente</span>
+                  <span class="text-500 text-sm">0% - {{ cuestionarioSeleccionado()!.umbrales.deficiente }}%</span>
+                </div>
+              </div>
+            } @else {
+              <div class="flex flex-column gap-2">
+                <div class="flex align-items-center gap-2">
+                  <span class="inline-block border-circle bg-green-500" style="width: 10px; height: 10px;"></span>
+                  <span class="text-600 text-sm flex-1">Sobresaliente</span>
+                  <span class="text-500 text-sm">{{ cuestionarioSeleccionado()!.umbrales.sobresaliente }}% - 100%</span>
+                </div>
+                <div class="flex align-items-center gap-2">
+                  <span class="inline-block border-circle bg-orange-500" style="width: 10px; height: 10px;"></span>
+                  <span class="text-600 text-sm flex-1">Aceptable</span>
+                  <span class="text-500 text-sm">{{ cuestionarioSeleccionado()!.umbrales.deficiente }}% - {{ cuestionarioSeleccionado()!.umbrales.aceptable }}%</span>
+                </div>
+                <div class="flex align-items-center gap-2">
+                  <span class="inline-block border-circle bg-red-500" style="width: 10px; height: 10px;"></span>
+                  <span class="text-600 text-sm flex-1">Deficiente</span>
+                  <span class="text-500 text-sm">0% - {{ cuestionarioSeleccionado()!.umbrales.deficiente }}%</span>
+                </div>
+              </div>
+            }
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Columna derecha: Preview del cuestionario -->
+      <div class="col-12 lg:col-7">
+        <div class="surface-card border-round-lg p-4 h-full">
+          <!-- Header del preview -->
+          <div class="flex align-items-center justify-content-between mb-4">
+            <div class="flex align-items-center gap-2">
+              <h3 class="text-xl font-bold text-900 m-0">{{ cuestionarioSeleccionado()!.nombre }}</h3>
+              <p-tag [value]="cuestionarioSeleccionado()!.estado | titlecase" [severity]="getEstadoSeverity(cuestionarioSeleccionado()!.estado)" />
+            </div>
+            <div class="flex align-items-center gap-2">
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="editarCuestionario(cuestionarioSeleccionado()!)" pTooltip="Editar en editor" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="eliminarCuestionario(cuestionarioSeleccionado()!)" pTooltip="Eliminar" />
+            </div>
+          </div>
+
+          <!-- Secciones como acordeones -->
+          <div class="flex flex-column gap-2" style="max-height: calc(100vh - 280px); overflow-y: auto;">
+            @for (seccion of cuestionarioSeleccionado()!.secciones; track seccion.id; let i = $index) {
+              <p-accordion [multiple]="true">
+                <p-accordionpanel>
+                  <p-accordionheader>
+                    <div class="flex align-items-center justify-content-between w-full pr-3">
+                      <span class="font-medium text-900">{{ seccion.nombre }}</span>
+                      <span class="text-red-500 text-sm font-medium">Obligatorio</span>
+                    </div>
+                  </p-accordionheader>
+                  <p-accordioncontent>
+                    <div class="p-3">
+                      <!-- Grid de campos del formulario -->
+                      <div class="grid">
+                        @for (pregunta of seccion.preguntas; track pregunta.id; let j = $index) {
+                          <div class="col-12 md:col-6 lg:col-4 mb-3">
+                            <label class="block text-700 text-sm mb-2">
+                              {{ pregunta.texto }}
+                              @if (pregunta.requerida) {
+                                <span class="text-red-500">*</span>
+                              }
+                            </label>
+
+                            <!-- Campo según tipo -->
+                            @switch (pregunta.tipo) {
+                              @case ('texto') {
+                                <input pInputText class="w-full" [placeholder]="pregunta.placeholder || 'Escribe aquí...'" disabled />
+                              }
+                              @case ('textoLargo') {
+                                <textarea pTextarea class="w-full" rows="2" placeholder="Escribe aquí..." disabled></textarea>
+                              }
+                              @case ('numero') {
+                                <p-inputNumber styleClass="w-full" placeholder="0" [disabled]="true" />
+                              }
+                              @case ('siNoNa') {
+                                <div class="flex gap-3">
+                                  <div class="flex align-items-center gap-1">
+                                    <p-radioButton [disabled]="true" />
+                                    <span class="text-sm">Sí</span>
+                                  </div>
+                                  <div class="flex align-items-center gap-1">
+                                    <p-radioButton [disabled]="true" />
+                                    <span class="text-sm">No</span>
+                                  </div>
+                                  <div class="flex align-items-center gap-1">
+                                    <p-radioButton [disabled]="true" />
+                                    <span class="text-sm">N/A</span>
+                                  </div>
+                                </div>
+                              }
+                              @case ('fecha') {
+                                <p-datePicker styleClass="w-full" [disabled]="true" placeholder="dd/mm/aaaa" />
+                              }
+                              @case ('seleccionUnica') {
+                                <p-select [options]="pregunta.opciones || [{label: 'Seleccionar', value: ''}]" styleClass="w-full" [disabled]="true" placeholder="Seleccionar" />
+                              }
+                              @case ('opcionMultiple') {
+                                <p-multiSelect [options]="pregunta.opciones || []" styleClass="w-full" [disabled]="true" placeholder="Seleccionar" />
+                              }
+                              @case ('escala') {
+                                <div class="flex align-items-center gap-2">
+                                  <span class="text-xs text-500">{{ pregunta.escalaMin || 1 }}</span>
+                                  <p-slider [min]="pregunta.escalaMin || 1" [max]="pregunta.escalaMax || 10" styleClass="flex-1" [disabled]="true" />
+                                  <span class="text-xs text-500">{{ pregunta.escalaMax || 10 }}</span>
+                                </div>
+                              }
+                              @case ('archivo') {
+                                <div class="p-2 border-1 border-dashed surface-border border-round text-center">
+                                  <i class="pi pi-upload text-400"></i>
+                                  <span class="text-500 text-xs ml-2">Subir archivo</span>
+                                </div>
+                              }
+                              @default {
+                                <input pInputText class="w-full" placeholder="Campo" disabled />
+                              }
+                            }
+                          </div>
+                        }
+                      </div>
+
+                      @if (seccion.preguntas.length > 0) {
+                        <div class="flex align-items-center gap-2 mt-2">
+                          <p-checkbox [binary]="true" [disabled]="true" />
+                          <span class="text-sm text-700">Solicitar Revisión</span>
+                        </div>
+                      }
+                    </div>
+                  </p-accordioncontent>
+                </p-accordionpanel>
+              </p-accordion>
+            } @empty {
+              <div class="flex flex-column align-items-center justify-content-center py-8 surface-100 border-round-lg">
+                <div class="flex align-items-center justify-content-center bg-primary-100 border-circle mb-4" style="width: 80px; height: 80px;">
+                  <i class="pi pi-folder-open text-4xl text-primary"></i>
+                </div>
+                <h4 class="text-900 font-semibold m-0 mb-2">Sin secciones</h4>
+                <p class="text-500 m-0 mb-4 text-center">Este cuestionario aún no tiene secciones definidas</p>
+                <p-button label="Agregar secciones en el editor" icon="pi pi-pencil" (onClick)="editarCuestionario(cuestionarioSeleccionado()!)" />
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 }

@@ -108,7 +108,7 @@ export class CuestionariosComponent {
   // =============================================
   // ESTADO DE LA VISTA - Solo vistas de creación
   // =============================================
-  vistaActual = signal<'lista' | 'editor' | 'wizard'>('lista');
+  vistaActual = signal<'lista' | 'editor' | 'wizard' | 'detalle'>('lista');
 
   // =============================================
   // FILTROS
@@ -129,6 +129,7 @@ export class CuestionariosComponent {
   // SELECCIONES
   // =============================================
   cuestionarioSeleccionado = signal<Cuestionario | null>(null);
+  editandoDetalle = signal(false);
 
   // =============================================
   // NUEVO CUESTIONARIO
@@ -527,6 +528,25 @@ export class CuestionariosComponent {
 
   irACumplimiento() {
     this.router.navigate(['/cumplimiento']);
+  }
+
+  verDetalleCuestionario(cuestionario: Cuestionario) {
+    this.cuestionarioSeleccionado.set(cuestionario);
+    this.editandoDetalle.set(false);
+    this.vistaActual.set('detalle');
+  }
+
+  toggleEditarDetalle() {
+    this.editandoDetalle.update(v => !v);
+  }
+
+  guardarYCerrarEdicion() {
+    this.guardarCuestionarioEditor();
+    this.editandoDetalle.set(false);
+  }
+
+  cancelarEdicionDetalle() {
+    this.editandoDetalle.set(false);
   }
 
   // =============================================

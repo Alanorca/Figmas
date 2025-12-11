@@ -77,138 +77,151 @@
       </div>
     </div>
 
-    <!-- Graficos y tablas -->
-    <div class="grid">
-      <!-- Grafico de barras -->
-      <div class="col-12 lg:col-6">
-        <div class="surface-card border-round-lg p-4 shadow-1 h-full">
-          <h3 class="text-lg font-semibold text-900 m-0 mb-4">Cumplimiento por Marco</h3>
-          <div style="height: 250px;">
-            <p-chart type="bar" [data]="chartData()" [options]="chartOptions" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Grafico de pie -->
-      <div class="col-12 lg:col-6">
-        <div class="surface-card border-round-lg p-4 shadow-1 h-full">
-          <h3 class="text-lg font-semibold text-900 m-0 mb-4">Estado de Revisiones</h3>
-          <div style="height: 250px;">
-            <p-chart type="pie" [data]="pieChartData()" [options]="pieChartOptions" />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Alertas activas -->
-    <div class="surface-card border-round-lg p-4 shadow-1 mt-4">
-      <div class="flex justify-content-between align-items-center mb-4">
-        <h3 class="text-lg font-semibold text-900 m-0">Alertas Activas</h3>
-        <span class="text-500 text-sm">{{ alertasActivas().length }} alertas</span>
-      </div>
-      <div class="flex flex-column gap-3">
-        @for (alerta of alertasActivas(); track alerta.id) {
-          <div class="flex align-items-center justify-content-between p-3 surface-100 border-round">
-            <div class="flex align-items-center gap-3">
-              <p-tag [value]="alerta.severidad | uppercase" [severity]="getSeveridadAlerta(alerta.severidad)" />
+    <!-- Tabs: Revisiones y Gráficas -->
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0"><i class="pi pi-table mr-2"></i>Revisiones</p-tab>
+        <p-tab value="1"><i class="pi pi-chart-bar mr-2"></i>Gráficas</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <!-- Tab Revisiones -->
+        <p-tabpanel value="0">
+          <div class="surface-card border-round-lg p-4 shadow-1 mt-3">
+            <div class="flex justify-content-between align-items-center mb-4">
               <div>
-                <span class="font-medium text-900">{{ alerta.titulo }}</span>
-                <p class="text-500 text-sm m-0">{{ alerta.descripcion }}</p>
+                <h3 class="text-lg font-semibold text-900 m-0">Revisiones</h3>
+                <p class="text-500 text-sm m-0 mt-1">Gestiona las revisiones de cuestionarios</p>
+              </div>
+              <p-button label="Nueva Revisión" icon="pi pi-plus" (onClick)="abrirAsignarDialog()" />
+            </div>
+            <p-table [value]="asignaciones()" styleClass="p-datatable-sm" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]">
+              <ng-template #header>
+                <tr>
+                  <th>Titulo</th>
+                  <th>Cuestionario</th>
+                  <th>Tipo</th>
+                  <th>Asignados</th>
+                  <th>Procesos</th>
+                  <th>Fecha Inicio</th>
+                  <th>Vencimiento</th>
+                  <th>Progreso</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-asignacion>
+                <tr>
+                  <td>{{ asignacion.titulo }}</td>
+                  <td>{{ getCuestionario(asignacion.cuestionarioId)?.nombre }}</td>
+                  <td><p-tag [value]="asignacion.tipoRevision | titlecase" [severity]="asignacion.tipoRevision === 'externa' ? 'info' : 'secondary'" /></td>
+                  <td>
+                    <div class="flex align-items-center gap-1">
+                      @for (nombre of asignacion.usuariosAsignadosNombres | slice:0:2; track nombre) {
+                        <p-avatar [label]="getAvatarLabel(nombre)" shape="circle" styleClass="bg-primary" />
+                      }
+                      @if (asignacion.usuariosAsignadosNombres.length > 2) {
+                        <span class="text-500 text-sm">+{{ asignacion.usuariosAsignadosNombres.length - 2 }}</span>
+                      }
+                      @if (asignacion.emailsExternos.length > 0) {
+                        <p-avatar icon="pi pi-envelope" shape="circle" styleClass="bg-purple-500" />
+                      }
+                    </div>
+                  </td>
+                  <td>
+                    <div class="flex flex-wrap gap-1">
+                      @for (proceso of asignacion.procesosObjetivoNombres | slice:0:2; track proceso) {
+                        <p-tag [value]="$any(proceso)" severity="secondary" styleClass="text-xs" />
+                      }
+                      @if (asignacion.procesosObjetivoNombres && asignacion.procesosObjetivoNombres.length > 2) {
+                        <span class="text-500 text-xs">+{{ asignacion.procesosObjetivoNombres.length - 2 }}</span>
+                      }
+                      @if (!asignacion.procesosObjetivoNombres || asignacion.procesosObjetivoNombres.length === 0) {
+                        <span class="text-400 text-sm">-</span>
+                      }
+                    </div>
+                  </td>
+                  <td>{{ asignacion.fechaInicio | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ asignacion.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
+                  <td style="width: 120px">
+                    <p-progressBar [value]="asignacion.progreso" [showValue]="false" styleClass="h-1rem" />
+                    <span class="text-xs text-500">{{ asignacion.progreso }}%</span>
+                  </td>
+                  <td><p-tag [value]="asignacion.estado | titlecase" [severity]="getEstadoSeverity(asignacion.estado)" /></td>
+                  <td>
+                    <div class="flex gap-1">
+                      <p-button icon="pi pi-file-edit" [rounded]="true" [text]="true" severity="secondary" pTooltip="Responder" (onClick)="responderCuestionario(asignacion)" />
+                      <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info" pTooltip="Revisar" (onClick)="revisarCuestionario(asignacion)" />
+                      <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="warn" pTooltip="Editar" (onClick)="editarAsignacion(asignacion)" />
+                      <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="eliminarAsignacion(asignacion)" />
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage>
+                <tr>
+                  <td colspan="10" class="text-center py-4">
+                    <i class="pi pi-inbox text-3xl text-300 mb-2"></i>
+                    <p class="text-500 m-0">No hay asignaciones</p>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab Gráficas -->
+        <p-tabpanel value="1">
+          <div class="grid mt-3">
+            <!-- Grafico de barras -->
+            <div class="col-12 lg:col-6">
+              <div class="surface-card border-round-lg p-4 shadow-1 h-full">
+                <h3 class="text-lg font-semibold text-900 m-0 mb-4">Cumplimiento por Marco</h3>
+                <div style="height: 250px;">
+                  <p-chart type="bar" [data]="chartData()" [options]="chartOptions" />
+                </div>
               </div>
             </div>
-            <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success" (onClick)="atenderAlerta(alerta)" pTooltip="Marcar como atendida" />
-          </div>
-        } @empty {
-          <div class="text-center py-4">
-            <i class="pi pi-check-circle text-3xl text-green-500 mb-2"></i>
-            <p class="text-500 m-0">No hay alertas activas</p>
-          </div>
-        }
-      </div>
-    </div>
 
-    <!-- Gestión de Revisiones -->
-    <div class="surface-card border-round-lg p-4 shadow-1 mt-4">
-      <div class="flex justify-content-between align-items-center mb-4">
-        <div>
-          <h3 class="text-lg font-semibold text-900 m-0">Revisiones</h3>
-          <p class="text-500 text-sm m-0 mt-1">Gestiona las revisiones de cuestionarios</p>
-        </div>
-        <p-button label="Nueva Revisión" icon="pi pi-plus" (onClick)="abrirAsignarDialog()" />
-      </div>
-      <p-table [value]="asignaciones()" styleClass="p-datatable-sm" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]">
-        <ng-template #header>
-          <tr>
-            <th>Titulo</th>
-            <th>Cuestionario</th>
-            <th>Tipo</th>
-            <th>Asignados</th>
-            <th>Procesos</th>
-            <th>Fecha Inicio</th>
-            <th>Vencimiento</th>
-            <th>Progreso</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-asignacion>
-          <tr>
-            <td>{{ asignacion.titulo }}</td>
-            <td>{{ getCuestionario(asignacion.cuestionarioId)?.nombre }}</td>
-            <td><p-tag [value]="asignacion.tipoRevision | titlecase" [severity]="asignacion.tipoRevision === 'externa' ? 'info' : 'secondary'" /></td>
-            <td>
-              <div class="flex align-items-center gap-1">
-                @for (nombre of asignacion.usuariosAsignadosNombres | slice:0:2; track nombre) {
-                  <p-avatar [label]="getAvatarLabel(nombre)" shape="circle" styleClass="bg-primary" />
-                }
-                @if (asignacion.usuariosAsignadosNombres.length > 2) {
-                  <span class="text-500 text-sm">+{{ asignacion.usuariosAsignadosNombres.length - 2 }}</span>
-                }
-                @if (asignacion.emailsExternos.length > 0) {
-                  <p-avatar icon="pi pi-envelope" shape="circle" styleClass="bg-purple-500" />
-                }
+            <!-- Grafico de pie -->
+            <div class="col-12 lg:col-6">
+              <div class="surface-card border-round-lg p-4 shadow-1 h-full">
+                <h3 class="text-lg font-semibold text-900 m-0 mb-4">Estado de Revisiones</h3>
+                <div style="height: 250px;">
+                  <p-chart type="pie" [data]="pieChartData()" [options]="pieChartOptions" />
+                </div>
               </div>
-            </td>
-            <td>
-              <div class="flex flex-wrap gap-1">
-                @for (proceso of asignacion.procesosObjetivoNombres | slice:0:2; track proceso) {
-                  <p-tag [value]="$any(proceso)" severity="secondary" styleClass="text-xs" />
-                }
-                @if (asignacion.procesosObjetivoNombres && asignacion.procesosObjetivoNombres.length > 2) {
-                  <span class="text-500 text-xs">+{{ asignacion.procesosObjetivoNombres.length - 2 }}</span>
-                }
-                @if (!asignacion.procesosObjetivoNombres || asignacion.procesosObjetivoNombres.length === 0) {
-                  <span class="text-400 text-sm">-</span>
-                }
-              </div>
-            </td>
-            <td>{{ asignacion.fechaInicio | date:'dd/MM/yyyy' }}</td>
-            <td>{{ asignacion.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
-            <td style="width: 120px">
-              <p-progressBar [value]="asignacion.progreso" [showValue]="false" styleClass="h-1rem" />
-              <span class="text-xs text-500">{{ asignacion.progreso }}%</span>
-            </td>
-            <td><p-tag [value]="asignacion.estado | titlecase" [severity]="getEstadoSeverity(asignacion.estado)" /></td>
-            <td>
-              <div class="flex gap-1">
-                <p-button icon="pi pi-file-edit" [rounded]="true" [text]="true" severity="secondary" pTooltip="Responder" (onClick)="responderCuestionario(asignacion)" />
-                <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info" pTooltip="Revisar" (onClick)="revisarCuestionario(asignacion)" />
-                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="warn" pTooltip="Editar" (onClick)="editarAsignacion(asignacion)" />
-                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="eliminarAsignacion(asignacion)" />
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template #emptymessage>
-          <tr>
-            <td colspan="10" class="text-center py-4">
-              <i class="pi pi-inbox text-3xl text-300 mb-2"></i>
-              <p class="text-500 m-0">No hay asignaciones</p>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
+            </div>
+          </div>
+
+          <!-- Alertas activas -->
+          <div class="surface-card border-round-lg p-4 shadow-1 mt-4">
+            <div class="flex justify-content-between align-items-center mb-4">
+              <h3 class="text-lg font-semibold text-900 m-0">Alertas Activas</h3>
+              <span class="text-500 text-sm">{{ alertasActivas().length }} alertas</span>
+            </div>
+            <div class="flex flex-column gap-3">
+              @for (alerta of alertasActivas(); track alerta.id) {
+                <div class="flex align-items-center justify-content-between p-3 surface-100 border-round">
+                  <div class="flex align-items-center gap-3">
+                    <p-tag [value]="alerta.severidad | uppercase" [severity]="getSeveridadAlerta(alerta.severidad)" />
+                    <div>
+                      <span class="font-medium text-900">{{ alerta.titulo }}</span>
+                      <p class="text-500 text-sm m-0">{{ alerta.descripcion }}</p>
+                    </div>
+                  </div>
+                  <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success" (onClick)="atenderAlerta(alerta)" pTooltip="Marcar como atendida" />
+                </div>
+              } @empty {
+                <div class="text-center py-4">
+                  <i class="pi pi-check-circle text-3xl text-green-500 mb-2"></i>
+                  <p class="text-500 m-0">No hay alertas activas</p>
+                </div>
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
   </div>
 </div>
 }
