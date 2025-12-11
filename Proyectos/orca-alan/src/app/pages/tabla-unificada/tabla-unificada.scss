@@ -160,6 +160,51 @@
   gap: 0.5rem;
 }
 
+// Filtros en header de tabla
+:host ::ng-deep {
+  .p-datatable .p-datatable-thead > tr:nth-child(2) > th {
+    padding: 0.5rem;
+    background: var(--surface-50);
+    border-top: none;
+  }
+
+  .p-column-filter {
+    width: 100%;
+  }
+
+  .p-column-filter-menu-button,
+  .p-column-filter-clear-button {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .p-datatable-thead .p-inputtext {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .p-datatable-thead .p-select {
+    .p-select-label {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .p-datatable-thead .p-datepicker {
+    .p-inputtext {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .p-datatable-thead .p-inputnumber {
+    .p-inputtext {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
+}
+
 .filter-button {
   background: none;
   border: none;

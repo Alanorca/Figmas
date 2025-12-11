@@ -1,93 +1,248 @@
 <div class="graficas-interactivas-container" [class.dark-mode]="tema() === 'dark'">
-  <!-- Toolbar de controles -->
-  <div class="graficas-toolbar">
-    <!-- Selector de tipo de gráfica -->
-    <div class="toolbar-section tipos-section">
-      <span class="section-label">Tipo de Gráfica</span>
-      <div class="tipos-grid">
-        @for (grupo of tiposGraficaOpciones; track grupo.label) {
-          <div class="tipo-grupo">
-            <span class="grupo-label">{{ grupo.label }}</span>
-            <div class="tipo-buttons">
-              @for (item of grupo.items; track item.value) {
-                <button
-                  class="tipo-btn"
-                  [class.active]="tipoGrafica() === item.value"
-                  (click)="cambiarTipo(item.value)"
-                  [pTooltip]="item.label"
-                  tooltipPosition="top">
-                  <i [class]="item.icon"></i>
-                </button>
-              }
-            </div>
+  <!-- Panel de Configuración -->
+  <div class="config-panel">
+    <div class="config-header">
+      <h3><i class="pi pi-cog mr-2"></i>Configuración de Gráfica</h3>
+    </div>
+
+    <div class="config-body">
+      <!-- PASO 1: Tipo de Gráfica -->
+      <div class="config-section">
+        <div class="step-header">
+          <span class="step-number">1</span>
+          <h4><i class="pi pi-chart-pie mr-2"></i>Tipo de Gráfica</h4>
+        </div>
+
+        <div class="config-field">
+          <p-select
+            [options]="tiposGraficaFlat()"
+            [ngModel]="tipoGrafica()"
+            (ngModelChange)="cambiarTipo($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar tipo de gráfica"
+            appendTo="body"
+            [style]="{ width: '100%' }">
+            <ng-template let-option pTemplate="item">
+              <div class="tipo-option">
+                <i [class]="getTipoIcon(option.value)" class="mr-2"></i>
+                <span>{{ option.label }}</span>
+                <small class="tipo-group">({{ option.group }})</small>
+              </div>
+            </ng-template>
+            <ng-template let-option pTemplate="selectedItem">
+              <div class="tipo-option">
+                <i [class]="getTipoIcon(option.value)" class="mr-2"></i>
+                <span>{{ option.label }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <!-- Asistente en Accordion colapsable -->
+        <p-accordion [multiple]="true" styleClass="asistente-accordion">
+          <p-accordionpanel value="asistente">
+            <p-accordionheader>
+              <span class="accordion-header-content">
+                <i class="pi pi-sparkles mr-2"></i>
+                Asistente de Visualización
+              </span>
+            </p-accordionheader>
+            <p-accordioncontent>
+              <div class="asistente-content">
+                @for (rec of recomendacionesAsistente(); track rec.titulo) {
+                  <div class="asistente-item" [class]="'asistente-' + rec.tipo">
+                    <div class="asistente-icon">
+                      <i [class]="rec.icono"></i>
+                    </div>
+                    <div class="asistente-texto">
+                      <span class="asistente-titulo">{{ rec.titulo }}</span>
+                      <p class="asistente-mensaje">{{ rec.mensaje }}</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            </p-accordioncontent>
+          </p-accordionpanel>
+        </p-accordion>
+      </div>
+
+      <p-divider />
+
+      <!-- PASO 2: Selección de Datos -->
+      <div class="config-section">
+        <div class="step-header">
+          <span class="step-number">2</span>
+          <h4><i class="pi pi-database mr-2"></i>Datos</h4>
+        </div>
+
+        <!-- Eje X / Categorías (siempre visible) -->
+        <div class="config-field">
+          <label>
+            @if (esGraficaCircular()) {
+              Categorías (segmentos)
+            } @else {
+              Eje X (Categorías)
+            }
+          </label>
+          <p-select
+            [options]="camposDisponibles"
+            [ngModel]="campoEjeX()"
+            (ngModelChange)="onCampoChange($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar campo"
+            appendTo="body"
+            [style]="{ width: '100%' }">
+            <ng-template let-option pTemplate="item">
+              <div class="campo-option">
+                <span class="campo-label">{{ option.label }}</span>
+                <p-tag
+                  [value]="option.tipo"
+                  [severity]="option.tipo === 'categoria' ? 'info' : option.tipo === 'numerico' ? 'success' : 'warn'"
+                  styleClass="campo-tipo-tag" />
+              </div>
+            </ng-template>
+            <ng-template let-option pTemplate="selectedItem">
+              <div class="campo-option">
+                <span>{{ option.label }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+          <small class="field-hint">{{ getCampoDescripcion(campoEjeX()) }}</small>
+        </div>
+
+        <!-- Eje Y (solo si es necesario) -->
+        @if (necesitaEjeY()) {
+          <div class="config-field">
+            <label>Eje Y (Valores)</label>
+            <p-select
+              [options]="camposNumericos()"
+              [ngModel]="campoEjeY()"
+              (ngModelChange)="campoEjeY.set($event)"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccionar campo numérico"
+              appendTo="body"
+              [style]="{ width: '100%' }">
+              <ng-template let-option pTemplate="item">
+                <div class="campo-option">
+                  <span class="campo-label">{{ option.label }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+            <small class="field-hint">Campo numérico para el eje vertical</small>
           </div>
         }
-      </div>
-    </div>
 
-    <!-- Selector de paleta -->
-    <div class="toolbar-section">
-      <span class="section-label">Paleta de Colores</span>
-      <div class="paletas-grid">
-        @for (paleta of ['vibrant', 'pastel', 'neon', 'corporate', 'ocean', 'sunset']; track paleta) {
-          <button
-            class="paleta-btn"
-            [class.active]="paletaSeleccionada() === paleta"
-            (click)="cambiarPaleta(paleta)"
-            [pTooltip]="paleta | titlecase"
-            tooltipPosition="top">
-            <div class="paleta-preview">
-              @for (color of paletas[paleta].slice(0, 5); track $index) {
-                <span class="color-dot" [style.background]="color"></span>
-              }
-            </div>
-          </button>
+        <!-- Campos recomendados en Accordion -->
+        @if (camposRecomendados().length > 0) {
+          <p-accordion styleClass="campos-accordion">
+            <p-accordionpanel value="campos">
+              <p-accordionheader>
+                <span class="accordion-header-content">
+                  <i class="pi pi-lightbulb mr-2"></i>
+                  Campos recomendados
+                </span>
+              </p-accordionheader>
+              <p-accordioncontent>
+                <div class="recomendados-chips">
+                  @for (campo of camposRecomendados(); track campo.value) {
+                    <button
+                      class="campo-chip"
+                      [class.active]="campoEjeX() === campo.value"
+                      (click)="onCampoChange(campo.value)"
+                      pTooltip="{{ campo.descripcion }}"
+                      tooltipPosition="top">
+                      {{ campo.label }}
+                    </button>
+                  }
+                </div>
+              </p-accordioncontent>
+            </p-accordionpanel>
+          </p-accordion>
         }
       </div>
-    </div>
 
-    <!-- Toggles de opciones -->
-    <div class="toolbar-section opciones-section">
-      <span class="section-label">Opciones</span>
-      <div class="opciones-grid">
-        <button
-          class="opcion-btn"
-          [class.active]="animaciones()"
-          (click)="toggleAnimaciones()"
-          pTooltip="Animaciones">
-          <i class="pi pi-play"></i>
-          <span>Animaciones</span>
-        </button>
-        <button
-          class="opcion-btn"
-          [class.active]="mostrarLeyenda()"
-          (click)="toggleLeyenda()"
-          pTooltip="Leyenda">
-          <i class="pi pi-list"></i>
-          <span>Leyenda</span>
-        </button>
-        <button
-          class="opcion-btn"
-          [class.active]="mostrarDataLabels()"
-          (click)="toggleDataLabels()"
-          pTooltip="Etiquetas">
-          <i class="pi pi-tag"></i>
-          <span>Etiquetas</span>
-        </button>
-        <button
-          class="opcion-btn"
-          [class.active]="tema() === 'dark'"
-          (click)="toggleTema()"
-          pTooltip="Tema oscuro">
-          <i [class]="tema() === 'dark' ? 'pi pi-sun' : 'pi pi-moon'"></i>
-          <span>{{ tema() === 'dark' ? 'Claro' : 'Oscuro' }}</span>
-        </button>
+      <p-divider />
+
+      <!-- PASO 3: Colores -->
+      <div class="config-section">
+        <div class="step-header">
+          <span class="step-number">3</span>
+          <h4><i class="pi pi-palette mr-2"></i>Colores</h4>
+        </div>
+
+        <div class="config-field">
+          <p-select
+            [options]="paletasOptions"
+            [ngModel]="paletaSeleccionada()"
+            (ngModelChange)="cambiarPaleta($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar paleta"
+            appendTo="body"
+            [style]="{ width: '100%' }">
+            <ng-template let-option pTemplate="item">
+              <div class="paleta-option">
+                <div class="paleta-colores">
+                  @for (color of paletas[option.value].slice(0, 5); track $index) {
+                    <span class="color-dot" [style.background]="color"></span>
+                  }
+                </div>
+                <div class="paleta-info">
+                  <span class="paleta-nombre">{{ option.label }}</span>
+                  <small class="paleta-desc">{{ option.descripcion }}</small>
+                </div>
+              </div>
+            </ng-template>
+            <ng-template let-option pTemplate="selectedItem">
+              <div class="paleta-option-selected">
+                <div class="paleta-colores">
+                  @for (color of paletas[option.value].slice(0, 5); track $index) {
+                    <span class="color-dot" [style.background]="color"></span>
+                  }
+                </div>
+                <span>{{ option.label }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+      </div>
+
+      <p-divider />
+
+      <!-- PASO 4: Opciones -->
+      <div class="config-section">
+        <div class="step-header">
+          <span class="step-number">4</span>
+          <h4><i class="pi pi-sliders-h mr-2"></i>Opciones</h4>
+        </div>
+
+        <div class="opciones-toggles">
+          <div class="toggle-item" [class.active]="animaciones()" (click)="toggleAnimaciones()">
+            <i class="pi pi-play"></i>
+            <span>Animaciones</span>
+          </div>
+          <div class="toggle-item" [class.active]="mostrarLeyenda()" (click)="toggleLeyenda()">
+            <i class="pi pi-list"></i>
+            <span>Leyenda</span>
+          </div>
+          <div class="toggle-item" [class.active]="mostrarDataLabels()" (click)="toggleDataLabels()">
+            <i class="pi pi-tag"></i>
+            <span>Etiquetas</span>
+          </div>
+          <div class="toggle-item" [class.active]="tema() === 'dark'" (click)="toggleTema()">
+            <i [class]="tema() === 'dark' ? 'pi pi-sun' : 'pi pi-moon'"></i>
+            <span>{{ tema() === 'dark' ? 'Claro' : 'Oscuro' }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Contenedor de la gráfica -->
-  <div class="chart-wrapper">
+  <!-- Área de la Gráfica -->
+  <div class="chart-area">
     <div class="chart-header">
       <div class="chart-info">
         <p-tag [value]="getTipoLabel(tipoGrafica())" severity="info" styleClass="tipo-tag" />
@@ -159,18 +314,18 @@
         <span class="stat-label">Paleta</span>
       </div>
     </div>
-  </div>
 
-  <!-- Tips de interactividad -->
-  <div class="interactivity-tips">
-    <p-tag icon="pi pi-info-circle" severity="secondary" styleClass="tip-tag">
-      <span class="tip-text">
-        <strong>Tips:</strong>
-        Haz clic en la leyenda para ocultar series |
-        Usa scroll para zoom |
-        Arrastra para pan |
-        Clic en barras/sectores para detalle
-      </span>
-    </p-tag>
+    <!-- Tips de interactividad -->
+    <div class="interactivity-tips">
+      <p-tag icon="pi pi-info-circle" severity="secondary" styleClass="tip-tag">
+        <span class="tip-text">
+          <strong>Tips:</strong>
+          Clic en leyenda para ocultar series |
+          Scroll para zoom |
+          Arrastra para pan |
+          Clic en elementos para detalle
+        </span>
+      </p-tag>
+    </div>
   </div>
 </div>

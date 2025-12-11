@@ -124,7 +124,7 @@
       [rowsPerPageOptions]="[10, 25, 50, 100]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
-      [globalFilterFields]="['descripcion', 'contenedorNombre', 'responsable', 'estado', 'tipoEntidad']"
+      [globalFilterFields]="['descripcion', 'contenedorNombre', 'responsable', 'estado', 'tipoEntidad', 'severidad']"
       [filterDelay]="300"
       [rowHover]="true"
       [resizableColumns]="true"
@@ -132,8 +132,9 @@
       styleClass="p-datatable-sm p-datatable-gridlines"
       [tableStyle]="{ 'min-width': '60rem' }">
 
-      <!-- Headers -->
+      <!-- Headers con filtros -->
       <ng-template pTemplate="header" let-columns>
+        <!-- Fila de títulos -->
         <tr>
           @for (col of columns; track col.field) {
             <th
@@ -149,6 +150,194 @@
             </th>
           }
           <th style="width: 80px">Acciones</th>
+        </tr>
+        <!-- Fila de filtros -->
+        <tr>
+          @for (col of columns; track col.field) {
+            <th>
+              @switch (col.field) {
+                @case ('tipoEntidad') {
+                  <p-columnFilter field="tipoEntidad" matchMode="equals" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <p-select
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        [options]="tipoEntidadOptions"
+                        placeholder="Todos"
+                        [showClear]="true"
+                        appendTo="body"
+                        [style]="{ width: '100%', 'min-width': '120px' }">
+                        <ng-template let-option pTemplate="item">
+                          <div class="flex align-items-center gap-2">
+                            <i [class]="option.icon"></i>
+                            <span>{{ option.label }}</span>
+                          </div>
+                        </ng-template>
+                      </p-select>
+                    </ng-template>
+                  </p-columnFilter>
+                }
+                @case ('estado') {
+                  <p-columnFilter field="estado" matchMode="equals" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <p-select
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        [options]="estadoOptions"
+                        placeholder="Todos"
+                        [showClear]="true"
+                        appendTo="body"
+                        [style]="{ width: '100%', 'min-width': '130px' }">
+                        <ng-template let-option pTemplate="item">
+                          <p-tag [value]="option.label" [severity]="getEstadoTag(option.value)" />
+                        </ng-template>
+                      </p-select>
+                    </ng-template>
+                  </p-columnFilter>
+                }
+                @case ('severidad') {
+                  <p-columnFilter field="severidad" matchMode="equals" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <p-select
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        [options]="severidadOptions"
+                        placeholder="Todas"
+                        [showClear]="true"
+                        appendTo="body"
+                        [style]="{ width: '100%', 'min-width': '120px' }">
+                        <ng-template let-option pTemplate="item">
+                          <p-tag [value]="option.label" [severity]="getSeveridadTag(option.value)" />
+                        </ng-template>
+                      </p-select>
+                    </ng-template>
+                  </p-columnFilter>
+                }
+                @case ('nivelRiesgo') {
+                  <p-columnFilter field="nivelRiesgo" matchMode="equals" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <p-select
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        [options]="nivelRiesgoOptions"
+                        placeholder="Todos"
+                        [showClear]="true"
+                        appendTo="body"
+                        [style]="{ width: '100%', 'min-width': '120px' }">
+                        <ng-template let-option pTemplate="item">
+                          <p-tag [value]="option.label" [severity]="option.severity" />
+                        </ng-template>
+                      </p-select>
+                    </ng-template>
+                  </p-columnFilter>
+                }
+                @case ('fecha') {
+                  <p-columnFilter type="date" field="fecha" display="menu" [showMenu]="true">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <p-datePicker
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        dateFormat="dd/mm/yy"
+                        placeholder="Filtrar fecha"
+                        [showIcon]="true"
+                        [style]="{ width: '100%', 'min-width': '140px' }" />
+                    </ng-template>
+                  </p-columnFilter>
+                }
+                @case ('probabilidad') {
+                  <p-columnFilter type="numeric" field="probabilidad" display="menu" [showMenu]="true">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <p-inputNumber
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        [min]="1"
+                        [max]="5"
+                        placeholder="1-5"
+                        [style]="{ width: '80px' }" />
+                    </ng-template>
+                  </p-columnFilter>
+                }
+                @case ('impacto') {
+                  <p-columnFilter type="numeric" field="impacto" display="menu" [showMenu]="true">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <p-inputNumber
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        [min]="1"
+                        [max]="5"
+                        placeholder="1-5"
+                        [style]="{ width: '80px' }" />
+                    </ng-template>
+                  </p-columnFilter>
+                }
+                @case ('descripcion') {
+                  <p-columnFilter type="text" field="descripcion" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <input
+                        pInputText
+                        type="text"
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        placeholder="Buscar..."
+                        class="p-column-filter"
+                        [style]="{ width: '100%', 'min-width': '150px' }" />
+                    </ng-template>
+                  </p-columnFilter>
+                }
+                @case ('contenedorNombre') {
+                  <p-columnFilter type="text" field="contenedorNombre" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <input
+                        pInputText
+                        type="text"
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        placeholder="Buscar..."
+                        class="p-column-filter"
+                        [style]="{ width: '100%', 'min-width': '150px' }" />
+                    </ng-template>
+                  </p-columnFilter>
+                }
+                @case ('responsable') {
+                  <p-columnFilter type="text" field="responsable" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <input
+                        pInputText
+                        type="text"
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        placeholder="Buscar..."
+                        class="p-column-filter"
+                        [style]="{ width: '100%', 'min-width': '120px' }" />
+                    </ng-template>
+                  </p-columnFilter>
+                }
+                @default {
+                  <p-columnFilter type="text" [field]="col.field" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                      <input
+                        pInputText
+                        type="text"
+                        [ngModel]="value"
+                        (ngModelChange)="filter($event)"
+                        placeholder="Buscar..."
+                        class="p-column-filter"
+                        [style]="{ width: '100%' }" />
+                    </ng-template>
+                  </p-columnFilter>
+                }
+              }
+            </th>
+          }
+          <th>
+            <p-button
+              icon="pi pi-filter-slash"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              (onClick)="dt.clear()"
+              pTooltip="Limpiar filtros" />
+          </th>
         </tr>
       </ng-template>
 
@@ -441,29 +630,13 @@
   [resizable]="false"
   styleClass="graficas-dialog">
 
-  <!-- Selector de columna para agrupar -->
-  <div class="columna-selector">
-    <span class="selector-label">Agrupar por:</span>
-    <p-select
-      [options]="columnasGraficaOptions"
-      [(ngModel)]="columnaGraficaSeleccionada"
-      optionLabel="label"
-      optionValue="value"
-      [style]="{ width: '220px' }" />
-    <span class="registros-info">
-      <i class="pi pi-database mr-1"></i>
-      {{ contadores().total }} registros
-      @if (estado().filtrosActivos.length > 0) {
-        <p-tag value="filtrados" severity="info" styleClass="ml-2" />
-      }
-    </span>
-  </div>
-
   <!-- Componente de Gráficas Interactivas -->
   <app-graficas-interactivas
     [datos]="datosGraficaInteractiva()"
+    [campoInicial]="columnaGraficaSeleccionada()"
     [titulo]="getTituloGrafica()"
-    [subtitulo]="'Datos de Riesgos e Incidentes'"
+    [subtitulo]="'Datos de Riesgos e Incidentes - ' + contadores().total + ' registros'"
+    (campoSeleccionado)="onCampoGraficaChange($event)"
     (dataPointClick)="onGraficaDataPointClick($event)"
     (legendClick)="onGraficaLegendClick($event)" />
 

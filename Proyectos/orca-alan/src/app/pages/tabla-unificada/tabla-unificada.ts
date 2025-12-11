@@ -114,6 +114,37 @@ export class TablaUnificadaComponent {
     { label: 'Incidentes', value: 'incidente', icon: 'pi pi-exclamation-triangle' }
   ];
 
+  // Opciones para filtros de columna
+  tipoEntidadOptions = [
+    { label: 'Riesgo', value: 'riesgo', icon: 'pi pi-shield' },
+    { label: 'Incidente', value: 'incidente', icon: 'pi pi-exclamation-triangle' }
+  ];
+
+  estadoOptions = [
+    { label: 'Identificado', value: 'identificado' },
+    { label: 'Evaluado', value: 'evaluado' },
+    { label: 'Mitigado', value: 'mitigado' },
+    { label: 'Aceptado', value: 'aceptado' },
+    { label: 'Abierto', value: 'abierto' },
+    { label: 'En Proceso', value: 'en_proceso' },
+    { label: 'Resuelto', value: 'resuelto' },
+    { label: 'Cerrado', value: 'cerrado' }
+  ];
+
+  severidadOptions = [
+    { label: 'Crítica', value: 'critica' },
+    { label: 'Alta', value: 'alta' },
+    { label: 'Media', value: 'media' },
+    { label: 'Baja', value: 'baja' }
+  ];
+
+  nivelRiesgoOptions = [
+    { label: 'Crítico (15-25)', value: 'critico', severity: 'danger' as const, min: 15, max: 25 },
+    { label: 'Alto (10-14)', value: 'alto', severity: 'warn' as const, min: 10, max: 14 },
+    { label: 'Medio (5-9)', value: 'medio', severity: 'info' as const, min: 5, max: 9 },
+    { label: 'Bajo (1-4)', value: 'bajo', severity: 'success' as const, min: 1, max: 4 }
+  ];
+
   // Opciones de operadores
   operadoresTexto = [
     { label: 'Contiene', value: 'contiene' },
@@ -427,6 +458,11 @@ export class TablaUnificadaComponent {
   getTituloGrafica(): string {
     const opcion = this.columnasGraficaOptions.find(o => o.value === this.columnaGraficaSeleccionada());
     return `Distribución por ${opcion?.label || 'Categoría'}`;
+  }
+
+  onCampoGraficaChange(event: { campo: string; tipo: string }): void {
+    // Actualizar la columna seleccionada cuando cambia en el componente de gráficas
+    this.columnaGraficaSeleccionada.set(event.campo);
   }
 
   onGraficaDataPointClick(event: { categoria: string; valor: number; serie?: string }): void {
