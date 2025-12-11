@@ -833,11 +833,16 @@ export class CuestionariosComponent {
     const labels: Record<string, string> = {
       'texto': 'Text Input',
       'textoLargo': 'Textarea',
+      'boolean': 'True/False',
       'numero': 'Number',
       'seleccionUnica': 'Single Choice',
       'opcionMultiple': 'Multiple Choice',
       'radioButtons': 'Radio Buttons',
-      'escala': 'Scale/Rating',
+      'starRating': 'Star Rating',
+      'likertScale': 'Likert Scale',
+      'escala': 'Numeric Scale',
+      'semanticDiff': 'Semantic Differential',
+      'ranking': 'Ranking',
       'siNoNa': 'Yes/No/N/A',
       'fecha': 'Date',
       'archivo': 'File Upload',
@@ -1009,18 +1014,40 @@ export class CuestionariosComponent {
   }
 
   duplicarCuestionario(cuestionario: Cuestionario) {
-    const copia: Cuestionario = {
-      ...cuestionario,
+    // Crear copia profunda del cuestionario
+    const copia: Cuestionario = JSON.parse(JSON.stringify(cuestionario));
+
+    // Generar nuevos IDs
+    copia.id = crypto.randomUUID();
+    copia.nombre = `${cuestionario.nombre} (Copia)`;
+    copia.estado = 'borrador';
+    copia.fechaCreacion = new Date();
+    copia.fechaModificacion = new Date();
+    copia.respuestas = 0;
+    copia.tasaCompletado = 0;
+
+    // Generar nuevos IDs para secciones y preguntas
+    copia.secciones = copia.secciones.map(seccion => ({
+      ...seccion,
       id: crypto.randomUUID(),
-      nombre: `${cuestionario.nombre} (copia)`,
-      estado: 'borrador',
-      respuestas: 0,
-      tasaCompletado: 0,
-      fechaCreacion: new Date(),
-      fechaModificacion: new Date()
-    };
+      preguntas: seccion.preguntas.map(pregunta => ({
+        ...pregunta,
+        id: crypto.randomUUID()
+      }))
+    }));
+
+    // Agregar a la lista
     this.cuestionarios.update(lista => [...lista, copia]);
-    this.messageService.add({ severity: 'success', summary: 'Duplicado', detail: 'Cuestionario duplicado exitosamente' });
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Duplicado',
+      detail: `Se creó una copia de "${cuestionario.nombre}"`
+    });
+
+    // Abrir el editor con la copia
+    this.cuestionarioSeleccionado.set(copia);
+    this.vistaActual.set('editor');
   }
 
   eliminarCuestionario(cuestionario: Cuestionario) {
@@ -1181,7 +1208,13 @@ export class CuestionariosComponent {
     }
 
     if (preguntaCondicionante.opciones && preguntaCondicionante.opciones.length > 0) {
-      return preguntaCondicionante.opciones.map(op => ({ label: op, value: op }));
+      return preguntaCondicionante.opciones.map(op => {
+        if (typeof op === 'string') {
+          return { label: op, value: op };
+        } else {
+          return { label: op.text, value: op.text };
+        }
+      });
     }
 
     return [];

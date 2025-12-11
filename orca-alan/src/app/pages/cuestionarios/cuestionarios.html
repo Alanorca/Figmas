@@ -106,6 +106,7 @@
               <div class="flex gap-1" (click)="$event.stopPropagation()">
                 <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info" size="small" pTooltip="Ver detalle" (onClick)="verDetalleCuestionario(cuestionario)" />
                 <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" size="small" pTooltip="Editar" (onClick)="editarCuestionario(cuestionario)" />
+                <p-button icon="pi pi-copy" [rounded]="true" [text]="true" severity="help" size="small" pTooltip="Duplicar" (onClick)="duplicarCuestionario(cuestionario)" />
                 <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" pTooltip="Eliminar" (onClick)="eliminarCuestionario(cuestionario)" />
               </div>
             </td>
@@ -891,6 +892,7 @@
             </div>
             <div class="flex align-items-center gap-2">
               <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="editarCuestionario(cuestionarioSeleccionado()!)" pTooltip="Editar en editor" />
+              <p-button icon="pi pi-copy" [rounded]="true" [text]="true" severity="help" (onClick)="duplicarCuestionario(cuestionarioSeleccionado()!)" pTooltip="Duplicar" />
               <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="eliminarCuestionario(cuestionarioSeleccionado()!)" pTooltip="Eliminar" />
             </div>
           </div>
@@ -966,6 +968,52 @@
                                 <div class="p-2 border-1 border-dashed surface-border border-round text-center">
                                   <i class="pi pi-upload text-400"></i>
                                   <span class="text-500 text-xs ml-2">Subir archivo</span>
+                                </div>
+                              }
+                              @case ('starRating') {
+                                <p-rating [stars]="pregunta.maxStars || 5" [disabled]="true" />
+                              }
+                              @case ('likertScale') {
+                                <div class="flex gap-2">
+                                  @for (label of (pregunta.likertLabels || ['Muy en desacuerdo', 'En desacuerdo', 'Neutral', 'De acuerdo', 'Muy de acuerdo']); track label; let i = $index) {
+                                    <div class="flex flex-column align-items-center gap-1">
+                                      <p-radioButton [disabled]="true" />
+                                      <span class="text-xs text-500 text-center" style="max-width: 60px;">{{ label }}</span>
+                                    </div>
+                                  }
+                                </div>
+                              }
+                              @case ('semanticDiff') {
+                                <div class="flex align-items-center gap-3">
+                                  <span class="text-sm text-700">{{ pregunta.leftAnchor || 'Muy malo' }}</span>
+                                  <div class="flex gap-2 flex-1 justify-content-center">
+                                    @for (i of [1,2,3,4,5,6,7]; track i) {
+                                      <p-radioButton [disabled]="true" />
+                                    }
+                                  </div>
+                                  <span class="text-sm text-700">{{ pregunta.rightAnchor || 'Excelente' }}</span>
+                                </div>
+                              }
+                              @case ('ranking') {
+                                <div class="flex flex-column gap-2">
+                                  @for (opcion of (pregunta.opciones || ['Opción 1', 'Opción 2', 'Opción 3']); track opcion; let i = $index) {
+                                    <div class="flex align-items-center gap-2 p-2 surface-100 border-round">
+                                      <i class="pi pi-bars text-400 cursor-move"></i>
+                                      <span class="text-sm">{{ i + 1 }}. {{ opcion }}</span>
+                                    </div>
+                                  }
+                                </div>
+                              }
+                              @case ('boolean') {
+                                <div class="flex gap-3">
+                                  <div class="flex align-items-center gap-1">
+                                    <p-radioButton [disabled]="true" />
+                                    <span class="text-sm">Verdadero</span>
+                                  </div>
+                                  <div class="flex align-items-center gap-1">
+                                    <p-radioButton [disabled]="true" />
+                                    <span class="text-sm">Falso</span>
+                                  </div>
                                 </div>
                               }
                               @default {
@@ -1189,6 +1237,61 @@
               <div>
                 <span class="text-sm font-medium">URL</span>
                 <p class="text-xs text-500 m-0">Website link field</p>
+              </div>
+            </div>
+            <i class="pi pi-plus text-primary"></i>
+          </div>
+          <div class="flex align-items-center justify-content-between p-2 border-round hover:surface-100 cursor-pointer"
+               pDraggable="pregunta" (onDragStart)="iniciarArrastre('starRating')">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-star text-yellow-500"></i>
+              <div>
+                <span class="text-sm font-medium">Star Rating</span>
+                <p class="text-xs text-500 m-0">1-5 or 1-10 stars</p>
+              </div>
+            </div>
+            <i class="pi pi-plus text-primary"></i>
+          </div>
+          <div class="flex align-items-center justify-content-between p-2 border-round hover:surface-100 cursor-pointer"
+               pDraggable="pregunta" (onDragStart)="iniciarArrastre('likertScale')">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-chart-bar text-blue-500"></i>
+              <div>
+                <span class="text-sm font-medium">Likert Scale</span>
+                <p class="text-xs text-500 m-0">Agreement scale (5 options)</p>
+              </div>
+            </div>
+            <i class="pi pi-plus text-primary"></i>
+          </div>
+          <div class="flex align-items-center justify-content-between p-2 border-round hover:surface-100 cursor-pointer"
+               pDraggable="pregunta" (onDragStart)="iniciarArrastre('semanticDiff')">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-arrows-h text-purple-500"></i>
+              <div>
+                <span class="text-sm font-medium">Semantic Differential</span>
+                <p class="text-xs text-500 m-0">Scale between opposites</p>
+              </div>
+            </div>
+            <i class="pi pi-plus text-primary"></i>
+          </div>
+          <div class="flex align-items-center justify-content-between p-2 border-round hover:surface-100 cursor-pointer"
+               pDraggable="pregunta" (onDragStart)="iniciarArrastre('ranking')">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-sort-amount-up text-teal-500"></i>
+              <div>
+                <span class="text-sm font-medium">Ranking</span>
+                <p class="text-xs text-500 m-0">Order by preference</p>
+              </div>
+            </div>
+            <i class="pi pi-plus text-primary"></i>
+          </div>
+          <div class="flex align-items-center justify-content-between p-2 border-round hover:surface-100 cursor-pointer"
+               pDraggable="pregunta" (onDragStart)="iniciarArrastre('boolean')">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-check-square text-green-500"></i>
+              <div>
+                <span class="text-sm font-medium">True/False</span>
+                <p class="text-xs text-500 m-0">Boolean toggle</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>

@@ -55,13 +55,35 @@ export interface Seccion {
   peso: number;
 }
 
+// Tipos de pregunta soportados según documentación
+export type TipoPregunta =
+  | 'texto'           // FREE_TEXT - Texto corto
+  | 'textoLargo'      // FREE_TEXT - Texto largo (textarea)
+  | 'boolean'         // BOOLEAN - Verdadero/Falso
+  | 'numero'          // NUMBER - Campo numérico
+  | 'siNoNa'          // YES_NO - Sí/No/N/A
+  | 'seleccionUnica'  // SINGLE_SELECT / DROPDOWN - Opción única
+  | 'opcionMultiple'  // MULTI_SELECT - Selección múltiple
+  | 'radioButtons'    // Radio buttons para opciones
+  | 'starRating'      // STAR_RATING - Calificación con estrellas (1-5 o 1-10)
+  | 'likertScale'     // LIKERT_SCALE - Escala de acuerdo (5 opciones fijas)
+  | 'escala'          // NUMERIC_SCALE - Escala numérica con slider
+  | 'semanticDiff'    // SEMANTIC_DIFFERENTIAL - Escala entre opuestos
+  | 'ranking'         // RANKING - Ordenamiento por preferencia
+  | 'fecha'           // Date picker
+  | 'archivo'         // File upload
+  | 'matriz'          // Matriz de preguntas
+  | 'grupo'           // Agrupador de preguntas
+  | 'calculado'       // Campo calculado
+  | 'url';            // URL/Link
+
 export interface Pregunta {
   id: string;
   texto: string;
-  tipo: 'texto' | 'opcionMultiple' | 'seleccionUnica' | 'escala' | 'fecha' | 'numero' | 'archivo' | 'matriz' | 'siNoNa' | 'grupo' | 'textoLargo' | 'radioButtons' | 'calculado' | 'url';
+  tipo: TipoPregunta;
   requerida: boolean;
   peso: number;
-  opciones?: string[];
+  opciones?: string[] | { text: string; score: number }[];  // Opciones con puntaje para cálculo de compliance
   escalaMin?: number;
   escalaMax?: number;
   ayuda?: string;
@@ -69,6 +91,13 @@ export interface Pregunta {
   requisitoNormativoId?: string;
   controlAsociado?: string;
   requiereEvidencia: boolean;
+  // Campos para STAR_RATING
+  maxStars?: number;  // 5 o 10 estrellas
+  // Campos para SEMANTIC_DIFFERENTIAL
+  leftAnchor?: string;   // Etiqueta izquierda (ej: "Muy malo")
+  rightAnchor?: string;  // Etiqueta derecha (ej: "Excelente")
+  // Campos para LIKERT_SCALE (opciones predefinidas)
+  likertLabels?: string[];  // Ej: ["Totalmente en desacuerdo", "En desacuerdo", "Neutral", "De acuerdo", "Totalmente de acuerdo"]
   // Logica condicional - segun especificacion del documento
   displayConditionQuestionId?: string;  // ID de la pregunta condicionante
   displayConditionAnswer?: string;       // Respuesta esperada para mostrar esta pregunta
