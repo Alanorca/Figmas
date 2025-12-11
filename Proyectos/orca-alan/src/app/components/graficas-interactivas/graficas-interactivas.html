@@ -1,0 +1,176 @@
+<div class="graficas-interactivas-container" [class.dark-mode]="tema() === 'dark'">
+  <!-- Toolbar de controles -->
+  <div class="graficas-toolbar">
+    <!-- Selector de tipo de gráfica -->
+    <div class="toolbar-section tipos-section">
+      <span class="section-label">Tipo de Gráfica</span>
+      <div class="tipos-grid">
+        @for (grupo of tiposGraficaOpciones; track grupo.label) {
+          <div class="tipo-grupo">
+            <span class="grupo-label">{{ grupo.label }}</span>
+            <div class="tipo-buttons">
+              @for (item of grupo.items; track item.value) {
+                <button
+                  class="tipo-btn"
+                  [class.active]="tipoGrafica() === item.value"
+                  (click)="cambiarTipo(item.value)"
+                  [pTooltip]="item.label"
+                  tooltipPosition="top">
+                  <i [class]="item.icon"></i>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Selector de paleta -->
+    <div class="toolbar-section">
+      <span class="section-label">Paleta de Colores</span>
+      <div class="paletas-grid">
+        @for (paleta of ['vibrant', 'pastel', 'neon', 'corporate', 'ocean', 'sunset']; track paleta) {
+          <button
+            class="paleta-btn"
+            [class.active]="paletaSeleccionada() === paleta"
+            (click)="cambiarPaleta(paleta)"
+            [pTooltip]="paleta | titlecase"
+            tooltipPosition="top">
+            <div class="paleta-preview">
+              @for (color of paletas[paleta].slice(0, 5); track $index) {
+                <span class="color-dot" [style.background]="color"></span>
+              }
+            </div>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Toggles de opciones -->
+    <div class="toolbar-section opciones-section">
+      <span class="section-label">Opciones</span>
+      <div class="opciones-grid">
+        <button
+          class="opcion-btn"
+          [class.active]="animaciones()"
+          (click)="toggleAnimaciones()"
+          pTooltip="Animaciones">
+          <i class="pi pi-play"></i>
+          <span>Animaciones</span>
+        </button>
+        <button
+          class="opcion-btn"
+          [class.active]="mostrarLeyenda()"
+          (click)="toggleLeyenda()"
+          pTooltip="Leyenda">
+          <i class="pi pi-list"></i>
+          <span>Leyenda</span>
+        </button>
+        <button
+          class="opcion-btn"
+          [class.active]="mostrarDataLabels()"
+          (click)="toggleDataLabels()"
+          pTooltip="Etiquetas">
+          <i class="pi pi-tag"></i>
+          <span>Etiquetas</span>
+        </button>
+        <button
+          class="opcion-btn"
+          [class.active]="tema() === 'dark'"
+          (click)="toggleTema()"
+          pTooltip="Tema oscuro">
+          <i [class]="tema() === 'dark' ? 'pi pi-sun' : 'pi pi-moon'"></i>
+          <span>{{ tema() === 'dark' ? 'Claro' : 'Oscuro' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor de la gráfica -->
+  <div class="chart-wrapper">
+    <div class="chart-header">
+      <div class="chart-info">
+        <p-tag [value]="getTipoLabel(tipoGrafica())" severity="info" styleClass="tipo-tag" />
+        <span class="chart-title">{{ titulo }}</span>
+        @if (subtitulo) {
+          <span class="chart-subtitle">{{ subtitulo }}</span>
+        }
+      </div>
+      <div class="chart-actions">
+        <p-button
+          icon="pi pi-refresh"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="resetZoom()"
+          pTooltip="Resetear zoom"
+          tooltipPosition="top" />
+        <p-button
+          icon="pi pi-image"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="exportarPNG()"
+          pTooltip="Exportar PNG"
+          tooltipPosition="top" />
+        <p-button
+          icon="pi pi-download"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="exportarSVG()"
+          pTooltip="Exportar SVG"
+          tooltipPosition="top" />
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <apx-chart
+        #chartRef
+        [series]="chartSeries()"
+        [chart]="chartOptions().chart"
+        [colors]="chartOptions().colors"
+        [labels]="chartOptions().labels"
+        [title]="chartOptions().title"
+        [subtitle]="chartOptions().subtitle"
+        [legend]="chartOptions().legend"
+        [tooltip]="chartOptions().tooltip"
+        [dataLabels]="chartOptions().dataLabels"
+        [plotOptions]="chartOptions().plotOptions"
+        [xaxis]="chartOptions().xaxis"
+        [yaxis]="chartOptions().yaxis"
+        [stroke]="chartOptions().stroke"
+        [fill]="chartOptions().fill"
+        [grid]="chartOptions().grid"
+        [markers]="chartOptions().markers"
+        [responsive]="chartOptions().responsive"
+        [theme]="chartOptions().theme" />
+    </div>
+
+    <!-- Stats rápidos -->
+    <div class="chart-stats">
+      <div class="stat-item">
+        <span class="stat-value">{{ datosSignal().labels.length }}</span>
+        <span class="stat-label">Categorías</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ getTotalSeries() | number }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ paletaSeleccionada() | titlecase }}</span>
+        <span class="stat-label">Paleta</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips de interactividad -->
+  <div class="interactivity-tips">
+    <p-tag icon="pi pi-info-circle" severity="secondary" styleClass="tip-tag">
+      <span class="tip-text">
+        <strong>Tips:</strong>
+        Haz clic en la leyenda para ocultar series |
+        Usa scroll para zoom |
+        Arrastra para pan |
+        Clic en barras/sectores para detalle
+      </span>
+    </p-tag>
+  </div>
+</div>

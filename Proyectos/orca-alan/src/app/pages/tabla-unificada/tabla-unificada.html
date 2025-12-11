@@ -1,0 +1,600 @@
+<div class="tabla-unificada-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1><i class="pi pi-table mr-2"></i>Tabla Unificada</h1>
+      <p class="text-secondary">Gestión unificada de Riesgos e Incidentes</p>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-cards">
+    <p-card styleClass="kpi-card">
+      <div class="kpi-content">
+        <div class="kpi-icon bg-blue-100">
+          <i class="pi pi-list text-blue-600"></i>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ contadores().total }}</span>
+          <span class="kpi-label">Total Registros</span>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card styleClass="kpi-card">
+      <div class="kpi-content">
+        <div class="kpi-icon bg-orange-100">
+          <i class="pi pi-shield text-orange-600"></i>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ contadores().riesgos }}</span>
+          <span class="kpi-label">Riesgos</span>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card styleClass="kpi-card">
+      <div class="kpi-content">
+        <div class="kpi-icon bg-red-100">
+          <i class="pi pi-exclamation-triangle text-red-600"></i>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ contadores().incidentes }}</span>
+          <span class="kpi-label">Incidentes</span>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Toolbar -->
+  <p-card styleClass="toolbar-card">
+    <div class="toolbar">
+      <!-- Selector de Entidades -->
+      <div class="toolbar-section">
+        <label class="toolbar-label">Mostrar:</label>
+        <p-selectButton
+          [options]="entidadOptions"
+          [ngModel]="estado().entidadesSeleccionadas"
+          (ngModelChange)="onEntidadesChange($event)"
+          [multiple]="true"
+          optionLabel="label"
+          optionValue="value">
+          <ng-template let-item pTemplate="item">
+            <i [class]="item.icon + ' mr-1'"></i>
+            {{ item.label }}
+          </ng-template>
+        </p-selectButton>
+      </div>
+
+      <!-- Búsqueda Global -->
+      <div class="toolbar-section search-section">
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            placeholder="Buscar en todos los campos..."
+            (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+            class="search-input" />
+        </span>
+      </div>
+
+      <!-- Acciones -->
+      <div class="toolbar-section toolbar-actions">
+        <p-button
+          icon="pi pi-cog"
+          label="Columnas"
+          [outlined]="true"
+          (onClick)="showColumnasDialog.set(true)"
+          pTooltip="Configurar columnas visibles" />
+
+        <p-button
+          icon="pi pi-chart-bar"
+          label="Gráficas"
+          [outlined]="true"
+          (onClick)="abrirGraficas()"
+          pTooltip="Generar gráficas"
+          [disabled]="contadores().total === 0" />
+
+        <p-button
+          label="CSV"
+          icon="pi pi-file"
+          (onClick)="exportarCSV()"
+          [outlined]="true"
+          pTooltip="Exportar CSV" />
+        <p-button
+          label="Excel"
+          icon="pi pi-file-excel"
+          (onClick)="exportarExcel()"
+          [outlined]="true"
+          pTooltip="Exportar Excel" />
+      </div>
+    </div>
+
+  </p-card>
+
+  <!-- Tabla Principal -->
+  <p-card styleClass="table-card">
+    <p-table
+      #dt
+      [value]="datosFiltrados()"
+      [columns]="columnasVisibles()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+      [globalFilterFields]="['descripcion', 'contenedorNombre', 'responsable', 'estado', 'tipoEntidad']"
+      [filterDelay]="300"
+      [rowHover]="true"
+      [resizableColumns]="true"
+      columnResizeMode="expand"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+      [tableStyle]="{ 'min-width': '60rem' }">
+
+      <!-- Headers -->
+      <ng-template pTemplate="header" let-columns>
+        <tr>
+          @for (col of columns; track col.field) {
+            <th
+              [pSortableColumn]="col.sortable ? col.field : undefined"
+              [style.width]="col.width"
+              pResizableColumn>
+              <div class="column-header">
+                <span>{{ col.header }}</span>
+                @if (col.sortable) {
+                  <p-sortIcon [field]="col.field" />
+                }
+              </div>
+            </th>
+          }
+          <th style="width: 80px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template pTemplate="body" let-registro let-columns="columns">
+        <tr (click)="verDetalle(registro)" class="row-clickable">
+          @for (col of columns; track col.field) {
+            <td>
+              @switch (col.field) {
+                @case ('tipoEntidad') {
+                  <p-tag
+                    [value]="getTipoEntidadLabel(registro.tipoEntidad)"
+                    [icon]="getTipoEntidadIcon(registro.tipoEntidad)"
+                    [severity]="registro.tipoEntidad === 'riesgo' ? 'warn' : 'danger'" />
+                }
+                @case ('contenedorNombre') {
+                  <div class="contenedor-cell">
+                    <p-tag
+                      [value]="registro.tipoContenedor === 'activo' ? 'Activo' : 'Proceso'"
+                      severity="info"
+                      styleClass="contenedor-badge" />
+                    <span class="contenedor-nombre">{{ registro.contenedorNombre }}</span>
+                  </div>
+                }
+                @case ('estado') {
+                  <p-tag
+                    [value]="formatearEstado(registro.estado)"
+                    [severity]="getEstadoTag(registro.estado)" />
+                }
+                @case ('fecha') {
+                  {{ formatearFecha(registro.fecha) }}
+                }
+                @case ('nivelRiesgo') {
+                  @if (registro.nivelRiesgo) {
+                    <p-tag
+                      [value]="getNivelRiesgoLabel(registro.nivelRiesgo) + ' (' + registro.nivelRiesgo + ')'"
+                      [severity]="getNivelRiesgoTag(registro.nivelRiesgo)" />
+                  } @else {
+                    <span class="text-secondary">-</span>
+                  }
+                }
+                @case ('severidad') {
+                  @if (registro.severidad) {
+                    <p-tag
+                      [value]="formatearEstado(registro.severidad)"
+                      [severity]="getSeveridadTag(registro.severidad)" />
+                  } @else {
+                    <span class="text-secondary">-</span>
+                  }
+                }
+                @case ('probabilidad') {
+                  @if (registro.probabilidad) {
+                    <span class="nivel-badge">{{ registro.probabilidad }}/5</span>
+                  } @else {
+                    <span class="text-secondary">-</span>
+                  }
+                }
+                @case ('impacto') {
+                  @if (registro.impacto) {
+                    <span class="nivel-badge">{{ registro.impacto }}/5</span>
+                  } @else {
+                    <span class="text-secondary">-</span>
+                  }
+                }
+                @default {
+                  {{ registro[col.field] ?? '-' }}
+                }
+              }
+            </td>
+          }
+          <td>
+            <p-button
+              icon="pi pi-eye"
+              [rounded]="true"
+              [text]="true"
+              (onClick)="verDetalle(registro); $event.stopPropagation()"
+              pTooltip="Ver detalle" />
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty -->
+      <ng-template pTemplate="emptymessage" let-columns>
+        <tr>
+          <td [attr.colspan]="columns.length + 1" class="text-center py-6">
+            <div class="empty-state">
+              <i class="pi pi-inbox text-4xl text-secondary mb-3"></i>
+              <p class="text-secondary">No se encontraron registros</p>
+              <p-button
+                label="Limpiar filtros"
+                [text]="true"
+                (onClick)="dt.clear()" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Dialog: Configuración de Columnas -->
+<p-dialog
+  header="Configurar Columnas"
+  [(visible)]="showColumnasDialog"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [draggable]="false"
+  [resizable]="false">
+  <div class="columnas-config">
+    <p class="text-secondary mb-3">
+      Selecciona las columnas que deseas mostrar en la tabla.
+    </p>
+    @for (col of columnasConfig(); track col.field) {
+      <div class="columna-item">
+        <p-checkbox
+          [ngModel]="col.visible"
+          (ngModelChange)="toggleColumnaVisibilidad(col.field)"
+          [binary]="true"
+          [inputId]="col.field" />
+        <label [for]="col.field" class="ml-2">
+          {{ col.header }}
+          <span class="text-secondary text-sm">({{ col.tipo }})</span>
+        </label>
+      </div>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Restaurar por defecto"
+      icon="pi pi-refresh"
+      [text]="true"
+      (onClick)="restaurarColumnas()" />
+    <p-button
+      label="Cerrar"
+      icon="pi pi-check"
+      (onClick)="showColumnasDialog.set(false)" />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: Filtro de Columna -->
+<p-dialog
+  [header]="'Filtrar por ' + columnaFiltroActual()?.header"
+  [(visible)]="showFiltroPopover"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [draggable]="false"
+  [resizable]="false">
+  @if (columnaFiltroActual(); as col) {
+    <div class="filtro-config">
+      @switch (col.tipo) {
+        @case ('texto') {
+          <div class="field">
+            <label>Operador</label>
+            <p-select
+              [options]="operadoresTexto"
+              [(ngModel)]="filtroTemp().operador"
+              optionLabel="label"
+              optionValue="value"
+              [style]="{ width: '100%' }" />
+          </div>
+          <div class="field">
+            <label>Valor</label>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="filtroTemp().valor"
+              placeholder="Escribe para buscar..."
+              class="w-full" />
+          </div>
+        }
+
+        @case ('numero') {
+          <div class="field">
+            <label>Operador</label>
+            <p-select
+              [options]="operadoresNumero"
+              [(ngModel)]="filtroTemp().operador"
+              optionLabel="label"
+              optionValue="value"
+              [style]="{ width: '100%' }" />
+          </div>
+          <div class="field">
+            <label>{{ filtroTemp().operador === 'entre' ? 'Valor mínimo' : 'Valor' }}</label>
+            <p-inputNumber
+              [(ngModel)]="filtroTemp().valor"
+              [style]="{ width: '100%' }" />
+          </div>
+          @if (filtroTemp().operador === 'entre') {
+            <div class="field">
+              <label>Valor máximo</label>
+              <p-inputNumber
+                [(ngModel)]="filtroTemp().valorHasta"
+                [style]="{ width: '100%' }" />
+            </div>
+          }
+        }
+
+        @case ('fecha') {
+          <div class="field">
+            <label>Presets rápidos</label>
+            <div class="presets-grid">
+              @for (preset of presetsFecha; track preset.value) {
+                <p-button
+                  [label]="preset.label"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="aplicarPresetFecha(preset)" />
+              }
+            </div>
+          </div>
+          <p-divider />
+          <div class="field">
+            <label>O seleccionar rango personalizado</label>
+            <p-datePicker
+              [(ngModel)]="filtroTemp().valor"
+              [showIcon]="true"
+              [style]="{ width: '100%' }"
+              dateFormat="dd/mm/yy"
+              placeholder="Fecha desde" />
+          </div>
+          @if (filtroTemp().operador === 'entre') {
+            <div class="field">
+              <p-datePicker
+                [(ngModel)]="filtroTemp().valorHasta"
+                [showIcon]="true"
+                [style]="{ width: '100%' }"
+                dateFormat="dd/mm/yy"
+                placeholder="Fecha hasta" />
+            </div>
+          }
+        }
+
+        @case ('seleccion') {
+          <div class="field">
+            <label>Seleccionar valores</label>
+            @if (col.field === 'estado') {
+              <p-multiSelect
+                [options]="opcionesEstado()"
+                [(ngModel)]="filtroTemp().valoresSeleccionados"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccionar estados"
+                [style]="{ width: '100%' }" />
+            } @else if (col.opciones) {
+              <p-multiSelect
+                [options]="col.opciones"
+                [(ngModel)]="filtroTemp().valoresSeleccionados"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccionar valores"
+                [style]="{ width: '100%' }" />
+            }
+          </div>
+        }
+
+        @case ('contenedor') {
+          <div class="field">
+            <label>Buscar activo o proceso</label>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="filtroTemp().valor"
+              placeholder="Nombre del activo o proceso..."
+              class="w-full" />
+          </div>
+        }
+      }
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      [text]="true"
+      (onClick)="showFiltroPopover.set(false)" />
+    <p-button
+      label="Aplicar"
+      icon="pi pi-check"
+      (onClick)="aplicarFiltro()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: Asistente de Gráficas Interactivas -->
+<p-dialog
+  header="Gráficas Interactivas"
+  [(visible)]="showGraficasDialog"
+  [modal]="true"
+  [style]="{ width: '95vw', maxWidth: '1400px' }"
+  [contentStyle]="{ height: '85vh', padding: '0' }"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="graficas-dialog">
+
+  <!-- Selector de columna para agrupar -->
+  <div class="columna-selector">
+    <span class="selector-label">Agrupar por:</span>
+    <p-select
+      [options]="columnasGraficaOptions"
+      [(ngModel)]="columnaGraficaSeleccionada"
+      optionLabel="label"
+      optionValue="value"
+      [style]="{ width: '220px' }" />
+    <span class="registros-info">
+      <i class="pi pi-database mr-1"></i>
+      {{ contadores().total }} registros
+      @if (estado().filtrosActivos.length > 0) {
+        <p-tag value="filtrados" severity="info" styleClass="ml-2" />
+      }
+    </span>
+  </div>
+
+  <!-- Componente de Gráficas Interactivas -->
+  <app-graficas-interactivas
+    [datos]="datosGraficaInteractiva()"
+    [titulo]="getTituloGrafica()"
+    [subtitulo]="'Datos de Riesgos e Incidentes'"
+    (dataPointClick)="onGraficaDataPointClick($event)"
+    (legendClick)="onGraficaLegendClick($event)" />
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar"
+      icon="pi pi-times"
+      (onClick)="showGraficasDialog.set(false)" />
+  </ng-template>
+</p-dialog>
+
+<!-- Drawer: Detalle del Registro -->
+<p-drawer
+  [(visible)]="showDetalleDrawer"
+  position="right"
+  [style]="{ width: '500px' }"
+  header="Detalle del Registro">
+  @if (registroSeleccionado(); as registro) {
+    <div class="detalle-content">
+      <!-- Header del detalle -->
+      <div class="detalle-header">
+        <p-tag
+          [value]="getTipoEntidadLabel(registro.tipoEntidad)"
+          [icon]="getTipoEntidadIcon(registro.tipoEntidad)"
+          [severity]="registro.tipoEntidad === 'riesgo' ? 'warn' : 'danger'"
+          styleClass="mb-2" />
+        <h2>{{ registro.titulo || registro.descripcion }}</h2>
+        <span class="text-secondary">{{ registro.id }}</span>
+      </div>
+
+      <p-divider />
+
+      <!-- Información general -->
+      <div class="detalle-section">
+        <h4><i class="pi pi-info-circle mr-2"></i>Información General</h4>
+        <div class="detalle-grid">
+          <div class="detalle-item">
+            <span class="detalle-label">Estado</span>
+            <p-tag
+              [value]="formatearEstado(registro.estado)"
+              [severity]="getEstadoTag(registro.estado)" />
+          </div>
+          <div class="detalle-item">
+            <span class="detalle-label">Fecha</span>
+            <span>{{ formatearFecha(registro.fecha) }}</span>
+          </div>
+          <div class="detalle-item">
+            <span class="detalle-label">Responsable</span>
+            <span>{{ registro.responsable }}</span>
+          </div>
+        </div>
+      </div>
+
+      <p-divider />
+
+      <!-- Activo/Proceso relacionado -->
+      <div class="detalle-section">
+        <h4><i class="pi pi-link mr-2"></i>Activo/Proceso Relacionado</h4>
+        <div class="contenedor-info">
+          <p-tag
+            [value]="registro.tipoContenedor === 'activo' ? 'Activo' : 'Proceso'"
+            severity="info" />
+          <span class="ml-2">{{ registro.contenedorNombre }}</span>
+        </div>
+      </div>
+
+      @if (registro.tipoEntidad === 'riesgo') {
+        <p-divider />
+        <!-- Información específica de Riesgo -->
+        <div class="detalle-section">
+          <h4><i class="pi pi-shield mr-2"></i>Evaluación del Riesgo</h4>
+          <div class="detalle-grid">
+            <div class="detalle-item">
+              <span class="detalle-label">Probabilidad</span>
+              <span class="nivel-badge">{{ registro.probabilidad }}/5</span>
+            </div>
+            <div class="detalle-item">
+              <span class="detalle-label">Impacto</span>
+              <span class="nivel-badge">{{ registro.impacto }}/5</span>
+            </div>
+            <div class="detalle-item">
+              <span class="detalle-label">Nivel de Riesgo</span>
+              <p-tag
+                [value]="getNivelRiesgoLabel(registro.nivelRiesgo!) + ' (' + registro.nivelRiesgo + ')'"
+                [severity]="getNivelRiesgoTag(registro.nivelRiesgo!)" />
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (registro.tipoEntidad === 'incidente') {
+        <p-divider />
+        <!-- Información específica de Incidente -->
+        <div class="detalle-section">
+          <h4><i class="pi pi-exclamation-triangle mr-2"></i>Detalles del Incidente</h4>
+          <div class="detalle-grid">
+            <div class="detalle-item">
+              <span class="detalle-label">Severidad</span>
+              <p-tag
+                [value]="formatearEstado(registro.severidad!)"
+                [severity]="getSeveridadTag(registro.severidad!)" />
+            </div>
+            <div class="detalle-item">
+              <span class="detalle-label">Reportado por</span>
+              <span>{{ registro.reportadoPor }}</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <p-divider />
+
+      <!-- Descripción -->
+      <div class="detalle-section">
+        <h4><i class="pi pi-align-left mr-2"></i>Descripción</h4>
+        <p class="descripcion-texto">{{ registro.descripcion }}</p>
+      </div>
+    </div>
+
+    <!-- Acciones del drawer -->
+    <ng-template pTemplate="footer">
+      <div class="detalle-acciones">
+        <p-button
+          label="Ir al Activo"
+          icon="pi pi-external-link"
+          [outlined]="true"
+          routerLink="/activos" />
+        <p-button
+          label="Cerrar"
+          (onClick)="showDetalleDrawer.set(false)" />
+      </div>
+    </ng-template>
+  }
+</p-drawer>
