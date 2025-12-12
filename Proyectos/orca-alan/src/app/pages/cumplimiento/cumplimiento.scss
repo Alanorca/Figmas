@@ -1067,7 +1067,8 @@
 .sidebar-chat-tab {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100vh - 280px);
+  min-height: 400px;
   overflow: hidden;
 }
 

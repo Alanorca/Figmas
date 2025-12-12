@@ -495,58 +495,13 @@
           <!-- Tab: Chat -->
           <p-tabpanel value="chat">
             <div class="sidebar-chat-tab">
-              <!-- Participantes del chat -->
-              <div class="chat-participantes">
-                @for (participante of participantesChat(); track participante.id) {
-                  <p-avatar [label]="participante.nombre.charAt(0)"
-                            [styleClass]="participante.rol === 'aprobador' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'"
-                            shape="circle" size="normal"
-                            [pTooltip]="participante.nombre" />
-                }
-                <span class="text-500 text-xs">{{ participantesChat().length }}</span>
-              </div>
-
-              <!-- Mensajes -->
-              <div class="chat-mensajes">
-                @for (mensaje of mensajesChat(); track mensaje.id) {
-                  @if (esMensajePropio(mensaje)) {
-                    <div class="mensaje mensaje-propio">
-                      <div class="mensaje-contenido bg-primary text-white">
-                        <p class="m-0 text-sm">{{ mensaje.mensaje }}</p>
-                      </div>
-                      <span class="mensaje-hora">{{ getMensajeHora(mensaje.fecha) }}</span>
-                    </div>
-                  } @else {
-                    <div class="mensaje mensaje-otro">
-                      <p-avatar [label]="mensaje.usuarioNombre.charAt(0)" shape="circle" size="normal"
-                                styleClass="bg-surface-200" />
-                      <div class="mensaje-contenido-wrapper">
-                        <span class="mensaje-autor">{{ mensaje.usuarioNombre }}</span>
-                        <div class="mensaje-contenido surface-100">
-                          <p class="m-0 text-sm">{{ mensaje.mensaje }}</p>
-                        </div>
-                        <span class="mensaje-hora">{{ getMensajeHora(mensaje.fecha) }}</span>
-                      </div>
-                    </div>
-                  }
-                } @empty {
-                  <div class="chat-empty">
-                    <i class="pi pi-comments text-300 text-3xl"></i>
-                    <p class="m-0 text-500 text-sm">No hay mensajes</p>
-                    <p class="m-0 text-400 text-xs">Inicia la conversación</p>
-                  </div>
-                }
-              </div>
-
-              <!-- Input del Chat -->
-              <div class="chat-input">
-                <input type="text" pInputText class="flex-1" placeholder="Escribe un mensaje..."
-                       [ngModel]="mensajeChat()"
-                       (ngModelChange)="mensajeChat.set($event)"
-                       (keyup.enter)="enviarMensajeChat()"
-                       [variant]="'filled'" />
-                <p-button icon="pi pi-send" [rounded]="true" [disabled]="!mensajeChat().trim()" (onClick)="enviarMensajeChat()" />
-              </div>
+              <app-chat
+                [participantes]="participantesChat()"
+                [mensajes]="mensajesChat()"
+                [usuarioActualId]="usuarioActual().id"
+                [showParticipantes]="true"
+                (onEnviarMensaje)="enviarMensajeChat($event)"
+              />
             </div>
           </p-tabpanel>
         </p-tabpanels>
@@ -904,58 +859,13 @@
           <!-- Tab: Chat -->
           <p-tabpanel value="chat">
             <div class="sidebar-chat-tab">
-              <!-- Participantes del chat -->
-              <div class="chat-participantes">
-                @for (participante of participantesChat(); track participante.id) {
-                  <p-avatar [label]="participante.nombre.charAt(0)"
-                            [styleClass]="participante.rol === 'aprobador' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'"
-                            shape="circle" size="normal"
-                            [pTooltip]="participante.nombre" />
-                }
-                <span class="text-500 text-xs">{{ participantesChat().length }}</span>
-              </div>
-
-              <!-- Mensajes -->
-              <div class="chat-mensajes">
-                @for (mensaje of mensajesChat(); track mensaje.id) {
-                  @if (esMensajePropio(mensaje)) {
-                    <div class="mensaje mensaje-propio">
-                      <div class="mensaje-contenido bg-primary text-white">
-                        <p class="m-0 text-sm">{{ mensaje.mensaje }}</p>
-                      </div>
-                      <span class="mensaje-hora">{{ getMensajeHora(mensaje.fecha) }}</span>
-                    </div>
-                  } @else {
-                    <div class="mensaje mensaje-otro">
-                      <p-avatar [label]="mensaje.usuarioNombre.charAt(0)" shape="circle" size="normal"
-                                styleClass="bg-surface-200" />
-                      <div class="mensaje-contenido-wrapper">
-                        <span class="mensaje-autor">{{ mensaje.usuarioNombre }}</span>
-                        <div class="mensaje-contenido surface-100">
-                          <p class="m-0 text-sm">{{ mensaje.mensaje }}</p>
-                        </div>
-                        <span class="mensaje-hora">{{ getMensajeHora(mensaje.fecha) }}</span>
-                      </div>
-                    </div>
-                  }
-                } @empty {
-                  <div class="chat-empty">
-                    <i class="pi pi-comments text-300 text-3xl"></i>
-                    <p class="m-0 text-500 text-sm">No hay mensajes</p>
-                    <p class="m-0 text-400 text-xs">Inicia la conversación</p>
-                  </div>
-                }
-              </div>
-
-              <!-- Input del Chat -->
-              <div class="chat-input">
-                <input type="text" pInputText class="flex-1" placeholder="Escribe un mensaje..."
-                       [ngModel]="mensajeChat()"
-                       (ngModelChange)="mensajeChat.set($event)"
-                       (keyup.enter)="enviarMensajeChat()"
-                       [variant]="'filled'" />
-                <p-button icon="pi pi-send" [rounded]="true" [disabled]="!mensajeChat().trim()" (onClick)="enviarMensajeChat()" />
-              </div>
+              <app-chat
+                [participantes]="participantesChat()"
+                [mensajes]="mensajesChat()"
+                [usuarioActualId]="usuarioActual().id"
+                [showParticipantes]="true"
+                (onEnviarMensaje)="enviarMensajeChat($event)"
+              />
             </div>
           </p-tabpanel>
         </p-tabpanels>

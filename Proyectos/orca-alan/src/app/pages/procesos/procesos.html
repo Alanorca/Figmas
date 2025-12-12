@@ -1,54 +1,77 @@
-<div class="procesos-editor">
-  <!-- Header -->
-  <div class="editor-header">
-    <div class="flex align-items-center gap-3">
-      <h1 class="text-2xl font-bold text-900 m-0">Editor de Procesos</h1>
+<div class="process-editor">
+  <!-- Header con estilo PrimeBlocks -->
+  <header class="editor-header surface-card shadow-2">
+    <div class="flex align-items-center gap-4">
+      <div class="header-icon flex align-items-center justify-content-center bg-primary border-round" style="width: 48px; height: 48px;">
+        <i class="pi pi-sitemap text-white text-2xl"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-900 m-0">Editor de Procesos</h1>
+        <p class="text-500 text-sm m-0 mt-1">Disena flujos de trabajo visuales con IA</p>
+      </div>
       @if (processService.currentProceso(); as proceso) {
-        <p-tag [value]="proceso.estado" [severity]="proceso.estado === 'activo' ? 'success' : 'info'"></p-tag>
+        <p-tag [value]="proceso.estado" [severity]="proceso.estado === 'activo' ? 'success' : 'info'" class="ml-3"></p-tag>
       }
     </div>
-    <div class="flex gap-2">
-      <p-button icon="pi pi-play" label="Ejecutar" severity="success"
-                (onClick)="executeProcess()" [loading]="processService.isExecuting()"
-                pTooltip="Ejecutar proceso completo"></p-button>
-      <p-button icon="pi pi-key" label="API Key" severity="secondary" [outlined]="true"
-                (onClick)="openApiKeyDialog()" pTooltip="Configurar API Key de Groq"></p-button>
-      <p-button icon="pi pi-trash" severity="danger" [outlined]="true"
-                (onClick)="clearCanvas()" pTooltip="Limpiar canvas"></p-button>
-      <p-button icon="pi pi-download" severity="secondary" [outlined]="true"
-                (onClick)="exportProcess()" pTooltip="Exportar JSON"></p-button>
+    <div class="flex align-items-center gap-2">
+      <p-button
+        icon="pi pi-play"
+        label="Ejecutar"
+        severity="success"
+        (onClick)="executeProcess()"
+        [loading]="processService.isExecuting()"
+        pTooltip="Ejecutar proceso completo">
+      </p-button>
+      <div class="mx-2 border-left-1 surface-border" style="height: 24px;"></div>
+      <p-button icon="pi pi-key" severity="secondary" [outlined]="true" (onClick)="openApiKeyDialog()" pTooltip="API Key Groq"></p-button>
+      <p-button icon="pi pi-trash" severity="secondary" [outlined]="true" (onClick)="clearCanvas()" pTooltip="Limpiar canvas"></p-button>
+      <p-button icon="pi pi-download" severity="secondary" [outlined]="true" (onClick)="exportProcess()" pTooltip="Exportar JSON"></p-button>
+      <div class="mx-2 border-left-1 surface-border" style="height: 24px;"></div>
       <p-button icon="pi pi-save" label="Guardar" (onClick)="openSaveDialog()"></p-button>
     </div>
-  </div>
+  </header>
 
-  <div class="editor-content">
-    <!-- Sidebar izquierdo - Nodos disponibles (dark theme) -->
-    <div class="nodes-sidebar">
-      <h3>Nodos Disponibles</h3>
-
-      @for (categoria of categorias; track categoria.key) {
-        <div class="categoria-section">
-          <h4>{{ categoria.label }}</h4>
-          <div class="node-list">
-            @for (nodeType of getNodesByCategoria(categoria.key); track nodeType.type) {
-              <div class="node-item" (click)="addNodeToCanvas(nodeType.type)"
-                   [style.border-left-color]="nodeType.iconColor">
-                <div class="node-item-icon" [style.background-color]="nodeType.bgColor">
-                  <span class="material-icons" [style.color]="nodeType.iconColor">{{ nodeType.icon }}</span>
-                </div>
-                <div class="node-item-info">
-                  <span class="node-item-title">{{ nodeType.title }}</span>
-                  <span class="node-item-desc">{{ nodeType.descripcion }}</span>
-                </div>
-              </div>
-            }
-          </div>
+  <div class="editor-main">
+    <!-- Sidebar izquierdo - Nodos disponibles (PrimeBlocks style) -->
+    <aside class="nodes-sidebar">
+      <div class="sidebar-header">
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-th-large text-primary"></i>
+          <span class="font-semibold text-sm uppercase letter-spacing">Componentes</span>
         </div>
-      }
-    </div>
+      </div>
+
+      <div class="sidebar-content">
+        @for (cat of categorias; track cat.key) {
+          <div class="categoria-section">
+            <div class="categoria-header">
+              <i [class]="cat.icon" class="text-400"></i>
+              <span>{{ cat.label }}</span>
+            </div>
+
+            <div class="node-list">
+              @for (nodeType of getNodesByCategoria(cat.key); track nodeType.type) {
+                <div
+                  class="node-card"
+                  [style.--node-color]="nodeType.iconColor"
+                  (click)="addNodeToCanvas(nodeType.type)">
+                  <div class="node-card-icon" [style.background]="getNodeGradient(nodeType.type)">
+                    <span class="material-icons">{{ nodeType.icon }}</span>
+                  </div>
+                  <div class="node-card-content">
+                    <span class="node-card-title">{{ nodeType.title }}</span>
+                    <span class="node-card-desc">{{ nodeType.descripcion }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </aside>
 
     <!-- Canvas central -->
-    <div class="canvas-container">
+    <main class="canvas-area">
       <vflow
         [nodes]="vflowNodes()"
         [edges]="vflowEdges()"
@@ -57,560 +80,544 @@
         [background]="{ type: 'dots' }">
 
         <ng-template nodeHtml let-ctx>
-          <div class="custom-node"
-               [class.selected]="processService.selectedNode()?.id === ctx.node.id"
-               [style.border-color]="getNodeColor(ctx.node.data?.nodeType)"
-               (click)="onNodeSelect(ctx.node.id)">
-            <!-- Header con color del tipo de nodo -->
-            <div class="node-header" [style.background]="getNodeGradient(ctx.node.data?.nodeType)">
-              <span class="material-icons">{{ getNodeIcon(ctx.node.data?.nodeType) }}</span>
-              <span class="node-title">{{ ctx.node.text }}</span>
+          <div
+            class="flow-node"
+            [class.selected]="processService.selectedNode()?.id === ctx.node.id"
+            [style.--node-color]="getNodeColor(ctx.node.data?.nodeType)"
+            (click)="onNodeSelect(ctx.node.id)">
+
+            <!-- Header del nodo -->
+            <div class="flow-node-header" [style.background]="getNodeGradient(ctx.node.data?.nodeType)">
+              <div class="flow-node-icon">
+                <span class="material-icons">{{ getNodeIcon(ctx.node.data?.nodeType) }}</span>
+              </div>
+              <span class="flow-node-title">{{ ctx.node.text }}</span>
             </div>
-            <!-- Body con info del nodo -->
-            <div class="node-body">
-              <span class="node-type-badge">{{ ctx.node.data?.nodeType }}</span>
 
-              <!-- Preview de configuracion segun tipo -->
-              @if (ctx.node.data?.config) {
-                <div class="node-preview">
-                  @switch (ctx.node.data?.nodeType) {
-                    @case ('csv') {
-                      <div class="node-preview-label">Archivo</div>
-                      <div class="node-preview-value">{{ ctx.node.data?.config?.fileName || 'Sin configurar' }}</div>
-                    }
-                    @case ('llm') {
-                      <div class="node-preview-label">Modelo</div>
-                      <div class="node-preview-value">{{ ctx.node.data?.config?.model || 'Sin configurar' }}</div>
-                    }
-                    @case ('condicional') {
-                      <div class="node-preview-label">Condicion</div>
-                      <div class="node-preview-value">{{ ctx.node.data?.config?.variable }} {{ ctx.node.data?.config?.operador }} {{ ctx.node.data?.config?.valor }}</div>
-                    }
-                    @case ('transformacion') {
-                      <div class="node-preview-label">Operacion</div>
-                      <div class="node-preview-value">{{ ctx.node.data?.config?.operacion || 'Sin configurar' }}</div>
-                    }
-                    @case ('activo') {
-                      <div class="node-preview-label">Activo</div>
-                      <div class="node-preview-value">{{ ctx.node.data?.config?.activoId || 'Sin configurar' }}</div>
-                    }
-                    @default {
-                      <div class="node-preview-label">Tipo</div>
-                      <div class="node-preview-value">{{ ctx.node.data?.nodeType }}</div>
-                    }
-                  }
-                </div>
-              }
+            <!-- Body del nodo -->
+            <div class="flow-node-body">
+              <!-- Badge del tipo -->
+              <div class="flow-node-badge">
+                <span class="material-icons" [style.color]="getNodeColor(ctx.node.data?.nodeType)">{{ getNodeIcon(ctx.node.data?.nodeType) }}</span>
+                <span>{{ getNodeMeta(ctx.node.data?.nodeType)?.title }}</span>
+              </div>
 
-              <!-- Status indicator -->
-              <div class="node-status">
+              <!-- Preview de configuracion -->
+              <div class="flow-node-preview">
+                <div class="preview-label">Configuracion</div>
+                <div class="preview-value">{{ getNodePreview(ctx.node) }}</div>
+              </div>
+
+              <!-- Status -->
+              <div class="flow-node-status">
                 <span class="status-dot"></span>
                 <span>Listo</span>
               </div>
             </div>
+
             <handle type="source" position="right" />
             <handle type="target" position="left" />
           </div>
         </ng-template>
       </vflow>
-    </div>
+    </main>
 
-    <!-- Sidebar derecho - Panel de configuracion profesional -->
+    <!-- Panel de propiedades -->
     @if (showConfigSidebar() && processService.selectedNode(); as node) {
-      <div class="config-sidebar">
-        <!-- Header con icono y titulo del nodo -->
-        <div class="config-header">
-          <div class="config-title-section">
-            <div class="config-node-icon" [style.background]="getNodeGradient(node.type)">
+      <aside class="properties-panel">
+        <!-- Header -->
+        <div class="panel-header">
+          <div class="flex align-items-center gap-3">
+            <div class="panel-icon" [style.background]="getNodeGradient(node.type)">
               <span class="material-icons">{{ getNodeIcon(node.type) }}</span>
             </div>
-            <div class="config-title-text">
-              <h3>{{ node.label }}</h3>
-              <p>{{ getNodeDescription(node.type) }}</p>
+            <div>
+              <h3 class="text-lg font-semibold text-900 m-0">{{ node.label }}</h3>
+              <p class="text-500 text-sm m-0 mt-1">{{ getNodeDescription(node.type) }}</p>
             </div>
           </div>
-          <p-button icon="pi pi-times" [rounded]="true" [text]="true"
-                    (onClick)="closeConfigSidebar()"></p-button>
+          <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary" (onClick)="closeConfigSidebar()"></p-button>
         </div>
 
-        <!-- Tabs de configuracion -->
-        <div class="config-tabs">
-          <button class="config-tab" [class.active]="activeTab() === 'input'" (click)="setActiveTab('input')">
-            <span class="material-icons" style="font-size: 16px;">input</span>
-            Entrada
-            <span class="config-tab-badge">{{ getInputVariables().length }}</span>
-          </button>
-          <button class="config-tab" [class.active]="activeTab() === 'output'" (click)="setActiveTab('output')">
-            <span class="material-icons" style="font-size: 16px;">output</span>
-            Salida
-            <span class="config-tab-badge">{{ getOutputSchema().length }}</span>
-          </button>
-          <button class="config-tab" [class.active]="activeTab() === 'config'" (click)="setActiveTab('config')">
-            <span class="material-icons" style="font-size: 16px;">settings</span>
-            Config
-          </button>
-        </div>
+        <!-- TabView -->
+        <p-tabs [(value)]="activeTab" styleClass="panel-tabs">
+          <p-tablist>
+            <p-tab value="input">
+              <i class="pi pi-sign-in mr-2"></i>
+              Entrada
+              <p-badge [value]="getInputVariables().length.toString()" severity="secondary" class="ml-2"></p-badge>
+            </p-tab>
+            <p-tab value="output">
+              <i class="pi pi-sign-out mr-2"></i>
+              Salida
+            </p-tab>
+            <p-tab value="config">
+              <i class="pi pi-cog mr-2"></i>
+              Config
+            </p-tab>
+          </p-tablist>
 
-        <!-- Contenido de tabs -->
-        <div class="config-body">
-          <!-- TAB: ENTRADA -->
-          @if (activeTab() === 'input') {
-            <div class="config-section">
-              <div class="config-section-title">Variables disponibles</div>
-              <p class="form-help" style="margin-bottom: 12px;">
-                Selecciona las variables de nodos anteriores que usaras en este nodo.
-              </p>
-              <div class="variable-list">
-                @for (variable of availableVariables(); track variable.name) {
-                  <div class="variable-chip"
-                       [class.selected]="isVariableSelected(variable.name)"
-                       (click)="toggleVariable(variable.name)">
-                    <span>{{ variable.name }}</span>
-                    <span class="variable-chip-type">{{ variable.type }}</span>
+          <p-tabpanels>
+            <!-- TAB: ENTRADA -->
+            <p-tabpanel value="input">
+              <div class="panel-section">
+                <div class="section-title">
+                  <i class="pi pi-arrow-right text-primary mr-2"></i>
+                  Variables de entrada
+                </div>
+                <p class="text-500 text-sm mb-3">Variables disponibles de nodos anteriores conectados.</p>
+
+                <div class="variable-chips">
+                  @for (variable of availableVariables(); track variable.name) {
+                    <div
+                      class="variable-chip"
+                      [class.selected]="isVariableSelected(variable.name)"
+                      (click)="toggleVariable(variable.name)">
+                      <span>{{ variable.name }}</span>
+                      <span class="chip-type">{{ variable.type }}</span>
+                    </div>
+                  }
+                  @empty {
+                    <p-message severity="info" text="Conecta nodos anteriores para ver variables disponibles" [closable]="false" styleClass="w-full"></p-message>
+                  }
+                </div>
+              </div>
+
+              <div class="panel-section">
+                <div class="section-title">Vista previa del contexto</div>
+                <pre class="context-preview">{{ getContextPreview() }}</pre>
+              </div>
+            </p-tabpanel>
+
+            <!-- TAB: SALIDA -->
+            <p-tabpanel value="output">
+              <div class="panel-section">
+                <div class="section-title">
+                  <i class="pi pi-arrow-left text-primary mr-2"></i>
+                  Variable de salida
+                </div>
+                <div class="field">
+                  <label class="field-label">Nombre de la variable</label>
+                  <input pInputText [ngModel]="getConfigValue(node, 'outputVariable')"
+                         (ngModelChange)="updateNodeConfig({ outputVariable: $event })"
+                         placeholder="output_nombre" class="w-full" />
+                  <small class="text-500">Otros nodos podran acceder a este dato usando este nombre.</small>
+                </div>
+              </div>
+
+              <div class="panel-section">
+                <div class="section-title">Schema de salida</div>
+                <div class="schema-builder">
+                  @for (field of outputSchema(); track field.name; let i = $index) {
+                    <div class="schema-row">
+                      <input type="text" [value]="field.name" placeholder="Campo"
+                             (input)="updateSchemaField(i, 'name', $any($event.target).value)" />
+                      <select [value]="field.type" (change)="updateSchemaField(i, 'type', $any($event.target).value)">
+                        <option value="string">String</option>
+                        <option value="number">Number</option>
+                        <option value="boolean">Boolean</option>
+                        <option value="object">Object</option>
+                        <option value="array">Array</option>
+                      </select>
+                      <label class="schema-required">
+                        <input type="checkbox" [checked]="field.required"
+                               (change)="updateSchemaField(i, 'required', $any($event.target).checked)" />
+                        Req
+                      </label>
+                      <button class="schema-remove" (click)="removeSchemaField(i)">
+                        <i class="pi pi-times"></i>
+                      </button>
+                    </div>
+                  }
+                  <button class="schema-add" (click)="addSchemaField()">
+                    <i class="pi pi-plus mr-2"></i>
+                    Agregar campo
+                  </button>
+                </div>
+              </div>
+            </p-tabpanel>
+
+            <!-- TAB: CONFIGURACION -->
+            <p-tabpanel value="config">
+              <!-- Etiqueta del nodo -->
+              <div class="panel-section">
+                <div class="section-title">
+                  <i class="pi pi-tag text-primary mr-2"></i>
+                  Informacion basica
+                </div>
+                <div class="field">
+                  <label class="field-label">Etiqueta del nodo</label>
+                  <input pInputText [ngModel]="node.label" (ngModelChange)="updateNodeLabel($event)" class="w-full" />
+                </div>
+              </div>
+
+              <!-- Configuracion especifica por tipo de nodo -->
+              @switch (node.type) {
+                @case ('csv') {
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-file text-primary mr-2"></i>
+                      Configuracion de archivo
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Nombre del archivo</label>
+                      <input pInputText [ngModel]="getConfigValue(node, 'fileName')"
+                             (ngModelChange)="updateNodeConfig({ fileName: $event })"
+                             placeholder="datos.csv" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Delimitador</label>
+                      <p-select [options]="delimiterOptions" [ngModel]="getConfigValue(node, 'delimiter')"
+                                (ngModelChange)="updateNodeConfig({ delimiter: $event })" placeholder="Seleccionar" styleClass="w-full"></p-select>
+                    </div>
+                    <div class="flex align-items-center gap-2 mt-3">
+                      <p-checkbox [ngModel]="getConfigValue(node, 'hasHeaders')"
+                                  (ngModelChange)="updateNodeConfig({ hasHeaders: $event })" [binary]="true" inputId="hasHeaders"></p-checkbox>
+                      <label for="hasHeaders" class="text-700">Tiene encabezados</label>
+                    </div>
                   </div>
                 }
-                @empty {
-                  <p class="form-help">No hay variables disponibles. Conecta nodos anteriores.</p>
-                }
-              </div>
-            </div>
 
-            <!-- Preview del contexto -->
-            <div class="config-section">
-              <div class="config-section-title">Vista previa del contexto</div>
-              <div class="prompt-editor-container">
-                <pre class="prompt-editor-textarea" style="min-height: 100px; background: #fafafa;">{{ getContextPreview() }}</pre>
-              </div>
-            </div>
-          }
-
-          <!-- TAB: SALIDA -->
-          @if (activeTab() === 'output') {
-            <div class="config-section">
-              <div class="config-section-title">Schema de salida</div>
-              <p class="form-help" style="margin-bottom: 12px;">
-                Define los campos que este nodo producira como salida.
-              </p>
-              <div class="schema-builder">
-                @for (field of outputSchema(); track field.name; let i = $index) {
-                  <div class="schema-field">
-                    <input type="text" [value]="field.name" placeholder="Nombre del campo"
-                           (input)="updateSchemaField(i, 'name', $any($event.target).value)">
-                    <select [value]="field.type" (change)="updateSchemaField(i, 'type', $any($event.target).value)">
-                      <option value="string">String</option>
-                      <option value="number">Number</option>
-                      <option value="boolean">Boolean</option>
-                      <option value="object">Object</option>
-                      <option value="array">Array</option>
-                    </select>
-                    <label class="schema-field-required">
-                      <input type="checkbox" [checked]="field.required"
-                             (change)="updateSchemaField(i, 'required', $any($event.target).checked)">
-                      Req
-                    </label>
-                    <button class="schema-field-remove" (click)="removeSchemaField(i)">
-                      <span class="material-icons">close</span>
-                    </button>
+                @case ('activo') {
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-box text-primary mr-2"></i>
+                      Configuracion del activo
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Area</label>
+                      <input pInputText [ngModel]="getConfigValue(node, 'area')"
+                             (ngModelChange)="updateNodeConfig({ area: $event })"
+                             placeholder="Ej: Finanzas" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">ID del Activo</label>
+                      <input pInputText [ngModel]="getConfigValue(node, 'activoId')"
+                             (ngModelChange)="updateNodeConfig({ activoId: $event })"
+                             placeholder="ACT-001" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Criticidad</label>
+                      <p-select [options]="criticidadOptions" [ngModel]="getConfigValue(node, 'criticidad')"
+                                (ngModelChange)="updateNodeConfig({ criticidad: $event })" styleClass="w-full"></p-select>
+                    </div>
                   </div>
                 }
-                <button class="add-schema-field" (click)="addSchemaField()">
-                  <span class="material-icons" style="font-size: 16px;">add</span>
-                  Agregar campo
-                </button>
-              </div>
-            </div>
 
-            <!-- Variable de salida -->
-            <div class="config-section">
-              <div class="config-section-title">Variable de salida</div>
-              <div class="form-group">
-                <input pInputText [ngModel]="getConfigValue(node, 'outputVariable')"
-                       (ngModelChange)="updateNodeConfig({ outputVariable: $event })"
-                       placeholder="resultado" />
-                <p class="form-help">Nombre con el que otros nodos podran acceder a estos datos.</p>
-              </div>
-            </div>
-          }
+                @case ('transformacion') {
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-sync text-primary mr-2"></i>
+                      Configuracion de transformacion
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Operacion</label>
+                      <p-select [options]="operacionOptions" [ngModel]="getConfigValue(node, 'operacion')"
+                                (ngModelChange)="updateNodeConfig({ operacion: $event })" styleClass="w-full"></p-select>
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Expresion / Mapeo</label>
+                      <textarea pTextarea [ngModel]="getConfigValue(node, 'expresion')"
+                                (ngModelChange)="updateNodeConfig({ expresion: $event })"
+                                rows="3" placeholder="Escribe la expresion de mapeo..." class="w-full"></textarea>
+                    </div>
+                  </div>
+                }
 
-          <!-- TAB: CONFIGURACION -->
-          @if (activeTab() === 'config') {
-            <!-- Etiqueta del nodo -->
-            <div class="config-section">
-              <div class="config-section-title">Informacion basica</div>
-              <div class="form-group">
-                <label class="form-label">Etiqueta del nodo</label>
-                <input pInputText [ngModel]="node.label"
-                       (ngModelChange)="updateNodeLabel($event)" />
-              </div>
-            </div>
+                @case ('condicional') {
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-question-circle text-primary mr-2"></i>
+                      Configuracion de condicion
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Variable a evaluar</label>
+                      <input pInputText [ngModel]="getConfigValue(node, 'variable')"
+                             (ngModelChange)="updateNodeConfig({ variable: $event })"
+                             placeholder="nombre_variable" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Operador</label>
+                      <p-select [options]="operadorOptions" [ngModel]="getConfigValue(node, 'operador')"
+                                (ngModelChange)="updateNodeConfig({ operador: $event })" styleClass="w-full"></p-select>
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Valor a comparar</label>
+                      <input pInputText [ngModel]="getConfigValue(node, 'valor')"
+                             (ngModelChange)="updateNodeConfig({ valor: $event })"
+                             placeholder="valor" class="w-full" />
+                    </div>
+                  </div>
+                }
 
-            <!-- Configuracion especifica por tipo de nodo -->
-            @switch (node.type) {
-              @case ('csv') {
-                <div class="config-section">
-                  <div class="config-section-title">Configuracion de archivo</div>
-                  <div class="form-group">
-                    <label class="form-label">Nombre del archivo</label>
-                    <input pInputText [ngModel]="getConfigValue(node, 'fileName')"
-                           (ngModelChange)="updateNodeConfig({ fileName: $event })"
-                           placeholder="datos.csv" />
+                @case ('llm') {
+                  <!-- Selector de modelo -->
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-sparkles text-primary mr-2"></i>
+                      Modelo de IA
+                    </div>
+                    <div class="model-grid">
+                      @for (model of llmModels; track model.id) {
+                        <div class="model-card"
+                             [class.selected]="getConfigValue(node, 'model') === model.id"
+                             (click)="updateNodeConfig({ model: model.id })">
+                          <i class="pi pi-bolt text-primary mb-2"></i>
+                          <div class="model-name">{{ model.name }}</div>
+                          <div class="model-desc">{{ model.description }}</div>
+                        </div>
+                      }
+                    </div>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Delimitador</label>
-                    <p-select [options]="delimiterOptions"
-                              [ngModel]="getConfigValue(node, 'delimiter')"
-                              (ngModelChange)="updateNodeConfig({ delimiter: $event })"
-                              placeholder="Seleccionar"></p-select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Tiene encabezados</label>
-                    <p-select [options]="[{label: 'Si', value: true}, {label: 'No', value: false}]"
-                              [ngModel]="getConfigValue(node, 'hasHeaders')"
-                              (ngModelChange)="updateNodeConfig({ hasHeaders: $event })"></p-select>
-                  </div>
-                </div>
-              }
 
-              @case ('activo') {
-                <div class="config-section">
-                  <div class="config-section-title">Configuracion del activo</div>
-                  <div class="form-group">
-                    <label class="form-label">Area</label>
-                    <input pInputText [ngModel]="getConfigValue(node, 'area')"
-                           (ngModelChange)="updateNodeConfig({ area: $event })"
-                           placeholder="Ej: Finanzas" />
+                  <!-- System Prompt -->
+                  <div class="panel-section">
+                    <div class="section-title">System Prompt</div>
+                    <div class="prompt-editor">
+                      <div class="prompt-toolbar">
+                        <button class="toolbar-btn" (click)="insertTemplate('system', 'analyst')">Analista</button>
+                        <button class="toolbar-btn" (click)="insertTemplate('system', 'extractor')">Extractor</button>
+                      </div>
+                      <textarea class="prompt-textarea"
+                                [ngModel]="getConfigValue(node, 'systemPrompt')"
+                                (ngModelChange)="updateNodeConfig({ systemPrompt: $event })"
+                                placeholder="Eres un asistente experto en..."></textarea>
+                    </div>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">ID del Activo</label>
-                    <input pInputText [ngModel]="getConfigValue(node, 'activoId')"
-                           (ngModelChange)="updateNodeConfig({ activoId: $event })"
-                           placeholder="ACT-001" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Criticidad</label>
-                    <p-select [options]="criticidadOptions"
-                              [ngModel]="getConfigValue(node, 'criticidad')"
-                              (ngModelChange)="updateNodeConfig({ criticidad: $event })"></p-select>
-                  </div>
-                </div>
-              }
 
-              @case ('transformacion') {
-                <div class="config-section">
-                  <div class="config-section-title">Configuracion de transformacion</div>
-                  <div class="form-group">
-                    <label class="form-label">Operacion</label>
-                    <p-select [options]="operacionOptions"
-                              [ngModel]="getConfigValue(node, 'operacion')"
-                              (ngModelChange)="updateNodeConfig({ operacion: $event })"></p-select>
+                  <!-- User Prompt -->
+                  <div class="panel-section">
+                    <div class="section-title">Prompt del usuario</div>
+                    <div class="prompt-editor">
+                      <div class="prompt-toolbar">
+                        @for (variable of selectedVariables(); track variable) {
+                          <button class="toolbar-btn" (click)="insertVariableToPrompt(variable)">
+                            {{ '{{' + variable + '}}' }}
+                          </button>
+                        }
+                      </div>
+                      <textarea class="prompt-textarea"
+                                [ngModel]="getConfigValue(node, 'prompt')"
+                                (ngModelChange)="updateNodeConfig({ prompt: $event })"
+                                placeholder="Analiza el siguiente contenido: {{'{{variable}}'}}"></textarea>
+                    </div>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Expresion / Mapeo</label>
-                    <textarea pTextarea [ngModel]="getConfigValue(node, 'expresion')"
-                              (ngModelChange)="updateNodeConfig({ expresion: $event })"
-                              rows="3" placeholder="Escribe la expresion de mapeo..."></textarea>
-                  </div>
-                </div>
-              }
 
-              @case ('condicional') {
-                <div class="config-section">
-                  <div class="config-section-title">Configuracion de condicion</div>
-                  <div class="form-group">
-                    <label class="form-label">Variable a evaluar</label>
-                    <input pInputText [ngModel]="getConfigValue(node, 'variable')"
-                           (ngModelChange)="updateNodeConfig({ variable: $event })"
-                           placeholder="nombre_variable" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Operador</label>
-                    <p-select [options]="operadorOptions"
-                              [ngModel]="getConfigValue(node, 'operador')"
-                              (ngModelChange)="updateNodeConfig({ operador: $event })"></p-select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Valor a comparar</label>
-                    <input pInputText [ngModel]="getConfigValue(node, 'valor')"
-                           (ngModelChange)="updateNodeConfig({ valor: $event })"
-                           placeholder="valor" />
-                  </div>
-                </div>
-              }
+                  <!-- Parametros -->
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-sliders-h text-primary mr-2"></i>
+                      Parametros
+                    </div>
 
-              @case ('llm') {
-                <!-- Selector de modelo -->
-                <div class="config-section">
-                  <div class="config-section-title">Modelo de IA</div>
-                  <div class="model-selector">
-                    @for (model of llmModels; track model.id) {
-                      <div class="model-option"
-                           [class.selected]="getConfigValue(node, 'model') === model.id"
-                           (click)="updateNodeConfig({ model: model.id })">
-                        <div class="model-option-icon">⚡</div>
-                        <div class="model-option-name">{{ model.name }}</div>
-                        <div class="model-option-provider">{{ model.description }}</div>
+                    <div class="param-group">
+                      <div class="param-header">
+                        <span class="param-label">Temperatura</span>
+                        <p-tag [value]="(getConfigValue(node, 'temperature') || 0.7).toString()" severity="secondary"></p-tag>
+                      </div>
+                      <p-slider [ngModel]="getConfigValue(node, 'temperature') || 0.7"
+                                (ngModelChange)="updateNodeConfig({ temperature: $event })"
+                                [min]="0" [max]="2" [step]="0.1" styleClass="w-full"></p-slider>
+                      <small class="text-500">0 = Preciso, 2 = Creativo</small>
+                    </div>
+
+                    <div class="param-group">
+                      <div class="param-header">
+                        <span class="param-label">Max Tokens</span>
+                        <p-tag [value]="(getConfigValue(node, 'maxTokens') || 2048).toString()" severity="secondary"></p-tag>
+                      </div>
+                      <p-slider [ngModel]="getConfigValue(node, 'maxTokens') || 2048"
+                                (ngModelChange)="updateNodeConfig({ maxTokens: $event })"
+                                [min]="256" [max]="8192" [step]="256" styleClass="w-full"></p-slider>
+                    </div>
+                  </div>
+
+                  <!-- Manejo de errores -->
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-exclamation-triangle text-primary mr-2"></i>
+                      Manejo de errores
+                    </div>
+                    <div class="error-options">
+                      <div class="error-option" [class.selected]="getConfigValue(node, 'onError') === 'retry'" (click)="updateNodeConfig({ onError: 'retry' })">
+                        <i class="pi pi-refresh"></i>
+                        <span>Reintentar</span>
+                      </div>
+                      <div class="error-option" [class.selected]="getConfigValue(node, 'onError') === 'skip'" (click)="updateNodeConfig({ onError: 'skip' })">
+                        <i class="pi pi-forward"></i>
+                        <span>Omitir</span>
+                      </div>
+                      <div class="error-option" [class.selected]="getConfigValue(node, 'onError') === 'fail'" (click)="updateNodeConfig({ onError: 'fail' })">
+                        <i class="pi pi-times"></i>
+                        <span>Fallar</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Panel de prueba -->
+                  <div class="test-panel">
+                    <div class="test-header">
+                      <div class="flex align-items-center gap-2">
+                        <i class="pi pi-play text-primary"></i>
+                        <span class="font-semibold">Modo de prueba</span>
+                      </div>
+                      <p-button label="Probar" size="small" (onClick)="runTest()" [loading]="isTestRunning()"></p-button>
+                    </div>
+                    <textarea class="test-input" [(ngModel)]="testData"
+                              placeholder='{"nombre": "Juan", "email": "juan@test.com"}'></textarea>
+                    @if (testResult()) {
+                      <div class="test-result" [class.success]="testResult()?.success" [class.error]="!testResult()?.success">
+                        <pre>{{ testResult()?.data | json }}</pre>
                       </div>
                     }
                   </div>
-                </div>
+                }
 
-                <!-- System Prompt -->
-                <div class="config-section">
-                  <div class="config-section-title">System Prompt</div>
-                  <div class="prompt-editor-container">
-                    <div class="prompt-editor-toolbar">
-                      <button class="prompt-toolbar-btn" (click)="insertVariable('system')">
-                        <span class="material-icons" style="font-size: 14px;">data_object</span>
-                        Variable
-                      </button>
-                      <button class="prompt-toolbar-btn" (click)="insertTemplate('system', 'analyst')">
-                        Analista
-                      </button>
-                      <button class="prompt-toolbar-btn" (click)="insertTemplate('system', 'extractor')">
-                        Extractor
-                      </button>
+                @case ('branching') {
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-share-alt text-primary mr-2"></i>
+                      Configuracion de ramificacion
                     </div>
-                    <textarea class="prompt-editor-textarea"
-                              [ngModel]="getConfigValue(node, 'systemPrompt')"
-                              (ngModelChange)="updateNodeConfig({ systemPrompt: $event })"
-                              placeholder="Eres un asistente experto en..."></textarea>
-                  </div>
-                </div>
-
-                <!-- User Prompt -->
-                <div class="config-section">
-                  <div class="config-section-title">Prompt del usuario</div>
-                  <div class="prompt-editor-container">
-                    <div class="prompt-editor-toolbar">
-                      <button class="prompt-toolbar-btn" (click)="insertVariable('user')">
-                        <span class="material-icons" style="font-size: 14px;">data_object</span>
-                        Variable
-                      </button>
-                      @for (variable of selectedVariables(); track variable) {
-                        <button class="prompt-toolbar-btn" (click)="insertVariableToPrompt(variable)">
-                          {{ '{{' + variable + '}}' }}
-                        </button>
-                      }
+                    <div class="field">
+                      <label class="field-label">Cantidad de ramas</label>
+                      <p-inputNumber [ngModel]="getConfigValue(node, 'cantidadRamas')"
+                                     (ngModelChange)="updateNodeConfig({ cantidadRamas: $event })"
+                                     [min]="2" [max]="10" [showButtons]="true" styleClass="w-full"></p-inputNumber>
                     </div>
-                    <textarea class="prompt-editor-textarea"
-                              [ngModel]="getConfigValue(node, 'prompt')"
-                              (ngModelChange)="updateNodeConfig({ prompt: $event })"
-                              placeholder="Analiza el siguiente contenido: {{'{{variable}}'}}"></textarea>
-                  </div>
-                </div>
-
-                <!-- Parametros del modelo -->
-                <div class="config-section">
-                  <div class="config-section-title">Parametros del modelo</div>
-
-                  <div class="param-slider-group">
-                    <div class="param-slider-header">
-                      <span class="param-slider-label">Temperatura</span>
-                      <span class="param-slider-value">{{ getConfigValue(node, 'temperature') || 0.7 }}</span>
-                    </div>
-                    <p-slider [ngModel]="getConfigValue(node, 'temperature') || 0.7"
-                              (ngModelChange)="updateNodeConfig({ temperature: $event })"
-                              [min]="0" [max]="2" [step]="0.1"></p-slider>
-                    <p class="form-help">0 = Preciso, 2 = Creativo</p>
-                  </div>
-
-                  <div class="param-slider-group">
-                    <div class="param-slider-header">
-                      <span class="param-slider-label">Max Tokens</span>
-                      <span class="param-slider-value">{{ getConfigValue(node, 'maxTokens') || 2048 }}</span>
-                    </div>
-                    <p-slider [ngModel]="getConfigValue(node, 'maxTokens') || 2048"
-                              (ngModelChange)="updateNodeConfig({ maxTokens: $event })"
-                              [min]="256" [max]="8192" [step]="256"></p-slider>
-                  </div>
-
-                  <div class="param-slider-group">
-                    <div class="param-slider-header">
-                      <span class="param-slider-label">Top P</span>
-                      <span class="param-slider-value">{{ getConfigValue(node, 'topP') || 1 }}</span>
-                    </div>
-                    <p-slider [ngModel]="getConfigValue(node, 'topP') || 1"
-                              (ngModelChange)="updateNodeConfig({ topP: $event })"
-                              [min]="0" [max]="1" [step]="0.05"></p-slider>
-                  </div>
-                </div>
-
-                <!-- Manejo de errores -->
-                <div class="config-section">
-                  <div class="config-section-title">Manejo de errores</div>
-                  <div class="error-handling-options">
-                    <div class="error-option"
-                         [class.selected]="getConfigValue(node, 'onError') === 'retry'"
-                         (click)="updateNodeConfig({ onError: 'retry' })">
-                      <span class="material-icons" style="font-size: 16px;">refresh</span>
-                      Reintentar
-                    </div>
-                    <div class="error-option"
-                         [class.selected]="getConfigValue(node, 'onError') === 'skip'"
-                         (click)="updateNodeConfig({ onError: 'skip' })">
-                      <span class="material-icons" style="font-size: 16px;">skip_next</span>
-                      Omitir
-                    </div>
-                    <div class="error-option"
-                         [class.selected]="getConfigValue(node, 'onError') === 'fail'"
-                         (click)="updateNodeConfig({ onError: 'fail' })">
-                      <span class="material-icons" style="font-size: 16px;">error</span>
-                      Fallar
+                    <div class="field">
+                      <label class="field-label">Estrategia de ejecucion</label>
+                      <p-select [options]="estrategiaOptions" [ngModel]="getConfigValue(node, 'estrategia')"
+                                (ngModelChange)="updateNodeConfig({ estrategia: $event })" styleClass="w-full"></p-select>
                     </div>
                   </div>
-                </div>
+                }
 
-                <!-- Panel de prueba -->
-                <div class="test-panel">
-                  <div class="test-panel-header">
-                    <h4>
-                      <span class="material-icons" style="font-size: 18px;">science</span>
-                      Modo de prueba
-                    </h4>
-                    <p-button icon="pi pi-play" label="Ejecutar" size="small"
-                              (onClick)="runTest()" [loading]="isTestRunning()"></p-button>
-                  </div>
-                  <textarea class="test-data-input"
-                            [(ngModel)]="testData"
-                            placeholder='{"nombre": "Juan", "email": "juan@test.com"}'></textarea>
-                  @if (testResult()) {
-                    <div class="test-result" [class.success]="testResult()?.success" [class.error]="!testResult()?.success">
-                      <pre>{{ testResult()?.data | json }}</pre>
+                @case ('estado') {
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-flag text-primary mr-2"></i>
+                      Configuracion de estado
                     </div>
-                  }
-                </div>
-              }
+                    <div class="field">
+                      <label class="field-label">Tipo de estado</label>
+                      <p-select [options]="tipoEstadoOptions" [ngModel]="getConfigValue(node, 'tipoEstado')"
+                                (ngModelChange)="updateNodeConfig({ tipoEstado: $event })" styleClass="w-full"></p-select>
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Nombre del estado</label>
+                      <input pInputText [ngModel]="getConfigValue(node, 'nombreEstado')"
+                             (ngModelChange)="updateNodeConfig({ nombreEstado: $event })"
+                             placeholder="Completado" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Mensaje</label>
+                      <textarea pTextarea [ngModel]="getConfigValue(node, 'mensaje')"
+                                (ngModelChange)="updateNodeConfig({ mensaje: $event })"
+                                rows="2" class="w-full"></textarea>
+                    </div>
+                  </div>
+                }
 
-              @case ('branching') {
-                <div class="config-section">
-                  <div class="config-section-title">Configuracion de ramificacion</div>
-                  <div class="form-group">
-                    <label class="form-label">Cantidad de ramas</label>
-                    <p-inputNumber [ngModel]="getConfigValue(node, 'cantidadRamas')"
-                                   (ngModelChange)="updateNodeConfig({ cantidadRamas: $event })"
-                                   [min]="2" [max]="10"></p-inputNumber>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Estrategia de ejecucion</label>
-                    <p-select [options]="estrategiaOptions"
-                              [ngModel]="getConfigValue(node, 'estrategia')"
-                              (ngModelChange)="updateNodeConfig({ estrategia: $event })"></p-select>
-                  </div>
-                </div>
-              }
-
-              @case ('estado') {
-                <div class="config-section">
-                  <div class="config-section-title">Configuracion de estado</div>
-                  <div class="form-group">
-                    <label class="form-label">Tipo de estado</label>
-                    <p-select [options]="tipoEstadoOptions"
-                              [ngModel]="getConfigValue(node, 'tipoEstado')"
-                              (ngModelChange)="updateNodeConfig({ tipoEstado: $event })"></p-select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Nombre del estado</label>
-                    <input pInputText [ngModel]="getConfigValue(node, 'nombreEstado')"
-                           (ngModelChange)="updateNodeConfig({ nombreEstado: $event })"
-                           placeholder="Completado" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Mensaje</label>
-                    <textarea pTextarea [ngModel]="getConfigValue(node, 'mensaje')"
-                              (ngModelChange)="updateNodeConfig({ mensaje: $event })"
-                              rows="2"></textarea>
-                  </div>
-                </div>
-              }
-
-              @case ('matematico') {
-                <div class="config-section">
-                  <div class="config-section-title">Configuracion matematica</div>
-                  <div class="form-group">
-                    <label class="form-label">Formula</label>
-                    <div class="prompt-editor-container">
-                      <div class="prompt-editor-toolbar">
-                        <button class="prompt-toolbar-btn">SUM</button>
-                        <button class="prompt-toolbar-btn">AVG</button>
-                        <button class="prompt-toolbar-btn">MAX</button>
-                        <button class="prompt-toolbar-btn">MIN</button>
+                @case ('matematico') {
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-calculator text-primary mr-2"></i>
+                      Configuracion matematica
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Formula</label>
+                      <div class="formula-toolbar">
+                        <button class="toolbar-btn" (click)="updateNodeConfig({ formula: (getConfigValue(node, 'formula') || '') + ' + ' })">+</button>
+                        <button class="toolbar-btn" (click)="updateNodeConfig({ formula: (getConfigValue(node, 'formula') || '') + ' - ' })">-</button>
+                        <button class="toolbar-btn" (click)="updateNodeConfig({ formula: (getConfigValue(node, 'formula') || '') + ' * ' })">x</button>
+                        <button class="toolbar-btn" (click)="updateNodeConfig({ formula: (getConfigValue(node, 'formula') || '') + ' / ' })">/</button>
+                        <button class="toolbar-btn" (click)="updateNodeConfig({ formula: (getConfigValue(node, 'formula') || '') + '(' })">(</button>
+                        <button class="toolbar-btn" (click)="updateNodeConfig({ formula: (getConfigValue(node, 'formula') || '') + ')' })">)</button>
                       </div>
-                      <textarea class="prompt-editor-textarea" style="min-height: 60px;"
-                                [ngModel]="getConfigValue(node, 'formula')"
-                                (ngModelChange)="updateNodeConfig({ formula: $event })"
-                                placeholder="(a + b) * c"></textarea>
+                      <input pInputText [ngModel]="getConfigValue(node, 'formula')"
+                             (ngModelChange)="updateNodeConfig({ formula: $event })"
+                             placeholder="(a + b) * c" class="w-full font-mono" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Precision (decimales)</label>
+                      <p-inputNumber [ngModel]="getConfigValue(node, 'precision')"
+                                     (ngModelChange)="updateNodeConfig({ precision: $event })"
+                                     [min]="0" [max]="10" [showButtons]="true" styleClass="w-full"></p-inputNumber>
                     </div>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Precision (decimales)</label>
-                    <p-inputNumber [ngModel]="getConfigValue(node, 'precision')"
-                                   (ngModelChange)="updateNodeConfig({ precision: $event })"
-                                   [min]="0" [max]="10"></p-inputNumber>
-                  </div>
-                </div>
-              }
+                }
 
-              @case ('ml') {
-                <div class="config-section">
-                  <div class="config-section-title">Configuracion de ML</div>
-                  <div class="form-group">
-                    <label class="form-label">Nombre del modelo</label>
-                    <input pInputText [ngModel]="getConfigValue(node, 'modeloNombre')"
-                           (ngModelChange)="updateNodeConfig({ modeloNombre: $event })"
-                           placeholder="Mi modelo ML" />
+                @case ('ml') {
+                  <div class="panel-section">
+                    <div class="section-title">
+                      <i class="pi pi-microchip-ai text-primary mr-2"></i>
+                      Configuracion de ML
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Nombre del modelo</label>
+                      <input pInputText [ngModel]="getConfigValue(node, 'modeloNombre')"
+                             (ngModelChange)="updateNodeConfig({ modeloNombre: $event })"
+                             placeholder="Mi modelo ML" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Tipo de modelo</label>
+                      <p-select [options]="tipoModeloOptions" [ngModel]="getConfigValue(node, 'tipoModelo')"
+                                (ngModelChange)="updateNodeConfig({ tipoModelo: $event })" styleClass="w-full"></p-select>
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Endpoint / URL</label>
+                      <input pInputText [ngModel]="getConfigValue(node, 'endpoint')"
+                             (ngModelChange)="updateNodeConfig({ endpoint: $event })"
+                             placeholder="https://api.ml/predict" class="w-full" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label">Campo de prediccion</label>
+                      <input pInputText [ngModel]="getConfigValue(node, 'outputField')"
+                             (ngModelChange)="updateNodeConfig({ outputField: $event })"
+                             placeholder="prediccion" class="w-full" />
+                    </div>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Tipo de modelo</label>
-                    <p-select [options]="tipoModeloOptions"
-                              [ngModel]="getConfigValue(node, 'tipoModelo')"
-                              (ngModelChange)="updateNodeConfig({ tipoModelo: $event })"></p-select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Endpoint / URL</label>
-                    <input pInputText [ngModel]="getConfigValue(node, 'endpoint')"
-                           (ngModelChange)="updateNodeConfig({ endpoint: $event })"
-                           placeholder="https://api.ml/predict" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Campo de prediccion</label>
-                    <input pInputText [ngModel]="getConfigValue(node, 'outputField')"
-                           (ngModelChange)="updateNodeConfig({ outputField: $event })"
-                           placeholder="prediccion" />
-                  </div>
-                </div>
+                }
               }
-            }
-          }
-        </div>
+            </p-tabpanel>
+          </p-tabpanels>
+        </p-tabs>
 
         <!-- Footer con acciones -->
-        <div class="config-footer">
-          <p-button icon="pi pi-copy" label="Duplicar" severity="secondary" [outlined]="true"
-                    (onClick)="duplicateNode()" styleClass="flex-1"></p-button>
-          <p-button icon="pi pi-trash" label="Eliminar" severity="danger" [outlined]="true"
-                    (onClick)="deleteSelectedNode()" styleClass="flex-1"></p-button>
+        <div class="panel-footer">
+          <p-button icon="pi pi-copy" label="Duplicar" severity="secondary" [outlined]="true" (onClick)="duplicateNode()" styleClass="flex-1"></p-button>
+          <p-button icon="pi pi-trash" label="Eliminar" severity="danger" [outlined]="true" (onClick)="deleteSelectedNode()" styleClass="flex-1"></p-button>
         </div>
-      </div>
+      </aside>
     }
   </div>
 </div>
 
 <!-- Dialog API Key Groq -->
 <p-dialog header="Configurar API Key de Groq" [modal]="true" [(visible)]="showApiKeyDialog" [style]="{width: '450px'}">
-  <div class="flex flex-column gap-3">
-    <p class="text-500 m-0">
-      Ingresa tu API Key de Groq para habilitar los nodos de LLM.
-      Puedes obtener una en <a href="https://console.groq.com" target="_blank">console.groq.com</a>
-    </p>
-    <div class="flex flex-column gap-2">
-      <label class="font-medium">API Key</label>
-      <input pInputText type="password" [(ngModel)]="apiKeyInput"
-             placeholder="gsk_..." />
-    </div>
-    @if (groqService.isConfigured) {
-      <p class="text-green-500 text-sm m-0">
-        <i class="pi pi-check-circle mr-1"></i> API Key configurada
+  <div class="flex flex-column gap-4">
+    <div class="surface-ground border-round p-3">
+      <div class="flex align-items-center gap-2 mb-2">
+        <i class="pi pi-info-circle text-primary"></i>
+        <span class="font-semibold text-900">Informacion</span>
+      </div>
+      <p class="text-600 text-sm m-0 line-height-3">
+        Ingresa tu API Key de Groq para habilitar los nodos de LLM.
+        <a href="https://console.groq.com" target="_blank" class="text-primary font-medium">Obtener API Key</a>
       </p>
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="apiKey" class="font-semibold text-900">API Key</label>
+      <input pInputText id="apiKey" type="password" [(ngModel)]="apiKeyInput" placeholder="gsk_..." class="w-full" />
+    </div>
+
+    @if (groqService.isConfigured) {
+      <div class="flex align-items-center gap-2 p-3 bg-green-50 border-round">
+        <i class="pi pi-check-circle text-green-500"></i>
+        <span class="text-green-700 font-medium">API Key configurada correctamente</span>
+      </div>
     }
   </div>
   <ng-template pTemplate="footer">
@@ -621,15 +628,14 @@
 
 <!-- Dialog Guardar Proceso -->
 <p-dialog header="Guardar Proceso" [modal]="true" [(visible)]="showSaveDialog" [style]="{width: '450px'}">
-  <div class="flex flex-column gap-3">
+  <div class="flex flex-column gap-4">
     <div class="flex flex-column gap-2">
-      <label class="font-medium">Nombre del proceso *</label>
-      <input pInputText [(ngModel)]="procesoNombre" placeholder="Mi proceso" />
+      <label for="nombre" class="font-semibold text-900">Nombre del proceso *</label>
+      <input pInputText id="nombre" [(ngModel)]="procesoNombre" placeholder="Mi proceso" class="w-full" />
     </div>
     <div class="flex flex-column gap-2">
-      <label class="font-medium">Descripcion</label>
-      <textarea pTextarea [(ngModel)]="procesoDescripcion" rows="3"
-                placeholder="Descripcion del proceso..."></textarea>
+      <label for="descripcion" class="font-semibold text-900">Descripcion</label>
+      <textarea pTextarea id="descripcion" [(ngModel)]="procesoDescripcion" rows="3" placeholder="Descripcion del proceso..." class="w-full"></textarea>
     </div>
   </div>
   <ng-template pTemplate="footer">
@@ -639,30 +645,26 @@
 </p-dialog>
 
 <!-- Dialog Resultados de Ejecucion -->
-<p-dialog header="Resultados de Ejecucion" [modal]="true" [(visible)]="showExecutionDialog" [style]="{width: '700px', maxHeight: '80vh'}">
+<p-dialog header="Resultados de Ejecucion" [modal]="true" [(visible)]="showExecutionDialog" [style]="{width: '700px'}">
   <div class="execution-results">
-    <!-- Header con estado general -->
     @if (processService.currentExecution(); as execution) {
-      <div class="execution-header" [class]="'status-' + execution.status">
-        <div class="execution-status-icon">
+      <!-- Status header -->
+      <div class="execution-status" [class]="'status-' + execution.status">
+        <div class="status-icon">
           @switch (execution.status) {
-            @case ('running') {
-              <span class="material-icons spin">sync</span>
-            }
-            @case ('completed') {
-              <span class="material-icons text-green-500">check_circle</span>
-            }
-            @case ('failed') {
-              <span class="material-icons text-red-500">error</span>
-            }
-            @case ('cancelled') {
-              <span class="material-icons text-yellow-500">cancel</span>
-            }
+            @case ('running') { <i class="pi pi-spin pi-spinner text-blue-500 text-4xl"></i> }
+            @case ('completed') { <i class="pi pi-check-circle text-green-500 text-4xl"></i> }
+            @case ('failed') { <i class="pi pi-times-circle text-red-500 text-4xl"></i> }
+            @case ('cancelled') { <i class="pi pi-ban text-yellow-500 text-4xl"></i> }
           }
         </div>
-        <div class="execution-info">
-          <h4 class="m-0">{{ execution.status === 'running' ? 'Ejecutando...' : execution.status === 'completed' ? 'Completado' : execution.status === 'failed' ? 'Fallido' : 'Cancelado' }}</h4>
-          <p class="text-500 text-sm m-0">
+        <div class="status-info">
+          <h4 class="m-0 mb-1 text-900 font-semibold">
+            {{ execution.status === 'running' ? 'Ejecutando...' :
+               execution.status === 'completed' ? 'Completado' :
+               execution.status === 'failed' ? 'Fallido' : 'Cancelado' }}
+          </h4>
+          <p class="m-0 text-600 text-sm">
             {{ execution.results.length }} nodos procesados
             @if (execution.endTime) {
               en {{ getExecutionDuration(execution) }}ms
@@ -670,47 +672,34 @@
           </p>
         </div>
         @if (execution.status === 'running') {
-          <p-button icon="pi pi-stop" label="Cancelar" severity="danger" size="small"
-                    (onClick)="cancelExecution()"></p-button>
+          <p-button icon="pi pi-stop" label="Cancelar" severity="danger" size="small" (onClick)="cancelExecution()"></p-button>
         }
       </div>
 
-      <!-- Lista de resultados por nodo -->
-      <div class="execution-nodes-list">
+      <!-- Results list -->
+      <div class="results-list">
         @for (result of processService.executionResults(); track result.nodeId) {
-          <div class="execution-node-result" [class]="'status-' + result.status">
+          <div class="result-item" [class]="'status-' + result.status">
             <div class="result-header">
-              <div class="result-status-icon">
+              <div class="result-icon">
                 @switch (result.status) {
-                  @case ('pending') {
-                    <span class="material-icons text-400">hourglass_empty</span>
-                  }
-                  @case ('running') {
-                    <span class="material-icons text-blue-500 spin">sync</span>
-                  }
-                  @case ('success') {
-                    <span class="material-icons text-green-500">check_circle</span>
-                  }
-                  @case ('error') {
-                    <span class="material-icons text-red-500">error</span>
-                  }
-                  @case ('skipped') {
-                    <span class="material-icons text-yellow-500">skip_next</span>
-                  }
+                  @case ('pending') { <i class="pi pi-clock text-400"></i> }
+                  @case ('running') { <i class="pi pi-spin pi-spinner text-blue-500"></i> }
+                  @case ('success') { <i class="pi pi-check text-green-500"></i> }
+                  @case ('error') { <i class="pi pi-times text-red-500"></i> }
+                  @case ('skipped') { <i class="pi pi-forward text-yellow-500"></i> }
                 }
               </div>
-              <div class="result-info">
-                <span class="result-name">{{ result.nodeName }}</span>
-                @if (result.duration) {
-                  <span class="result-duration">{{ result.duration }}ms</span>
-                }
-              </div>
+              <span class="result-name">{{ result.nodeName }}</span>
+              @if (result.duration) {
+                <p-tag [value]="result.duration + 'ms'" severity="secondary"></p-tag>
+              }
             </div>
             @if (result.output || result.error) {
-              <div class="result-output">
+              <div class="result-body">
                 @if (result.error) {
                   <div class="result-error">
-                    <span class="material-icons" style="font-size: 14px;">warning</span>
+                    <i class="pi pi-exclamation-triangle"></i>
                     {{ result.error }}
                   </div>
                 } @else if (result.output) {
@@ -722,16 +711,15 @@
         }
       </div>
 
-      <!-- Contexto final -->
+      <!-- Final context -->
       @if (execution.status !== 'running' && Object.keys(execution.context).length > 0) {
-        <div class="execution-context">
-          <h5 class="m-0 mb-2">Contexto Final</h5>
+        <p-panel header="Contexto Final" [toggleable]="true" [collapsed]="true" styleClass="mt-3">
           <pre class="context-data">{{ execution.context | json }}</pre>
-        </div>
+        </p-panel>
       }
     }
   </div>
   <ng-template pTemplate="footer">
-    <p-button label="Cerrar" (onClick)="showExecutionDialog.set(false)"></p-button>
+    <p-button label="Cerrar" icon="pi pi-times" (onClick)="showExecutionDialog.set(false)"></p-button>
   </ng-template>
 </p-dialog>

@@ -13,6 +13,11 @@ import { DividerModule } from 'primeng/divider';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SliderModule } from 'primeng/slider';
 import { TagModule } from 'primeng/tag';
+import { TabsModule } from 'primeng/tabs';
+import { BadgeModule } from 'primeng/badge';
+import { MessageModule } from 'primeng/message';
+import { PanelModule } from 'primeng/panel';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ProcessService } from '../../services/process.service';
 import { GroqService } from '../../services/groq.service';
 import { NODE_TYPES_METADATA, ProcessNodeType, ProcessNode } from '../../models/process-nodes';
@@ -53,7 +58,12 @@ interface TestResult {
     DividerModule,
     InputNumberModule,
     SliderModule,
-    TagModule
+    TagModule,
+    TabsModule,
+    BadgeModule,
+    MessageModule,
+    PanelModule,
+    CheckboxModule
   ],
   templateUrl: './procesos.html',
   styleUrl: './procesos.scss',
@@ -553,4 +563,41 @@ export class ProcesosComponent {
 
   // Helper para Object.keys en template
   Object = Object;
+
+  // Helper para obtener metadata del nodo
+  getNodeMeta(type: ProcessNodeType | undefined): { title: string; icon: string; color: string } | null {
+    if (!type) return null;
+    const meta = this.nodeTypes.find(n => n.type === type);
+    if (!meta) return null;
+    return {
+      title: meta.title,
+      icon: meta.icon,
+      color: meta.iconColor
+    };
+  }
+
+  // Helper para obtener preview del nodo
+  getNodePreview(node: { data?: { nodeType?: ProcessNodeType; config?: Record<string, unknown> } }): string {
+    const data = node.data;
+    if (!data?.nodeType) return '';
+
+    const config = data.config;
+    if (!config) return '';
+
+    // Mostrar preview basado en el tipo de nodo
+    switch (data.nodeType) {
+      case 'csv':
+        return config['fileName'] as string || 'Sin archivo';
+      case 'llm':
+        return config['model'] as string || 'Sin modelo';
+      case 'condicional':
+        return `${config['variable'] || '?'} ${config['operador'] || '?'} ${config['valor'] || '?'}`;
+      case 'transformacion':
+        return config['operacion'] as string || 'Sin operación';
+      case 'activo':
+        return config['activoNombre'] as string || 'Sin activo';
+      default:
+        return '';
+    }
+  }
 }

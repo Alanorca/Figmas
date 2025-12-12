@@ -44,6 +44,9 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { StepperModule } from 'primeng/stepper';
 import { SelectButtonModule } from 'primeng/selectbutton';
 
+// Componentes compartidos
+import { ChatComponent } from '../../components/chat/chat';
+
 // Shared Models
 import {
   MarcoNormativo,
@@ -140,7 +143,8 @@ interface ArchivoAdjunto {
     InputGroupModule,
     InputGroupAddonModule,
     StepperModule,
-    SelectButtonModule
+    SelectButtonModule,
+    ChatComponent
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './cumplimiento.html',
@@ -2921,6 +2925,7 @@ export class CumplimientoComponent {
     if (!asignacion) return;
 
     // Cargar mensajes mock o existentes
+    const usuarioActualId = this.usuarioActual().id;
     const mensajesMock: MensajeChat[] = [
       {
         id: '1',
@@ -2930,8 +2935,8 @@ export class CumplimientoComponent {
         usuarioId: 'user1',
         usuarioNombre: 'Maria Garcia',
         usuarioRol: 'evaluador',
-        mensaje: 'He completado la evaluacion del primer control. Adjunte las evidencias correspondientes.',
-        fecha: new Date(Date.now() - 3600000 * 2),
+        mensaje: 'Hola equipo, he comenzado con la evaluación del cuestionario de cumplimiento ISO 27001.',
+        fecha: new Date(Date.now() - 3600000 * 4),
         leido: true
       },
       {
@@ -2939,11 +2944,11 @@ export class CumplimientoComponent {
         asignacionId: asignacion.id,
         cuestionarioId: cuestionarioId || undefined,
         activoProcesoId: activoProcesoId || undefined,
-        usuarioId: 'user2',
-        usuarioNombre: 'Carlos Lopez',
-        usuarioRol: 'aprobador',
-        mensaje: 'Gracias Maria. Revise la evidencia del control 3, parece que falta el documento de aprobacion.',
-        fecha: new Date(Date.now() - 3600000),
+        usuarioId: usuarioActualId,
+        usuarioNombre: this.usuarioActual().nombre,
+        usuarioRol: this.usuarioActual().rol,
+        mensaje: 'Perfecto María, avísame cuando tengas las primeras secciones completadas para revisarlas.',
+        fecha: new Date(Date.now() - 3600000 * 3),
         leido: true
       },
       {
@@ -2954,8 +2959,44 @@ export class CumplimientoComponent {
         usuarioId: 'user1',
         usuarioNombre: 'Maria Garcia',
         usuarioRol: 'evaluador',
-        mensaje: 'Tiene razon, lo adjunto ahora mismo.',
+        mensaje: 'Ya completé la sección de Políticas de Seguridad. Adjunté las evidencias correspondientes al control A.5.1.',
+        fecha: new Date(Date.now() - 3600000 * 2),
+        leido: true
+      },
+      {
+        id: '4',
+        asignacionId: asignacion.id,
+        cuestionarioId: cuestionarioId || undefined,
+        activoProcesoId: activoProcesoId || undefined,
+        usuarioId: 'user2',
+        usuarioNombre: 'Carlos Lopez',
+        usuarioRol: 'aprobador',
+        mensaje: 'Revisé la documentación. Todo se ve bien, pero falta el acta de aprobación del comité para el control A.5.2.',
+        fecha: new Date(Date.now() - 3600000),
+        leido: true
+      },
+      {
+        id: '5',
+        asignacionId: asignacion.id,
+        cuestionarioId: cuestionarioId || undefined,
+        activoProcesoId: activoProcesoId || undefined,
+        usuarioId: 'user1',
+        usuarioNombre: 'Maria Garcia',
+        usuarioRol: 'evaluador',
+        mensaje: 'Tienes razón Carlos, lo adjunto ahora mismo. Gracias por la observación.',
         fecha: new Date(Date.now() - 1800000),
+        leido: true
+      },
+      {
+        id: '6',
+        asignacionId: asignacion.id,
+        cuestionarioId: cuestionarioId || undefined,
+        activoProcesoId: activoProcesoId || undefined,
+        usuarioId: usuarioActualId,
+        usuarioNombre: this.usuarioActual().nombre,
+        usuarioRol: this.usuarioActual().rol,
+        mensaje: 'Excelente trabajo equipo. Continuemos con la siguiente sección cuando estén listos.',
+        fecha: new Date(Date.now() - 600000),
         leido: true
       }
     ];
@@ -2963,8 +3004,8 @@ export class CumplimientoComponent {
     this.mensajesChat.set(mensajesMock);
   }
 
-  enviarMensajeChat() {
-    const mensaje = this.mensajeChat().trim();
+  enviarMensajeChat(mensajeTexto?: string) {
+    const mensaje = mensajeTexto?.trim() || this.mensajeChat().trim();
     if (!mensaje) return;
 
     const asignacion = this.asignacionSeleccionada();

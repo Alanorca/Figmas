@@ -151,6 +151,12 @@ export class CuestionariosComponent {
   });
 
   // =============================================
+  // DETALLE STATE
+  // =============================================
+  tabDetalleActivo = signal<'componentes' | 'informacion'>('componentes');
+  seccionSeleccionadaIndex = signal<number>(0);
+
+  // =============================================
   // EDITOR STATE
   // =============================================
   seccionActiva = signal<string | null>(null);
@@ -534,7 +540,22 @@ export class CuestionariosComponent {
   verDetalleCuestionario(cuestionario: Cuestionario) {
     this.cuestionarioSeleccionado.set(cuestionario);
     this.editandoDetalle.set(false);
+    this.tabDetalleActivo.set('componentes');
     this.vistaActual.set('detalle');
+  }
+
+  irADetalle(cuestionario: Cuestionario) {
+    this.cuestionarioSeleccionado.set(cuestionario);
+    this.tabDetalleActivo.set('componentes');
+    this.vistaActual.set('detalle');
+  }
+
+  volverADetalle() {
+    this.vistaActual.set('detalle');
+  }
+
+  irAEditorDesdeDetalle() {
+    this.vistaActual.set('editor');
   }
 
   toggleEditarDetalle() {
