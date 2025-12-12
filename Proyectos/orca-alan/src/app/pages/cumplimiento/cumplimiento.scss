@@ -4,6 +4,675 @@
   display: block;
 }
 
+// =============================================
+// VISTA DE REVISIONES - Nuevo diseño
+// =============================================
+
+.revisiones-container {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: 100vh;
+  background: var(--surface-ground);
+}
+
+.revisiones-sidebar {
+  background: var(--surface-card);
+  border-right: 1px solid var(--surface-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  background: var(--surface-50);
+}
+
+.revision-card {
+  margin: 1rem;
+  padding: 1rem;
+  background: var(--surface-50);
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  position: relative;
+
+  .edit-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+}
+
+.selector-group {
+  padding: 0 1rem 1rem;
+
+  .selector-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-color-secondary);
+    margin-bottom: 0.5rem;
+  }
+}
+
+.progress-section {
+  margin-top: 0.5rem;
+}
+
+// Panel derecho
+.revisiones-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content-header {
+  padding: 1.5rem;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+
+  ::ng-deep .p-tabs {
+    margin-top: 1rem;
+  }
+
+  ::ng-deep .p-tablist {
+    border-bottom: 1px solid var(--surface-border);
+  }
+}
+
+.content-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+// Secciones colapsables
+::ng-deep .revisiones-content {
+  .p-accordion {
+    .p-accordionpanel {
+      margin-bottom: 0.5rem;
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .p-accordionheader {
+      padding: 1rem;
+      background: var(--surface-50);
+    }
+
+    .p-accordioncontent-content {
+      padding: 0;
+    }
+  }
+}
+
+.seccion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-right: 1rem;
+}
+
+.seccion-nombre {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.seccion-content {
+  padding: 1rem;
+}
+
+.pregunta-field {
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.field-label {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  padding-top: 0.5rem;
+}
+
+.field-value {
+  min-width: 200px;
+}
+
+.field-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+// Aprobación de cuestionario
+.aprobacion-cuestionario {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+}
+
+.aprobacion-header {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+
+  h3 {
+    color: var(--primary-color);
+  }
+}
+
+.aprobacion-actions {
+  margin-bottom: 1rem;
+}
+
+// =============================================
+// VISTA DE REVISIÓN - NUEVOS ESTILOS
+// =============================================
+
+// Card de resumen de avance
+.revision-summary-card {
+  padding: 1.5rem;
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+}
+
+// Grid de información (personas y aprobadores)
+.revision-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Card de información
+.info-card {
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  overflow: hidden;
+}
+
+.info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--surface-50);
+  border-bottom: 1px solid var(--surface-border);
+  font-weight: 600;
+  color: var(--text-color);
+
+  i {
+    font-size: 1.25rem;
+  }
+}
+
+.info-card-body {
+  padding: 1rem;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+// Item de persona
+.persona-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: var(--surface-50);
+  }
+
+  & + .persona-item {
+    border-top: 1px solid var(--surface-border);
+  }
+}
+
+.persona-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.persona-nombre {
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.persona-estado {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+// Sección de archivos
+.archivos-section {
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  padding: 1.5rem;
+}
+
+.archivos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.archivo-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-50);
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.archivo-preview {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-100);
+  border-bottom: 1px solid var(--surface-border);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  i {
+    font-size: 3rem;
+  }
+}
+
+.archivo-info {
+  padding: 0.75rem;
+  flex: 1;
+}
+
+.archivo-nombre {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.25rem;
+}
+
+.archivo-size {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+.archivo-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  border-top: 1px solid var(--surface-border);
+  background: var(--surface-card);
+}
+
+// Previsualización del cuestionario
+.cuestionario-preview {
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+// Header de sección con progreso
+.seccion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding-right: 1rem;
+}
+
+.seccion-progreso {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// Archivos de pregunta
+.pregunta-archivos {
+  padding: 0.5rem;
+  background: var(--surface-50);
+  border-radius: 6px;
+}
+
+// =============================================
+// LAYOUT DE 2 COLUMNAS PARA REVISIÓN
+// =============================================
+
+.content-body-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  height: calc(100vh - 180px);
+  overflow: hidden;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
+  }
+}
+
+.content-body-main {
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.content-body-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+
+  @media (max-width: 1200px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .sidebar-card {
+      flex: 1;
+      min-width: 250px;
+    }
+  }
+}
+
+// Sidebar cards
+.sidebar-card {
+  background: var(--surface-card);
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+  overflow: hidden;
+}
+
+.sidebar-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-50);
+  border-bottom: 1px solid var(--surface-border);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-color);
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.sidebar-card-body {
+  padding: 0.75rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+// Persona mini card
+.persona-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: var(--surface-50);
+  }
+
+  & + .persona-mini {
+    margin-top: 0.25rem;
+  }
+}
+
+.persona-mini-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.persona-mini-nombre {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.persona-mini-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+
+  ::ng-deep .p-progressbar {
+    flex: 1;
+    height: 4px !important;
+  }
+}
+
+// Pregunta field nuevo
+.pregunta-field-new {
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.pregunta-label {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.pregunta-input {
+  margin-bottom: 0.5rem;
+}
+
+// Archivos section dentro de pregunta
+.pregunta-archivos-section {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface-50);
+  border-radius: 8px;
+  border: 1px dashed var(--surface-border);
+}
+
+.archivos-pregunta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.archivo-item-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: var(--surface-card);
+  border-radius: 6px;
+  border: 1px solid var(--surface-border);
+}
+
+.archivo-item-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-100);
+  border-radius: 6px;
+  flex-shrink: 0;
+
+  .archivo-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+}
+
+.archivo-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.archivo-item-nombre {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.archivo-item-size {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+.archivo-item-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.archivo-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+}
+
+// Estado vacío
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 3rem;
+
+  h3 {
+    margin: 1rem 0 0.5rem;
+    color: var(--text-color);
+  }
+
+  p {
+    color: var(--text-color-secondary);
+    max-width: 300px;
+  }
+}
+
+.empty-icon {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--primary-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 3rem;
+    color: var(--primary-color);
+  }
+}
+
+// Tab placeholder
+.tab-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  text-align: center;
+
+  h3 {
+    margin: 0;
+  }
+
+  p {
+    margin: 0.5rem 0 0;
+  }
+}
+
+// Responsive
+@media (max-width: 1024px) {
+  .revisiones-container {
+    grid-template-columns: 280px 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .revisiones-container {
+    grid-template-columns: 1fr;
+  }
+
+  .revisiones-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--surface-border);
+    max-height: 300px;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 // Timeline customization
 ::ng-deep .p-timeline {
   .p-timeline-event-content {
@@ -117,6 +786,305 @@
   canvas {
     max-height: 100%;
   }
+}
+
+// =============================================
+// BARRA DE APROBACIÓN SUPERIOR
+// =============================================
+
+.aprobacion-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface-card);
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.aprobacion-bar-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.aprobacion-bar-comentario {
+  flex: 1;
+  min-width: 200px;
+}
+
+// =============================================
+// SIDEBAR CON TABS
+// =============================================
+
+.sidebar-tabs-container {
+  background: var(--surface-card);
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+::ng-deep .sidebar-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .p-tablist {
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--surface-border);
+    padding: 0 0.5rem;
+  }
+
+  .p-tab {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8125rem;
+    gap: 0.25rem;
+  }
+
+  .p-tabpanels {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .p-tabpanel {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+}
+
+.sidebar-tab-content {
+  padding: 0.75rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sidebar-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+// Secciones colapsables
+.collapsible-section {
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--surface-50);
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: var(--surface-100);
+  }
+
+  > i {
+    color: var(--text-color-secondary);
+    font-size: 0.75rem;
+  }
+}
+
+.collapsible-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-color);
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.collapsible-content {
+  padding: 0.5rem;
+  border-top: 1px solid var(--surface-border);
+  background: var(--surface-card);
+}
+
+.collapsible-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: var(--text-color-secondary);
+}
+
+// Chat tab específico
+.sidebar-chat-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+// =============================================
+// CHAT INTEGRADO EN SIDEBAR
+// =============================================
+
+.sidebar-chat {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-card);
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+  height: calc(100vh - 240px);
+  min-height: 400px;
+  overflow: hidden;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--surface-50);
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.chat-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-color);
+}
+
+.chat-participantes {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--surface-border);
+  flex-wrap: wrap;
+
+  ::ng-deep .p-avatar {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    font-size: 0.75rem;
+  }
+}
+
+.chat-mensajes {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mensaje {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 90%;
+
+  ::ng-deep .p-avatar {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+}
+
+.mensaje-propio {
+  flex-direction: column;
+  align-items: flex-end;
+  align-self: flex-end;
+
+  .mensaje-contenido {
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px 12px 0 12px;
+    max-width: 100%;
+  }
+}
+
+.mensaje-otro {
+  align-self: flex-start;
+}
+
+.mensaje-contenido-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mensaje-autor {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.mensaje-contenido {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 12px 12px 12px;
+
+  p {
+    word-break: break-word;
+  }
+}
+
+.mensaje-hora {
+  font-size: 0.65rem;
+  color: var(--text-color-secondary);
+}
+
+.chat-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--surface-border);
+  background: var(--surface-50);
+
+  input {
+    flex: 1;
+    font-size: 0.875rem;
+  }
+}
+
+.chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  padding: 2rem;
 }
 
 // Scrollbar personalizado para paneles

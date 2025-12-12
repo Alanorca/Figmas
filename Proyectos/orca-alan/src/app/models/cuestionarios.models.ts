@@ -53,6 +53,7 @@ export interface Seccion {
   descripcion: string;
   preguntas: Pregunta[];
   peso: number;
+  requerida?: boolean;
 }
 
 // Tipos de pregunta soportados según documentación
@@ -114,6 +115,7 @@ export interface AsignacionCuestionario {
   cuestionarioId: string;
   cuestionarioIds?: string[]; // Múltiples cuestionarios
   titulo: string;
+  descripcion?: string;
   tipoRevision: 'interna' | 'externa';
   usuariosAsignados: string[];
   usuariosAsignadosNombres: string[];
@@ -182,6 +184,7 @@ export interface RespuestaPregunta {
   valor: string | string[] | number | Date | null;
   comentario: string;
   evidencias: Evidencia[];
+  archivosAdjuntos?: string[]; // Lista de nombres de archivos adjuntos
   marcadaParaRevision: boolean;
   estadoRevision: 'pendiente' | 'aprobada' | 'rechazada' | 'requiere_aclaracion';
   comentarioRevisor: string;

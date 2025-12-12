@@ -65,6 +65,37 @@ import {
 
 type VistasCumplimiento = 'dashboard' | 'asignar' | 'responder' | 'revisar' | 'marcos' | 'reportes' | 'historial' | 'mapeo' | 'evidencias' | 'portal-externo' | 'detalleCuestionario';
 
+// Interfaces para la vista de revisión
+interface PersonaContestacion {
+  id: string;
+  nombre: string;
+  email: string;
+  completado: boolean;
+  progreso: number;
+  fechaUltimaRespuesta?: Date;
+}
+
+interface AprobadorRevision {
+  id: string;
+  nombre: string;
+  email: string;
+  aprobado: boolean;
+  rechazado: boolean;
+  fechaAccion?: Date;
+  comentario?: string;
+}
+
+interface ArchivoAdjunto {
+  id: string;
+  nombre: string;
+  tipo: 'imagen' | 'pdf' | 'excel' | 'word' | 'otro';
+  tamanio: string;
+  urlPreview?: string;
+  urlDescarga: string;
+  preguntaId?: string;
+  fechaSubida: Date;
+}
+
 @Component({
   selector: 'app-cumplimiento',
   standalone: true,
@@ -200,9 +231,54 @@ export class CumplimientoComponent {
   // Sidebar de revision - cuestionarios y activos/procesos
   cuestionarioRevisionSeleccionadoId = signal<string | null>(null);
   activoProcesoSeleccionadoId = signal<string | null>(null);
+  revisionSeleccionadaId = signal<string | null>(null);
+  seccionSeleccionadaId = signal<string | null>(null);
+  tabRevisionActivo = signal<'info' | 'reglas' | 'riesgos' | 'auditoria'>('info');
+  seccionesExpandidas = signal<string[]>([]);
 
-  // Chat sidebar
-  showChatSidebar = signal(false);
+  // Mock data para revisiones disponibles
+  revisionesDisponibles = signal<{id: string; nombre: string; estado: string; fecha: Date}[]>([
+    { id: 'rev1', nombre: 'Revisión Q4 2024', estado: 'en_progreso', fecha: new Date('2024-10-01') },
+    { id: 'rev2', nombre: 'Revisión Q3 2024', estado: 'completada', fecha: new Date('2024-07-01') },
+    { id: 'rev3', nombre: 'Auditoría Anual 2024', estado: 'pendiente', fecha: new Date('2024-12-01') }
+  ]);
+
+  // Mock data para personas que contestaron y aprobadores
+  personasContestaron = signal<PersonaContestacion[]>([
+    { id: 'p1', nombre: 'María García', email: 'maria@empresa.com', completado: true, progreso: 100, fechaUltimaRespuesta: new Date('2024-12-10') },
+    { id: 'p2', nombre: 'Carlos López', email: 'carlos@empresa.com', completado: false, progreso: 75, fechaUltimaRespuesta: new Date('2024-12-09') },
+    { id: 'p3', nombre: 'Ana Martínez', email: 'ana@empresa.com', completado: false, progreso: 45 }
+  ]);
+
+  aprobadoresRevision = signal<AprobadorRevision[]>([
+    { id: 'a1', nombre: 'Director Cumplimiento', email: 'director@empresa.com', aprobado: true, rechazado: false, fechaAccion: new Date('2024-12-11'), comentario: 'Todo en orden' },
+    { id: 'a2', nombre: 'Auditor Senior', email: 'auditor@empresa.com', aprobado: false, rechazado: false },
+    { id: 'a3', nombre: 'Gerente de Riesgos', email: 'riesgos@empresa.com', aprobado: false, rechazado: true, fechaAccion: new Date('2024-12-08'), comentario: 'Falta documentación' }
+  ]);
+
+  archivosAdjuntos = signal<ArchivoAdjunto[]>([
+    // Archivos para pregunta p1 (código de ética)
+    { id: 'f1', nombre: 'Código_Ética_2024.pdf', tipo: 'pdf', tamanio: '2.4 MB', urlDescarga: '/files/codigo_etica.pdf', preguntaId: 'p1', fechaSubida: new Date('2024-12-01') },
+    { id: 'f2', nombre: 'Comunicado_Ética.png', tipo: 'imagen', tamanio: '1.2 MB', urlPreview: 'https://picsum.photos/200/150', urlDescarga: '/files/comunicado.png', preguntaId: 'p1', fechaSubida: new Date('2024-12-05') },
+    // Archivos para pregunta p2 (capacitación)
+    { id: 'f3', nombre: 'Registro_Capacitación.xlsx', tipo: 'excel', tamanio: '850 KB', urlDescarga: '/files/capacitacion.xlsx', preguntaId: 'p2', fechaSubida: new Date('2024-12-03') },
+    { id: 'f4', nombre: 'Presentación_Controles.pdf', tipo: 'pdf', tamanio: '3.1 MB', urlDescarga: '/files/presentacion.pdf', preguntaId: 'p2', fechaSubida: new Date('2024-12-07') },
+    // Archivos para pregunta p4 (evaluación de riesgos)
+    { id: 'f5', nombre: 'Matriz_Riesgos_2024.xlsx', tipo: 'excel', tamanio: '1.5 MB', urlDescarga: '/files/matriz_riesgos.xlsx', preguntaId: 'p4', fechaSubida: new Date('2024-12-09') },
+    { id: 'f6', nombre: 'Informe_Evaluación.docx', tipo: 'word', tamanio: '2.2 MB', urlDescarga: '/files/informe_eval.docx', preguntaId: 'p4', fechaSubida: new Date('2024-12-10') },
+    // Archivos generales (sin pregunta específica)
+    { id: 'f7', nombre: 'Política_Seguridad_v3.pdf', tipo: 'pdf', tamanio: '1.8 MB', urlDescarga: '/files/politica.pdf', fechaSubida: new Date('2024-11-20') }
+  ]);
+
+  // Dialog para previsualizar archivos
+  showDialogPreview = signal(false);
+  archivoPreview = signal<ArchivoAdjunto | null>(null);
+
+  // Sidebar tabs (participantes, chat)
+  sidebarTabActivo = signal<'participantes' | 'chat'>('participantes');
+  seccionRespuestasExpandida = signal(true);
+  seccionAprobadoresExpandida = signal(true);
+  showChatSidebar = signal(false); // Mantener por compatibilidad
   mensajeChat = signal('');
   mensajesChat = signal<MensajeChat[]>([]);
 
@@ -2326,6 +2402,223 @@ export class CumplimientoComponent {
     this.cargarMensajesChat();
   }
 
+  // Seleccionar sección
+  seleccionarSeccion(id: string) {
+    this.seccionSeleccionadaId.set(id);
+    // Expandir la sección seleccionada
+    if (id && !this.seccionesExpandidas().includes(id)) {
+      this.seccionesExpandidas.update(arr => [...arr, id]);
+    }
+  }
+
+  // Obtener progreso del cuestionario
+  getProgresoCuestionario(): number {
+    const cuestionario = this.cuestionarioSeleccionado();
+    const respuesta = this.respuestaRevision();
+    if (!cuestionario || !respuesta) return 0;
+
+    const totalPreguntas = cuestionario.secciones.reduce((acc, s) => acc + s.preguntas.length, 0);
+    if (totalPreguntas === 0) return 0;
+
+    const respondidas = respuesta.respuestas.filter(r => r.valor !== null && r.valor !== '').length;
+    return Math.round((respondidas / totalPreguntas) * 100);
+  }
+
+  // Obtener progreso de la sección seleccionada
+  getProgresoSeccion(): number {
+    const cuestionario = this.cuestionarioSeleccionado();
+    const respuesta = this.respuestaRevision();
+    const seccionId = this.seccionSeleccionadaId();
+    if (!cuestionario || !respuesta || !seccionId) return 0;
+
+    const seccion = cuestionario.secciones.find(s => s.id === seccionId);
+    if (!seccion || seccion.preguntas.length === 0) return 0;
+
+    const preguntaIds = seccion.preguntas.map(p => p.id);
+    const respondidas = respuesta.respuestas.filter(r =>
+      preguntaIds.includes(r.preguntaId) && r.valor !== null && r.valor !== ''
+    ).length;
+
+    return Math.round((respondidas / seccion.preguntas.length) * 100);
+  }
+
+  // Aprobar cuestionario completo
+  aprobarCuestionarioCompleto() {
+    const cuestionario = this.cuestionarioSeleccionado();
+    if (!cuestionario) return;
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Cuestionario Aprobado',
+      detail: `El cuestionario "${cuestionario.nombre}" ha sido aprobado`
+    });
+
+    // Actualizar estado del cuestionario en la respuesta
+    const respuesta = this.respuestaRevision();
+    if (respuesta) {
+      respuesta.estado = 'aprobado';
+    }
+
+    this.irADashboard();
+  }
+
+  // Rechazar cuestionario completo
+  rechazarCuestionarioCompleto() {
+    const cuestionario = this.cuestionarioSeleccionado();
+    if (!cuestionario) return;
+
+    const comentario = this.comentarioGeneralRevisor();
+    if (!comentario || comentario.trim().length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Comentario Requerido',
+        detail: 'Debe agregar un comentario para rechazar el cuestionario'
+      });
+      return;
+    }
+
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Cuestionario Rechazado',
+      detail: `El cuestionario "${cuestionario.nombre}" ha sido rechazado`
+    });
+
+    this.irADashboard();
+  }
+
+  // Solicitar correcciones del cuestionario
+  solicitarCorreccionesCuestionario() {
+    const cuestionario = this.cuestionarioSeleccionado();
+    if (!cuestionario) return;
+
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Correcciones Solicitadas',
+      detail: `Se han solicitado correcciones para "${cuestionario.nombre}"`
+    });
+  }
+
+  // =============================================
+  // MÉTODOS PARA LA VISTA DE REVISIÓN - RESUMEN
+  // =============================================
+
+  // Obtener personas que han contestado
+  getPersonasContestaron(): PersonaContestacion[] {
+    return this.personasContestaron();
+  }
+
+  // Obtener aprobadores de la revisión
+  getAprobadoresRevision(): AprobadorRevision[] {
+    return this.aprobadoresRevision();
+  }
+
+  // Obtener archivos adjuntos
+  getArchivosAdjuntos(): ArchivoAdjunto[] {
+    return this.archivosAdjuntos();
+  }
+
+  // Obtener total de preguntas
+  getTotalPreguntas(): number {
+    const cuestionario = this.cuestionarioSeleccionado();
+    if (!cuestionario) return 0;
+    return cuestionario.secciones.reduce((total, seccion) => total + seccion.preguntas.length, 0);
+  }
+
+  // Obtener preguntas contestadas
+  getPreguntasContestadas(): number {
+    const cuestionario = this.cuestionarioSeleccionado();
+    const respuesta = this.respuestaRevision();
+    if (!cuestionario || !respuesta) return 0;
+
+    let contestadas = 0;
+    cuestionario.secciones.forEach(seccion => {
+      seccion.preguntas.forEach(pregunta => {
+        const resp = respuesta.respuestas.find(r => r.preguntaId === pregunta.id);
+        if (resp && resp.valor !== null && resp.valor !== '') {
+          contestadas++;
+        }
+      });
+    });
+    return contestadas;
+  }
+
+  // Obtener secciones completadas
+  getSeccionesCompletadas(): number {
+    const cuestionario = this.cuestionarioSeleccionado();
+    const respuesta = this.respuestaRevision();
+    if (!cuestionario || !respuesta) return 0;
+
+    let completadas = 0;
+    cuestionario.secciones.forEach(seccion => {
+      const preguntasSeccion = seccion.preguntas.length;
+      const contestadas = seccion.preguntas.filter(p => {
+        const resp = respuesta.respuestas.find(r => r.preguntaId === p.id);
+        return resp && resp.valor !== null && resp.valor !== '';
+      }).length;
+      if (contestadas === preguntasSeccion && preguntasSeccion > 0) {
+        completadas++;
+      }
+    });
+    return completadas;
+  }
+
+  // Obtener progreso de una sección por ID
+  getProgresoSeccionById(seccionId: string): number {
+    const cuestionario = this.cuestionarioSeleccionado();
+    const respuesta = this.respuestaRevision();
+    if (!cuestionario || !respuesta) return 0;
+
+    const seccion = cuestionario.secciones.find(s => s.id === seccionId);
+    if (!seccion || seccion.preguntas.length === 0) return 0;
+
+    const contestadas = seccion.preguntas.filter(p => {
+      const resp = respuesta.respuestas.find(r => r.preguntaId === p.id);
+      return resp && resp.valor !== null && resp.valor !== '';
+    }).length;
+
+    return Math.round((contestadas / seccion.preguntas.length) * 100);
+  }
+
+  // Previsualizar archivo
+  previsualizarArchivo(archivo: ArchivoAdjunto) {
+    this.archivoPreview.set(archivo);
+    this.showDialogPreview.set(true);
+  }
+
+  // Descargar archivo
+  descargarArchivo(archivo: ArchivoAdjunto) {
+    // En producción, esto descargaría el archivo real
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Descarga iniciada',
+      detail: `Descargando ${archivo.nombre}...`
+    });
+  }
+
+  // Previsualizar archivo por nombre
+  previsualizarArchivoPorNombre(nombreArchivo: string) {
+    const archivo = this.archivosAdjuntos().find(a => a.nombre === nombreArchivo);
+    if (archivo) {
+      this.previsualizarArchivo(archivo);
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Archivo no encontrado',
+        detail: `No se encontró el archivo "${nombreArchivo}"`
+      });
+    }
+  }
+
+  // Seleccionar revisión
+  seleccionarRevision(revisionId: string) {
+    this.revisionSeleccionadaId.set(revisionId);
+  }
+
+  // Obtener archivos adjuntos para una pregunta específica
+  getArchivosParaPregunta(preguntaId: string): ArchivoAdjunto[] {
+    return this.archivosAdjuntos().filter(a => a.preguntaId === preguntaId);
+  }
+
   // Obtener nombre del activo/proceso seleccionado
   getActivoProcesoNombre(): string {
     const id = this.activoProcesoSeleccionadoId();
@@ -2383,8 +2676,25 @@ export class CumplimientoComponent {
   }
 
   // =============================================
-  // METODOS - CHAT
+  // METODOS - SIDEBAR TABS Y CHAT
   // =============================================
+
+  cambiarSidebarTab(tab: string | number | undefined) {
+    if (tab === 'participantes' || tab === 'chat') {
+      this.sidebarTabActivo.set(tab);
+      if (tab === 'chat') {
+        this.cargarMensajesChat();
+      }
+    }
+  }
+
+  toggleSeccionRespuestas() {
+    this.seccionRespuestasExpandida.update(v => !v);
+  }
+
+  toggleSeccionAprobadores() {
+    this.seccionAprobadoresExpandida.update(v => !v);
+  }
 
   toggleChatSidebar() {
     this.showChatSidebar.update(v => !v);
