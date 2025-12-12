@@ -422,7 +422,7 @@
 <!-- ==================== VISTA: REVISAR CUESTIONARIO ==================== -->
 @if (vistaActual() === 'revisar' && asignacionSeleccionada()) {
 <div class="revisiones-container">
-  <!-- ========== PANEL IZQUIERDO: NAVEGACIÓN JERÁRQUICA ========== -->
+  <!-- ========== PANEL DERECHO: NAVEGACIÓN + PERSONAS + CHAT (1/3 pantalla) ========== -->
   <div class="revisiones-sidebar">
     <!-- Header -->
     <div class="sidebar-header">
@@ -435,127 +435,288 @@
       </div>
     </div>
 
-    <!-- Card de la Revisión Actual (Solo Vista) -->
-    <div class="revision-card">
-      <div class="flex align-items-center justify-content-between mb-2">
-        <span class="font-semibold text-900">{{ asignacionSeleccionada()!.titulo }}</span>
-        <p-tag [value]="getEstadoAsignacionLabel(asignacionSeleccionada()!.estado)"
-               [severity]="getEstadoAsignacionSeverity(asignacionSeleccionada()!.estado)" />
-      </div>
-      <p class="text-500 text-sm m-0 mb-2">{{ asignacionSeleccionada()!.descripcion || 'Sin descripción' }}</p>
-
-      <!-- Info compacta -->
-      <div class="revision-info-grid">
-        <div class="info-item">
-          <i class="pi pi-calendar text-primary"></i>
-          <div>
-            <span class="info-label">Período</span>
-            <span class="info-value">{{ asignacionSeleccionada()!.fechaInicio | date:'dd/MM' }} - {{ asignacionSeleccionada()!.fechaVencimiento | date:'dd/MM/yy' }}</span>
+    <!-- Tabs: Navegación, Personas, Chat -->
+    <div class="sidebar-tabs-container flex-1">
+      <p-tabs [value]="sidebarTabActivo()" (valueChange)="cambiarSidebarTab($event)" styleClass="sidebar-tabs h-full">
+        <div class="sidebar-tablist-wrapper">
+          <p-tablist>
+            <p-tab value="navegacion">
+              <i class="pi pi-sitemap mr-1"></i>
+              <span>Navegación</span>
+            </p-tab>
+            <p-tab value="participantes">
+              <i class="pi pi-users mr-1"></i>
+              <span>Personas</span>
+            </p-tab>
+            <p-tab value="chat">
+              <i class="pi pi-comments mr-1"></i>
+              <span>Chat</span>
+              @if (getMensajesNoLeidos() > 0) {
+                <p-badge [value]="getMensajesNoLeidos() + ''" severity="danger" styleClass="ml-1" />
+              }
+            </p-tab>
+          </p-tablist>
+          <div class="sidebar-tablist-actions">
+            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" (onClick)="abrirDialogEditarRevision()" pTooltip="Editar revisión" />
+            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger" (onClick)="eliminarAsignacionActual()" pTooltip="Eliminar revisión" />
           </div>
         </div>
-        <div class="info-item">
-          <i class="pi pi-users text-blue-500"></i>
-          <div>
-            <span class="info-label">Asignados</span>
-            <span class="info-value">{{ asignacionSeleccionada()!.usuariosAsignados?.length || 0 }}</span>
-          </div>
-        </div>
-        <div class="info-item">
-          <i class="pi pi-verified text-green-500"></i>
-          <div>
-            <span class="info-label">Aprobadores</span>
-            <span class="info-value">{{ asignacionSeleccionada()!.aprobadores?.length || 0 }}</span>
-          </div>
-        </div>
-      </div>
 
-      <div class="flex gap-2">
-        <p-button icon="pi pi-pencil" label="Editar" [text]="true" size="small" (onClick)="abrirDialogEditarRevision()" />
-        <p-button icon="pi pi-trash" [text]="true" size="small" severity="danger" (onClick)="eliminarAsignacionActual()" pTooltip="Eliminar revisión" />
-      </div>
-    </div>
+        <p-tabpanels class="flex-1 overflow-hidden">
+          <!-- Tab: Navegación -->
+          <p-tabpanel value="navegacion" class="h-full">
+            <div class="sidebar-tab-content navegacion-content">
+              <!-- Card de la Revisión Actual (Solo Vista) -->
+              <div class="revision-card">
+                <div class="flex align-items-center justify-content-between mb-2">
+                  <span class="font-semibold text-900">{{ asignacionSeleccionada()!.titulo }}</span>
+                  <p-tag [value]="getEstadoAsignacionLabel(asignacionSeleccionada()!.estado)"
+                         [severity]="getEstadoAsignacionSeverity(asignacionSeleccionada()!.estado)" />
+                </div>
+                <p class="text-500 text-sm m-0 mb-2">{{ asignacionSeleccionada()!.descripcion || 'Sin descripción' }}</p>
 
-    <!-- Selector: Activo/Proceso -->
-    <div class="selector-group">
-      <label class="selector-label">Activo / Proceso</label>
-      <p-select
-        [options]="activosProcesosEnRevision()"
-        [ngModel]="activoProcesoSeleccionadoId()"
-        (ngModelChange)="seleccionarActivoProceso($event)"
-        optionLabel="nombre"
-        optionValue="id"
-        placeholder="Seleccionar activo/proceso"
-        appendTo="body"
-        [variant]="'filled'"
-        styleClass="w-full" />
-    </div>
+                <!-- Info compacta -->
+                <div class="revision-info-grid">
+                  <div class="info-item">
+                    <i class="pi pi-calendar text-primary"></i>
+                    <div>
+                      <span class="info-label">Período</span>
+                      <span class="info-value">{{ asignacionSeleccionada()!.fechaInicio | date:'dd/MM' }} - {{ asignacionSeleccionada()!.fechaVencimiento | date:'dd/MM/yy' }}</span>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <i class="pi pi-users text-blue-500"></i>
+                    <div>
+                      <span class="info-label">Asignados</span>
+                      <span class="info-value">{{ asignacionSeleccionada()!.usuariosAsignados?.length || 0 }}</span>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <i class="pi pi-verified text-green-500"></i>
+                    <div>
+                      <span class="info-label">Aprobadores</span>
+                      <span class="info-value">{{ asignacionSeleccionada()!.aprobadores?.length || 0 }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-    <!-- Selector: Revisión -->
-    <div class="selector-group">
-      <label class="selector-label">Revisión</label>
-      <p-select
-        [options]="revisionesDisponibles()"
-        [ngModel]="revisionSeleccionadaId()"
-        (ngModelChange)="seleccionarRevision($event)"
-        optionLabel="nombre"
-        optionValue="id"
-        placeholder="Seleccionar revisión"
-        appendTo="body"
-        [variant]="'filled'"
-        styleClass="w-full" />
-    </div>
+              <!-- Selector: Activo/Proceso -->
+              <div class="selector-group">
+                <label class="selector-label">Activo / Proceso</label>
+                <p-select
+                  [options]="activosProcesosEnRevision()"
+                  [ngModel]="activoProcesoSeleccionadoId()"
+                  (ngModelChange)="seleccionarActivoProceso($event)"
+                  optionLabel="nombre"
+                  optionValue="id"
+                  placeholder="Seleccionar activo/proceso"
+                  appendTo="body"
+                  [variant]="'filled'"
+                  styleClass="w-full" />
+              </div>
 
-    <!-- Selector: Cuestionario -->
-    <div class="selector-group">
-      <label class="selector-label">Cuestionario</label>
-      <p-select
-        [options]="cuestionariosEnRevision()"
-        [ngModel]="cuestionarioRevisionSeleccionadoId()"
-        (ngModelChange)="seleccionarCuestionarioRevision($event)"
-        optionLabel="nombre"
-        optionValue="id"
-        placeholder="Seleccionar cuestionario"
-        appendTo="body"
-        [variant]="'filled'"
-        styleClass="w-full" />
-      <!-- Barra de progreso del cuestionario -->
-      @if (cuestionarioSeleccionado()) {
-        <div class="progress-section">
-          <p-progressBar [value]="getProgresoCuestionario()" [showValue]="false" styleClass="h-0.5rem" />
-          <div class="flex justify-content-between mt-1">
-            <span class="text-xs text-primary font-semibold">{{ getProgresoCuestionario() }}%</span>
-            <span class="text-xs text-500">activo</span>
-          </div>
-        </div>
-      }
-    </div>
+              <!-- Selector: Revisión -->
+              <div class="selector-group">
+                <label class="selector-label">Revisión</label>
+                <p-select
+                  [options]="revisionesDisponibles()"
+                  [ngModel]="revisionSeleccionadaId()"
+                  (ngModelChange)="seleccionarRevision($event)"
+                  optionLabel="nombre"
+                  optionValue="id"
+                  placeholder="Seleccionar revisión"
+                  appendTo="body"
+                  [variant]="'filled'"
+                  styleClass="w-full" />
+              </div>
 
-    <!-- Selector: Sección -->
-    @if (cuestionarioSeleccionado()) {
-      <div class="selector-group">
-        <label class="selector-label">Sección</label>
-        <p-select
-          [options]="cuestionarioSeleccionado()!.secciones"
-          [ngModel]="seccionSeleccionadaId()"
-          (ngModelChange)="seleccionarSeccion($event)"
-          optionLabel="nombre"
-          optionValue="id"
-          placeholder="Seleccionar sección"
-          appendTo="body"
-          [variant]="'filled'"
-          styleClass="w-full" />
-        <!-- Barra de progreso de la sección -->
-        @if (seccionSeleccionadaId()) {
-          <div class="progress-section">
-            <p-progressBar [value]="getProgresoSeccion()" [showValue]="false" styleClass="h-0.5rem" />
-            <div class="flex justify-content-between mt-1">
-              <span class="text-xs text-primary font-semibold">{{ getProgresoSeccion() }}%</span>
-              <span class="text-xs text-500">completado</span>
+              <!-- Selector: Cuestionario -->
+              <div class="selector-group">
+                <label class="selector-label">Cuestionario</label>
+                <p-select
+                  [options]="cuestionariosEnRevision()"
+                  [ngModel]="cuestionarioRevisionSeleccionadoId()"
+                  (ngModelChange)="seleccionarCuestionarioRevision($event)"
+                  optionLabel="nombre"
+                  optionValue="id"
+                  placeholder="Seleccionar cuestionario"
+                  appendTo="body"
+                  [variant]="'filled'"
+                  styleClass="w-full" />
+                <!-- Barra de progreso del cuestionario -->
+                @if (cuestionarioSeleccionado()) {
+                  <div class="progress-section">
+                    <p-progressBar [value]="getProgresoCuestionario()" [showValue]="false" styleClass="h-0.5rem" />
+                    <div class="flex justify-content-between mt-1">
+                      <span class="text-xs text-primary font-semibold">{{ getProgresoCuestionario() }}%</span>
+                      <span class="text-xs text-500">activo</span>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Selector: Sección -->
+              @if (cuestionarioSeleccionado()) {
+                <div class="selector-group">
+                  <label class="selector-label">Sección</label>
+                  <p-select
+                    [options]="cuestionarioSeleccionado()!.secciones"
+                    [ngModel]="seccionSeleccionadaId()"
+                    (ngModelChange)="seleccionarSeccion($event)"
+                    optionLabel="nombre"
+                    optionValue="id"
+                    placeholder="Seleccionar sección"
+                    appendTo="body"
+                    [variant]="'filled'"
+                    styleClass="w-full" />
+                  <!-- Barra de progreso de la sección -->
+                  @if (seccionSeleccionadaId()) {
+                    <div class="progress-section">
+                      <p-progressBar [value]="getProgresoSeccion()" [showValue]="false" styleClass="h-0.5rem" />
+                      <div class="flex justify-content-between mt-1">
+                        <span class="text-xs text-primary font-semibold">{{ getProgresoSeccion() }}%</span>
+                        <span class="text-xs text-500">completado</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
             </div>
-          </div>
-        }
-      </div>
-    }
+          </p-tabpanel>
+
+          <!-- Tab: Participantes -->
+          <p-tabpanel value="participantes">
+            <div class="sidebar-tab-content">
+              <!-- Sección colapsable: Han contestado -->
+              <div class="collapsible-section">
+                <div class="collapsible-header" (click)="toggleSeccionRespuestas()">
+                  <div class="collapsible-title">
+                    <i class="pi pi-users text-blue-500"></i>
+                    <span>Han contestado</span>
+                    <p-badge [value]="getPersonasContestaron().length + ''" severity="info" styleClass="ml-auto" />
+                  </div>
+                  <i class="pi" [ngClass]="seccionRespuestasExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                </div>
+                @if (seccionRespuestasExpandida()) {
+                  <div class="collapsible-content">
+                    @for (persona of getPersonasContestaron(); track persona.id) {
+                      <div class="persona-mini">
+                        <p-avatar [label]="persona.nombre.charAt(0)" shape="circle" size="normal"
+                                  [style]="{'background-color': persona.completado ? 'var(--green-100)' : 'var(--yellow-100)', 'color': persona.completado ? 'var(--green-600)' : 'var(--yellow-600)'}" />
+                        <div class="persona-mini-info">
+                          <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                          <div class="persona-mini-progress">
+                            <p-progressBar [value]="persona.progreso" [showValue]="false" styleClass="h-0.25rem" />
+                            <span class="text-xs">{{ persona.progreso }}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    } @empty {
+                      <div class="collapsible-empty">
+                        <i class="pi pi-inbox text-300"></i>
+                        <span class="text-500 text-sm">Sin respuestas aún</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Sección colapsable: Aprobadores -->
+              <div class="collapsible-section">
+                <div class="collapsible-header" (click)="toggleSeccionAprobadores()">
+                  <div class="collapsible-title">
+                    <i class="pi pi-verified text-green-500"></i>
+                    <span>Aprobadores</span>
+                    <p-badge [value]="getAprobadoresRevision().length + ''" severity="success" styleClass="ml-auto" />
+                  </div>
+                  <i class="pi" [ngClass]="seccionAprobadoresExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                </div>
+                @if (seccionAprobadoresExpandida()) {
+                  <div class="collapsible-content">
+                    @for (aprobador of getAprobadoresRevision(); track aprobador.id) {
+                      <div class="persona-mini">
+                        <p-avatar [label]="aprobador.nombre.charAt(0)" shape="circle" size="normal"
+                                  [style]="{'background-color': aprobador.aprobado ? 'var(--green-100)' : aprobador.rechazado ? 'var(--red-100)' : 'var(--surface-200)', 'color': aprobador.aprobado ? 'var(--green-600)' : aprobador.rechazado ? 'var(--red-600)' : 'var(--text-color-secondary)'}" />
+                        <div class="persona-mini-info">
+                          <span class="persona-mini-nombre">{{ aprobador.nombre }}</span>
+                          <p-tag [value]="aprobador.aprobado ? 'Aprobado' : aprobador.rechazado ? 'Rechazado' : 'Pendiente'"
+                                 [severity]="aprobador.aprobado ? 'success' : aprobador.rechazado ? 'danger' : 'secondary'"
+                                 styleClass="text-xs" />
+                        </div>
+                      </div>
+                    } @empty {
+                      <div class="collapsible-empty">
+                        <i class="pi pi-user-minus text-300"></i>
+                        <span class="text-500 text-sm">Sin aprobadores</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab: Chat -->
+          <p-tabpanel value="chat">
+            <div class="sidebar-chat-tab">
+              <!-- Participantes del chat -->
+              <div class="chat-participantes">
+                @for (participante of participantesChat(); track participante.id) {
+                  <p-avatar [label]="participante.nombre.charAt(0)"
+                            [styleClass]="participante.rol === 'aprobador' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'"
+                            shape="circle" size="normal"
+                            [pTooltip]="participante.nombre" />
+                }
+                <span class="text-500 text-xs">{{ participantesChat().length }}</span>
+              </div>
+
+              <!-- Mensajes -->
+              <div class="chat-mensajes">
+                @for (mensaje of mensajesChat(); track mensaje.id) {
+                  @if (esMensajePropio(mensaje)) {
+                    <div class="mensaje mensaje-propio">
+                      <div class="mensaje-contenido bg-primary text-white">
+                        <p class="m-0 text-sm">{{ mensaje.mensaje }}</p>
+                      </div>
+                      <span class="mensaje-hora">{{ getMensajeHora(mensaje.fecha) }}</span>
+                    </div>
+                  } @else {
+                    <div class="mensaje mensaje-otro">
+                      <p-avatar [label]="mensaje.usuarioNombre.charAt(0)" shape="circle" size="normal"
+                                styleClass="bg-surface-200" />
+                      <div class="mensaje-contenido-wrapper">
+                        <span class="mensaje-autor">{{ mensaje.usuarioNombre }}</span>
+                        <div class="mensaje-contenido surface-100">
+                          <p class="m-0 text-sm">{{ mensaje.mensaje }}</p>
+                        </div>
+                        <span class="mensaje-hora">{{ getMensajeHora(mensaje.fecha) }}</span>
+                      </div>
+                    </div>
+                  }
+                } @empty {
+                  <div class="chat-empty">
+                    <i class="pi pi-comments text-300 text-3xl"></i>
+                    <p class="m-0 text-500 text-sm">No hay mensajes</p>
+                    <p class="m-0 text-400 text-xs">Inicia la conversación</p>
+                  </div>
+                }
+              </div>
+
+              <!-- Input del Chat -->
+              <div class="chat-input">
+                <input type="text" pInputText class="flex-1" placeholder="Escribe un mensaje..."
+                       [ngModel]="mensajeChat()"
+                       (ngModelChange)="mensajeChat.set($event)"
+                       (keyup.enter)="enviarMensajeChat()"
+                       [variant]="'filled'" />
+                <p-button icon="pi pi-send" [rounded]="true" [disabled]="!mensajeChat().trim()" (onClick)="enviarMensajeChat()" />
+              </div>
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
   </div>
 
   <!-- ========== PANEL CENTRAL: CUESTIONARIO ========== -->
@@ -563,15 +724,9 @@
     @if (cuestionarioSeleccionado()) {
       <!-- Header del cuestionario -->
       <div class="content-header">
-        <div class="flex align-items-center justify-content-between">
-          <div class="flex align-items-center gap-3">
-            <h2 class="m-0 text-xl font-bold">{{ cuestionarioSeleccionado()!.nombre }}</h2>
-            <p-tag value="Activo" severity="success" />
-          </div>
-          <div class="flex gap-2">
-            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" pTooltip="Editar Revisión" (onClick)="abrirDialogEditarRevision()" />
-            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="eliminarAsignacionActual()" />
-          </div>
+        <div class="flex align-items-center gap-3">
+          <h2 class="m-0 text-xl font-bold">{{ cuestionarioSeleccionado()!.nombre }}</h2>
+          <p-tag value="Activo" severity="success" />
         </div>
         <!-- Barra de progreso general -->
         <div class="mt-3">
@@ -720,159 +875,6 @@
               </p-accordionpanel>
             }
           </p-accordion>
-        </div>
-
-        <!-- Panel Derecho: Tabs Participantes/Chat/Config -->
-        <div class="content-body-sidebar">
-          <div class="sidebar-tabs-container">
-            <p-tabs [value]="sidebarTabActivo()" (valueChange)="cambiarSidebarTab($event)" styleClass="sidebar-tabs">
-              <p-tablist>
-                <p-tab value="participantes">
-                  <i class="pi pi-users mr-1"></i>
-                  <span>Personas</span>
-                </p-tab>
-                <p-tab value="chat">
-                  <i class="pi pi-comments mr-1"></i>
-                  <span>Chat</span>
-                  @if (getMensajesNoLeidos() > 0) {
-                    <p-badge [value]="getMensajesNoLeidos() + ''" severity="danger" styleClass="ml-1" />
-                  }
-                </p-tab>
-              </p-tablist>
-
-              <p-tabpanels>
-                <!-- Tab: Participantes (Solo Vista) -->
-                <p-tabpanel value="participantes">
-                  <div class="sidebar-tab-content">
-                    <!-- Sección colapsable: Han contestado -->
-                    <div class="collapsible-section">
-                      <div class="collapsible-header" (click)="toggleSeccionRespuestas()">
-                        <div class="collapsible-title">
-                          <i class="pi pi-users text-blue-500"></i>
-                          <span>Han contestado</span>
-                          <p-badge [value]="getPersonasContestaron().length + ''" severity="info" styleClass="ml-auto" />
-                        </div>
-                        <i class="pi" [ngClass]="seccionRespuestasExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-                      </div>
-                      @if (seccionRespuestasExpandida()) {
-                        <div class="collapsible-content">
-                          @for (persona of getPersonasContestaron(); track persona.id) {
-                            <div class="persona-mini">
-                              <p-avatar [label]="persona.nombre.charAt(0)" shape="circle" size="normal"
-                                        [style]="{'background-color': persona.completado ? 'var(--green-100)' : 'var(--yellow-100)', 'color': persona.completado ? 'var(--green-600)' : 'var(--yellow-600)'}" />
-                              <div class="persona-mini-info">
-                                <span class="persona-mini-nombre">{{ persona.nombre }}</span>
-                                <div class="persona-mini-progress">
-                                  <p-progressBar [value]="persona.progreso" [showValue]="false" styleClass="h-0.25rem" />
-                                  <span class="text-xs">{{ persona.progreso }}%</span>
-                                </div>
-                              </div>
-                            </div>
-                          } @empty {
-                            <div class="collapsible-empty">
-                              <i class="pi pi-inbox text-300"></i>
-                              <span class="text-500 text-sm">Sin respuestas aún</span>
-                            </div>
-                          }
-                        </div>
-                      }
-                    </div>
-
-                    <!-- Sección colapsable: Aprobadores -->
-                    <div class="collapsible-section">
-                      <div class="collapsible-header" (click)="toggleSeccionAprobadores()">
-                        <div class="collapsible-title">
-                          <i class="pi pi-verified text-green-500"></i>
-                          <span>Aprobadores</span>
-                          <p-badge [value]="getAprobadoresRevision().length + ''" severity="success" styleClass="ml-auto" />
-                        </div>
-                        <i class="pi" [ngClass]="seccionAprobadoresExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-                      </div>
-                      @if (seccionAprobadoresExpandida()) {
-                        <div class="collapsible-content">
-                          @for (aprobador of getAprobadoresRevision(); track aprobador.id) {
-                            <div class="persona-mini">
-                              <p-avatar [label]="aprobador.nombre.charAt(0)" shape="circle" size="normal"
-                                        [style]="{'background-color': aprobador.aprobado ? 'var(--green-100)' : aprobador.rechazado ? 'var(--red-100)' : 'var(--surface-200)', 'color': aprobador.aprobado ? 'var(--green-600)' : aprobador.rechazado ? 'var(--red-600)' : 'var(--text-color-secondary)'}" />
-                              <div class="persona-mini-info">
-                                <span class="persona-mini-nombre">{{ aprobador.nombre }}</span>
-                                <p-tag [value]="aprobador.aprobado ? 'Aprobado' : aprobador.rechazado ? 'Rechazado' : 'Pendiente'"
-                                       [severity]="aprobador.aprobado ? 'success' : aprobador.rechazado ? 'danger' : 'secondary'"
-                                       styleClass="text-xs" />
-                              </div>
-                            </div>
-                          } @empty {
-                            <div class="collapsible-empty">
-                              <i class="pi pi-user-minus text-300"></i>
-                              <span class="text-500 text-sm">Sin aprobadores</span>
-                            </div>
-                          }
-                        </div>
-                      }
-                    </div>
-                  </div>
-                </p-tabpanel>
-
-                <!-- Tab: Chat -->
-                <p-tabpanel value="chat">
-                  <div class="sidebar-chat-tab">
-                    <!-- Participantes del chat -->
-                    <div class="chat-participantes">
-                      @for (participante of participantesChat(); track participante.id) {
-                        <p-avatar [label]="participante.nombre.charAt(0)"
-                                  [styleClass]="participante.rol === 'aprobador' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'"
-                                  shape="circle" size="normal"
-                                  [pTooltip]="participante.nombre" />
-                      }
-                      <span class="text-500 text-xs">{{ participantesChat().length }}</span>
-                    </div>
-
-                    <!-- Mensajes -->
-                    <div class="chat-mensajes">
-                      @for (mensaje of mensajesChat(); track mensaje.id) {
-                        @if (esMensajePropio(mensaje)) {
-                          <div class="mensaje mensaje-propio">
-                            <div class="mensaje-contenido bg-primary text-white">
-                              <p class="m-0 text-sm">{{ mensaje.mensaje }}</p>
-                            </div>
-                            <span class="mensaje-hora">{{ getMensajeHora(mensaje.fecha) }}</span>
-                          </div>
-                        } @else {
-                          <div class="mensaje mensaje-otro">
-                            <p-avatar [label]="mensaje.usuarioNombre.charAt(0)" shape="circle" size="normal"
-                                      styleClass="bg-surface-200" />
-                            <div class="mensaje-contenido-wrapper">
-                              <span class="mensaje-autor">{{ mensaje.usuarioNombre }}</span>
-                              <div class="mensaje-contenido surface-100">
-                                <p class="m-0 text-sm">{{ mensaje.mensaje }}</p>
-                              </div>
-                              <span class="mensaje-hora">{{ getMensajeHora(mensaje.fecha) }}</span>
-                            </div>
-                          </div>
-                        }
-                      } @empty {
-                        <div class="chat-empty">
-                          <i class="pi pi-comments text-300 text-3xl"></i>
-                          <p class="m-0 text-500 text-sm">No hay mensajes</p>
-                          <p class="m-0 text-400 text-xs">Inicia la conversación</p>
-                        </div>
-                      }
-                    </div>
-
-                    <!-- Input del Chat -->
-                    <div class="chat-input">
-                      <input type="text" pInputText class="flex-1" placeholder="Escribe un mensaje..."
-                             [ngModel]="mensajeChat()"
-                             (ngModelChange)="mensajeChat.set($event)"
-                             (keyup.enter)="enviarMensajeChat()"
-                             [variant]="'filled'" />
-                      <p-button icon="pi pi-send" [rounded]="true" [disabled]="!mensajeChat().trim()" (onClick)="enviarMensajeChat()" />
-                    </div>
-                  </div>
-                </p-tabpanel>
-              </p-tabpanels>
-            </p-tabs>
-          </div>
         </div>
       </div>
     } @else {

@@ -276,8 +276,8 @@ export class CumplimientoComponent {
   showDialogPreview = signal(false);
   archivoPreview = signal<ArchivoAdjunto | null>(null);
 
-  // Sidebar tabs (participantes, chat)
-  sidebarTabActivo = signal<'participantes' | 'chat'>('participantes');
+  // Sidebar tabs (navegacion, participantes, chat)
+  sidebarTabActivo = signal<'navegacion' | 'participantes' | 'chat'>('navegacion');
   seccionRespuestasExpandida = signal(true);
   seccionAprobadoresExpandida = signal(true);
   showChatSidebar = signal(false); // Mantener por compatibilidad
@@ -2719,7 +2719,7 @@ export class CumplimientoComponent {
   // =============================================
 
   cambiarSidebarTab(tab: string | number | undefined) {
-    if (tab === 'participantes' || tab === 'chat') {
+    if (tab === 'navegacion' || tab === 'participantes' || tab === 'chat') {
       this.sidebarTabActivo.set(tab);
       if (tab === 'chat') {
         this.cargarMensajesChat();
