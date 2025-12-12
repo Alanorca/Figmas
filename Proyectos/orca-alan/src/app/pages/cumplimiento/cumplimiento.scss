@@ -36,11 +36,75 @@
   border-radius: 8px;
   border: 1px solid var(--surface-border);
   position: relative;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
 
   .edit-btn {
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
+  }
+}
+
+// Edición in-place
+.edicion-inplace {
+  .field {
+    margin-bottom: 0.75rem;
+  }
+
+  label {
+    color: var(--text-color-secondary);
+  }
+
+  ::ng-deep {
+    .p-inputtext,
+    .p-textarea {
+      font-size: 0.875rem;
+    }
+
+    .p-multiselect {
+      font-size: 0.875rem;
+
+      .p-multiselect-label {
+        padding: 0.5rem;
+      }
+    }
+
+    .p-datepicker {
+      font-size: 0.875rem;
+
+      .p-inputtext {
+        padding: 0.5rem;
+      }
+    }
+  }
+
+  .collapsible-section {
+    margin-bottom: 0.5rem;
+  }
+
+  .collapsible-header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .collapsible-content {
+    padding: 0.5rem;
+  }
+}
+
+// Edición sidebar section
+.edicion-sidebar-section {
+  background: var(--surface-50);
+  border-radius: 8px;
+  padding: 0.75rem;
+  border: 1px solid var(--surface-border);
+
+  ::ng-deep .p-multiselect {
+    font-size: 0.8125rem;
+
+    .p-multiselect-label {
+      padding: 0.5rem;
+    }
   }
 }
 
@@ -191,14 +255,50 @@
   border: 1px solid var(--surface-border);
 }
 
-// Grid de información (personas y aprobadores)
+// Grid de información compacta (panel izquierdo - revision card)
 .revision-info-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 
-  @media (max-width: 1024px) {
+  @media (max-width: 768px) {
     grid-template-columns: 1fr;
+  }
+}
+
+// Item de información compacto
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--surface-50);
+  border-radius: 6px;
+
+  i {
+    font-size: 0.875rem;
+    margin-top: 0.125rem;
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .info-label {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: var(--text-color-secondary);
+    font-weight: 500;
+  }
+
+  .info-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
   }
 }
 
@@ -949,6 +1049,105 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+}
+
+// Config tab específico
+.sidebar-config-tab {
+  padding: 0.75rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 300px);
+}
+
+.config-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.config-section {
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface-card);
+}
+
+.config-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--surface-50);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: var(--surface-100);
+  }
+
+  .pi-chevron-up,
+  .pi-chevron-down {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+.config-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-color);
+
+  i {
+    font-size: 1rem;
+  }
+
+  ::ng-deep .p-badge {
+    font-size: 0.625rem;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    line-height: 1.25rem;
+  }
+}
+
+.config-section-content {
+  padding: 0.75rem;
+  border-top: 1px solid var(--surface-border);
+  background: var(--surface-card);
+
+  .field {
+    margin-bottom: 0;
+  }
+
+  ::ng-deep {
+    .p-inputtext,
+    .p-textarea,
+    .p-select,
+    .p-multiselect,
+    .p-datepicker {
+      font-size: 0.875rem;
+    }
+
+    .p-selectbutton {
+      .p-button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+      }
+    }
+
+    .p-multiselect-chip {
+      font-size: 0.75rem;
+      padding: 0.125rem 0.375rem;
+    }
+  }
+}
+
+.config-section-danger {
+  border-color: var(--red-200);
 }
 
 // =============================================

@@ -435,14 +435,44 @@
       </div>
     </div>
 
-    <!-- Card de la Revisión Actual -->
+    <!-- Card de la Revisión Actual (Solo Vista) -->
     <div class="revision-card">
       <div class="flex align-items-center justify-content-between mb-2">
         <span class="font-semibold text-900">{{ asignacionSeleccionada()!.titulo }}</span>
-        <p-tag value="Activo" severity="success" />
+        <p-tag [value]="getEstadoAsignacionLabel(asignacionSeleccionada()!.estado)"
+               [severity]="getEstadoAsignacionSeverity(asignacionSeleccionada()!.estado)" />
       </div>
-      <p class="text-500 text-sm m-0">{{ asignacionSeleccionada()!.descripcion || 'Cuestionario de cumplimiento' }}</p>
-      <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" styleClass="edit-btn" />
+      <p class="text-500 text-sm m-0 mb-2">{{ asignacionSeleccionada()!.descripcion || 'Sin descripción' }}</p>
+
+      <!-- Info compacta -->
+      <div class="revision-info-grid">
+        <div class="info-item">
+          <i class="pi pi-calendar text-primary"></i>
+          <div>
+            <span class="info-label">Período</span>
+            <span class="info-value">{{ asignacionSeleccionada()!.fechaInicio | date:'dd/MM' }} - {{ asignacionSeleccionada()!.fechaVencimiento | date:'dd/MM/yy' }}</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-users text-blue-500"></i>
+          <div>
+            <span class="info-label">Asignados</span>
+            <span class="info-value">{{ asignacionSeleccionada()!.usuariosAsignados?.length || 0 }}</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-verified text-green-500"></i>
+          <div>
+            <span class="info-label">Aprobadores</span>
+            <span class="info-value">{{ asignacionSeleccionada()!.aprobadores?.length || 0 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <p-button icon="pi pi-pencil" label="Editar" [text]="true" size="small" (onClick)="abrirDialogEditarRevision()" />
+        <p-button icon="pi pi-trash" [text]="true" size="small" severity="danger" (onClick)="eliminarAsignacionActual()" pTooltip="Eliminar revisión" />
+      </div>
     </div>
 
     <!-- Selector: Activo/Proceso -->
@@ -539,8 +569,8 @@
             <p-tag value="Activo" severity="success" />
           </div>
           <div class="flex gap-2">
-            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" pTooltip="Editar" />
-            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" />
+            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" pTooltip="Editar Revisión" (onClick)="abrirDialogEditarRevision()" />
+            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="eliminarAsignacionActual()" />
           </div>
         </div>
         <!-- Barra de progreso general -->
@@ -692,14 +722,14 @@
           </p-accordion>
         </div>
 
-        <!-- Panel Derecho: Tabs Participantes/Chat -->
+        <!-- Panel Derecho: Tabs Participantes/Chat/Config -->
         <div class="content-body-sidebar">
           <div class="sidebar-tabs-container">
             <p-tabs [value]="sidebarTabActivo()" (valueChange)="cambiarSidebarTab($event)" styleClass="sidebar-tabs">
               <p-tablist>
                 <p-tab value="participantes">
                   <i class="pi pi-users mr-1"></i>
-                  <span>Participantes</span>
+                  <span>Personas</span>
                 </p-tab>
                 <p-tab value="chat">
                   <i class="pi pi-comments mr-1"></i>
@@ -711,7 +741,7 @@
               </p-tablist>
 
               <p-tabpanels>
-                <!-- Tab: Participantes (Respuestas + Aprobadores colapsables) -->
+                <!-- Tab: Participantes (Solo Vista) -->
                 <p-tabpanel value="participantes">
                   <div class="sidebar-tab-content">
                     <!-- Sección colapsable: Han contestado -->
@@ -859,6 +889,205 @@
 
 </div>
 }
+
+<!-- Dialog: Editar Revisión con Tabs -->
+<p-dialog header="Editar Revisión" [(visible)]="showDialogEditarRevision" [modal]="true" [style]="{width: '700px'}" [draggable]="false" styleClass="dialog-editar-revision">
+  <p-tabs [value]="tabEdicionActivo()" (valueChange)="cambiarTabEdicion($event)">
+    <p-tablist>
+      <p-tab value="info">
+        <i class="pi pi-info-circle mr-2"></i>Información
+      </p-tab>
+      <p-tab value="usuarios">
+        <i class="pi pi-users mr-2"></i>Usuarios
+      </p-tab>
+      <p-tab value="alcance">
+        <i class="pi pi-sitemap mr-2"></i>Alcance
+      </p-tab>
+      <p-tab value="config">
+        <i class="pi pi-cog mr-2"></i>Configuración
+      </p-tab>
+    </p-tablist>
+
+    <p-tabpanels styleClass="pt-3">
+      <!-- Tab 1: Información General -->
+      <p-tabpanel value="info">
+        <div class="grid">
+          <div class="col-12">
+            <label class="block font-medium mb-2">Título *</label>
+            <input type="text" pInputText class="w-full"
+                   [ngModel]="edicionRevision().titulo"
+                   (ngModelChange)="actualizarEdicionRevisionCampo('titulo', $event)"
+                   placeholder="Título de la revisión" />
+          </div>
+          <div class="col-12">
+            <label class="block font-medium mb-2">Descripción</label>
+            <textarea pTextarea class="w-full" rows="2"
+                      [ngModel]="edicionRevision().descripcion"
+                      (ngModelChange)="actualizarEdicionRevisionCampo('descripcion', $event)"
+                      placeholder="Descripción de la revisión"></textarea>
+          </div>
+          <div class="col-12 md:col-6">
+            <label class="block font-medium mb-2">Tipo de Revisión</label>
+            <p-selectbutton [options]="[{label: 'Interna', value: 'interna'}, {label: 'Externa', value: 'externa'}]"
+                            [ngModel]="edicionRevision().tipoRevision"
+                            (ngModelChange)="actualizarEdicionRevisionCampo('tipoRevision', $event)"
+                            optionLabel="label" optionValue="value" />
+          </div>
+          <div class="col-12">
+            <label class="block font-medium mb-2">Cuestionarios *</label>
+            <p-multiselect [options]="cuestionariosOptions()" optionLabel="label" optionValue="value" styleClass="w-full"
+                           [ngModel]="edicionRevision().cuestionarioIds"
+                           (ngModelChange)="actualizarEdicionRevisionCampo('cuestionarioIds', $event)"
+                           placeholder="Seleccionar cuestionarios" [filter]="true" filterBy="label"
+                           display="chip" appendTo="body">
+              <ng-template #item let-option>
+                <div class="flex align-items-center gap-2">
+                  <span>{{ option.label }}</span>
+                  <p-tag [value]="option.marco" severity="secondary" styleClass="text-xs" />
+                </div>
+              </ng-template>
+            </p-multiselect>
+          </div>
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab 2: Usuarios -->
+      <p-tabpanel value="usuarios">
+        <div class="grid">
+          <div class="col-12">
+            <label class="block font-medium mb-2">Evaluadores</label>
+            <p-multiselect [options]="usuariosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                           [ngModel]="edicionRevision().usuariosAsignados"
+                           (ngModelChange)="actualizarEdicionRevisionCampo('usuariosAsignados', $event)"
+                           placeholder="Seleccionar evaluadores" [filter]="true" filterBy="label"
+                           display="chip" appendTo="body" />
+          </div>
+          <div class="col-12">
+            <label class="block font-medium mb-2">Aprobadores</label>
+            <p-multiselect [options]="usuariosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                           [ngModel]="edicionRevision().aprobadores"
+                           (ngModelChange)="actualizarEdicionRevisionCampo('aprobadores', $event)"
+                           placeholder="Seleccionar aprobadores" [filter]="true" filterBy="label"
+                           display="chip" appendTo="body" />
+          </div>
+
+          <!-- Evaluados externos (solo si es revisión externa) -->
+          @if (edicionRevision().tipoRevision === 'externa') {
+            <div class="col-12">
+              <p-divider />
+              <label class="block font-medium mb-2">Evaluados Externos</label>
+              @for (evaluado of edicionRevision().evaluadosExternos || []; track evaluado.id) {
+                <div class="flex align-items-center gap-2 mb-2 p-2 surface-100 border-round">
+                  <p-avatar [label]="evaluado.nombre.charAt(0)" shape="circle" size="normal"
+                            styleClass="bg-orange-100 text-orange-600" />
+                  <div class="flex-1">
+                    <div class="font-medium">{{ evaluado.nombre }}</div>
+                    <div class="text-sm text-500">{{ evaluado.email }}</div>
+                  </div>
+                  <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" size="small"
+                            (onClick)="eliminarEvaluadoExternoEdicion(evaluado.id)" />
+                </div>
+              } @empty {
+                <p class="text-500 text-sm">No hay evaluados externos</p>
+              }
+              <div class="grid mt-2">
+                <div class="col-5">
+                  <input type="text" pInputText class="w-full" placeholder="Nombre"
+                         [(ngModel)]="nuevoEvaluadoNombre" />
+                </div>
+                <div class="col-5">
+                  <input type="email" pInputText class="w-full" placeholder="Email"
+                         [(ngModel)]="nuevoEvaluadoEmail" />
+                </div>
+                <div class="col-2">
+                  <p-button icon="pi pi-plus" (onClick)="agregarEvaluadoExternoEdicion()"
+                            [disabled]="!nuevoEvaluadoNombre || !nuevoEvaluadoEmail" />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab 3: Alcance -->
+      <p-tabpanel value="alcance">
+        <div class="grid">
+          <div class="col-12">
+            <label class="block font-medium mb-2">Tipo de Alcance</label>
+            <p-selectbutton [options]="[{label: 'Activos', value: 'activos'}, {label: 'Procesos', value: 'procesos'}]"
+                            [ngModel]="edicionTipoAlcance()"
+                            (ngModelChange)="edicionTipoAlcance.set($event)"
+                            optionLabel="label" optionValue="value" />
+          </div>
+          @if (edicionTipoAlcance() === 'activos') {
+            <div class="col-12">
+              <label class="block font-medium mb-2">Activos Objetivo</label>
+              <p-multiselect [options]="activosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                             [ngModel]="edicionRevision().activosObjetivo"
+                             (ngModelChange)="actualizarEdicionRevisionCampo('activosObjetivo', $event)"
+                             placeholder="Seleccionar activos" [filter]="true" filterBy="label"
+                             display="chip" appendTo="body" />
+            </div>
+          } @else {
+            <div class="col-12">
+              <label class="block font-medium mb-2">Procesos Objetivo</label>
+              <p-multiselect [options]="procesosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                             [ngModel]="edicionRevision().procesosObjetivo"
+                             (ngModelChange)="actualizarEdicionRevisionCampo('procesosObjetivo', $event)"
+                             placeholder="Seleccionar procesos" [filter]="true" filterBy="label"
+                             display="chip" appendTo="body" />
+            </div>
+          }
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab 4: Configuración -->
+      <p-tabpanel value="config">
+        <div class="grid">
+          <div class="col-12 md:col-6">
+            <label class="block font-medium mb-2">Fecha de Inicio *</label>
+            <p-datepicker [ngModel]="edicionRevision().fechaInicio"
+                          (ngModelChange)="actualizarEdicionRevisionCampo('fechaInicio', $event)"
+                          dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" appendTo="body" />
+          </div>
+          <div class="col-12 md:col-6">
+            <label class="block font-medium mb-2">Fecha de Vencimiento *</label>
+            <p-datepicker [ngModel]="edicionRevision().fechaVencimiento"
+                          (ngModelChange)="actualizarEdicionRevisionCampo('fechaVencimiento', $event)"
+                          dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" appendTo="body" />
+          </div>
+          <div class="col-12">
+            <label class="block font-medium mb-2">Instrucciones</label>
+            <textarea pTextarea class="w-full" rows="3"
+                      [ngModel]="edicionRevision().instrucciones"
+                      (ngModelChange)="actualizarEdicionRevisionCampo('instrucciones', $event)"
+                      placeholder="Instrucciones para los evaluadores"></textarea>
+          </div>
+          <div class="col-12">
+            <div class="flex align-items-center gap-2">
+              <p-checkbox [ngModel]="edicionRevision().recordatorios"
+                          (ngModelChange)="actualizarEdicionRevisionCampo('recordatorios', $event)"
+                          [binary]="true" inputId="recordatoriosEdit" />
+              <label for="recordatoriosEdit">Enviar recordatorios automáticos</label>
+            </div>
+          </div>
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <ng-template #footer>
+    <div class="flex justify-content-between w-full">
+      <p-button label="Eliminar" icon="pi pi-trash" severity="danger" [text]="true"
+                (onClick)="eliminarAsignacionActual(); showDialogEditarRevision.set(false)" />
+      <div class="flex gap-2">
+        <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cerrarDialogEditarRevision()" />
+        <p-button label="Guardar Cambios" icon="pi pi-check" (onClick)="guardarEdicionRevision()"
+                  [disabled]="!edicionRevision().titulo || !edicionRevision().cuestionarioIds?.length" />
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
 
 <!-- Dialog: Rechazo con comentario obligatorio -->
 <p-dialog header="Rechazar Respuesta" [(visible)]="showDialogRechazo" [modal]="true" [style]="{width: '500px'}" [draggable]="false">

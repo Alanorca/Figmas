@@ -42,6 +42,7 @@ import { ChartModule } from 'primeng/chart';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { StepperModule } from 'primeng/stepper';
+import { SelectButtonModule } from 'primeng/selectbutton';
 
 // Shared Models
 import {
@@ -138,7 +139,8 @@ interface ArchivoAdjunto {
     ChartModule,
     InputGroupModule,
     InputGroupAddonModule,
-    StepperModule
+    StepperModule,
+    SelectButtonModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './cumplimiento.html',
@@ -281,6 +283,15 @@ export class CumplimientoComponent {
   showChatSidebar = signal(false); // Mantener por compatibilidad
   mensajeChat = signal('');
   mensajesChat = signal<MensajeChat[]>([]);
+
+  // Dialog de edición de revisión con tabs (4 tabs como el stepper)
+  showDialogEditarRevision = signal(false);
+  tabEdicionActivo = signal<'info' | 'usuarios' | 'alcance' | 'config'>('info');
+  edicionRevision = signal<Partial<AsignacionCuestionario>>({});
+  edicionTipoAlcance = signal<'activos' | 'procesos'>('activos');
+  // Para agregar evaluados externos
+  nuevoEvaluadoNombre = '';
+  nuevoEvaluadoEmail = '';
 
   // Usuarios del chat (evaluadores y aprobadores)
   usuarioActual = signal({ id: 'current', nombre: 'Usuario Actual', rol: 'evaluador' as 'evaluador' | 'aprobador' });
@@ -1337,13 +1348,25 @@ export class CumplimientoComponent {
     this.modoEdicionAsignacion.set(true);
     this.asignacionEditandoId.set(asignacion.id);
     this.pasoAsignacion.set(0);
-    const cuestionario = this.getCuestionario(asignacion.cuestionarioId);
-    if (cuestionario) {
-      this.cuestionarioSeleccionado.set(cuestionario);
+
+    // Manejar cuestionarioIds (puede venir como array o como ID único)
+    const cuestionarioIds = asignacion.cuestionarioIds?.length
+      ? asignacion.cuestionarioIds
+      : asignacion.cuestionarioId
+        ? [asignacion.cuestionarioId]
+        : [];
+
+    // Determinar tipo de alcance basado en los datos existentes
+    if (asignacion.activosObjetivo?.length) {
+      this.tipoAlcanceSeleccionado.set('activos');
+    } else if (asignacion.procesosObjetivo?.length) {
+      this.tipoAlcanceSeleccionado.set('objetivos');
     }
+
     this.nuevaAsignacion.set({
-      cuestionarioId: asignacion.cuestionarioId,
+      cuestionarioIds: cuestionarioIds,
       titulo: asignacion.titulo,
+      descripcion: asignacion.descripcion,
       tipoRevision: asignacion.tipoRevision,
       usuariosAsignados: asignacion.usuariosAsignados,
       emailsExternos: asignacion.emailsExternos,
@@ -1361,6 +1384,22 @@ export class CumplimientoComponent {
     });
     this.nuevoEvaluadoExterno.set({ nombre: '', email: '' });
     this.showAsignarDialog.set(true);
+  }
+
+  // Editar la asignación actual (desde la vista de revisión)
+  editarAsignacionActual() {
+    const asignacion = this.asignacionSeleccionada();
+    if (asignacion) {
+      this.editarAsignacion(asignacion);
+    }
+  }
+
+  // Eliminar la asignación actual (desde la vista de revisión)
+  eliminarAsignacionActual() {
+    const asignacion = this.asignacionSeleccionada();
+    if (asignacion) {
+      this.eliminarAsignacion(asignacion);
+    }
   }
 
   eliminarAsignacion(asignacion: AsignacionCuestionario) {
@@ -2688,12 +2727,183 @@ export class CumplimientoComponent {
     }
   }
 
+  // =============================================
+  // METODOS - DIALOG EDITAR REVISION CON TABS
+  // =============================================
+
+  abrirDialogEditarRevision() {
+    const asignacion = this.asignacionSeleccionada();
+    if (!asignacion) return;
+
+    // Determinar tipo de alcance basado en los datos existentes
+    const tipoAlcance = (asignacion.activosObjetivo?.length || 0) > 0 ? 'activos' : 'procesos';
+
+    // Obtener cuestionarioIds
+    const cuestionarioIds = asignacion.cuestionarioIds && asignacion.cuestionarioIds.length > 0
+      ? asignacion.cuestionarioIds
+      : asignacion.cuestionarioId
+        ? [asignacion.cuestionarioId]
+        : [];
+
+    this.edicionRevision.set({
+      id: asignacion.id,
+      titulo: asignacion.titulo,
+      descripcion: asignacion.descripcion || '',
+      tipoRevision: asignacion.tipoRevision,
+      cuestionarioIds: cuestionarioIds,
+      usuariosAsignados: asignacion.usuariosAsignados || [],
+      aprobadores: asignacion.aprobadores || [],
+      evaluadosExternos: asignacion.evaluadosExternos ? [...asignacion.evaluadosExternos] : [],
+      activosObjetivo: asignacion.activosObjetivo || [],
+      procesosObjetivo: asignacion.procesosObjetivo || [],
+      fechaInicio: asignacion.fechaInicio,
+      fechaVencimiento: asignacion.fechaVencimiento,
+      instrucciones: asignacion.instrucciones || '',
+      recordatorios: asignacion.recordatorios
+    });
+
+    this.edicionTipoAlcance.set(tipoAlcance);
+    this.tabEdicionActivo.set('info');
+    this.showDialogEditarRevision.set(true);
+  }
+
+  cerrarDialogEditarRevision() {
+    this.showDialogEditarRevision.set(false);
+    this.edicionRevision.set({});
+    this.nuevoEvaluadoNombre = '';
+    this.nuevoEvaluadoEmail = '';
+  }
+
+  cambiarTabEdicion(tab: string | number | undefined) {
+    if (tab === 'info' || tab === 'usuarios' || tab === 'alcance' || tab === 'config') {
+      this.tabEdicionActivo.set(tab);
+    }
+  }
+
+  actualizarEdicionRevisionCampo(campo: string, valor: any) {
+    this.edicionRevision.update(e => ({ ...e, [campo]: valor }));
+  }
+
+  agregarEvaluadoExternoEdicion() {
+    if (!this.nuevoEvaluadoNombre.trim() || !this.nuevoEvaluadoEmail.trim()) {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Complete nombre y email' });
+      return;
+    }
+
+    const password = this.generarPasswordAleatorio();
+    const nuevoEvaluado: EvaluadoExterno = {
+      id: crypto.randomUUID(),
+      nombre: this.nuevoEvaluadoNombre.trim(),
+      email: this.nuevoEvaluadoEmail.trim(),
+      password: password,
+      invitacionEnviada: false,
+      haRespondido: false
+    };
+
+    this.edicionRevision.update(e => ({
+      ...e,
+      evaluadosExternos: [...(e.evaluadosExternos || []), nuevoEvaluado]
+    }));
+
+    this.nuevoEvaluadoNombre = '';
+    this.nuevoEvaluadoEmail = '';
+    this.messageService.add({ severity: 'success', summary: 'Agregado', detail: `Evaluado agregado. Contraseña: ${password}` });
+  }
+
+  eliminarEvaluadoExternoEdicion(evaluadoId: string) {
+    this.edicionRevision.update(e => ({
+      ...e,
+      evaluadosExternos: (e.evaluadosExternos || []).filter(ev => ev.id !== evaluadoId)
+    }));
+  }
+
+  guardarEdicionRevision() {
+    const edicion = this.edicionRevision();
+    if (!edicion.id || !edicion.titulo) {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'El título es requerido' });
+      return;
+    }
+
+    if (!edicion.cuestionarioIds?.length) {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Seleccione al menos un cuestionario' });
+      return;
+    }
+
+    // Obtener nombres para las listas
+    const usuariosNombres = (edicion.usuariosAsignados || []).map(id =>
+      this.usuariosDisponibles.find(u => u.value === id)?.label || ''
+    ).filter(n => n);
+    const activosNombres = (edicion.activosObjetivo || []).map(id =>
+      this.activosDisponibles.find(a => a.value === id)?.label || ''
+    ).filter(n => n);
+    const procesosNombres = (edicion.procesosObjetivo || []).map(id =>
+      this.procesosDisponibles.find(p => p.value === id)?.label || ''
+    ).filter(n => n);
+    const aprobadoresNombres = (edicion.aprobadores || []).map(id =>
+      this.usuariosDisponibles.find(u => u.value === id)?.label || ''
+    ).filter(n => n);
+
+    // Actualizar la asignación
+    this.asignaciones.update(lista => lista.map(a => {
+      if (a.id === edicion.id) {
+        return {
+          ...a,
+          titulo: edicion.titulo!,
+          descripcion: edicion.descripcion,
+          tipoRevision: edicion.tipoRevision as 'interna' | 'externa',
+          cuestionarioId: edicion.cuestionarioIds?.[0] || a.cuestionarioId,
+          cuestionarioIds: edicion.cuestionarioIds,
+          usuariosAsignados: edicion.usuariosAsignados || [],
+          usuariosAsignadosNombres: usuariosNombres,
+          aprobadores: edicion.aprobadores || [],
+          aprobadoresNombres: aprobadoresNombres,
+          evaluadosExternos: edicion.evaluadosExternos || [],
+          activosObjetivo: edicion.activosObjetivo || [],
+          activosObjetivoNombres: activosNombres,
+          procesosObjetivo: edicion.procesosObjetivo || [],
+          procesosObjetivoNombres: procesosNombres,
+          fechaInicio: edicion.fechaInicio!,
+          fechaVencimiento: edicion.fechaVencimiento!,
+          instrucciones: edicion.instrucciones || '',
+          recordatorios: edicion.recordatorios!
+        };
+      }
+      return a;
+    }));
+
+    this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Revisión actualizada correctamente' });
+    this.cerrarDialogEditarRevision();
+  }
+
   toggleSeccionRespuestas() {
     this.seccionRespuestasExpandida.update(v => !v);
   }
 
   toggleSeccionAprobadores() {
     this.seccionAprobadoresExpandida.update(v => !v);
+  }
+
+  // Helpers para mostrar estado
+  getEstadoAsignacionLabel(estado: string): string {
+    const labels: Record<string, string> = {
+      'pendiente': 'Pendiente',
+      'en_progreso': 'En Progreso',
+      'completado': 'Completado',
+      'vencido': 'Vencido',
+      'revisado': 'Revisado'
+    };
+    return labels[estado] || estado;
+  }
+
+  getEstadoAsignacionSeverity(estado: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    const severities: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
+      'pendiente': 'secondary',
+      'en_progreso': 'info',
+      'completado': 'success',
+      'vencido': 'danger',
+      'revisado': 'success'
+    };
+    return severities[estado] || 'secondary';
   }
 
   toggleChatSidebar() {
