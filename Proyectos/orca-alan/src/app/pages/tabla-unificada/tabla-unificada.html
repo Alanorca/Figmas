@@ -635,10 +635,12 @@
     [datos]="datosGraficaInteractiva()"
     [campoInicial]="columnaGraficaSeleccionada()"
     [titulo]="getTituloGrafica()"
-    [subtitulo]="'Datos de Riesgos e Incidentes - ' + contadores().total + ' registros'"
+    [subtitulo]="filtroGraficaActivo() ? 'Filtrado: ' + filtroGraficaActivo()!.valor + ' - ' + datosGraficaInteractiva().labels.length + ' categorías' : 'Datos de Riesgos e Incidentes - ' + contadores().total + ' registros'"
+    [valoresFiltrado]="valoresFiltradoGrafica()"
     (campoSeleccionado)="onCampoGraficaChange($event)"
     (dataPointClick)="onGraficaDataPointClick($event)"
-    (legendClick)="onGraficaLegendClick($event)" />
+    (legendClick)="onGraficaLegendClick($event)"
+    (filtroAplicado)="onFiltroGraficaAplicado($event)" />
 
   <ng-template pTemplate="footer">
     <p-button

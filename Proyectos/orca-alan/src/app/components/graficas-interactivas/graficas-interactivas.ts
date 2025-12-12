@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, effect, ViewChild } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, effect, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgApexchartsModule, ChartComponent } from 'ng-apexcharts';
@@ -12,6 +12,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { AccordionModule } from 'primeng/accordion';
+import { GroqService } from '../../services/groq.service';
 import {
   ApexChart,
   ApexAxisChartSeries,
@@ -93,6 +94,51 @@ interface RecomendacionAsistente {
   mensaje: string;
 }
 
+// Interfaz para configuraciones guardadas
+export interface ConfiguracionGuardada {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  fechaCreacion: Date;
+  configuracion: {
+    tipoGrafica: TipoGraficaAvanzada;
+    campoEjeX: string;
+    campoEjeY: string | null;
+    campoAgrupacion: string | null;
+    paleta: string;
+    animaciones: boolean;
+    mostrarLeyenda: boolean;
+    mostrarDataLabels: boolean;
+    tema: 'light' | 'dark';
+  };
+}
+
+// Interfaz para filtros de datos
+export interface FiltroGrafica {
+  campo: string;
+  valor: string;
+  operador?: 'igual' | 'contiene' | 'diferente';
+}
+
+// Interfaz para mensajes del asistente IA
+export interface MensajeAsistente {
+  id: string;
+  tipo: 'user' | 'assistant';
+  mensaje: string;
+  fecha: Date;
+  configuracionSugerida?: {
+    tipoGrafica?: TipoGraficaAvanzada;
+    campoEjeX?: string;
+    campoEjeY?: string | null;
+    paleta?: string;
+    animaciones?: boolean;
+    mostrarLeyenda?: boolean;
+    mostrarDataLabels?: boolean;
+    tema?: 'light' | 'dark';
+    filtro?: FiltroGrafica;
+  };
+}
+
 @Component({
   selector: 'app-graficas-interactivas',
   standalone: true,
@@ -108,6 +154,8 @@ interface RecomendacionAsistente {
 export class GraficasInteractivasComponent {
   @ViewChild('chartRef') chartRef!: ChartComponent;
 
+  private groqService = inject(GroqService);
+
   @Input() set datos(value: DatosGrafica) {
     this.datosSignal.set(value);
   }
@@ -121,6 +169,7 @@ export class GraficasInteractivasComponent {
 
   @Output() dataPointClick = new EventEmitter<{ categoria: string; valor: number; serie?: string }>();
   @Output() legendClick = new EventEmitter<{ serie: string; visible: boolean }>();
+  @Output() filtroAplicado = new EventEmitter<FiltroGrafica | null>();
 
   // Signal público para acceso en template
   readonly datosSignal = signal<DatosGrafica>({ labels: [], series: [] });
@@ -160,6 +209,12 @@ export class GraficasInteractivasComponent {
     { label: 'Mono Azul', value: 'monoazul', descripcion: 'Escala monocromática profesional' }
   ];
 
+  // Valores disponibles para filtrado (ej: nombres de servidores, activos, etc.)
+  @Input() valoresFiltrado: { campo: string; valores: string[] }[] = [];
+
+  // Filtro activo
+  filtroActivo = signal<FiltroGrafica | null>(null);
+
   // Campos disponibles para selección de datos
   @Input() camposDisponibles: CampoDisponible[] = [
     { label: 'Tipo de Entidad', value: 'tipoEntidad', tipo: 'categoria', descripcion: 'Riesgo o Incidente' },
@@ -179,6 +234,54 @@ export class GraficasInteractivasComponent {
   campoAgrupacion = signal<string | null>(null);
 
   @Output() campoSeleccionado = new EventEmitter<{ campo: string; tipo: string }>();
+
+  // Configuraciones guardadas
+  configuracionesGuardadas = signal<ConfiguracionGuardada[]>([]);
+  mostrarDialogGuardar = signal(false);
+  nombreConfiguracion = signal('');
+  descripcionConfiguracion = signal('');
+  tabActivo = signal<'config' | 'guardadas' | 'asistente'>('config');
+
+  // Asistente IA
+  mensajesAsistente = signal<MensajeAsistente[]>([]);
+  inputAsistente = signal('');
+  asistenteEscribiendo = signal(false);
+  sugerenciasPredefinidas = [
+    'Quiero ver los riesgos por estado en un gráfico de dona',
+    'Muéstrame una gráfica de barras con la severidad',
+    'Necesito ver la distribución por responsable',
+    'Crear una línea de tiempo por fecha',
+    'Gráfica de pastel con colores corporativos'
+  ];
+
+  // Cargar configuraciones desde localStorage al iniciar
+  private readonly STORAGE_KEY = 'graficas-configuraciones';
+
+  constructor() {
+    this.cargarConfiguracionesDesdeStorage();
+  }
+
+  private cargarConfiguracionesDesdeStorage(): void {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (stored) {
+        const configs = JSON.parse(stored);
+        // Convertir fechas de string a Date
+        configs.forEach((c: any) => c.fechaCreacion = new Date(c.fechaCreacion));
+        this.configuracionesGuardadas.set(configs);
+      }
+    } catch (e) {
+      console.error('Error cargando configuraciones:', e);
+    }
+  }
+
+  private guardarConfiguracionesEnStorage(): void {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.configuracionesGuardadas()));
+    } catch (e) {
+      console.error('Error guardando configuraciones:', e);
+    }
+  }
 
   // Computed: campos para categorías (eje X)
   camposCategoria = computed(() =>
@@ -934,6 +1037,75 @@ export class GraficasInteractivasComponent {
     return icons[tipo] || 'pi pi-chart-bar';
   }
 
+  // Métodos para configuraciones guardadas
+  guardarConfiguracionActual(): void {
+    const nombre = this.nombreConfiguracion().trim();
+    if (!nombre) return;
+
+    const nuevaConfig: ConfiguracionGuardada = {
+      id: Date.now().toString(),
+      nombre,
+      descripcion: this.descripcionConfiguracion().trim() || undefined,
+      fechaCreacion: new Date(),
+      configuracion: {
+        tipoGrafica: this.tipoGrafica(),
+        campoEjeX: this.campoEjeX(),
+        campoEjeY: this.campoEjeY(),
+        campoAgrupacion: this.campoAgrupacion(),
+        paleta: this.paletaSeleccionada(),
+        animaciones: this.animaciones(),
+        mostrarLeyenda: this.mostrarLeyenda(),
+        mostrarDataLabels: this.mostrarDataLabels(),
+        tema: this.tema()
+      }
+    };
+
+    this.configuracionesGuardadas.update(configs => [...configs, nuevaConfig]);
+    this.guardarConfiguracionesEnStorage();
+    this.cerrarDialogGuardar();
+  }
+
+  cargarConfiguracion(config: ConfiguracionGuardada): void {
+    this.tipoGrafica.set(config.configuracion.tipoGrafica);
+    this.campoEjeX.set(config.configuracion.campoEjeX);
+    this.campoEjeY.set(config.configuracion.campoEjeY);
+    this.campoAgrupacion.set(config.configuracion.campoAgrupacion);
+    this.paletaSeleccionada.set(config.configuracion.paleta);
+    this.animaciones.set(config.configuracion.animaciones);
+    this.mostrarLeyenda.set(config.configuracion.mostrarLeyenda);
+    this.mostrarDataLabels.set(config.configuracion.mostrarDataLabels);
+    this.tema.set(config.configuracion.tema);
+    this.tabActivo.set('config');
+  }
+
+  eliminarConfiguracion(id: string): void {
+    this.configuracionesGuardadas.update(configs => configs.filter(c => c.id !== id));
+    this.guardarConfiguracionesEnStorage();
+  }
+
+  abrirDialogGuardar(): void {
+    this.nombreConfiguracion.set('');
+    this.descripcionConfiguracion.set('');
+    this.mostrarDialogGuardar.set(true);
+    this.tabActivo.set('guardadas');
+  }
+
+  cerrarDialogGuardar(): void {
+    this.mostrarDialogGuardar.set(false);
+    this.nombreConfiguracion.set('');
+    this.descripcionConfiguracion.set('');
+  }
+
+  formatFecha(fecha: Date): string {
+    return new Date(fecha).toLocaleDateString('es-MX', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
   getCampoDescripcion(campoValue: string): string {
     const campo = this.camposDisponibles.find(c => c.value === campoValue);
     return campo?.descripcion || '';
@@ -948,5 +1120,319 @@ export class GraficasInteractivasComponent {
     }
 
     return series.length;
+  }
+
+  // Métodos del Asistente IA
+  async enviarMensajeAsistente(): Promise<void> {
+    const mensaje = this.inputAsistente().trim();
+    if (!mensaje) return;
+
+    // Agregar mensaje del usuario
+    const mensajeUsuario: MensajeAsistente = {
+      id: Date.now().toString(),
+      tipo: 'user',
+      mensaje,
+      fecha: new Date()
+    };
+    this.mensajesAsistente.update(msgs => [...msgs, mensajeUsuario]);
+    this.inputAsistente.set('');
+    this.asistenteEscribiendo.set(true);
+
+    try {
+      // Verificar si Groq está configurado
+      if (!this.groqService.isConfigured) {
+        const respuestaError: MensajeAsistente = {
+          id: Date.now().toString(),
+          tipo: 'assistant',
+          mensaje: '⚠️ No hay API Key de Groq configurada. Por favor configura tu API Key en la sección de procesos para usar el asistente IA.\n\nMientras tanto, puedo ayudarte con comandos básicos. Intenta decir algo como "dona por estado" o "barras con severidad".',
+          fecha: new Date()
+        };
+        this.mensajesAsistente.update(msgs => [...msgs, respuestaError]);
+        this.asistenteEscribiendo.set(false);
+        return;
+      }
+
+      const respuesta = await this.procesarMensajeConGroq(mensaje);
+      this.mensajesAsistente.update(msgs => [...msgs, respuesta]);
+    } catch (error) {
+      console.error('Error con Groq:', error);
+      const respuestaError: MensajeAsistente = {
+        id: Date.now().toString(),
+        tipo: 'assistant',
+        mensaje: `❌ Error al procesar tu solicitud: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        fecha: new Date()
+      };
+      this.mensajesAsistente.update(msgs => [...msgs, respuestaError]);
+    } finally {
+      this.asistenteEscribiendo.set(false);
+    }
+  }
+
+  usarSugerencia(sugerencia: string): void {
+    this.inputAsistente.set(sugerencia);
+    this.enviarMensajeAsistente();
+  }
+
+  aplicarConfiguracionSugerida(config: MensajeAsistente['configuracionSugerida']): void {
+    if (!config) return;
+
+    if (config.tipoGrafica) this.tipoGrafica.set(config.tipoGrafica);
+    if (config.campoEjeX) {
+      this.campoEjeX.set(config.campoEjeX);
+      // Emitir evento para que el componente padre actualice los datos
+      this.campoSeleccionado.emit({ campo: config.campoEjeX, tipo: 'ejeX' });
+    }
+    if (config.campoEjeY !== undefined) this.campoEjeY.set(config.campoEjeY);
+    if (config.paleta) this.paletaSeleccionada.set(config.paleta);
+    if (config.animaciones !== undefined) this.animaciones.set(config.animaciones);
+    if (config.mostrarLeyenda !== undefined) this.mostrarLeyenda.set(config.mostrarLeyenda);
+    if (config.mostrarDataLabels !== undefined) this.mostrarDataLabels.set(config.mostrarDataLabels);
+    if (config.tema) this.tema.set(config.tema);
+
+    // Manejar filtro
+    if (config.filtro) {
+      this.filtroActivo.set(config.filtro);
+      this.filtroAplicado.emit(config.filtro);
+    }
+
+    // Cambiar a tab de configuración para ver el resultado
+    this.tabActivo.set('config');
+  }
+
+  limpiarChatAsistente(): void {
+    this.mensajesAsistente.set([]);
+  }
+
+  private async procesarMensajeConGroq(mensaje: string): Promise<MensajeAsistente> {
+    // Construir lista de valores disponibles para filtrado
+    const valoresDisponiblesStr = this.valoresFiltrado.length > 0
+      ? this.valoresFiltrado.map(v => `- ${v.campo}: ${v.valores.slice(0, 10).join(', ')}${v.valores.length > 10 ? '...' : ''}`).join('\n')
+      : 'No hay valores de filtrado disponibles';
+
+    // Contexto actual para dar más información al modelo
+    const contextoActual = `
+CONFIGURACIÓN ACTUAL:
+- Tipo de gráfica: ${this.tipoGrafica()}
+- Campo eje X: ${this.campoEjeX()}
+- Paleta: ${this.paletaSeleccionada()}
+- Tema: ${this.tema()}
+- Filtro activo: ${this.filtroActivo() ? `${this.filtroActivo()!.campo} = "${this.filtroActivo()!.valor}"` : 'Ninguno'}
+
+DATOS ACTUALES (categorías): ${this.datosSignal().labels.slice(0, 10).join(', ')}${this.datosSignal().labels.length > 10 ? '...' : ''}
+
+VALORES DISPONIBLES PARA FILTRAR:
+${valoresDisponiblesStr}
+`;
+
+    const systemPrompt = `Eres un asistente experto en visualización de datos para una aplicación de gestión de riesgos e incidentes. Tu trabajo es ayudar a configurar gráficas basándote en lo que el usuario pide en lenguaje natural.
+
+${contextoActual}
+
+IMPORTANTE: El usuario puede mencionar términos específicos de su negocio como nombres de servidores, activos, procesos, etc. Si mencionan algo que parece ser un nombre específico (como "Servidor Principal", "Base de datos X", etc.), probablemente quieren filtrar o ver datos relacionados con ese elemento. En ese caso:
+1. Sugiere usar "contenedorNombre" como campo para ver datos agrupados por activo/proceso
+2. O pregunta amablemente qué tipo de visualización necesitan para ese elemento
+
+DEBES responder SIEMPRE en formato JSON válido con esta estructura exacta:
+{
+  "mensaje": "Tu respuesta amigable al usuario explicando qué configuraste o preguntando más detalles",
+  "configuracion": {
+    "tipoGrafica": "valor o null",
+    "campoEjeX": "valor o null",
+    "paleta": "valor o null",
+    "tema": "valor o null",
+    "animaciones": true/false o null,
+    "mostrarLeyenda": true/false o null,
+    "mostrarDataLabels": true/false o null,
+    "filtro": {
+      "campo": "nombre del campo a filtrar o null",
+      "valor": "valor específico a filtrar o null"
+    }
+  }
+}
+
+TIPOS DE GRÁFICA disponibles (usa exactamente estos valores):
+- "donut" = dona, rosquilla, circular con hueco
+- "pie" = pastel, circular, torta, pay
+- "bar" = barras horizontales
+- "column" = columnas, barras verticales, barras
+- "stackedBar" = barras apiladas
+- "groupedBar" = barras agrupadas
+- "line" = línea, tendencia, evolución
+- "area" = área, área rellena
+- "spline" = línea suave, curva
+- "stepline" = escalones, pasos
+- "radar" = radar, araña, spider
+- "scatter" = dispersión, puntos, correlación
+- "heatmap" = mapa de calor, matriz
+- "treemap" = treemap, mosaico, rectángulos
+- "funnel" = embudo
+- "pyramid" = pirámide
+- "radialBar" = barras radiales, progreso circular
+- "polarArea" = área polar
+
+CAMPOS disponibles para campoEjeX (estos son los campos de datos que el usuario puede visualizar):
+- "estado" = estado, estatus, situación actual (abierto, cerrado, en proceso, etc.)
+- "severidad" = severidad, gravedad, criticidad, importancia (crítico, alto, medio, bajo)
+- "responsable" = responsable, encargado, asignado, dueño, owner
+- "fecha" = fecha, tiempo, temporal, cronológico, histórico, evolución
+- "tipoEntidad" = tipo, entidad, categoría, clasificación (riesgo o incidente)
+- "contenedorNombre" = activo, proceso, área, servidor, sistema, aplicación, elemento
+- "probabilidad" = probabilidad, likelihood
+- "impacto" = impacto, consecuencia, efecto
+- "nivelRiesgo" = nivel de riesgo, riesgo total, score
+
+PALETAS disponibles:
+- "vibrant" = vibrante, vivo, llamativo, colorido, alegre
+- "pastel" = pastel, suave, claro, tenue
+- "neon" = neón, brillante, fluorescente, encendido
+- "corporate" = corporativo, profesional, ejecutivo, formal, serio
+- "earth" = tierra, natural, cálido, marrón, café
+- "ocean" = océano, azul, mar, agua, fresco
+- "sunset" = atardecer, cálido, naranja, degradado
+- "semaforo" = semáforo, indicador, rojo-amarillo-verde, tráfico, alerta
+- "monoazul" = monocromático, azul, uniforme, simple
+
+TEMA:
+- "dark" = oscuro, negro, noche, dark mode
+- "light" = claro, blanco, día, light mode
+
+FILTROS - MUY IMPORTANTE:
+Cuando el usuario menciona un elemento específico (servidor, activo, proceso, área, sistema) Y quiere ver datos de ese elemento, DEBES usar el filtro:
+- filtro.campo = "contenedorNombre" (para filtrar por activo/servidor/proceso)
+- filtro.valor = el nombre exacto mencionado por el usuario
+
+REGLAS:
+1. Si el usuario menciona un tipo de gráfica, úsalo
+2. Si el usuario menciona un concepto relacionado con los campos (estado, severidad, etc.), usa ese campo en campoEjeX
+3. Si el usuario menciona un nombre específico de elemento (servidor, sistema, etc.) Y pide ver datos de él, USA EL FILTRO
+4. El filtro se usa para mostrar SOLO los datos de ese elemento específico
+5. campoEjeX es cómo agrupar los datos (por estado, severidad, etc.)
+6. Solo incluye en configuracion los valores que puedas determinar del mensaje
+7. Usa null para lo que no se mencione o no puedas determinar
+8. El mensaje debe ser corto (1-2 oraciones), amigable y en español
+
+EJEMPLOS de respuestas correctas:
+- Input: "dona por estado" → {"mensaje": "¡Listo! He configurado una gráfica de dona agrupada por estado.", "configuracion": {"tipoGrafica": "donut", "campoEjeX": "estado"}}
+- Input: "barras con severidad" → {"mensaje": "Perfecto, aquí tienes una gráfica de barras mostrando la distribución por severidad.", "configuracion": {"tipoGrafica": "column", "campoEjeX": "severidad"}}
+- Input: "grafica de Servidor Principal por estado" → {"mensaje": "¡Listo! He filtrado los datos para mostrar solo 'Servidor Principal' agrupados por estado.", "configuracion": {"tipoGrafica": "donut", "campoEjeX": "estado", "filtro": {"campo": "contenedorNombre", "valor": "Servidor Principal"}}}
+- Input: "quiero ver los riesgos del Servidor Principal" → {"mensaje": "Aquí tienes los riesgos del Servidor Principal agrupados por estado.", "configuracion": {"campoEjeX": "estado", "filtro": {"campo": "contenedorNombre", "valor": "Servidor Principal"}}}
+- Input: "Servidor Principal con severidad en barras" → {"mensaje": "¡Listo! Gráfica de barras mostrando la severidad de los riesgos del Servidor Principal.", "configuracion": {"tipoGrafica": "column", "campoEjeX": "severidad", "filtro": {"campo": "contenedorNombre", "valor": "Servidor Principal"}}}
+- Input: "quitar filtro" → {"mensaje": "He quitado el filtro. Ahora se muestran todos los datos.", "configuracion": {"filtro": null}}
+- Input: "hola" → {"mensaje": "¡Hola! Soy tu asistente de gráficas. Dime qué quieres visualizar, por ejemplo: 'dona por estado' o 'gráfica de Servidor Principal por severidad'.", "configuracion": {}}`;
+
+    const response = await this.groqService.ask(mensaje, {
+      systemPrompt,
+      temperature: 0.3,
+      maxTokens: 500
+    });
+
+    console.log('Respuesta Groq:', response);
+
+    try {
+      // Intentar extraer JSON de la respuesta (puede venir con texto extra)
+      let jsonStr = response;
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonStr = jsonMatch[0];
+      }
+
+      const parsed = JSON.parse(jsonStr);
+      console.log('JSON parseado:', parsed);
+
+      // Construir configuración limpia (solo valores no null)
+      const configLimpia: MensajeAsistente['configuracionSugerida'] = {};
+
+      if (parsed.configuracion) {
+        if (parsed.configuracion.tipoGrafica) configLimpia.tipoGrafica = parsed.configuracion.tipoGrafica;
+        if (parsed.configuracion.campoEjeX) configLimpia.campoEjeX = parsed.configuracion.campoEjeX;
+        if (parsed.configuracion.paleta) configLimpia.paleta = parsed.configuracion.paleta;
+        if (parsed.configuracion.tema) configLimpia.tema = parsed.configuracion.tema;
+        if (parsed.configuracion.animaciones !== null && parsed.configuracion.animaciones !== undefined) {
+          configLimpia.animaciones = parsed.configuracion.animaciones;
+        }
+        if (parsed.configuracion.mostrarLeyenda !== null && parsed.configuracion.mostrarLeyenda !== undefined) {
+          configLimpia.mostrarLeyenda = parsed.configuracion.mostrarLeyenda;
+        }
+        if (parsed.configuracion.mostrarDataLabels !== null && parsed.configuracion.mostrarDataLabels !== undefined) {
+          configLimpia.mostrarDataLabels = parsed.configuracion.mostrarDataLabels;
+        }
+        // Procesar filtro
+        if (parsed.configuracion.filtro !== undefined) {
+          if (parsed.configuracion.filtro === null) {
+            // Usuario quiere quitar el filtro
+            configLimpia.filtro = undefined;
+          } else if (parsed.configuracion.filtro.campo && parsed.configuracion.filtro.valor) {
+            configLimpia.filtro = {
+              campo: parsed.configuracion.filtro.campo,
+              valor: parsed.configuracion.filtro.valor
+            };
+          }
+        }
+      }
+
+      const quitarFiltro = parsed.configuracion?.filtro === null;
+      const tieneConfiguracion = Object.keys(configLimpia).length > 0 || quitarFiltro;
+
+      // Si hay configuración válida, aplicarla automáticamente
+      if (tieneConfiguracion) {
+        console.log('Aplicando configuración automáticamente:', configLimpia, 'Quitar filtro:', quitarFiltro);
+        this.aplicarConfiguracionSugeridaSinCambiarTab(configLimpia, quitarFiltro);
+      }
+
+      return {
+        id: Date.now().toString(),
+        tipo: 'assistant',
+        mensaje: parsed.mensaje || response,
+        fecha: new Date(),
+        configuracionSugerida: tieneConfiguracion ? configLimpia : undefined
+      };
+    } catch (e) {
+      console.error('Error parseando JSON:', e, 'Respuesta:', response);
+      // Si no es JSON válido, devolver el texto tal cual
+      return {
+        id: Date.now().toString(),
+        tipo: 'assistant',
+        mensaje: response,
+        fecha: new Date()
+      };
+    }
+  }
+
+  // Aplica configuración sin cambiar de tab (para aplicación automática)
+  private aplicarConfiguracionSugeridaSinCambiarTab(config: MensajeAsistente['configuracionSugerida'], quitarFiltro = false): void {
+    if (!config && !quitarFiltro) return;
+
+    if (config?.tipoGrafica) this.tipoGrafica.set(config.tipoGrafica);
+    if (config?.campoEjeX) {
+      this.campoEjeX.set(config.campoEjeX);
+      this.campoSeleccionado.emit({ campo: config.campoEjeX, tipo: 'ejeX' });
+    }
+    if (config?.campoEjeY !== undefined) this.campoEjeY.set(config.campoEjeY);
+    if (config?.paleta) this.paletaSeleccionada.set(config.paleta);
+    if (config?.animaciones !== undefined) this.animaciones.set(config.animaciones);
+    if (config?.mostrarLeyenda !== undefined) this.mostrarLeyenda.set(config.mostrarLeyenda);
+    if (config?.mostrarDataLabels !== undefined) this.mostrarDataLabels.set(config.mostrarDataLabels);
+    if (config?.tema) this.tema.set(config.tema);
+
+    // Manejar filtro
+    if (quitarFiltro) {
+      this.filtroActivo.set(null);
+      this.filtroAplicado.emit(null);
+      console.log('Filtro removido');
+    } else if (config?.filtro) {
+      this.filtroActivo.set(config.filtro);
+      this.filtroAplicado.emit(config.filtro);
+      console.log('Filtro aplicado:', config.filtro);
+    }
+  }
+
+  // Método público para quitar el filtro
+  quitarFiltro(): void {
+    this.filtroActivo.set(null);
+    this.filtroAplicado.emit(null);
+  }
+
+  formatHoraAsistente(fecha: Date): string {
+    return new Date(fecha).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
   }
 }

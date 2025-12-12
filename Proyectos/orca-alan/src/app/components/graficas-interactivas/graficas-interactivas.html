@@ -3,8 +3,48 @@
   <div class="config-panel">
     <div class="config-header">
       <h3><i class="pi pi-cog mr-2"></i>Configuración de Gráfica</h3>
+      <div class="config-header-actions">
+        <p-button
+          icon="pi pi-save"
+          [rounded]="true"
+          [text]="true"
+          severity="success"
+          (onClick)="abrirDialogGuardar()"
+          pTooltip="Guardar configuración"
+          tooltipPosition="top" />
+      </div>
     </div>
 
+    <!-- Tabs de configuración -->
+    <div class="config-tabs">
+      <button
+        class="config-tab"
+        [class.active]="tabActivo() === 'config'"
+        (click)="tabActivo.set('config')">
+        <i class="pi pi-sliders-h"></i>
+        <span>Config</span>
+      </button>
+      <button
+        class="config-tab"
+        [class.active]="tabActivo() === 'guardadas'"
+        (click)="tabActivo.set('guardadas')">
+        <i class="pi pi-bookmark"></i>
+        <span>Guardadas</span>
+        @if (configuracionesGuardadas().length > 0) {
+          <span class="tab-badge">{{ configuracionesGuardadas().length }}</span>
+        }
+      </button>
+      <button
+        class="config-tab asistente-tab"
+        [class.active]="tabActivo() === 'asistente'"
+        (click)="tabActivo.set('asistente')">
+        <i class="pi pi-sparkles"></i>
+        <span>IA</span>
+      </button>
+    </div>
+
+    <!-- Tab de Configuración -->
+    @if (tabActivo() === 'config') {
     <div class="config-body">
       <!-- PASO 1: Tipo de Gráfica -->
       <div class="config-section">
@@ -239,6 +279,245 @@
         </div>
       </div>
     </div>
+    }
+
+    <!-- Tab de Configuraciones Guardadas -->
+    @if (tabActivo() === 'guardadas') {
+    <div class="config-body guardadas-body">
+      @if (configuracionesGuardadas().length === 0 && !mostrarDialogGuardar()) {
+        <div class="empty-guardadas">
+          <i class="pi pi-bookmark"></i>
+          <h4>No hay configuraciones guardadas</h4>
+          <p>Guarda tu configuración actual para reutilizarla después</p>
+          <p-button
+            label="Guardar actual"
+            icon="pi pi-save"
+            severity="success"
+            (onClick)="abrirDialogGuardar()" />
+        </div>
+      } @else {
+        <!-- Formulario de guardar inline -->
+        @if (mostrarDialogGuardar()) {
+          <div class="guardar-inline">
+            <div class="guardar-inline-header">
+              <h4><i class="pi pi-save mr-2"></i>Nueva configuración</h4>
+              <p-button
+                icon="pi pi-times"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                (onClick)="cerrarDialogGuardar()" />
+            </div>
+            <div class="guardar-inline-body">
+              <div class="guardar-field">
+                <label for="nombreConfig">Nombre *</label>
+                <input
+                  pInputText
+                  id="nombreConfig"
+                  [ngModel]="nombreConfiguracion()"
+                  (ngModelChange)="nombreConfiguracion.set($event)"
+                  placeholder="Ej: Riesgos por estado"
+                  class="w-full" />
+              </div>
+              <div class="guardar-field">
+                <label for="descConfig">Descripción</label>
+                <input
+                  pInputText
+                  id="descConfig"
+                  [ngModel]="descripcionConfiguracion()"
+                  (ngModelChange)="descripcionConfiguracion.set($event)"
+                  placeholder="Opcional..."
+                  class="w-full" />
+              </div>
+              <div class="guardar-preview">
+                <div class="preview-tags">
+                  <p-tag [value]="getTipoLabel(tipoGrafica())" severity="info" />
+                  <p-tag [value]="campoEjeX()" severity="secondary" />
+                  <p-tag [value]="paletaSeleccionada() | titlecase" severity="warn" />
+                </div>
+              </div>
+              <div class="guardar-actions">
+                <p-button
+                  label="Guardar"
+                  icon="pi pi-check"
+                  severity="success"
+                  size="small"
+                  [disabled]="!nombreConfiguracion().trim()"
+                  (onClick)="guardarConfiguracionActual()" />
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Lista de configuraciones -->
+        @if (configuracionesGuardadas().length > 0) {
+          <div class="guardadas-list">
+            @for (config of configuracionesGuardadas(); track config.id) {
+              <div class="guardada-item">
+                <div class="guardada-info">
+                  <div class="guardada-header">
+                    <span class="guardada-nombre">{{ config.nombre }}</span>
+                    <p-tag
+                      [value]="getTipoLabel(config.configuracion.tipoGrafica)"
+                      severity="info"
+                      styleClass="guardada-tipo" />
+                  </div>
+                  @if (config.descripcion) {
+                    <p class="guardada-desc">{{ config.descripcion }}</p>
+                  }
+                  <div class="guardada-meta">
+                    <span class="guardada-fecha">
+                      <i class="pi pi-calendar"></i>
+                      {{ formatFecha(config.fechaCreacion) }}
+                    </span>
+                    <span class="guardada-paleta">
+                      <i class="pi pi-palette"></i>
+                      {{ config.configuracion.paleta | titlecase }}
+                    </span>
+                  </div>
+                </div>
+                <div class="guardada-actions">
+                  <p-button
+                    icon="pi pi-upload"
+                    [rounded]="true"
+                    severity="success"
+                    pTooltip="Cargar configuración"
+                    tooltipPosition="top"
+                    (onClick)="cargarConfiguracion(config)" />
+                  <p-button
+                    icon="pi pi-trash"
+                    [rounded]="true"
+                    severity="danger"
+                    [text]="true"
+                    pTooltip="Eliminar"
+                    tooltipPosition="top"
+                    (onClick)="eliminarConfiguracion(config.id)" />
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+    }
+
+    <!-- Tab de Asistente IA -->
+    @if (tabActivo() === 'asistente') {
+    <div class="asistente-panel">
+      <!-- Header del asistente -->
+      <div class="asistente-header">
+        <div class="asistente-avatar">
+          <i class="pi pi-sparkles"></i>
+        </div>
+        <div class="asistente-info">
+          <span class="asistente-nombre">Asistente de Gráficas</span>
+          <span class="asistente-status">
+            @if (asistenteEscribiendo()) {
+              <span class="typing-indicator">Escribiendo...</span>
+            } @else {
+              Listo para ayudarte
+            }
+          </span>
+        </div>
+        @if (mensajesAsistente().length > 0) {
+          <p-button
+            icon="pi pi-trash"
+            [rounded]="true"
+            [text]="true"
+            size="small"
+            severity="secondary"
+            pTooltip="Limpiar chat"
+            tooltipPosition="top"
+            (onClick)="limpiarChatAsistente()" />
+        }
+      </div>
+
+      <!-- Área de mensajes -->
+      <div class="asistente-mensajes">
+        @if (mensajesAsistente().length === 0) {
+          <!-- Estado vacío con sugerencias -->
+          <div class="asistente-welcome">
+            <div class="welcome-icon">
+              <i class="pi pi-sparkles"></i>
+            </div>
+            <h4>¿Cómo puedo ayudarte?</h4>
+            <p>Descríbeme qué gráfica necesitas y la configuraré por ti</p>
+            <div class="sugerencias-list">
+              @for (sugerencia of sugerenciasPredefinidas; track $index) {
+                <button class="sugerencia-chip" (click)="usarSugerencia(sugerencia)">
+                  {{ sugerencia }}
+                </button>
+              }
+            </div>
+          </div>
+        } @else {
+          <!-- Mensajes del chat -->
+          @for (msg of mensajesAsistente(); track msg.id) {
+            <div class="mensaje-wrapper" [class.user]="msg.tipo === 'user'">
+              <div class="mensaje-bubble" [class.user]="msg.tipo === 'user'" [class.assistant]="msg.tipo === 'assistant'">
+                <div class="mensaje-contenido">{{ msg.mensaje }}</div>
+                @if (msg.configuracionSugerida) {
+                  <div class="mensaje-config-preview">
+                    <div class="config-tags">
+                      @if (msg.configuracionSugerida.tipoGrafica) {
+                        <p-tag [value]="getTipoLabel(msg.configuracionSugerida.tipoGrafica)" severity="info" />
+                      }
+                      @if (msg.configuracionSugerida.campoEjeX) {
+                        <p-tag [value]="msg.configuracionSugerida.campoEjeX" severity="secondary" />
+                      }
+                      @if (msg.configuracionSugerida.paleta) {
+                        <p-tag [value]="msg.configuracionSugerida.paleta | titlecase" severity="warn" />
+                      }
+                      @if (msg.configuracionSugerida.filtro) {
+                        <p-tag [value]="'Filtro: ' + msg.configuracionSugerida.filtro.valor" severity="danger" icon="pi pi-filter" />
+                      }
+                    </div>
+                    <p-button
+                      label="Aplicar"
+                      icon="pi pi-check"
+                      severity="success"
+                      size="small"
+                      (onClick)="aplicarConfiguracionSugerida(msg.configuracionSugerida)" />
+                  </div>
+                }
+              </div>
+              <span class="mensaje-hora">{{ formatHoraAsistente(msg.fecha) }}</span>
+            </div>
+          }
+
+          <!-- Indicador de escritura -->
+          @if (asistenteEscribiendo()) {
+            <div class="mensaje-wrapper">
+              <div class="mensaje-bubble assistant typing">
+                <div class="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Input del asistente -->
+      <div class="asistente-input">
+        <input
+          pInputText
+          [ngModel]="inputAsistente()"
+          (ngModelChange)="inputAsistente.set($event)"
+          placeholder="Describe la gráfica que necesitas..."
+          (keyup.enter)="enviarMensajeAsistente()"
+          class="w-full" />
+        <p-button
+          icon="pi pi-send"
+          [rounded]="true"
+          severity="success"
+          [disabled]="!inputAsistente().trim() || asistenteEscribiendo()"
+          (onClick)="enviarMensajeAsistente()" />
+      </div>
+    </div>
+    }
   </div>
 
   <!-- Área de la Gráfica -->
@@ -246,6 +525,17 @@
     <div class="chart-header">
       <div class="chart-info">
         <p-tag [value]="getTipoLabel(tipoGrafica())" severity="info" styleClass="tipo-tag" />
+        @if (filtroActivo()) {
+          <p-tag
+            [value]="'Filtro: ' + filtroActivo()!.valor"
+            severity="danger"
+            icon="pi pi-filter"
+            styleClass="filtro-tag"
+            [style]="{ cursor: 'pointer' }"
+            pTooltip="Clic para quitar filtro"
+            tooltipPosition="top"
+            (click)="quitarFiltro()" />
+        }
         <span class="chart-title">{{ titulo }}</span>
         @if (subtitulo) {
           <span class="chart-subtitle">{{ subtitulo }}</span>

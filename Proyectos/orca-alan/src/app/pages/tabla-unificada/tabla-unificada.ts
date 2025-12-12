@@ -32,7 +32,7 @@ import { TabsModule } from 'primeng/tabs';
 import { MessageModule } from 'primeng/message';
 
 // Componentes personalizados
-import { GraficasInteractivasComponent, DatosGrafica } from '../../components/graficas-interactivas/graficas-interactivas';
+import { GraficasInteractivasComponent, DatosGrafica, FiltroGrafica } from '../../components/graficas-interactivas/graficas-interactivas';
 
 // Services & Models
 import { TablaUnificadaService } from '../../services/tabla-unificada.service';
@@ -190,10 +190,24 @@ export class TablaUnificadaComponent {
     mostrarGrid: true
   });
 
+  // Filtro activo para gráficas (desde asistente IA)
+  filtroGraficaActivo = signal<FiltroGrafica | null>(null);
+
   // Datos para gráfica interactiva (ApexCharts)
   datosGraficaInteractiva = computed<DatosGrafica>(() => {
-    const datos = this.datosFiltrados();
+    let datos = this.datosFiltrados();
     const columna = this.columnaGraficaSeleccionada();
+    const filtro = this.filtroGraficaActivo();
+
+    // Aplicar filtro de gráfica si existe
+    if (filtro && filtro.campo && filtro.valor) {
+      datos = datos.filter(d => {
+        const valorCampo = (d as any)[filtro.campo];
+        if (valorCampo === undefined || valorCampo === null) return false;
+        return String(valorCampo).toLowerCase().includes(filtro.valor.toLowerCase());
+      });
+    }
+
     const agrupados = new Map<string, number>();
 
     datos.forEach(d => {
@@ -210,6 +224,23 @@ export class TablaUnificadaComponent {
       labels: Array.from(agrupados.keys()),
       series: Array.from(agrupados.values())
     };
+  });
+
+  // Valores disponibles para filtrado en gráficas (activos, responsables, etc.)
+  valoresFiltradoGrafica = computed(() => {
+    const datos = this.datosFiltrados();
+    const contenedores = new Set<string>();
+    const responsables = new Set<string>();
+
+    datos.forEach(d => {
+      if (d.contenedorNombre) contenedores.add(d.contenedorNombre);
+      if (d.responsable) responsables.add(d.responsable);
+    });
+
+    return [
+      { campo: 'contenedorNombre', valores: Array.from(contenedores).sort() },
+      { campo: 'responsable', valores: Array.from(responsables).sort() }
+    ];
   });
 
   // Opciones de columnas para gráficas
@@ -472,6 +503,11 @@ export class TablaUnificadaComponent {
 
   onGraficaLegendClick(event: { serie: string; visible: boolean }): void {
     console.log('Legend clicked:', event);
+  }
+
+  onFiltroGraficaAplicado(filtro: FiltroGrafica | null): void {
+    console.log('Filtro de gráfica aplicado:', filtro);
+    this.filtroGraficaActivo.set(filtro);
   }
 
   exportarGraficaImagen(formato: 'png' | 'jpg'): void {
