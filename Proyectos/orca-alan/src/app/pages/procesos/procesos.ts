@@ -18,6 +18,8 @@ import { BadgeModule } from 'primeng/badge';
 import { MessageModule } from 'primeng/message';
 import { PanelModule } from 'primeng/panel';
 import { CheckboxModule } from 'primeng/checkbox';
+import { TableModule } from 'primeng/table';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ProcessService } from '../../services/process.service';
 import { GroqService } from '../../services/groq.service';
 import { NODE_TYPES_METADATA, ProcessNodeType, ProcessNode } from '../../models/process-nodes';
@@ -63,7 +65,9 @@ interface TestResult {
     BadgeModule,
     MessageModule,
     PanelModule,
-    CheckboxModule
+    CheckboxModule,
+    TableModule,
+    MultiSelectModule
   ],
   templateUrl: './procesos.html',
   styleUrl: './procesos.scss',
@@ -136,6 +140,81 @@ export class ProcesosComponent {
 
   // Dialog para resultados de ejecucion
   showExecutionDialog = signal(false);
+
+  // =============== NUEVAS PROPIEDADES V2 ===============
+  sidebarCollapsed = signal(false);
+  searchQuery = signal('');
+  selectedNodeTypeToAdd = signal<string | null>(null);
+  showPreviewPanel = signal(false);
+  previewData = signal<Record<string, unknown>[]>([]);
+  previewColumns = signal<string[]>([]);
+  draggedNodeType = signal<ProcessNodeType | null>(null);
+
+  // Opciones para el selector de nodos en toolbar
+  nodeTypeOptions = NODE_TYPES_METADATA.map(n => ({
+    label: n.title,
+    value: n.type
+  }));
+
+  // Opciones para areas de activos
+  areaOptions = [
+    { label: 'TI (Tecnologia)', value: 'TI' },
+    { label: 'RRHH (Recursos Humanos)', value: 'RRHH' },
+    { label: 'Finanzas', value: 'FIN' },
+    { label: 'Operaciones', value: 'OPS' },
+    { label: 'Marketing', value: 'MKT' }
+  ];
+
+  // Opciones de activos por area (computed)
+  activoOptions = computed(() => {
+    const node = this.processService.selectedNode();
+    if (!node) return [];
+    const area = (node.config as unknown as Record<string, unknown>)['area'] as string;
+    if (!area) return [];
+
+    const activosPorArea: Record<string, { label: string; value: string }[]> = {
+      'TI': [
+        { label: 'Servidor Principal', value: 'servidor-principal' },
+        { label: 'Base de Datos CRM', value: 'db-crm' },
+        { label: 'Firewall Corporativo', value: 'firewall' }
+      ],
+      'RRHH': [
+        { label: 'Sistema de Nomina', value: 'nomina' },
+        { label: 'Portal de Empleados', value: 'portal-emp' }
+      ],
+      'FIN': [
+        { label: 'Software Contable', value: 'contable' },
+        { label: 'Sistema Facturacion', value: 'facturacion' }
+      ],
+      'OPS': [
+        { label: 'Sistema Produccion', value: 'produccion' },
+        { label: 'Control Inventario', value: 'inventario' }
+      ],
+      'MKT': [
+        { label: 'CRM Marketing', value: 'crm-mkt' },
+        { label: 'Plataforma Email', value: 'email-mkt' }
+      ]
+    };
+    return activosPorArea[area] || [];
+  });
+
+  // Opciones de modelos LLM para selector
+  llmModelOptions = this.groqService.getAvailableModels().map(m => ({
+    label: m.name,
+    value: m.id
+  }));
+
+  // =============== ASISTENTE IA ===============
+  showAiAssistantModal = signal(false);
+  aiMessages = signal<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  aiInputMessage = signal('');
+  aiIsProcessing = signal(false);
+  aiSuggestion = signal<{
+    accion: 'crear_nodo' | 'conectar' | 'configurar' | 'ejecutar' | 'explicar';
+    tipo_nodo?: string;
+    configuracion?: Record<string, unknown>;
+    explicacion?: string;
+  } | null>(null);
 
   // Categorias de nodos para el sidebar
   categorias = [
@@ -565,14 +644,15 @@ export class ProcesosComponent {
   Object = Object;
 
   // Helper para obtener metadata del nodo
-  getNodeMeta(type: ProcessNodeType | undefined): { title: string; icon: string; color: string } | null {
+  getNodeMeta(type: ProcessNodeType | undefined): { title: string; icon: string; color: string; descripcion: string } | null {
     if (!type) return null;
     const meta = this.nodeTypes.find(n => n.type === type);
     if (!meta) return null;
     return {
       title: meta.title,
       icon: meta.icon,
-      color: meta.iconColor
+      color: meta.iconColor,
+      descripcion: meta.descripcion
     };
   }
 
@@ -599,5 +679,306 @@ export class ProcesosComponent {
       default:
         return '';
     }
+  }
+
+  // =============== ASISTENTE IA MODAL ===============
+
+  openAiAssistant(): void {
+    this.showAiAssistantModal.set(true);
+    if (this.aiMessages().length === 0) {
+      this.aiMessages.set([{
+        role: 'assistant',
+        content: 'Hola! Soy tu asistente para crear procesos. Puedo ayudarte a:\n\n- Crear nodos (CSV, LLM, condicional, etc.)\n- Configurar propiedades de nodos\n- Conectar nodos entre si\n- Explicar como funciona cada componente\n\nEjemplos:\n- "Crea un nodo CSV para leer datos.csv"\n- "Agrega un nodo LLM con el modelo llama-3.3-70b"\n- "Necesito un condicional que verifique si status == activo"'
+      }]);
+    }
+  }
+
+  closeAiAssistant(): void {
+    this.showAiAssistantModal.set(false);
+  }
+
+  clearAiChat(): void {
+    this.aiMessages.set([]);
+    this.aiSuggestion.set(null);
+  }
+
+  async sendAiMessage(): Promise<void> {
+    const message = this.aiInputMessage().trim();
+    if (!message || this.aiIsProcessing()) return;
+
+    // Agregar mensaje del usuario
+    this.aiMessages.update(msgs => [...msgs, { role: 'user', content: message }]);
+    this.aiInputMessage.set('');
+    this.aiIsProcessing.set(true);
+    this.aiSuggestion.set(null);
+
+    try {
+      const nodosActuales = this.processService.nodes().map(n => ({
+        id: n.id,
+        tipo: n.type,
+        label: n.label
+      }));
+
+      const tiposDisponibles = this.nodeTypes.map(n => ({
+        type: n.type,
+        title: n.title,
+        descripcion: n.descripcion,
+        categoria: n.categoria
+      }));
+
+      const systemPrompt = `Eres un asistente experto en crear flujos de procesos visuales. Tu trabajo es ayudar al usuario a crear y configurar nodos de proceso.
+
+TIPOS DE NODOS DISPONIBLES:
+${JSON.stringify(tiposDisponibles, null, 2)}
+
+NODOS ACTUALES EN EL CANVAS:
+${JSON.stringify(nodosActuales, null, 2)}
+
+INSTRUCCIONES:
+1. Analiza lo que el usuario quiere hacer
+2. Responde SIEMPRE en formato JSON con la siguiente estructura:
+{
+  "accion": "crear_nodo" | "conectar" | "configurar" | "ejecutar" | "explicar",
+  "tipo_nodo": "csv" | "activo" | "transformacion" | "condicional" | "llm" | "branching" | "estado" | "matematico" | "ml" (solo para crear_nodo),
+  "configuracion": { ... propiedades del nodo ... },
+  "explicacion": "Texto explicativo para el usuario"
+}
+
+CONFIGURACIONES POR TIPO DE NODO:
+- csv: { fileName: string, delimiter: string, hasHeaders: boolean }
+- activo: { area: string, activoId: string, criticidad: "alta"|"media"|"baja" }
+- transformacion: { operacion: "mapear"|"filtrar"|"agregar"|"ordenar", expresion: string }
+- condicional: { variable: string, operador: "=="|"!="|">"|"<"|"contains", valor: string }
+- llm: { model: string, systemPrompt: string, prompt: string, temperature: number, maxTokens: number }
+- branching: { cantidadRamas: number, estrategia: "paralela"|"secuencial" }
+- estado: { tipoEstado: "success"|"warning"|"error", nombreEstado: string, mensaje: string }
+- matematico: { formula: string, precision: number }
+- ml: { modeloNombre: string, tipoModelo: string, endpoint: string }
+
+Responde UNICAMENTE con el JSON, sin texto adicional ni markdown.`;
+
+      const response = await this.groqService.ask(message, {
+        model: 'llama-3.3-70b-versatile',
+        systemPrompt,
+        temperature: 0.3,
+        maxTokens: 1024
+      });
+
+      // Extraer JSON de la respuesta
+      let jsonResponse;
+      try {
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          jsonResponse = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('No JSON found');
+        }
+      } catch {
+        jsonResponse = {
+          accion: 'explicar',
+          explicacion: response
+        };
+      }
+
+      // Guardar la sugerencia
+      this.aiSuggestion.set(jsonResponse);
+
+      // Agregar respuesta del asistente
+      const assistantMessage = jsonResponse.explicacion ||
+        (jsonResponse.accion === 'crear_nodo' ? `Puedo crear un nodo de tipo "${jsonResponse.tipo_nodo}" con la configuracion propuesta. ¿Deseas aplicarlo?` :
+        jsonResponse.accion === 'configurar' ? 'Configuracion lista para aplicar. ¿Deseas aplicarla?' :
+        'Listo para ejecutar la accion.');
+
+      this.aiMessages.update(msgs => [...msgs, { role: 'assistant', content: assistantMessage }]);
+
+    } catch (error) {
+      console.error('Error en asistente IA:', error);
+      this.aiMessages.update(msgs => [...msgs, {
+        role: 'assistant',
+        content: `Error: ${(error as Error).message}. Verifica que la API Key de Groq este configurada.`
+      }]);
+    } finally {
+      this.aiIsProcessing.set(false);
+    }
+  }
+
+  aplicarSugerenciaAi(): void {
+    const sugerencia = this.aiSuggestion();
+    if (!sugerencia) return;
+
+    if (sugerencia.accion === 'crear_nodo' && sugerencia.tipo_nodo) {
+      // Crear el nodo
+      const x = 300 + Math.random() * 200;
+      const y = 150 + Math.random() * 150;
+      this.processService.addNode(sugerencia.tipo_nodo as ProcessNodeType, x, y);
+
+      // Obtener el nodo recien creado y aplicar configuracion
+      const nodes = this.processService.nodes();
+      const newNode = nodes[nodes.length - 1];
+      if (newNode && sugerencia.configuracion) {
+        this.processService.updateNode(newNode.id, {
+          config: { ...newNode.config, ...sugerencia.configuracion }
+        });
+      }
+
+      this.aiMessages.update(msgs => [...msgs, {
+        role: 'assistant',
+        content: `Nodo "${sugerencia.tipo_nodo}" creado exitosamente con la configuracion aplicada.`
+      }]);
+    } else if (sugerencia.accion === 'configurar' && sugerencia.configuracion) {
+      const selected = this.processService.selectedNode();
+      if (selected) {
+        this.processService.updateNode(selected.id, {
+          config: { ...selected.config, ...sugerencia.configuracion }
+        });
+        this.aiMessages.update(msgs => [...msgs, {
+          role: 'assistant',
+          content: 'Configuracion aplicada al nodo seleccionado.'
+        }]);
+      } else {
+        this.aiMessages.update(msgs => [...msgs, {
+          role: 'assistant',
+          content: 'No hay nodo seleccionado. Selecciona un nodo primero.'
+        }]);
+      }
+    } else if (sugerencia.accion === 'ejecutar') {
+      this.executeProcess();
+      this.closeAiAssistant();
+    }
+
+    this.aiSuggestion.set(null);
+  }
+
+  getAiActionLabel(): string {
+    const sugerencia = this.aiSuggestion();
+    if (!sugerencia) return 'Aplicar';
+
+    switch (sugerencia.accion) {
+      case 'crear_nodo': return `Crear ${sugerencia.tipo_nodo}`;
+      case 'configurar': return 'Aplicar config';
+      case 'ejecutar': return 'Ejecutar proceso';
+      default: return 'Aplicar';
+    }
+  }
+
+  // =============== METODOS NUEVOS V2 ===============
+
+  // Drag and drop de nodos
+  onDragStart(event: DragEvent, type: ProcessNodeType): void {
+    this.draggedNodeType.set(type);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'copy';
+      event.dataTransfer.setData('text/plain', type);
+    }
+  }
+
+  onDragEnd(_event: DragEvent): void {
+    this.draggedNodeType.set(null);
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+    }
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    const type = this.draggedNodeType();
+    if (type) {
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      this.processService.addNode(type, x, y);
+    }
+    this.draggedNodeType.set(null);
+  }
+
+  // Selector de nodos en toolbar
+  onNodeTypeSelect(event: { value: string }): void {
+    if (event.value) {
+      this.addNodeToCanvas(event.value as ProcessNodeType);
+      this.selectedNodeTypeToAdd.set(null);
+    }
+  }
+
+  // Zoom controls
+  zoomIn(): void {
+    console.log('Zoom in');
+  }
+
+  zoomOut(): void {
+    console.log('Zoom out');
+  }
+
+  fitView(): void {
+    console.log('Fit view');
+  }
+
+  toggleLayers(): void {
+    console.log('Toggle layers');
+  }
+
+  // Preview de datos
+  previewDataFn(nodeId: string): void {
+    console.log('Preview data for node:', nodeId);
+    // Datos de ejemplo
+    this.previewData.set([
+      { nombre: 'Juan Perez', email: 'juan@test.com', status: 'activo' },
+      { nombre: 'Maria Garcia', email: 'maria@test.com', status: 'pendiente' },
+      { nombre: 'Carlos Lopez', email: 'carlos@test.com', status: 'activo' }
+    ]);
+    this.previewColumns.set(['nombre', 'email', 'status']);
+    this.showPreviewPanel.set(true);
+  }
+
+  loadData(): void {
+    console.log('Loading data...');
+  }
+
+  vincularActivo(): void {
+    console.log('Vinculando activo...');
+  }
+
+  appendToFormula(op: string): void {
+    const node = this.processService.selectedNode();
+    if (node) {
+      const current = (node.config as unknown as Record<string, unknown>)['formula'] as string || '';
+      this.updateNodeConfig({ formula: current + op });
+    }
+  }
+
+  guardarConfiguracionColumnas(): void {
+    console.log('Guardando configuracion de columnas...');
+    this.showPreviewPanel.set(false);
+  }
+
+  // Eliminar y duplicar nodos por ID
+  deleteNodeById(nodeId: string): void {
+    this.processService.deleteNode(nodeId);
+  }
+
+  duplicateNodeById(nodeId: string): void {
+    const node = this.processService.nodes().find(n => n.id === nodeId);
+    if (node) {
+      const x = node.position.x + 50;
+      const y = node.position.y + 50;
+      this.processService.addNode(node.type, x, y);
+      const nodes = this.processService.nodes();
+      const newNode = nodes[nodes.length - 1];
+      if (newNode) {
+        this.processService.updateNode(newNode.id, {
+          label: `${node.label} (copia)`,
+          config: { ...node.config }
+        });
+      }
+    }
+  }
+
+  // Helper para obtener el fondo del icono del nodo
+  getNodeIconBg(type: ProcessNodeType): string {
+    const color = this.getNodeColor(type);
+    return `linear-gradient(135deg, ${color} 0%, ${this.darkenColor(color, 15)} 100%)`;
   }
 }
