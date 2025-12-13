@@ -21,7 +21,7 @@ import { MenuModule } from 'primeng/menu';
 import { BadgeModule } from 'primeng/badge';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService, MenuItem } from 'primeng/api';
 import { TabsModule } from 'primeng/tabs';
 import { StepperModule } from 'primeng/stepper';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -1312,5 +1312,16 @@ export class CuestionariosComponent {
     if (!preguntaCondicionante) return '';
 
     return `Si "${preguntaCondicionante.texto.substring(0, 30)}..." = "${pregunta.displayConditionAnswer}"`;
+  }
+
+  // Menú contextual para cuestionarios
+  getMenuItemsCuestionario(cuestionario: Cuestionario): MenuItem[] {
+    return [
+      { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.verDetalleCuestionario(cuestionario) },
+      { label: 'Editar', icon: 'pi pi-pencil', command: () => this.editarCuestionario(cuestionario) },
+      { label: 'Duplicar', icon: 'pi pi-copy', command: () => this.duplicarCuestionario(cuestionario) },
+      { separator: true },
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.eliminarCuestionario(cuestionario) }
+    ];
   }
 }

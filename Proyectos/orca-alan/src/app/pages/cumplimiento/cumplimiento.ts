@@ -21,7 +21,7 @@ import { MenuModule } from 'primeng/menu';
 import { BadgeModule } from 'primeng/badge';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService, MenuItem } from 'primeng/api';
 import { TabsModule } from 'primeng/tabs';
 import { CheckboxModule } from 'primeng/checkbox';
 import { RadioButtonModule } from 'primeng/radiobutton';
@@ -3331,5 +3331,16 @@ export class CumplimientoComponent {
   getTotalPreguntasCuestionario(cuestionario: Cuestionario): number {
     if (!cuestionario.secciones) return cuestionario.preguntas || 0;
     return cuestionario.secciones.reduce((total, seccion) => total + seccion.preguntas.length, 0);
+  }
+
+  // Menú contextual para asignaciones
+  getMenuItemsAsignacion(asignacion: AsignacionCuestionario): MenuItem[] {
+    return [
+      { label: 'Responder', icon: 'pi pi-file-edit', command: () => this.responderCuestionario(asignacion) },
+      { label: 'Revisar', icon: 'pi pi-eye', command: () => this.revisarCuestionario(asignacion) },
+      { label: 'Editar', icon: 'pi pi-pencil', command: () => this.editarAsignacion(asignacion) },
+      { separator: true },
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.eliminarAsignacion(asignacion) }
+    ];
   }
 }

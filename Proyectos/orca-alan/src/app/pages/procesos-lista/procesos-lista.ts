@@ -13,7 +13,8 @@ import { DividerModule } from 'primeng/divider';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { SelectModule } from 'primeng/select';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService, MenuItem } from 'primeng/api';
+import { MenuModule } from 'primeng/menu';
 import { ProcessService } from '../../services/process.service';
 import { Proceso } from '../../models/process-nodes';
 
@@ -33,7 +34,8 @@ import { Proceso } from '../../models/process-nodes';
     DividerModule,
     ConfirmDialogModule,
     ToastModule,
-    SelectModule
+    SelectModule,
+    MenuModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './procesos-lista.html',
@@ -193,5 +195,56 @@ export class ProcesosListaComponent {
         });
       }
     });
+  }
+
+  // Generar items del menú contextual
+  getMenuItems(proceso: Proceso): MenuItem[] {
+    const items: MenuItem[] = [
+      {
+        label: 'Ver detalle',
+        icon: 'pi pi-eye',
+        command: () => this.verDetalle(proceso)
+      },
+      {
+        label: 'Editar',
+        icon: 'pi pi-pencil',
+        command: () => this.editarProceso(proceso)
+      },
+      {
+        label: 'Duplicar',
+        icon: 'pi pi-copy',
+        command: () => this.duplicarProceso(proceso)
+      }
+    ];
+
+    if (proceso.estado === 'activo') {
+      items.push({
+        label: 'Ejecutar',
+        icon: 'pi pi-play',
+        command: () => this.ejecutarProceso(proceso)
+      });
+    }
+
+    items.push({
+      separator: true
+    });
+
+    items.push({
+      label: 'Eliminar',
+      icon: 'pi pi-trash',
+      styleClass: 'text-red-500',
+      command: () => this.eliminarProceso(proceso)
+    });
+
+    return items;
+  }
+
+  // Métodos para el resumen del footer
+  getCountByEstado(estado: string): number {
+    return this.procesos().filter(p => p.estado === estado).length;
+  }
+
+  getTotalNodos(): number {
+    return this.procesos().reduce((total, p) => total + (p.nodes?.length || 0), 0);
   }
 }

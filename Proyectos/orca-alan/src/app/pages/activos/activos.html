@@ -56,15 +56,10 @@
               {{ activo.defectos.length }}
             </span>
           </td>
-          <td>
-            <div class="flex gap-1">
-              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info"
-                        pTooltip="Ver detalle" (onClick)="viewDetail(activo)"></p-button>
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
-                        pTooltip="Editar"></p-button>
-              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
-                        pTooltip="Eliminar"></p-button>
-            </div>
+          <td class="text-center">
+            <p-menu #menuActivo [model]="getMenuItemsActivo(activo)" [popup]="true" appendTo="body"></p-menu>
+            <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+                      (onClick)="menuActivo.toggle($event)"></p-button>
           </td>
         </tr>
       </ng-template>
@@ -74,6 +69,46 @@
             <span class="text-500">No hay activos registrados</span>
           </td>
         </tr>
+      </ng-template>
+
+      <!-- Footer con resumen -->
+      <ng-template pTemplate="summary">
+        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
+          <div class="flex align-items-center gap-2 text-sm">
+            <span class="text-500">Total:</span>
+            <span class="font-semibold">{{ activos().length }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-red-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Alta:</span>
+            <span class="font-semibold">{{ getCountByCriticidad('alta') }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Media:</span>
+            <span class="font-semibold">{{ getCountByCriticidad('media') }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-green-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Baja:</span>
+            <span class="font-semibold">{{ getCountByCriticidad('baja') }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-shield text-orange-500"></i>
+            <span class="text-500">Riesgos:</span>
+            <span class="font-semibold">{{ getTotalRiesgos() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-exclamation-triangle text-red-500"></i>
+            <span class="text-500">Incidentes:</span>
+            <span class="font-semibold">{{ getTotalIncidentes() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-bug text-purple-500"></i>
+            <span class="text-500">Defectos:</span>
+            <span class="font-semibold">{{ getTotalDefectos() }}</span>
+          </div>
+        </div>
       </ng-template>
     </p-table>
   </p-card>

@@ -7,45 +7,6 @@
     </div>
   </div>
 
-  <!-- KPI Cards -->
-  <div class="kpi-cards">
-    <p-card styleClass="kpi-card">
-      <div class="kpi-content">
-        <div class="kpi-icon bg-blue-100">
-          <i class="pi pi-list text-blue-600"></i>
-        </div>
-        <div class="kpi-info">
-          <span class="kpi-value">{{ contadores().total }}</span>
-          <span class="kpi-label">Total Registros</span>
-        </div>
-      </div>
-    </p-card>
-
-    <p-card styleClass="kpi-card">
-      <div class="kpi-content">
-        <div class="kpi-icon bg-orange-100">
-          <i class="pi pi-shield text-orange-600"></i>
-        </div>
-        <div class="kpi-info">
-          <span class="kpi-value">{{ contadores().riesgos }}</span>
-          <span class="kpi-label">Riesgos</span>
-        </div>
-      </div>
-    </p-card>
-
-    <p-card styleClass="kpi-card">
-      <div class="kpi-content">
-        <div class="kpi-icon bg-red-100">
-          <i class="pi pi-exclamation-triangle text-red-600"></i>
-        </div>
-        <div class="kpi-info">
-          <span class="kpi-value">{{ contadores().incidentes }}</span>
-          <span class="kpi-label">Incidentes</span>
-        </div>
-      </div>
-    </p-card>
-  </div>
-
   <!-- Toolbar -->
   <p-card styleClass="toolbar-card">
     <div class="toolbar">
@@ -408,13 +369,13 @@
               }
             </td>
           }
-          <td>
+          <td class="text-center">
+            <p-menu #menuRegistro [model]="getMenuItemsRegistro(registro)" [popup]="true" appendTo="body"></p-menu>
             <p-button
-              icon="pi pi-eye"
+              icon="pi pi-ellipsis-v"
               [rounded]="true"
               [text]="true"
-              (onClick)="verDetalle(registro); $event.stopPropagation()"
-              pTooltip="Ver detalle" />
+              (onClick)="menuRegistro.toggle($event); $event.stopPropagation()" />
           </td>
         </tr>
       </ng-template>
@@ -433,6 +394,36 @@
             </div>
           </td>
         </tr>
+      </ng-template>
+
+      <!-- Footer con resumen -->
+      <ng-template pTemplate="summary">
+        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
+          <div class="flex align-items-center gap-2 text-sm">
+            <span class="text-500">Total:</span>
+            <span class="font-semibold">{{ contadores().total }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-shield text-orange-500"></i>
+            <span class="text-500">Riesgos:</span>
+            <span class="font-semibold">{{ contadores().riesgos }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-exclamation-triangle text-red-500"></i>
+            <span class="text-500">Incidentes:</span>
+            <span class="font-semibold">{{ contadores().incidentes }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-red-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Criticos:</span>
+            <span class="font-semibold">{{ contadores().criticos }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-green-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Controlados:</span>
+            <span class="font-semibold">{{ contadores().controlados }}</span>
+          </div>
+        </div>
       </ng-template>
     </p-table>
   </p-card>

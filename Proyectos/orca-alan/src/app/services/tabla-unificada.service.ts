@@ -211,7 +211,14 @@ export class TablaUnificadaService {
     return {
       total: datos.length,
       riesgos: datos.filter(d => d.tipoEntidad === 'riesgo').length,
-      incidentes: datos.filter(d => d.tipoEntidad === 'incidente').length
+      incidentes: datos.filter(d => d.tipoEntidad === 'incidente').length,
+      criticos: datos.filter(d =>
+        (d.tipoEntidad === 'riesgo' && d.nivelRiesgo && d.nivelRiesgo >= 15) ||
+        (d.tipoEntidad === 'incidente' && d.severidad === 'critica')
+      ).length,
+      controlados: datos.filter(d =>
+        d.estado === 'mitigado' || d.estado === 'aceptado' || d.estado === 'resuelto' || d.estado === 'cerrado'
+      ).length
     };
   });
 

@@ -21,62 +21,6 @@
   </div>
 
   <div class="p-4">
-    <!-- Tarjetas de resumen -->
-    <div class="grid mb-4">
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="surface-card border-round-lg p-4 shadow-1">
-          <div class="flex align-items-center gap-3">
-            <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width: 48px; height: 48px;">
-              <i class="pi pi-chart-line text-blue-500 text-xl"></i>
-            </div>
-            <div>
-              <span class="text-500 text-sm block">Promedio Completado</span>
-              <span class="text-2xl font-bold text-900">{{ promedioCompletado() }}%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="surface-card border-round-lg p-4 shadow-1">
-          <div class="flex align-items-center gap-3">
-            <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 48px; height: 48px;">
-              <i class="pi pi-clock text-orange-500 text-xl"></i>
-            </div>
-            <div>
-              <span class="text-500 text-sm block">Revisiones Pendientes</span>
-              <span class="text-2xl font-bold text-900">{{ asignacionesPendientes() }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="surface-card border-round-lg p-4 shadow-1">
-          <div class="flex align-items-center gap-3">
-            <div class="flex align-items-center justify-content-center bg-red-100 border-round" style="width: 48px; height: 48px;">
-              <i class="pi pi-exclamation-triangle text-red-500 text-xl"></i>
-            </div>
-            <div>
-              <span class="text-500 text-sm block">Alertas Criticas</span>
-              <span class="text-2xl font-bold text-900">{{ alertasCriticas() }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="surface-card border-round-lg p-4 shadow-1">
-          <div class="flex align-items-center gap-3">
-            <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width: 48px; height: 48px;">
-              <i class="pi pi-check-circle text-green-500 text-xl"></i>
-            </div>
-            <div>
-              <span class="text-500 text-sm block">Controles Implementados</span>
-              <span class="text-2xl font-bold text-900">{{ totalControlesImplementados() }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Tabs: Revisiones y Gráficas -->
     <p-tabs value="0">
       <p-tablist>
@@ -147,13 +91,10 @@
                     <span class="text-xs text-500">{{ asignacion.progreso }}%</span>
                   </td>
                   <td><p-tag [value]="asignacion.estado | titlecase" [severity]="getEstadoSeverity(asignacion.estado)" /></td>
-                  <td>
-                    <div class="flex gap-1">
-                      <p-button icon="pi pi-file-edit" [rounded]="true" [text]="true" severity="secondary" pTooltip="Responder" (onClick)="responderCuestionario(asignacion)" />
-                      <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info" pTooltip="Revisar" (onClick)="revisarCuestionario(asignacion)" />
-                      <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="warn" pTooltip="Editar" (onClick)="editarAsignacion(asignacion)" />
-                      <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="eliminarAsignacion(asignacion)" />
-                    </div>
+                  <td class="text-center">
+                    <p-menu #menuAsignacion [model]="getMenuItemsAsignacion(asignacion)" [popup]="true" appendTo="body"></p-menu>
+                    <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+                              (onClick)="menuAsignacion.toggle($event)"></p-button>
                   </td>
                 </tr>
               </ng-template>
@@ -164,6 +105,31 @@
                     <p class="text-500 m-0">No hay asignaciones</p>
                   </td>
                 </tr>
+              </ng-template>
+
+              <!-- Footer con resumen -->
+              <ng-template pTemplate="summary">
+                <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
+                  <div class="flex align-items-center gap-2 text-sm">
+                    <span class="text-500">Total:</span>
+                    <span class="font-semibold">{{ totalAsignaciones() }}</span>
+                  </div>
+                  <div class="flex align-items-center gap-2 text-sm">
+                    <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
+                    <span class="text-500">Pendientes:</span>
+                    <span class="font-semibold">{{ asignacionesPendientes() }}</span>
+                  </div>
+                  <div class="flex align-items-center gap-2 text-sm">
+                    <i class="pi pi-chart-line text-blue-500"></i>
+                    <span class="text-500">Promedio:</span>
+                    <span class="font-semibold">{{ promedioCompletado() }}%</span>
+                  </div>
+                  <div class="flex align-items-center gap-2 text-sm">
+                    <i class="pi pi-exclamation-triangle text-red-500"></i>
+                    <span class="text-500">Alertas Criticas:</span>
+                    <span class="font-semibold">{{ alertasCriticas() }}</span>
+                  </div>
+                </div>
               </ng-template>
             </p-table>
           </div>
@@ -313,6 +279,31 @@
             <p class="text-500 m-0">No hay asignaciones</p>
           </td>
         </tr>
+      </ng-template>
+
+      <!-- Footer con resumen -->
+      <ng-template pTemplate="summary">
+        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
+          <div class="flex align-items-center gap-2 text-sm">
+            <span class="text-500">Total:</span>
+            <span class="font-semibold">{{ totalAsignaciones() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Pendientes:</span>
+            <span class="font-semibold">{{ asignacionesPendientes() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-chart-line text-blue-500"></i>
+            <span class="text-500">Promedio:</span>
+            <span class="font-semibold">{{ promedioCompletado() }}%</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-exclamation-triangle text-red-500"></i>
+            <span class="text-500">Alertas Criticas:</span>
+            <span class="font-semibold">{{ alertasCriticas() }}</span>
+          </div>
+        </div>
       </ng-template>
     </p-table>
   </div>

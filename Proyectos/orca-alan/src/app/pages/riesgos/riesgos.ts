@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { CardModule } from 'primeng/card';
@@ -9,6 +10,8 @@ import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { SliderModule } from 'primeng/slider';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { Riesgo, EstadoRiesgo } from '../../models';
 
@@ -20,8 +23,8 @@ interface RiesgoConActivo extends Riesgo {
   selector: 'app-riesgos',
   standalone: true,
   imports: [
-    FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
-    InputTextModule, SelectModule, TextareaModule, TagModule, SliderModule
+    DecimalPipe, FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
+    InputTextModule, SelectModule, TextareaModule, TagModule, SliderModule, MenuModule
   ],
   templateUrl: './riesgos.html',
   styleUrl: './riesgos.scss'
@@ -121,5 +124,21 @@ export class RiesgosComponent {
       });
       this.showDialog.set(false);
     }
+  }
+
+  getMenuItemsRiesgo(riesgo: RiesgoConActivo): MenuItem[] {
+    return [
+      { label: 'Ver detalle', icon: 'pi pi-eye', command: () => console.log('Ver', riesgo.id) },
+      { label: 'Editar', icon: 'pi pi-pencil', command: () => console.log('Editar', riesgo.id) },
+      { separator: true },
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', riesgo.id) }
+    ];
+  }
+
+  getPromedioNivel(): number {
+    const riesgos = this.riesgos();
+    if (riesgos.length === 0) return 0;
+    const suma = riesgos.reduce((total, r) => total + this.getNivelRiesgo(r.probabilidad, r.impacto), 0);
+    return suma / riesgos.length;
   }
 }

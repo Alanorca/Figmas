@@ -7,70 +7,6 @@
     <p-button label="Registrar Defecto" icon="pi pi-plus" severity="help" (onClick)="openNewDialog()"></p-button>
   </div>
 
-  <!-- KPIs por Tipo -->
-  <div class="grid mb-4">
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-blue-500">build</span>
-          </div>
-          <div>
-            <p class="text-500 text-sm m-0">Funcionales</p>
-            <p class="text-2xl font-bold text-blue-500 m-0">
-              {{ defectosFuncionales() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-red-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-red-500">security</span>
-          </div>
-          <div>
-            <p class="text-500 text-sm m-0">Seguridad</p>
-            <p class="text-2xl font-bold text-red-500 m-0">
-              {{ defectosSeguridad() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-orange-500">speed</span>
-          </div>
-          <div>
-            <p class="text-500 text-sm m-0">Rendimiento</p>
-            <p class="text-2xl font-bold text-orange-500 m-0">
-              {{ defectosRendimiento() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-purple-500">touch_app</span>
-          </div>
-          <div>
-            <p class="text-500 text-sm m-0">Usabilidad</p>
-            <p class="text-2xl font-bold text-purple-500 m-0">
-              {{ defectosUsabilidad() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-  </div>
-
   <p-card>
     <p-table [value]="defectos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} defectos"
@@ -112,12 +48,10 @@
           </td>
           <td>{{ defecto.detectadoPor }}</td>
           <td>{{ defecto.fechaDeteccion | date:'dd/MM/yyyy' }}</td>
-          <td>
-            <div class="flex gap-1">
-              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info"></p-button>
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"></p-button>
-              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"></p-button>
-            </div>
+          <td class="text-center">
+            <p-menu #menuDefecto [model]="getMenuItemsDefecto(defecto)" [popup]="true" appendTo="body"></p-menu>
+            <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+                      (onClick)="menuDefecto.toggle($event)"></p-button>
           </td>
         </tr>
       </ng-template>
@@ -130,6 +64,41 @@
             </div>
           </td>
         </tr>
+      </ng-template>
+
+      <!-- Footer con resumen -->
+      <ng-template pTemplate="summary">
+        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
+          <div class="flex align-items-center gap-2 text-sm">
+            <span class="text-500">Total:</span>
+            <span class="font-semibold">{{ defectos().length }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-cog text-blue-500"></i>
+            <span class="text-500">Funcionales:</span>
+            <span class="font-semibold">{{ defectosFuncionales() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-shield text-red-500"></i>
+            <span class="text-500">Seguridad:</span>
+            <span class="font-semibold">{{ defectosSeguridad() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-bolt text-orange-500"></i>
+            <span class="text-500">Rendimiento:</span>
+            <span class="font-semibold">{{ defectosRendimiento() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-user text-purple-500"></i>
+            <span class="text-500">Usabilidad:</span>
+            <span class="font-semibold">{{ defectosUsabilidad() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-check-circle text-green-500"></i>
+            <span class="text-500">Resueltos:</span>
+            <span class="font-semibold">{{ getDefectosResueltos() }}</span>
+          </div>
+        </div>
       </ng-template>
     </p-table>
   </p-card>

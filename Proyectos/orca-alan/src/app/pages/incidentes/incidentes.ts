@@ -10,6 +10,8 @@ import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { TimelineModule } from 'primeng/timeline';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { Incidente, Severidad, EstadoIncidente } from '../../models';
 
@@ -22,7 +24,7 @@ interface IncidenteConActivo extends Incidente {
   standalone: true,
   imports: [
     CommonModule, FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
-    InputTextModule, SelectModule, TextareaModule, TagModule, TimelineModule
+    InputTextModule, SelectModule, TextareaModule, TagModule, TimelineModule, MenuModule
   ],
   templateUrl: './incidentes.html',
   styleUrl: './incidentes.scss'
@@ -128,5 +130,18 @@ export class IncidentesComponent {
       });
       this.showDialog.set(false);
     }
+  }
+
+  getMenuItemsIncidente(incidente: IncidenteConActivo): MenuItem[] {
+    return [
+      { label: 'Ver detalle', icon: 'pi pi-eye', command: () => console.log('Ver', incidente.id) },
+      { label: 'Editar', icon: 'pi pi-pencil', command: () => console.log('Editar', incidente.id) },
+      { separator: true },
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', incidente.id) }
+    ];
+  }
+
+  getIncidentesCriticos(): number {
+    return this.incidentes().filter(i => i.severidad === 'critica').length;
   }
 }

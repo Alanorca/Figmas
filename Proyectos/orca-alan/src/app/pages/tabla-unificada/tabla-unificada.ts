@@ -14,6 +14,7 @@ import { TagModule } from 'primeng/tag';
 import { ChipModule } from 'primeng/chip';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 import { PopoverModule } from 'primeng/popover';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SliderModule } from 'primeng/slider';
@@ -641,5 +642,15 @@ export class TablaUnificadaComponent {
 
   trackById(index: number, registro: RegistroUnificado): string {
     return registro.id;
+  }
+
+  // Menú contextual para registros
+  getMenuItemsRegistro(registro: RegistroUnificado): MenuItem[] {
+    return [
+      { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.verDetalle(registro) },
+      { label: 'Editar', icon: 'pi pi-pencil', command: () => console.log('Editar', registro.id) },
+      { separator: true },
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', registro.id) }
+    ];
   }
 }

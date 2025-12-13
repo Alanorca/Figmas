@@ -10,6 +10,8 @@ import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { TabsModule } from 'primeng/tabs';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { Activo, TipoActivo, Criticidad } from '../../models';
 
@@ -18,7 +20,7 @@ import { Activo, TipoActivo, Criticidad } from '../../models';
   standalone: true,
   imports: [
     FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
-    InputTextModule, SelectModule, TextareaModule, TagModule, TooltipModule, TabsModule
+    InputTextModule, SelectModule, TextareaModule, TagModule, TooltipModule, TabsModule, MenuModule
   ],
   templateUrl: './activos.html',
   styleUrl: './activos.scss'
@@ -96,5 +98,31 @@ export class ActivosComponent {
   viewDetail(activo: Activo): void {
     this.selectedActivo.set(activo);
     this.showDetailDialog.set(true);
+  }
+
+  getMenuItemsActivo(activo: Activo): MenuItem[] {
+    return [
+      { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.viewDetail(activo) },
+      { label: 'Editar', icon: 'pi pi-pencil', command: () => console.log('Editar', activo.id) },
+      { separator: true },
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', activo.id) }
+    ];
+  }
+
+  // Métodos para el resumen del footer
+  getCountByCriticidad(criticidad: string): number {
+    return this.activos().filter(a => a.criticidad === criticidad).length;
+  }
+
+  getTotalRiesgos(): number {
+    return this.activos().reduce((total, a) => total + a.riesgos.length, 0);
+  }
+
+  getTotalIncidentes(): number {
+    return this.activos().reduce((total, a) => total + a.incidentes.length, 0);
+  }
+
+  getTotalDefectos(): number {
+    return this.activos().reduce((total, a) => total + a.defectos.length, 0);
   }
 }

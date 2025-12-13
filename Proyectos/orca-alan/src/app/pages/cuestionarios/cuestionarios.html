@@ -138,13 +138,10 @@
             <td>
               <p-tag [value]="cuestionario.estado | titlecase" [severity]="getEstadoSeverity(cuestionario.estado)" styleClass="text-xs" />
             </td>
-            <td>
-              <div class="flex gap-1" (click)="$event.stopPropagation()">
-                <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info" size="small" pTooltip="Ver detalle" (onClick)="verDetalleCuestionario(cuestionario)" />
-                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" size="small" pTooltip="Editar" (onClick)="editarCuestionario(cuestionario)" />
-                <p-button icon="pi pi-copy" [rounded]="true" [text]="true" severity="help" size="small" pTooltip="Duplicar" (onClick)="duplicarCuestionario(cuestionario)" />
-                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" pTooltip="Eliminar" (onClick)="eliminarCuestionario(cuestionario)" />
-              </div>
+            <td class="text-center" (click)="$event.stopPropagation()">
+              <p-menu #menuCuestionario [model]="getMenuItemsCuestionario(cuestionario)" [popup]="true" appendTo="body"></p-menu>
+              <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small"
+                        (onClick)="menuCuestionario.toggle($event)"></p-button>
             </td>
           </tr>
         </ng-template>
@@ -159,6 +156,31 @@
               </div>
             </td>
           </tr>
+        </ng-template>
+
+        <!-- Footer con resumen -->
+        <ng-template pTemplate="summary">
+          <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
+            <div class="flex align-items-center gap-2 text-sm">
+              <span class="text-500">Total:</span>
+              <span class="font-semibold">{{ totalCuestionarios() }}</span>
+            </div>
+            <div class="flex align-items-center gap-2 text-sm">
+              <i class="pi pi-circle-fill text-green-500" style="font-size: 0.5rem"></i>
+              <span class="text-500">Activos:</span>
+              <span class="font-semibold">{{ totalActivos() }}</span>
+            </div>
+            <div class="flex align-items-center gap-2 text-sm">
+              <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
+              <span class="text-500">Borradores:</span>
+              <span class="font-semibold">{{ totalBorradores() }}</span>
+            </div>
+            <div class="flex align-items-center gap-2 text-sm">
+              <i class="pi pi-question-circle text-blue-500"></i>
+              <span class="text-500">Total Preguntas:</span>
+              <span class="font-semibold">{{ totalPreguntas() }}</span>
+            </div>
+          </div>
         </ng-template>
       </p-table>
     </div>

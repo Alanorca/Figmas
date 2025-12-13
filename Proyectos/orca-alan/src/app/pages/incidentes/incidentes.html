@@ -7,70 +7,6 @@
     <p-button label="Reportar Incidente" icon="pi pi-plus" severity="danger" (onClick)="openNewDialog()"></p-button>
   </div>
 
-  <!-- KPIs -->
-  <div class="grid mb-4">
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-red-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-red-500">error</span>
-          </div>
-          <div>
-            <p class="text-500 text-sm m-0">Abiertos</p>
-            <p class="text-2xl font-bold text-red-500 m-0">
-              {{ incidentesAbiertos() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-orange-500">sync</span>
-          </div>
-          <div>
-            <p class="text-500 text-sm m-0">En Proceso</p>
-            <p class="text-2xl font-bold text-orange-500 m-0">
-              {{ incidentesEnProceso() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-green-500">check_circle</span>
-          </div>
-          <div>
-            <p class="text-500 text-sm m-0">Resueltos</p>
-            <p class="text-2xl font-bold text-green-500 m-0">
-              {{ incidentesResueltos() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 md:col-3">
-      <p-card styleClass="h-full">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-gray-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-gray-500">lock</span>
-          </div>
-          <div>
-            <p class="text-500 text-sm m-0">Cerrados</p>
-            <p class="text-2xl font-bold text-gray-500 m-0">
-              {{ incidentesCerrados() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-  </div>
-
   <p-card>
     <p-table [value]="incidentes()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} incidentes"
@@ -106,12 +42,10 @@
           </td>
           <td>{{ incidente.reportadoPor }}</td>
           <td>{{ incidente.fechaReporte | date:'dd/MM/yyyy' }}</td>
-          <td>
-            <div class="flex gap-1">
-              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info"></p-button>
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"></p-button>
-              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"></p-button>
-            </div>
+          <td class="text-center">
+            <p-menu #menuIncidente [model]="getMenuItemsIncidente(incidente)" [popup]="true" appendTo="body"></p-menu>
+            <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+                      (onClick)="menuIncidente.toggle($event)"></p-button>
           </td>
         </tr>
       </ng-template>
@@ -124,6 +58,41 @@
             </div>
           </td>
         </tr>
+      </ng-template>
+
+      <!-- Footer con resumen -->
+      <ng-template pTemplate="summary">
+        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
+          <div class="flex align-items-center gap-2 text-sm">
+            <span class="text-500">Total:</span>
+            <span class="font-semibold">{{ incidentes().length }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-red-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Abiertos:</span>
+            <span class="font-semibold">{{ incidentesAbiertos() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">En Proceso:</span>
+            <span class="font-semibold">{{ incidentesEnProceso() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-green-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Resueltos:</span>
+            <span class="font-semibold">{{ incidentesResueltos() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-gray-400" style="font-size: 0.5rem"></i>
+            <span class="text-500">Cerrados:</span>
+            <span class="font-semibold">{{ incidentesCerrados() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-exclamation-triangle text-red-500"></i>
+            <span class="text-500">Críticos:</span>
+            <span class="font-semibold">{{ getIncidentesCriticos() }}</span>
+          </div>
+        </div>
       </ng-template>
     </p-table>
   </p-card>

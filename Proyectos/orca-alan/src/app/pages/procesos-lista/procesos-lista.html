@@ -26,26 +26,6 @@
     </div>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-value">{{ stats().total }}</div>
-      <div class="stat-label">Total</div>
-    </div>
-    <div class="stat-card borrador">
-      <div class="stat-value">{{ stats().borradores }}</div>
-      <div class="stat-label">Borradores</div>
-    </div>
-    <div class="stat-card activo">
-      <div class="stat-value">{{ stats().activos }}</div>
-      <div class="stat-label">Activos</div>
-    </div>
-    <div class="stat-card inactivo">
-      <div class="stat-value">{{ stats().inactivos }}</div>
-      <div class="stat-label">Inactivos</div>
-    </div>
-  </div>
-
   <!-- Table Card -->
   <p-card>
     <p-table
@@ -138,56 +118,14 @@
           </td>
           <td>{{ formatDate(proceso.createdAt) }}</td>
           <td>{{ formatDate(proceso.updatedAt) }}</td>
-          <td>
-            <div class="actions-cell">
-              <p-button
-                icon="pi pi-eye"
-                [rounded]="true"
-                [text]="true"
-                severity="info"
-                pTooltip="Ver detalle"
-                tooltipPosition="top"
-                (onClick)="verDetalle(proceso)">
-              </p-button>
-              <p-button
-                icon="pi pi-pencil"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                pTooltip="Editar"
-                tooltipPosition="top"
-                (onClick)="editarProceso(proceso)">
-              </p-button>
-              <p-button
-                icon="pi pi-copy"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                pTooltip="Duplicar"
-                tooltipPosition="top"
-                (onClick)="duplicarProceso(proceso)">
-              </p-button>
-              @if (proceso.estado === 'activo') {
-                <p-button
-                  icon="pi pi-play"
-                  [rounded]="true"
-                  [text]="true"
-                  severity="success"
-                  pTooltip="Ejecutar"
-                  tooltipPosition="top"
-                  (onClick)="ejecutarProceso(proceso)">
-                </p-button>
-              }
-              <p-button
-                icon="pi pi-trash"
-                [rounded]="true"
-                [text]="true"
-                severity="danger"
-                pTooltip="Eliminar"
-                tooltipPosition="top"
-                (onClick)="eliminarProceso(proceso)">
-              </p-button>
-            </div>
+          <td class="text-center">
+            <p-menu #menu [model]="getMenuItems(proceso)" [popup]="true" appendTo="body"></p-menu>
+            <p-button
+              icon="pi pi-ellipsis-v"
+              [rounded]="true"
+              [text]="true"
+              (onClick)="menu.toggle($event)">
+            </p-button>
           </td>
         </tr>
       </ng-template>
@@ -207,6 +145,36 @@
             </div>
           </td>
         </tr>
+      </ng-template>
+
+      <!-- Footer con resumen -->
+      <ng-template pTemplate="summary">
+        <div class="table-summary">
+          <div class="summary-item">
+            <span class="summary-label">Total:</span>
+            <span class="summary-value">{{ procesos().length }}</span>
+          </div>
+          <div class="summary-item">
+            <i class="pi pi-circle-fill text-green-500"></i>
+            <span class="summary-label">Activos:</span>
+            <span class="summary-value">{{ getCountByEstado('activo') }}</span>
+          </div>
+          <div class="summary-item">
+            <i class="pi pi-circle-fill text-gray-400"></i>
+            <span class="summary-label">Borradores:</span>
+            <span class="summary-value">{{ getCountByEstado('borrador') }}</span>
+          </div>
+          <div class="summary-item">
+            <i class="pi pi-circle-fill text-orange-500"></i>
+            <span class="summary-label">Inactivos:</span>
+            <span class="summary-value">{{ getCountByEstado('inactivo') }}</span>
+          </div>
+          <div class="summary-item">
+            <i class="pi pi-sitemap"></i>
+            <span class="summary-label">Total Nodos:</span>
+            <span class="summary-value">{{ getTotalNodos() }}</span>
+          </div>
+        </div>
       </ng-template>
     </p-table>
   </p-card>

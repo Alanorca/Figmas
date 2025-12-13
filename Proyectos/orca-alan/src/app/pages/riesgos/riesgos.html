@@ -7,55 +7,6 @@
     <p-button label="Nuevo Riesgo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
   </div>
 
-  <!-- Matriz de Riesgos Visual -->
-  <div class="grid mb-4">
-    <div class="col-12 lg:col-4">
-      <p-card styleClass="h-full bg-red-50">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-red-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-red-500">dangerous</span>
-          </div>
-          <div>
-            <p class="text-red-700 text-sm font-medium m-0">Riesgos Criticos</p>
-            <p class="text-3xl font-bold text-red-500 m-0">
-              {{ riesgosCriticos() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 lg:col-4">
-      <p-card styleClass="h-full bg-orange-50">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-orange-500">warning</span>
-          </div>
-          <div>
-            <p class="text-orange-700 text-sm font-medium m-0">Riesgos Altos</p>
-            <p class="text-3xl font-bold text-orange-500 m-0">
-              {{ riesgosAltos() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-    <div class="col-12 lg:col-4">
-      <p-card styleClass="h-full bg-green-50">
-        <div class="flex align-items-center gap-3">
-          <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width: 3rem; height: 3rem;">
-            <span class="material-icons text-green-500">check_circle</span>
-          </div>
-          <div>
-            <p class="text-green-700 text-sm font-medium m-0">Riesgos Controlados</p>
-            <p class="text-3xl font-bold text-green-500 m-0">
-              {{ riesgosControlados() }}
-            </p>
-          </div>
-        </div>
-      </p-card>
-    </div>
-  </div>
-
   <p-card>
     <p-table [value]="riesgos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
@@ -102,11 +53,10 @@
             <p-tag [value]="riesgo.estado" [severity]="getEstadoSeverity(riesgo.estado)"></p-tag>
           </td>
           <td>{{ riesgo.responsable }}</td>
-          <td>
-            <div class="flex gap-1">
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"></p-button>
-              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"></p-button>
-            </div>
+          <td class="text-center">
+            <p-menu #menuRiesgo [model]="getMenuItemsRiesgo(riesgo)" [popup]="true" appendTo="body"></p-menu>
+            <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+                      (onClick)="menuRiesgo.toggle($event)"></p-button>
           </td>
         </tr>
       </ng-template>
@@ -116,6 +66,36 @@
             <span class="text-500">No hay riesgos registrados</span>
           </td>
         </tr>
+      </ng-template>
+
+      <!-- Footer con resumen -->
+      <ng-template pTemplate="summary">
+        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
+          <div class="flex align-items-center gap-2 text-sm">
+            <span class="text-500">Total:</span>
+            <span class="font-semibold">{{ riesgos().length }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-red-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Críticos:</span>
+            <span class="font-semibold">{{ riesgosCriticos() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Altos:</span>
+            <span class="font-semibold">{{ riesgosAltos() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-circle-fill text-green-500" style="font-size: 0.5rem"></i>
+            <span class="text-500">Controlados:</span>
+            <span class="font-semibold">{{ riesgosControlados() }}</span>
+          </div>
+          <div class="flex align-items-center gap-2 text-sm">
+            <i class="pi pi-chart-line"></i>
+            <span class="text-500">Nivel promedio:</span>
+            <span class="font-semibold">{{ getPromedioNivel() | number:'1.1-1' }}</span>
+          </div>
+        </div>
       </ng-template>
     </p-table>
   </p-card>

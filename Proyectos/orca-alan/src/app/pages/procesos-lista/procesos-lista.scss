@@ -139,6 +139,35 @@
   .p-column-filter {
     width: 100%;
   }
+
+  // Table summary footer
+  .table-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--surface-200);
+
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+
+      i {
+        font-size: 0.625rem;
+      }
+
+      .summary-label {
+        color: var(--text-color-secondary);
+      }
+
+      .summary-value {
+        font-weight: 600;
+        color: var(--text-color);
+      }
+    }
+  }
 }
 
 // Drawer Styles

@@ -9,6 +9,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { Defecto, TipoDefecto, Severidad, EstadoDefecto } from '../../models';
 
@@ -21,7 +23,7 @@ interface DefectoConActivo extends Defecto {
   standalone: true,
   imports: [
     CommonModule, FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
-    InputTextModule, SelectModule, TextareaModule, TagModule
+    InputTextModule, SelectModule, TextareaModule, TagModule, MenuModule
   ],
   templateUrl: './defectos.html',
   styleUrl: './defectos.scss'
@@ -139,5 +141,18 @@ export class DefectosComponent {
       });
       this.showDialog.set(false);
     }
+  }
+
+  getMenuItemsDefecto(defecto: DefectoConActivo): MenuItem[] {
+    return [
+      { label: 'Ver detalle', icon: 'pi pi-eye', command: () => console.log('Ver', defecto.id) },
+      { label: 'Editar', icon: 'pi pi-pencil', command: () => console.log('Editar', defecto.id) },
+      { separator: true },
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', defecto.id) }
+    ];
+  }
+
+  getDefectosResueltos(): number {
+    return this.defectos().filter(d => d.estado === 'corregido' || d.estado === 'verificado').length;
   }
 }
