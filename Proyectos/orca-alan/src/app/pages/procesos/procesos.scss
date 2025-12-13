@@ -465,8 +465,353 @@ $text-dark: #334155;
 }
 
 // ============================================
-// NODOS EN CANVAS - Estilo Figma (Simple y limpio)
+// NODOS EN CANVAS - Estilo Figma EXACTO (Expandidos)
 // ============================================
+
+// Card principal del nodo (estilo Figma)
+.node-card-figma {
+  background: #ffffff;
+  border-radius: 12px;
+  min-width: 320px;
+  max-width: 380px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid $border-color;
+  overflow: visible;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  &.selected {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  }
+}
+
+// Header del nodo Figma
+.node-figma-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid $border-color;
+  background: #fafafa;
+  border-radius: 12px 12px 0 0;
+}
+
+.node-figma-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.node-figma-icon {
+  font-size: 20px;
+  color: $text-secondary;
+}
+
+.node-figma-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-dark;
+}
+
+.node-figma-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.node-figma-action-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: $text-secondary;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+
+  &:hover {
+    background: $border-color;
+    color: $text-dark;
+  }
+
+  &.danger:hover {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  i {
+    font-size: 14px;
+  }
+}
+
+// Body del nodo
+.node-figma-body {
+  padding: 16px;
+}
+
+.node-figma-description {
+  font-family: 'Roboto', sans-serif;
+  font-size: 13px;
+  color: $text-secondary;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+// Formulario dentro del nodo
+.node-figma-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// Input estilo Figma
+.node-figma-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Roboto', sans-serif;
+  color: $text-dark;
+  background: #ffffff;
+  transition: all 0.2s;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+
+  &.mono {
+    font-family: 'Monaco', 'Menlo', monospace;
+  }
+}
+
+// Select estilo Figma
+.node-figma-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Roboto', sans-serif;
+  color: $text-dark;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+  }
+}
+
+// Textarea estilo Figma
+.node-figma-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: 'Roboto', sans-serif;
+  color: $text-dark;
+  background: #ffffff;
+  resize: vertical;
+  min-height: 60px;
+  transition: all 0.2s;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+  }
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+}
+
+// Campo con label
+.node-figma-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: $text-dark;
+  }
+}
+
+// Grupo de botones Choose/Upload/Cancel
+.node-figma-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.figma-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+  border: 1px solid $border-color;
+  background: #ffffff;
+  color: $text-dark;
+
+  i {
+    font-size: 14px;
+  }
+
+  &.choose {
+    &.active, &:hover {
+      background: $primary-color;
+      border-color: $primary-color;
+      color: white;
+    }
+  }
+
+  &.upload {
+    &.active, &:hover {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: white;
+    }
+  }
+
+  &.cancel {
+    &.active, &:hover {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: white;
+    }
+  }
+}
+
+// Dropzone estilo Figma
+.node-figma-dropzone {
+  border: 2px dashed $border-color;
+  border-radius: 10px;
+  padding: 24px 16px;
+  text-align: center;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    border-color: $primary-color;
+    background: #f0fdf4;
+  }
+
+  span {
+    font-size: 13px;
+    color: $text-secondary;
+  }
+
+  i {
+    font-size: 28px;
+    color: $text-secondary;
+  }
+}
+
+// Botón primario Figma
+.figma-btn-primary {
+  width: 100%;
+  padding: 12px 16px;
+  background: $primary-color;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: color.scale($primary-color, $lightness: -10%);
+  }
+}
+
+// Toolbar de fórmula
+.node-figma-formula-toolbar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.formula-op {
+  width: 32px;
+  height: 32px;
+  border: 1px solid $border-color;
+  background: #ffffff;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  color: $text-dark;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: $primary-color;
+    border-color: $primary-color;
+    color: white;
+  }
+}
+
+// Badge en desarrollo
+.node-figma-badge-dev {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+
+  i {
+    font-size: 14px;
+  }
+}
+
+.node-figma-hint {
+  font-size: 12px;
+  color: $text-secondary;
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+}
+
+// Mantener estilos antiguos por compatibilidad
 .node-card-v2 {
   background: $card-bg;
   border-radius: 12px;
@@ -1628,5 +1973,31 @@ $text-dark: #334155;
   // Toolbar select
   .toolbar-select {
     min-width: 200px;
+  }
+
+  // Sobrescribir estilos por defecto de vflow para nodos html-template
+  .vflow-node {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+
+    &__html-template {
+      background: transparent !important;
+      border: none !important;
+    }
+  }
+
+  // Contenedor de nodos html
+  [data-node-type="html-template"] {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  // Asegurar que el nodo personalizado sea visible
+  .html-node,
+  .node-html-wrapper {
+    background: transparent !important;
+    border: none !important;
   }
 }

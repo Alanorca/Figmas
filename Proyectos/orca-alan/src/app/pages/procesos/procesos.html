@@ -157,31 +157,262 @@
 
         <ng-template nodeHtml let-ctx>
           <div
-            class="node-card-v2"
+            class="node-card-figma"
             [class.selected]="processService.selectedNode()?.id === ctx.node.id"
             (click)="onNodeSelect(ctx.node.id)">
 
-            <!-- Node Header: Avatar + Título + Acciones -->
-            <div class="node-card-header">
-              <div class="node-header-left">
-                <div class="node-type-icon">
-                  <span class="material-icons">{{ getNodeIcon(ctx.node.data?.nodeType) }}</span>
-                </div>
-                <span class="node-type-title">{{ getNodeMeta(ctx.node.data?.nodeType)?.title }}</span>
+            <!-- Node Header: Icono + Título + Acciones -->
+            <div class="node-figma-header">
+              <div class="node-figma-header-left">
+                <span class="material-icons node-figma-icon">{{ getNodeIcon(ctx.node.data?.nodeType) }}</span>
+                <span class="node-figma-title">{{ ctx.node.data?.label || getNodeMeta(ctx.node.data?.nodeType)?.title }}</span>
               </div>
-              <div class="node-header-actions">
-                <button class="node-action-btn" (click)="onNodeSelect(ctx.node.id); $event.stopPropagation()" pTooltip="Editar">
-                  <i class="pi pi-pencil"></i>
+              <div class="node-figma-actions">
+                <button class="node-figma-action-btn" (click)="$event.stopPropagation()" pTooltip="Agregar">
+                  <i class="pi pi-plus"></i>
                 </button>
-                <button class="node-action-btn danger" (click)="deleteNodeById(ctx.node.id); $event.stopPropagation()" pTooltip="Eliminar">
+                <button class="node-figma-action-btn danger" (click)="deleteNodeById(ctx.node.id); $event.stopPropagation()" pTooltip="Eliminar">
                   <i class="pi pi-trash"></i>
                 </button>
               </div>
             </div>
 
-            <!-- Node Description -->
-            <div class="node-card-description">
-              {{ getNodeMeta(ctx.node.data?.nodeType)?.descripcion }}
+            <!-- Node Body: Contenido específico por tipo -->
+            <div class="node-figma-body">
+              <!-- Descripción del nodo -->
+              <p class="node-figma-description">{{ getNodeMeta(ctx.node.data?.nodeType)?.descripcion }}</p>
+
+              <!-- ========== NODO CSV/ARCHIVO ========== -->
+              @if (ctx.node.data?.nodeType === 'csv') {
+                <div class="node-figma-form">
+                  <input type="text" class="node-figma-input" [value]="ctx.node.data?.config?.fileName || ''" placeholder="Nombre del Nodo:" (click)="$event.stopPropagation()" />
+
+                  <!-- Botones Choose/Upload/Cancel -->
+                  <div class="node-figma-btn-group">
+                    <button class="figma-btn choose" [class.active]="ctx.node.data?.config?.loadMode === 'choose'" (click)="updateNodeConfigById(ctx.node.id, { loadMode: 'choose' }); $event.stopPropagation()">
+                      <i class="pi pi-check"></i> Choose
+                    </button>
+                    <button class="figma-btn upload" [class.active]="ctx.node.data?.config?.loadMode === 'upload'" (click)="updateNodeConfigById(ctx.node.id, { loadMode: 'upload' }); $event.stopPropagation()">
+                      <i class="pi pi-upload"></i> Upload
+                    </button>
+                    <button class="figma-btn cancel" [class.active]="ctx.node.data?.config?.loadMode === 'cancel'" (click)="updateNodeConfigById(ctx.node.id, { loadMode: 'cancel' }); $event.stopPropagation()">
+                      <i class="pi pi-times"></i> Cancel
+                    </button>
+                  </div>
+
+                  <!-- Dropzone -->
+                  <div class="node-figma-dropzone" (click)="$event.stopPropagation()">
+                    <span>Arrastra y suelta tus archivos aquí para subirlos.</span>
+                    <i class="pi pi-cloud-upload"></i>
+                  </div>
+
+                  <!-- Selector delimitador -->
+                  <div class="node-figma-field">
+                    <label>Delimitador (CSV):</label>
+                    <select class="node-figma-select" (click)="$event.stopPropagation()">
+                      <option value=",">,</option>
+                      <option value=";">;</option>
+                      <option value="|">|</option>
+                      <option value="tab">Tab</option>
+                    </select>
+                  </div>
+
+                  <!-- Botón cargar datos -->
+                  <button class="figma-btn-primary" (click)="loadData(); $event.stopPropagation()">
+                    Cargar Datos
+                  </button>
+                </div>
+              }
+
+              <!-- ========== NODO ACTIVO ========== -->
+              @if (ctx.node.data?.nodeType === 'activo') {
+                <div class="node-figma-form">
+                  <div class="node-figma-field">
+                    <label>Área del Activo:</label>
+                    <select class="node-figma-select" (click)="$event.stopPropagation()">
+                      <option value="">Seleccionar área...</option>
+                      @for (area of areaOptions; track area.value) {
+                        <option [value]="area.value">{{ area.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="node-figma-field">
+                    <label>Activo:</label>
+                    <select class="node-figma-select" (click)="$event.stopPropagation()">
+                      <option value="">Seleccionar activo...</option>
+                    </select>
+                  </div>
+
+                  <button class="figma-btn-primary" (click)="vincularActivo(); $event.stopPropagation()">
+                    Vincular activos
+                  </button>
+                </div>
+              }
+
+              <!-- ========== NODO LLM/PROMPT ========== -->
+              @if (ctx.node.data?.nodeType === 'llm') {
+                <div class="node-figma-form">
+                  <div class="node-figma-field">
+                    <label>Modelo:</label>
+                    <select class="node-figma-select" (click)="$event.stopPropagation()">
+                      @for (model of llmModelOptions; track model.value) {
+                        <option [value]="model.value">{{ model.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="node-figma-field">
+                    <label>Prompt:</label>
+                    <textarea class="node-figma-textarea" rows="3" placeholder="Escribe tu prompt aquí..." (click)="$event.stopPropagation()"></textarea>
+                  </div>
+
+                  <div class="node-figma-field">
+                    <label>Formato de salida:</label>
+                    <select class="node-figma-select" (click)="$event.stopPropagation()">
+                      <option value="json">JSON</option>
+                      <option value="text">Texto plano</option>
+                      <option value="table">Tabla</option>
+                      <option value="markdown">Markdown</option>
+                    </select>
+                  </div>
+                </div>
+              }
+
+              <!-- ========== NODO CONDICIONAL ========== -->
+              @if (ctx.node.data?.nodeType === 'condicional') {
+                <div class="node-figma-form">
+                  <div class="node-figma-field">
+                    <label>Variable a evaluar:</label>
+                    <input type="text" class="node-figma-input" placeholder="nombre_variable" (click)="$event.stopPropagation()" />
+                  </div>
+
+                  <div class="node-figma-field">
+                    <label>Operador:</label>
+                    <select class="node-figma-select" (click)="$event.stopPropagation()">
+                      @for (op of operadorOptions; track op.value) {
+                        <option [value]="op.value">{{ op.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="node-figma-field">
+                    <label>Valor a comparar:</label>
+                    <input type="text" class="node-figma-input" placeholder="valor" (click)="$event.stopPropagation()" />
+                  </div>
+                </div>
+              }
+
+              <!-- ========== NODO TRANSFORMACIÓN ========== -->
+              @if (ctx.node.data?.nodeType === 'transformacion') {
+                <div class="node-figma-form">
+                  <div class="node-figma-field">
+                    <label>Operación:</label>
+                    <select class="node-figma-select" (click)="$event.stopPropagation()">
+                      @for (op of operacionOptions; track op.value) {
+                        <option [value]="op.value">{{ op.label }}</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div class="node-figma-field">
+                    <label>Expresión / Mapeo:</label>
+                    <textarea class="node-figma-textarea" rows="2" placeholder="Escribe la expresión..." (click)="$event.stopPropagation()"></textarea>
+                  </div>
+                </div>
+              }
+
+              <!-- ========== NODO ESTADO ========== -->
+              @if (ctx.node.data?.nodeType === 'estado') {
+                <div class="node-figma-form">
+                  <div class="node-figma-field">
+                    <label>Estado:</label>
+                    <select class="node-figma-select" (click)="$event.stopPropagation()">
+                      <option value="pending">Pending</option>
+                      <option value="running">Running</option>
+                      <option value="complete">Complete</option>
+                      <option value="fail">Fail</option>
+                      <option value="post">Post</option>
+                      <option value="canceled">Canceled</option>
+                    </select>
+                  </div>
+
+                  <div class="node-figma-field">
+                    <label>Motivo:</label>
+                    <input type="text" class="node-figma-input" placeholder="Motivo del cambio" (click)="$event.stopPropagation()" />
+                  </div>
+                </div>
+              }
+
+              <!-- ========== NODO MATEMÁTICO ========== -->
+              @if (ctx.node.data?.nodeType === 'matematico') {
+                <div class="node-figma-form">
+                  <div class="node-figma-field">
+                    <label>Fórmula:</label>
+                    <div class="node-figma-formula-toolbar">
+                      <button class="formula-op" (click)="$event.stopPropagation()">+</button>
+                      <button class="formula-op" (click)="$event.stopPropagation()">-</button>
+                      <button class="formula-op" (click)="$event.stopPropagation()">×</button>
+                      <button class="formula-op" (click)="$event.stopPropagation()">÷</button>
+                      <button class="formula-op" (click)="$event.stopPropagation()">(</button>
+                      <button class="formula-op" (click)="$event.stopPropagation()">)</button>
+                    </div>
+                    <input type="text" class="node-figma-input mono" placeholder="(a + b) * c" (click)="$event.stopPropagation()" />
+                  </div>
+                </div>
+              }
+
+              <!-- ========== NODO BRANCHING ========== -->
+              @if (ctx.node.data?.nodeType === 'branching') {
+                <div class="node-figma-form">
+                  <div class="node-figma-field">
+                    <label>Cantidad de ramas:</label>
+                    <input type="number" class="node-figma-input" min="2" max="10" value="2" (click)="$event.stopPropagation()" />
+                  </div>
+
+                  <div class="node-figma-field">
+                    <label>Estrategia:</label>
+                    <select class="node-figma-select" (click)="$event.stopPropagation()">
+                      <option value="parallel">Paralelo</option>
+                      <option value="sequential">Secuencial</option>
+                    </select>
+                  </div>
+                </div>
+              }
+
+              <!-- ========== NODO ML ========== -->
+              @if (ctx.node.data?.nodeType === 'ml') {
+                <div class="node-figma-form">
+                  <div class="node-figma-field">
+                    <label>Nombre del modelo:</label>
+                    <input type="text" class="node-figma-input" placeholder="Mi modelo ML" (click)="$event.stopPropagation()" />
+                  </div>
+
+                  <div class="node-figma-field">
+                    <label>Tipo de modelo:</label>
+                    <select class="node-figma-select" (click)="$event.stopPropagation()">
+                      <option value="classification">Clasificación</option>
+                      <option value="regression">Regresión</option>
+                      <option value="clustering">Clustering</option>
+                    </select>
+                  </div>
+
+                  <div class="node-figma-field">
+                    <label>Endpoint:</label>
+                    <input type="text" class="node-figma-input" placeholder="https://api.ml/predict" (click)="$event.stopPropagation()" />
+                  </div>
+                </div>
+              }
+
+              <!-- ========== NODO INTEGRACIÓN ========== -->
+              @if (ctx.node.data?.nodeType === 'integracion') {
+                <div class="node-figma-form">
+                  <div class="node-figma-badge-dev">
+                    <i class="pi pi-wrench"></i> En desarrollo
+                  </div>
+                  <p class="node-figma-hint">Próximamente: conexión con bases de datos y APIs externas.</p>
+                </div>
+              }
             </div>
 
             <handle type="source" position="right" />

@@ -109,11 +109,11 @@ export class ProcesosComponent {
     return this.processService.nodes().map(node => ({
       id: node.id,
       point: { x: node.position.x, y: node.position.y },
-      type: 'default',
-      text: node.label,
+      type: 'html-template' as const,
       data: {
         nodeType: node.type,
-        config: node.config
+        config: node.config,
+        label: node.label
       }
     }));
   });
@@ -952,6 +952,16 @@ Responde UNICAMENTE con el JSON, sin texto adicional ni markdown.`;
   guardarConfiguracionColumnas(): void {
     console.log('Guardando configuracion de columnas...');
     this.showPreviewPanel.set(false);
+  }
+
+  // Actualizar configuracion de un nodo por ID (para uso en template de nodos)
+  updateNodeConfigById(nodeId: string, config: Record<string, unknown>): void {
+    const node = this.processService.nodes().find(n => n.id === nodeId);
+    if (node) {
+      this.processService.updateNode(nodeId, {
+        config: { ...node.config, ...config }
+      });
+    }
   }
 
   // Eliminar y duplicar nodos por ID
