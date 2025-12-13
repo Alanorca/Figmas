@@ -1,0 +1,389 @@
+<p-toast></p-toast>
+
+<!-- Modal de Creación de Proceso - Estilo Figma -->
+<div class="wizard-overlay" (click)="cancelar()">
+  <div class="wizard-modal" (click)="$event.stopPropagation()">
+    <!-- Header del Modal -->
+    <div class="wizard-header">
+      <div class="wizard-header-left">
+        <div class="wizard-icon">
+          <i class="pi pi-file-edit"></i>
+        </div>
+        <div class="wizard-header-text">
+          <h2>{{ steps[pasoActual()].label }}</h2>
+          <span class="wizard-step-indicator">Paso {{ pasoActual() + 1 }} de {{ steps.length }}</span>
+        </div>
+      </div>
+      <button class="wizard-close-btn" (click)="cancelar()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="wizard-progress">
+      @for (step of steps; track $index; let i = $index) {
+        <div class="progress-step" [class.active]="i === pasoActual()" [class.completed]="i < pasoActual()">
+          <div class="step-circle">
+            @if (i < pasoActual()) {
+              <i class="pi pi-check"></i>
+            } @else {
+              {{ i + 1 }}
+            }
+          </div>
+          <span class="step-label">{{ step.label }}</span>
+        </div>
+        @if (i < steps.length - 1) {
+          <div class="step-connector" [class.completed]="i < pasoActual()"></div>
+        }
+      }
+    </div>
+
+    <!-- Content -->
+    <div class="wizard-body">
+      <!-- Step 1: Datos Básicos -->
+      @if (pasoActual() === 0) {
+        <div class="step-content">
+          <div class="form-section">
+            <label class="form-label">Nombre del Proceso *</label>
+            <input
+              type="text"
+              class="form-input"
+              [ngModel]="nombre()"
+              (ngModelChange)="nombre.set($event)"
+              placeholder="Ej: Proceso de Onboarding">
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">Descripción</label>
+            <textarea
+              class="form-textarea"
+              [ngModel]="descripcion()"
+              (ngModelChange)="descripcion.set($event)"
+              rows="3"
+              placeholder="Describe brevemente el propósito del proceso...">
+            </textarea>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label">Tipo de Proceso *</label>
+            <div class="tipo-proceso-grid">
+              @for (tipo of tiposProceso; track tipo.id) {
+                <div
+                  class="tipo-card"
+                  [class.selected]="tipoSeleccionado() === tipo.id"
+                  (click)="tipoSeleccionado.set(tipo.id)">
+                  <div class="tipo-icon">
+                    <i [class]="tipo.icono"></i>
+                  </div>
+                  <span class="tipo-nombre">{{ tipo.nombre }}</span>
+                  <span class="tipo-desc">{{ tipo.descripcion }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Step 2: Información Detallada -->
+      @if (pasoActual() === 1) {
+        <div class="step-content">
+          <div class="form-row">
+            <div class="form-section">
+              <label class="form-label">Área Responsable</label>
+              <select
+                class="form-select"
+                [ngModel]="areaResponsable()"
+                (ngModelChange)="areaResponsable.set($event)">
+                <option value="">Seleccionar área</option>
+                @for (area of areasOptions; track area.value) {
+                  <option [value]="area.value">{{ area.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-section">
+              <label class="form-label">Categoría</label>
+              <select
+                class="form-select"
+                [ngModel]="categoria()"
+                (ngModelChange)="categoria.set($event)">
+                <option value="">Seleccionar categoría</option>
+                @for (cat of categoriasOptions; track cat.value) {
+                  <option [value]="cat.value">{{ cat.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-section">
+              <label class="form-label">Fuente de Datos</label>
+              <input
+                type="text"
+                class="form-input"
+                [ngModel]="fuenteDatos()"
+                (ngModelChange)="fuenteDatos.set($event)"
+                placeholder="Ej: Base de datos, API externa...">
+            </div>
+
+            <div class="form-section">
+              <label class="form-label">Propietario del Proceso</label>
+              <input
+                type="text"
+                class="form-input"
+                [ngModel]="propietario()"
+                (ngModelChange)="propietario.set($event)"
+                placeholder="Nombre del responsable">
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Step 3: Apetito de Riesgo -->
+      @if (pasoActual() === 2) {
+        <div class="step-content">
+          <p class="step-description">
+            Selecciona las celdas que representan los niveles de riesgo aceptables para este proceso.
+          </p>
+
+          <div class="matriz-wrapper">
+            <div class="matriz-y-axis">
+              <span class="axis-title">Probabilidad</span>
+              @for (label of probabilidadLabels.slice().reverse(); track $index) {
+                <span class="axis-label">{{ label }}</span>
+              }
+            </div>
+
+            <div class="matriz-main">
+              <div class="matriz-grid-figma">
+                @for (prob of [5, 4, 3, 2, 1]; track prob) {
+                  <div class="matriz-row-figma">
+                    @for (imp of [1, 2, 3, 4, 5]; track imp) {
+                      <div
+                        class="matriz-cell"
+                        [class]="getCeldaNivel(prob, imp)"
+                        [class.selected]="isCeldaSeleccionada(prob, imp)"
+                        (click)="toggleCelda(prob, imp)">
+                        @if (isCeldaSeleccionada(prob, imp)) {
+                          <i class="pi pi-check"></i>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <div class="matriz-x-axis">
+                @for (label of impactoLabels; track $index) {
+                  <span class="axis-label">{{ label }}</span>
+                }
+                <span class="axis-title">Impacto</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="matriz-legend-figma">
+            <div class="legend-item"><span class="legend-dot bajo"></span> Bajo</div>
+            <div class="legend-item"><span class="legend-dot medio"></span> Medio</div>
+            <div class="legend-item"><span class="legend-dot alto"></span> Alto</div>
+            <div class="legend-item"><span class="legend-dot critico"></span> Crítico</div>
+          </div>
+        </div>
+      }
+
+      <!-- Step 4: KPIs -->
+      @if (pasoActual() === 3) {
+        <div class="step-content">
+          <div class="kpi-add-form">
+            <div class="form-row">
+              <div class="form-section flex-2">
+                <label class="form-label">Nombre del KPI</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  [ngModel]="nuevoKpiNombre()"
+                  (ngModelChange)="nuevoKpiNombre.set($event)"
+                  placeholder="Ej: Tiempo de respuesta">
+              </div>
+              <div class="form-section flex-1">
+                <label class="form-label">Valor Objetivo</label>
+                <input
+                  type="number"
+                  class="form-input"
+                  [ngModel]="nuevoKpiValor()"
+                  (ngModelChange)="nuevoKpiValor.set($event)"
+                  placeholder="100">
+              </div>
+              <div class="form-section flex-1">
+                <label class="form-label">Unidad</label>
+                <select
+                  class="form-select"
+                  [ngModel]="nuevoKpiUnidad()"
+                  (ngModelChange)="nuevoKpiUnidad.set($event)">
+                  @for (unidad of unidadesOptions; track unidad.value) {
+                    <option [value]="unidad.value">{{ unidad.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-section add-btn-section">
+                <button class="btn-add-kpi" (click)="agregarKPI()">
+                  <i class="pi pi-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          @if (kpis().length > 0) {
+            <div class="kpis-list-figma">
+              @for (kpi of kpis(); track kpi.id) {
+                <div class="kpi-item-figma">
+                  <div class="kpi-icon">
+                    <i class="pi pi-chart-bar"></i>
+                  </div>
+                  <div class="kpi-info">
+                    <span class="kpi-name">{{ kpi.nombre }}</span>
+                    <span class="kpi-target">Objetivo: {{ kpi.valorObjetivo }} {{ kpi.unidad }}</span>
+                  </div>
+                  <button class="kpi-delete" (click)="eliminarKPI(kpi.id)">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-kpis-figma">
+              <i class="pi pi-chart-line"></i>
+              <p>No hay KPIs definidos</p>
+              <span>Agrega indicadores para medir el rendimiento</span>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Step 5: Resumen -->
+      @if (pasoActual() === 4) {
+        <div class="step-content resumen-content">
+          <div class="resumen-grid-figma">
+            <!-- Datos Básicos -->
+            <div class="resumen-card">
+              <div class="resumen-card-header">
+                <i class="pi pi-file"></i>
+                <span>Datos Básicos</span>
+              </div>
+              <div class="resumen-card-body">
+                <div class="resumen-row">
+                  <span class="label">Nombre:</span>
+                  <span class="value">{{ nombre() }}</span>
+                </div>
+                <div class="resumen-row">
+                  <span class="label">Tipo:</span>
+                  <span class="value">{{ getTipoSeleccionado()?.nombre || '-' }}</span>
+                </div>
+                @if (descripcion()) {
+                  <div class="resumen-row">
+                    <span class="label">Descripción:</span>
+                    <span class="value desc">{{ descripcion() }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Información -->
+            <div class="resumen-card">
+              <div class="resumen-card-header">
+                <i class="pi pi-info-circle"></i>
+                <span>Información</span>
+              </div>
+              <div class="resumen-card-body">
+                <div class="resumen-row">
+                  <span class="label">Área:</span>
+                  <span class="value">{{ areaResponsable() || '-' }}</span>
+                </div>
+                <div class="resumen-row">
+                  <span class="label">Categoría:</span>
+                  <span class="value">{{ categoria() || '-' }}</span>
+                </div>
+                <div class="resumen-row">
+                  <span class="label">Propietario:</span>
+                  <span class="value">{{ propietario() || '-' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Matriz de Riesgo -->
+            <div class="resumen-card">
+              <div class="resumen-card-header">
+                <i class="pi pi-shield"></i>
+                <span>Apetito de Riesgo</span>
+              </div>
+              <div class="resumen-card-body centered">
+                <div class="mini-matriz">
+                  @for (prob of [5, 4, 3, 2, 1]; track prob) {
+                    <div class="mini-row">
+                      @for (imp of [1, 2, 3, 4, 5]; track imp) {
+                        <div
+                          class="mini-cell"
+                          [class]="getCeldaNivel(prob, imp)"
+                          [class.selected]="isCeldaSeleccionada(prob, imp)">
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+                <span class="tolerancia-text">{{ toleranciaSeleccionada().size }} celdas aceptables</span>
+              </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="resumen-card">
+              <div class="resumen-card-header">
+                <i class="pi pi-chart-bar"></i>
+                <span>KPIs ({{ kpis().length }})</span>
+              </div>
+              <div class="resumen-card-body">
+                @if (kpis().length > 0) {
+                  @for (kpi of kpis(); track kpi.id) {
+                    <div class="resumen-kpi-row">
+                      <span class="kpi-name">{{ kpi.nombre }}</span>
+                      <span class="kpi-value">{{ kpi.valorObjetivo }} {{ kpi.unidad }}</span>
+                    </div>
+                  }
+                } @else {
+                  <span class="no-data">Sin KPIs definidos</span>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="wizard-footer">
+      <div class="footer-left">
+        @if (pasoActual() > 0) {
+          <button class="btn-secondary" (click)="anterior()">
+            <i class="pi pi-arrow-left"></i>
+            Anterior
+          </button>
+        }
+      </div>
+
+      <div class="footer-right">
+        <button class="btn-text" (click)="cancelar()">Cancelar</button>
+
+        @if (pasoActual() < 4) {
+          <button class="btn-primary" (click)="siguiente()">
+            Siguiente
+            <i class="pi pi-arrow-right"></i>
+          </button>
+        } @else {
+          <button class="btn-success" (click)="crearProceso()">
+            <i class="pi pi-check"></i>
+            Crear Proceso
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>

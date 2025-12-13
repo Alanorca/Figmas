@@ -86,15 +86,561 @@ export class ProcessService {
 
   constructor() {
     this.loadFromStorage();
-    // Crear proceso inicial si no hay ninguno
-    if (this._procesos().length === 0) {
-      this.createProceso('Mi Primer Proceso', 'Proceso de ejemplo');
-    }
+    // Crear procesos de demo si no existen
+    this.ensureDemoProcessesExist();
     // Cargar el primer proceso por defecto
     const procesos = this._procesos();
     if (procesos.length > 0 && !this._currentProceso()) {
       this.loadProceso(procesos[0].id);
     }
+  }
+
+  // Verificar que los procesos de demo existan
+  private ensureDemoProcessesExist(): void {
+    const demoIds = ['proc-demo-001', 'proc-demo-002', 'proc-demo-003', 'proc-demo-004', 'proc-demo-005'];
+    const existingIds = new Set(this._procesos().map(p => p.id));
+
+    // Si no existe ningún proceso de demo, crearlos todos
+    const hasAnyDemo = demoIds.some(id => existingIds.has(id));
+    if (!hasAnyDemo) {
+      this.createDemoProcesses();
+    }
+  }
+
+  // =============== PROCESOS DE DEMOSTRACIÓN ===============
+
+  // Método público para forzar la recreación de procesos demo
+  resetDemoProcesses(): void {
+    // Eliminar procesos demo existentes
+    const demoIds = ['proc-demo-001', 'proc-demo-002', 'proc-demo-003', 'proc-demo-004', 'proc-demo-005'];
+    this._procesos.update(list => list.filter(p => !demoIds.includes(p.id)));
+    // Recrear procesos demo
+    this.createDemoProcesses();
+    // Guardar y recargar
+    this.saveToStorage();
+    const procesos = this._procesos();
+    if (procesos.length > 0) {
+      this.loadProceso(procesos[0].id);
+    }
+  }
+
+  // Método para limpiar todo el localStorage y empezar de nuevo
+  clearAllData(): void {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(EXECUTIONS_KEY);
+    this._procesos.set([]);
+    this._currentProceso.set(null);
+    this._nodes.set([]);
+    this._edges.set([]);
+    this.createDemoProcesses();
+    const procesos = this._procesos();
+    if (procesos.length > 0) {
+      this.loadProceso(procesos[0].id);
+    }
+  }
+
+  private createDemoProcesses(): void {
+    // 1. Análisis de Riesgo de Créditos
+    this.createDemoProcess1();
+    // 2. Monitoreo de Activos TI
+    this.createDemoProcess2();
+    // 3. Clasificación de Incidentes
+    this.createDemoProcess3();
+    // 4. Evaluación de Proveedores
+    this.createDemoProcess4();
+    // 5. Auditoría de Cumplimiento
+    this.createDemoProcess5();
+  }
+
+  private createDemoProcess1(): void {
+    const proceso: Proceso = {
+      id: 'proc-demo-001',
+      nombre: 'Análisis de Riesgo de Créditos',
+      descripcion: 'Proceso automatizado para evaluar el riesgo crediticio de solicitudes usando IA',
+      version: '1.2.0',
+      estado: 'activo',
+      createdAt: new Date('2024-11-15'),
+      updatedAt: new Date('2024-12-10'),
+      createdBy: 'admin',
+      nodes: [
+        {
+          id: 'node-csv-1',
+          type: 'csv',
+          label: 'Solicitudes de Crédito',
+          position: { x: 100, y: 150 },
+          config: {
+            fileName: 'solicitudes_credito.csv',
+            columns: ['id', 'cliente', 'monto', 'ingreso_mensual', 'historial_credito', 'años_empleo'],
+            rowCount: 150,
+            delimiter: ',',
+            hasHeaders: true
+          } as CsvNodeConfig
+        },
+        {
+          id: 'node-trans-1',
+          type: 'transformacion',
+          label: 'Calcular Ratio Deuda/Ingreso',
+          position: { x: 400, y: 150 },
+          config: {
+            operacion: 'mapear',
+            mappings: [
+              { source: 'monto', target: 'ratio_deuda' }
+            ]
+          } as TransformacionNodeConfig
+        },
+        {
+          id: 'node-llm-1',
+          type: 'llm',
+          label: 'Análisis IA de Riesgo',
+          position: { x: 700, y: 150 },
+          config: {
+            provider: 'groq',
+            model: 'llama-3.3-70b-versatile',
+            prompt: 'Analiza el siguiente perfil crediticio y proporciona una evaluación de riesgo:\n\nCliente: {{cliente}}\nMonto solicitado: {{monto}}\nHistorial crediticio: {{historial_credito}}\nAños de empleo: {{años_empleo}}\n\nProporciona: nivel de riesgo (bajo/medio/alto), score de 0-100, y recomendación.',
+            systemPrompt: 'Eres un analista de riesgo crediticio experto. Evalúa perfiles de crédito de forma objetiva.',
+            temperature: 0.3,
+            maxTokens: 500,
+            inputVariables: ['cliente', 'monto', 'historial_credito', 'años_empleo'],
+            outputVariable: 'analisis_riesgo'
+          } as LlmNodeConfig
+        },
+        {
+          id: 'node-cond-1',
+          type: 'condicional',
+          label: '¿Riesgo Aceptable?',
+          position: { x: 1000, y: 150 },
+          config: {
+            variable: 'score_riesgo',
+            operador: '>',
+            valor: '60',
+            tipoComparacion: 'number'
+          } as CondicionalNodeConfig
+        },
+        {
+          id: 'node-estado-1',
+          type: 'estado',
+          label: 'Crédito Aprobado',
+          position: { x: 1300, y: 50 },
+          config: {
+            tipoEstado: 'success',
+            nombreEstado: 'Aprobado',
+            mensaje: 'Solicitud de crédito aprobada. Proceder con desembolso.',
+            notificar: true,
+            accionSiguiente: 'continuar'
+          } as EstadoNodeConfig
+        },
+        {
+          id: 'node-estado-2',
+          type: 'estado',
+          label: 'Crédito Rechazado',
+          position: { x: 1300, y: 250 },
+          config: {
+            tipoEstado: 'error',
+            nombreEstado: 'Rechazado',
+            mensaje: 'Solicitud rechazada por alto riesgo crediticio.',
+            notificar: true,
+            accionSiguiente: 'detener'
+          } as EstadoNodeConfig
+        }
+      ],
+      edges: [
+        { id: 'edge-1', sourceNodeId: 'node-csv-1', targetNodeId: 'node-trans-1' },
+        { id: 'edge-2', sourceNodeId: 'node-trans-1', targetNodeId: 'node-llm-1' },
+        { id: 'edge-3', sourceNodeId: 'node-llm-1', targetNodeId: 'node-cond-1' },
+        { id: 'edge-4', sourceNodeId: 'node-cond-1', targetNodeId: 'node-estado-1', sourceHandle: 'true' },
+        { id: 'edge-5', sourceNodeId: 'node-cond-1', targetNodeId: 'node-estado-2', sourceHandle: 'false' }
+      ]
+    };
+    this._procesos.update(list => [...list, proceso]);
+  }
+
+  private createDemoProcess2(): void {
+    const proceso: Proceso = {
+      id: 'proc-demo-002',
+      nombre: 'Monitoreo de Activos TI',
+      descripcion: 'Monitoreo continuo de activos tecnológicos con cálculo de score de riesgo',
+      version: '2.0.0',
+      estado: 'activo',
+      createdAt: new Date('2024-10-01'),
+      updatedAt: new Date('2024-12-08'),
+      createdBy: 'admin',
+      nodes: [
+        {
+          id: 'node-activo-1',
+          type: 'activo',
+          label: 'Servidor Principal',
+          position: { x: 100, y: 150 },
+          config: {
+            area: 'Infraestructura TI',
+            activoId: 'SRV-001',
+            activoNombre: 'Servidor de Base de Datos',
+            criticidad: 'alta'
+          } as ActivoNodeConfig
+        },
+        {
+          id: 'node-activo-2',
+          type: 'activo',
+          label: 'Firewall Perimetral',
+          position: { x: 100, y: 350 },
+          config: {
+            area: 'Seguridad',
+            activoId: 'FW-001',
+            activoNombre: 'Firewall Principal',
+            criticidad: 'alta'
+          } as ActivoNodeConfig
+        },
+        {
+          id: 'node-mat-1',
+          type: 'matematico',
+          label: 'Calcular Score Riesgo',
+          position: { x: 400, y: 250 },
+          config: {
+            formula: '(criticidad * 0.4) + (vulnerabilidades * 0.3) + (exposicion * 0.3)',
+            variablesSalida: 'score_riesgo',
+            precision: 2
+          } as MatematicoNodeConfig
+        },
+        {
+          id: 'node-cond-2',
+          type: 'condicional',
+          label: '¿Score > 70?',
+          position: { x: 700, y: 250 },
+          config: {
+            variable: 'score_riesgo',
+            operador: '>',
+            valor: '70',
+            tipoComparacion: 'number'
+          } as CondicionalNodeConfig
+        },
+        {
+          id: 'node-estado-3',
+          type: 'estado',
+          label: 'Alerta Crítica',
+          position: { x: 1000, y: 150 },
+          config: {
+            tipoEstado: 'error',
+            nombreEstado: 'Riesgo Alto',
+            mensaje: 'Activo con riesgo alto detectado. Requiere atención inmediata.',
+            notificar: true,
+            accionSiguiente: 'detener'
+          } as EstadoNodeConfig
+        },
+        {
+          id: 'node-estado-4',
+          type: 'estado',
+          label: 'Monitoreo Normal',
+          position: { x: 1000, y: 350 },
+          config: {
+            tipoEstado: 'success',
+            nombreEstado: 'Normal',
+            mensaje: 'Activos dentro de parámetros normales.',
+            notificar: false,
+            accionSiguiente: 'continuar'
+          } as EstadoNodeConfig
+        }
+      ],
+      edges: [
+        { id: 'edge-6', sourceNodeId: 'node-activo-1', targetNodeId: 'node-mat-1' },
+        { id: 'edge-7', sourceNodeId: 'node-activo-2', targetNodeId: 'node-mat-1' },
+        { id: 'edge-8', sourceNodeId: 'node-mat-1', targetNodeId: 'node-cond-2' },
+        { id: 'edge-9', sourceNodeId: 'node-cond-2', targetNodeId: 'node-estado-3', sourceHandle: 'true' },
+        { id: 'edge-10', sourceNodeId: 'node-cond-2', targetNodeId: 'node-estado-4', sourceHandle: 'false' }
+      ]
+    };
+    this._procesos.update(list => [...list, proceso]);
+  }
+
+  private createDemoProcess3(): void {
+    const proceso: Proceso = {
+      id: 'proc-demo-003',
+      nombre: 'Clasificación de Incidentes',
+      descripcion: 'Clasificación automática de incidentes usando Machine Learning',
+      version: '1.5.0',
+      estado: 'activo',
+      createdAt: new Date('2024-09-20'),
+      updatedAt: new Date('2024-12-05'),
+      createdBy: 'admin',
+      nodes: [
+        {
+          id: 'node-csv-2',
+          type: 'csv',
+          label: 'Incidentes Reportados',
+          position: { x: 100, y: 200 },
+          config: {
+            fileName: 'incidentes_2024.csv',
+            columns: ['id', 'descripcion', 'categoria', 'prioridad', 'fecha_reporte'],
+            rowCount: 500,
+            delimiter: ',',
+            hasHeaders: true
+          } as CsvNodeConfig
+        },
+        {
+          id: 'node-ml-1',
+          type: 'ml',
+          label: 'Clasificador ML',
+          position: { x: 400, y: 200 },
+          config: {
+            modeloId: 'clf-incidentes-v2',
+            modeloNombre: 'Clasificador de Incidentes',
+            tipoModelo: 'clasificacion',
+            inputFeatures: ['descripcion', 'categoria'],
+            outputField: 'clasificacion_ml'
+          } as MlNodeConfig
+        },
+        {
+          id: 'node-branch-1',
+          type: 'branching',
+          label: 'Distribuir por Tipo',
+          position: { x: 700, y: 200 },
+          config: {
+            cantidadRamas: 3,
+            estrategia: 'paralela',
+            ramas: [
+              { id: 'rama-seg', nombre: 'Seguridad', condicion: 'tipo == "seguridad"' },
+              { id: 'rama-infra', nombre: 'Infraestructura', condicion: 'tipo == "infraestructura"' },
+              { id: 'rama-app', nombre: 'Aplicaciones', condicion: 'tipo == "aplicacion"' }
+            ]
+          } as BranchingNodeConfig
+        },
+        {
+          id: 'node-estado-seg',
+          type: 'estado',
+          label: 'Cola Seguridad',
+          position: { x: 1000, y: 50 },
+          config: {
+            tipoEstado: 'error',
+            nombreEstado: 'Seguridad',
+            mensaje: 'Incidente asignado al equipo de Seguridad.',
+            notificar: true,
+            accionSiguiente: 'continuar'
+          } as EstadoNodeConfig
+        },
+        {
+          id: 'node-estado-infra',
+          type: 'estado',
+          label: 'Cola Infraestructura',
+          position: { x: 1000, y: 200 },
+          config: {
+            tipoEstado: 'warning',
+            nombreEstado: 'Infraestructura',
+            mensaje: 'Incidente asignado al equipo de Infraestructura.',
+            notificar: true,
+            accionSiguiente: 'continuar'
+          } as EstadoNodeConfig
+        },
+        {
+          id: 'node-estado-app',
+          type: 'estado',
+          label: 'Cola Aplicaciones',
+          position: { x: 1000, y: 350 },
+          config: {
+            tipoEstado: 'info',
+            nombreEstado: 'Aplicaciones',
+            mensaje: 'Incidente asignado al equipo de Desarrollo.',
+            notificar: true,
+            accionSiguiente: 'continuar'
+          } as EstadoNodeConfig
+        }
+      ],
+      edges: [
+        { id: 'edge-11', sourceNodeId: 'node-csv-2', targetNodeId: 'node-ml-1' },
+        { id: 'edge-12', sourceNodeId: 'node-ml-1', targetNodeId: 'node-branch-1' },
+        { id: 'edge-13', sourceNodeId: 'node-branch-1', targetNodeId: 'node-estado-seg', sourceHandle: 'rama-seg' },
+        { id: 'edge-14', sourceNodeId: 'node-branch-1', targetNodeId: 'node-estado-infra', sourceHandle: 'rama-infra' },
+        { id: 'edge-15', sourceNodeId: 'node-branch-1', targetNodeId: 'node-estado-app', sourceHandle: 'rama-app' }
+      ]
+    };
+    this._procesos.update(list => [...list, proceso]);
+  }
+
+  private createDemoProcess4(): void {
+    const proceso: Proceso = {
+      id: 'proc-demo-004',
+      nombre: 'Evaluación de Proveedores',
+      descripcion: 'Proceso de evaluación y scoring de proveedores con análisis de IA',
+      version: '1.0.0',
+      estado: 'borrador',
+      createdAt: new Date('2024-12-01'),
+      updatedAt: new Date('2024-12-12'),
+      createdBy: 'admin',
+      nodes: [
+        {
+          id: 'node-csv-3',
+          type: 'csv',
+          label: 'Base de Proveedores',
+          position: { x: 100, y: 150 },
+          config: {
+            fileName: 'proveedores_2024.csv',
+            columns: ['id', 'nombre', 'pais', 'certificaciones', 'años_operacion', 'facturacion_anual'],
+            rowCount: 85,
+            delimiter: ',',
+            hasHeaders: true
+          } as CsvNodeConfig
+        },
+        {
+          id: 'node-trans-2',
+          type: 'transformacion',
+          label: 'Normalizar Datos',
+          position: { x: 400, y: 150 },
+          config: {
+            operacion: 'mapear',
+            mappings: [
+              { source: 'certificaciones', target: 'score_certificaciones' },
+              { source: 'años_operacion', target: 'score_experiencia' }
+            ]
+          } as TransformacionNodeConfig
+        },
+        {
+          id: 'node-llm-2',
+          type: 'llm',
+          label: 'Análisis de Riesgo Proveedor',
+          position: { x: 700, y: 150 },
+          config: {
+            provider: 'groq',
+            model: 'llama-3.3-70b-versatile',
+            prompt: 'Evalúa el riesgo del siguiente proveedor:\n\nNombre: {{nombre}}\nPaís: {{pais}}\nCertificaciones: {{certificaciones}}\nAños de operación: {{años_operacion}}\n\nConsidera riesgos geopolíticos, financieros y operacionales. Proporciona un score de 0-100.',
+            systemPrompt: 'Eres un experto en gestión de riesgos de terceros y cadena de suministro.',
+            temperature: 0.4,
+            maxTokens: 400,
+            inputVariables: ['nombre', 'pais', 'certificaciones', 'años_operacion'],
+            outputVariable: 'evaluacion_proveedor'
+          } as LlmNodeConfig
+        },
+        {
+          id: 'node-mat-2',
+          type: 'matematico',
+          label: 'Score Final',
+          position: { x: 1000, y: 150 },
+          config: {
+            formula: '(score_certificaciones * 0.3) + (score_experiencia * 0.3) + (score_riesgo_ia * 0.4)',
+            variablesSalida: 'score_final',
+            precision: 1
+          } as MatematicoNodeConfig
+        },
+        {
+          id: 'node-estado-5',
+          type: 'estado',
+          label: 'Evaluación Completada',
+          position: { x: 1300, y: 150 },
+          config: {
+            tipoEstado: 'success',
+            nombreEstado: 'Evaluado',
+            mensaje: 'Evaluación de proveedor completada. Score registrado.',
+            notificar: false,
+            accionSiguiente: 'continuar'
+          } as EstadoNodeConfig
+        }
+      ],
+      edges: [
+        { id: 'edge-16', sourceNodeId: 'node-csv-3', targetNodeId: 'node-trans-2' },
+        { id: 'edge-17', sourceNodeId: 'node-trans-2', targetNodeId: 'node-llm-2' },
+        { id: 'edge-18', sourceNodeId: 'node-llm-2', targetNodeId: 'node-mat-2' },
+        { id: 'edge-19', sourceNodeId: 'node-mat-2', targetNodeId: 'node-estado-5' }
+      ]
+    };
+    this._procesos.update(list => [...list, proceso]);
+  }
+
+  private createDemoProcess5(): void {
+    const proceso: Proceso = {
+      id: 'proc-demo-005',
+      nombre: 'Auditoría de Cumplimiento SOX',
+      descripcion: 'Proceso de auditoría automatizada para verificar controles SOX',
+      version: '3.1.0',
+      estado: 'activo',
+      createdAt: new Date('2024-06-15'),
+      updatedAt: new Date('2024-12-11'),
+      createdBy: 'admin',
+      nodes: [
+        {
+          id: 'node-activo-3',
+          type: 'activo',
+          label: 'Control SOX-404',
+          position: { x: 100, y: 100 },
+          config: {
+            area: 'Cumplimiento',
+            activoId: 'CTL-SOX-404',
+            activoNombre: 'Control de Accesos Financieros',
+            criticidad: 'alta'
+          } as ActivoNodeConfig
+        },
+        {
+          id: 'node-activo-4',
+          type: 'activo',
+          label: 'Control SOX-302',
+          position: { x: 100, y: 300 },
+          config: {
+            area: 'Cumplimiento',
+            activoId: 'CTL-SOX-302',
+            activoNombre: 'Certificación de Estados Financieros',
+            criticidad: 'alta'
+          } as ActivoNodeConfig
+        },
+        {
+          id: 'node-cond-3',
+          type: 'condicional',
+          label: '¿Evidencia Completa?',
+          position: { x: 400, y: 200 },
+          config: {
+            variable: 'evidencias_completas',
+            operador: '==',
+            valor: 'true',
+            tipoComparacion: 'boolean'
+          } as CondicionalNodeConfig
+        },
+        {
+          id: 'node-llm-3',
+          type: 'llm',
+          label: 'Análisis de Cumplimiento',
+          position: { x: 700, y: 100 },
+          config: {
+            provider: 'groq',
+            model: 'llama-3.3-70b-versatile',
+            prompt: 'Analiza las siguientes evidencias de control SOX:\n\nControl: {{control_nombre}}\nEvidencias: {{evidencias}}\nPeriodo: {{periodo}}\n\nEvalúa si el control es efectivo, identifica gaps y proporciona recomendaciones.',
+            systemPrompt: 'Eres un auditor SOX certificado con amplia experiencia en controles internos.',
+            temperature: 0.2,
+            maxTokens: 800,
+            inputVariables: ['control_nombre', 'evidencias', 'periodo'],
+            outputVariable: 'resultado_auditoria'
+          } as LlmNodeConfig
+        },
+        {
+          id: 'node-estado-6',
+          type: 'estado',
+          label: 'Solicitar Evidencias',
+          position: { x: 700, y: 300 },
+          config: {
+            tipoEstado: 'warning',
+            nombreEstado: 'Pendiente',
+            mensaje: 'Evidencias incompletas. Notificar al responsable del control.',
+            notificar: true,
+            accionSiguiente: 'detener'
+          } as EstadoNodeConfig
+        },
+        {
+          id: 'node-estado-7',
+          type: 'estado',
+          label: 'Auditoría Completada',
+          position: { x: 1000, y: 100 },
+          config: {
+            tipoEstado: 'success',
+            nombreEstado: 'Completado',
+            mensaje: 'Auditoría de control SOX completada exitosamente.',
+            notificar: true,
+            accionSiguiente: 'continuar'
+          } as EstadoNodeConfig
+        }
+      ],
+      edges: [
+        { id: 'edge-20', sourceNodeId: 'node-activo-3', targetNodeId: 'node-cond-3' },
+        { id: 'edge-21', sourceNodeId: 'node-activo-4', targetNodeId: 'node-cond-3' },
+        { id: 'edge-22', sourceNodeId: 'node-cond-3', targetNodeId: 'node-llm-3', sourceHandle: 'true' },
+        { id: 'edge-23', sourceNodeId: 'node-cond-3', targetNodeId: 'node-estado-6', sourceHandle: 'false' },
+        { id: 'edge-24', sourceNodeId: 'node-llm-3', targetNodeId: 'node-estado-7' }
+      ]
+    };
+    this._procesos.update(list => [...list, proceso]);
+    this.saveToStorage();
   }
 
   // =============== PERSISTENCIA EN LOCALSTORAGE ===============
@@ -169,6 +715,54 @@ export class ProcessService {
       this._currentProceso.set(null);
       this._nodes.set([]);
       this._edges.set([]);
+    }
+    this.saveToStorage();
+  }
+
+  // Obtener proceso por ID
+  getProcesoById(procesoId: string): Proceso | undefined {
+    return this._procesos().find(p => p.id === procesoId);
+  }
+
+  // Duplicar proceso
+  duplicateProceso(procesoId: string): Proceso | null {
+    const original = this.getProcesoById(procesoId);
+    if (!original) return null;
+
+    const copia: Proceso = {
+      ...original,
+      id: `proc-${crypto.randomUUID()}`,
+      nombre: `${original.nombre} (copia)`,
+      estado: 'borrador',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      nodes: original.nodes.map(n => ({ ...n, id: `node-${crypto.randomUUID().slice(0, 8)}` })),
+      edges: []
+    };
+
+    this._procesos.update(list => [...list, copia]);
+    this.saveToStorage();
+    return copia;
+  }
+
+  // Actualizar estado del proceso
+  updateProcesoEstado(procesoId: string, estado: Proceso['estado']): void {
+    this._procesos.update(list =>
+      list.map(p => p.id === procesoId ? { ...p, estado, updatedAt: new Date() } : p)
+    );
+    if (this._currentProceso()?.id === procesoId) {
+      this._currentProceso.update(p => p ? { ...p, estado, updatedAt: new Date() } : null);
+    }
+    this.saveToStorage();
+  }
+
+  // Actualizar información básica del proceso
+  updateProcesoInfo(procesoId: string, updates: { nombre?: string; descripcion?: string }): void {
+    this._procesos.update(list =>
+      list.map(p => p.id === procesoId ? { ...p, ...updates, updatedAt: new Date() } : p)
+    );
+    if (this._currentProceso()?.id === procesoId) {
+      this._currentProceso.update(p => p ? { ...p, ...updates, updatedAt: new Date() } : null);
     }
     this.saveToStorage();
   }

@@ -1,0 +1,334 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="procesos-lista-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Procesos</h1>
+      <span class="subtitle">Gestiona tus procesos de automatización</span>
+    </div>
+    <div class="header-right">
+      <p-button
+        label="Cargar Demo"
+        icon="pi pi-database"
+        severity="secondary"
+        [outlined]="true"
+        pTooltip="Resetear procesos de demostración"
+        tooltipPosition="bottom"
+        (onClick)="resetDemoData()">
+      </p-button>
+      <p-button
+        label="Nuevo Proceso"
+        icon="pi pi-plus"
+        (onClick)="crearProceso()">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value">{{ stats().total }}</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-card borrador">
+      <div class="stat-value">{{ stats().borradores }}</div>
+      <div class="stat-label">Borradores</div>
+    </div>
+    <div class="stat-card activo">
+      <div class="stat-value">{{ stats().activos }}</div>
+      <div class="stat-label">Activos</div>
+    </div>
+    <div class="stat-card inactivo">
+      <div class="stat-value">{{ stats().inactivos }}</div>
+      <div class="stat-label">Inactivos</div>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <p-card>
+    <p-table
+      #dt
+      [value]="procesos()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} procesos"
+      [globalFilterFields]="['nombre', 'descripcion', 'estado']"
+      styleClass="p-datatable-sm p-datatable-striped"
+      [tableStyle]="{ 'min-width': '70rem' }">
+
+      <!-- Header -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th pSortableColumn="nombre">
+            Nombre
+            <p-sortIcon field="nombre"></p-sortIcon>
+          </th>
+          <th style="width: 120px" pSortableColumn="estado">
+            Estado
+            <p-sortIcon field="estado"></p-sortIcon>
+          </th>
+          <th style="width: 120px">Nodos</th>
+          <th pSortableColumn="createdAt" style="width: 180px">
+            Creado
+            <p-sortIcon field="createdAt"></p-sortIcon>
+          </th>
+          <th pSortableColumn="updatedAt" style="width: 180px">
+            Modificado
+            <p-sortIcon field="updatedAt"></p-sortIcon>
+          </th>
+          <th style="width: 200px; text-align: center">Acciones</th>
+        </tr>
+        <tr>
+          <th></th>
+          <th>
+            <input
+              pInputText
+              type="text"
+              placeholder="Buscar..."
+              style="width: 100%"
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')">
+          </th>
+          <th>
+            <p-select
+              [options]="estadoOptions"
+              placeholder="Todos"
+              [showClear]="true"
+              (onChange)="dt.filter($event.value, 'estado', 'equals')"
+              styleClass="p-column-filter"
+              appendTo="body">
+            </p-select>
+          </th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+        </tr>
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template pTemplate="body" let-proceso>
+        <tr>
+          <td>
+            <span class="id-badge">{{ proceso.id.slice(0, 6) }}</span>
+          </td>
+          <td>
+            <div class="nombre-cell">
+              <span class="nombre">{{ proceso.nombre }}</span>
+              @if (proceso.descripcion) {
+                <span class="descripcion">{{ proceso.descripcion }}</span>
+              }
+            </div>
+          </td>
+          <td>
+            <p-tag
+              [value]="getEstadoLabel(proceso.estado)"
+              [severity]="getEstadoSeverity(proceso.estado)">
+            </p-tag>
+          </td>
+          <td>
+            <span class="nodes-count">
+              <i class="pi pi-sitemap"></i>
+              {{ proceso.nodes?.length || 0 }} nodos
+            </span>
+          </td>
+          <td>{{ formatDate(proceso.createdAt) }}</td>
+          <td>{{ formatDate(proceso.updatedAt) }}</td>
+          <td>
+            <div class="actions-cell">
+              <p-button
+                icon="pi pi-eye"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
+                (onClick)="verDetalle(proceso)">
+              </p-button>
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (onClick)="editarProceso(proceso)">
+              </p-button>
+              <p-button
+                icon="pi pi-copy"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                pTooltip="Duplicar"
+                tooltipPosition="top"
+                (onClick)="duplicarProceso(proceso)">
+              </p-button>
+              @if (proceso.estado === 'activo') {
+                <p-button
+                  icon="pi pi-play"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="success"
+                  pTooltip="Ejecutar"
+                  tooltipPosition="top"
+                  (onClick)="ejecutarProceso(proceso)">
+                </p-button>
+              }
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (onClick)="eliminarProceso(proceso)">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-inbox"></i>
+              <p>No hay procesos creados</p>
+              <p-button
+                label="Crear primer proceso"
+                icon="pi pi-plus"
+                (onClick)="crearProceso()">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Drawer de Detalle -->
+<p-drawer
+  [(visible)]="showDrawer"
+  [position]="'right'"
+  [style]="{ width: '450px' }"
+  header="Detalle del Proceso">
+
+  @if (procesoSeleccionado()) {
+    <div class="drawer-content">
+      <!-- Info General -->
+      <div class="detail-section">
+        <h3>Información General</h3>
+        <div class="detail-row">
+          <span class="label">ID:</span>
+          <span class="value">{{ procesoSeleccionado()!.id }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Nombre:</span>
+          <span class="value">{{ procesoSeleccionado()!.nombre }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Descripción:</span>
+          <span class="value">{{ procesoSeleccionado()!.descripcion || '-' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Estado:</span>
+          <p-tag
+            [value]="getEstadoLabel(procesoSeleccionado()!.estado)"
+            [severity]="getEstadoSeverity(procesoSeleccionado()!.estado)">
+          </p-tag>
+        </div>
+        <div class="detail-row">
+          <span class="label">Versión:</span>
+          <span class="value">{{ procesoSeleccionado()!.version }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Estadísticas -->
+      <div class="detail-section">
+        <h3>Estadísticas</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <i class="pi pi-sitemap"></i>
+            <span class="stat-number">{{ procesoSeleccionado()!.nodes?.length || 0 }}</span>
+            <span class="stat-text">Nodos</span>
+          </div>
+          <div class="stat-item">
+            <i class="pi pi-arrow-right-arrow-left"></i>
+            <span class="stat-number">{{ procesoSeleccionado()!.edges?.length || 0 }}</span>
+            <span class="stat-text">Conexiones</span>
+          </div>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Fechas -->
+      <div class="detail-section">
+        <h3>Historial</h3>
+        <div class="detail-row">
+          <span class="label">Creado:</span>
+          <span class="value">{{ formatDate(procesoSeleccionado()!.createdAt) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Modificado:</span>
+          <span class="value">{{ formatDate(procesoSeleccionado()!.updatedAt) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Creado por:</span>
+          <span class="value">{{ procesoSeleccionado()!.createdBy }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Cambiar Estado -->
+      <div class="detail-section">
+        <h3>Cambiar Estado</h3>
+        <div class="estado-buttons">
+          @for (option of estadoOptions; track option.value) {
+            <p-button
+              [label]="option.label"
+              [severity]="getEstadoSeverity(option.value)"
+              [outlined]="procesoSeleccionado()!.estado !== option.value"
+              size="small"
+              (onClick)="cambiarEstado(procesoSeleccionado()!, option.value)">
+            </p-button>
+          }
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Acciones -->
+      <div class="drawer-actions">
+        <p-button
+          label="Editar Proceso"
+          icon="pi pi-pencil"
+          (onClick)="editarProceso(procesoSeleccionado()!); showDrawer.set(false)">
+        </p-button>
+        <p-button
+          label="Duplicar"
+          icon="pi pi-copy"
+          severity="secondary"
+          (onClick)="duplicarProceso(procesoSeleccionado()!); showDrawer.set(false)">
+        </p-button>
+        @if (procesoSeleccionado()!.estado === 'activo') {
+          <p-button
+            label="Ejecutar"
+            icon="pi pi-play"
+            severity="success"
+            (onClick)="ejecutarProceso(procesoSeleccionado()!)">
+          </p-button>
+        }
+      </div>
+    </div>
+  }
+</p-drawer>

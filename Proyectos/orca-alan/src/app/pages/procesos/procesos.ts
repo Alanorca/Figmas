@@ -1,6 +1,7 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { Vflow, Node, Edge, Connection } from 'ngx-vflow';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -49,6 +50,7 @@ interface TestResult {
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     Vflow,
     CardModule,
     ButtonModule,
@@ -73,9 +75,14 @@ interface TestResult {
   styleUrl: './procesos.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProcesosComponent {
+export class ProcesosComponent implements OnInit {
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
   processService = inject(ProcessService);
   groqService = inject(GroqService);
+
+  // ID del proceso actual (de la ruta)
+  procesoId = signal<string | null>(null);
 
   // Metadata de tipos de nodos para el sidebar
   nodeTypes = NODE_TYPES_METADATA;
@@ -285,6 +292,26 @@ export class ProcesosComponent {
 
   // Modelos LLM disponibles
   llmModels = this.groqService.getAvailableModels();
+
+  // =============== LIFECYCLE ===============
+
+  ngOnInit(): void {
+    // Obtener ID de la ruta
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.procesoId.set(id);
+      const loaded = this.processService.loadProceso(id);
+      if (!loaded) {
+        console.warn(`Proceso con ID ${id} no encontrado, redirigiendo...`);
+        this.router.navigate(['/procesos']);
+      }
+    }
+  }
+
+  // Volver al listado
+  volverAlListado(): void {
+    this.router.navigate(['/procesos']);
+  }
 
   // Nodos filtrados por categoria
   getNodesByCategoria(categoria: string) {

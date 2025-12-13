@@ -32,6 +32,14 @@ export const routes: Routes = [
   },
   {
     path: 'procesos',
+    loadComponent: () => import('./pages/procesos-lista/procesos-lista').then(m => m.ProcesosListaComponent)
+  },
+  {
+    path: 'procesos/crear',
+    loadComponent: () => import('./pages/proceso-crear/proceso-crear').then(m => m.ProcesoCrearComponent)
+  },
+  {
+    path: 'procesos/:id',
     loadComponent: () => import('./pages/procesos/procesos').then(m => m.ProcesosComponent)
   },
   {
