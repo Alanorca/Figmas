@@ -1,12 +1,14 @@
-<div class="p-4">
-  <div class="flex align-items-center justify-content-between mb-4">
-    <div>
-      <h1 class="text-3xl font-bold text-900 m-0">Gestion de Riesgos</h1>
-      <p class="text-500 mt-1">Identifica, evalua y gestiona los riesgos de tus activos</p>
+<div class="riesgos-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Gestión de Riesgos</h1>
+      <p class="text-secondary">Identifica, evalúa y gestiona los riesgos de tus activos</p>
     </div>
   </div>
 
-  <p-toolbar styleClass="mb-4">
+  <!-- Toolbar -->
+  <p-toolbar>
     <ng-template pTemplate="start">
       <span class="p-input-icon-left">
         <i class="pi pi-search"></i>
@@ -32,7 +34,8 @@
     </ng-template>
   </p-toolbar>
 
-  <p-card>
+  <!-- Table Card -->
+  <p-card styleClass="table-card">
     <p-table #dt [value]="riesgos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
              [globalFilterFields]="['id', 'activoNombre', 'descripcion', 'estado', 'responsable']"

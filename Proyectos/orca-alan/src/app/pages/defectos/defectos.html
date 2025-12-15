@@ -1,12 +1,14 @@
-<div class="p-4">
-  <div class="flex align-items-center justify-content-between mb-4">
-    <div>
-      <h1 class="text-3xl font-bold text-900 m-0">Gestion de Defectos</h1>
-      <p class="text-500 mt-1">Registra y da seguimiento a defectos y no conformidades</p>
+<div class="defectos-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Gestión de Defectos</h1>
+      <p class="text-secondary">Registra y da seguimiento a defectos y no conformidades</p>
     </div>
   </div>
 
-  <p-toolbar styleClass="mb-4">
+  <!-- Toolbar -->
+  <p-toolbar>
     <ng-template pTemplate="start">
       <span class="p-input-icon-left">
         <i class="pi pi-search"></i>
@@ -32,7 +34,8 @@
     </ng-template>
   </p-toolbar>
 
-  <p-card>
+  <!-- Table Card -->
+  <p-card styleClass="table-card">
     <p-table #dt [value]="defectos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} defectos"
              [globalFilterFields]="['id', 'titulo', 'activoNombre', 'tipo', 'prioridad', 'estado', 'detectadoPor']"
