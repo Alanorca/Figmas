@@ -225,6 +225,11 @@ export class ProcesosListaComponent {
         command: () => this.editarProceso(proceso)
       },
       {
+        label: 'Edición rápida',
+        icon: 'pi pi-bolt',
+        command: () => this.iniciarEdicionDesdeMenu(proceso)
+      },
+      {
         label: 'Duplicar',
         icon: 'pi pi-copy',
         command: () => this.duplicarProceso(proceso)
@@ -265,6 +270,15 @@ export class ProcesosListaComponent {
   // Métodos de edición in-place
   iniciarEdicion(proceso: Proceso, event: Event): void {
     event.stopPropagation();
+    this.procesoEditando.set(proceso.id);
+    this.valoresEdicion.set({
+      nombre: proceso.nombre,
+      descripcion: proceso.descripcion,
+      estado: proceso.estado
+    });
+  }
+
+  iniciarEdicionDesdeMenu(proceso: Proceso): void {
     this.procesoEditando.set(proceso.id);
     this.valoresEdicion.set({
       nombre: proceso.nombre,

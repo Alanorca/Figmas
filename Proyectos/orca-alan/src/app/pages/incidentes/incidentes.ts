@@ -150,10 +150,21 @@ export class IncidentesComponent {
   getMenuItemsIncidente(incidente: IncidenteConActivo): MenuItem[] {
     return [
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => console.log('Ver', incidente.id) },
-      { label: 'Editar', icon: 'pi pi-pencil', command: () => console.log('Editar', incidente.id) },
+      { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(incidente) },
       { separator: true },
       { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', incidente.id) }
     ];
+  }
+
+  iniciarEdicionDesdeMenu(incidente: IncidenteConActivo): void {
+    this.incidenteEditando.set(incidente.id);
+    this.valoresEdicion.set({
+      titulo: incidente.titulo,
+      descripcion: incidente.descripcion,
+      severidad: incidente.severidad,
+      estado: incidente.estado,
+      reportadoPor: incidente.reportadoPor
+    });
   }
 
   getIncidentesCriticos(): number {

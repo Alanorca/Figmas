@@ -161,10 +161,22 @@ export class DefectosComponent {
   getMenuItemsDefecto(defecto: DefectoConActivo): MenuItem[] {
     return [
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => console.log('Ver', defecto.id) },
-      { label: 'Editar', icon: 'pi pi-pencil', command: () => console.log('Editar', defecto.id) },
+      { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(defecto) },
       { separator: true },
       { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', defecto.id) }
     ];
+  }
+
+  iniciarEdicionDesdeMenu(defecto: DefectoConActivo): void {
+    this.defectoEditando.set(defecto.id);
+    this.valoresEdicion.set({
+      titulo: defecto.titulo,
+      descripcion: defecto.descripcion,
+      tipo: defecto.tipo,
+      prioridad: defecto.prioridad,
+      estado: defecto.estado,
+      detectadoPor: defecto.detectadoPor
+    });
   }
 
   getDefectosResueltos(): number {

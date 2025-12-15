@@ -133,10 +133,7 @@
                           pTooltip="Cancelar" (onClick)="cancelarEdicion($event)" />
               </div>
             } @else {
-              <div class="flex gap-1">
-                <p-button icon="pi pi-pencil" [outlined]="true" severity="secondary" size="small"
-                          styleClass="btn-edit" pTooltip="Editar"
-                          (onClick)="iniciarEdicion(defecto, $event)" />
+              <div class="flex justify-content-center">
                 <p-menu #menuDefecto [model]="getMenuItemsDefecto(defecto)" [popup]="true" appendTo="body"></p-menu>
                 <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
                           (onClick)="menuDefecto.toggle($event)" />

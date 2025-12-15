@@ -144,10 +144,21 @@ export class RiesgosComponent {
   getMenuItemsRiesgo(riesgo: RiesgoConActivo): MenuItem[] {
     return [
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => console.log('Ver', riesgo.id) },
-      { label: 'Editar', icon: 'pi pi-pencil', command: () => console.log('Editar', riesgo.id) },
+      { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(riesgo) },
       { separator: true },
       { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', riesgo.id) }
     ];
+  }
+
+  iniciarEdicionDesdeMenu(riesgo: RiesgoConActivo): void {
+    this.riesgoEditando.set(riesgo.id);
+    this.valoresEdicion.set({
+      descripcion: riesgo.descripcion,
+      probabilidad: riesgo.probabilidad,
+      impacto: riesgo.impacto,
+      estado: riesgo.estado,
+      responsable: riesgo.responsable
+    });
   }
 
   getPromedioNivel(): number {

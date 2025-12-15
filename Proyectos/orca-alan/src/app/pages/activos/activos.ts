@@ -118,10 +118,22 @@ export class ActivosComponent {
   getMenuItemsActivo(activo: Activo): MenuItem[] {
     return [
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.viewDetail(activo) },
-      { label: 'Editar', icon: 'pi pi-pencil', command: () => console.log('Editar', activo.id) },
+      { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(activo) },
       { separator: true },
       { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', activo.id) }
     ];
+  }
+
+  iniciarEdicionDesdeMenu(activo: Activo): void {
+    this.activoEditando.set(activo.id);
+    this.valoresEdicion.set({
+      nombre: activo.nombre,
+      descripcion: activo.descripcion,
+      tipo: activo.tipo,
+      criticidad: activo.criticidad,
+      responsable: activo.responsable,
+      departamento: activo.departamento
+    });
   }
 
   // Métodos para el resumen del footer

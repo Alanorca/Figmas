@@ -142,10 +142,7 @@
                           pTooltip="Cancelar" (onClick)="cancelarEdicion($event)" />
               </div>
             } @else {
-              <div class="flex gap-1">
-                <p-button icon="pi pi-pencil" [outlined]="true" severity="secondary" size="small"
-                          styleClass="btn-edit" pTooltip="Editar"
-                          (onClick)="iniciarEdicion(activo, $event)" />
+              <div class="flex justify-content-center">
                 <p-menu #menuActivo [model]="getMenuItemsActivo(activo)" [popup]="true" appendTo="body"></p-menu>
                 <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
                           (onClick)="menuActivo.toggle($event)" />

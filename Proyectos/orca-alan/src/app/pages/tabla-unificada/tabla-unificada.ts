@@ -738,7 +738,7 @@ export class TablaUnificadaComponent {
   getMenuItemsRegistro(registro: RegistroUnificado): MenuItem[] {
     return [
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.verDetalle(registro) },
-      { label: 'Editar', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(registro) },
+      { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(registro) },
       { separator: true },
       { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', registro.id) }
     ];
