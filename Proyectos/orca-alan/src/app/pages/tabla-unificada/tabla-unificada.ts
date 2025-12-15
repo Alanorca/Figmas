@@ -738,10 +738,24 @@ export class TablaUnificadaComponent {
   getMenuItemsRegistro(registro: RegistroUnificado): MenuItem[] {
     return [
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.verDetalle(registro) },
-      { label: 'Editar', icon: 'pi pi-pencil', command: () => console.log('Editar', registro.id) },
+      { label: 'Editar', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(registro) },
       { separator: true },
       { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', registro.id) }
     ];
+  }
+
+  iniciarEdicionDesdeMenu(registro: RegistroUnificado): void {
+    this.registroEditando.set(registro.id);
+    this.valoresEdicion.set({
+      descripcion: registro.descripcion,
+      contenedorNombre: registro.contenedorNombre,
+      estado: registro.estado,
+      fecha: registro.fecha,
+      responsable: registro.responsable,
+      probabilidad: registro.probabilidad,
+      impacto: registro.impacto,
+      severidad: registro.severidad
+    });
   }
 
   // Menú de exportación
