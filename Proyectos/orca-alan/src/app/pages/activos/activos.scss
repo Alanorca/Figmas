@@ -1,3 +1,36 @@
 .capitalize {
   text-transform: capitalize;
 }
+
+// Botón de acciones masivas
+:host ::ng-deep .btn-acciones-masivas {
+  border-radius: 6px !important;
+
+  .p-button {
+    border-radius: 6px !important;
+  }
+}
+
+// Botón de editar
+:host ::ng-deep .btn-edit {
+  border-radius: 6px !important;
+
+  .p-button {
+    border-radius: 6px !important;
+  }
+}
+
+// Fila en modo edición
+.row-editing {
+  background: var(--primary-50) !important;
+
+  td {
+    padding: 0.5rem !important;
+  }
+}
+
+// Celda de acciones
+.actions-cell {
+  white-space: nowrap;
+  width: 100px;
+}

@@ -158,29 +158,41 @@
           </tr>
         </ng-template>
 
-        <!-- Footer con resumen -->
-        <ng-template pTemplate="summary">
-          <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
-            <div class="flex align-items-center gap-2 text-sm">
-              <span class="text-500">Total:</span>
-              <span class="font-semibold">{{ totalCuestionarios() }}</span>
-            </div>
-            <div class="flex align-items-center gap-2 text-sm">
-              <i class="pi pi-circle-fill text-green-500" style="font-size: 0.5rem"></i>
-              <span class="text-500">Activos:</span>
-              <span class="font-semibold">{{ totalActivos() }}</span>
-            </div>
-            <div class="flex align-items-center gap-2 text-sm">
-              <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
-              <span class="text-500">Borradores:</span>
-              <span class="font-semibold">{{ totalBorradores() }}</span>
-            </div>
-            <div class="flex align-items-center gap-2 text-sm">
-              <i class="pi pi-question-circle text-blue-500"></i>
-              <span class="text-500">Total Preguntas:</span>
-              <span class="font-semibold">{{ totalPreguntas() }}</span>
-            </div>
-          </div>
+        <!-- Pie de tabla con totales por columna -->
+        <ng-template #footer>
+          <tr class="font-semibold bg-surface-100">
+            <td>
+              <span class="text-900">Totales</span>
+            </td>
+            <td>
+              <span class="text-600">{{ totalCuestionarios() }} cuestionarios</span>
+            </td>
+            <td>
+              <span class="text-600">{{ getCategoriasTotales() }} categorías</span>
+            </td>
+            <td>
+              <div class="flex gap-2">
+                <p-tag value="IA" severity="info" styleClass="text-xs" />
+                <span class="text-600">{{ getTotalPorTipo('ia') }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="text-primary font-bold">{{ totalPreguntas() }}</span>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <p-progressBar [value]="getPromedioCumplimiento()" [showValue]="false" styleClass="h-1rem flex-1" />
+                <span class="text-sm font-medium">{{ getPromedioCumplimiento() }}%</span>
+              </div>
+            </td>
+            <td>
+              <div class="flex gap-1">
+                <p-tag [value]="totalActivos().toString()" severity="success" styleClass="text-xs" pTooltip="Activos" />
+                <p-tag [value]="totalBorradores().toString()" severity="warn" styleClass="text-xs" pTooltip="Borradores" />
+              </div>
+            </td>
+            <td></td>
+          </tr>
         </ng-template>
       </p-table>
     </div>
@@ -1073,8 +1085,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-circle text-500"></i>
               <div>
-                <span class="text-sm font-medium">Group</span>
-                <p class="text-xs text-500 m-0">The elements below are grouped</p>
+                <span class="text-sm font-medium">Grupo</span>
+                <p class="text-xs text-500 m-0">Agrupa los elementos siguientes</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1084,8 +1096,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-pencil text-500"></i>
               <div>
-                <span class="text-sm font-medium">Text Input</span>
-                <p class="text-xs text-500 m-0">Single line text field</p>
+                <span class="text-sm font-medium">Texto corto</span>
+                <p class="text-xs text-500 m-0">Campo de texto de una línea</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1095,8 +1107,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-hashtag text-purple-500"></i>
               <div>
-                <span class="text-sm font-medium">Number</span>
-                <p class="text-xs text-500 m-0">Numeric input with validation</p>
+                <span class="text-sm font-medium">Número</span>
+                <p class="text-xs text-500 m-0">Entrada numérica con validación</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1106,8 +1118,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-align-left text-500"></i>
               <div>
-                <span class="text-sm font-medium">Textarea</span>
-                <p class="text-xs text-500 m-0">Multi-line text area</p>
+                <span class="text-sm font-medium">Texto largo</span>
+                <p class="text-xs text-500 m-0">Área de texto multilínea</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1117,8 +1129,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-check-square text-500"></i>
               <div>
-                <span class="text-sm font-medium">Checkbox</span>
-                <p class="text-xs text-500 m-0">True/false toggle</p>
+                <span class="text-sm font-medium">Sí/No/N/A</span>
+                <p class="text-xs text-500 m-0">Opción de tres estados</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1128,8 +1140,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-calendar text-500"></i>
               <div>
-                <span class="text-sm font-medium">Date Picker</span>
-                <p class="text-xs text-500 m-0">Date selection field</p>
+                <span class="text-sm font-medium">Selector de fecha</span>
+                <p class="text-xs text-500 m-0">Campo de selección de fecha</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1139,15 +1151,15 @@
 
       <!-- Seleccion -->
       <div class="mb-4">
-        <span class="text-xs font-semibold text-primary uppercase">Choice Fields</span>
+        <span class="text-xs font-semibold text-primary uppercase">Campos de Selección</span>
         <div class="flex flex-column gap-1 mt-2">
           <div class="flex align-items-center justify-content-between p-2 border-round hover:surface-100 cursor-pointer"
                pDraggable="pregunta" (onDragStart)="iniciarArrastre('seleccionUnica')">
             <div class="flex align-items-center gap-2">
               <i class="pi pi-chevron-down text-500"></i>
               <div>
-                <span class="text-sm font-medium">Dropdown</span>
-                <p class="text-xs text-500 m-0">Single selection dropdown</p>
+                <span class="text-sm font-medium">Lista desplegable</span>
+                <p class="text-xs text-500 m-0">Selección única de opciones</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1157,8 +1169,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-list text-500"></i>
               <div>
-                <span class="text-sm font-medium">Multi Select</span>
-                <p class="text-xs text-500 m-0">Multiple choice selection</p>
+                <span class="text-sm font-medium">Selección múltiple</span>
+                <p class="text-xs text-500 m-0">Varias opciones seleccionables</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1168,8 +1180,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-circle text-500"></i>
               <div>
-                <span class="text-sm font-medium">Radio Buttons</span>
-                <p class="text-xs text-500 m-0">Single choice options</p>
+                <span class="text-sm font-medium">Botones de opción</span>
+                <p class="text-xs text-500 m-0">Opción única visible</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1179,15 +1191,15 @@
 
       <!-- Avanzados -->
       <div class="mb-4">
-        <span class="text-xs font-semibold text-primary uppercase">Advanced</span>
+        <span class="text-xs font-semibold text-primary uppercase">Avanzados</span>
         <div class="flex flex-column gap-1 mt-2">
           <div class="flex align-items-center justify-content-between p-2 border-round hover:surface-100 cursor-pointer"
                pDraggable="pregunta" (onDragStart)="iniciarArrastre('archivo')">
             <div class="flex align-items-center gap-2">
               <i class="pi pi-upload text-500"></i>
               <div>
-                <span class="text-sm font-medium">File Upload</span>
-                <p class="text-xs text-500 m-0">Document attachment</p>
+                <span class="text-sm font-medium">Carga de archivo</span>
+                <p class="text-xs text-500 m-0">Adjuntar documentos</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1197,19 +1209,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-sliders-h text-500"></i>
               <div>
-                <span class="text-sm font-medium">Scale / Rating</span>
-                <p class="text-xs text-500 m-0">Numeric scale (1-5, 1-10)</p>
-              </div>
-            </div>
-            <i class="pi pi-plus text-primary"></i>
-          </div>
-          <div class="flex align-items-center justify-content-between p-2 border-round hover:surface-100 cursor-pointer"
-               pDraggable="pregunta" (onDragStart)="iniciarArrastre('calculado')">
-            <div class="flex align-items-center gap-2">
-              <i class="pi pi-calculator text-500"></i>
-              <div>
-                <span class="text-sm font-medium">Calculated Field</span>
-                <p class="text-xs text-500 m-0">Auto-calculated values</p>
+                <span class="text-sm font-medium">Escala / Calificación</span>
+                <p class="text-xs text-500 m-0">Escala numérica (1-5, 1-10)</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1220,7 +1221,7 @@
               <i class="pi pi-link text-500"></i>
               <div>
                 <span class="text-sm font-medium">URL</span>
-                <p class="text-xs text-500 m-0">Website link field</p>
+                <p class="text-xs text-500 m-0">Enlace a sitio web</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1230,8 +1231,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-star text-yellow-500"></i>
               <div>
-                <span class="text-sm font-medium">Star Rating</span>
-                <p class="text-xs text-500 m-0">1-5 or 1-10 stars</p>
+                <span class="text-sm font-medium">Calificación estrellas</span>
+                <p class="text-xs text-500 m-0">1-5 o 1-10 estrellas</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1241,8 +1242,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-chart-bar text-blue-500"></i>
               <div>
-                <span class="text-sm font-medium">Likert Scale</span>
-                <p class="text-xs text-500 m-0">Agreement scale (5 options)</p>
+                <span class="text-sm font-medium">Escala Likert</span>
+                <p class="text-xs text-500 m-0">Escala de acuerdo (5 opciones)</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1252,8 +1253,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-arrows-h text-purple-500"></i>
               <div>
-                <span class="text-sm font-medium">Semantic Differential</span>
-                <p class="text-xs text-500 m-0">Scale between opposites</p>
+                <span class="text-sm font-medium">Diferencial semántico</span>
+                <p class="text-xs text-500 m-0">Escala entre opuestos</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1263,8 +1264,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-sort-amount-up text-teal-500"></i>
               <div>
-                <span class="text-sm font-medium">Ranking</span>
-                <p class="text-xs text-500 m-0">Order by preference</p>
+                <span class="text-sm font-medium">Ordenamiento</span>
+                <p class="text-xs text-500 m-0">Ordenar por preferencia</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1274,8 +1275,8 @@
             <div class="flex align-items-center gap-2">
               <i class="pi pi-check-square text-green-500"></i>
               <div>
-                <span class="text-sm font-medium">True/False</span>
-                <p class="text-xs text-500 m-0">Boolean toggle</p>
+                <span class="text-sm font-medium">Verdadero/Falso</span>
+                <p class="text-xs text-500 m-0">Interruptor booleano</p>
               </div>
             </div>
             <i class="pi pi-plus text-primary"></i>
@@ -1380,63 +1381,116 @@
       <h3 class="text-sm font-semibold text-900 mb-3">Propiedades</h3>
 
       @if (preguntaSeleccionada()) {
-        <p class="text-xs text-500 mb-3">Configure selectd element</p>
+        <p class="text-xs text-500 mb-3">Configurar elemento seleccionado</p>
 
         <div class="flex flex-column gap-3">
           <div>
-            <label class="block text-xs font-medium text-500 mb-1">Display Label</label>
-            <input pInputText [(ngModel)]="preguntaSeleccionada()!.texto" class="w-full" />
+            <label class="block text-xs font-medium text-500 mb-1">Texto de la pregunta</label>
+            <input pInputText [(ngModel)]="preguntaSeleccionada()!.texto" class="w-full" placeholder="Escribe la pregunta..." />
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-500 mb-1">Machine Name</label>
-            <input pInputText [(ngModel)]="preguntaSeleccionada()!.placeholder" class="w-full" [placeholder]="'Escribe el placeholder'" />
+            <label class="block text-xs font-medium text-500 mb-1">Texto de ayuda (opcional)</label>
+            <input pInputText [(ngModel)]="preguntaSeleccionada()!.ayuda" class="w-full" placeholder="Instrucciones adicionales..." />
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-500 mb-1">Default Value (Optional)</label>
-            <input pInputText class="w-full" placeholder="e.g.,Pending" />
+            <label class="block text-xs font-medium text-500 mb-1">Placeholder</label>
+            <input pInputText [(ngModel)]="preguntaSeleccionada()!.placeholder" class="w-full" placeholder="Ej: Escribe tu respuesta..." />
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-500 mb-1">Numero de columnas</label>
-            <p-select [options]="[{label: '1 columna', value: 1}, {label: '2 columnas', value: 2}]" optionLabel="label" optionValue="value" styleClass="w-full" />
-          </div>
-
-          <div class="flex gap-4">
-            <div class="flex align-items-center gap-2">
-              <p-radioButton [disabled]="true" />
-              <span class="text-sm">Is Calculated?</span>
-            </div>
-            <div class="flex align-items-center gap-2">
-              <p-radioButton [disabled]="true" />
-              <span class="text-sm">Is Autoincrement ID?</span>
-            </div>
+            <label class="block text-xs font-medium text-500 mb-1">Peso del campo</label>
+            <p-inputNumber [(ngModel)]="preguntaSeleccionada()!.peso" [min]="0" [max]="100" [showButtons]="true" styleClass="w-full" suffix=" pts" />
           </div>
 
           <p-divider />
 
-          <h4 class="text-xs font-semibold text-900 m-0">Validation Rules</h4>
+          <h4 class="text-xs font-semibold text-900 m-0">Reglas de Validación</h4>
           <div class="flex flex-wrap gap-3">
             <div class="flex align-items-center gap-2">
               <p-checkbox [(ngModel)]="preguntaSeleccionada()!.requerida" [binary]="true" />
-              <span class="text-sm">Required Field</span>
+              <span class="text-sm">Campo obligatorio</span>
             </div>
             <div class="flex align-items-center gap-2">
-              <p-checkbox [binary]="true" />
-              <span class="text-sm">Must be Unique</span>
-            </div>
-            <div class="flex align-items-center gap-2">
-              <p-checkbox [binary]="true" />
-              <span class="text-sm">Searchable</span>
+              <p-checkbox [(ngModel)]="preguntaSeleccionada()!.requiereEvidencia" [binary]="true" />
+              <span class="text-sm">Requiere evidencia</span>
             </div>
           </div>
 
+          <!-- Opciones con Puntaje - Solo para tipos de selección -->
+          @if (tieneOpciones(preguntaSeleccionada()!.tipo)) {
+            <p-divider />
+            <h4 class="text-xs font-semibold text-900 m-0">Opciones y Puntajes</h4>
+            <p class="text-xs text-500 mt-1 mb-2">Configura las opciones y su puntaje para el cálculo de compliance</p>
+
+            <div class="opciones-lista flex flex-column gap-2">
+              @for (opcion of getOpcionesConScore(); track $index; let i = $index) {
+                <div class="opcion-item flex align-items-center gap-2 p-2 surface-50 border-round">
+                  <i class="pi pi-bars text-400 cursor-move"></i>
+                  <input pInputText
+                         [value]="getOpcionTexto(opcion)"
+                         (input)="actualizarOpcionTexto(i, $any($event.target).value)"
+                         class="flex-1"
+                         placeholder="Texto de la opción" />
+                  <p-inputNumber
+                    [ngModel]="getOpcionScore(opcion)"
+                    (ngModelChange)="actualizarOpcionScore(i, $event)"
+                    [min]="0"
+                    [max]="100"
+                    styleClass="w-5rem"
+                    suffix=" pts"
+                    [showButtons]="true"
+                    buttonLayout="horizontal"
+                    incrementButtonIcon="pi pi-plus"
+                    decrementButtonIcon="pi pi-minus" />
+                  <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" (onClick)="eliminarOpcion(i)" />
+                </div>
+              }
+            </div>
+
+            <p-button label="Agregar opción" icon="pi pi-plus" severity="secondary" size="small" [text]="true" class="mt-2" (onClick)="agregarOpcion()" />
+          }
+
+          <!-- Campo Calculado - Solo para tipos numéricos -->
+          @if (estipoNumerico(preguntaSeleccionada()!.tipo)) {
+            <p-divider />
+            <h4 class="text-xs font-semibold text-900 m-0">Campo Calculado</h4>
+            <div class="flex align-items-center justify-content-between">
+              <span class="text-sm">¿Es un campo calculado?</span>
+              <p-toggleSwitch [(ngModel)]="preguntaSeleccionada()!.isCalculated" />
+            </div>
+            @if (preguntaSeleccionada()!.isCalculated) {
+              <div class="formula-editor mt-2">
+                <label class="block text-xs font-medium text-500 mb-1">Fórmula de cálculo</label>
+                <textarea
+                  pTextarea
+                  [(ngModel)]="preguntaSeleccionada()!.formula"
+                  class="w-full formula-textarea"
+                  rows="4"
+                  placeholder="Ej: (Q1 + Q2) / 2 * 100"
+                  style="font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.85rem;"></textarea>
+                <div class="formula-help mt-2 p-2 bg-blue-50 border-round text-xs">
+                  <div class="flex align-items-center gap-1 mb-1 text-blue-700 font-medium">
+                    <i class="pi pi-info-circle"></i>
+                    <span>Sintaxis disponible:</span>
+                  </div>
+                  <ul class="m-0 pl-4 text-blue-600 line-height-3">
+                    <li><code>Q1, Q2, ...</code> - Referencias a otras preguntas</li>
+                    <li><code>+, -, *, /</code> - Operaciones matemáticas</li>
+                    <li><code>Math.min(), Math.max()</code> - Funciones</li>
+                    <li><code>()</code> - Agrupación de operaciones</li>
+                  </ul>
+                </div>
+              </div>
+            }
+          }
+
           <p-divider />
 
-          <h4 class="text-xs font-semibold text-900 m-0">Logica Condicional</h4>
+          <h4 class="text-xs font-semibold text-900 m-0">Lógica Condicional</h4>
           <div class="flex align-items-center justify-content-between">
-            <span class="text-sm">Mostrar solo si se cumple condicion</span>
+            <span class="text-sm">Mostrar solo si se cumple condición</span>
             <p-toggleSwitch [ngModel]="!!preguntaSeleccionada()!.displayConditionQuestionId"
                             (ngModelChange)="toggleLogicaCondicional($event)" />
           </div>
@@ -1477,32 +1531,34 @@
         <div class="flex flex-column gap-3">
           <div>
             <label class="block text-xs font-medium text-500 mb-1">Marco Normativo</label>
-            <p-select [options]="marcosNormativos()" optionLabel="nombre" optionValue="id" [(ngModel)]="cuestionarioSeleccionado()!.marcoNormativo" styleClass="w-full" placeholder="Seleccionar marco" />
+            <p-multiselect
+              [options]="marcosNormativos()"
+              [(ngModel)]="marcosSeleccionados"
+              optionLabel="nombre"
+              placeholder="Seleccionar marcos"
+              class="w-full"
+              display="chip"
+              [showClear]="true">
+              <ng-template let-marco #item>
+                <div class="flex align-items-center gap-2">
+                  <p-tag [value]="marco.acronimo" [severity]="getMarcoSeverity(marco.id)" styleClass="text-xs" />
+                  <span>{{ marco.nombre }}</span>
+                </div>
+              </ng-template>
+              <ng-template #header>
+                <div class="font-medium px-3 py-2">Marcos Normativos Disponibles</div>
+              </ng-template>
+              <ng-template #footer>
+                <div class="p-3 flex justify-content-between border-top-1 surface-border">
+                  <p-button label="Agregar nuevo" severity="secondary" [text]="true" size="small" icon="pi pi-plus" (onClick)="agregarNuevoMarco()" />
+                  <p-button label="Eliminar seleccionados" severity="danger" [text]="true" size="small" icon="pi pi-trash" (onClick)="eliminarMarcosSeleccionados()" [disabled]="!marcosSeleccionados || marcosSeleccionados.length === 0" />
+                </div>
+              </ng-template>
+            </p-multiselect>
           </div>
           <div>
             <label class="block text-xs font-medium text-500 mb-1">Tipo de Evaluacion</label>
             <p-select [options]="tipoEvaluacionOptions" [(ngModel)]="cuestionarioSeleccionado()!.tipoEvaluacion" styleClass="w-full" />
-          </div>
-
-          <p-divider />
-
-          <h4 class="text-xs font-semibold text-900 m-0">Umbrales de Evaluacion</h4>
-          <div class="flex flex-column gap-2">
-            <div class="flex align-items-center gap-2">
-              <span class="w-1rem h-1rem border-round bg-red-500"></span>
-              <span class="text-sm flex-1">Deficiente</span>
-              <p-inputNumber [(ngModel)]="cuestionarioSeleccionado()!.umbrales.deficiente" [min]="0" [max]="100" styleClass="w-4rem" suffix="%" />
-            </div>
-            <div class="flex align-items-center gap-2">
-              <span class="w-1rem h-1rem border-round bg-yellow-500"></span>
-              <span class="text-sm flex-1">Aceptable</span>
-              <p-inputNumber [(ngModel)]="cuestionarioSeleccionado()!.umbrales.aceptable" [min]="0" [max]="100" styleClass="w-4rem" suffix="%" />
-            </div>
-            <div class="flex align-items-center gap-2">
-              <span class="w-1rem h-1rem border-round bg-green-500"></span>
-              <span class="text-sm flex-1">Sobresaliente</span>
-              <p-inputNumber [(ngModel)]="cuestionarioSeleccionado()!.umbrales.sobresaliente" [min]="0" [max]="100" styleClass="w-4rem" suffix="%" />
-            </div>
           </div>
 
           <p-divider />

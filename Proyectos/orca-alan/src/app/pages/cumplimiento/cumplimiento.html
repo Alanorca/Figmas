@@ -107,29 +107,33 @@
                 </tr>
               </ng-template>
 
-              <!-- Footer con resumen -->
-              <ng-template pTemplate="summary">
-                <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
-                  <div class="flex align-items-center gap-2 text-sm">
-                    <span class="text-500">Total:</span>
-                    <span class="font-semibold">{{ totalAsignaciones() }}</span>
-                  </div>
-                  <div class="flex align-items-center gap-2 text-sm">
-                    <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
-                    <span class="text-500">Pendientes:</span>
-                    <span class="font-semibold">{{ asignacionesPendientes() }}</span>
-                  </div>
-                  <div class="flex align-items-center gap-2 text-sm">
-                    <i class="pi pi-chart-line text-blue-500"></i>
-                    <span class="text-500">Promedio:</span>
-                    <span class="font-semibold">{{ promedioCompletado() }}%</span>
-                  </div>
-                  <div class="flex align-items-center gap-2 text-sm">
-                    <i class="pi pi-exclamation-triangle text-red-500"></i>
-                    <span class="text-500">Alertas Criticas:</span>
-                    <span class="font-semibold">{{ alertasCriticas() }}</span>
-                  </div>
-                </div>
+              <!-- Pie de tabla con totales por columna -->
+              <ng-template #footer>
+                <tr class="font-semibold surface-100">
+                  <td>
+                    <span class="text-900">Totales</span>
+                  </td>
+                  <td>
+                    <span class="text-600">{{ totalAsignaciones() }} asignaciones</span>
+                  </td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <p-tag [value]="asignacionesPendientes().toString() + ' pendientes'" severity="warn" styleClass="text-xs" />
+                  </td>
+                  <td>
+                    <div class="flex align-items-center gap-2">
+                      <p-progressBar [value]="promedioCompletado()" [showValue]="false" styleClass="h-1rem flex-1" />
+                      <span class="text-sm font-medium">{{ promedioCompletado() }}%</span>
+                    </div>
+                  </td>
+                  <td>
+                    <p-tag [value]="alertasCriticas().toString() + ' alertas'" severity="danger" styleClass="text-xs" />
+                  </td>
+                  <td></td>
+                </tr>
               </ng-template>
             </p-table>
           </div>
@@ -281,29 +285,33 @@
         </tr>
       </ng-template>
 
-      <!-- Footer con resumen -->
-      <ng-template pTemplate="summary">
-        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
-          <div class="flex align-items-center gap-2 text-sm">
-            <span class="text-500">Total:</span>
-            <span class="font-semibold">{{ totalAsignaciones() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
-            <span class="text-500">Pendientes:</span>
-            <span class="font-semibold">{{ asignacionesPendientes() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-chart-line text-blue-500"></i>
-            <span class="text-500">Promedio:</span>
-            <span class="font-semibold">{{ promedioCompletado() }}%</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-exclamation-triangle text-red-500"></i>
-            <span class="text-500">Alertas Criticas:</span>
-            <span class="font-semibold">{{ alertasCriticas() }}</span>
-          </div>
-        </div>
+      <!-- Pie de tabla con totales por columna -->
+      <ng-template #footer>
+        <tr class="font-semibold surface-100">
+          <td>
+            <span class="text-900">Totales</span>
+          </td>
+          <td>
+            <span class="text-600">{{ totalAsignaciones() }} asignaciones</span>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>
+            <p-tag [value]="asignacionesPendientes().toString() + ' pendientes'" severity="warn" styleClass="text-xs" />
+          </td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <p-progressBar [value]="promedioCompletado()" [showValue]="false" styleClass="h-1rem flex-1" />
+              <span class="text-sm font-medium">{{ promedioCompletado() }}%</span>
+            </div>
+          </td>
+          <td>
+            <p-tag [value]="alertasCriticas().toString() + ' alertas'" severity="danger" styleClass="text-xs" />
+          </td>
+          <td></td>
+        </tr>
       </ng-template>
     </p-table>
   </div>

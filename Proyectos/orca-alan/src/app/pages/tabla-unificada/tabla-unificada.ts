@@ -31,6 +31,9 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { DrawerModule } from 'primeng/drawer';
 import { TabsModule } from 'primeng/tabs';
 import { MessageModule } from 'primeng/message';
+import { ToolbarModule } from 'primeng/toolbar';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 // Componentes personalizados
 import { GraficasInteractivasComponent, DatosGrafica, FiltroGrafica } from '../../components/graficas-interactivas/graficas-interactivas';
@@ -64,7 +67,7 @@ interface TipoGraficaOpcion {
     DatePickerModule, PaginatorModule, DragDropModule, ToggleButtonModule,
     SelectButtonModule, PanelModule, DividerModule, BadgeModule,
     InputNumberModule, SkeletonModule, DrawerModule, TabsModule,
-    MessageModule, GraficasInteractivasComponent
+    MessageModule, ToolbarModule, IconFieldModule, InputIconModule, GraficasInteractivasComponent
   ],
   templateUrl: './tabla-unificada.html',
   styleUrl: './tabla-unificada.scss',
@@ -91,10 +94,50 @@ export class TablaUnificadaComponent {
   // Estado local del componente
   showDetalleDrawer = signal(false);
   registroSeleccionado = signal<RegistroUnificado | null>(null);
+  registrosSeleccionados = signal<RegistroUnificado[]>([]);
   showColumnasDialog = signal(false);
   showGraficasDialog = signal(false);
   showFiltroPopover = signal(false);
   columnaFiltroActual = signal<ColumnaConfig | null>(null);
+  busquedaColumna = signal('');
+
+  // Edición in-place
+  registroEditando = signal<string | null>(null); // ID del registro en edición
+  valoresEdicion = signal<Record<string, any>>({});
+
+  // Drawer de acciones masivas
+  showAccionesMasivasDrawer = signal(false);
+  accionesMasivasValues = signal<Record<string, any>>({});
+  accionesMasivasColumnasActivas = signal<Set<string>>(new Set());
+
+  // Todas las columnas editables (excluye ID, tipoEntidad que no tiene sentido cambiar)
+  accionesMasivasColumnas = computed(() => {
+    return this.columnasConfig().filter(col =>
+      !['id', 'tipoEntidad', 'nivelRiesgo'].includes(col.field)
+    );
+  });
+
+  // Dialogs de acciones masivas (legacy)
+  showAsignarResponsableDialog = signal(false);
+  showCambiarEstadoDialog = signal(false);
+  nuevoResponsable = signal('');
+  nuevoEstadoMasivo = signal('');
+
+  // Columnas filtradas por búsqueda
+  columnasFiltradas = computed(() => {
+    const busqueda = this.busquedaColumna().toLowerCase().trim();
+    const columnas = this.columnasConfig();
+
+    if (!busqueda) {
+      return columnas;
+    }
+
+    return columnas.filter(col =>
+      col.header.toLowerCase().includes(busqueda) ||
+      col.field.toLowerCase().includes(busqueda) ||
+      col.tipo.toLowerCase().includes(busqueda)
+    );
+  });
 
   // Estado del filtro temporal
   filtroTemp = signal<{
@@ -477,6 +520,53 @@ export class TablaUnificadaComponent {
     this.showDetalleDrawer.set(true);
   }
 
+  // Métodos de edición in-place
+  iniciarEdicion(registro: RegistroUnificado, event: Event): void {
+    event.stopPropagation();
+    this.registroEditando.set(registro.id);
+    // Copiar valores actuales para edición
+    this.valoresEdicion.set({
+      estado: registro.estado,
+      severidad: registro.severidad,
+      responsable: registro.responsable,
+      descripcion: registro.descripcion,
+      fecha: registro.fecha,
+      probabilidad: registro.probabilidad,
+      impacto: registro.impacto,
+      contenedorNombre: registro.contenedorNombre
+    });
+  }
+
+  estaEditando(registroId: string): boolean {
+    return this.registroEditando() === registroId;
+  }
+
+  getValorEdicion(field: string): any {
+    return this.valoresEdicion()[field];
+  }
+
+  setValorEdicion(field: string, valor: any): void {
+    this.valoresEdicion.update(v => ({ ...v, [field]: valor }));
+  }
+
+  guardarEdicion(registro: RegistroUnificado, event: Event): void {
+    event.stopPropagation();
+    const valores = this.valoresEdicion();
+
+    console.log(`Guardando edición del registro ${registro.id}:`, valores);
+    // Aquí implementarías la lógica real de guardado
+    // Por ejemplo: this.service.actualizarRegistro(registro.id, valores);
+
+    this.registroEditando.set(null);
+    this.valoresEdicion.set({});
+  }
+
+  cancelarEdicion(event: Event): void {
+    event.stopPropagation();
+    this.registroEditando.set(null);
+    this.valoresEdicion.set({});
+  }
+
   // Métodos de exportación
   exportarCSV(): void {
     this.service.exportarDatos('csv', true);
@@ -652,5 +742,178 @@ export class TablaUnificadaComponent {
       { separator: true },
       { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', registro.id) }
     ];
+  }
+
+  // Menú de exportación
+  exportMenuItems: MenuItem[] = [
+    { label: 'CSV', icon: 'pi pi-file', command: () => this.exportarCSV() },
+    { label: 'Excel', icon: 'pi pi-file-excel', command: () => this.exportarExcel() }
+  ];
+
+  // Menú de acciones masivas
+  accionesMasivasMenuItems: MenuItem[] = [
+    {
+      label: 'Cambiar estado',
+      icon: 'pi pi-refresh',
+      command: () => this.abrirCambiarEstadoDialog()
+    },
+    {
+      label: 'Asignar responsable',
+      icon: 'pi pi-user',
+      command: () => this.abrirAsignarResponsableDialog()
+    },
+    { separator: true },
+    {
+      label: 'Exportar seleccionados',
+      icon: 'pi pi-download',
+      items: [
+        { label: 'CSV', icon: 'pi pi-file', command: () => this.exportarSeleccionados('csv') },
+        { label: 'Excel', icon: 'pi pi-file-excel', command: () => this.exportarSeleccionados('excel') }
+      ]
+    },
+    { separator: true },
+    {
+      label: 'Eliminar seleccionados',
+      icon: 'pi pi-trash',
+      styleClass: 'text-red-500',
+      command: () => this.eliminarSeleccionados()
+    }
+  ];
+
+  // Métodos de selección masiva
+  onSelectionChange(registros: RegistroUnificado[]): void {
+    this.registrosSeleccionados.set(registros);
+  }
+
+  seleccionarTodos(): void {
+    this.registrosSeleccionados.set([...this.datosFiltrados()]);
+  }
+
+  deseleccionarTodos(): void {
+    this.registrosSeleccionados.set([]);
+  }
+
+  // Drawer de acciones masivas
+  abrirAccionesMasivasDrawer(): void {
+    this.accionesMasivasValues.set({});
+    this.accionesMasivasColumnasActivas.set(new Set());
+    this.showAccionesMasivasDrawer.set(true);
+  }
+
+  toggleColumnaAccionMasiva(field: string): void {
+    const activas = new Set(this.accionesMasivasColumnasActivas());
+    if (activas.has(field)) {
+      activas.delete(field);
+      // Limpiar el valor al desactivar
+      const valores = { ...this.accionesMasivasValues() };
+      delete valores[field];
+      this.accionesMasivasValues.set(valores);
+    } else {
+      activas.add(field);
+    }
+    this.accionesMasivasColumnasActivas.set(activas);
+  }
+
+  isColumnaAccionActiva(field: string): boolean {
+    return this.accionesMasivasColumnasActivas().has(field);
+  }
+
+  actualizarValorAccionMasiva(field: string, valor: any): void {
+    this.accionesMasivasValues.update(v => ({ ...v, [field]: valor }));
+  }
+
+  getValorAccionMasiva(field: string): any {
+    return this.accionesMasivasValues()[field];
+  }
+
+  aplicarAccionesMasivas(): void {
+    const seleccionados = this.registrosSeleccionados();
+    const valores = this.accionesMasivasValues();
+    const columnasActivas = this.accionesMasivasColumnasActivas();
+
+    if (seleccionados.length === 0 || columnasActivas.size === 0) return;
+
+    // Preparar los cambios
+    const cambios: { campo: string; valor: any }[] = [];
+    columnasActivas.forEach(field => {
+      if (valores[field] !== undefined && valores[field] !== null && valores[field] !== '') {
+        cambios.push({ campo: field, valor: valores[field] });
+      }
+    });
+
+    if (cambios.length === 0) return;
+
+    console.log(`Aplicando cambios masivos a ${seleccionados.length} registros:`, cambios);
+    // Aquí implementarías la lógica real de actualización masiva
+    // Por ejemplo: this.service.actualizarMasivo(seleccionados.map(r => r.id), cambios);
+
+    this.showAccionesMasivasDrawer.set(false);
+    this.deseleccionarTodos();
+  }
+
+  getCantidadCambiosPendientes(): number {
+    const valores = this.accionesMasivasValues();
+    const activas = this.accionesMasivasColumnasActivas();
+    let count = 0;
+    activas.forEach(field => {
+      if (valores[field] !== undefined && valores[field] !== null && valores[field] !== '') {
+        count++;
+      }
+    });
+    return count;
+  }
+
+  // Dialogs de acciones masivas (legacy)
+  abrirCambiarEstadoDialog(): void {
+    this.nuevoEstadoMasivo.set('');
+    this.showCambiarEstadoDialog.set(true);
+  }
+
+  abrirAsignarResponsableDialog(): void {
+    this.nuevoResponsable.set('');
+    this.showAsignarResponsableDialog.set(true);
+  }
+
+  confirmarCambiarEstado(): void {
+    const seleccionados = this.registrosSeleccionados();
+    const nuevoEstado = this.nuevoEstadoMasivo();
+    if (seleccionados.length === 0 || !nuevoEstado) return;
+
+    console.log(`Cambiando estado de ${seleccionados.length} registros a: ${nuevoEstado}`);
+    // Aquí implementarías la lógica real de cambio de estado
+    // Por ejemplo: this.service.cambiarEstadoMasivo(seleccionados.map(r => r.id), nuevoEstado);
+
+    this.showCambiarEstadoDialog.set(false);
+    this.deseleccionarTodos();
+  }
+
+  confirmarAsignarResponsable(): void {
+    const seleccionados = this.registrosSeleccionados();
+    const responsable = this.nuevoResponsable();
+    if (seleccionados.length === 0 || !responsable) return;
+
+    console.log(`Asignando responsable "${responsable}" a ${seleccionados.length} registros`);
+    // Aquí implementarías la lógica real de asignación
+    // Por ejemplo: this.service.asignarResponsableMasivo(seleccionados.map(r => r.id), responsable);
+
+    this.showAsignarResponsableDialog.set(false);
+    this.deseleccionarTodos();
+  }
+
+  exportarSeleccionados(formato: 'csv' | 'excel'): void {
+    const seleccionados = this.registrosSeleccionados();
+    if (seleccionados.length === 0) return;
+
+    console.log(`Exportando ${seleccionados.length} registros a ${formato}`);
+    // Implementar exportación de seleccionados
+  }
+
+  eliminarSeleccionados(): void {
+    const seleccionados = this.registrosSeleccionados();
+    if (seleccionados.length === 0) return;
+
+    console.log(`Eliminando ${seleccionados.length} registros`);
+    // Aquí mostrarías un dialog de confirmación
+    this.deseleccionarTodos();
   }
 }

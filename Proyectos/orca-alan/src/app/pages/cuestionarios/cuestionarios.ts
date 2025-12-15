@@ -256,7 +256,6 @@ export class CuestionariosComponent {
     { label: 'Archivo adjunto', value: 'archivo', icon: 'pi pi-paperclip' },
     { label: 'Matriz', value: 'matriz', icon: 'pi pi-table' },
     { label: 'Grupo', value: 'grupo', icon: 'pi pi-folder' },
-    { label: 'Campo Calculado', value: 'calculado', icon: 'pi pi-calculator' },
     { label: 'URL', value: 'url', icon: 'pi pi-link' }
   ];
 
@@ -268,6 +267,9 @@ export class CuestionariosComponent {
     { label: 'Legal', value: 'legal' },
     { label: 'Cumplimiento', value: 'cumplimiento' }
   ];
+
+  // Marcos normativos seleccionados para multiselect
+  marcosSeleccionados: MarcoNormativo[] = [];
 
   // =============================================
   // DATOS MOCK - MARCOS NORMATIVOS
@@ -444,6 +446,23 @@ export class CuestionariosComponent {
   totalBorradores = computed(() => this.cuestionarios().filter(c => c.estado === 'borrador').length);
   totalPreguntas = computed(() => this.cuestionarios().reduce((sum, c) => sum + c.preguntas, 0));
 
+  // Métodos para totales del pie de tabla
+  getCategoriasTotales(): number {
+    const categorias = new Set(this.cuestionarios().map(c => c.categoria));
+    return categorias.size;
+  }
+
+  getTotalPorTipo(tipo: 'ia' | 'manual'): number {
+    return this.cuestionarios().filter(c => c.tipo === tipo).length;
+  }
+
+  getPromedioCumplimiento(): number {
+    const cuestionarios = this.cuestionarios();
+    if (cuestionarios.length === 0) return 0;
+    const suma = cuestionarios.reduce((sum, c) => sum + c.tasaCompletado, 0);
+    return Math.round(suma / cuestionarios.length);
+  }
+
   // =============================================
   // CUESTIONARIOS FILTRADOS
   // =============================================
@@ -496,6 +515,52 @@ export class CuestionariosComponent {
   getMarcoNombre(marcoId: string): string {
     const marco = this.marcosNormativos().find(m => m.id === marcoId);
     return marco ? marco.acronimo : marcoId;
+  }
+
+  getMarcoSeverity(marcoId: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    const severities: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast'> = {
+      'iso27001': 'info',
+      'sox': 'warn',
+      'gdpr': 'success',
+      'pcidss': 'danger',
+      'nist': 'secondary'
+    };
+    return severities[marcoId] || 'info';
+  }
+
+  agregarNuevoMarco(): void {
+    // Por ahora solo mostrar mensaje, en implementación real se abriría un dialog
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Agregar Marco',
+      detail: 'Esta funcionalidad permitirá agregar nuevos marcos normativos'
+    });
+  }
+
+  eliminarMarcosSeleccionados(): void {
+    if (!this.marcosSeleccionados || this.marcosSeleccionados.length === 0) {
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `¿Está seguro de eliminar ${this.marcosSeleccionados.length} marco(s) normativo(s) seleccionado(s)?`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        const idsAEliminar = this.marcosSeleccionados.map(m => m.id);
+        this.marcosNormativos.update(marcos =>
+          marcos.filter(m => !idsAEliminar.includes(m.id))
+        );
+        this.marcosSeleccionados = [];
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Marcos eliminados',
+          detail: `Se eliminaron ${idsAEliminar.length} marco(s) normativo(s)`
+        });
+      }
+    });
   }
 
   // =============================================
@@ -870,7 +935,6 @@ export class CuestionariosComponent {
       'archivo': 'File Upload',
       'matriz': 'Matrix',
       'grupo': 'Group',
-      'calculado': 'Calculated Field',
       'url': 'URL'
     };
     return labels[tipo] || tipo;
@@ -1240,6 +1304,101 @@ export class CuestionariosComponent {
     }
 
     return [];
+  }
+
+  // Verificar si el tipo de pregunta es numérico (permite campos calculados)
+  estipoNumerico(tipo: string): boolean {
+    const tiposNumericos = ['numero', 'escala', 'starRating'];
+    return tiposNumericos.includes(tipo);
+  }
+
+  // Verificar si el tipo de pregunta tiene opciones configurables
+  tieneOpciones(tipo: string): boolean {
+    const tiposConOpciones = ['seleccionUnica', 'opcionMultiple', 'radioButtons', 'siNoNa'];
+    return tiposConOpciones.includes(tipo);
+  }
+
+  // Obtener opciones normalizadas con score
+  getOpcionesConScore(): { text: string; score: number }[] {
+    const pregunta = this.preguntaSeleccionada();
+    if (!pregunta || !pregunta.opciones) {
+      // Retornar opciones por defecto según el tipo
+      if (pregunta?.tipo === 'siNoNa') {
+        return [
+          { text: 'Sí', score: 100 },
+          { text: 'No', score: 0 },
+          { text: 'N/A', score: 50 }
+        ];
+      }
+      return [];
+    }
+
+    // Normalizar opciones a formato { text, score }
+    return pregunta.opciones.map((opt, index) => {
+      if (typeof opt === 'string') {
+        // Si es string, calcular score proporcional inverso
+        const totalOpciones = pregunta.opciones!.length;
+        return {
+          text: opt,
+          score: Math.round(((totalOpciones - index) / totalOpciones) * 100)
+        };
+      }
+      return opt as { text: string; score: number };
+    });
+  }
+
+  // Obtener texto de una opción
+  getOpcionTexto(opcion: string | { text: string; score: number }): string {
+    return typeof opcion === 'string' ? opcion : opcion.text;
+  }
+
+  // Obtener score de una opción
+  getOpcionScore(opcion: string | { text: string; score: number }): number {
+    return typeof opcion === 'string' ? 0 : opcion.score;
+  }
+
+  // Actualizar texto de una opción
+  actualizarOpcionTexto(index: number, texto: string): void {
+    const pregunta = this.preguntaSeleccionada();
+    if (!pregunta) return;
+
+    const opciones = this.getOpcionesConScore();
+    opciones[index].text = texto;
+    pregunta.opciones = opciones;
+    this.actualizarPreguntaSeleccionada();
+  }
+
+  // Actualizar score de una opción
+  actualizarOpcionScore(index: number, score: number): void {
+    const pregunta = this.preguntaSeleccionada();
+    if (!pregunta) return;
+
+    const opciones = this.getOpcionesConScore();
+    opciones[index].score = score;
+    pregunta.opciones = opciones;
+    this.actualizarPreguntaSeleccionada();
+  }
+
+  // Agregar nueva opción
+  agregarOpcion(): void {
+    const pregunta = this.preguntaSeleccionada();
+    if (!pregunta) return;
+
+    const opciones = this.getOpcionesConScore();
+    opciones.push({ text: `Opción ${opciones.length + 1}`, score: 0 });
+    pregunta.opciones = opciones;
+    this.actualizarPreguntaSeleccionada();
+  }
+
+  // Eliminar opción
+  eliminarOpcion(index: number): void {
+    const pregunta = this.preguntaSeleccionada();
+    if (!pregunta) return;
+
+    const opciones = this.getOpcionesConScore();
+    opciones.splice(index, 1);
+    pregunta.opciones = opciones;
+    this.actualizarPreguntaSeleccionada();
   }
 
   // Toggle logica condicional

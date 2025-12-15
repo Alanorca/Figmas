@@ -79,10 +79,24 @@
 
 // Toolbar
 :host ::ng-deep .toolbar-card {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 
   .p-card-body {
     padding: 1rem;
+  }
+}
+
+// Quitar separación entre toolbar y tabla
+:host ::ng-deep .p-toolbar {
+  margin-bottom: 0 !important;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+:host ::ng-deep .table-card {
+  .p-card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
   }
 }
 
@@ -160,6 +174,15 @@
   gap: 0.5rem;
 }
 
+// Quitar líneas verticales de la tabla
+:host ::ng-deep .p-datatable {
+  .p-datatable-thead > tr > th,
+  .p-datatable-tbody > tr > td {
+    border-left: none;
+    border-right: none;
+  }
+}
+
 // Filtros en header de tabla
 :host ::ng-deep {
   .p-datatable .p-datatable-thead > tr:nth-child(2) > th {
@@ -178,29 +201,50 @@
     height: 1.75rem;
   }
 
+  // Inputs y selects ocupan ancho completo
   .p-datatable-thead .p-inputtext {
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
+    width: 100%;
   }
 
-  .p-datatable-thead .p-select {
-    .p-select-label {
+  .p-datatable-thead .p-select,
+  .p-datatable-thead .p-multiselect {
+    width: 100% !important;
+    min-width: unset !important;
+
+    .p-select-label,
+    .p-multiselect-label {
       padding: 0.5rem 0.75rem;
       font-size: 0.875rem;
     }
   }
 
   .p-datatable-thead .p-datepicker {
+    width: 100%;
+
     .p-inputtext {
       padding: 0.5rem 0.75rem;
       font-size: 0.875rem;
+      width: 100%;
     }
   }
 
   .p-datatable-thead .p-inputnumber {
+    width: 100%;
+
     .p-inputtext {
       padding: 0.5rem 0.75rem;
       font-size: 0.875rem;
+      width: 100%;
+    }
+  }
+
+  // Centrar botones de filtro en columnas
+  .p-datatable-thead > tr:nth-child(2) > th {
+    .p-button {
+      display: flex;
+      margin: 0 auto;
     }
   }
 }
@@ -262,25 +306,45 @@
   padding: 2rem;
 }
 
-// Columnas Config Dialog
-.columnas-config {
-  max-height: 400px;
+// Columnas Config Drawer
+.columnas-drawer-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.columnas-search {
+  .p-iconfield {
+    width: 100%;
+  }
+}
+
+.columnas-list {
+  flex: 1;
   overflow-y: auto;
 }
 
 .columna-item {
   display: flex;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.75rem 0.5rem;
   border-radius: 6px;
   transition: background 0.2s;
+  border-bottom: 1px solid var(--surface-100);
 
   &:hover {
     background: var(--surface-hover);
   }
 
+  &:last-child {
+    border-bottom: none;
+  }
+
   label {
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
   }
 }
 
@@ -575,6 +639,128 @@
   align-items: center;
   font-size: 0.9rem;
   color: var(--text-color-secondary);
+}
+
+// Drawer Acciones Masivas
+.acciones-masivas-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.acciones-masivas-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.acciones-masivas-fields {
+  flex: 1;
+  overflow-y: auto;
+  margin: 1rem 0;
+}
+
+.accion-masiva-item {
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: var(--primary-200);
+  }
+
+  &.active {
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+  }
+}
+
+.accion-masiva-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+
+  i {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+    transition: transform 0.2s;
+  }
+}
+
+.accion-masiva-control {
+  padding: 0 1rem 1rem;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.acciones-adicionales {
+  padding-top: 0.5rem;
+}
+
+// Botón de acciones masivas
+:host ::ng-deep .btn-acciones-masivas {
+  border-radius: 6px !important;
+
+  .p-button {
+    border-radius: 6px !important;
+  }
+}
+
+// Botón de editar
+:host ::ng-deep .btn-edit {
+  border-radius: 6px !important;
+
+  .p-button {
+    border-radius: 6px !important;
+  }
+}
+
+// Fila en modo edición
+.row-editing {
+  background: var(--primary-50) !important;
+
+  td {
+    padding: 0.5rem !important;
+  }
+}
+
+// Celda de acciones
+.actions-cell {
+  white-space: nowrap;
+  width: 100px;
+}
+
+// Inputs en modo edición
+:host ::ng-deep .row-editing {
+  .p-inputtext,
+  .p-select,
+  .p-datepicker,
+  .p-inputnumber {
+    font-size: 0.875rem;
+  }
+
+  .p-inputtext-sm {
+    padding: 0.4rem 0.6rem;
+  }
 }
 
 // Responsive

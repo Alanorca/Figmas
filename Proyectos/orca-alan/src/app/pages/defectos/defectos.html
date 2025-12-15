@@ -4,15 +4,47 @@
       <h1 class="text-3xl font-bold text-900 m-0">Gestion de Defectos</h1>
       <p class="text-500 mt-1">Registra y da seguimiento a defectos y no conformidades</p>
     </div>
-    <p-button label="Registrar Defecto" icon="pi pi-plus" severity="help" (onClick)="openNewDialog()"></p-button>
   </div>
 
+  <p-toolbar styleClass="mb-4">
+    <ng-template pTemplate="start">
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input type="text" pInputText placeholder="Buscar defectos..." #dtFilter
+               (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 250px" />
+      </span>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <div class="flex gap-2">
+        @if (defectosSeleccionados().length > 0) {
+          <p-button
+            label="Acciones masivas"
+            icon="pi pi-check-square"
+            [badge]="defectosSeleccionados().length.toString()"
+            badgeSeverity="contrast"
+            severity="success"
+            [outlined]="true"
+            styleClass="btn-acciones-masivas"
+            (onClick)="abrirAccionesMasivasDrawer()" />
+        }
+        <p-button label="Registrar Defecto" icon="pi pi-plus" severity="help" (onClick)="openNewDialog()"></p-button>
+      </div>
+    </ng-template>
+  </p-toolbar>
+
   <p-card>
-    <p-table [value]="defectos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+    <p-table #dt [value]="defectos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} defectos"
-             styleClass="p-datatable-striped">
+             [globalFilterFields]="['id', 'titulo', 'activoNombre', 'tipo', 'prioridad', 'estado', 'detectadoPor']"
+             styleClass="p-datatable-striped"
+             [(selection)]="defectosSeleccionados"
+             (selectionChange)="onSelectionChange($event)"
+             dataKey="id">
       <ng-template pTemplate="header">
         <tr>
+          <th style="width: 3rem">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
           <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
           <th pSortableColumn="titulo">Titulo <p-sortIcon field="titulo"></p-sortIcon></th>
           <th pSortableColumn="activoNombre">Activo <p-sortIcon field="activoNombre"></p-sortIcon></th>
@@ -21,43 +53,101 @@
           <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
           <th pSortableColumn="detectadoPor">Detectado Por <p-sortIcon field="detectadoPor"></p-sortIcon></th>
           <th pSortableColumn="fechaDeteccion">Fecha <p-sortIcon field="fechaDeteccion"></p-sortIcon></th>
-          <th>Acciones</th>
+          <th style="width: 100px">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-defecto>
-        <tr>
-          <td class="font-mono text-sm">{{ defecto.id }}</td>
+        <tr [class.row-editing]="estaEditando(defecto.id)">
           <td>
-            <div>
-              <p class="font-medium m-0">{{ defecto.titulo }}</p>
-              <p class="text-sm text-500 m-0 mt-1">{{ defecto.descripcion | slice:0:50 }}...</p>
-            </div>
+            <p-tableCheckbox [value]="defecto"></p-tableCheckbox>
+          </td>
+          <td class="font-mono text-sm">{{ defecto.id }}</td>
+          <!-- Titulo -->
+          <td>
+            @if (estaEditando(defecto.id)) {
+              <input pInputText [ngModel]="getValorEdicion('titulo')"
+                     (ngModelChange)="setValorEdicion('titulo', $event)"
+                     class="w-full" />
+            } @else {
+              <div>
+                <p class="font-medium m-0">{{ defecto.titulo }}</p>
+                <p class="text-sm text-500 m-0 mt-1">{{ defecto.descripcion | slice:0:50 }}...</p>
+              </div>
+            }
           </td>
           <td class="font-medium">{{ defecto.activoNombre }}</td>
+          <!-- Tipo -->
           <td>
-            <div class="flex align-items-center gap-2">
-              <span class="material-icons text-500 text-sm">{{ getTipoIcon(defecto.tipo) }}</span>
-              <span class="capitalize">{{ defecto.tipo }}</span>
-            </div>
+            @if (estaEditando(defecto.id)) {
+              <p-select [options]="tiposDefecto"
+                        [ngModel]="getValorEdicion('tipo')"
+                        (ngModelChange)="setValorEdicion('tipo', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <div class="flex align-items-center gap-2">
+                <span class="material-icons text-500 text-sm">{{ getTipoIcon(defecto.tipo) }}</span>
+                <span class="capitalize">{{ defecto.tipo }}</span>
+              </div>
+            }
           </td>
+          <!-- Prioridad -->
           <td>
-            <p-tag [value]="defecto.prioridad" [severity]="getPrioridadSeverity(defecto.prioridad)"></p-tag>
+            @if (estaEditando(defecto.id)) {
+              <p-select [options]="prioridades"
+                        [ngModel]="getValorEdicion('prioridad')"
+                        (ngModelChange)="setValorEdicion('prioridad', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <p-tag [value]="defecto.prioridad" [severity]="getPrioridadSeverity(defecto.prioridad)"></p-tag>
+            }
           </td>
+          <!-- Estado -->
           <td>
-            <p-tag [value]="defecto.estado" [severity]="getEstadoSeverity(defecto.estado)"></p-tag>
+            @if (estaEditando(defecto.id)) {
+              <p-select [options]="estados"
+                        [ngModel]="getValorEdicion('estado')"
+                        (ngModelChange)="setValorEdicion('estado', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <p-tag [value]="defecto.estado" [severity]="getEstadoSeverity(defecto.estado)"></p-tag>
+            }
           </td>
-          <td>{{ defecto.detectadoPor }}</td>
+          <!-- Detectado Por -->
+          <td>
+            @if (estaEditando(defecto.id)) {
+              <input pInputText [ngModel]="getValorEdicion('detectadoPor')"
+                     (ngModelChange)="setValorEdicion('detectadoPor', $event)"
+                     class="w-full" />
+            } @else {
+              {{ defecto.detectadoPor }}
+            }
+          </td>
           <td>{{ defecto.fechaDeteccion | date:'dd/MM/yyyy' }}</td>
-          <td class="text-center">
-            <p-menu #menuDefecto [model]="getMenuItemsDefecto(defecto)" [popup]="true" appendTo="body"></p-menu>
-            <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
-                      (onClick)="menuDefecto.toggle($event)"></p-button>
+          <!-- Acciones -->
+          <td class="actions-cell">
+            @if (estaEditando(defecto.id)) {
+              <div class="flex gap-1">
+                <p-button icon="pi pi-check" severity="success" [text]="true" size="small"
+                          pTooltip="Guardar" (onClick)="guardarEdicion(defecto, $event)" />
+                <p-button icon="pi pi-times" severity="secondary" [text]="true" size="small"
+                          pTooltip="Cancelar" (onClick)="cancelarEdicion($event)" />
+              </div>
+            } @else {
+              <div class="flex gap-1">
+                <p-button icon="pi pi-pencil" [outlined]="true" severity="secondary" size="small"
+                          styleClass="btn-edit" pTooltip="Editar"
+                          (onClick)="iniciarEdicion(defecto, $event)" />
+                <p-menu #menuDefecto [model]="getMenuItemsDefecto(defecto)" [popup]="true" appendTo="body"></p-menu>
+                <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
+                          (onClick)="menuDefecto.toggle($event)" />
+              </div>
+            }
           </td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9" class="text-center py-4">
+          <td colspan="10" class="text-center py-4">
             <div class="flex flex-column align-items-center gap-2">
               <span class="material-icons text-4xl text-green-500">thumb_up</span>
               <span class="text-500">No hay defectos registrados</span>
@@ -66,39 +156,37 @@
         </tr>
       </ng-template>
 
-      <!-- Footer con resumen -->
-      <ng-template pTemplate="summary">
-        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
-          <div class="flex align-items-center gap-2 text-sm">
-            <span class="text-500">Total:</span>
-            <span class="font-semibold">{{ defectos().length }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-cog text-blue-500"></i>
-            <span class="text-500">Funcionales:</span>
-            <span class="font-semibold">{{ defectosFuncionales() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-shield text-red-500"></i>
-            <span class="text-500">Seguridad:</span>
-            <span class="font-semibold">{{ defectosSeguridad() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-bolt text-orange-500"></i>
-            <span class="text-500">Rendimiento:</span>
-            <span class="font-semibold">{{ defectosRendimiento() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-user text-purple-500"></i>
-            <span class="text-500">Usabilidad:</span>
-            <span class="font-semibold">{{ defectosUsabilidad() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-check-circle text-green-500"></i>
-            <span class="text-500">Resueltos:</span>
-            <span class="font-semibold">{{ getDefectosResueltos() }}</span>
-          </div>
-        </div>
+      <!-- Pie de tabla con totales por columna -->
+      <ng-template pTemplate="footer">
+        <tr class="font-semibold surface-100">
+          <td></td>
+          <td>
+            <span class="text-900">Totales</span>
+          </td>
+          <td>
+            <span class="text-600">{{ defectos().length }} defectos</span>
+          </td>
+          <td></td>
+          <td>
+            <div class="flex flex-column gap-1">
+              <div class="flex gap-1">
+                <p-tag [value]="defectosFuncionales().toString()" severity="info" styleClass="text-xs" pTooltip="Funcionales" />
+                <p-tag [value]="defectosSeguridad().toString()" severity="danger" styleClass="text-xs" pTooltip="Seguridad" />
+              </div>
+              <div class="flex gap-1">
+                <p-tag [value]="defectosRendimiento().toString()" severity="warn" styleClass="text-xs" pTooltip="Rendimiento" />
+                <p-tag [value]="defectosUsabilidad().toString()" severity="secondary" styleClass="text-xs" pTooltip="Usabilidad" />
+              </div>
+            </div>
+          </td>
+          <td></td>
+          <td>
+            <p-tag [value]="getDefectosResueltos().toString() + ' resueltos'" severity="success" styleClass="text-xs" />
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
       </ng-template>
     </p-table>
   </p-card>
@@ -154,3 +242,46 @@
     <p-button label="Registrar" icon="pi pi-check" severity="help" (onClick)="saveDefecto()"></p-button>
   </ng-template>
 </p-dialog>
+
+<!-- Drawer Acciones Masivas -->
+<p-drawer [(visible)]="showAccionesMasivasDrawer" position="right" [style]="{width: '400px'}" header="Acciones Masivas">
+  <div class="flex flex-column gap-4">
+    <p class="text-600 m-0">Aplicar cambios a {{ defectosSeleccionados().length }} defectos seleccionados</p>
+
+    <!-- Tipo -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Tipo</label>
+      <p-select [options]="tiposDefecto" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Prioridad -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Prioridad</label>
+      <p-select [options]="prioridades" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Estado -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Estado</label>
+      <p-select [options]="estados" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Detectado Por -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Detectado Por</label>
+      <input pInputText placeholder="Sin cambios" class="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-content-end">
+      <p-button label="Cancelar" severity="secondary" [text]="true"
+                (onClick)="showAccionesMasivasDrawer.set(false)" />
+      <p-button label="Aplicar cambios" icon="pi pi-check"
+                (onClick)="aplicarAccionesMasivas()" />
+    </div>
+  </ng-template>
+</p-drawer>

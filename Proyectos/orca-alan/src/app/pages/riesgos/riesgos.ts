@@ -11,6 +11,10 @@ import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { SliderModule } from 'primeng/slider';
 import { MenuModule } from 'primeng/menu';
+import { ToolbarModule } from 'primeng/toolbar';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DrawerModule } from 'primeng/drawer';
+import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { Riesgo, EstadoRiesgo } from '../../models';
@@ -24,7 +28,8 @@ interface RiesgoConActivo extends Riesgo {
   standalone: true,
   imports: [
     DecimalPipe, FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
-    InputTextModule, SelectModule, TextareaModule, TagModule, SliderModule, MenuModule
+    InputTextModule, SelectModule, TextareaModule, TagModule, SliderModule, MenuModule,
+    ToolbarModule, CheckboxModule, DrawerModule, TooltipModule
   ],
   templateUrl: './riesgos.html',
   styleUrl: './riesgos.scss'
@@ -34,6 +39,16 @@ export class RiesgosComponent {
 
   activos = this.mockData.activos;
   showDialog = signal(false);
+
+  // Selección múltiple
+  riesgosSeleccionados = signal<RiesgoConActivo[]>([]);
+
+  // Edición in-place
+  riesgoEditando = signal<string | null>(null);
+  valoresEdicion = signal<Record<string, any>>({});
+
+  // Drawer de acciones masivas
+  showAccionesMasivasDrawer = signal(false);
 
   riesgos = computed<RiesgoConActivo[]>(() => {
     return this.activos().flatMap(activo =>
@@ -140,5 +155,58 @@ export class RiesgosComponent {
     if (riesgos.length === 0) return 0;
     const suma = riesgos.reduce((total, r) => total + this.getNivelRiesgo(r.probabilidad, r.impacto), 0);
     return suma / riesgos.length;
+  }
+
+  // Métodos de edición in-place
+  iniciarEdicion(riesgo: RiesgoConActivo, event: Event): void {
+    event.stopPropagation();
+    this.riesgoEditando.set(riesgo.id);
+    this.valoresEdicion.set({
+      descripcion: riesgo.descripcion,
+      probabilidad: riesgo.probabilidad,
+      impacto: riesgo.impacto,
+      estado: riesgo.estado,
+      responsable: riesgo.responsable
+    });
+  }
+
+  estaEditando(riesgoId: string): boolean {
+    return this.riesgoEditando() === riesgoId;
+  }
+
+  getValorEdicion(campo: string): any {
+    return this.valoresEdicion()[campo];
+  }
+
+  setValorEdicion(campo: string, valor: any): void {
+    this.valoresEdicion.update(v => ({ ...v, [campo]: valor }));
+  }
+
+  guardarEdicion(riesgo: RiesgoConActivo, event: Event): void {
+    event.stopPropagation();
+    const valores = this.valoresEdicion();
+    console.log(`Guardando edición del riesgo ${riesgo.id}:`, valores);
+    this.riesgoEditando.set(null);
+    this.valoresEdicion.set({});
+  }
+
+  cancelarEdicion(event: Event): void {
+    event.stopPropagation();
+    this.riesgoEditando.set(null);
+    this.valoresEdicion.set({});
+  }
+
+  // Métodos de selección
+  onSelectionChange(riesgos: RiesgoConActivo[]): void {
+    this.riesgosSeleccionados.set(riesgos);
+  }
+
+  abrirAccionesMasivasDrawer(): void {
+    this.showAccionesMasivasDrawer.set(true);
+  }
+
+  aplicarAccionesMasivas(): void {
+    console.log('Aplicando acciones masivas a:', this.riesgosSeleccionados());
+    this.showAccionesMasivasDrawer.set(false);
   }
 }

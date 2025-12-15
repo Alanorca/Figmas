@@ -8,23 +8,57 @@
       <h1>Procesos</h1>
       <span class="subtitle">Gestiona tus procesos de automatización</span>
     </div>
-    <div class="header-right">
-      <p-button
-        label="Cargar Demo"
-        icon="pi pi-database"
-        severity="secondary"
-        [outlined]="true"
-        pTooltip="Resetear procesos de demostración"
-        tooltipPosition="bottom"
-        (onClick)="resetDemoData()">
-      </p-button>
-      <p-button
-        label="Nuevo Proceso"
-        icon="pi pi-plus"
-        (onClick)="crearProceso()">
-      </p-button>
-    </div>
   </div>
+
+  <!-- Toolbar -->
+  <p-toolbar styleClass="mb-4">
+    <ng-template pTemplate="start">
+      <div class="flex align-items-center gap-3">
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input type="text" pInputText placeholder="Buscar procesos..."
+                 (input)="dt.filterGlobal($any($event.target).value, 'contains')" style="width: 250px" />
+        </span>
+        <p-select
+          [options]="estadoOptions"
+          placeholder="Filtrar por estado"
+          [showClear]="true"
+          (onChange)="dt.filter($event.value, 'estado', 'equals')"
+          [style]="{ width: '180px' }"
+          appendTo="body">
+        </p-select>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <div class="flex gap-2">
+        @if (procesosSeleccionados().length > 0) {
+          <p-button
+            label="Acciones masivas"
+            icon="pi pi-check-square"
+            [badge]="procesosSeleccionados().length.toString()"
+            badgeSeverity="contrast"
+            severity="success"
+            [outlined]="true"
+            styleClass="btn-acciones-masivas"
+            (onClick)="abrirAccionesMasivasDrawer()" />
+        }
+        <p-button
+          label="Cargar Demo"
+          icon="pi pi-database"
+          severity="secondary"
+          [outlined]="true"
+          pTooltip="Resetear procesos de demostración"
+          tooltipPosition="bottom"
+          (onClick)="resetDemoData()">
+        </p-button>
+        <p-button
+          label="Nuevo Proceso"
+          icon="pi pi-plus"
+          (onClick)="crearProceso()">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-toolbar>
 
   <!-- Table Card -->
   <p-card>
@@ -38,11 +72,17 @@
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} procesos"
       [globalFilterFields]="['nombre', 'descripcion', 'estado']"
       styleClass="p-datatable-sm p-datatable-striped"
-      [tableStyle]="{ 'min-width': '70rem' }">
+      [tableStyle]="{ 'min-width': '70rem' }"
+      [(selection)]="procesosSeleccionados"
+      (selectionChange)="onSelectionChange($event)"
+      dataKey="id">
 
       <!-- Header -->
       <ng-template pTemplate="header">
         <tr>
+          <th style="width: 3rem">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
           <th style="width: 80px">ID</th>
           <th pSortableColumn="nombre">
             Nombre
@@ -61,54 +101,52 @@
             Modificado
             <p-sortIcon field="updatedAt"></p-sortIcon>
           </th>
-          <th style="width: 200px; text-align: center">Acciones</th>
-        </tr>
-        <tr>
-          <th></th>
-          <th>
-            <input
-              pInputText
-              type="text"
-              placeholder="Buscar..."
-              style="width: 100%"
-              (input)="dt.filterGlobal($any($event.target).value, 'contains')">
-          </th>
-          <th>
-            <p-select
-              [options]="estadoOptions"
-              placeholder="Todos"
-              [showClear]="true"
-              (onChange)="dt.filter($event.value, 'estado', 'equals')"
-              styleClass="p-column-filter"
-              appendTo="body">
-            </p-select>
-          </th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
+          <th style="width: 100px">Acciones</th>
         </tr>
       </ng-template>
 
       <!-- Body -->
       <ng-template pTemplate="body" let-proceso>
-        <tr>
+        <tr [class.row-editing]="estaEditando(proceso.id)">
+          <td>
+            <p-tableCheckbox [value]="proceso"></p-tableCheckbox>
+          </td>
           <td>
             <span class="id-badge">{{ proceso.id.slice(0, 6) }}</span>
           </td>
+          <!-- Nombre -->
           <td>
-            <div class="nombre-cell">
-              <span class="nombre">{{ proceso.nombre }}</span>
-              @if (proceso.descripcion) {
-                <span class="descripcion">{{ proceso.descripcion }}</span>
-              }
-            </div>
+            @if (estaEditando(proceso.id)) {
+              <div class="flex flex-column gap-1">
+                <input pInputText [ngModel]="getValorEdicion('nombre')"
+                       (ngModelChange)="setValorEdicion('nombre', $event)"
+                       class="w-full" placeholder="Nombre" />
+                <input pInputText [ngModel]="getValorEdicion('descripcion')"
+                       (ngModelChange)="setValorEdicion('descripcion', $event)"
+                       class="w-full text-sm" placeholder="Descripción" />
+              </div>
+            } @else {
+              <div class="nombre-cell">
+                <span class="nombre">{{ proceso.nombre }}</span>
+                @if (proceso.descripcion) {
+                  <span class="descripcion">{{ proceso.descripcion }}</span>
+                }
+              </div>
+            }
           </td>
+          <!-- Estado -->
           <td>
-            <p-tag
-              [value]="getEstadoLabel(proceso.estado)"
-              [severity]="getEstadoSeverity(proceso.estado)">
-            </p-tag>
+            @if (estaEditando(proceso.id)) {
+              <p-select [options]="estadoOptions"
+                        [ngModel]="getValorEdicion('estado')"
+                        (ngModelChange)="setValorEdicion('estado', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <p-tag
+                [value]="getEstadoLabel(proceso.estado)"
+                [severity]="getEstadoSeverity(proceso.estado)">
+              </p-tag>
+            }
           </td>
           <td>
             <span class="nodes-count">
@@ -118,14 +156,25 @@
           </td>
           <td>{{ formatDate(proceso.createdAt) }}</td>
           <td>{{ formatDate(proceso.updatedAt) }}</td>
-          <td class="text-center">
-            <p-menu #menu [model]="getMenuItems(proceso)" [popup]="true" appendTo="body"></p-menu>
-            <p-button
-              icon="pi pi-ellipsis-v"
-              [rounded]="true"
-              [text]="true"
-              (onClick)="menu.toggle($event)">
-            </p-button>
+          <!-- Acciones -->
+          <td class="actions-cell">
+            @if (estaEditando(proceso.id)) {
+              <div class="flex gap-1">
+                <p-button icon="pi pi-check" severity="success" [text]="true" size="small"
+                          pTooltip="Guardar" (onClick)="guardarEdicion(proceso, $event)" />
+                <p-button icon="pi pi-times" severity="secondary" [text]="true" size="small"
+                          pTooltip="Cancelar" (onClick)="cancelarEdicion($event)" />
+              </div>
+            } @else {
+              <div class="flex gap-1">
+                <p-button icon="pi pi-pencil" [outlined]="true" severity="secondary" size="small"
+                          styleClass="btn-edit" pTooltip="Editar"
+                          (onClick)="iniciarEdicion(proceso, $event)" />
+                <p-menu #menu [model]="getMenuItems(proceso)" [popup]="true" appendTo="body"></p-menu>
+                <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
+                          (onClick)="menu.toggle($event)" />
+              </div>
+            }
           </td>
         </tr>
       </ng-template>
@@ -133,7 +182,7 @@
       <!-- Empty -->
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7">
+          <td colspan="8">
             <div class="empty-state">
               <i class="pi pi-inbox"></i>
               <p>No hay procesos creados</p>
@@ -147,34 +196,30 @@
         </tr>
       </ng-template>
 
-      <!-- Footer con resumen -->
-      <ng-template pTemplate="summary">
-        <div class="table-summary">
-          <div class="summary-item">
-            <span class="summary-label">Total:</span>
-            <span class="summary-value">{{ procesos().length }}</span>
-          </div>
-          <div class="summary-item">
-            <i class="pi pi-circle-fill text-green-500"></i>
-            <span class="summary-label">Activos:</span>
-            <span class="summary-value">{{ getCountByEstado('activo') }}</span>
-          </div>
-          <div class="summary-item">
-            <i class="pi pi-circle-fill text-gray-400"></i>
-            <span class="summary-label">Borradores:</span>
-            <span class="summary-value">{{ getCountByEstado('borrador') }}</span>
-          </div>
-          <div class="summary-item">
-            <i class="pi pi-circle-fill text-orange-500"></i>
-            <span class="summary-label">Inactivos:</span>
-            <span class="summary-value">{{ getCountByEstado('inactivo') }}</span>
-          </div>
-          <div class="summary-item">
-            <i class="pi pi-sitemap"></i>
-            <span class="summary-label">Total Nodos:</span>
-            <span class="summary-value">{{ getTotalNodos() }}</span>
-          </div>
-        </div>
+      <!-- Pie de tabla con totales por columna -->
+      <ng-template pTemplate="footer">
+        <tr class="font-semibold surface-100">
+          <td></td>
+          <td>
+            <span class="text-900">Totales</span>
+          </td>
+          <td>
+            <span class="text-600">{{ procesos().length }} procesos</span>
+          </td>
+          <td>
+            <div class="flex gap-1">
+              <p-tag [value]="getCountByEstado('activo').toString()" severity="success" styleClass="text-xs" pTooltip="Activos" />
+              <p-tag [value]="getCountByEstado('borrador').toString()" severity="warn" styleClass="text-xs" pTooltip="Borradores" />
+              <p-tag [value]="getCountByEstado('inactivo').toString()" severity="secondary" styleClass="text-xs" pTooltip="Inactivos" />
+            </div>
+          </td>
+          <td>
+            <span class="text-primary font-bold">{{ getTotalNodos() }}</span>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
       </ng-template>
     </p-table>
   </p-card>
@@ -299,4 +344,27 @@
       </div>
     </div>
   }
+</p-drawer>
+
+<!-- Drawer Acciones Masivas -->
+<p-drawer [(visible)]="showAccionesMasivasDrawer" position="right" [style]="{width: '400px'}" header="Acciones Masivas">
+  <div class="flex flex-column gap-4">
+    <p class="text-600 m-0">Aplicar cambios a {{ procesosSeleccionados().length }} procesos seleccionados</p>
+
+    <!-- Estado -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Estado</label>
+      <p-select [options]="estadoOptions" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-content-end">
+      <p-button label="Cancelar" severity="secondary" [text]="true"
+                (onClick)="showAccionesMasivasDrawer.set(false)" />
+      <p-button label="Aplicar cambios" icon="pi pi-check"
+                (onClick)="aplicarAccionesMasivas()" />
+    </div>
+  </ng-template>
 </p-drawer>

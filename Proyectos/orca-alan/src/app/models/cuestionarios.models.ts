@@ -75,7 +75,6 @@ export type TipoPregunta =
   | 'archivo'         // File upload
   | 'matriz'          // Matriz de preguntas
   | 'grupo'           // Agrupador de preguntas
-  | 'calculado'       // Campo calculado
   | 'url';            // URL/Link
 
 export interface Pregunta {
@@ -108,6 +107,9 @@ export interface Pregunta {
     condicion: string;
     valor: string;
   };
+  // Campos calculados - Solo para tipos numéricos (numero, escala, starRating)
+  isCalculated?: boolean;  // Si es true, el campo se calcula con la fórmula
+  formula?: string;        // Fórmula JavaScript para calcular el valor (ej: "Q1 + Q2 * 0.5")
 }
 
 export interface AsignacionCuestionario {

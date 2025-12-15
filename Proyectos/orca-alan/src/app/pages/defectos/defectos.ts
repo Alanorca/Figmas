@@ -10,6 +10,10 @@ import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { MenuModule } from 'primeng/menu';
+import { ToolbarModule } from 'primeng/toolbar';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DrawerModule } from 'primeng/drawer';
+import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { Defecto, TipoDefecto, Severidad, EstadoDefecto } from '../../models';
@@ -23,7 +27,8 @@ interface DefectoConActivo extends Defecto {
   standalone: true,
   imports: [
     CommonModule, FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
-    InputTextModule, SelectModule, TextareaModule, TagModule, MenuModule
+    InputTextModule, SelectModule, TextareaModule, TagModule, MenuModule, ToolbarModule,
+    CheckboxModule, DrawerModule, TooltipModule
   ],
   templateUrl: './defectos.html',
   styleUrl: './defectos.scss'
@@ -33,6 +38,16 @@ export class DefectosComponent {
 
   activos = this.mockData.activos;
   showDialog = signal(false);
+
+  // Selección múltiple
+  defectosSeleccionados = signal<DefectoConActivo[]>([]);
+
+  // Edición in-place
+  defectoEditando = signal<string | null>(null);
+  valoresEdicion = signal<Record<string, any>>({});
+
+  // Drawer de acciones masivas
+  showAccionesMasivasDrawer = signal(false);
 
   defectos = computed<DefectoConActivo[]>(() => {
     return this.activos().flatMap(activo =>
@@ -154,5 +169,59 @@ export class DefectosComponent {
 
   getDefectosResueltos(): number {
     return this.defectos().filter(d => d.estado === 'corregido' || d.estado === 'verificado').length;
+  }
+
+  // Métodos de edición in-place
+  iniciarEdicion(defecto: DefectoConActivo, event: Event): void {
+    event.stopPropagation();
+    this.defectoEditando.set(defecto.id);
+    this.valoresEdicion.set({
+      titulo: defecto.titulo,
+      descripcion: defecto.descripcion,
+      tipo: defecto.tipo,
+      prioridad: defecto.prioridad,
+      estado: defecto.estado,
+      detectadoPor: defecto.detectadoPor
+    });
+  }
+
+  estaEditando(defectoId: string): boolean {
+    return this.defectoEditando() === defectoId;
+  }
+
+  getValorEdicion(campo: string): any {
+    return this.valoresEdicion()[campo];
+  }
+
+  setValorEdicion(campo: string, valor: any): void {
+    this.valoresEdicion.update(v => ({ ...v, [campo]: valor }));
+  }
+
+  guardarEdicion(defecto: DefectoConActivo, event: Event): void {
+    event.stopPropagation();
+    const valores = this.valoresEdicion();
+    console.log(`Guardando edición del defecto ${defecto.id}:`, valores);
+    this.defectoEditando.set(null);
+    this.valoresEdicion.set({});
+  }
+
+  cancelarEdicion(event: Event): void {
+    event.stopPropagation();
+    this.defectoEditando.set(null);
+    this.valoresEdicion.set({});
+  }
+
+  // Métodos de selección
+  onSelectionChange(defectos: DefectoConActivo[]): void {
+    this.defectosSeleccionados.set(defectos);
+  }
+
+  abrirAccionesMasivasDrawer(): void {
+    this.showAccionesMasivasDrawer.set(true);
+  }
+
+  aplicarAccionesMasivas(): void {
+    console.log('Aplicando acciones masivas a:', this.defectosSeleccionados());
+    this.showAccionesMasivasDrawer.set(false);
   }
 }

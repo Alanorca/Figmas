@@ -8,71 +8,80 @@
   </div>
 
   <!-- Toolbar -->
-  <p-card styleClass="toolbar-card">
-    <div class="toolbar">
-      <!-- Selector de Entidades -->
-      <div class="toolbar-section">
-        <label class="toolbar-label">Mostrar:</label>
-        <p-selectButton
+  <p-toolbar styleClass="mb-4">
+    <ng-template pTemplate="start">
+      <div class="flex align-items-center gap-3">
+        <!-- Botón de acciones masivas -->
+        @if (registrosSeleccionados().length > 0) {
+          <p-button
+            label="Acciones masivas"
+            icon="pi pi-check-square"
+            [badge]="registrosSeleccionados().length.toString()"
+            badgeSeverity="contrast"
+            severity="success"
+            [outlined]="true"
+            styleClass="btn-acciones-masivas"
+            (onClick)="abrirAccionesMasivasDrawer()"
+            pTooltip="Editar registros seleccionados"
+            tooltipPosition="bottom" />
+        }
+
+        <p-multiSelect
           [options]="entidadOptions"
           [ngModel]="estado().entidadesSeleccionadas"
           (ngModelChange)="onEntidadesChange($event)"
-          [multiple]="true"
           optionLabel="label"
-          optionValue="value">
+          optionValue="value"
+          placeholder="Mostrar"
+          [style]="{ minWidth: '200px' }"
+          [showHeader]="false"
+          appendTo="body">
           <ng-template let-item pTemplate="item">
-            <i [class]="item.icon + ' mr-1'"></i>
-            {{ item.label }}
+            <div class="flex align-items-center gap-2">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </div>
           </ng-template>
-        </p-selectButton>
+        </p-multiSelect>
       </div>
+    </ng-template>
 
-      <!-- Búsqueda Global -->
-      <div class="toolbar-section search-section">
-        <span class="p-input-icon-left">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            placeholder="Buscar en todos los campos..."
-            (input)="dt.filterGlobal($any($event.target).value, 'contains')"
-            class="search-input" />
-        </span>
-      </div>
+    <ng-template pTemplate="center">
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search" />
+        <input
+          type="text"
+          pInputText
+          placeholder="Buscar en todos los campos..."
+          (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+          style="width: 300px" />
+      </p-iconfield>
+    </ng-template>
 
-      <!-- Acciones -->
-      <div class="toolbar-section toolbar-actions">
-        <p-button
-          icon="pi pi-cog"
-          label="Columnas"
-          [outlined]="true"
-          (onClick)="showColumnasDialog.set(true)"
-          pTooltip="Configurar columnas visibles" />
-
+    <ng-template pTemplate="end">
+      <div class="flex gap-2 align-items-center">
         <p-button
           icon="pi pi-chart-bar"
-          label="Gráficas"
-          [outlined]="true"
+          severity="secondary"
+          [rounded]="true"
+          [text]="true"
           (onClick)="abrirGraficas()"
-          pTooltip="Generar gráficas"
+          pTooltip="Gráficas"
+          tooltipPosition="bottom"
           [disabled]="contadores().total === 0" />
 
+        <p-menu #exportMenu [model]="exportMenuItems" [popup]="true" appendTo="body"></p-menu>
         <p-button
-          label="CSV"
-          icon="pi pi-file"
-          (onClick)="exportarCSV()"
-          [outlined]="true"
-          pTooltip="Exportar CSV" />
-        <p-button
-          label="Excel"
-          icon="pi pi-file-excel"
-          (onClick)="exportarExcel()"
-          [outlined]="true"
-          pTooltip="Exportar Excel" />
+          icon="pi pi-download"
+          severity="secondary"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="exportMenu.toggle($event)"
+          pTooltip="Descargar"
+          tooltipPosition="bottom" />
       </div>
-    </div>
-
-  </p-card>
+    </ng-template>
+  </p-toolbar>
 
   <!-- Tabla Principal -->
   <p-card styleClass="table-card">
@@ -90,13 +99,19 @@
       [rowHover]="true"
       [resizableColumns]="true"
       columnResizeMode="expand"
-      styleClass="p-datatable-sm p-datatable-gridlines"
-      [tableStyle]="{ 'min-width': '60rem' }">
+      styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '60rem' }"
+      [selection]="registrosSeleccionados()"
+      (selectionChange)="onSelectionChange($event)"
+      dataKey="id">
 
       <!-- Headers con filtros -->
       <ng-template pTemplate="header" let-columns>
         <!-- Fila de títulos -->
         <tr>
+          <th style="width: 50px">
+            <p-tableHeaderCheckbox />
+          </th>
           @for (col of columns; track col.field) {
             <th
               [pSortableColumn]="col.sortable ? col.field : undefined"
@@ -110,85 +125,95 @@
               </div>
             </th>
           }
-          <th style="width: 80px">Acciones</th>
+          <th style="width: 80px">
+            <div class="flex align-items-center justify-content-between">
+              <span>Acciones</span>
+              <p-button
+                icon="pi pi-ellipsis-v"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                (onClick)="showColumnasDialog.set(true)"
+                pTooltip="Columnas"
+                tooltipPosition="left" />
+            </div>
+          </th>
         </tr>
         <!-- Fila de filtros -->
         <tr>
+          <th></th>
           @for (col of columns; track col.field) {
             <th>
               @switch (col.field) {
                 @case ('tipoEntidad') {
-                  <p-columnFilter field="tipoEntidad" matchMode="equals" [showMenu]="false">
+                  <p-columnFilter field="tipoEntidad" matchMode="in" [showMenu]="false">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                      <p-select
+                      <p-multiSelect
                         [ngModel]="value"
                         (ngModelChange)="filter($event)"
                         [options]="tipoEntidadOptions"
                         placeholder="Todos"
-                        [showClear]="true"
                         appendTo="body"
-                        [style]="{ width: '100%', 'min-width': '120px' }">
+                        [showHeader]="false">
                         <ng-template let-option pTemplate="item">
                           <div class="flex align-items-center gap-2">
                             <i [class]="option.icon"></i>
                             <span>{{ option.label }}</span>
                           </div>
                         </ng-template>
-                      </p-select>
+                      </p-multiSelect>
                     </ng-template>
                   </p-columnFilter>
                 }
                 @case ('estado') {
-                  <p-columnFilter field="estado" matchMode="equals" [showMenu]="false">
+                  <p-columnFilter field="estado" matchMode="in" [showMenu]="false">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                      <p-select
+                      <p-multiSelect
                         [ngModel]="value"
                         (ngModelChange)="filter($event)"
                         [options]="estadoOptions"
                         placeholder="Todos"
-                        [showClear]="true"
                         appendTo="body"
-                        [style]="{ width: '100%', 'min-width': '130px' }">
+                        [showHeader]="false">
                         <ng-template let-option pTemplate="item">
                           <p-tag [value]="option.label" [severity]="getEstadoTag(option.value)" />
                         </ng-template>
-                      </p-select>
+                      </p-multiSelect>
                     </ng-template>
                   </p-columnFilter>
                 }
                 @case ('severidad') {
-                  <p-columnFilter field="severidad" matchMode="equals" [showMenu]="false">
+                  <p-columnFilter field="severidad" matchMode="in" [showMenu]="false">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                      <p-select
+                      <p-multiSelect
                         [ngModel]="value"
                         (ngModelChange)="filter($event)"
                         [options]="severidadOptions"
                         placeholder="Todas"
-                        [showClear]="true"
                         appendTo="body"
-                        [style]="{ width: '100%', 'min-width': '120px' }">
+                        [showHeader]="false">
                         <ng-template let-option pTemplate="item">
                           <p-tag [value]="option.label" [severity]="getSeveridadTag(option.value)" />
                         </ng-template>
-                      </p-select>
+                      </p-multiSelect>
                     </ng-template>
                   </p-columnFilter>
                 }
                 @case ('nivelRiesgo') {
-                  <p-columnFilter field="nivelRiesgo" matchMode="equals" [showMenu]="false">
+                  <p-columnFilter field="nivelRiesgo" matchMode="in" [showMenu]="false">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                      <p-select
+                      <p-multiSelect
                         [ngModel]="value"
                         (ngModelChange)="filter($event)"
                         [options]="nivelRiesgoOptions"
                         placeholder="Todos"
-                        [showClear]="true"
                         appendTo="body"
-                        [style]="{ width: '100%', 'min-width': '120px' }">
+                        [showHeader]="false">
                         <ng-template let-option pTemplate="item">
                           <p-tag [value]="option.label" [severity]="option.severity" />
                         </ng-template>
-                      </p-select>
+                      </p-multiSelect>
                     </ng-template>
                   </p-columnFilter>
                 }
@@ -200,8 +225,7 @@
                         (ngModelChange)="filter($event)"
                         dateFormat="dd/mm/yy"
                         placeholder="Filtrar fecha"
-                        [showIcon]="true"
-                        [style]="{ width: '100%', 'min-width': '140px' }" />
+                        [showIcon]="true" />
                     </ng-template>
                   </p-columnFilter>
                 }
@@ -213,8 +237,7 @@
                         (ngModelChange)="filter($event)"
                         [min]="1"
                         [max]="5"
-                        placeholder="1-5"
-                        [style]="{ width: '80px' }" />
+                        placeholder="1-5" />
                     </ng-template>
                   </p-columnFilter>
                 }
@@ -226,8 +249,7 @@
                         (ngModelChange)="filter($event)"
                         [min]="1"
                         [max]="5"
-                        placeholder="1-5"
-                        [style]="{ width: '80px' }" />
+                        placeholder="1-5" />
                     </ng-template>
                   </p-columnFilter>
                 }
@@ -240,8 +262,7 @@
                         [ngModel]="value"
                         (ngModelChange)="filter($event)"
                         placeholder="Buscar..."
-                        class="p-column-filter"
-                        [style]="{ width: '100%', 'min-width': '150px' }" />
+                        class="p-column-filter" />
                     </ng-template>
                   </p-columnFilter>
                 }
@@ -254,8 +275,7 @@
                         [ngModel]="value"
                         (ngModelChange)="filter($event)"
                         placeholder="Buscar..."
-                        class="p-column-filter"
-                        [style]="{ width: '100%', 'min-width': '150px' }" />
+                        class="p-column-filter" />
                     </ng-template>
                   </p-columnFilter>
                 }
@@ -268,8 +288,7 @@
                         [ngModel]="value"
                         (ngModelChange)="filter($event)"
                         placeholder="Buscar..."
-                        class="p-column-filter"
-                        [style]="{ width: '100%', 'min-width': '120px' }" />
+                        class="p-column-filter" />
                     </ng-template>
                   </p-columnFilter>
                 }
@@ -282,8 +301,7 @@
                         [ngModel]="value"
                         (ngModelChange)="filter($event)"
                         placeholder="Buscar..."
-                        class="p-column-filter"
-                        [style]="{ width: '100%' }" />
+                        class="p-column-filter" />
                     </ng-template>
                   </p-columnFilter>
                 }
@@ -304,78 +322,210 @@
 
       <!-- Body -->
       <ng-template pTemplate="body" let-registro let-columns="columns">
-        <tr (click)="verDetalle(registro)" class="row-clickable">
+        <tr
+          (click)="!estaEditando(registro.id) && verDetalle(registro)"
+          [class.row-clickable]="!estaEditando(registro.id)"
+          [class.row-editing]="estaEditando(registro.id)">
+          <td (click)="$event.stopPropagation()">
+            <p-tableCheckbox [value]="registro" />
+          </td>
           @for (col of columns; track col.field) {
-            <td>
-              @switch (col.field) {
-                @case ('tipoEntidad') {
-                  <p-tag
-                    [value]="getTipoEntidadLabel(registro.tipoEntidad)"
-                    [icon]="getTipoEntidadIcon(registro.tipoEntidad)"
-                    [severity]="registro.tipoEntidad === 'riesgo' ? 'warn' : 'danger'" />
-                }
-                @case ('contenedorNombre') {
-                  <div class="contenedor-cell">
+            <td (click)="estaEditando(registro.id) && $event.stopPropagation()">
+              <!-- Modo edición -->
+              @if (estaEditando(registro.id)) {
+                @switch (col.field) {
+                  @case ('tipoEntidad') {
                     <p-tag
-                      [value]="registro.tipoContenedor === 'activo' ? 'Activo' : 'Proceso'"
-                      severity="info"
-                      styleClass="contenedor-badge" />
-                    <span class="contenedor-nombre">{{ registro.contenedorNombre }}</span>
-                  </div>
+                      [value]="getTipoEntidadLabel(registro.tipoEntidad)"
+                      [icon]="getTipoEntidadIcon(registro.tipoEntidad)"
+                      [severity]="registro.tipoEntidad === 'riesgo' ? 'warn' : 'danger'" />
+                  }
+                  @case ('nivelRiesgo') {
+                    @if (registro.nivelRiesgo) {
+                      <p-tag
+                        [value]="getNivelRiesgoLabel(registro.nivelRiesgo) + ' (' + registro.nivelRiesgo + ')'"
+                        [severity]="getNivelRiesgoTag(registro.nivelRiesgo)" />
+                    } @else {
+                      <span class="text-secondary">-</span>
+                    }
+                  }
+                  @case ('contenedorNombre') {
+                    <input
+                      pInputText
+                      [ngModel]="getValorEdicion('contenedorNombre')"
+                      (ngModelChange)="setValorEdicion('contenedorNombre', $event)"
+                      class="w-full p-inputtext-sm" />
+                  }
+                  @case ('estado') {
+                    <p-select
+                      [options]="estadoOptions"
+                      [ngModel]="getValorEdicion('estado')"
+                      (ngModelChange)="setValorEdicion('estado', $event)"
+                      optionLabel="label"
+                      optionValue="value"
+                      [style]="{ width: '100%' }"
+                      appendTo="body" />
+                  }
+                  @case ('severidad') {
+                    <p-select
+                      [options]="severidadOptions"
+                      [ngModel]="getValorEdicion('severidad')"
+                      (ngModelChange)="setValorEdicion('severidad', $event)"
+                      optionLabel="label"
+                      optionValue="value"
+                      [style]="{ width: '100%' }"
+                      appendTo="body" />
+                  }
+                  @case ('fecha') {
+                    <p-datePicker
+                      [ngModel]="getValorEdicion('fecha')"
+                      (ngModelChange)="setValorEdicion('fecha', $event)"
+                      dateFormat="dd/mm/yy"
+                      [style]="{ width: '100%' }"
+                      appendTo="body" />
+                  }
+                  @case ('probabilidad') {
+                    <p-inputNumber
+                      [ngModel]="getValorEdicion('probabilidad')"
+                      (ngModelChange)="setValorEdicion('probabilidad', $event)"
+                      [min]="1"
+                      [max]="5"
+                      [showButtons]="true"
+                      [style]="{ width: '80px' }" />
+                  }
+                  @case ('impacto') {
+                    <p-inputNumber
+                      [ngModel]="getValorEdicion('impacto')"
+                      (ngModelChange)="setValorEdicion('impacto', $event)"
+                      [min]="1"
+                      [max]="5"
+                      [showButtons]="true"
+                      [style]="{ width: '80px' }" />
+                  }
+                  @case ('responsable') {
+                    <input
+                      pInputText
+                      [ngModel]="getValorEdicion('responsable')"
+                      (ngModelChange)="setValorEdicion('responsable', $event)"
+                      class="w-full p-inputtext-sm" />
+                  }
+                  @case ('descripcion') {
+                    <input
+                      pInputText
+                      [ngModel]="getValorEdicion('descripcion')"
+                      (ngModelChange)="setValorEdicion('descripcion', $event)"
+                      class="w-full p-inputtext-sm" />
+                  }
+                  @default {
+                    <input
+                      pInputText
+                      [ngModel]="getValorEdicion(col.field) ?? registro[col.field]"
+                      (ngModelChange)="setValorEdicion(col.field, $event)"
+                      class="w-full p-inputtext-sm" />
+                  }
                 }
-                @case ('estado') {
-                  <p-tag
-                    [value]="formatearEstado(registro.estado)"
-                    [severity]="getEstadoTag(registro.estado)" />
-                }
-                @case ('fecha') {
-                  {{ formatearFecha(registro.fecha) }}
-                }
-                @case ('nivelRiesgo') {
-                  @if (registro.nivelRiesgo) {
+              } @else {
+                <!-- Modo visualización -->
+                @switch (col.field) {
+                  @case ('tipoEntidad') {
                     <p-tag
-                      [value]="getNivelRiesgoLabel(registro.nivelRiesgo) + ' (' + registro.nivelRiesgo + ')'"
-                      [severity]="getNivelRiesgoTag(registro.nivelRiesgo)" />
-                  } @else {
-                    <span class="text-secondary">-</span>
+                      [value]="getTipoEntidadLabel(registro.tipoEntidad)"
+                      [icon]="getTipoEntidadIcon(registro.tipoEntidad)"
+                      [severity]="registro.tipoEntidad === 'riesgo' ? 'warn' : 'danger'" />
                   }
-                }
-                @case ('severidad') {
-                  @if (registro.severidad) {
+                  @case ('contenedorNombre') {
+                    <div class="contenedor-cell">
+                      <p-tag
+                        [value]="registro.tipoContenedor === 'activo' ? 'Activo' : 'Proceso'"
+                        severity="info"
+                        styleClass="contenedor-badge" />
+                      <span class="contenedor-nombre">{{ registro.contenedorNombre }}</span>
+                    </div>
+                  }
+                  @case ('estado') {
                     <p-tag
-                      [value]="formatearEstado(registro.severidad)"
-                      [severity]="getSeveridadTag(registro.severidad)" />
-                  } @else {
-                    <span class="text-secondary">-</span>
+                      [value]="formatearEstado(registro.estado)"
+                      [severity]="getEstadoTag(registro.estado)" />
                   }
-                }
-                @case ('probabilidad') {
-                  @if (registro.probabilidad) {
-                    <span class="nivel-badge">{{ registro.probabilidad }}/5</span>
-                  } @else {
-                    <span class="text-secondary">-</span>
+                  @case ('fecha') {
+                    {{ formatearFecha(registro.fecha) }}
                   }
-                }
-                @case ('impacto') {
-                  @if (registro.impacto) {
-                    <span class="nivel-badge">{{ registro.impacto }}/5</span>
-                  } @else {
-                    <span class="text-secondary">-</span>
+                  @case ('nivelRiesgo') {
+                    @if (registro.nivelRiesgo) {
+                      <p-tag
+                        [value]="getNivelRiesgoLabel(registro.nivelRiesgo) + ' (' + registro.nivelRiesgo + ')'"
+                        [severity]="getNivelRiesgoTag(registro.nivelRiesgo)" />
+                    } @else {
+                      <span class="text-secondary">-</span>
+                    }
                   }
-                }
-                @default {
-                  {{ registro[col.field] ?? '-' }}
+                  @case ('severidad') {
+                    @if (registro.severidad) {
+                      <p-tag
+                        [value]="formatearEstado(registro.severidad)"
+                        [severity]="getSeveridadTag(registro.severidad)" />
+                    } @else {
+                      <span class="text-secondary">-</span>
+                    }
+                  }
+                  @case ('probabilidad') {
+                    @if (registro.probabilidad) {
+                      <span class="nivel-badge">{{ registro.probabilidad }}/5</span>
+                    } @else {
+                      <span class="text-secondary">-</span>
+                    }
+                  }
+                  @case ('impacto') {
+                    @if (registro.impacto) {
+                      <span class="nivel-badge">{{ registro.impacto }}/5</span>
+                    } @else {
+                      <span class="text-secondary">-</span>
+                    }
+                  }
+                  @default {
+                    {{ registro[col.field] ?? '-' }}
+                  }
                 }
               }
             </td>
           }
-          <td class="text-center">
-            <p-menu #menuRegistro [model]="getMenuItemsRegistro(registro)" [popup]="true" appendTo="body"></p-menu>
-            <p-button
-              icon="pi pi-ellipsis-v"
-              [rounded]="true"
-              [text]="true"
-              (onClick)="menuRegistro.toggle($event); $event.stopPropagation()" />
+          <td class="text-center actions-cell">
+            @if (estaEditando(registro.id)) {
+              <!-- Botones de edición -->
+              <div class="flex gap-1 justify-content-center">
+                <p-button
+                  icon="pi pi-check"
+                  severity="success"
+                  [outlined]="true"
+                  size="small"
+                  pTooltip="Guardar"
+                  (onClick)="guardarEdicion(registro, $event)" />
+                <p-button
+                  icon="pi pi-times"
+                  severity="secondary"
+                  [outlined]="true"
+                  size="small"
+                  pTooltip="Cancelar"
+                  (onClick)="cancelarEdicion($event)" />
+              </div>
+            } @else {
+              <!-- Botones normales -->
+              <div class="flex gap-1 justify-content-center">
+                <p-button
+                  icon="pi pi-pencil"
+                  [outlined]="true"
+                  size="small"
+                  pTooltip="Editar"
+                  styleClass="btn-edit"
+                  (onClick)="iniciarEdicion(registro, $event)" />
+                <p-menu #menuRegistro [model]="getMenuItemsRegistro(registro)" [popup]="true" appendTo="body"></p-menu>
+                <p-button
+                  icon="pi pi-ellipsis-v"
+                  [text]="true"
+                  size="small"
+                  (onClick)="menuRegistro.toggle($event); $event.stopPropagation()" />
+              </div>
+            }
           </td>
         </tr>
       </ng-template>
@@ -383,7 +533,7 @@
       <!-- Empty -->
       <ng-template pTemplate="emptymessage" let-columns>
         <tr>
-          <td [attr.colspan]="columns.length + 1" class="text-center py-6">
+          <td [attr.colspan]="columns.length + 2" class="text-center py-6">
             <div class="empty-state">
               <i class="pi pi-inbox text-4xl text-secondary mb-3"></i>
               <p class="text-secondary">No se encontraron registros</p>
@@ -396,77 +546,107 @@
         </tr>
       </ng-template>
 
-      <!-- Footer con resumen -->
-      <ng-template pTemplate="summary">
-        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
-          <div class="flex align-items-center gap-2 text-sm">
-            <span class="text-500">Total:</span>
-            <span class="font-semibold">{{ contadores().total }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-shield text-orange-500"></i>
-            <span class="text-500">Riesgos:</span>
-            <span class="font-semibold">{{ contadores().riesgos }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-exclamation-triangle text-red-500"></i>
-            <span class="text-500">Incidentes:</span>
-            <span class="font-semibold">{{ contadores().incidentes }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-circle-fill text-red-500" style="font-size: 0.5rem"></i>
-            <span class="text-500">Criticos:</span>
-            <span class="font-semibold">{{ contadores().criticos }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-circle-fill text-green-500" style="font-size: 0.5rem"></i>
-            <span class="text-500">Controlados:</span>
-            <span class="font-semibold">{{ contadores().controlados }}</span>
-          </div>
-        </div>
+      <!-- Pie de tabla con totales por columna -->
+      <ng-template pTemplate="footer" let-columns>
+        <tr class="font-semibold surface-100">
+          <td>
+            @if (registrosSeleccionados().length > 0) {
+              <span class="text-primary text-sm">{{ registrosSeleccionados().length }}</span>
+            }
+          </td>
+          <td>
+            <span class="text-900">Totales</span>
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <p-tag value="Riesgos" severity="warn" styleClass="text-xs" />
+              <span>{{ contadores().riesgos }}</span>
+              <p-tag value="Incidentes" severity="danger" styleClass="text-xs" />
+              <span>{{ contadores().incidentes }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="text-600">{{ contadores().total }} registros</span>
+          </td>
+          <td>
+            <div class="flex gap-1">
+              <p-tag [value]="contadores().criticos.toString()" severity="danger" styleClass="text-xs" pTooltip="Críticos" />
+              <p-tag [value]="contadores().controlados.toString()" severity="success" styleClass="text-xs" pTooltip="Controlados" />
+            </div>
+          </td>
+          @for (col of columns.slice(4); track col.field) {
+            <td></td>
+          }
+          <td></td>
+        </tr>
       </ng-template>
     </p-table>
   </p-card>
 </div>
 
-<!-- Dialog: Configuración de Columnas -->
-<p-dialog
-  header="Configurar Columnas"
+<!-- Drawer: Configuración de Columnas -->
+<p-drawer
   [(visible)]="showColumnasDialog"
-  [modal]="true"
-  [style]="{ width: '450px' }"
-  [draggable]="false"
-  [resizable]="false">
-  <div class="columnas-config">
-    <p class="text-secondary mb-3">
+  position="right"
+  [style]="{ width: '350px' }"
+  header="Configurar Columnas">
+  <div class="columnas-drawer-content">
+    <!-- Buscador -->
+    <div class="columnas-search mb-3">
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search" />
+        <input
+          type="text"
+          pInputText
+          placeholder="Buscar columna..."
+          [(ngModel)]="busquedaColumna"
+          class="w-full" />
+      </p-iconfield>
+    </div>
+
+    <p class="text-secondary text-sm mb-3">
       Selecciona las columnas que deseas mostrar en la tabla.
     </p>
-    @for (col of columnasConfig(); track col.field) {
-      <div class="columna-item">
-        <p-checkbox
-          [ngModel]="col.visible"
-          (ngModelChange)="toggleColumnaVisibilidad(col.field)"
-          [binary]="true"
-          [inputId]="col.field" />
-        <label [for]="col.field" class="ml-2">
-          {{ col.header }}
-          <span class="text-secondary text-sm">({{ col.tipo }})</span>
-        </label>
-      </div>
-    }
+
+    <!-- Lista de columnas -->
+    <div class="columnas-list">
+      @for (col of columnasFiltradas(); track col.field) {
+        <div class="columna-item">
+          <p-checkbox
+            [ngModel]="col.visible"
+            (ngModelChange)="toggleColumnaVisibilidad(col.field)"
+            [binary]="true"
+            [inputId]="col.field" />
+          <label [for]="col.field" class="ml-2 flex-1">
+            <span>{{ col.header }}</span>
+            <span class="text-secondary text-xs ml-1">({{ col.tipo }})</span>
+          </label>
+        </div>
+      }
+      @if (columnasFiltradas().length === 0) {
+        <div class="text-center text-secondary py-4">
+          <i class="pi pi-search text-2xl mb-2"></i>
+          <p class="m-0">No se encontraron columnas</p>
+        </div>
+      }
+    </div>
   </div>
+
   <ng-template pTemplate="footer">
-    <p-button
-      label="Restaurar por defecto"
-      icon="pi pi-refresh"
-      [text]="true"
-      (onClick)="restaurarColumnas()" />
-    <p-button
-      label="Cerrar"
-      icon="pi pi-check"
-      (onClick)="showColumnasDialog.set(false)" />
+    <div class="flex justify-content-between w-full">
+      <p-button
+        label="Restaurar"
+        icon="pi pi-refresh"
+        [text]="true"
+        severity="secondary"
+        (onClick)="restaurarColumnas()" />
+      <p-button
+        label="Cerrar"
+        icon="pi pi-check"
+        (onClick)="showColumnasDialog.set(false)" />
+    </div>
   </ng-template>
-</p-dialog>
+</p-drawer>
 
 <!-- Dialog: Filtro de Columna -->
 <p-dialog
@@ -764,3 +944,240 @@
     </ng-template>
   }
 </p-drawer>
+
+<!-- Drawer: Acciones Masivas -->
+<p-drawer
+  [(visible)]="showAccionesMasivasDrawer"
+  position="right"
+  [style]="{ width: '420px' }"
+  header="Acciones Masivas">
+  <div class="acciones-masivas-content">
+    <!-- Header con contador -->
+    <div class="acciones-masivas-header mb-4">
+      <div class="flex align-items-center gap-2 mb-2">
+        <p-tag
+          [value]="registrosSeleccionados().length + ' seleccionados'"
+          severity="success"
+          icon="pi pi-check-circle" />
+      </div>
+      <p class="text-secondary text-sm m-0">
+        Selecciona los campos que deseas modificar y establece los nuevos valores.
+      </p>
+    </div>
+
+    <!-- Lista de columnas editables -->
+    <div class="acciones-masivas-fields">
+      @for (col of accionesMasivasColumnas(); track col.field) {
+        <div class="accion-masiva-item" [class.active]="isColumnaAccionActiva(col.field)">
+          <!-- Header de la columna con toggle -->
+          <div
+            class="accion-masiva-header"
+            (click)="toggleColumnaAccionMasiva(col.field)">
+            <div class="flex align-items-center gap-2">
+              <p-checkbox
+                [ngModel]="isColumnaAccionActiva(col.field)"
+                [binary]="true"
+                (click)="$event.stopPropagation()" />
+              <span class="font-medium">{{ col.header }}</span>
+              <span class="text-secondary text-xs">({{ col.tipo }})</span>
+            </div>
+            <i class="pi" [class.pi-chevron-down]="isColumnaAccionActiva(col.field)" [class.pi-chevron-right]="!isColumnaAccionActiva(col.field)"></i>
+          </div>
+
+          <!-- Control del campo (se muestra solo si está activo) -->
+          @if (isColumnaAccionActiva(col.field)) {
+            <div class="accion-masiva-control">
+              @switch (col.field) {
+                @case ('estado') {
+                  <p-select
+                    [options]="estadoOptions"
+                    [ngModel]="getValorAccionMasiva('estado')"
+                    (ngModelChange)="actualizarValorAccionMasiva('estado', $event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Seleccionar estado"
+                    [style]="{ width: '100%' }"
+                    appendTo="body">
+                    <ng-template let-option pTemplate="item">
+                      <p-tag [value]="option.label" [severity]="getEstadoTag(option.value)" />
+                    </ng-template>
+                    <ng-template let-option pTemplate="selectedItem">
+                      <p-tag [value]="option.label" [severity]="getEstadoTag(option.value)" />
+                    </ng-template>
+                  </p-select>
+                }
+                @case ('severidad') {
+                  <p-select
+                    [options]="severidadOptions"
+                    [ngModel]="getValorAccionMasiva('severidad')"
+                    (ngModelChange)="actualizarValorAccionMasiva('severidad', $event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Seleccionar severidad"
+                    [style]="{ width: '100%' }"
+                    appendTo="body">
+                    <ng-template let-option pTemplate="item">
+                      <p-tag [value]="option.label" [severity]="getSeveridadTag(option.value)" />
+                    </ng-template>
+                    <ng-template let-option pTemplate="selectedItem">
+                      <p-tag [value]="option.label" [severity]="getSeveridadTag(option.value)" />
+                    </ng-template>
+                  </p-select>
+                }
+                @case ('fecha') {
+                  <p-datePicker
+                    [ngModel]="getValorAccionMasiva('fecha')"
+                    (ngModelChange)="actualizarValorAccionMasiva('fecha', $event)"
+                    [showIcon]="true"
+                    dateFormat="dd/mm/yy"
+                    placeholder="Seleccionar fecha"
+                    [style]="{ width: '100%' }"
+                    appendTo="body" />
+                }
+                @case ('probabilidad') {
+                  <p-inputNumber
+                    [ngModel]="getValorAccionMasiva('probabilidad')"
+                    (ngModelChange)="actualizarValorAccionMasiva('probabilidad', $event)"
+                    [min]="1"
+                    [max]="5"
+                    [showButtons]="true"
+                    placeholder="1-5"
+                    [style]="{ width: '100%' }" />
+                }
+                @case ('impacto') {
+                  <p-inputNumber
+                    [ngModel]="getValorAccionMasiva('impacto')"
+                    (ngModelChange)="actualizarValorAccionMasiva('impacto', $event)"
+                    [min]="1"
+                    [max]="5"
+                    [showButtons]="true"
+                    placeholder="1-5"
+                    [style]="{ width: '100%' }" />
+                }
+                @default {
+                  <!-- Input de texto para campos genéricos -->
+                  <input
+                    pInputText
+                    [ngModel]="getValorAccionMasiva(col.field)"
+                    (ngModelChange)="actualizarValorAccionMasiva(col.field, $event)"
+                    [placeholder]="'Nuevo valor para ' + col.header"
+                    class="w-full" />
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Acciones adicionales -->
+    <p-divider />
+    <div class="acciones-adicionales">
+      <p-button
+        label="Eliminar seleccionados"
+        icon="pi pi-trash"
+        severity="danger"
+        [outlined]="true"
+        [style]="{ width: '100%' }"
+        (onClick)="eliminarSeleccionados()" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-between align-items-center w-full">
+      <span class="text-secondary text-sm">
+        @if (getCantidadCambiosPendientes() > 0) {
+          {{ getCantidadCambiosPendientes() }} campo(s) a modificar
+        } @else {
+          Selecciona campos para modificar
+        }
+      </span>
+      <div class="flex gap-2">
+        <p-button
+          label="Cancelar"
+          [text]="true"
+          severity="secondary"
+          (onClick)="showAccionesMasivasDrawer.set(false)" />
+        <p-button
+          label="Aplicar cambios"
+          icon="pi pi-check"
+          (onClick)="aplicarAccionesMasivas()"
+          [disabled]="getCantidadCambiosPendientes() === 0" />
+      </div>
+    </div>
+  </ng-template>
+</p-drawer>
+
+<!-- Dialog: Asignar Responsable Masivo -->
+<p-dialog
+  header="Asignar Responsable"
+  [(visible)]="showAsignarResponsableDialog"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [draggable]="false">
+  <div class="flex flex-column gap-3">
+    <p class="text-secondary m-0">
+      Se asignará el responsable a <strong>{{ registrosSeleccionados().length }}</strong> registro(s) seleccionado(s).
+    </p>
+    <div class="flex flex-column gap-2">
+      <label for="nuevoResponsable" class="font-medium">Nuevo Responsable</label>
+      <input
+        pInputText
+        id="nuevoResponsable"
+        [ngModel]="nuevoResponsable()"
+        (ngModelChange)="nuevoResponsable.set($event)"
+        placeholder="Nombre del responsable" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      [text]="true"
+      severity="secondary"
+      (onClick)="showAsignarResponsableDialog.set(false)" />
+    <p-button
+      label="Asignar"
+      icon="pi pi-check"
+      (onClick)="confirmarAsignarResponsable()"
+      [disabled]="!nuevoResponsable()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: Cambiar Estado Masivo -->
+<p-dialog
+  header="Cambiar Estado"
+  [(visible)]="showCambiarEstadoDialog"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [draggable]="false">
+  <div class="flex flex-column gap-3">
+    <p class="text-secondary m-0">
+      Se cambiará el estado de <strong>{{ registrosSeleccionados().length }}</strong> registro(s) seleccionado(s).
+    </p>
+    <div class="flex flex-column gap-2">
+      <label for="nuevoEstado" class="font-medium">Nuevo Estado</label>
+      <p-select
+        id="nuevoEstado"
+        [options]="estadoOptions"
+        [ngModel]="nuevoEstadoMasivo()"
+        (ngModelChange)="nuevoEstadoMasivo.set($event)"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar estado"
+        [style]="{ width: '100%' }"
+        appendTo="body" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      [text]="true"
+      severity="secondary"
+      (onClick)="showCambiarEstadoDialog.set(false)" />
+    <p-button
+      label="Cambiar"
+      icon="pi pi-check"
+      (onClick)="confirmarCambiarEstado()"
+      [disabled]="!nuevoEstadoMasivo()" />
+  </ng-template>
+</p-dialog>

@@ -4,16 +4,47 @@
       <h1 class="text-3xl font-bold text-900 m-0">Gestion de Activos</h1>
       <p class="text-500 mt-1">Administra los activos de la organizacion</p>
     </div>
-    <p-button label="Nuevo Activo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
   </div>
 
+  <p-toolbar styleClass="mb-4">
+    <ng-template pTemplate="start">
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input type="text" pInputText placeholder="Buscar activos..." #dtFilter
+               (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 250px" />
+      </span>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <div class="flex gap-2">
+        @if (activosSeleccionados().length > 0) {
+          <p-button
+            label="Acciones masivas"
+            icon="pi pi-check-square"
+            [badge]="activosSeleccionados().length.toString()"
+            badgeSeverity="contrast"
+            severity="success"
+            [outlined]="true"
+            styleClass="btn-acciones-masivas"
+            (onClick)="abrirAccionesMasivasDrawer()" />
+        }
+        <p-button label="Nuevo Activo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
+      </div>
+    </ng-template>
+  </p-toolbar>
+
   <p-card>
-    <p-table [value]="activos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+    <p-table #dt [value]="activos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} activos"
              [globalFilterFields]="['nombre', 'tipo', 'departamento', 'responsable']"
-             styleClass="p-datatable-striped">
+             styleClass="p-datatable-striped"
+             [(selection)]="activosSeleccionados"
+             (selectionChange)="onSelectionChange($event)"
+             dataKey="id">
       <ng-template pTemplate="header">
         <tr>
+          <th style="width: 3rem">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
           <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre"></p-sortIcon></th>
           <th pSortableColumn="tipo">Tipo <p-sortIcon field="tipo"></p-sortIcon></th>
           <th pSortableColumn="criticidad">Criticidad <p-sortIcon field="criticidad"></p-sortIcon></th>
@@ -22,93 +53,145 @@
           <th>Riesgos</th>
           <th>Incidentes</th>
           <th>Defectos</th>
-          <th>Acciones</th>
+          <th style="width: 100px">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-activo>
-        <tr>
+        <tr [class.row-editing]="estaEditando(activo.id)">
           <td>
-            <div class="flex align-items-center gap-2">
-              <span class="material-icons text-500">{{ getTipoIcon(activo.tipo) }}</span>
-              <span class="font-medium">{{ activo.nombre }}</span>
-            </div>
+            <p-tableCheckbox [value]="activo"></p-tableCheckbox>
           </td>
+          <!-- Nombre -->
           <td>
-            <span class="capitalize">{{ activo.tipo }}</span>
+            @if (estaEditando(activo.id)) {
+              <input pInputText [ngModel]="getValorEdicion('nombre')"
+                     (ngModelChange)="setValorEdicion('nombre', $event)"
+                     class="w-full" />
+            } @else {
+              <div class="flex align-items-center gap-2">
+                <span class="material-icons text-500">{{ getTipoIcon(activo.tipo) }}</span>
+                <span class="font-medium">{{ activo.nombre }}</span>
+              </div>
+            }
           </td>
+          <!-- Tipo -->
           <td>
-            <p-tag [value]="activo.criticidad" [severity]="getCriticidadSeverity(activo.criticidad)"></p-tag>
+            @if (estaEditando(activo.id)) {
+              <p-select [options]="tiposActivo" [ngModel]="getValorEdicion('tipo')"
+                        (ngModelChange)="setValorEdicion('tipo', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <span class="capitalize">{{ activo.tipo }}</span>
+            }
           </td>
-          <td>{{ activo.departamento }}</td>
-          <td>{{ activo.responsable }}</td>
+          <!-- Criticidad -->
+          <td>
+            @if (estaEditando(activo.id)) {
+              <p-select [options]="criticidades" [ngModel]="getValorEdicion('criticidad')"
+                        (ngModelChange)="setValorEdicion('criticidad', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <p-tag [value]="activo.criticidad" [severity]="getCriticidadSeverity(activo.criticidad)"></p-tag>
+            }
+          </td>
+          <!-- Departamento -->
+          <td>
+            @if (estaEditando(activo.id)) {
+              <input pInputText [ngModel]="getValorEdicion('departamento')"
+                     (ngModelChange)="setValorEdicion('departamento', $event)"
+                     class="w-full" />
+            } @else {
+              {{ activo.departamento }}
+            }
+          </td>
+          <!-- Responsable -->
+          <td>
+            @if (estaEditando(activo.id)) {
+              <input pInputText [ngModel]="getValorEdicion('responsable')"
+                     (ngModelChange)="setValorEdicion('responsable', $event)"
+                     class="w-full" />
+            } @else {
+              {{ activo.responsable }}
+            }
+          </td>
+          <!-- Riesgos (solo lectura) -->
           <td>
             <span class="font-bold" [class]="activo.riesgos.length > 0 ? 'text-orange-500' : 'text-500'">
               {{ activo.riesgos.length }}
             </span>
           </td>
+          <!-- Incidentes (solo lectura) -->
           <td>
             <span class="font-bold" [class]="activo.incidentes.length > 0 ? 'text-red-500' : 'text-500'">
               {{ activo.incidentes.length }}
             </span>
           </td>
+          <!-- Defectos (solo lectura) -->
           <td>
             <span class="font-bold" [class]="activo.defectos.length > 0 ? 'text-purple-500' : 'text-500'">
               {{ activo.defectos.length }}
             </span>
           </td>
-          <td class="text-center">
-            <p-menu #menuActivo [model]="getMenuItemsActivo(activo)" [popup]="true" appendTo="body"></p-menu>
-            <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
-                      (onClick)="menuActivo.toggle($event)"></p-button>
+          <!-- Acciones -->
+          <td class="actions-cell">
+            @if (estaEditando(activo.id)) {
+              <div class="flex gap-1">
+                <p-button icon="pi pi-check" severity="success" [text]="true" size="small"
+                          pTooltip="Guardar" (onClick)="guardarEdicion(activo, $event)" />
+                <p-button icon="pi pi-times" severity="secondary" [text]="true" size="small"
+                          pTooltip="Cancelar" (onClick)="cancelarEdicion($event)" />
+              </div>
+            } @else {
+              <div class="flex gap-1">
+                <p-button icon="pi pi-pencil" [outlined]="true" severity="secondary" size="small"
+                          styleClass="btn-edit" pTooltip="Editar"
+                          (onClick)="iniciarEdicion(activo, $event)" />
+                <p-menu #menuActivo [model]="getMenuItemsActivo(activo)" [popup]="true" appendTo="body"></p-menu>
+                <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
+                          (onClick)="menuActivo.toggle($event)" />
+              </div>
+            }
           </td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9" class="text-center py-4">
+          <td colspan="10" class="text-center py-4">
             <span class="text-500">No hay activos registrados</span>
           </td>
         </tr>
       </ng-template>
 
-      <!-- Footer con resumen -->
-      <ng-template pTemplate="summary">
-        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
-          <div class="flex align-items-center gap-2 text-sm">
-            <span class="text-500">Total:</span>
-            <span class="font-semibold">{{ activos().length }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-circle-fill text-red-500" style="font-size: 0.5rem"></i>
-            <span class="text-500">Alta:</span>
-            <span class="font-semibold">{{ getCountByCriticidad('alta') }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
-            <span class="text-500">Media:</span>
-            <span class="font-semibold">{{ getCountByCriticidad('media') }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-circle-fill text-green-500" style="font-size: 0.5rem"></i>
-            <span class="text-500">Baja:</span>
-            <span class="font-semibold">{{ getCountByCriticidad('baja') }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-shield text-orange-500"></i>
-            <span class="text-500">Riesgos:</span>
-            <span class="font-semibold">{{ getTotalRiesgos() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-exclamation-triangle text-red-500"></i>
-            <span class="text-500">Incidentes:</span>
-            <span class="font-semibold">{{ getTotalIncidentes() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-bug text-purple-500"></i>
-            <span class="text-500">Defectos:</span>
-            <span class="font-semibold">{{ getTotalDefectos() }}</span>
-          </div>
-        </div>
+      <!-- Pie de tabla con totales por columna -->
+      <ng-template pTemplate="footer">
+        <tr class="font-semibold surface-100">
+          <td></td>
+          <td>
+            <span class="text-900">Totales</span>
+          </td>
+          <td>
+            <span class="text-600">{{ activos().length }} activos</span>
+          </td>
+          <td>
+            <div class="flex gap-1">
+              <p-tag [value]="getCountByCriticidad('alta').toString()" severity="danger" styleClass="text-xs" pTooltip="Alta" />
+              <p-tag [value]="getCountByCriticidad('media').toString()" severity="warn" styleClass="text-xs" pTooltip="Media" />
+              <p-tag [value]="getCountByCriticidad('baja').toString()" severity="success" styleClass="text-xs" pTooltip="Baja" />
+            </div>
+          </td>
+          <td></td>
+          <td></td>
+          <td>
+            <span class="text-orange-500 font-bold">{{ getTotalRiesgos() }}</span>
+          </td>
+          <td>
+            <span class="text-red-500 font-bold">{{ getTotalIncidentes() }}</span>
+          </td>
+          <td>
+            <span class="text-purple-500 font-bold">{{ getTotalDefectos() }}</span>
+          </td>
+          <td></td>
+        </tr>
       </ng-template>
     </p-table>
   </p-card>
@@ -267,3 +350,45 @@
     <p-button label="Cerrar" severity="secondary" (onClick)="showDetailDialog.set(false)"></p-button>
   </ng-template>
 </p-dialog>
+
+<!-- Drawer Acciones Masivas -->
+<p-drawer [(visible)]="showAccionesMasivasDrawer" position="right" [style]="{width: '400px'}" header="Acciones Masivas">
+  <div class="flex flex-column gap-4">
+    <p class="text-600 m-0">Aplicar cambios a {{ activosSeleccionados().length }} activos seleccionados</p>
+
+    <!-- Tipo -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Tipo</label>
+      <p-select [options]="tiposActivo" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Criticidad -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Criticidad</label>
+      <p-select [options]="criticidades" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Responsable -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Responsable</label>
+      <input pInputText placeholder="Sin cambios" class="w-full" />
+    </div>
+
+    <!-- Departamento -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Departamento</label>
+      <input pInputText placeholder="Sin cambios" class="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-content-end">
+      <p-button label="Cancelar" severity="secondary" [text]="true"
+                (onClick)="showAccionesMasivasDrawer.set(false)" />
+      <p-button label="Aplicar cambios" icon="pi pi-check"
+                (onClick)="aplicarAccionesMasivas()" />
+    </div>
+  </ng-template>
+</p-drawer>

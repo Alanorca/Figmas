@@ -11,6 +11,10 @@ import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { TimelineModule } from 'primeng/timeline';
 import { MenuModule } from 'primeng/menu';
+import { ToolbarModule } from 'primeng/toolbar';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DrawerModule } from 'primeng/drawer';
+import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { Incidente, Severidad, EstadoIncidente } from '../../models';
@@ -24,7 +28,8 @@ interface IncidenteConActivo extends Incidente {
   standalone: true,
   imports: [
     CommonModule, FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
-    InputTextModule, SelectModule, TextareaModule, TagModule, TimelineModule, MenuModule
+    InputTextModule, SelectModule, TextareaModule, TagModule, TimelineModule, MenuModule,
+    ToolbarModule, CheckboxModule, DrawerModule, TooltipModule
   ],
   templateUrl: './incidentes.html',
   styleUrl: './incidentes.scss'
@@ -34,6 +39,16 @@ export class IncidentesComponent {
 
   activos = this.mockData.activos;
   showDialog = signal(false);
+
+  // Selección múltiple
+  incidentesSeleccionados = signal<IncidenteConActivo[]>([]);
+
+  // Edición in-place
+  incidenteEditando = signal<string | null>(null);
+  valoresEdicion = signal<Record<string, any>>({});
+
+  // Drawer de acciones masivas
+  showAccionesMasivasDrawer = signal(false);
 
   incidentes = computed<IncidenteConActivo[]>(() => {
     return this.activos().flatMap(activo =>
@@ -143,5 +158,58 @@ export class IncidentesComponent {
 
   getIncidentesCriticos(): number {
     return this.incidentes().filter(i => i.severidad === 'critica').length;
+  }
+
+  // Métodos de edición in-place
+  iniciarEdicion(incidente: IncidenteConActivo, event: Event): void {
+    event.stopPropagation();
+    this.incidenteEditando.set(incidente.id);
+    this.valoresEdicion.set({
+      titulo: incidente.titulo,
+      descripcion: incidente.descripcion,
+      severidad: incidente.severidad,
+      estado: incidente.estado,
+      reportadoPor: incidente.reportadoPor
+    });
+  }
+
+  estaEditando(incidenteId: string): boolean {
+    return this.incidenteEditando() === incidenteId;
+  }
+
+  getValorEdicion(campo: string): any {
+    return this.valoresEdicion()[campo];
+  }
+
+  setValorEdicion(campo: string, valor: any): void {
+    this.valoresEdicion.update(v => ({ ...v, [campo]: valor }));
+  }
+
+  guardarEdicion(incidente: IncidenteConActivo, event: Event): void {
+    event.stopPropagation();
+    const valores = this.valoresEdicion();
+    console.log(`Guardando edición del incidente ${incidente.id}:`, valores);
+    this.incidenteEditando.set(null);
+    this.valoresEdicion.set({});
+  }
+
+  cancelarEdicion(event: Event): void {
+    event.stopPropagation();
+    this.incidenteEditando.set(null);
+    this.valoresEdicion.set({});
+  }
+
+  // Métodos de selección
+  onSelectionChange(incidentes: IncidenteConActivo[]): void {
+    this.incidentesSeleccionados.set(incidentes);
+  }
+
+  abrirAccionesMasivasDrawer(): void {
+    this.showAccionesMasivasDrawer.set(true);
+  }
+
+  aplicarAccionesMasivas(): void {
+    console.log('Aplicando acciones masivas a:', this.incidentesSeleccionados());
+    this.showAccionesMasivasDrawer.set(false);
   }
 }

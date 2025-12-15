@@ -15,6 +15,8 @@ import { ToastModule } from 'primeng/toast';
 import { SelectModule } from 'primeng/select';
 import { ConfirmationService, MessageService, MenuItem } from 'primeng/api';
 import { MenuModule } from 'primeng/menu';
+import { ToolbarModule } from 'primeng/toolbar';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ProcessService } from '../../services/process.service';
 import { Proceso } from '../../models/process-nodes';
 
@@ -35,7 +37,9 @@ import { Proceso } from '../../models/process-nodes';
     ConfirmDialogModule,
     ToastModule,
     SelectModule,
-    MenuModule
+    MenuModule,
+    ToolbarModule,
+    CheckboxModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './procesos-lista.html',
@@ -53,6 +57,16 @@ export class ProcesosListaComponent {
   // Drawer de detalle
   showDrawer = signal(false);
   procesoSeleccionado = signal<Proceso | null>(null);
+
+  // Selección múltiple
+  procesosSeleccionados = signal<Proceso[]>([]);
+
+  // Edición in-place
+  procesoEditando = signal<string | null>(null);
+  valoresEdicion = signal<Record<string, any>>({});
+
+  // Drawer de acciones masivas
+  showAccionesMasivasDrawer = signal(false);
 
   // Opciones de estado para filtro
   estadoOptions: { label: string; value: Proceso['estado'] }[] = [
@@ -246,5 +260,56 @@ export class ProcesosListaComponent {
 
   getTotalNodos(): number {
     return this.procesos().reduce((total, p) => total + (p.nodes?.length || 0), 0);
+  }
+
+  // Métodos de edición in-place
+  iniciarEdicion(proceso: Proceso, event: Event): void {
+    event.stopPropagation();
+    this.procesoEditando.set(proceso.id);
+    this.valoresEdicion.set({
+      nombre: proceso.nombre,
+      descripcion: proceso.descripcion,
+      estado: proceso.estado
+    });
+  }
+
+  estaEditando(procesoId: string): boolean {
+    return this.procesoEditando() === procesoId;
+  }
+
+  getValorEdicion(campo: string): any {
+    return this.valoresEdicion()[campo];
+  }
+
+  setValorEdicion(campo: string, valor: any): void {
+    this.valoresEdicion.update(v => ({ ...v, [campo]: valor }));
+  }
+
+  guardarEdicion(proceso: Proceso, event: Event): void {
+    event.stopPropagation();
+    const valores = this.valoresEdicion();
+    console.log(`Guardando edición del proceso ${proceso.id}:`, valores);
+    this.procesoEditando.set(null);
+    this.valoresEdicion.set({});
+  }
+
+  cancelarEdicion(event: Event): void {
+    event.stopPropagation();
+    this.procesoEditando.set(null);
+    this.valoresEdicion.set({});
+  }
+
+  // Métodos de selección
+  onSelectionChange(procesos: Proceso[]): void {
+    this.procesosSeleccionados.set(procesos);
+  }
+
+  abrirAccionesMasivasDrawer(): void {
+    this.showAccionesMasivasDrawer.set(true);
+  }
+
+  aplicarAccionesMasivas(): void {
+    console.log('Aplicando acciones masivas a:', this.procesosSeleccionados());
+    this.showAccionesMasivasDrawer.set(false);
   }
 }

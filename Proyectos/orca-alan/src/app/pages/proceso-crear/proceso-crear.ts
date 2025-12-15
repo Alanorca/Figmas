@@ -13,11 +13,30 @@ interface TipoProceso {
   descripcion: string;
 }
 
+interface UmbralKPI {
+  deficiente: { min: number; max: number };
+  aceptable: { min: number; max: number };
+  bueno: { min: number; max: number };
+  sobresaliente: { min: number; max: number };
+}
+
 interface KPI {
   id: string;
   nombre: string;
-  valorObjetivo: number;
   unidad: string;
+  valorInicial: number;
+  valorMeta: number;
+  umbrales: UmbralKPI;
+}
+
+interface Objetivo {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  fechaLimite: string;
+  progresoMeta: number;
+  kpis: KPI[];
+  expanded: boolean;
 }
 
 interface CeldaRiesgo {
@@ -51,7 +70,7 @@ export class ProcesoCrearComponent {
     { label: 'Datos Básicos' },
     { label: 'Información' },
     { label: 'Apetito de Riesgo' },
-    { label: 'KPIs' },
+    { label: 'Objetivos' },
     { label: 'Resumen' }
   ];
 
@@ -96,18 +115,42 @@ export class ProcesoCrearComponent {
   probabilidadLabels = ['Muy Baja', 'Baja', 'Media', 'Alta', 'Muy Alta'];
   impactoLabels = ['Insignificante', 'Menor', 'Moderado', 'Mayor', 'Catastrófico'];
 
-  // Datos del formulario - Step 4 - KPIs
-  kpis = signal<KPI[]>([]);
+  // Datos del formulario - Step 4 - Objetivos y KPIs
+  objetivos = signal<Objetivo[]>([]);
+
+  // Para agregar/editar objetivos
+  objetivoEditando = signal<Objetivo | null>(null);
+  mostrarFormObjetivo = signal(false);
+  nuevoObjetivoNombre = signal('');
+  nuevoObjetivoDescripcion = signal('');
+  nuevoObjetivoFechaLimite = signal('');
+  nuevoObjetivoProgresoMeta = signal<number>(100);
+
+  // Para agregar/editar KPIs
+  objetivoParaKPI = signal<string | null>(null);
+  mostrarFormKPI = signal(false);
+  kpiEditando = signal<KPI | null>(null);
   nuevoKpiNombre = signal('');
-  nuevoKpiValor = signal<number | null>(null);
-  nuevoKpiUnidad = signal('');
+  nuevoKpiUnidad = signal('%');
+  nuevoKpiValorInicial = signal<number>(0);
+  nuevoKpiValorMeta = signal<number>(100);
+  // Umbrales
+  umbralDeficienteMin = signal<number>(0);
+  umbralDeficienteMax = signal<number>(25);
+  umbralAceptableMin = signal<number>(26);
+  umbralAceptableMax = signal<number>(50);
+  umbralBuenoMin = signal<number>(51);
+  umbralBuenoMax = signal<number>(75);
+  umbralSobresalienteMin = signal<number>(76);
+  umbralSobresalienteMax = signal<number>(100);
 
   unidadesOptions = [
     { label: '%', value: '%' },
     { label: 'Días', value: 'días' },
     { label: 'Horas', value: 'horas' },
     { label: 'Unidades', value: 'unidades' },
-    { label: 'USD', value: 'USD' }
+    { label: 'USD', value: 'USD' },
+    { label: 'Puntos', value: 'puntos' }
   ];
 
   constructor() {
@@ -184,28 +227,193 @@ export class ProcesoCrearComponent {
     }
   }
 
-  // KPIs
-  agregarKPI(): void {
-    if (!this.nuevoKpiNombre().trim() || this.nuevoKpiValor() === null) {
-      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'Nombre y valor son requeridos' });
+  // ========== OBJETIVOS ==========
+
+  abrirFormObjetivo(objetivo?: Objetivo): void {
+    if (objetivo) {
+      this.objetivoEditando.set(objetivo);
+      this.nuevoObjetivoNombre.set(objetivo.nombre);
+      this.nuevoObjetivoDescripcion.set(objetivo.descripcion);
+      this.nuevoObjetivoFechaLimite.set(objetivo.fechaLimite);
+      this.nuevoObjetivoProgresoMeta.set(objetivo.progresoMeta);
+    } else {
+      this.objetivoEditando.set(null);
+      this.nuevoObjetivoNombre.set('');
+      this.nuevoObjetivoDescripcion.set('');
+      this.nuevoObjetivoFechaLimite.set('');
+      this.nuevoObjetivoProgresoMeta.set(100);
+    }
+    this.mostrarFormObjetivo.set(true);
+  }
+
+  cerrarFormObjetivo(): void {
+    this.mostrarFormObjetivo.set(false);
+    this.objetivoEditando.set(null);
+  }
+
+  guardarObjetivo(): void {
+    if (!this.nuevoObjetivoNombre().trim()) {
+      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre del objetivo es requerido' });
       return;
     }
 
-    const nuevoKpi: KPI = {
-      id: crypto.randomUUID(),
-      nombre: this.nuevoKpiNombre(),
-      valorObjetivo: this.nuevoKpiValor()!,
-      unidad: this.nuevoKpiUnidad() || '%'
-    };
+    if (this.objetivoEditando()) {
+      // Editar existente
+      this.objetivos.update(list =>
+        list.map(o =>
+          o.id === this.objetivoEditando()!.id
+            ? {
+                ...o,
+                nombre: this.nuevoObjetivoNombre(),
+                descripcion: this.nuevoObjetivoDescripcion(),
+                fechaLimite: this.nuevoObjetivoFechaLimite(),
+                progresoMeta: this.nuevoObjetivoProgresoMeta()
+              }
+            : o
+        )
+      );
+      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Objetivo actualizado correctamente' });
+    } else {
+      // Crear nuevo
+      const nuevoObjetivo: Objetivo = {
+        id: crypto.randomUUID(),
+        nombre: this.nuevoObjetivoNombre(),
+        descripcion: this.nuevoObjetivoDescripcion(),
+        fechaLimite: this.nuevoObjetivoFechaLimite(),
+        progresoMeta: this.nuevoObjetivoProgresoMeta(),
+        kpis: [],
+        expanded: true
+      };
+      this.objetivos.update(list => [...list, nuevoObjetivo]);
+      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'Objetivo agregado correctamente' });
+    }
 
-    this.kpis.update(list => [...list, nuevoKpi]);
-    this.nuevoKpiNombre.set('');
-    this.nuevoKpiValor.set(null);
-    this.nuevoKpiUnidad.set('');
+    this.cerrarFormObjetivo();
   }
 
-  eliminarKPI(id: string): void {
-    this.kpis.update(list => list.filter(k => k.id !== id));
+  eliminarObjetivo(id: string): void {
+    this.objetivos.update(list => list.filter(o => o.id !== id));
+    this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'Objetivo eliminado' });
+  }
+
+  toggleObjetivo(id: string): void {
+    this.objetivos.update(list =>
+      list.map(o => (o.id === id ? { ...o, expanded: !o.expanded } : o))
+    );
+  }
+
+  moverObjetivo(index: number, direction: 'up' | 'down'): void {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= this.objetivos().length) return;
+
+    this.objetivos.update(list => {
+      const newList = [...list];
+      [newList[index], newList[newIndex]] = [newList[newIndex], newList[index]];
+      return newList;
+    });
+  }
+
+  // ========== KPIs ==========
+
+  abrirFormKPI(objetivoId: string, kpi?: KPI): void {
+    this.objetivoParaKPI.set(objetivoId);
+
+    if (kpi) {
+      this.kpiEditando.set(kpi);
+      this.nuevoKpiNombre.set(kpi.nombre);
+      this.nuevoKpiUnidad.set(kpi.unidad);
+      this.nuevoKpiValorInicial.set(kpi.valorInicial);
+      this.nuevoKpiValorMeta.set(kpi.valorMeta);
+      this.umbralDeficienteMin.set(kpi.umbrales.deficiente.min);
+      this.umbralDeficienteMax.set(kpi.umbrales.deficiente.max);
+      this.umbralAceptableMin.set(kpi.umbrales.aceptable.min);
+      this.umbralAceptableMax.set(kpi.umbrales.aceptable.max);
+      this.umbralBuenoMin.set(kpi.umbrales.bueno.min);
+      this.umbralBuenoMax.set(kpi.umbrales.bueno.max);
+      this.umbralSobresalienteMin.set(kpi.umbrales.sobresaliente.min);
+      this.umbralSobresalienteMax.set(kpi.umbrales.sobresaliente.max);
+    } else {
+      this.kpiEditando.set(null);
+      this.nuevoKpiNombre.set('');
+      this.nuevoKpiUnidad.set('%');
+      this.nuevoKpiValorInicial.set(0);
+      this.nuevoKpiValorMeta.set(100);
+      this.umbralDeficienteMin.set(0);
+      this.umbralDeficienteMax.set(25);
+      this.umbralAceptableMin.set(26);
+      this.umbralAceptableMax.set(50);
+      this.umbralBuenoMin.set(51);
+      this.umbralBuenoMax.set(75);
+      this.umbralSobresalienteMin.set(76);
+      this.umbralSobresalienteMax.set(100);
+    }
+
+    this.mostrarFormKPI.set(true);
+  }
+
+  cerrarFormKPI(): void {
+    this.mostrarFormKPI.set(false);
+    this.kpiEditando.set(null);
+    this.objetivoParaKPI.set(null);
+  }
+
+  guardarKPI(): void {
+    if (!this.nuevoKpiNombre().trim()) {
+      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre del KPI es requerido' });
+      return;
+    }
+
+    const objetivoId = this.objetivoParaKPI();
+    if (!objetivoId) return;
+
+    const nuevoKpi: KPI = {
+      id: this.kpiEditando()?.id || crypto.randomUUID(),
+      nombre: this.nuevoKpiNombre(),
+      unidad: this.nuevoKpiUnidad(),
+      valorInicial: this.nuevoKpiValorInicial(),
+      valorMeta: this.nuevoKpiValorMeta(),
+      umbrales: {
+        deficiente: { min: this.umbralDeficienteMin(), max: this.umbralDeficienteMax() },
+        aceptable: { min: this.umbralAceptableMin(), max: this.umbralAceptableMax() },
+        bueno: { min: this.umbralBuenoMin(), max: this.umbralBuenoMax() },
+        sobresaliente: { min: this.umbralSobresalienteMin(), max: this.umbralSobresalienteMax() }
+      }
+    };
+
+    if (this.kpiEditando()) {
+      // Editar existente
+      this.objetivos.update(list =>
+        list.map(o =>
+          o.id === objetivoId
+            ? { ...o, kpis: o.kpis.map(k => (k.id === nuevoKpi.id ? nuevoKpi : k)) }
+            : o
+        )
+      );
+      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'KPI actualizado correctamente' });
+    } else {
+      // Agregar nuevo
+      this.objetivos.update(list =>
+        list.map(o =>
+          o.id === objetivoId ? { ...o, kpis: [...o.kpis, nuevoKpi] } : o
+        )
+      );
+      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'KPI agregado correctamente' });
+    }
+
+    this.cerrarFormKPI();
+  }
+
+  eliminarKPI(objetivoId: string, kpiId: string): void {
+    this.objetivos.update(list =>
+      list.map(o =>
+        o.id === objetivoId ? { ...o, kpis: o.kpis.filter(k => k.id !== kpiId) } : o
+      )
+    );
+    this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'KPI eliminado' });
+  }
+
+  getTotalKPIs(): number {
+    return this.objetivos().reduce((total, obj) => total + obj.kpis.length, 0);
   }
 
   // Finalizar

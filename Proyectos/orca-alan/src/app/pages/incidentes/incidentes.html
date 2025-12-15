@@ -4,15 +4,47 @@
       <h1 class="text-3xl font-bold text-900 m-0">Gestion de Incidentes</h1>
       <p class="text-500 mt-1">Reporta y gestiona incidentes de seguridad</p>
     </div>
-    <p-button label="Reportar Incidente" icon="pi pi-plus" severity="danger" (onClick)="openNewDialog()"></p-button>
   </div>
 
+  <p-toolbar styleClass="mb-4">
+    <ng-template pTemplate="start">
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input type="text" pInputText placeholder="Buscar incidentes..." #dtFilter
+               (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 250px" />
+      </span>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <div class="flex gap-2">
+        @if (incidentesSeleccionados().length > 0) {
+          <p-button
+            label="Acciones masivas"
+            icon="pi pi-check-square"
+            [badge]="incidentesSeleccionados().length.toString()"
+            badgeSeverity="contrast"
+            severity="success"
+            [outlined]="true"
+            styleClass="btn-acciones-masivas"
+            (onClick)="abrirAccionesMasivasDrawer()" />
+        }
+        <p-button label="Reportar Incidente" icon="pi pi-plus" severity="danger" (onClick)="openNewDialog()"></p-button>
+      </div>
+    </ng-template>
+  </p-toolbar>
+
   <p-card>
-    <p-table [value]="incidentes()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+    <p-table #dt [value]="incidentes()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} incidentes"
-             styleClass="p-datatable-striped">
+             [globalFilterFields]="['id', 'titulo', 'activoNombre', 'severidad', 'estado', 'reportadoPor']"
+             styleClass="p-datatable-striped"
+             [(selection)]="incidentesSeleccionados"
+             (selectionChange)="onSelectionChange($event)"
+             dataKey="id">
       <ng-template pTemplate="header">
         <tr>
+          <th style="width: 3rem">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
           <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
           <th pSortableColumn="titulo">Titulo <p-sortIcon field="titulo"></p-sortIcon></th>
           <th pSortableColumn="activoNombre">Activo <p-sortIcon field="activoNombre"></p-sortIcon></th>
@@ -20,38 +52,88 @@
           <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
           <th pSortableColumn="reportadoPor">Reportado Por <p-sortIcon field="reportadoPor"></p-sortIcon></th>
           <th pSortableColumn="fechaReporte">Fecha <p-sortIcon field="fechaReporte"></p-sortIcon></th>
-          <th>Acciones</th>
+          <th style="width: 100px">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-incidente>
-        <tr>
-          <td class="font-mono text-sm">{{ incidente.id }}</td>
+        <tr [class.row-editing]="estaEditando(incidente.id)">
           <td>
-            <div>
-              <p class="font-medium m-0">{{ incidente.titulo }}</p>
-              <p class="text-sm text-500 m-0 mt-1">{{ incidente.descripcion | slice:0:50 }}...</p>
-            </div>
+            <p-tableCheckbox [value]="incidente"></p-tableCheckbox>
+          </td>
+          <td class="font-mono text-sm">{{ incidente.id }}</td>
+          <!-- Titulo -->
+          <td>
+            @if (estaEditando(incidente.id)) {
+              <input pInputText [ngModel]="getValorEdicion('titulo')"
+                     (ngModelChange)="setValorEdicion('titulo', $event)"
+                     class="w-full" />
+            } @else {
+              <div>
+                <p class="font-medium m-0">{{ incidente.titulo }}</p>
+                <p class="text-sm text-500 m-0 mt-1">{{ incidente.descripcion | slice:0:50 }}...</p>
+              </div>
+            }
           </td>
           <td class="font-medium">{{ incidente.activoNombre }}</td>
+          <!-- Severidad -->
           <td>
-            <p-tag [value]="incidente.severidad" [severity]="getSeveridadSeverity(incidente.severidad)"></p-tag>
+            @if (estaEditando(incidente.id)) {
+              <p-select [options]="severidades"
+                        [ngModel]="getValorEdicion('severidad')"
+                        (ngModelChange)="setValorEdicion('severidad', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <p-tag [value]="incidente.severidad" [severity]="getSeveridadSeverity(incidente.severidad)"></p-tag>
+            }
           </td>
+          <!-- Estado -->
           <td>
-            <p-tag [value]="incidente.estado" [severity]="getEstadoSeverity(incidente.estado)"
-                   [icon]="getEstadoIcon(incidente.estado)"></p-tag>
+            @if (estaEditando(incidente.id)) {
+              <p-select [options]="estados"
+                        [ngModel]="getValorEdicion('estado')"
+                        (ngModelChange)="setValorEdicion('estado', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <p-tag [value]="incidente.estado" [severity]="getEstadoSeverity(incidente.estado)"
+                     [icon]="getEstadoIcon(incidente.estado)"></p-tag>
+            }
           </td>
-          <td>{{ incidente.reportadoPor }}</td>
+          <!-- Reportado Por -->
+          <td>
+            @if (estaEditando(incidente.id)) {
+              <input pInputText [ngModel]="getValorEdicion('reportadoPor')"
+                     (ngModelChange)="setValorEdicion('reportadoPor', $event)"
+                     class="w-full" />
+            } @else {
+              {{ incidente.reportadoPor }}
+            }
+          </td>
           <td>{{ incidente.fechaReporte | date:'dd/MM/yyyy' }}</td>
-          <td class="text-center">
-            <p-menu #menuIncidente [model]="getMenuItemsIncidente(incidente)" [popup]="true" appendTo="body"></p-menu>
-            <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
-                      (onClick)="menuIncidente.toggle($event)"></p-button>
+          <!-- Acciones -->
+          <td class="actions-cell">
+            @if (estaEditando(incidente.id)) {
+              <div class="flex gap-1">
+                <p-button icon="pi pi-check" severity="success" [text]="true" size="small"
+                          pTooltip="Guardar" (onClick)="guardarEdicion(incidente, $event)" />
+                <p-button icon="pi pi-times" severity="secondary" [text]="true" size="small"
+                          pTooltip="Cancelar" (onClick)="cancelarEdicion($event)" />
+              </div>
+            } @else {
+              <div class="flex gap-1">
+                <p-button icon="pi pi-pencil" [outlined]="true" severity="secondary" size="small"
+                          styleClass="btn-edit" pTooltip="Editar"
+                          (onClick)="iniciarEdicion(incidente, $event)" />
+                <p-menu #menuIncidente [model]="getMenuItemsIncidente(incidente)" [popup]="true" appendTo="body"></p-menu>
+                <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
+                          (onClick)="menuIncidente.toggle($event)" />
+              </div>
+            }
           </td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8" class="text-center py-4">
+          <td colspan="9" class="text-center py-4">
             <div class="flex flex-column align-items-center gap-2">
               <span class="material-icons text-4xl text-green-500">verified</span>
               <span class="text-500">No hay incidentes registrados</span>
@@ -60,39 +142,32 @@
         </tr>
       </ng-template>
 
-      <!-- Footer con resumen -->
-      <ng-template pTemplate="summary">
-        <div class="flex flex-wrap gap-4 py-2" style="border-top: 1px solid var(--surface-200);">
-          <div class="flex align-items-center gap-2 text-sm">
-            <span class="text-500">Total:</span>
-            <span class="font-semibold">{{ incidentes().length }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-circle-fill text-red-500" style="font-size: 0.5rem"></i>
-            <span class="text-500">Abiertos:</span>
-            <span class="font-semibold">{{ incidentesAbiertos() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-circle-fill text-orange-500" style="font-size: 0.5rem"></i>
-            <span class="text-500">En Proceso:</span>
-            <span class="font-semibold">{{ incidentesEnProceso() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-circle-fill text-green-500" style="font-size: 0.5rem"></i>
-            <span class="text-500">Resueltos:</span>
-            <span class="font-semibold">{{ incidentesResueltos() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-circle-fill text-gray-400" style="font-size: 0.5rem"></i>
-            <span class="text-500">Cerrados:</span>
-            <span class="font-semibold">{{ incidentesCerrados() }}</span>
-          </div>
-          <div class="flex align-items-center gap-2 text-sm">
-            <i class="pi pi-exclamation-triangle text-red-500"></i>
-            <span class="text-500">Críticos:</span>
-            <span class="font-semibold">{{ getIncidentesCriticos() }}</span>
-          </div>
-        </div>
+      <!-- Pie de tabla con totales por columna -->
+      <ng-template pTemplate="footer">
+        <tr class="font-semibold surface-100">
+          <td></td>
+          <td>
+            <span class="text-900">Totales</span>
+          </td>
+          <td>
+            <span class="text-600">{{ incidentes().length }} incidentes</span>
+          </td>
+          <td></td>
+          <td>
+            <p-tag [value]="getIncidentesCriticos().toString() + ' críticos'" severity="danger" styleClass="text-xs" />
+          </td>
+          <td>
+            <div class="flex gap-1">
+              <p-tag [value]="incidentesAbiertos().toString()" severity="danger" styleClass="text-xs" pTooltip="Abiertos" />
+              <p-tag [value]="incidentesEnProceso().toString()" severity="warn" styleClass="text-xs" pTooltip="En Proceso" />
+              <p-tag [value]="incidentesResueltos().toString()" severity="success" styleClass="text-xs" pTooltip="Resueltos" />
+              <p-tag [value]="incidentesCerrados().toString()" severity="secondary" styleClass="text-xs" pTooltip="Cerrados" />
+            </div>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
       </ng-template>
     </p-table>
   </p-card>
@@ -141,3 +216,39 @@
     <p-button label="Reportar" icon="pi pi-send" severity="danger" (onClick)="saveIncidente()"></p-button>
   </ng-template>
 </p-dialog>
+
+<!-- Drawer Acciones Masivas -->
+<p-drawer [(visible)]="showAccionesMasivasDrawer" position="right" [style]="{width: '400px'}" header="Acciones Masivas">
+  <div class="flex flex-column gap-4">
+    <p class="text-600 m-0">Aplicar cambios a {{ incidentesSeleccionados().length }} incidentes seleccionados</p>
+
+    <!-- Severidad -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Severidad</label>
+      <p-select [options]="severidades" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Estado -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Estado</label>
+      <p-select [options]="estados" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Reportado Por -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Reportado Por</label>
+      <input pInputText placeholder="Sin cambios" class="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-content-end">
+      <p-button label="Cancelar" severity="secondary" [text]="true"
+                (onClick)="showAccionesMasivasDrawer.set(false)" />
+      <p-button label="Aplicar cambios" icon="pi pi-check"
+                (onClick)="aplicarAccionesMasivas()" />
+    </div>
+  </ng-template>
+</p-drawer>
