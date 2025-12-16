@@ -26,15 +26,14 @@
             tooltipPosition="bottom" />
         }
 
-        <p-multiSelect
+        <p-select
           [options]="entidadOptions"
-          [ngModel]="estado().entidadesSeleccionadas"
-          (ngModelChange)="onEntidadesChange($event)"
+          [ngModel]="entidadSeleccionada()"
+          (ngModelChange)="onEntidadChange($event)"
           optionLabel="label"
           optionValue="value"
-          placeholder="Mostrar"
+          placeholder="Seleccionar entidad"
           [style]="{ minWidth: '200px' }"
-          [showHeader]="false"
           appendTo="body">
           <ng-template let-item pTemplate="item">
             <div class="flex align-items-center gap-2">
@@ -42,7 +41,13 @@
               <span>{{ item.label }}</span>
             </div>
           </ng-template>
-        </p-multiSelect>
+          <ng-template let-item pTemplate="selectedItem">
+            <div class="flex align-items-center gap-2">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
       </div>
     </ng-template>
 

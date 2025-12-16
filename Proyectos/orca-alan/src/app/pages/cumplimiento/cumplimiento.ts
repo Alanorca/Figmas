@@ -46,6 +46,24 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 
 // Componentes compartidos
 import { ChatComponent } from '../../components/chat/chat';
+import { ComplianceResultsComponent } from '../../components/compliance-results/compliance-results';
+
+// Utilidades de Scoring
+import {
+  calculateTotalScore,
+  calculateSectionScore,
+  calculateSectionProgress,
+  isFieldAnswered,
+  QuestionnaireScoreResult,
+} from '../../utils/scoring.utils';
+
+import {
+  evaluateThreshold,
+  getThresholdSeverity,
+  getNivelCumplimiento,
+  ThresholdResult,
+  DEFAULT_THRESHOLDS,
+} from '../../utils/thresholds.utils';
 
 // Shared Models
 import {
@@ -144,7 +162,8 @@ interface ArchivoAdjunto {
     InputGroupAddonModule,
     StepperModule,
     SelectButtonModule,
-    ChatComponent
+    ChatComponent,
+    ComplianceResultsComponent
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './cumplimiento.html',
@@ -2467,6 +2486,68 @@ export class CumplimientoComponent {
     return Math.round((respondidas / totalPreguntas) * 100);
   }
 
+  // Obtener calificación de cumplimiento basada en umbrales
+  getCalificacionCumplimiento(): number {
+    const cuestionario = this.cuestionarioSeleccionado();
+    const respuesta = this.respuestaRevision();
+    if (!cuestionario || !respuesta) return 0;
+
+    let cumple = 0;
+    let total = 0;
+
+    cuestionario.secciones.forEach(seccion => {
+      seccion.preguntas.forEach(pregunta => {
+        const resp = respuesta.respuestas.find(r => r.preguntaId === pregunta.id);
+        if (resp && resp.valor !== null && resp.valor !== '') {
+          // Para preguntas tipo siNoNa, "Si" cuenta como cumplimiento
+          if (pregunta.tipo === 'siNoNa') {
+            if (resp.valor !== 'NA' && resp.valor !== 'N/A') {
+              total++;
+              if (resp.valor === 'Si' || resp.valor === 'Sí') {
+                cumple++;
+              }
+            }
+          }
+          // Para selección única, usamos el score de la opción si existe
+          else if (pregunta.tipo === 'seleccionUnica' && pregunta.opciones?.length) {
+            total++;
+            // Buscar la opción seleccionada y usar su score
+            const opcionSeleccionada = pregunta.opciones.find((o: any) =>
+              (typeof o === 'string' ? o : o.text) === resp.valor
+            );
+            if (opcionSeleccionada) {
+              if (typeof opcionSeleccionada === 'object' && 'score' in opcionSeleccionada) {
+                // Normalizar score (asumiendo 0-100 o 0-10)
+                const score = opcionSeleccionada.score;
+                cumple += score > 10 ? score / 100 : score / 10;
+              } else {
+                // Si no hay score, usar posición
+                const idx = pregunta.opciones.findIndex((o: any) =>
+                  (typeof o === 'string' ? o : o.text) === resp.valor
+                );
+                if (idx === 0) cumple++;
+                else if (idx === 1) cumple += 0.75;
+                else if (idx === 2) cumple += 0.5;
+                else cumple += 0.25;
+              }
+            }
+          }
+          // Para escalas, calculamos porcentaje del valor máximo
+          else if (pregunta.tipo === 'escala') {
+            total++;
+            const min = pregunta.escalaMin || 1;
+            const max = pregunta.escalaMax || 10;
+            const valor = Number(resp.valor) || min;
+            cumple += (valor - min) / (max - min);
+          }
+        }
+      });
+    });
+
+    if (total === 0) return 0;
+    return Math.round((cumple / total) * 100);
+  }
+
   // Obtener progreso de la sección seleccionada
   getProgresoSeccion(): number {
     const cuestionario = this.cuestionarioSeleccionado();
@@ -2781,6 +2862,12 @@ export class CumplimientoComponent {
   cambiarTabEdicion(tab: string | number | undefined) {
     if (tab === 'info' || tab === 'usuarios' || tab === 'alcance' || tab === 'config') {
       this.tabEdicionActivo.set(tab);
+    }
+  }
+
+  cambiarTabRevision(tab: string | number | undefined) {
+    if (tab === 'info' || tab === 'reglas' || tab === 'riesgos' || tab === 'auditoria') {
+      this.tabRevisionActivo.set(tab);
     }
   }
 
@@ -3342,5 +3429,72 @@ export class CumplimientoComponent {
       { separator: true },
       { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.eliminarAsignacion(asignacion) }
     ];
+  }
+
+  // =============================================
+  // FUNCIONES DE SCORING Y CUMPLIMIENTO
+  // =============================================
+
+  /**
+   * Calcula el score completo de un cuestionario
+   */
+  calcularScoreCuestionario(cuestionario: Cuestionario, respuestas: RespuestaPregunta[]): QuestionnaireScoreResult {
+    return calculateTotalScore(cuestionario.secciones, respuestas);
+  }
+
+  /**
+   * Evalúa el umbral de cumplimiento para un porcentaje dado
+   */
+  evaluarUmbralCumplimiento(porcentaje: number, cuestionario?: Cuestionario): ThresholdResult {
+    const umbrales = cuestionario?.umbrales || DEFAULT_THRESHOLDS;
+    return evaluateThreshold(porcentaje, umbrales);
+  }
+
+  /**
+   * Obtiene la severidad de PrimeNG para el porcentaje de cumplimiento
+   */
+  getSeveridadCumplimiento(porcentaje: number, cuestionario?: Cuestionario): 'success' | 'warn' | 'danger' | 'info' | 'secondary' | 'contrast' {
+    const umbrales = cuestionario?.umbrales || DEFAULT_THRESHOLDS;
+    return getThresholdSeverity(porcentaje, umbrales);
+  }
+
+  /**
+   * Obtiene el nivel de cumplimiento como string
+   */
+  getNivelCumplimientoTexto(porcentaje: number, cuestionario?: Cuestionario): string {
+    const umbrales = cuestionario?.umbrales || DEFAULT_THRESHOLDS;
+    return getNivelCumplimiento(porcentaje, umbrales);
+  }
+
+  /**
+   * Actualiza la puntuación de una respuesta de cuestionario
+   */
+  actualizarPuntuacionRespuesta(respuesta: RespuestaCuestionario, cuestionario: Cuestionario): void {
+    const resultado = this.calcularScoreCuestionario(cuestionario, respuesta.respuestas);
+    respuesta.puntuacionTotal = resultado.porcentajeCumplimiento;
+    respuesta.nivelCumplimiento = this.getNivelCumplimientoTexto(resultado.porcentajeCumplimiento, cuestionario) as 'deficiente' | 'aceptable' | 'sobresaliente';
+  }
+
+  /**
+   * Obtiene el score de una sección específica
+   */
+  getScoreSeccion(seccion: Seccion, respuestas: RespuestaPregunta[]): number {
+    const resultado = calculateSectionScore(seccion, respuestas);
+    return resultado.porcentaje;
+  }
+
+  /**
+   * Obtiene el progreso de contestación de una sección
+   */
+  getProgresoSeccionCalculado(seccion: Seccion, respuestas: RespuestaPregunta[]): number {
+    return calculateSectionProgress(seccion, respuestas);
+  }
+
+  /**
+   * Verifica si una pregunta específica está respondida
+   */
+  isPreguntaRespondida(preguntaId: string, respuestas: RespuestaPregunta[]): boolean {
+    const respuesta = respuestas.find(r => r.preguntaId === preguntaId);
+    return isFieldAnswered(respuesta);
   }
 }

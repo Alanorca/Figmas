@@ -155,13 +155,21 @@ export class TablaUnificadaComponent {
   // Opciones de entidades
   entidadOptions = [
     { label: 'Riesgos', value: 'riesgo', icon: 'pi pi-shield' },
-    { label: 'Incidentes', value: 'incidente', icon: 'pi pi-exclamation-triangle' }
+    { label: 'Incidentes', value: 'incidente', icon: 'pi pi-exclamation-triangle' },
+    { label: 'Cumplimiento', value: 'cumplimiento', icon: 'pi pi-check-circle' },
+    { label: 'Activos', value: 'activo', icon: 'pi pi-box' },
+    { label: 'Procesos', value: 'proceso', icon: 'pi pi-sitemap' },
+    { label: 'Respuestas', value: 'respuesta', icon: 'pi pi-comments' }
   ];
 
   // Opciones para filtros de columna
   tipoEntidadOptions = [
     { label: 'Riesgo', value: 'riesgo', icon: 'pi pi-shield' },
-    { label: 'Incidente', value: 'incidente', icon: 'pi pi-exclamation-triangle' }
+    { label: 'Incidente', value: 'incidente', icon: 'pi pi-exclamation-triangle' },
+    { label: 'Cumplimiento', value: 'cumplimiento', icon: 'pi pi-check-circle' },
+    { label: 'Activo', value: 'activo', icon: 'pi pi-box' },
+    { label: 'Proceso', value: 'proceso', icon: 'pi pi-sitemap' },
+    { label: 'Respuesta', value: 'respuesta', icon: 'pi pi-comments' }
   ];
 
   estadoOptions = [
@@ -410,7 +418,17 @@ export class TablaUnificadaComponent {
     return baseOptions;
   });
 
+  // Computed: Entidad seleccionada (primera del array)
+  entidadSeleccionada = computed(() => {
+    const entidades = this.estado().entidadesSeleccionadas;
+    return entidades.length > 0 ? entidades[0] : 'riesgo';
+  });
+
   // Métodos de entidades
+  onEntidadChange(entidad: TipoEntidad): void {
+    this.service.setEntidadesSeleccionadas([entidad]);
+  }
+
   onEntidadesChange(entidades: TipoEntidad[]): void {
     this.service.setEntidadesSeleccionadas(entidades);
   }

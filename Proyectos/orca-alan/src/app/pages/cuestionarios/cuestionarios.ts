@@ -42,6 +42,7 @@ import { SplitterModule } from 'primeng/splitter';
 import { MessageModule } from 'primeng/message';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { AvatarModule } from 'primeng/avatar';
+import { TimelineModule } from 'primeng/timeline';
 
 // Shared Models
 import {
@@ -95,7 +96,8 @@ import {
     SplitterModule,
     MessageModule,
     ScrollPanelModule,
-    AvatarModule
+    AvatarModule,
+    TimelineModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './cuestionarios.html',
@@ -131,6 +133,9 @@ export class CuestionariosComponent {
   // =============================================
   cuestionarioSeleccionado = signal<Cuestionario | null>(null);
   editandoDetalle = signal(false);
+  marcosSeleccionados: MarcoNormativo[] = [];
+  mostrarDialogoMarco = signal(false);
+  nuevoMarco = signal<{ acronimo: string; nombre: string }>({ acronimo: '', nombre: '' });
 
   // =============================================
   // NUEVO CUESTIONARIO
@@ -153,7 +158,7 @@ export class CuestionariosComponent {
   // =============================================
   // DETALLE STATE
   // =============================================
-  tabDetalleActivo = signal<'componentes' | 'informacion'>('componentes');
+  tabDetalleActivo = signal<'componentes' | 'informacion' | 'reglas' | 'riesgos' | 'auditoria'>('informacion');
   seccionSeleccionadaIndex = signal<number>(0);
 
   // =============================================
@@ -268,9 +273,6 @@ export class CuestionariosComponent {
     { label: 'Cumplimiento', value: 'cumplimiento' }
   ];
 
-  // Marcos normativos seleccionados para multiselect
-  marcosSeleccionados: MarcoNormativo[] = [];
-
   // =============================================
   // DATOS MOCK - MARCOS NORMATIVOS
   // =============================================
@@ -355,23 +357,84 @@ export class CuestionariosComponent {
       secciones: [
         {
           id: 's1',
-          nombre: 'Ambiente de Control',
-          descripcion: 'Evaluación del ambiente de control interno',
-          peso: 30,
+          nombre: 'Datos de Solicitud',
+          descripcion: 'Información general de la solicitud',
+          peso: 15,
           preguntas: [
-            { id: 'p1', texto: '¿Existe un código de ética documentado y comunicado a todos los empleados?', tipo: 'siNoNa', requerida: true, peso: 10, requiereEvidencia: true, requisitoNormativoId: 'r4' },
-            { id: 'p2', texto: '¿Se realiza capacitación anual sobre controles internos?', tipo: 'siNoNa', requerida: true, peso: 8, requiereEvidencia: true },
-            { id: 'p3', texto: 'Describa los mecanismos de comunicación del código de ética', tipo: 'texto', requerida: false, peso: 5, requiereEvidencia: false }
+            { id: 'p1', texto: 'Estatus', tipo: 'seleccionUnica', requerida: true, peso: 5, requiereEvidencia: false, opciones: ['1. Encaptura', '2. En revisión', '3. Aprobado'] },
+            { id: 'p2', texto: 'Fecha de registro', tipo: 'fecha', requerida: true, peso: 5, requiereEvidencia: false },
+            { id: 'p3', texto: 'Código de solicitud', tipo: 'texto', requerida: true, peso: 5, requiereEvidencia: false, placeholder: 'Número de Factura' }
           ]
         },
         {
           id: 's2',
-          nombre: 'Evaluación de Riesgos',
-          descripcion: 'Proceso de evaluación de riesgos financieros',
-          peso: 35,
+          nombre: 'Identificación del Fideicomiso',
+          descripcion: 'Datos del fideicomiso asociado',
+          peso: 20,
           preguntas: [
-            { id: 'p4', texto: '¿Se realiza una evaluación de riesgos al menos anualmente?', tipo: 'siNoNa', requerida: true, peso: 15, requiereEvidencia: true, requisitoNormativoId: 'r5' },
-            { id: 'p5', texto: '¿Cuál es la frecuencia de revisión de la matriz de riesgos?', tipo: 'seleccionUnica', requerida: true, peso: 10, requiereEvidencia: false, opciones: ['Mensual', 'Trimestral', 'Semestral', 'Anual'] }
+            { id: 'p4', texto: 'Fideicomiso o Cartera', tipo: 'seleccionUnica', requerida: true, peso: 7, requiereEvidencia: false, opciones: ['Fideicomiso A', 'Fideicomiso B', 'Cartera C'] },
+            { id: 'p5', texto: 'Administrador Primario', tipo: 'seleccionUnica', requerida: true, peso: 7, requiereEvidencia: false, opciones: ['Admin 1', 'Admin 2'] },
+            { id: 'p6', texto: 'Administrador Maestro', tipo: 'seleccionUnica', requerida: true, peso: 6, requiereEvidencia: false, opciones: ['Maestro A', 'Maestro B'] },
+            { id: 'p7', texto: 'Institución de Fondeo', tipo: 'seleccionUnica', requerida: true, peso: 5, requiereEvidencia: false, opciones: ['Banco X', 'Banco Y'] },
+            { id: 'p8', texto: 'Tipo de Cartera', tipo: 'seleccionUnica', requerida: true, peso: 5, requiereEvidencia: false, opciones: ['Hipotecaria', 'Automotriz', 'Personal'] }
+          ]
+        },
+        {
+          id: 's3',
+          nombre: 'Identificación del Gasto',
+          descripcion: 'Clasificación y detalle del gasto',
+          peso: 15,
+          preguntas: [
+            { id: 'p9', texto: 'Tipo de Gasto', tipo: 'seleccionUnica', requerida: true, peso: 5, requiereEvidencia: false, opciones: ['Operativo', 'Administrativo', 'Financiero'] },
+            { id: 'p10', texto: 'Centro de Costos', tipo: 'texto', requerida: true, peso: 5, requiereEvidencia: false },
+            { id: 'p11', texto: 'Monto Total', tipo: 'numero', requerida: true, peso: 5, requiereEvidencia: true }
+          ]
+        },
+        {
+          id: 's4',
+          nombre: 'Datos de Factura 01',
+          descripcion: 'Primera factura asociada',
+          peso: 12,
+          preguntas: [
+            { id: 'p12', texto: 'Número de Factura', tipo: 'texto', requerida: true, peso: 4, requiereEvidencia: false },
+            { id: 'p13', texto: 'Fecha de Factura', tipo: 'fecha', requerida: true, peso: 4, requiereEvidencia: false },
+            { id: 'p14', texto: 'Proveedor', tipo: 'seleccionUnica', requerida: true, peso: 4, requiereEvidencia: false, opciones: ['Proveedor A', 'Proveedor B'] },
+            { id: 'p15', texto: 'Subtotal', tipo: 'numero', requerida: true, peso: 3, requiereEvidencia: false },
+            { id: 'p16', texto: 'IVA', tipo: 'numero', requerida: true, peso: 3, requiereEvidencia: false },
+            { id: 'p17', texto: 'Total', tipo: 'numero', requerida: true, peso: 3, requiereEvidencia: false }
+          ]
+        },
+        {
+          id: 's5',
+          nombre: 'Datos de Factura 02',
+          descripcion: 'Segunda factura asociada',
+          peso: 12,
+          preguntas: [
+            { id: 'p18', texto: 'Número de Factura', tipo: 'texto', requerida: false, peso: 4, requiereEvidencia: false },
+            { id: 'p19', texto: 'Fecha de Factura', tipo: 'fecha', requerida: false, peso: 4, requiereEvidencia: false },
+            { id: 'p20', texto: 'Proveedor', tipo: 'seleccionUnica', requerida: false, peso: 4, requiereEvidencia: false, opciones: ['Proveedor A', 'Proveedor B'] }
+          ]
+        },
+        {
+          id: 's6',
+          nombre: 'Datos de Factura 03',
+          descripcion: 'Tercera factura asociada',
+          peso: 12,
+          preguntas: [
+            { id: 'p21', texto: 'Número de Factura', tipo: 'texto', requerida: false, peso: 4, requiereEvidencia: false },
+            { id: 'p22', texto: 'Fecha de Factura', tipo: 'fecha', requerida: false, peso: 4, requiereEvidencia: false },
+            { id: 'p23', texto: 'Proveedor', tipo: 'seleccionUnica', requerida: false, peso: 4, requiereEvidencia: false, opciones: ['Proveedor A', 'Proveedor B'] }
+          ]
+        },
+        {
+          id: 's7',
+          nombre: 'Datos de Factura 04',
+          descripcion: 'Cuarta factura asociada',
+          peso: 12,
+          preguntas: [
+            { id: 'p24', texto: 'Número de Factura', tipo: 'texto', requerida: false, peso: 4, requiereEvidencia: false },
+            { id: 'p25', texto: 'Fecha de Factura', tipo: 'fecha', requerida: false, peso: 4, requiereEvidencia: false },
+            { id: 'p26', texto: 'Proveedor', tipo: 'seleccionUnica', requerida: false, peso: 4, requiereEvidencia: false, opciones: ['Proveedor A', 'Proveedor B'] }
           ]
         }
       ]
@@ -394,7 +457,52 @@ export class CuestionariosComponent {
       umbrales: { deficiente: 40, aceptable: 65, sobresaliente: 85 },
       areasObjetivo: ['operaciones', 'tecnologia'],
       responsables: ['user3'],
-      secciones: []
+      secciones: [
+        {
+          id: 's2-1',
+          nombre: 'Identificación de Activos',
+          descripcion: 'Inventario de activos críticos',
+          peso: 25,
+          preguntas: [
+            { id: 'p2-1', texto: 'Nombre del Activo', tipo: 'texto', requerida: true, peso: 8, requiereEvidencia: false },
+            { id: 'p2-2', texto: 'Tipo de Activo', tipo: 'seleccionUnica', requerida: true, peso: 8, requiereEvidencia: false, opciones: ['Hardware', 'Software', 'Datos', 'Personal'] },
+            { id: 'p2-3', texto: 'Criticidad', tipo: 'seleccionUnica', requerida: true, peso: 9, requiereEvidencia: false, opciones: ['Alta', 'Media', 'Baja'] }
+          ]
+        },
+        {
+          id: 's2-2',
+          nombre: 'Evaluación de Amenazas',
+          descripcion: 'Análisis de amenazas potenciales',
+          peso: 25,
+          preguntas: [
+            { id: 'p2-4', texto: '¿Existe análisis de amenazas documentado?', tipo: 'siNoNa', requerida: true, peso: 10, requiereEvidencia: true },
+            { id: 'p2-5', texto: 'Frecuencia de actualización', tipo: 'seleccionUnica', requerida: true, peso: 8, requiereEvidencia: false, opciones: ['Mensual', 'Trimestral', 'Anual'] },
+            { id: 'p2-6', texto: 'Responsable del análisis', tipo: 'texto', requerida: true, peso: 7, requiereEvidencia: false }
+          ]
+        },
+        {
+          id: 's2-3',
+          nombre: 'Vulnerabilidades Identificadas',
+          descripcion: 'Registro de vulnerabilidades',
+          peso: 25,
+          preguntas: [
+            { id: 'p2-7', texto: 'Número de vulnerabilidades críticas', tipo: 'numero', requerida: true, peso: 10, requiereEvidencia: true },
+            { id: 'p2-8', texto: 'Plan de remediación activo', tipo: 'siNoNa', requerida: true, peso: 8, requiereEvidencia: true },
+            { id: 'p2-9', texto: 'Fecha última evaluación', tipo: 'fecha', requerida: true, peso: 7, requiereEvidencia: false }
+          ]
+        },
+        {
+          id: 's2-4',
+          nombre: 'Controles Implementados',
+          descripcion: 'Medidas de control existentes',
+          peso: 25,
+          preguntas: [
+            { id: 'p2-10', texto: '¿Existen controles preventivos?', tipo: 'siNoNa', requerida: true, peso: 8, requiereEvidencia: true },
+            { id: 'p2-11', texto: '¿Existen controles detectivos?', tipo: 'siNoNa', requerida: true, peso: 8, requiereEvidencia: true },
+            { id: 'p2-12', texto: 'Efectividad general de controles', tipo: 'escala', requerida: true, peso: 9, requiereEvidencia: false, escalaMin: 1, escalaMax: 10 }
+          ]
+        }
+      ]
     },
     {
       id: '3',
@@ -403,18 +511,85 @@ export class CuestionariosComponent {
       categoria: 'seguridad',
       tipo: 'manual',
       tipoEvaluacion: 'auditoria_externa',
-      estado: 'borrador',
+      estado: 'activo',
       marcoNormativo: 'iso27001',
       periodicidad: 'anual',
       preguntas: 78,
-      respuestas: 0,
-      tasaCompletado: 0,
+      respuestas: 156,
+      tasaCompletado: 85,
       fechaCreacion: new Date('2024-11-01'),
       fechaModificacion: new Date('2024-11-25'),
-      umbrales: { deficiente: 60, aceptable: 75, sobresaliente: 92 },
+      umbrales: { deficiente: 50, aceptable: 70, sobresaliente: 90 },
       areasObjetivo: ['tecnologia'],
       responsables: ['user4'],
-      secciones: []
+      secciones: [
+        {
+          id: 's3-1',
+          nombre: 'Políticas de Seguridad',
+          descripcion: 'Documentación y comunicación de políticas',
+          peso: 15,
+          preguntas: [
+            { id: 'p3-1', texto: '¿Existe una política de seguridad de la información documentada?', tipo: 'siNoNa', requerida: true, peso: 5, requiereEvidencia: true },
+            { id: 'p3-2', texto: 'Fecha de última actualización de la política', tipo: 'fecha', requerida: true, peso: 5, requiereEvidencia: false },
+            { id: 'p3-3', texto: '¿La política está aprobada por la alta dirección?', tipo: 'siNoNa', requerida: true, peso: 5, requiereEvidencia: true }
+          ]
+        },
+        {
+          id: 's3-2',
+          nombre: 'Control de Accesos',
+          descripcion: 'Gestión de identidades y accesos',
+          peso: 20,
+          preguntas: [
+            { id: 'p3-4', texto: '¿Existe un proceso formal de alta de usuarios?', tipo: 'siNoNa', requerida: true, peso: 7, requiereEvidencia: true },
+            { id: 'p3-5', texto: '¿Se revisan los accesos periódicamente?', tipo: 'siNoNa', requerida: true, peso: 7, requiereEvidencia: true },
+            { id: 'p3-6', texto: 'Frecuencia de revisión de accesos', tipo: 'seleccionUnica', requerida: true, peso: 6, requiereEvidencia: false, opciones: ['Mensual', 'Trimestral', 'Semestral', 'Anual'] }
+          ]
+        },
+        {
+          id: 's3-3',
+          nombre: 'Seguridad Física',
+          descripcion: 'Protección de instalaciones y equipos',
+          peso: 15,
+          preguntas: [
+            { id: 'p3-7', texto: '¿Existen controles de acceso físico al datacenter?', tipo: 'siNoNa', requerida: true, peso: 5, requiereEvidencia: true },
+            { id: 'p3-8', texto: 'Tipo de control de acceso físico', tipo: 'opcionMultiple', requerida: true, peso: 5, requiereEvidencia: false, opciones: ['Tarjeta', 'Biométrico', 'PIN', 'Guardia'] },
+            { id: 'p3-9', texto: '¿Se registran los accesos?', tipo: 'siNoNa', requerida: true, peso: 5, requiereEvidencia: true }
+          ]
+        },
+        {
+          id: 's3-4',
+          nombre: 'Gestión de Incidentes',
+          descripcion: 'Proceso de respuesta a incidentes',
+          peso: 20,
+          preguntas: [
+            { id: 'p3-10', texto: '¿Existe un proceso documentado de gestión de incidentes?', tipo: 'siNoNa', requerida: true, peso: 7, requiereEvidencia: true },
+            { id: 'p3-11', texto: 'Número de incidentes en el último año', tipo: 'numero', requerida: true, peso: 6, requiereEvidencia: false },
+            { id: 'p3-12', texto: 'Tiempo promedio de resolución (horas)', tipo: 'numero', requerida: true, peso: 7, requiereEvidencia: false }
+          ]
+        },
+        {
+          id: 's3-5',
+          nombre: 'Continuidad del Negocio',
+          descripcion: 'Planes de recuperación y continuidad',
+          peso: 15,
+          preguntas: [
+            { id: 'p3-13', texto: '¿Existe un plan de continuidad del negocio?', tipo: 'siNoNa', requerida: true, peso: 5, requiereEvidencia: true },
+            { id: 'p3-14', texto: 'Fecha de última prueba del plan', tipo: 'fecha', requerida: true, peso: 5, requiereEvidencia: true },
+            { id: 'p3-15', texto: 'RTO definido (horas)', tipo: 'numero', requerida: true, peso: 5, requiereEvidencia: false }
+          ]
+        },
+        {
+          id: 's3-6',
+          nombre: 'Seguridad en Redes',
+          descripcion: 'Protección de infraestructura de red',
+          peso: 15,
+          preguntas: [
+            { id: 'p3-16', texto: '¿Existe segmentación de red?', tipo: 'siNoNa', requerida: true, peso: 5, requiereEvidencia: true },
+            { id: 'p3-17', texto: '¿Se utilizan firewalls?', tipo: 'siNoNa', requerida: true, peso: 5, requiereEvidencia: false },
+            { id: 'p3-18', texto: '¿Existe monitoreo de tráfico de red?', tipo: 'siNoNa', requerida: true, peso: 5, requiereEvidencia: true }
+          ]
+        }
+      ]
     },
     {
       id: '4',
@@ -434,7 +609,64 @@ export class CuestionariosComponent {
       umbrales: { deficiente: 55, aceptable: 72, sobresaliente: 88 },
       areasObjetivo: ['legal', 'tecnologia', 'rrhh'],
       responsables: ['user1', 'user5'],
-      secciones: []
+      secciones: [
+        {
+          id: 's4-1',
+          nombre: 'Consentimiento y Base Legal',
+          descripcion: 'Verificación de bases legales para el tratamiento',
+          peso: 20,
+          preguntas: [
+            { id: 'p4-1', texto: '¿Se obtiene consentimiento explícito para el tratamiento de datos?', tipo: 'siNoNa', requerida: true, peso: 7, requiereEvidencia: true },
+            { id: 'p4-2', texto: '¿Existe registro de consentimientos?', tipo: 'siNoNa', requerida: true, peso: 7, requiereEvidencia: true },
+            { id: 'p4-3', texto: 'Base legal principal utilizada', tipo: 'seleccionUnica', requerida: true, peso: 6, requiereEvidencia: false, opciones: ['Consentimiento', 'Contrato', 'Interés legítimo', 'Obligación legal'] }
+          ]
+        },
+        {
+          id: 's4-2',
+          nombre: 'Derechos de los Interesados',
+          descripcion: 'Mecanismos para ejercer derechos ARCO',
+          peso: 25,
+          preguntas: [
+            { id: 'p4-4', texto: '¿Existe procedimiento para atender solicitudes de acceso?', tipo: 'siNoNa', requerida: true, peso: 6, requiereEvidencia: true },
+            { id: 'p4-5', texto: '¿Existe procedimiento para atender solicitudes de rectificación?', tipo: 'siNoNa', requerida: true, peso: 6, requiereEvidencia: true },
+            { id: 'p4-6', texto: '¿Existe procedimiento para atender solicitudes de supresión?', tipo: 'siNoNa', requerida: true, peso: 6, requiereEvidencia: true },
+            { id: 'p4-7', texto: 'Tiempo promedio de respuesta (días)', tipo: 'numero', requerida: true, peso: 7, requiereEvidencia: false }
+          ]
+        },
+        {
+          id: 's4-3',
+          nombre: 'Registro de Actividades',
+          descripcion: 'Documentación de tratamientos',
+          peso: 20,
+          preguntas: [
+            { id: 'p4-8', texto: '¿Existe un registro de actividades de tratamiento?', tipo: 'siNoNa', requerida: true, peso: 10, requiereEvidencia: true },
+            { id: 'p4-9', texto: 'Número de tratamientos registrados', tipo: 'numero', requerida: true, peso: 5, requiereEvidencia: false },
+            { id: 'p4-10', texto: 'Fecha de última actualización del registro', tipo: 'fecha', requerida: true, peso: 5, requiereEvidencia: false }
+          ]
+        },
+        {
+          id: 's4-4',
+          nombre: 'Transferencias Internacionales',
+          descripcion: 'Control de flujos transfronterizos de datos',
+          peso: 15,
+          preguntas: [
+            { id: 'p4-11', texto: '¿Se realizan transferencias internacionales de datos?', tipo: 'siNoNa', requerida: true, peso: 5, requiereEvidencia: false },
+            { id: 'p4-12', texto: 'Mecanismo de protección utilizado', tipo: 'seleccionUnica', requerida: false, peso: 5, requiereEvidencia: true, opciones: ['Cláusulas tipo', 'BCR', 'Decisión adecuación', 'Consentimiento'] },
+            { id: 'p4-13', texto: 'Países destinatarios', tipo: 'texto', requerida: false, peso: 5, requiereEvidencia: false }
+          ]
+        },
+        {
+          id: 's4-5',
+          nombre: 'Brechas de Seguridad',
+          descripcion: 'Gestión de violaciones de datos',
+          peso: 20,
+          preguntas: [
+            { id: 'p4-14', texto: '¿Existe procedimiento de notificación de brechas?', tipo: 'siNoNa', requerida: true, peso: 7, requiereEvidencia: true },
+            { id: 'p4-15', texto: 'Número de brechas notificadas en el último año', tipo: 'numero', requerida: true, peso: 6, requiereEvidencia: false },
+            { id: 'p4-16', texto: '¿Se realizan simulacros de brechas?', tipo: 'siNoNa', requerida: true, peso: 7, requiereEvidencia: true }
+          ]
+        }
+      ]
     }
   ]);
 
@@ -528,13 +760,8 @@ export class CuestionariosComponent {
     return severities[marcoId] || 'info';
   }
 
-  agregarNuevoMarco(): void {
-    // Por ahora solo mostrar mensaje, en implementación real se abriría un dialog
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Agregar Marco',
-      detail: 'Esta funcionalidad permitirá agregar nuevos marcos normativos'
-    });
+  tienePregunasRequeridas(seccion: Seccion): boolean {
+    return seccion.preguntas?.some(p => p.requerida) ?? false;
   }
 
   eliminarMarcosSeleccionados(): void {
@@ -605,13 +832,13 @@ export class CuestionariosComponent {
   verDetalleCuestionario(cuestionario: Cuestionario) {
     this.cuestionarioSeleccionado.set(cuestionario);
     this.editandoDetalle.set(false);
-    this.tabDetalleActivo.set('componentes');
+    this.tabDetalleActivo.set('informacion');
     this.vistaActual.set('detalle');
   }
 
   irADetalle(cuestionario: Cuestionario) {
     this.cuestionarioSeleccionado.set(cuestionario);
-    this.tabDetalleActivo.set('componentes');
+    this.tabDetalleActivo.set('informacion');
     this.vistaActual.set('detalle');
   }
 
@@ -624,7 +851,11 @@ export class CuestionariosComponent {
   }
 
   toggleEditarDetalle() {
-    this.editandoDetalle.update(v => !v);
+    const nuevoEstado = !this.editandoDetalle();
+    if (nuevoEstado) {
+      this.inicializarMarcosSeleccionados();
+    }
+    this.editandoDetalle.set(nuevoEstado);
   }
 
   guardarYCerrarEdicion() {
@@ -634,6 +865,61 @@ export class CuestionariosComponent {
 
   cancelarEdicionDetalle() {
     this.editandoDetalle.set(false);
+    this.marcosSeleccionados = [];
+  }
+
+  // =============================================
+  // MARCOS NORMATIVOS - MultiSelect
+  // =============================================
+  getMarcosArray(): string[] {
+    if (this.marcosSeleccionados.length > 0) {
+      return this.marcosSeleccionados.map(m => m.id);
+    }
+    const cuestionario = this.cuestionarioSeleccionado();
+    if (cuestionario?.marcoNormativo) {
+      return [cuestionario.marcoNormativo];
+    }
+    return [];
+  }
+
+  mostrarDialogoNuevoMarco() {
+    this.nuevoMarco.set({ acronimo: '', nombre: '' });
+    this.mostrarDialogoMarco.set(true);
+  }
+
+  cerrarDialogoMarco() {
+    this.mostrarDialogoMarco.set(false);
+  }
+
+  agregarNuevoMarco() {
+    const nuevo = this.nuevoMarco();
+    if (nuevo.acronimo && nuevo.nombre) {
+      const nuevoMarcoNormativo: MarcoNormativo = {
+        id: nuevo.acronimo.toLowerCase().replace(/\s+/g, '-'),
+        nombre: nuevo.nombre,
+        acronimo: nuevo.acronimo,
+        descripcion: '',
+        version: '1.0',
+        fechaVigencia: new Date(),
+        activo: true,
+        requisitos: []
+      };
+      // Agregar a la lista de marcos
+      this.marcosNormativos.update(marcos => [...marcos, nuevoMarcoNormativo]);
+      // Seleccionarlo automáticamente
+      this.marcosSeleccionados = [...this.marcosSeleccionados, nuevoMarcoNormativo];
+      this.cerrarDialogoMarco();
+    }
+  }
+
+  inicializarMarcosSeleccionados() {
+    const cuestionario = this.cuestionarioSeleccionado();
+    if (cuestionario?.marcoNormativo) {
+      const marco = this.marcosNormativos().find(m => m.id === cuestionario.marcoNormativo);
+      if (marco) {
+        this.marcosSeleccionados = [marco];
+      }
+    }
   }
 
   // =============================================

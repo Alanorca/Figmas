@@ -30,7 +30,7 @@
       <p-tabpanels>
         <!-- Tab Revisiones -->
         <p-tabpanel value="0">
-          <div class="surface-card border-round-lg p-4 shadow-1 mt-3">
+          <div class="surface-card border-round-lg p-4 mt-3">
             <div class="flex justify-content-between align-items-center mb-4">
               <div>
                 <h3 class="text-lg font-semibold text-900 m-0">Revisiones</h3>
@@ -144,7 +144,7 @@
           <div class="grid mt-3">
             <!-- Grafico de barras -->
             <div class="col-12 lg:col-6">
-              <div class="surface-card border-round-lg p-4 shadow-1 h-full">
+              <div class="surface-card border-round-lg p-4 h-full">
                 <h3 class="text-lg font-semibold text-900 m-0 mb-4">Cumplimiento por Marco</h3>
                 <div style="height: 250px;">
                   <p-chart type="bar" [data]="chartData()" [options]="chartOptions" />
@@ -154,7 +154,7 @@
 
             <!-- Grafico de pie -->
             <div class="col-12 lg:col-6">
-              <div class="surface-card border-round-lg p-4 shadow-1 h-full">
+              <div class="surface-card border-round-lg p-4 h-full">
                 <h3 class="text-lg font-semibold text-900 m-0 mb-4">Estado de Revisiones</h3>
                 <div style="height: 250px;">
                   <p-chart type="pie" [data]="pieChartData()" [options]="pieChartOptions" />
@@ -164,7 +164,7 @@
           </div>
 
           <!-- Alertas activas -->
-          <div class="surface-card border-round-lg p-4 shadow-1 mt-4">
+          <div class="surface-card border-round-lg p-4 mt-4">
             <div class="flex justify-content-between align-items-center mb-4">
               <h3 class="text-lg font-semibold text-900 m-0">Alertas Activas</h3>
               <span class="text-500 text-sm">{{ alertasActivas().length }} alertas</span>
@@ -536,7 +536,7 @@
     <div class="content-body-layout">
       <div class="content-body-main">
         @for (seccion of cuestionarioSeleccionado()!.secciones; track seccion.id) {
-          <div class="surface-card border-round-lg p-4 mb-4 shadow-1">
+          <div class="surface-card border-round-lg p-4 mb-4">
             <h3 class="text-lg font-semibold text-900 m-0 mb-2">{{ seccion.nombre }}</h3>
             <p class="text-500 text-sm m-0 mb-4">{{ seccion.descripcion }}</p>
 
@@ -881,13 +881,34 @@
           <h2 class="m-0 text-xl font-bold">{{ cuestionarioSeleccionado()!.nombre }}</h2>
           <p-tag value="Activo" severity="success" />
         </div>
-        <!-- Barra de progreso general -->
-        <div class="mt-3">
-          <div class="flex align-items-center justify-content-between mb-2">
-            <span class="text-sm text-500">Progreso general</span>
-            <span class="text-sm font-bold text-primary">{{ getProgresoCuestionario() }}%</span>
+
+        <!-- Barras de progreso -->
+        <div class="grid mt-3">
+          <!-- Progreso de contestación -->
+          <div class="col-12 md:col-6">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <span class="text-sm text-500">Contestación</span>
+              <span class="text-sm font-bold text-primary">{{ getProgresoCuestionario() }}%</span>
+            </div>
+            <p-progressBar [value]="getProgresoCuestionario()" [showValue]="false" styleClass="h-0.5rem" />
           </div>
-          <p-progressBar [value]="getProgresoCuestionario()" [showValue]="false" styleClass="h-0.5rem" />
+          <!-- Calificación basada en umbrales -->
+          <div class="col-12 md:col-6">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <span class="text-sm text-500">Calificación</span>
+              <span class="text-sm font-bold" [ngClass]="{
+                'text-green-500': getCalificacionCumplimiento() >= 80,
+                'text-yellow-500': getCalificacionCumplimiento() >= 60 && getCalificacionCumplimiento() < 80,
+                'text-orange-500': getCalificacionCumplimiento() >= 40 && getCalificacionCumplimiento() < 60,
+                'text-red-500': getCalificacionCumplimiento() < 40
+              }">{{ getCalificacionCumplimiento() }}%</span>
+            </div>
+            <p-progressBar
+              [value]="getCalificacionCumplimiento()"
+              [showValue]="false"
+              styleClass="h-0.5rem"
+              [style]="{'--p-progressbar-value-background': getCalificacionCumplimiento() >= 80 ? 'var(--green-500)' : getCalificacionCumplimiento() >= 60 ? 'var(--yellow-500)' : getCalificacionCumplimiento() >= 40 ? 'var(--orange-500)' : 'var(--red-500)'}" />
+          </div>
         </div>
       </div>
 
@@ -1030,6 +1051,7 @@
           </p-accordion>
         </div>
       </div>
+
     } @else {
       <!-- Estado vacío -->
       <div class="empty-state">
@@ -1324,7 +1346,7 @@
     <div class="grid">
       @for (marco of marcosNormativos(); track marco.id) {
         <div class="col-12 md:col-6 lg:col-4">
-          <div class="surface-card border-round-lg p-4 shadow-1 h-full">
+          <div class="surface-card border-round-lg p-4 h-full">
             <div class="flex justify-content-between align-items-start mb-3">
               <div>
                 <h3 class="text-lg font-semibold text-900 m-0">{{ marco.acronimo }}</h3>
@@ -1362,7 +1384,7 @@
 
   <div class="p-4">
     <!-- Formulario de nuevo reporte -->
-    <div class="surface-card border-round-lg p-4 shadow-1 mb-4">
+    <div class="surface-card border-round-lg p-4 mb-4">
       <h3 class="text-lg font-semibold text-900 m-0 mb-4">Generar Nuevo Reporte</h3>
       <div class="grid">
         <div class="col-12 md:col-4">
@@ -1407,7 +1429,7 @@
     </div>
 
     <!-- Lista de reportes existentes -->
-    <div class="surface-card border-round-lg p-4 shadow-1">
+    <div class="surface-card border-round-lg p-4">
       <h3 class="text-lg font-semibold text-900 m-0 mb-4">Reportes Generados</h3>
       <p-table [value]="reportes()" styleClass="p-datatable-sm">
         <ng-template #header>
@@ -1465,7 +1487,7 @@
 
   <div class="p-4">
     <!-- Filtros -->
-    <div class="surface-card border-round-lg p-4 shadow-1 mb-4">
+    <div class="surface-card border-round-lg p-4 mb-4">
       <div class="grid">
         <div class="col-12 md:col-3">
           <label class="block text-sm font-medium mb-2">Accion</label>
@@ -1489,10 +1511,10 @@
     </div>
 
     <!-- Timeline -->
-    <div class="surface-card border-round-lg p-4 shadow-1">
+    <div class="surface-card border-round-lg p-4">
       <p-timeline [value]="historialFiltrado()">
         <ng-template #content let-evento>
-          <div class="surface-card border-round p-3 shadow-1 mb-2">
+          <div class="surface-card border-round p-3 mb-2">
             <div class="flex justify-content-between align-items-start mb-2">
               <div class="flex align-items-center gap-2">
                 <p-tag [value]="getAccionLabel(evento.accion)" [severity]="getAccionSeverity(evento.accion)" />
@@ -1533,7 +1555,7 @@
     <!-- Resumen -->
     <div class="grid mb-4">
       <div class="col-12 md:col-4">
-        <div class="surface-card border-round-lg p-4 shadow-1">
+        <div class="surface-card border-round-lg p-4">
           <div class="flex align-items-center gap-3">
             <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width: 48px; height: 48px;">
               <i class="pi pi-check-circle text-green-500 text-xl"></i>
@@ -1546,7 +1568,7 @@
         </div>
       </div>
       <div class="col-12 md:col-4">
-        <div class="surface-card border-round-lg p-4 shadow-1">
+        <div class="surface-card border-round-lg p-4">
           <div class="flex align-items-center gap-3">
             <div class="flex align-items-center justify-content-center bg-yellow-100 border-round" style="width: 48px; height: 48px;">
               <i class="pi pi-exclamation-circle text-yellow-500 text-xl"></i>
@@ -1559,7 +1581,7 @@
         </div>
       </div>
       <div class="col-12 md:col-4">
-        <div class="surface-card border-round-lg p-4 shadow-1">
+        <div class="surface-card border-round-lg p-4">
           <div class="flex align-items-center gap-3">
             <div class="flex align-items-center justify-content-center border-round" [class]="getEfectividadClass(promedioEfectividad())" style="width: 48px; height: 48px; background-color: var(--surface-100);">
               <i class="pi pi-chart-bar text-xl"></i>
@@ -1574,7 +1596,7 @@
     </div>
 
     <!-- Tabla de mapeo -->
-    <div class="surface-card border-round-lg p-4 shadow-1 mb-4">
+    <div class="surface-card border-round-lg p-4 mb-4">
       <h3 class="text-lg font-semibold text-900 m-0 mb-4">Controles Mapeados</h3>
       <p-table [value]="mapeoControles()" styleClass="p-datatable-sm">
         <ng-template #header>
@@ -1608,7 +1630,7 @@
 
     <!-- Controles faltantes -->
     @if (controlesFaltantes().length > 0) {
-      <div class="surface-card border-round-lg p-4 shadow-1 mb-4">
+      <div class="surface-card border-round-lg p-4 mb-4">
         <h3 class="text-lg font-semibold text-900 m-0 mb-4">Controles Faltantes Detectados</h3>
         <div class="flex flex-column gap-3">
           @for (control of controlesFaltantes(); track control.id) {
@@ -1636,7 +1658,7 @@
     }
 
     <!-- Acciones correctivas -->
-    <div class="surface-card border-round-lg p-4 shadow-1">
+    <div class="surface-card border-round-lg p-4">
       <div class="flex justify-content-between align-items-center mb-4">
         <h3 class="text-lg font-semibold text-900 m-0">Acciones Correctivas</h3>
         <div class="flex gap-2">
@@ -1689,7 +1711,7 @@
   </div>
 
   <div class="p-4">
-    <div class="surface-card border-round-lg p-4 shadow-1">
+    <div class="surface-card border-round-lg p-4">
       <p-table [value]="evidencias()" styleClass="p-datatable-sm">
         <ng-template #header>
           <tr>

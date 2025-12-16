@@ -17,7 +17,7 @@ export class TablaUnificadaService {
 
   // Estado de la tabla
   private estado = signal<EstadoTabla>({
-    entidadesSeleccionadas: ['riesgo', 'incidente'],
+    entidadesSeleccionadas: ['riesgo'],
     filtrosActivos: [],
     columnasVisibles: ['tipoEntidad', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable', 'nivelRiesgo', 'severidad'],
     ordenColumnas: ['tipoEntidad', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable', 'nivelRiesgo', 'severidad'],
