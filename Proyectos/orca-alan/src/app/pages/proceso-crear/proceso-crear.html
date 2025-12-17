@@ -1,314 +1,566 @@
 <p-toast></p-toast>
 
-<!-- Modal de Creación de Proceso - Estilo Figma -->
-<div class="wizard-overlay" (click)="cancelar()">
-  <div class="wizard-modal" (click)="$event.stopPropagation()">
-    <!-- Header del Modal -->
-    <div class="wizard-header">
-      <div class="wizard-header-left">
-        <div class="wizard-icon">
-          <i class="pi pi-file-edit"></i>
-        </div>
-        <div class="wizard-header-text">
-          <h2>{{ steps[pasoActual()].label }}</h2>
-          <span class="wizard-step-indicator">Paso {{ pasoActual() + 1 }} de {{ steps.length }}</span>
-        </div>
-      </div>
-      <button class="wizard-close-btn" (click)="cancelar()">
-        <i class="pi pi-times"></i>
-      </button>
+<div class="crear-proceso-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a routerLink="/procesos"><i class="pi pi-home"></i></a>
+      <span class="separator">/</span>
+      <span>Level 3</span>
+      <span class="separator">/</span>
+      <span>Level 2</span>
+      <span class="separator">/</span>
+      <span>Level 1</span>
     </div>
+    <h1>Crear proceso</h1>
+    <p class="page-description">Ingresa los datos del proceso para realizar el registro y dar seguimiento</p>
+  </div>
 
-    <!-- Progress Steps -->
-    <div class="wizard-progress">
-      @for (step of steps; track $index; let i = $index) {
-        <div class="progress-step" [class.active]="i === pasoActual()" [class.completed]="i < pasoActual()">
-          <div class="step-circle">
+  <!-- Stepper -->
+  <div class="stepper-container">
+    @for (step of steps; track $index; let i = $index) {
+      <div
+        class="step-item"
+        [class.active]="i === pasoActual()"
+        [class.completed]="i < pasoActual()"
+        [class.clickable]="i < pasoActual()"
+        (click)="irAPaso(i)">
+        <div class="step-indicator">
+          <div class="step-icon">
             @if (i < pasoActual()) {
               <i class="pi pi-check"></i>
             } @else {
-              {{ i + 1 }}
+              <i [class]="step.icon"></i>
             }
           </div>
-          <span class="step-label">{{ step.label }}</span>
+          @if (i < steps.length - 1) {
+            <div class="step-line" [class.completed]="i < pasoActual()"></div>
+          }
         </div>
-        @if (i < steps.length - 1) {
-          <div class="step-connector" [class.completed]="i < pasoActual()"></div>
-        }
-      }
-    </div>
-
-    <!-- Content -->
-    <div class="wizard-body">
-      <!-- Step 1: Datos Básicos -->
-      @if (pasoActual() === 0) {
         <div class="step-content">
-          <div class="form-section">
-            <label class="form-label">Nombre del Proceso *</label>
-            <input
-              type="text"
-              class="form-input"
-              [ngModel]="nombre()"
-              (ngModelChange)="nombre.set($event)"
-              placeholder="Ej: Proceso de Onboarding">
+          <span class="step-label">{{ step.label }}</span>
+          <span class="step-description">{{ step.descripcion }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Content Card -->
+  <div class="content-card">
+    <!-- PASO 1: Información Básica -->
+    @if (pasoActual() === 0) {
+      <div class="step-panel panel-columna-izquierda">
+        <h2 class="panel-title">Información Básica</h2>
+
+        <div class="form-field">
+          <label class="field-label">Nombre del Proceso *</label>
+          <input
+            type="text"
+            class="field-input"
+            [ngModel]="nombreProceso()"
+            (ngModelChange)="nombreProceso.set($event)"
+            placeholder="Título descriptivo">
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Estado *</label>
+          <div class="select-wrapper">
+            <select
+              class="field-select"
+              [ngModel]="tipoProceso()"
+              (ngModelChange)="tipoProceso.set($event)">
+              <option value="">Seleccionar tipo</option>
+              @for (tipo of tiposProcesoOptions; track tipo.value) {
+                <option [value]="tipo.value">{{ tipo.label }}</option>
+              }
+            </select>
+            <i class="pi pi-chevron-down select-icon"></i>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Descripción detallada *</label>
+          <textarea
+            class="field-textarea"
+            [ngModel]="descripcionProceso()"
+            (ngModelChange)="descripcionProceso.set($event)"
+            rows="5"
+            placeholder="Describe de forma detallada el proceso"></textarea>
+        </div>
+      </div>
+    }
+
+    <!-- PASO 2: Apetito de Riesgo -->
+    @if (pasoActual() === 1) {
+      <div class="step-panel panel-columna-izquierda apetito-panel">
+        <h2 class="panel-title">Apetito de riesgo</h2>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+          <button
+            class="tab-btn"
+            [class.active]="modoApetito() === 'seleccionar'"
+            (click)="modoApetito.set('seleccionar')">
+            <i class="pi pi-search"></i>
+            Seleccionar
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="modoApetito() === 'crear'"
+            (click)="modoApetito.set('crear')">
+            <i class="pi pi-plus"></i>
+            Crear nuevos
+          </button>
+          <button class="btn-guardar-apetito">Guardar</button>
+        </div>
+
+        <!-- Layout: Inputs izquierda | Mapa derecha -->
+        <div class="apetito-layout">
+          <!-- Columna izquierda: Inputs apilados -->
+          <div class="apetito-inputs-columna">
+            <div class="form-field">
+              <label class="field-label">Estado *</label>
+              <div class="select-wrapper">
+                <select class="field-select">
+                  <option>Contenedor Organizacional</option>
+                </select>
+                <i class="pi pi-chevron-down select-icon"></i>
+              </div>
+            </div>
+
+            <div class="input-row">
+              <label>Eje Y - Probabilidad</label>
+              <div class="input-group">
+                <input
+                  type="number"
+                  [ngModel]="probabilidadInput()"
+                  (ngModelChange)="actualizarProbabilidad($event)"
+                  min="1"
+                  max="10"
+                  class="number-input">
+                <div class="input-controls">
+                  <button (click)="actualizarProbabilidad(probabilidadInput() + 1)">
+                    <i class="pi pi-chevron-up"></i>
+                  </button>
+                  <button (click)="actualizarProbabilidad(probabilidadInput() - 1)">
+                    <i class="pi pi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="input-row">
+              <label>Eje X - Impacto</label>
+              <div class="input-group">
+                <input
+                  type="number"
+                  [ngModel]="impactoInput()"
+                  (ngModelChange)="actualizarImpacto($event)"
+                  min="1"
+                  max="10"
+                  class="number-input">
+                <div class="input-controls">
+                  <button (click)="actualizarImpacto(impactoInput() + 1)">
+                    <i class="pi pi-chevron-up"></i>
+                  </button>
+                  <button (click)="actualizarImpacto(impactoInput() - 1)">
+                    <i class="pi pi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="input-row">
+              <label>Apetito de riesgo</label>
+              <div class="input-group">
+                <input
+                  type="number"
+                  [ngModel]="apetitoRiesgo()"
+                  (ngModelChange)="apetitoRiesgo.set($event)"
+                  min="0"
+                  max="100"
+                  class="number-input">
+                <div class="input-controls">
+                  <button (click)="incrementarApetito()">
+                    <i class="pi pi-chevron-up"></i>
+                  </button>
+                  <button (click)="decrementarApetito()">
+                    <i class="pi pi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+              <span class="input-hint">%</span>
+            </div>
           </div>
 
-          <div class="form-section">
-            <label class="form-label">Descripción</label>
-            <textarea
-              class="form-textarea"
-              [ngModel]="descripcion()"
-              (ngModelChange)="descripcion.set($event)"
-              rows="3"
-              placeholder="Describe brevemente el propósito del proceso...">
-            </textarea>
-          </div>
+          <!-- Columna derecha: Mapa de calor -->
+          <div class="apetito-mapa-columna">
+            <div class="matriz-tabla-wrapper">
+              <div class="matriz-tabla-container">
+                <div class="eje-y-titulo">Probabilidad</div>
+                <table class="matriz-tabla">
+                  <tbody>
+                    @for (prob of getProbabilidadArray(); track prob) {
+                      <tr>
+                        <td class="label-y">{{ prob }}</td>
+                        @for (imp of getImpactoArray(); track imp) {
+                          <td>
+                            <div
+                              class="matriz-cell"
+                              [class]="getCeldaNivelDinamico(prob, imp)"
+                              [class.selected]="isCeldaSeleccionadaDinamica(prob, imp)"
+                              [class.dentro-apetito]="estaDentroApetitoDinamico(prob, imp)"
+                              (click)="seleccionarCeldaDirecta(prob, imp)">
+                              @if (isCeldaSeleccionadaDinamica(prob, imp)) {
+                                <div class="cell-marker-apetito">
+                                  <span>{{ apetitoRiesgo() }}%</span>
+                                </div>
+                              }
+                            </div>
+                          </td>
+                        }
+                      </tr>
+                    }
+                    <tr class="fila-labels-x">
+                      <td></td>
+                      @for (i of getImpactoArray(); track i) {
+                        <td class="label-x">{{ i }}</td>
+                      }
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="eje-x-titulo">Impacto</div>
+            </div>
 
-          <div class="form-section">
-            <label class="form-label">Tipo de Proceso *</label>
-            <div class="tipo-proceso-grid">
-              @for (tipo of tiposProceso; track tipo.id) {
-                <div
-                  class="tipo-card"
-                  [class.selected]="tipoSeleccionado() === tipo.id"
-                  (click)="tipoSeleccionado.set(tipo.id)">
-                  <div class="tipo-icon">
-                    <i [class]="tipo.icono"></i>
+            <!-- Leyenda -->
+            <div class="matriz-leyenda">
+              <div class="leyenda-item">
+                <span class="leyenda-color bajo"></span>
+                <span>Bajo</span>
+              </div>
+              <div class="leyenda-item">
+                <span class="leyenda-color medio"></span>
+                <span>Medio</span>
+              </div>
+              <div class="leyenda-item">
+                <span class="leyenda-color alto"></span>
+                <span>Alto</span>
+              </div>
+              <div class="leyenda-item">
+                <span class="leyenda-color critico"></span>
+                <span>Crítico</span>
+              </div>
+              <div class="leyenda-item apetito-legend">
+                <span class="leyenda-dentro"></span>
+                <span>Dentro del apetito</span>
+              </div>
+              <div class="leyenda-item fuera-legend">
+                <span class="leyenda-fuera"></span>
+                <span>Fuera del apetito</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- PASO 3: Objetivos y KPIs -->
+    @if (pasoActual() === 2) {
+      <div class="step-panel panel-columna-izquierda">
+        <h2 class="panel-title">Objetivos y KPIS</h2>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+          <button
+            class="tab-btn"
+            [class.active]="modoObjetivos() === 'seleccionar'"
+            (click)="modoObjetivos.set('seleccionar')">
+            <i class="pi pi-search"></i>
+            Seleccionar
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="modoObjetivos() === 'crear'"
+            (click)="modoObjetivos.set('crear')">
+            <i class="pi pi-plus"></i>
+            Crear nuevos
+          </button>
+          @if (modoObjetivos() === 'crear') {
+            <button class="btn-agregar-objetivo" (click)="abrirFormObjetivo()">
+              <i class="pi pi-plus"></i>
+              Agregar objetivo
+            </button>
+          }
+        </div>
+
+        <!-- Modo Seleccionar -->
+        @if (modoObjetivos() === 'seleccionar') {
+          <div class="form-field">
+            <div class="select-wrapper">
+              <select class="field-select">
+                <option>Seleccionar Existente</option>
+                @for (obj of objetivosExistentes(); track obj.id) {
+                  <option [value]="obj.id">{{ obj.nombre }}</option>
+                }
+              </select>
+              <i class="pi pi-chevron-down select-icon"></i>
+            </div>
+          </div>
+        }
+
+        <!-- Formulario inline para nuevo objetivo -->
+        @if (mostrarFormObjetivoInline() && !objetivoEditandoId()) {
+          <div class="inline-form objetivo-form-inline">
+            <div class="inline-form-header">
+              <h4>Nuevo Objetivo</h4>
+              <button class="btn-icon-x" (click)="cerrarFormObjetivo()">
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+            <div class="inline-form-body">
+              <div class="inline-form-row">
+                <div class="form-field flex-2">
+                  <label class="field-label">Nombre *</label>
+                  <input
+                    type="text"
+                    class="field-input"
+                    [ngModel]="nuevoObjetivoNombre()"
+                    (ngModelChange)="nuevoObjetivoNombre.set($event)"
+                    placeholder="Nombre del objetivo">
+                </div>
+                <div class="form-field flex-1">
+                  <label class="field-label">Tipo *</label>
+                  <div class="select-wrapper">
+                    <select
+                      class="field-select"
+                      [ngModel]="nuevoObjetivoTipo()"
+                      (ngModelChange)="nuevoObjetivoTipo.set($event)">
+                      <option value="estrategico">Estratégico</option>
+                      <option value="operativo">Operativo</option>
+                    </select>
+                    <i class="pi pi-chevron-down select-icon"></i>
                   </div>
-                  <span class="tipo-nombre">{{ tipo.nombre }}</span>
-                  <span class="tipo-desc">{{ tipo.descripcion }}</span>
+                </div>
+              </div>
+              <div class="form-field">
+                <label class="field-label">Descripción</label>
+                <textarea
+                  class="field-textarea"
+                  [ngModel]="nuevoObjetivoDescripcion()"
+                  (ngModelChange)="nuevoObjetivoDescripcion.set($event)"
+                  rows="2"
+                  placeholder="Descripción del objetivo"></textarea>
+              </div>
+            </div>
+            <div class="inline-form-actions">
+              <button class="btn-cancelar-sm" (click)="cerrarFormObjetivo()">Cancelar</button>
+              <button class="btn-guardar-sm" (click)="guardarObjetivo()">Crear</button>
+            </div>
+          </div>
+        }
+
+        <!-- Lista de Objetivos -->
+        <div class="objetivos-lista">
+          @for (objetivo of objetivos(); track objetivo.id) {
+            <div class="objetivo-card" [class.editando]="isEditandoObjetivo(objetivo.id)">
+              <!-- Vista normal del objetivo -->
+              @if (!isEditandoObjetivo(objetivo.id)) {
+                <div class="objetivo-header">
+                  <div class="objetivo-info">
+                    <h3 class="objetivo-titulo">{{ objetivo.nombre }}</h3>
+                    <p class="objetivo-descripcion">{{ objetivo.descripcion }}</p>
+                  </div>
+                  <div class="objetivo-actions-top">
+                    <span class="objetivo-tag" [class.estrategico]="objetivo.tipo === 'estrategico'">
+                      {{ getTipoLabel(objetivo.tipo) }}
+                    </span>
+                    <button class="btn-icon" (click)="abrirFormObjetivo(objetivo)">Editar</button>
+                    <button class="btn-icon-x" (click)="eliminarObjetivo(objetivo.id)">
+                      <i class="pi pi-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Progress bar -->
+                <div class="objetivo-progress">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="objetivo.progreso"></div>
+                  </div>
+                  <span class="progress-label">{{ objetivo.progreso }}%</span>
+                </div>
+              } @else {
+                <!-- Formulario inline para editar objetivo -->
+                <div class="inline-form-body">
+                  <div class="inline-form-row">
+                    <div class="form-field flex-2">
+                      <label class="field-label">Nombre *</label>
+                      <input
+                        type="text"
+                        class="field-input"
+                        [ngModel]="nuevoObjetivoNombre()"
+                        (ngModelChange)="nuevoObjetivoNombre.set($event)"
+                        placeholder="Nombre del objetivo">
+                    </div>
+                    <div class="form-field flex-1">
+                      <label class="field-label">Tipo *</label>
+                      <div class="select-wrapper">
+                        <select
+                          class="field-select"
+                          [ngModel]="nuevoObjetivoTipo()"
+                          (ngModelChange)="nuevoObjetivoTipo.set($event)">
+                          <option value="estrategico">Estratégico</option>
+                          <option value="operativo">Operativo</option>
+                        </select>
+                        <i class="pi pi-chevron-down select-icon"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label class="field-label">Descripción</label>
+                    <textarea
+                      class="field-textarea"
+                      [ngModel]="nuevoObjetivoDescripcion()"
+                      (ngModelChange)="nuevoObjetivoDescripcion.set($event)"
+                      rows="2"
+                      placeholder="Descripción del objetivo"></textarea>
+                  </div>
+                </div>
+                <div class="inline-form-actions">
+                  <button class="btn-cancelar-sm" (click)="cerrarFormObjetivo()">Cancelar</button>
+                  <button class="btn-guardar-sm" (click)="guardarObjetivo()">Guardar</button>
                 </div>
               }
-            </div>
-          </div>
-        </div>
-      }
 
-      <!-- Step 2: Información Detallada -->
-      @if (pasoActual() === 1) {
-        <div class="step-content">
-          <div class="form-row">
-            <div class="form-section">
-              <label class="form-label">Área Responsable</label>
-              <select
-                class="form-select"
-                [ngModel]="areaResponsable()"
-                (ngModelChange)="areaResponsable.set($event)">
-                <option value="">Seleccionar área</option>
-                @for (area of areasOptions; track area.value) {
-                  <option [value]="area.value">{{ area.label }}</option>
-                }
-              </select>
-            </div>
-
-            <div class="form-section">
-              <label class="form-label">Categoría</label>
-              <select
-                class="form-select"
-                [ngModel]="categoria()"
-                (ngModelChange)="categoria.set($event)">
-                <option value="">Seleccionar categoría</option>
-                @for (cat of categoriasOptions; track cat.value) {
-                  <option [value]="cat.value">{{ cat.label }}</option>
-                }
-              </select>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-section">
-              <label class="form-label">Fuente de Datos</label>
-              <input
-                type="text"
-                class="form-input"
-                [ngModel]="fuenteDatos()"
-                (ngModelChange)="fuenteDatos.set($event)"
-                placeholder="Ej: Base de datos, API externa...">
-            </div>
-
-            <div class="form-section">
-              <label class="form-label">Propietario del Proceso</label>
-              <input
-                type="text"
-                class="form-input"
-                [ngModel]="propietario()"
-                (ngModelChange)="propietario.set($event)"
-                placeholder="Nombre del responsable">
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- Step 3: Apetito de Riesgo -->
-      @if (pasoActual() === 2) {
-        <div class="step-content">
-          <p class="step-description">
-            Selecciona las celdas que representan los niveles de riesgo aceptables para este proceso.
-          </p>
-
-          <div class="matriz-wrapper">
-            <div class="matriz-y-axis">
-              <span class="axis-title">Probabilidad</span>
-              @for (label of probabilidadLabels.slice().reverse(); track $index) {
-                <span class="axis-label">{{ label }}</span>
-              }
-            </div>
-
-            <div class="matriz-main">
-              <div class="matriz-grid-figma">
-                @for (prob of [5, 4, 3, 2, 1]; track prob) {
-                  <div class="matriz-row-figma">
-                    @for (imp of [1, 2, 3, 4, 5]; track imp) {
-                      <div
-                        class="matriz-cell"
-                        [class]="getCeldaNivel(prob, imp)"
-                        [class.selected]="isCeldaSeleccionada(prob, imp)"
-                        (click)="toggleCelda(prob, imp)">
-                        @if (isCeldaSeleccionada(prob, imp)) {
-                          <i class="pi pi-check"></i>
-                        }
-                      </div>
-                    }
+              <!-- KPIs Section -->
+              @if (!isEditandoObjetivo(objetivo.id)) {
+                <div class="kpis-section">
+                  <div class="kpis-header">
+                    <span class="kpis-title">
+                      KPIs
+                      <span class="kpis-badge">{{ objetivo.kpis.length }}</span>
+                    </span>
+                    <button class="btn-agregar-kpi" (click)="abrirFormKPI(objetivo.id)">
+                      Agregar KPIs
+                      <i class="pi pi-plus"></i>
+                    </button>
                   </div>
-                }
-              </div>
 
-              <div class="matriz-x-axis">
-                @for (label of impactoLabels; track $index) {
-                  <span class="axis-label">{{ label }}</span>
-                }
-                <span class="axis-title">Impacto</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="matriz-legend-figma">
-            <div class="legend-item"><span class="legend-dot bajo"></span> Bajo</div>
-            <div class="legend-item"><span class="legend-dot medio"></span> Medio</div>
-            <div class="legend-item"><span class="legend-dot alto"></span> Alto</div>
-            <div class="legend-item"><span class="legend-dot critico"></span> Crítico</div>
-          </div>
-        </div>
-      }
-
-      <!-- Step 4: Objetivos y KPIs - Estilo Figma -->
-      @if (pasoActual() === 3) {
-        <div class="step-content objetivos-step-figma">
-          <!-- Header con botón agregar -->
-          <div class="objetivos-header-figma">
-            <div class="objetivos-header-info">
-              <h3>Objetivos del Proceso</h3>
-              <span class="objetivos-count">{{ objetivos().length }} objetivos · {{ getTotalKPIs() }} KPIs</span>
-            </div>
-            <button class="btn-add-objetivo-figma" (click)="abrirFormObjetivo()">
-              <i class="pi pi-plus"></i>
-              Nuevo Objetivo
-            </button>
-          </div>
-
-          <!-- Lista de Objetivos - Cards estilo Figma -->
-          @if (objetivos().length > 0) {
-            <div class="objetivos-grid-figma">
-              @for (objetivo of objetivos(); track objetivo.id; let i = $index) {
-                <div class="objetivo-card-figma" [class.expanded]="objetivo.expanded">
-                  <!-- Card Header -->
-                  <div class="card-header-figma">
-                    <div class="card-title-row">
-                      <span class="card-title">{{ objetivo.nombre }}</span>
-                      <div class="card-actions">
-                        <button class="card-badge-btn" title="{{ objetivo.kpis.length }} KPIs">
-                          <span class="badge-count">{{ objetivo.kpis.length }}</span>
-                        </button>
-                        <button class="card-expand-btn" (click)="toggleObjetivo(objetivo.id)">
-                          <i class="pi" [class.pi-chevron-down]="objetivo.expanded" [class.pi-chevron-right]="!objetivo.expanded"></i>
-                        </button>
+                  <!-- Formulario inline para nuevo KPI -->
+                  @if (isFormKPIVisible(objetivo.id) && !kpiEditandoId()) {
+                    <div class="inline-form kpi-form-inline">
+                      <div class="inline-form-body">
+                        <div class="inline-form-row">
+                          <div class="form-field flex-2">
+                            <label class="field-label">Nombre *</label>
+                            <input
+                              type="text"
+                              class="field-input"
+                              [ngModel]="nuevoKPINombre()"
+                              (ngModelChange)="nuevoKPINombre.set($event)"
+                              placeholder="Nombre del KPI">
+                          </div>
+                          <div class="form-field flex-1">
+                            <label class="field-label">Meta</label>
+                            <input
+                              type="number"
+                              class="field-input"
+                              [ngModel]="nuevoKPIMeta()"
+                              (ngModelChange)="nuevoKPIMeta.set($event)"
+                              min="0"
+                              max="100">
+                          </div>
+                          <div class="form-field flex-1">
+                            <label class="field-label">Escala</label>
+                            <div class="select-wrapper">
+                              <select
+                                class="field-select"
+                                [ngModel]="nuevoKPIEscala()"
+                                (ngModelChange)="nuevoKPIEscala.set($event)">
+                                @for (escala of escalasOptions; track escala.value) {
+                                  <option [value]="escala.value">{{ escala.label }}</option>
+                                }
+                              </select>
+                              <i class="pi pi-chevron-down select-icon"></i>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="inline-form-actions">
+                        <button class="btn-cancelar-sm" (click)="cerrarFormKPI()">Cancelar</button>
+                        <button class="btn-guardar-sm" (click)="guardarKPI()">Crear</button>
                       </div>
                     </div>
-                    <div class="card-tags-row">
-                      <span class="card-tag" [class.estrategico]="objetivo.progresoMeta >= 80" [class.especifico]="objetivo.progresoMeta < 80">
-                        {{ objetivo.progresoMeta >= 80 ? 'Estratégico' : 'Específico' }}
-                      </span>
-                    </div>
-                  </div>
+                  }
 
-                  <!-- Card Body -->
-                  <div class="card-body-figma">
-                    <p class="card-description">{{ objetivo.descripcion || 'Sin descripción' }}</p>
-                  </div>
-
-                  <!-- Progress Bar -->
-                  <div class="card-progress-figma">
-                    <div class="progress-bar">
-                      <div class="progress-value" [style.width.%]="objetivo.progresoMeta"></div>
-                    </div>
-                  </div>
-
-                  <!-- Card Footer Actions -->
-                  <div class="card-footer-figma">
-                    <div class="footer-left">
-                      @if (objetivo.fechaLimite) {
-                        <span class="fecha-limite">
-                          <i class="pi pi-calendar"></i>
-                          {{ objetivo.fechaLimite }}
-                        </span>
-                      }
-                    </div>
-                    <div class="footer-actions">
-                      <button class="action-btn" (click)="moverObjetivo(i, 'up')" [disabled]="i === 0" title="Subir">
-                        <i class="pi pi-arrow-up"></i>
-                      </button>
-                      <button class="action-btn" (click)="moverObjetivo(i, 'down')" [disabled]="i === objetivos().length - 1" title="Bajar">
-                        <i class="pi pi-arrow-down"></i>
-                      </button>
-                      <button class="action-btn" (click)="abrirFormObjetivo(objetivo)" title="Editar">
-                        <i class="pi pi-pencil"></i>
-                      </button>
-                      <button class="action-btn danger" (click)="eliminarObjetivo(objetivo.id)" title="Eliminar">
-                        <i class="pi pi-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Contenido expandido - KPIs -->
-                  @if (objetivo.expanded) {
-                    <div class="card-expanded-figma">
-                      <div class="kpis-header-figma">
-                        <span class="kpis-title">KPIs del Objetivo</span>
-                        <button class="btn-add-kpi-figma" (click)="abrirFormKPI(objetivo.id)">
-                          <i class="pi pi-plus"></i>
-                          Agregar KPI
-                        </button>
-                      </div>
-
-                      @if (objetivo.kpis.length > 0) {
-                        <div class="kpis-list-figma">
-                          @for (kpi of objetivo.kpis; track kpi.id) {
-                            <div class="kpi-row-figma">
-                              <div class="kpi-info">
-                                <span class="kpi-name">{{ kpi.nombre }}</span>
-                                <span class="kpi-values">{{ kpi.valorInicial }} → {{ kpi.valorMeta }} {{ kpi.unidad }}</span>
+                  @if (objetivo.kpis.length > 0) {
+                    <div class="kpis-lista">
+                      @for (kpi of objetivo.kpis; track kpi.id) {
+                        <div class="kpi-item" [class.editando]="isEditandoKPI(kpi.id)">
+                          @if (!isEditandoKPI(kpi.id) || !isFormKPIVisible(objetivo.id)) {
+                            <!-- Vista normal del KPI -->
+                            <div class="kpi-info">
+                              <span class="kpi-nombre">{{ kpi.nombre }}</span>
+                              <div class="kpi-meta">
+                                <span class="meta-label">Meta</span>
+                                <span class="meta-value">{{ kpi.meta }}%</span>
+                                <span class="meta-label">Escala</span>
+                                <span class="meta-value">{{ kpi.escala }}</span>
                               </div>
-                              <div class="kpi-umbrales">
-                                <span class="umbral deficiente" title="Deficiente"></span>
-                                <span class="umbral aceptable" title="Aceptable"></span>
-                                <span class="umbral bueno" title="Bueno"></span>
-                                <span class="umbral sobresaliente" title="Sobresaliente"></span>
+                              <div class="kpi-progress-bar">
+                                <div class="kpi-progress-fill" [style.width.%]="kpi.meta"></div>
                               </div>
-                              <div class="kpi-actions">
-                                <button class="kpi-btn" (click)="abrirFormKPI(objetivo.id, kpi)">
-                                  <i class="pi pi-pencil"></i>
-                                </button>
-                                <button class="kpi-btn danger" (click)="eliminarKPI(objetivo.id, kpi.id)">
-                                  <i class="pi pi-trash"></i>
-                                </button>
+                            </div>
+                            <div class="kpi-actions">
+                              <button class="btn-icon" (click)="abrirFormKPI(objetivo.id, kpi)">Editar</button>
+                              <button class="btn-icon-x" (click)="eliminarKPI(objetivo.id, kpi.id)">
+                                <i class="pi pi-times"></i>
+                              </button>
+                            </div>
+                          } @else {
+                            <!-- Formulario inline para editar KPI -->
+                            <div class="kpi-edit-form">
+                              <div class="inline-form-row">
+                                <div class="form-field flex-2">
+                                  <label class="field-label">Nombre *</label>
+                                  <input
+                                    type="text"
+                                    class="field-input"
+                                    [ngModel]="nuevoKPINombre()"
+                                    (ngModelChange)="nuevoKPINombre.set($event)"
+                                    placeholder="Nombre del KPI">
+                                </div>
+                                <div class="form-field flex-1">
+                                  <label class="field-label">Meta</label>
+                                  <input
+                                    type="number"
+                                    class="field-input"
+                                    [ngModel]="nuevoKPIMeta()"
+                                    (ngModelChange)="nuevoKPIMeta.set($event)"
+                                    min="0"
+                                    max="100">
+                                </div>
+                                <div class="form-field flex-1">
+                                  <label class="field-label">Escala</label>
+                                  <div class="select-wrapper">
+                                    <select
+                                      class="field-select"
+                                      [ngModel]="nuevoKPIEscala()"
+                                      (ngModelChange)="nuevoKPIEscala.set($event)">
+                                      @for (escala of escalasOptions; track escala.value) {
+                                        <option [value]="escala.value">{{ escala.label }}</option>
+                                      }
+                                    </select>
+                                    <i class="pi pi-chevron-down select-icon"></i>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="inline-form-actions">
+                                <button class="btn-cancelar-sm" (click)="cerrarFormKPI()">Cancelar</button>
+                                <button class="btn-guardar-sm" (click)="guardarKPI()">Guardar</button>
                               </div>
                             </div>
                           }
-                        </div>
-                      } @else {
-                        <div class="kpis-empty-figma">
-                          <i class="pi pi-chart-line"></i>
-                          <span>Sin KPIs definidos</span>
                         </div>
                       }
                     </div>
@@ -316,379 +568,134 @@
                 </div>
               }
             </div>
-          } @else {
-            <div class="empty-objetivos-figma">
-              <div class="empty-icon">
-                <i class="pi pi-flag"></i>
-              </div>
-              <h4>No hay objetivos definidos</h4>
-              <p>Agrega objetivos con sus KPIs para medir el rendimiento del proceso</p>
-              <button class="btn-add-first" (click)="abrirFormObjetivo()">
+          }
+
+          <!-- Empty state -->
+          @if (objetivos().length === 0 && !mostrarFormObjetivoInline()) {
+            <div class="empty-state">
+              <i class="pi pi-flag"></i>
+              <p>No hay objetivos agregados</p>
+              <button class="btn-crear-primero" (click)="modoObjetivos.set('crear'); abrirFormObjetivo()">
                 <i class="pi pi-plus"></i>
                 Crear primer objetivo
               </button>
             </div>
           }
         </div>
-      }
+      </div>
+    }
 
-      <!-- Modal Form Objetivo -->
-      @if (mostrarFormObjetivo()) {
-        <div class="modal-overlay" (click)="cerrarFormObjetivo()">
-          <div class="modal-form" (click)="$event.stopPropagation()">
-            <div class="modal-form-header">
-              <h3>{{ objetivoEditando() ? 'Editar' : 'Nuevo' }} Objetivo</h3>
-              <button class="modal-close" (click)="cerrarFormObjetivo()">
-                <i class="pi pi-times"></i>
-              </button>
+    <!-- PASO 4: Revisión -->
+    @if (pasoActual() === 3) {
+      <div class="step-panel panel-columna-izquierda revision-panel">
+        <h2 class="panel-title">Revisión</h2>
+
+        <!-- Resumen en una columna -->
+        <div class="revision-single-column">
+          <!-- Info básica -->
+          <div class="revision-section">
+            <div class="section-row">
+              <label>Nombre del proceso</label>
+              <span class="section-value">{{ nombreProceso() }}</span>
             </div>
-            <div class="modal-form-body">
-              <div class="form-section">
-                <label class="form-label">Nombre del Objetivo *</label>
-                <input
-                  type="text"
-                  class="form-input"
-                  [ngModel]="nuevoObjetivoNombre()"
-                  (ngModelChange)="nuevoObjetivoNombre.set($event)"
-                  placeholder="Ej: Reducir tiempos de respuesta">
+            <div class="section-row">
+              <label>Estado *</label>
+              <div class="select-wrapper compact">
+                <select class="field-select" [ngModel]="tipoProceso()" disabled>
+                  @for (tipo of tiposProcesoOptions; track tipo.value) {
+                    <option [value]="tipo.value">{{ tipo.label }}</option>
+                  }
+                </select>
               </div>
-              <div class="form-section">
-                <label class="form-label">Descripción</label>
-                <textarea
-                  class="form-textarea"
-                  [ngModel]="nuevoObjetivoDescripcion()"
-                  (ngModelChange)="nuevoObjetivoDescripcion.set($event)"
-                  rows="3"
-                  placeholder="Describe el objetivo...">
-                </textarea>
-              </div>
-              <div class="form-row">
-                <div class="form-section">
-                  <label class="form-label">Fecha Límite</label>
-                  <input
-                    type="date"
-                    class="form-input"
-                    [ngModel]="nuevoObjetivoFechaLimite()"
-                    (ngModelChange)="nuevoObjetivoFechaLimite.set($event)">
-                </div>
-                <div class="form-section">
-                  <label class="form-label">% Progreso Meta</label>
-                  <input
-                    type="number"
-                    class="form-input"
-                    [ngModel]="nuevoObjetivoProgresoMeta()"
-                    (ngModelChange)="nuevoObjetivoProgresoMeta.set($event)"
-                    min="0"
-                    max="100"
-                    placeholder="100">
-                </div>
-              </div>
-            </div>
-            <div class="modal-form-footer">
-              <button class="btn-text" (click)="cerrarFormObjetivo()">Cancelar</button>
-              <button class="btn-primary" (click)="guardarObjetivo()">
-                <i class="pi pi-check"></i>
-                {{ objetivoEditando() ? 'Guardar' : 'Agregar' }}
-              </button>
             </div>
           </div>
-        </div>
-      }
 
-      <!-- Modal Form KPI -->
-      @if (mostrarFormKPI()) {
-        <div class="modal-overlay" (click)="cerrarFormKPI()">
-          <div class="modal-form modal-form-kpi" (click)="$event.stopPropagation()">
-            <div class="modal-form-header">
-              <h3>{{ kpiEditando() ? 'Editar' : 'Nuevo' }} KPI</h3>
-              <button class="modal-close" (click)="cerrarFormKPI()">
-                <i class="pi pi-times"></i>
-              </button>
-            </div>
-            <div class="modal-form-body">
-              <div class="form-row">
-                <div class="form-section flex-2">
-                  <label class="form-label">Nombre del KPI *</label>
-                  <input
-                    type="text"
-                    class="form-input"
-                    [ngModel]="nuevoKpiNombre()"
-                    (ngModelChange)="nuevoKpiNombre.set($event)"
-                    placeholder="Ej: Tiempo de respuesta">
-                </div>
-                <div class="form-section flex-1">
-                  <label class="form-label">Unidad</label>
-                  <select
-                    class="form-select"
-                    [ngModel]="nuevoKpiUnidad()"
-                    (ngModelChange)="nuevoKpiUnidad.set($event)">
-                    @for (unidad of unidadesOptions; track unidad.value) {
-                      <option [value]="unidad.value">{{ unidad.label }}</option>
-                    }
-                  </select>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-section">
-                  <label class="form-label">Valor Inicial</label>
-                  <input
-                    type="number"
-                    class="form-input"
-                    [ngModel]="nuevoKpiValorInicial()"
-                    (ngModelChange)="nuevoKpiValorInicial.set($event)"
-                    placeholder="0">
-                </div>
-                <div class="form-section">
-                  <label class="form-label">Valor Meta</label>
-                  <input
-                    type="number"
-                    class="form-input"
-                    [ngModel]="nuevoKpiValorMeta()"
-                    (ngModelChange)="nuevoKpiValorMeta.set($event)"
-                    placeholder="100">
-                </div>
-              </div>
-
-              <!-- Umbrales -->
-              <div class="umbrales-section">
-                <label class="form-label umbrales-label">Umbrales de Desempeño</label>
-                <div class="umbrales-grid">
-                  <div class="umbral-row deficiente">
-                    <span class="umbral-name">
-                      <span class="umbral-indicator"></span>
-                      Deficiente
-                    </span>
-                    <div class="umbral-inputs">
-                      <input
-                        type="number"
-                        class="form-input umbral-input"
-                        [ngModel]="umbralDeficienteMin()"
-                        (ngModelChange)="umbralDeficienteMin.set($event)"
-                        placeholder="Min">
-                      <span class="umbral-separator">-</span>
-                      <input
-                        type="number"
-                        class="form-input umbral-input"
-                        [ngModel]="umbralDeficienteMax()"
-                        (ngModelChange)="umbralDeficienteMax.set($event)"
-                        placeholder="Max">
-                    </div>
-                  </div>
-                  <div class="umbral-row aceptable">
-                    <span class="umbral-name">
-                      <span class="umbral-indicator"></span>
-                      Aceptable
-                    </span>
-                    <div class="umbral-inputs">
-                      <input
-                        type="number"
-                        class="form-input umbral-input"
-                        [ngModel]="umbralAceptableMin()"
-                        (ngModelChange)="umbralAceptableMin.set($event)"
-                        placeholder="Min">
-                      <span class="umbral-separator">-</span>
-                      <input
-                        type="number"
-                        class="form-input umbral-input"
-                        [ngModel]="umbralAceptableMax()"
-                        (ngModelChange)="umbralAceptableMax.set($event)"
-                        placeholder="Max">
-                    </div>
-                  </div>
-                  <div class="umbral-row bueno">
-                    <span class="umbral-name">
-                      <span class="umbral-indicator"></span>
-                      Bueno
-                    </span>
-                    <div class="umbral-inputs">
-                      <input
-                        type="number"
-                        class="form-input umbral-input"
-                        [ngModel]="umbralBuenoMin()"
-                        (ngModelChange)="umbralBuenoMin.set($event)"
-                        placeholder="Min">
-                      <span class="umbral-separator">-</span>
-                      <input
-                        type="number"
-                        class="form-input umbral-input"
-                        [ngModel]="umbralBuenoMax()"
-                        (ngModelChange)="umbralBuenoMax.set($event)"
-                        placeholder="Max">
-                    </div>
-                  </div>
-                  <div class="umbral-row sobresaliente">
-                    <span class="umbral-name">
-                      <span class="umbral-indicator"></span>
-                      Sobresaliente
-                    </span>
-                    <div class="umbral-inputs">
-                      <input
-                        type="number"
-                        class="form-input umbral-input"
-                        [ngModel]="umbralSobresalienteMin()"
-                        (ngModelChange)="umbralSobresalienteMin.set($event)"
-                        placeholder="Min">
-                      <span class="umbral-separator">-</span>
-                      <input
-                        type="number"
-                        class="form-input umbral-input"
-                        [ngModel]="umbralSobresalienteMax()"
-                        (ngModelChange)="umbralSobresalienteMax.set($event)"
-                        placeholder="Max">
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="modal-form-footer">
-              <button class="btn-text" (click)="cerrarFormKPI()">Cancelar</button>
-              <button class="btn-primary" (click)="guardarKPI()">
-                <i class="pi pi-check"></i>
-                {{ kpiEditando() ? 'Guardar' : 'Agregar' }}
-              </button>
+          <!-- Descripción -->
+          <div class="revision-section">
+            <label>Descripción detallada *</label>
+            <div class="descripcion-box">
+              {{ descripcionProceso() }}
             </div>
           </div>
-        </div>
-      }
 
-      <!-- Step 5: Resumen -->
-      @if (pasoActual() === 4) {
-        <div class="step-content resumen-content">
-          <div class="resumen-grid-figma">
-            <!-- Datos Básicos -->
-            <div class="resumen-card">
-              <div class="resumen-card-header">
-                <i class="pi pi-file"></i>
-                <span>Datos Básicos</span>
+          <!-- Apetito de riesgo resumen -->
+          <div class="revision-section">
+            <label>Apetito de riesgo</label>
+            <div class="apetito-resumen">
+              <div class="apetito-valores">
+                <span><strong>Probabilidad:</strong> {{ probabilidadInput() }}</span>
+                <span><strong>Impacto:</strong> {{ impactoInput() }}</span>
+                <span><strong>Apetito:</strong> {{ apetitoRiesgo() }}%</span>
               </div>
-              <div class="resumen-card-body">
-                <div class="resumen-row">
-                  <span class="label">Nombre:</span>
-                  <span class="value">{{ nombre() }}</span>
+            </div>
+          </div>
+
+          <!-- Objetivos y KPIs -->
+          @for (objetivo of objetivos(); track objetivo.id) {
+            <div class="revision-objetivo">
+              <div class="objetivo-header-rev">
+                <span class="objetivo-titulo-rev">{{ objetivo.nombre }}</span>
+                <span class="objetivo-tag" [class.estrategico]="objetivo.tipo === 'estrategico'">
+                  {{ getTipoLabel(objetivo.tipo) }}
+                </span>
+              </div>
+              <p class="objetivo-desc-rev">{{ objetivo.descripcion }}</p>
+              <div class="objetivo-progress-rev">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="objetivo.progreso"></div>
                 </div>
-                <div class="resumen-row">
-                  <span class="label">Tipo:</span>
-                  <span class="value">{{ getTipoSeleccionado()?.nombre || '-' }}</span>
+              </div>
+
+              <div class="kpis-section-rev">
+                <div class="kpis-header-rev">
+                  <span>KPIs <span class="badge">{{ objetivo.kpis.length }}</span></span>
+                  <button class="btn-link" (click)="abrirFormKPI(objetivo.id)">Agregar KPIs +</button>
                 </div>
-                @if (descripcion()) {
-                  <div class="resumen-row">
-                    <span class="label">Descripción:</span>
-                    <span class="value desc">{{ descripcion() }}</span>
+
+                @for (kpi of objetivo.kpis; track kpi.id) {
+                  <div class="kpi-item-rev">
+                    <span class="kpi-nombre-rev">{{ kpi.nombre }}</span>
+                    <div class="kpi-meta-rev">
+                      <span>Meta</span> <strong>{{ kpi.meta }}%</strong>
+                      <span>Escala</span> <strong>{{ kpi.escala }}</strong>
+                    </div>
+                    <div class="kpi-progress-rev">
+                      <div class="kpi-fill-rev" [style.width.%]="kpi.meta"></div>
+                    </div>
+                    <div class="kpi-actions-rev">
+                      <button class="btn-text-sm" (click)="abrirFormKPI(objetivo.id, kpi)">Editar</button>
+                      <button class="btn-icon-sm" (click)="eliminarKPI(objetivo.id, kpi.id)">
+                        <i class="pi pi-times"></i>
+                      </button>
+                    </div>
                   </div>
                 }
               </div>
             </div>
-
-            <!-- Información -->
-            <div class="resumen-card">
-              <div class="resumen-card-header">
-                <i class="pi pi-info-circle"></i>
-                <span>Información</span>
-              </div>
-              <div class="resumen-card-body">
-                <div class="resumen-row">
-                  <span class="label">Área:</span>
-                  <span class="value">{{ areaResponsable() || '-' }}</span>
-                </div>
-                <div class="resumen-row">
-                  <span class="label">Categoría:</span>
-                  <span class="value">{{ categoria() || '-' }}</span>
-                </div>
-                <div class="resumen-row">
-                  <span class="label">Propietario:</span>
-                  <span class="value">{{ propietario() || '-' }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Matriz de Riesgo -->
-            <div class="resumen-card">
-              <div class="resumen-card-header">
-                <i class="pi pi-shield"></i>
-                <span>Apetito de Riesgo</span>
-              </div>
-              <div class="resumen-card-body centered">
-                <div class="mini-matriz">
-                  @for (prob of [5, 4, 3, 2, 1]; track prob) {
-                    <div class="mini-row">
-                      @for (imp of [1, 2, 3, 4, 5]; track imp) {
-                        <div
-                          class="mini-cell"
-                          [class]="getCeldaNivel(prob, imp)"
-                          [class.selected]="isCeldaSeleccionada(prob, imp)">
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-                <span class="tolerancia-text">{{ toleranciaSeleccionada().size }} celdas aceptables</span>
-              </div>
-            </div>
-
-            <!-- Objetivos y KPIs -->
-            <div class="resumen-card resumen-card-full">
-              <div class="resumen-card-header">
-                <i class="pi pi-flag"></i>
-                <span>Objetivos ({{ objetivos().length }}) · KPIs ({{ getTotalKPIs() }})</span>
-              </div>
-              <div class="resumen-card-body">
-                @if (objetivos().length > 0) {
-                  @for (objetivo of objetivos(); track objetivo.id) {
-                    <div class="resumen-objetivo">
-                      <div class="resumen-objetivo-header">
-                        <span class="objetivo-name">{{ objetivo.nombre }}</span>
-                        <span class="objetivo-meta-badge">{{ objetivo.progresoMeta }}%</span>
-                      </div>
-                      @if (objetivo.kpis.length > 0) {
-                        <div class="resumen-kpis">
-                          @for (kpi of objetivo.kpis; track kpi.id) {
-                            <div class="resumen-kpi-row">
-                              <span class="kpi-name">{{ kpi.nombre }}</span>
-                              <span class="kpi-value">{{ kpi.valorInicial }} → {{ kpi.valorMeta }} {{ kpi.unidad }}</span>
-                            </div>
-                          }
-                        </div>
-                      } @else {
-                        <span class="no-kpis">Sin KPIs</span>
-                      }
-                    </div>
-                  }
-                } @else {
-                  <span class="no-data">Sin objetivos definidos</span>
-                }
-              </div>
-            </div>
-          </div>
+          }
         </div>
+      </div>
+    }
+  </div>
+
+  <!-- Footer Fixed -->
+  <div class="page-footer-fixed">
+    <div class="footer-content">
+      @if (pasoActual() > 0) {
+        <button class="btn-atras" (click)="anterior()">
+          <i class="pi pi-arrow-left"></i>
+          Atrás
+        </button>
+      } @else {
+        <button class="btn-atras" (click)="cancelar()">Cancelar</button>
       }
-    </div>
 
-    <!-- Footer -->
-    <div class="wizard-footer">
-      <div class="footer-left">
-        @if (pasoActual() > 0) {
-          <button class="btn-secondary" (click)="anterior()">
-            <i class="pi pi-arrow-left"></i>
-            Anterior
-          </button>
-        }
-      </div>
-
-      <div class="footer-right">
-        <button class="btn-text" (click)="cancelar()">Cancelar</button>
-
-        @if (pasoActual() < 4) {
-          <button class="btn-primary" (click)="siguiente()">
-            Siguiente
-            <i class="pi pi-arrow-right"></i>
-          </button>
-        } @else {
-          <button class="btn-success" (click)="crearProceso()">
-            <i class="pi pi-check"></i>
-            Crear Proceso
-          </button>
-        }
-      </div>
+      @if (pasoActual() < 3) {
+        <button class="btn-siguiente" (click)="siguiente()">Siguiente</button>
+      } @else {
+        <button class="btn-guardar" (click)="guardarEIrEditor()">Guardar e ir editor</button>
+      }
     </div>
   </div>
 </div>
+

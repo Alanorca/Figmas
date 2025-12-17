@@ -43,6 +43,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/procesos/procesos').then(m => m.ProcesosComponent)
   },
   {
+    path: 'procesos/:id/detalle',
+    loadComponent: () => import('./pages/proceso-detalle/proceso-detalle').then(m => m.ProcesoDetalleComponent)
+  },
+  {
     path: 'cuestionarios',
     loadComponent: () => import('./pages/cuestionarios/cuestionarios').then(m => m.CuestionariosComponent)
   },
@@ -53,6 +57,10 @@ export const routes: Routes = [
   {
     path: 'tabla-unificada',
     loadComponent: () => import('./pages/tabla-unificada/tabla-unificada').then(m => m.TablaUnificadaComponent)
+  },
+  {
+    path: 'results-ml',
+    loadComponent: () => import('./pages/results-ml/results-ml').then(m => m.ResultsMLComponent)
   },
   {
     path: '**',

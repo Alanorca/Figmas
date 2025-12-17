@@ -1,48 +1,31 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ProcessService } from '../../services/process.service';
 
-interface TipoProceso {
+// Interfaces
+interface Objetivo {
   id: string;
   nombre: string;
-  icono: string;
   descripcion: string;
-}
-
-interface UmbralKPI {
-  deficiente: { min: number; max: number };
-  aceptable: { min: number; max: number };
-  bueno: { min: number; max: number };
-  sobresaliente: { min: number; max: number };
+  tipo: 'estrategico' | 'operativo';
+  progreso: number;
+  kpis: KPI[];
 }
 
 interface KPI {
   id: string;
   nombre: string;
-  unidad: string;
-  valorInicial: number;
-  valorMeta: number;
-  umbrales: UmbralKPI;
+  meta: number;
+  escala: string;
 }
 
-interface Objetivo {
-  id: string;
-  nombre: string;
-  descripcion: string;
-  fechaLimite: string;
-  progresoMeta: number;
-  kpis: KPI[];
-  expanded: boolean;
-}
-
-interface CeldaRiesgo {
+interface ApetitoCelda {
   probabilidad: number;
   impacto: number;
-  nivel: 'bajo' | 'medio' | 'alto' | 'critico';
 }
 
 @Component({
@@ -51,6 +34,7 @@ interface CeldaRiesgo {
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     ToastModule
   ],
   providers: [MessageService],
@@ -62,141 +46,118 @@ export class ProcesoCrearComponent {
   private messageService = inject(MessageService);
   private processService = inject(ProcessService);
 
-  // Paso actual del wizard
+  // Paso actual del wizard (0-3)
   pasoActual = signal(0);
 
-  // Steps para el componente
+  // Steps del wizard
   steps = [
-    { label: 'Datos Básicos' },
-    { label: 'Información' },
-    { label: 'Apetito de Riesgo' },
-    { label: 'Objetivos' },
-    { label: 'Resumen' }
+    {
+      icon: 'pi pi-info-circle',
+      label: 'Información Básica',
+      descripcion: 'Ingresa los datos básicos del proceso para realizar el registro'
+    },
+    {
+      icon: 'pi pi-key',
+      label: 'Apetito de riesgo',
+      descripcion: 'Define o crea el apetito de riesgo para poderlo monitorear'
+    },
+    {
+      icon: 'pi pi-bullseye',
+      label: 'Objetivos y KPIS',
+      descripcion: 'Registre objetivos y KPIS de acuerdo a tu proceso'
+    },
+    {
+      icon: 'pi pi-list',
+      label: 'Revisión',
+      descripcion: 'Revisa toda la información y confirma antes de guardar el proceso'
+    }
   ];
 
-  // Datos del formulario - Step 1
-  nombre = signal('');
-  descripcion = signal('');
-  tipoSeleccionado = signal<string | null>(null);
+  // ========== PASO 1: Información Básica ==========
+  nombreProceso = signal('');
+  tipoProceso = signal<'estrategico' | 'operativo' | ''>('');
+  descripcionProceso = signal('');
 
-  tiposProceso: TipoProceso[] = [
-    { id: 'operativo', nombre: 'Operativo', icono: 'pi pi-cog', descripcion: 'Procesos del día a día' },
-    { id: 'estrategico', nombre: 'Estratégico', icono: 'pi pi-chart-line', descripcion: 'Procesos de alto nivel' },
-    { id: 'soporte', nombre: 'Soporte', icono: 'pi pi-wrench', descripcion: 'Procesos de apoyo' },
-    { id: 'control', nombre: 'Control', icono: 'pi pi-shield', descripcion: 'Procesos de monitoreo' }
+  tiposProcesoOptions = [
+    { label: 'Estratégico', value: 'estrategico' },
+    { label: 'Operativo', value: 'operativo' }
   ];
 
-  // Datos del formulario - Step 2
-  areaResponsable = signal('');
-  fuenteDatos = signal('');
-  categoria = signal('');
-  propietario = signal('');
+  // ========== PASO 2: Apetito de Riesgo ==========
+  modoApetito = signal<'seleccionar' | 'crear'>('crear');
 
-  areasOptions = [
-    { label: 'TI', value: 'ti' },
-    { label: 'Operaciones', value: 'operaciones' },
-    { label: 'Finanzas', value: 'finanzas' },
-    { label: 'Recursos Humanos', value: 'rrhh' },
-    { label: 'Legal', value: 'legal' },
-    { label: 'Cumplimiento', value: 'cumplimiento' }
-  ];
+  // Inputs para la matriz - definen el TAMAÑO del mapa
+  probabilidadInput = signal<number>(5);
+  impactoInput = signal<number>(5);
+  apetitoRiesgo = signal<number>(20);
 
-  categoriasOptions = [
-    { label: 'Core', value: 'core' },
-    { label: 'Soporte', value: 'soporte' },
-    { label: 'Gestión', value: 'gestion' }
-  ];
+  // Celda seleccionada en la matriz
+  celdaSeleccionada = signal<ApetitoCelda | null>(null);
 
-  // Datos del formulario - Step 3 - Matriz de riesgo
-  matrizRiesgo = signal<CeldaRiesgo[]>([]);
-  toleranciaSeleccionada = signal<Set<string>>(new Set());
+  // Arrays dinámicos para la matriz
+  getProbabilidadArray(): number[] {
+    const max = this.probabilidadInput();
+    return Array.from({ length: max }, (_, i) => max - i);
+  }
 
-  // Labels para la matriz
-  probabilidadLabels = ['Muy Baja', 'Baja', 'Media', 'Alta', 'Muy Alta'];
+  getImpactoArray(): number[] {
+    const max = this.impactoInput();
+    return Array.from({ length: max }, (_, i) => i + 1);
+  }
+
+  // Labels de la matriz
+  probabilidadLabels = ['Raro', 'Poco probable', 'Posible', 'Probable', 'Seguro'];
   impactoLabels = ['Insignificante', 'Menor', 'Moderado', 'Mayor', 'Catastrófico'];
 
-  // Datos del formulario - Step 4 - Objetivos y KPIs
+  // ========== PASO 3: Objetivos y KPIs ==========
+  modoObjetivos = signal<'seleccionar' | 'crear'>('seleccionar');
   objetivos = signal<Objetivo[]>([]);
 
-  // Para agregar/editar objetivos
-  objetivoEditando = signal<Objetivo | null>(null);
-  mostrarFormObjetivo = signal(false);
+  // Objetivos existentes para seleccionar (mock)
+  objetivosExistentes = signal<Objetivo[]>([
+    {
+      id: 'OBJ-001',
+      nombre: 'Reducir riesgos operacionales',
+      descripcion: 'Evaluación de riesgos financieros, desarrollo de estrategias de mitigación, coordinación de auditorías y fortalecimiento de controles internos.',
+      tipo: 'estrategico',
+      progreso: 50,
+      kpis: [
+        { id: 'KPI-001', nombre: 'Reducir riesgos operacionales', meta: 75, escala: 'Porcentaje' }
+      ]
+    }
+  ]);
+
+  // Form inline para nuevo objetivo
+  mostrarFormObjetivoInline = signal(false);
+  objetivoEditandoId = signal<string | null>(null);
   nuevoObjetivoNombre = signal('');
   nuevoObjetivoDescripcion = signal('');
-  nuevoObjetivoFechaLimite = signal('');
-  nuevoObjetivoProgresoMeta = signal<number>(100);
+  nuevoObjetivoTipo = signal<'estrategico' | 'operativo'>('estrategico');
 
-  // Para agregar/editar KPIs
-  objetivoParaKPI = signal<string | null>(null);
-  mostrarFormKPI = signal(false);
-  kpiEditando = signal<KPI | null>(null);
-  nuevoKpiNombre = signal('');
-  nuevoKpiUnidad = signal('%');
-  nuevoKpiValorInicial = signal<number>(0);
-  nuevoKpiValorMeta = signal<number>(100);
-  // Umbrales
-  umbralDeficienteMin = signal<number>(0);
-  umbralDeficienteMax = signal<number>(25);
-  umbralAceptableMin = signal<number>(26);
-  umbralAceptableMax = signal<number>(50);
-  umbralBuenoMin = signal<number>(51);
-  umbralBuenoMax = signal<number>(75);
-  umbralSobresalienteMin = signal<number>(76);
-  umbralSobresalienteMax = signal<number>(100);
+  // Form inline para nuevo KPI
+  mostrarFormKPIInline = signal<string | null>(null); // ID del objetivo donde mostrar el form
+  kpiEditandoId = signal<string | null>(null);
+  nuevoKPINombre = signal('');
+  nuevoKPIMeta = signal<number>(75);
+  nuevoKPIEscala = signal('Porcentaje');
 
-  unidadesOptions = [
-    { label: '%', value: '%' },
-    { label: 'Días', value: 'días' },
-    { label: 'Horas', value: 'horas' },
-    { label: 'Unidades', value: 'unidades' },
-    { label: 'USD', value: 'USD' },
-    { label: 'Puntos', value: 'puntos' }
+  escalasOptions = [
+    { label: 'Porcentaje', value: 'Porcentaje' },
+    { label: 'Unidades', value: 'Unidades' },
+    { label: 'Días', value: 'Días' },
+    { label: 'Horas', value: 'Horas' },
+    { label: 'USD', value: 'USD' }
   ];
 
-  constructor() {
-    this.inicializarMatriz();
-  }
+  // Computed: Total de KPIs
+  totalKPIs = computed(() => {
+    return this.objetivos().reduce((total, obj) => total + obj.kpis.length, 0);
+  });
 
-  inicializarMatriz(): void {
-    const celdas: CeldaRiesgo[] = [];
-    for (let p = 1; p <= 5; p++) {
-      for (let i = 1; i <= 5; i++) {
-        const score = p * i;
-        let nivel: CeldaRiesgo['nivel'];
-        if (score <= 4) nivel = 'bajo';
-        else if (score <= 9) nivel = 'medio';
-        else if (score <= 16) nivel = 'alto';
-        else nivel = 'critico';
-        celdas.push({ probabilidad: p, impacto: i, nivel });
-      }
-    }
-    this.matrizRiesgo.set(celdas);
-  }
-
-  getCeldaNivel(prob: number, imp: number): string {
-    const celda = this.matrizRiesgo().find(c => c.probabilidad === prob && c.impacto === imp);
-    return celda?.nivel || 'bajo';
-  }
-
-  toggleCelda(prob: number, imp: number): void {
-    const key = `${prob}-${imp}`;
-    const current = new Set(this.toleranciaSeleccionada());
-    if (current.has(key)) {
-      current.delete(key);
-    } else {
-      current.add(key);
-    }
-    this.toleranciaSeleccionada.set(current);
-  }
-
-  isCeldaSeleccionada(prob: number, imp: number): boolean {
-    return this.toleranciaSeleccionada().has(`${prob}-${imp}`);
-  }
-
-  // Navegación del wizard
+  // ========== Navegación ==========
   siguiente(): void {
     if (this.validarPasoActual()) {
-      this.pasoActual.update(p => Math.min(p + 1, 4));
+      this.pasoActual.update(p => Math.min(p + 1, 3));
     }
   }
 
@@ -204,88 +165,197 @@ export class ProcesoCrearComponent {
     this.pasoActual.update(p => Math.max(p - 1, 0));
   }
 
+  irAPaso(paso: number): void {
+    // Solo permitir ir a pasos anteriores o al actual
+    if (paso <= this.pasoActual()) {
+      this.pasoActual.set(paso);
+    }
+  }
+
   validarPasoActual(): boolean {
     switch (this.pasoActual()) {
-      case 0:
-        if (!this.nombre().trim()) {
-          this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre es requerido' });
+      case 0: // Información Básica
+        if (!this.nombreProceso().trim()) {
+          this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre del proceso es requerido' });
           return false;
         }
-        if (!this.tipoSeleccionado()) {
+        if (!this.tipoProceso()) {
           this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'Selecciona un tipo de proceso' });
           return false;
         }
+        if (!this.descripcionProceso().trim()) {
+          this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'La descripción es requerida' });
+          return false;
+        }
         return true;
-      case 1:
-        return true; // Campos opcionales
-      case 2:
-        return true; // Matriz opcional
-      case 3:
-        return true; // KPIs opcionales
+      case 1: // Apetito de Riesgo
+        return true; // Opcional
+      case 2: // Objetivos y KPIs
+        return true; // Opcional
       default:
         return true;
     }
   }
 
-  // ========== OBJETIVOS ==========
+  // ========== Matriz de Riesgo ==========
+  generarCelda(): void {
+    const prob = this.probabilidadInput();
+    const imp = this.impactoInput();
+
+    // Mapear valores 1-10 a celdas 1-5
+    const probCelda = Math.ceil(prob / 2);
+    const impCelda = Math.ceil(imp / 2);
+
+    this.celdaSeleccionada.set({
+      probabilidad: probCelda,
+      impacto: impCelda
+    });
+  }
+
+  getCeldaNivel(prob: number, imp: number): string {
+    const score = prob * imp;
+    if (score <= 4) return 'bajo';
+    if (score <= 9) return 'medio';
+    if (score <= 16) return 'alto';
+    return 'critico';
+  }
+
+  isCeldaSeleccionada(prob: number, imp: number): boolean {
+    const celda = this.celdaSeleccionada();
+    return celda?.probabilidad === prob && celda?.impacto === imp;
+  }
+
+  // ========== Matriz de Riesgo Dinámica con Apetito ==========
+
+  // Seleccionar celda directamente desde el mapa
+  seleccionarCeldaDirecta(prob: number, imp: number): void {
+    this.celdaSeleccionada.set({
+      probabilidad: prob,
+      impacto: imp
+    });
+  }
+
+  // Actualizar probabilidad (tamaño del eje Y)
+  actualizarProbabilidad(valor: number): void {
+    const v = Math.max(1, Math.min(10, valor));
+    this.probabilidadInput.set(v);
+    // Limpiar selección si queda fuera del nuevo rango
+    const celda = this.celdaSeleccionada();
+    if (celda && celda.probabilidad > v) {
+      this.celdaSeleccionada.set(null);
+    }
+  }
+
+  // Actualizar impacto (tamaño del eje X)
+  actualizarImpacto(valor: number): void {
+    const v = Math.max(1, Math.min(10, valor));
+    this.impactoInput.set(v);
+    // Limpiar selección si queda fuera del nuevo rango
+    const celda = this.celdaSeleccionada();
+    if (celda && celda.impacto > v) {
+      this.celdaSeleccionada.set(null);
+    }
+  }
+
+  // Nivel dinámico basado en el tamaño actual de la matriz
+  getCeldaNivelDinamico(prob: number, imp: number): string {
+    const maxProb = this.probabilidadInput();
+    const maxImp = this.impactoInput();
+    const maxScore = maxProb * maxImp;
+    const score = prob * imp;
+    const porcentaje = (score / maxScore) * 100;
+
+    if (porcentaje <= 16) return 'bajo';
+    if (porcentaje <= 36) return 'medio';
+    if (porcentaje <= 64) return 'alto';
+    return 'critico';
+  }
+
+  // Celda seleccionada dinámica
+  isCeldaSeleccionadaDinamica(prob: number, imp: number): boolean {
+    const celda = this.celdaSeleccionada();
+    return celda?.probabilidad === prob && celda?.impacto === imp;
+  }
+
+  // Determinar si una celda está dentro del apetito de riesgo (dinámico)
+  estaDentroApetitoDinamico(prob: number, imp: number): boolean {
+    const maxProb = this.probabilidadInput();
+    const maxImp = this.impactoInput();
+    const maxScore = maxProb * maxImp;
+    const score = prob * imp;
+    const porcentajeRiesgo = (score / maxScore) * 100;
+    return porcentajeRiesgo <= this.apetitoRiesgo();
+  }
+
+  // ========== Objetivos (Inline) ==========
+  seleccionarObjetivoExistente(objetivo: Objetivo): void {
+    const yaExiste = this.objetivos().find(o => o.id === objetivo.id);
+    if (yaExiste) {
+      this.messageService.add({ severity: 'info', summary: 'Info', detail: 'Este objetivo ya está agregado' });
+      return;
+    }
+
+    this.objetivos.update(list => [...list, { ...objetivo }]);
+    this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'Objetivo agregado correctamente' });
+  }
 
   abrirFormObjetivo(objetivo?: Objetivo): void {
+    // Cerrar form de KPI si está abierto
+    this.cerrarFormKPI();
+
     if (objetivo) {
-      this.objetivoEditando.set(objetivo);
+      this.objetivoEditandoId.set(objetivo.id);
       this.nuevoObjetivoNombre.set(objetivo.nombre);
       this.nuevoObjetivoDescripcion.set(objetivo.descripcion);
-      this.nuevoObjetivoFechaLimite.set(objetivo.fechaLimite);
-      this.nuevoObjetivoProgresoMeta.set(objetivo.progresoMeta);
+      this.nuevoObjetivoTipo.set(objetivo.tipo);
     } else {
-      this.objetivoEditando.set(null);
+      this.objetivoEditandoId.set(null);
       this.nuevoObjetivoNombre.set('');
       this.nuevoObjetivoDescripcion.set('');
-      this.nuevoObjetivoFechaLimite.set('');
-      this.nuevoObjetivoProgresoMeta.set(100);
+      this.nuevoObjetivoTipo.set('estrategico');
     }
-    this.mostrarFormObjetivo.set(true);
+    this.mostrarFormObjetivoInline.set(true);
   }
 
   cerrarFormObjetivo(): void {
-    this.mostrarFormObjetivo.set(false);
-    this.objetivoEditando.set(null);
+    this.mostrarFormObjetivoInline.set(false);
+    this.objetivoEditandoId.set(null);
+    this.nuevoObjetivoNombre.set('');
+    this.nuevoObjetivoDescripcion.set('');
   }
 
   guardarObjetivo(): void {
     if (!this.nuevoObjetivoNombre().trim()) {
-      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre del objetivo es requerido' });
+      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre es requerido' });
       return;
     }
 
-    if (this.objetivoEditando()) {
-      // Editar existente
+    const editandoId = this.objetivoEditandoId();
+    if (editandoId) {
       this.objetivos.update(list =>
         list.map(o =>
-          o.id === this.objetivoEditando()!.id
+          o.id === editandoId
             ? {
                 ...o,
                 nombre: this.nuevoObjetivoNombre(),
                 descripcion: this.nuevoObjetivoDescripcion(),
-                fechaLimite: this.nuevoObjetivoFechaLimite(),
-                progresoMeta: this.nuevoObjetivoProgresoMeta()
+                tipo: this.nuevoObjetivoTipo()
               }
             : o
         )
       );
-      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Objetivo actualizado correctamente' });
+      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Objetivo actualizado' });
     } else {
-      // Crear nuevo
       const nuevoObjetivo: Objetivo = {
-        id: crypto.randomUUID(),
+        id: `OBJ-${Date.now()}`,
         nombre: this.nuevoObjetivoNombre(),
         descripcion: this.nuevoObjetivoDescripcion(),
-        fechaLimite: this.nuevoObjetivoFechaLimite(),
-        progresoMeta: this.nuevoObjetivoProgresoMeta(),
-        kpis: [],
-        expanded: true
+        tipo: this.nuevoObjetivoTipo(),
+        progreso: 0,
+        kpis: []
       };
       this.objetivos.update(list => [...list, nuevoObjetivo]);
-      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'Objetivo agregado correctamente' });
+      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'Objetivo creado' });
     }
 
     this.cerrarFormObjetivo();
@@ -296,108 +366,72 @@ export class ProcesoCrearComponent {
     this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'Objetivo eliminado' });
   }
 
-  toggleObjetivo(id: string): void {
-    this.objetivos.update(list =>
-      list.map(o => (o.id === id ? { ...o, expanded: !o.expanded } : o))
-    );
+  isEditandoObjetivo(objetivoId: string): boolean {
+    return this.objetivoEditandoId() === objetivoId && this.mostrarFormObjetivoInline();
   }
 
-  moverObjetivo(index: number, direction: 'up' | 'down'): void {
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= this.objetivos().length) return;
-
-    this.objetivos.update(list => {
-      const newList = [...list];
-      [newList[index], newList[newIndex]] = [newList[newIndex], newList[index]];
-      return newList;
-    });
-  }
-
-  // ========== KPIs ==========
-
+  // ========== KPIs (Inline) ==========
   abrirFormKPI(objetivoId: string, kpi?: KPI): void {
-    this.objetivoParaKPI.set(objetivoId);
+    // Cerrar form de objetivo si está abierto
+    this.cerrarFormObjetivo();
 
     if (kpi) {
-      this.kpiEditando.set(kpi);
-      this.nuevoKpiNombre.set(kpi.nombre);
-      this.nuevoKpiUnidad.set(kpi.unidad);
-      this.nuevoKpiValorInicial.set(kpi.valorInicial);
-      this.nuevoKpiValorMeta.set(kpi.valorMeta);
-      this.umbralDeficienteMin.set(kpi.umbrales.deficiente.min);
-      this.umbralDeficienteMax.set(kpi.umbrales.deficiente.max);
-      this.umbralAceptableMin.set(kpi.umbrales.aceptable.min);
-      this.umbralAceptableMax.set(kpi.umbrales.aceptable.max);
-      this.umbralBuenoMin.set(kpi.umbrales.bueno.min);
-      this.umbralBuenoMax.set(kpi.umbrales.bueno.max);
-      this.umbralSobresalienteMin.set(kpi.umbrales.sobresaliente.min);
-      this.umbralSobresalienteMax.set(kpi.umbrales.sobresaliente.max);
+      this.kpiEditandoId.set(kpi.id);
+      this.nuevoKPINombre.set(kpi.nombre);
+      this.nuevoKPIMeta.set(kpi.meta);
+      this.nuevoKPIEscala.set(kpi.escala);
     } else {
-      this.kpiEditando.set(null);
-      this.nuevoKpiNombre.set('');
-      this.nuevoKpiUnidad.set('%');
-      this.nuevoKpiValorInicial.set(0);
-      this.nuevoKpiValorMeta.set(100);
-      this.umbralDeficienteMin.set(0);
-      this.umbralDeficienteMax.set(25);
-      this.umbralAceptableMin.set(26);
-      this.umbralAceptableMax.set(50);
-      this.umbralBuenoMin.set(51);
-      this.umbralBuenoMax.set(75);
-      this.umbralSobresalienteMin.set(76);
-      this.umbralSobresalienteMax.set(100);
+      this.kpiEditandoId.set(null);
+      this.nuevoKPINombre.set('');
+      this.nuevoKPIMeta.set(75);
+      this.nuevoKPIEscala.set('Porcentaje');
     }
 
-    this.mostrarFormKPI.set(true);
+    this.mostrarFormKPIInline.set(objetivoId);
   }
 
   cerrarFormKPI(): void {
-    this.mostrarFormKPI.set(false);
-    this.kpiEditando.set(null);
-    this.objetivoParaKPI.set(null);
+    this.mostrarFormKPIInline.set(null);
+    this.kpiEditandoId.set(null);
+    this.nuevoKPINombre.set('');
+    this.nuevoKPIMeta.set(75);
   }
 
   guardarKPI(): void {
-    if (!this.nuevoKpiNombre().trim()) {
+    if (!this.nuevoKPINombre().trim()) {
       this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre del KPI es requerido' });
       return;
     }
 
-    const objetivoId = this.objetivoParaKPI();
+    const objetivoId = this.mostrarFormKPIInline();
     if (!objetivoId) return;
 
-    const nuevoKpi: KPI = {
-      id: this.kpiEditando()?.id || crypto.randomUUID(),
-      nombre: this.nuevoKpiNombre(),
-      unidad: this.nuevoKpiUnidad(),
-      valorInicial: this.nuevoKpiValorInicial(),
-      valorMeta: this.nuevoKpiValorMeta(),
-      umbrales: {
-        deficiente: { min: this.umbralDeficienteMin(), max: this.umbralDeficienteMax() },
-        aceptable: { min: this.umbralAceptableMin(), max: this.umbralAceptableMax() },
-        bueno: { min: this.umbralBuenoMin(), max: this.umbralBuenoMax() },
-        sobresaliente: { min: this.umbralSobresalienteMin(), max: this.umbralSobresalienteMax() }
-      }
+    const editandoId = this.kpiEditandoId();
+    const nuevoKPI: KPI = {
+      id: editandoId || `KPI-${Date.now()}`,
+      nombre: this.nuevoKPINombre(),
+      meta: this.nuevoKPIMeta(),
+      escala: this.nuevoKPIEscala()
     };
 
-    if (this.kpiEditando()) {
-      // Editar existente
+    if (editandoId) {
       this.objetivos.update(list =>
         list.map(o =>
           o.id === objetivoId
-            ? { ...o, kpis: o.kpis.map(k => (k.id === nuevoKpi.id ? nuevoKpi : k)) }
+            ? { ...o, kpis: o.kpis.map(k => k.id === nuevoKPI.id ? nuevoKPI : k) }
             : o
         )
       );
-      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'KPI actualizado correctamente' });
+      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'KPI actualizado' });
     } else {
-      // Agregar nuevo
       this.objetivos.update(list =>
         list.map(o =>
-          o.id === objetivoId ? { ...o, kpis: [...o.kpis, nuevoKpi] } : o
+          o.id === objetivoId
+            ? { ...o, kpis: [...o.kpis, nuevoKPI] }
+            : o
         )
       );
-      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'KPI agregado correctamente' });
+      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'KPI agregado' });
     }
 
     this.cerrarFormKPI();
@@ -406,21 +440,27 @@ export class ProcesoCrearComponent {
   eliminarKPI(objetivoId: string, kpiId: string): void {
     this.objetivos.update(list =>
       list.map(o =>
-        o.id === objetivoId ? { ...o, kpis: o.kpis.filter(k => k.id !== kpiId) } : o
+        o.id === objetivoId
+          ? { ...o, kpis: o.kpis.filter(k => k.id !== kpiId) }
+          : o
       )
     );
     this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'KPI eliminado' });
   }
 
-  getTotalKPIs(): number {
-    return this.objetivos().reduce((total, obj) => total + obj.kpis.length, 0);
+  isFormKPIVisible(objetivoId: string): boolean {
+    return this.mostrarFormKPIInline() === objetivoId;
   }
 
-  // Finalizar
-  crearProceso(): void {
+  isEditandoKPI(kpiId: string): boolean {
+    return this.kpiEditandoId() === kpiId;
+  }
+
+  // ========== Finalizar ==========
+  guardarEIrEditor(): void {
     const proceso = this.processService.createProceso(
-      this.nombre(),
-      this.descripcion()
+      this.nombreProceso(),
+      this.descripcionProceso()
     );
 
     this.messageService.add({
@@ -429,7 +469,6 @@ export class ProcesoCrearComponent {
       detail: `El proceso "${proceso.nombre}" fue creado exitosamente`
     });
 
-    // Navegar al editor de nodos
     setTimeout(() => {
       this.router.navigate(['/procesos', proceso.id]);
     }, 500);
@@ -439,8 +478,33 @@ export class ProcesoCrearComponent {
     this.router.navigate(['/procesos']);
   }
 
-  // Helper para obtener tipo seleccionado
-  getTipoSeleccionado(): TipoProceso | undefined {
-    return this.tiposProceso.find(t => t.id === this.tipoSeleccionado());
+  // Helpers
+  getTipoLabel(tipo: string): string {
+    return tipo === 'estrategico' ? 'Estratégico' : 'Operativo';
+  }
+
+  // Métodos para actualizar valores numéricos (evitar arrow functions en template)
+  incrementarProbabilidad(): void {
+    this.probabilidadInput.update(v => Math.min(v + 1, 10));
+  }
+
+  decrementarProbabilidad(): void {
+    this.probabilidadInput.update(v => Math.max(v - 1, 1));
+  }
+
+  incrementarImpacto(): void {
+    this.impactoInput.update(v => Math.min(v + 1, 10));
+  }
+
+  decrementarImpacto(): void {
+    this.impactoInput.update(v => Math.max(v - 1, 1));
+  }
+
+  incrementarApetito(): void {
+    this.apetitoRiesgo.update(v => Math.min(v + 5, 100));
+  }
+
+  decrementarApetito(): void {
+    this.apetitoRiesgo.update(v => Math.max(v - 5, 0));
   }
 }
