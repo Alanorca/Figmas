@@ -594,6 +594,10 @@ export class TablaUnificadaComponent {
     this.service.exportarDatos('excel', true);
   }
 
+  exportarPDF(): void {
+    this.service.exportarDatos('pdf', true);
+  }
+
   // Métodos para gráficas interactivas
   getTituloGrafica(): string {
     const opcion = this.columnasGraficaOptions.find(o => o.value === this.columnaGraficaSeleccionada());
@@ -778,8 +782,9 @@ export class TablaUnificadaComponent {
 
   // Menú de exportación
   exportMenuItems: MenuItem[] = [
-    { label: 'CSV', icon: 'pi pi-file', command: () => this.exportarCSV() },
-    { label: 'Excel', icon: 'pi pi-file-excel', command: () => this.exportarExcel() }
+    { label: 'Excel (.xlsx)', icon: 'pi pi-file-excel', command: () => this.exportarExcel() },
+    { label: 'PDF', icon: 'pi pi-file-pdf', command: () => this.exportarPDF() },
+    { label: 'CSV', icon: 'pi pi-file', command: () => this.exportarCSV() }
   ];
 
   // Menú de acciones masivas
@@ -799,8 +804,9 @@ export class TablaUnificadaComponent {
       label: 'Exportar seleccionados',
       icon: 'pi pi-download',
       items: [
-        { label: 'CSV', icon: 'pi pi-file', command: () => this.exportarSeleccionados('csv') },
-        { label: 'Excel', icon: 'pi pi-file-excel', command: () => this.exportarSeleccionados('excel') }
+        { label: 'Excel (.xlsx)', icon: 'pi pi-file-excel', command: () => this.exportarSeleccionados('excel') },
+        { label: 'PDF', icon: 'pi pi-file-pdf', command: () => this.exportarSeleccionados('pdf') },
+        { label: 'CSV', icon: 'pi pi-file', command: () => this.exportarSeleccionados('csv') }
       ]
     },
     { separator: true },
@@ -932,12 +938,12 @@ export class TablaUnificadaComponent {
     this.deseleccionarTodos();
   }
 
-  exportarSeleccionados(formato: 'csv' | 'excel'): void {
+  exportarSeleccionados(formato: 'csv' | 'excel' | 'pdf'): void {
     const seleccionados = this.registrosSeleccionados();
     if (seleccionados.length === 0) return;
 
-    console.log(`Exportando ${seleccionados.length} registros a ${formato}`);
-    // Implementar exportación de seleccionados
+    // Exportar solo los seleccionados usando el servicio
+    this.service.exportarDatosSeleccionados(seleccionados, formato);
   }
 
   eliminarSeleccionados(): void {

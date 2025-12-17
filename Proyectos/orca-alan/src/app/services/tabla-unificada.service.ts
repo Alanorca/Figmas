@@ -389,7 +389,7 @@ export class TablaUnificadaService {
   }
 
   // Método para exportar datos
-  exportarDatos(formato: 'csv' | 'excel', soloVisibles: boolean = true): void {
+  exportarDatos(formato: 'csv' | 'excel' | 'pdf', soloVisibles: boolean = true): void {
     const datos = this.datosFiltrados();
     const columnas = soloVisibles
       ? this.columnasVisibles()
@@ -397,8 +397,10 @@ export class TablaUnificadaService {
 
     if (formato === 'csv') {
       this.exportarCSV(datos, columnas);
-    } else {
+    } else if (formato === 'excel') {
       this.exportarExcel(datos, columnas);
+    } else {
+      this.exportarPDF(datos, columnas);
     }
   }
 
@@ -455,6 +457,85 @@ export class TablaUnificadaService {
     this.descargarArchivo(xml, 'tabla-unificada.xls', 'application/vnd.ms-excel');
   }
 
+  private exportarPDF(datos: RegistroUnificado[], columnas: ColumnaConfig[]): void {
+    // Crear contenido HTML para imprimir como PDF
+    const tieneRiesgos = datos.some(d => d.tipoEntidad === 'riesgo');
+    const tieneIncidentes = datos.some(d => d.tipoEntidad === 'incidente');
+    const titulo = tieneRiesgos && tieneIncidentes ? 'Tabla Unificada - Reporte' :
+                   tieneRiesgos ? 'Reporte de Riesgos' :
+                   tieneIncidentes ? 'Reporte de Incidentes' :
+                   'Tabla Unificada - Reporte';
+
+    let html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>${titulo}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
+          h1 { text-align: center; color: #333; margin-bottom: 5px; }
+          .fecha { text-align: center; color: #666; margin-bottom: 20px; font-size: 11px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th { background-color: #6366f1; color: white; padding: 10px 8px; text-align: left; font-size: 11px; }
+          td { padding: 8px; border-bottom: 1px solid #ddd; font-size: 11px; }
+          tr:nth-child(even) { background-color: #f9f9f9; }
+          tr:hover { background-color: #f5f5f5; }
+          .total { margin-top: 15px; text-align: right; font-size: 11px; color: #666; }
+          @media print {
+            body { margin: 0; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${titulo}</h1>
+        <p class="fecha">Generado el: ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+        <table>
+          <thead>
+            <tr>
+    `;
+
+    // Headers
+    columnas.forEach(c => {
+      html += `<th>${c.header}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // Datos
+    datos.forEach(d => {
+      html += '<tr>';
+      columnas.forEach(c => {
+        const valor = (d as any)[c.field];
+        let valorFormateado = String(valor ?? '-');
+
+        if (valor instanceof Date) {
+          valorFormateado = valor.toLocaleDateString('es-ES');
+        }
+
+        html += `<td>${valorFormateado}</td>`;
+      });
+      html += '</tr>';
+    });
+
+    html += `
+          </tbody>
+        </table>
+        <p class="total">Total de registros: ${datos.length}</p>
+        <script>window.onload = function() { window.print(); }</script>
+      </body>
+      </html>
+    `;
+
+    // Abrir en nueva ventana para imprimir
+    const ventana = window.open('', '_blank');
+    if (ventana) {
+      ventana.document.write(html);
+      ventana.document.close();
+    }
+  }
+
   private descargarArchivo(contenido: string, nombre: string, tipo: string): void {
     const blob = new Blob([contenido], { type: tipo });
     const url = URL.createObjectURL(blob);
@@ -463,6 +544,19 @@ export class TablaUnificadaService {
     link.download = nombre;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  // Método para exportar datos seleccionados
+  exportarDatosSeleccionados(datos: RegistroUnificado[], formato: 'csv' | 'excel' | 'pdf'): void {
+    const columnas = this.columnasVisibles();
+
+    if (formato === 'csv') {
+      this.exportarCSV(datos, columnas);
+    } else if (formato === 'excel') {
+      this.exportarExcel(datos, columnas);
+    } else {
+      this.exportarPDF(datos, columnas);
+    }
   }
 
   // Métodos para gráficas
