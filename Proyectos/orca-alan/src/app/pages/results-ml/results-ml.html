@@ -4,38 +4,46 @@
     <!-- Header -->
     <div class="page-header">
       <div class="header-content">
-        <h1><i class="pi pi-sparkles mr-2"></i>Resultados de Inteligencia</h1>
-        <p class="text-secondary">Visualiza insights de IA/ML para activos y procesos</p>
+        <h1><i class="pi pi-microchip mr-2"></i>Resultados de Inteligencia</h1>
+        <p class="text-secondary">Gestión de insights de IA/ML para activos y procesos</p>
       </div>
     </div>
 
-    <!-- Toolbar de búsqueda -->
+    <!-- Toolbar -->
     <p-toolbar styleClass="mb-4">
       <ng-template pTemplate="start">
         <div class="flex align-items-center gap-3">
-          <!-- Toggle tipo entidad -->
-          <div class="tipo-entidad-toggle">
-            <p-button
-              label="Todos"
-              [outlined]="tipoEntidadFiltro() !== 'todos'"
-              [severity]="tipoEntidadFiltro() === 'todos' ? 'primary' : 'secondary'"
-              size="small"
-              (onClick)="tipoEntidadFiltro.set('todos')" />
-            <p-button
-              label="Activos"
-              icon="pi pi-box"
-              [outlined]="tipoEntidadFiltro() !== 'activo'"
-              [severity]="tipoEntidadFiltro() === 'activo' ? 'primary' : 'secondary'"
-              size="small"
-              (onClick)="tipoEntidadFiltro.set('activo')" />
-            <p-button
-              label="Procesos"
-              icon="pi pi-sitemap"
-              [outlined]="tipoEntidadFiltro() !== 'proceso'"
-              [severity]="tipoEntidadFiltro() === 'proceso' ? 'primary' : 'secondary'"
-              size="small"
-              (onClick)="tipoEntidadFiltro.set('proceso')" />
-          </div>
+          <!-- Botón de hallazgos pendientes -->
+          @if (totalHallazgosPendientes() > 0) {
+            <p-tag
+              [value]="totalHallazgosPendientes() + ' pendientes'"
+              severity="warn"
+              icon="pi pi-bell" />
+          }
+
+          <!-- Filtro por tipo de entidad -->
+          <p-select
+            [options]="tipoEntidadOptions"
+            [ngModel]="tipoEntidadFiltro()"
+            (ngModelChange)="tipoEntidadFiltro.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Tipo de entidad"
+            [style]="{ minWidth: '180px' }"
+            appendTo="body">
+            <ng-template let-item pTemplate="item">
+              <div class="flex align-items-center gap-2">
+                <i [class]="item.icon"></i>
+                <span>{{ item.label }}</span>
+              </div>
+            </ng-template>
+            <ng-template let-item pTemplate="selectedItem">
+              <div class="flex align-items-center gap-2">
+                <i [class]="item.icon"></i>
+                <span>{{ item.label }}</span>
+              </div>
+            </ng-template>
+          </p-select>
         </div>
       </ng-template>
 
@@ -45,42 +53,26 @@
           <input
             type="text"
             pInputText
-            placeholder="Buscar activo o proceso..."
+            placeholder="Buscar en todos los campos..."
             [ngModel]="busquedaEntidad()"
             (ngModelChange)="busquedaEntidad.set($event)"
-            style="width: 350px" />
+            style="width: 300px" />
         </p-iconfield>
       </ng-template>
 
       <ng-template pTemplate="end">
-        <p-tag
-          [value]="totalHallazgosPendientes() + ' hallazgos pendientes'"
-          severity="warn"
-          icon="pi pi-bell" />
+        <div class="flex gap-2 align-items-center">
+          <p-button
+            icon="pi pi-refresh"
+            severity="secondary"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="refrescarDatos()"
+            pTooltip="Refrescar"
+            tooltipPosition="bottom" />
+        </div>
       </ng-template>
     </p-toolbar>
-
-    <!-- Entidades recientes -->
-    @if (entidadesRecientes().length > 0) {
-      <div class="recientes-section mb-4">
-        <h3 class="text-sm font-semibold text-secondary mb-2">
-          <i class="pi pi-history mr-2"></i>Consultados recientemente
-        </h3>
-        <div class="recientes-grid">
-          @for (entidad of entidadesRecientes(); track entidad.id) {
-            <div class="reciente-card" (click)="seleccionarEntidad(entidad)">
-              <div class="flex align-items-center gap-2">
-                <i [class]="getTipoEntidadIcon(entidad.tipo)" class="text-primary"></i>
-                <span class="font-medium">{{ entidad.nombre }}</span>
-              </div>
-              @if (entidad.cantidadHallazgosPendientes > 0) {
-                <p-badge [value]="entidad.cantidadHallazgosPendientes.toString()" severity="warn" />
-              }
-            </div>
-          }
-        </div>
-      </div>
-    }
 
     <!-- Lista de entidades -->
     <p-card styleClass="table-card">

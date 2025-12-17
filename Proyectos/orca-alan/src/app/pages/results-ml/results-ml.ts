@@ -135,6 +135,13 @@ export class ResultsMLComponent {
     { label: 'Baja (<50%)', value: 0 }
   ];
 
+  // Opciones de tipo de entidad para el select
+  tipoEntidadOptions = [
+    { label: 'Todos', value: 'todos', icon: 'pi pi-list' },
+    { label: 'Activos', value: 'activo', icon: 'pi pi-box' },
+    { label: 'Procesos', value: 'proceso', icon: 'pi pi-sitemap' }
+  ];
+
   // Computed: Entidades filtradas por tipo
   entidadesFiltradasPorTipo = computed(() => {
     const entidades = this.entidadesFiltradas();
@@ -156,6 +163,12 @@ export class ResultsMLComponent {
 
   volverABusqueda(): void {
     this.service.limpiarSeleccion();
+  }
+
+  refrescarDatos(): void {
+    // Resetear filtros y recargar datos
+    this.tipoEntidadFiltro.set('todos');
+    this.busquedaEntidad.set('');
   }
 
   // Métodos de tabs
