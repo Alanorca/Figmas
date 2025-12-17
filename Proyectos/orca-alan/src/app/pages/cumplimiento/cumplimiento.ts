@@ -59,10 +59,10 @@ import {
 
 import {
   evaluateThreshold,
-  getThresholdSeverity,
-  getNivelCumplimiento,
+  getComplianceSeverity,
+  getComplianceLevel,
   ThresholdResult,
-  DEFAULT_THRESHOLDS,
+  DEFAULT_UMBRALES,
 } from '../../utils/thresholds.utils';
 
 // Shared Models
@@ -3446,24 +3446,25 @@ export class CumplimientoComponent {
    * Evalúa el umbral de cumplimiento para un porcentaje dado
    */
   evaluarUmbralCumplimiento(porcentaje: number, cuestionario?: Cuestionario): ThresholdResult {
-    const umbrales = cuestionario?.umbrales || DEFAULT_THRESHOLDS;
+    const umbrales = cuestionario?.umbrales || DEFAULT_UMBRALES;
     return evaluateThreshold(porcentaje, umbrales);
   }
 
   /**
    * Obtiene la severidad de PrimeNG para el porcentaje de cumplimiento
    */
-  getSeveridadCumplimiento(porcentaje: number, cuestionario?: Cuestionario): 'success' | 'warn' | 'danger' | 'info' | 'secondary' | 'contrast' {
-    const umbrales = cuestionario?.umbrales || DEFAULT_THRESHOLDS;
-    return getThresholdSeverity(porcentaje, umbrales);
+  getSeveridadCumplimiento(porcentaje: number, cuestionario?: Cuestionario): 'success' | 'warn' | 'danger' {
+    const umbrales = cuestionario?.umbrales || DEFAULT_UMBRALES;
+    const level = getComplianceLevel(porcentaje, umbrales);
+    return getComplianceSeverity(level);
   }
 
   /**
    * Obtiene el nivel de cumplimiento como string
    */
   getNivelCumplimientoTexto(porcentaje: number, cuestionario?: Cuestionario): string {
-    const umbrales = cuestionario?.umbrales || DEFAULT_THRESHOLDS;
-    return getNivelCumplimiento(porcentaje, umbrales);
+    const umbrales = cuestionario?.umbrales || DEFAULT_UMBRALES;
+    return getComplianceLevel(porcentaje, umbrales);
   }
 
   /**
@@ -3471,16 +3472,17 @@ export class CumplimientoComponent {
    */
   actualizarPuntuacionRespuesta(respuesta: RespuestaCuestionario, cuestionario: Cuestionario): void {
     const resultado = this.calcularScoreCuestionario(cuestionario, respuesta.respuestas);
-    respuesta.puntuacionTotal = resultado.porcentajeCumplimiento;
-    respuesta.nivelCumplimiento = this.getNivelCumplimientoTexto(resultado.porcentajeCumplimiento, cuestionario) as 'deficiente' | 'aceptable' | 'sobresaliente';
+    respuesta.puntuacionTotal = resultado.percentage;
+    respuesta.nivelCumplimiento = this.getNivelCumplimientoTexto(resultado.percentage, cuestionario) as 'deficiente' | 'aceptable' | 'sobresaliente';
   }
 
   /**
    * Obtiene el score de una sección específica
    */
   getScoreSeccion(seccion: Seccion, respuestas: RespuestaPregunta[]): number {
-    const resultado = calculateSectionScore(seccion, respuestas);
-    return resultado.porcentaje;
+    const respuestasMap = new Map(respuestas.map(r => [r.preguntaId, r]));
+    const resultado = calculateSectionScore(seccion, respuestasMap);
+    return resultado.score;
   }
 
   /**

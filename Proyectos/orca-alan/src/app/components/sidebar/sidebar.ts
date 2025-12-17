@@ -227,6 +227,7 @@ export class SidebarComponent {
     { label: 'Procesos', icon: 'pi pi-cog', routerLink: '/procesos' },
     { label: 'Cuestionarios', icon: 'pi pi-list-check', routerLink: '/cuestionarios' },
     { label: 'Cumplimiento', icon: 'pi pi-check-circle', routerLink: '/cumplimiento' },
-    { label: 'Tabla Unificada', icon: 'pi pi-table', routerLink: '/tabla-unificada' }
+    { label: 'Tabla Unificada', icon: 'pi pi-table', routerLink: '/tabla-unificada' },
+    { label: 'Results ML', icon: 'pi pi-chart-line', routerLink: '/results-ml' }
   ];
 }

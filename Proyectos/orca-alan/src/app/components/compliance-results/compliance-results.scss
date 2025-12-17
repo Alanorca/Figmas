@@ -1,0 +1,329 @@
+/**
+ * Estilos para ComplianceResults Component
+ */
+
+.compliance-results {
+  padding: 1.5rem;
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+
+  &.compact {
+    padding: 1rem;
+
+    .score-badge {
+      width: 80px;
+      height: 80px;
+
+      .score-value {
+        font-size: 1.75rem;
+      }
+
+      .score-unit {
+        font-size: 0.875rem;
+      }
+    }
+
+    .sections-list {
+      max-height: 200px;
+    }
+  }
+}
+
+// Header con Score y Progreso
+.compliance-header {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+// Score Badge (Semáforo)
+.score-badge-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.score-badge {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.score-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-unit {
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.score-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+
+  .level-text {
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+// Progress Section
+.progress-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progress-label {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.progress-value {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.progress-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+
+  i {
+    font-size: 0.875rem;
+  }
+}
+
+// Next Level Indicator
+.next-level-indicator {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: var(--surface-50);
+  border-radius: 8px;
+}
+
+.next-level-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.next-level-bar {
+  height: 6px;
+  background: var(--surface-200);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.next-level-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-400), var(--primary-500));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+// Sections Breakdown
+.sections-breakdown {
+  margin-top: 1rem;
+}
+
+.sections-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0 0 1rem 0;
+
+  i {
+    color: var(--primary-color);
+  }
+}
+
+.sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--surface-100);
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--surface-300);
+    border-radius: 2px;
+
+    &:hover {
+      background: var(--surface-400);
+    }
+  }
+}
+
+.section-item {
+  padding: 0.75rem;
+  background: var(--surface-50);
+  border-radius: 8px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--surface-100);
+  }
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.section-name {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--text-color);
+}
+
+.section-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-progress {
+  min-width: 40px;
+  text-align: right;
+}
+
+.section-bar {
+  height: 6px;
+  background: var(--surface-200);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.section-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease, background-color 0.3s ease;
+}
+
+// Threshold Legend
+.threshold-legend {
+  margin-top: 1rem;
+}
+
+.legend-title {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend-text {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+// Empty State
+.compliance-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+// PrimeNG Overrides
+:host ::ng-deep {
+  .p-progressbar {
+    height: 0.5rem;
+    border-radius: 4px;
+    background: var(--surface-200);
+
+    .p-progressbar-value {
+      border-radius: 4px;
+    }
+  }
+
+  .p-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .p-divider {
+    margin: 1.25rem 0;
+  }
+}
