@@ -12,7 +12,10 @@ import {
   BranchingNodeConfig,
   EstadoNodeConfig,
   MatematicoNodeConfig,
-  MlNodeConfig
+  MlNodeConfig,
+  KpiNodeConfig,
+  ObjetivoProceso,
+  KpiProceso
 } from '../models/process-nodes';
 import { GroqService } from './groq.service';
 
@@ -162,12 +165,44 @@ export class ProcessService {
       createdAt: new Date('2024-11-15'),
       updatedAt: new Date('2024-12-10'),
       createdBy: 'admin',
+      objetivos: [
+        {
+          id: 'OBJ-CRED-001',
+          nombre: 'Reducir morosidad crediticia',
+          descripcion: 'Disminuir el porcentaje de créditos en mora mediante mejor evaluación de riesgo',
+          tipo: 'estrategico',
+          progreso: 65,
+          kpis: [
+            { id: 'KPI-CRED-001', nombre: 'Tasa de aprobación', meta: 70, escala: 'Porcentaje' },
+            { id: 'KPI-CRED-002', nombre: 'Tasa de morosidad', meta: 5, escala: 'Porcentaje' },
+            { id: 'KPI-CRED-003', nombre: 'Score promedio aprobados', meta: 75, escala: 'Unidades' }
+          ]
+        },
+        {
+          id: 'OBJ-CRED-002',
+          nombre: 'Optimizar tiempo de evaluación',
+          descripcion: 'Reducir el tiempo promedio de evaluación de solicitudes',
+          tipo: 'operativo',
+          progreso: 80,
+          kpis: [
+            { id: 'KPI-CRED-004', nombre: 'Tiempo promedio evaluación', meta: 24, escala: 'Horas' },
+            { id: 'KPI-CRED-005', nombre: 'Solicitudes procesadas/día', meta: 50, escala: 'Unidades' }
+          ]
+        }
+      ],
+      kpis: [
+        { id: 'KPI-CRED-001', nombre: 'Tasa de aprobación', unidad: 'porcentaje', meta: 70, valorActual: 68, objetivoId: 'OBJ-CRED-001', historico: [], alertas: { direccion: 'menor' } },
+        { id: 'KPI-CRED-002', nombre: 'Tasa de morosidad', unidad: 'porcentaje', meta: 5, valorActual: 4.2, objetivoId: 'OBJ-CRED-001', historico: [], alertas: { advertencia: 7, critico: 10, direccion: 'mayor' } },
+        { id: 'KPI-CRED-003', nombre: 'Score promedio aprobados', unidad: 'numero', meta: 75, valorActual: 78, objetivoId: 'OBJ-CRED-001', historico: [], alertas: { direccion: 'menor' } },
+        { id: 'KPI-CRED-004', nombre: 'Tiempo promedio evaluación', unidad: 'tiempo_horas', meta: 24, valorActual: 18, objetivoId: 'OBJ-CRED-002', historico: [], alertas: { advertencia: 30, critico: 48, direccion: 'mayor' } },
+        { id: 'KPI-CRED-005', nombre: 'Solicitudes procesadas/día', unidad: 'numero', meta: 50, valorActual: 45, objetivoId: 'OBJ-CRED-002', historico: [], alertas: { direccion: 'menor' } }
+      ],
       nodes: [
         {
           id: 'node-csv-1',
           type: 'csv',
           label: 'Solicitudes de Crédito',
-          position: { x: 100, y: 150 },
+          position: { x: 100, y: 200 },
           config: {
             fileName: 'solicitudes_credito.csv',
             columns: ['id', 'cliente', 'monto', 'ingreso_mensual', 'historial_credito', 'años_empleo'],
@@ -180,7 +215,7 @@ export class ProcessService {
           id: 'node-trans-1',
           type: 'transformacion',
           label: 'Calcular Ratio Deuda/Ingreso',
-          position: { x: 400, y: 150 },
+          position: { x: 350, y: 200 },
           config: {
             operacion: 'mapear',
             mappings: [
@@ -192,7 +227,7 @@ export class ProcessService {
           id: 'node-llm-1',
           type: 'llm',
           label: 'Análisis IA de Riesgo',
-          position: { x: 700, y: 150 },
+          position: { x: 600, y: 200 },
           config: {
             provider: 'groq',
             model: 'llama-3.3-70b-versatile',
@@ -205,10 +240,21 @@ export class ProcessService {
           } as LlmNodeConfig
         },
         {
+          id: 'node-mat-score',
+          type: 'matematico',
+          label: 'Calcular Score Final',
+          position: { x: 850, y: 200 },
+          config: {
+            formula: '(historial_credito * 0.4) + (años_empleo * 5) + (ingreso_mensual / monto * 20)',
+            variablesSalida: 'score_riesgo',
+            precision: 2
+          } as MatematicoNodeConfig
+        },
+        {
           id: 'node-cond-1',
           type: 'condicional',
           label: '¿Riesgo Aceptable?',
-          position: { x: 1000, y: 150 },
+          position: { x: 1100, y: 200 },
           config: {
             variable: 'score_riesgo',
             operador: '>',
@@ -220,7 +266,7 @@ export class ProcessService {
           id: 'node-estado-1',
           type: 'estado',
           label: 'Crédito Aprobado',
-          position: { x: 1300, y: 50 },
+          position: { x: 1350, y: 80 },
           config: {
             tipoEstado: 'success',
             nombreEstado: 'Aprobado',
@@ -233,7 +279,7 @@ export class ProcessService {
           id: 'node-estado-2',
           type: 'estado',
           label: 'Crédito Rechazado',
-          position: { x: 1300, y: 250 },
+          position: { x: 1350, y: 320 },
           config: {
             tipoEstado: 'error',
             nombreEstado: 'Rechazado',
@@ -241,14 +287,83 @@ export class ProcessService {
             notificar: true,
             accionSiguiente: 'detener'
           } as EstadoNodeConfig
+        },
+        // Nodos KPI conectados al flujo
+        {
+          id: 'node-kpi-aprobacion',
+          type: 'kpi',
+          label: 'Actualizar Tasa Aprobación',
+          position: { x: 1600, y: 80 },
+          config: {
+            origenValor: 'calculado',
+            nodoPrevioId: 'node-mat-score',
+            kpiId: 'KPI-CRED-001',
+            kpiNombre: 'Tasa de aprobación',
+            kpiUnidad: 'porcentaje',
+            objetivoId: 'OBJ-CRED-001',
+            alertasHabilitadas: true,
+            umbrales: {
+              advertencia: 65,
+              critico: 50,
+              direccion: 'menor'
+            },
+            guardarHistorico: true
+          } as KpiNodeConfig
+        },
+        {
+          id: 'node-kpi-score',
+          type: 'kpi',
+          label: 'Actualizar Score Promedio',
+          position: { x: 1850, y: 80 },
+          config: {
+            origenValor: 'variable',
+            variableOrigen: 'score_riesgo',
+            kpiId: 'KPI-CRED-003',
+            kpiNombre: 'Score promedio aprobados',
+            kpiUnidad: 'numero',
+            objetivoId: 'OBJ-CRED-001',
+            alertasHabilitadas: true,
+            umbrales: {
+              advertencia: 70,
+              critico: 60,
+              direccion: 'menor'
+            },
+            guardarHistorico: true
+          } as KpiNodeConfig
+        },
+        {
+          id: 'node-kpi-morosidad',
+          type: 'kpi',
+          label: 'Actualizar Tasa Morosidad',
+          position: { x: 1600, y: 320 },
+          config: {
+            origenValor: 'fijo',
+            valorFijo: 5.2,
+            kpiId: 'KPI-CRED-002',
+            kpiNombre: 'Tasa de morosidad',
+            kpiUnidad: 'porcentaje',
+            objetivoId: 'OBJ-CRED-001',
+            alertasHabilitadas: true,
+            umbrales: {
+              advertencia: 7,
+              critico: 10,
+              direccion: 'mayor'
+            },
+            guardarHistorico: true
+          } as KpiNodeConfig
         }
       ],
       edges: [
         { id: 'edge-1', sourceNodeId: 'node-csv-1', targetNodeId: 'node-trans-1' },
         { id: 'edge-2', sourceNodeId: 'node-trans-1', targetNodeId: 'node-llm-1' },
-        { id: 'edge-3', sourceNodeId: 'node-llm-1', targetNodeId: 'node-cond-1' },
-        { id: 'edge-4', sourceNodeId: 'node-cond-1', targetNodeId: 'node-estado-1', sourceHandle: 'true' },
-        { id: 'edge-5', sourceNodeId: 'node-cond-1', targetNodeId: 'node-estado-2', sourceHandle: 'false' }
+        { id: 'edge-3', sourceNodeId: 'node-llm-1', targetNodeId: 'node-mat-score' },
+        { id: 'edge-4', sourceNodeId: 'node-mat-score', targetNodeId: 'node-cond-1' },
+        { id: 'edge-5', sourceNodeId: 'node-cond-1', targetNodeId: 'node-estado-1', sourceHandle: 'true' },
+        { id: 'edge-6', sourceNodeId: 'node-cond-1', targetNodeId: 'node-estado-2', sourceHandle: 'false' },
+        // Conexiones a nodos KPI
+        { id: 'edge-7', sourceNodeId: 'node-estado-1', targetNodeId: 'node-kpi-aprobacion' },
+        { id: 'edge-8', sourceNodeId: 'node-kpi-aprobacion', targetNodeId: 'node-kpi-score' },
+        { id: 'edge-9', sourceNodeId: 'node-estado-2', targetNodeId: 'node-kpi-morosidad' }
       ]
     };
     this._procesos.update(list => [...list, proceso]);
@@ -264,6 +379,38 @@ export class ProcessService {
       createdAt: new Date('2024-10-01'),
       updatedAt: new Date('2024-12-08'),
       createdBy: 'admin',
+      objetivos: [
+        {
+          id: 'OBJ-TI-001',
+          nombre: 'Garantizar disponibilidad de infraestructura',
+          descripcion: 'Mantener alta disponibilidad de los activos críticos de TI',
+          tipo: 'estrategico',
+          progreso: 92,
+          kpis: [
+            { id: 'KPI-TI-001', nombre: 'Disponibilidad de servidores', meta: 99.9, escala: 'Porcentaje' },
+            { id: 'KPI-TI-002', nombre: 'Tiempo de inactividad mensual', meta: 4, escala: 'Horas' }
+          ]
+        },
+        {
+          id: 'OBJ-TI-002',
+          nombre: 'Reducir vulnerabilidades',
+          descripcion: 'Minimizar el número de vulnerabilidades críticas en activos',
+          tipo: 'operativo',
+          progreso: 75,
+          kpis: [
+            { id: 'KPI-TI-003', nombre: 'Vulnerabilidades críticas abiertas', meta: 0, escala: 'Unidades' },
+            { id: 'KPI-TI-004', nombre: 'Score de riesgo promedio', meta: 30, escala: 'Unidades' },
+            { id: 'KPI-TI-005', nombre: 'Activos actualizados', meta: 95, escala: 'Porcentaje' }
+          ]
+        }
+      ],
+      kpis: [
+        { id: 'KPI-TI-001', nombre: 'Disponibilidad de servidores', unidad: 'porcentaje', meta: 99.9, valorActual: 99.7, objetivoId: 'OBJ-TI-001', historico: [], alertas: { advertencia: 99.5, critico: 99, direccion: 'menor' } },
+        { id: 'KPI-TI-002', nombre: 'Tiempo de inactividad mensual', unidad: 'tiempo_horas', meta: 4, valorActual: 2.5, objetivoId: 'OBJ-TI-001', historico: [], alertas: { advertencia: 6, critico: 12, direccion: 'mayor' } },
+        { id: 'KPI-TI-003', nombre: 'Vulnerabilidades críticas abiertas', unidad: 'numero', meta: 0, valorActual: 3, objetivoId: 'OBJ-TI-002', historico: [], alertas: { advertencia: 5, critico: 10, direccion: 'mayor' } },
+        { id: 'KPI-TI-004', nombre: 'Score de riesgo promedio', unidad: 'numero', meta: 30, valorActual: 42, objetivoId: 'OBJ-TI-002', historico: [], alertas: { advertencia: 50, critico: 70, direccion: 'mayor' } },
+        { id: 'KPI-TI-005', nombre: 'Activos actualizados', unidad: 'porcentaje', meta: 95, valorActual: 88, objetivoId: 'OBJ-TI-002', historico: [], alertas: { advertencia: 85, critico: 75, direccion: 'menor' } }
+      ],
       nodes: [
         {
           id: 'node-activo-1',
@@ -360,6 +507,36 @@ export class ProcessService {
       createdAt: new Date('2024-09-20'),
       updatedAt: new Date('2024-12-05'),
       createdBy: 'admin',
+      objetivos: [
+        {
+          id: 'OBJ-INC-001',
+          nombre: 'Mejorar tiempo de respuesta',
+          descripcion: 'Reducir el tiempo desde reporte hasta resolución de incidentes',
+          tipo: 'operativo',
+          progreso: 70,
+          kpis: [
+            { id: 'KPI-INC-001', nombre: 'Tiempo medio de resolución', meta: 4, escala: 'Horas' },
+            { id: 'KPI-INC-002', nombre: 'Incidentes resueltos en SLA', meta: 95, escala: 'Porcentaje' }
+          ]
+        },
+        {
+          id: 'OBJ-INC-002',
+          nombre: 'Precisión de clasificación',
+          descripcion: 'Mejorar la precisión del modelo de clasificación automática',
+          tipo: 'estrategico',
+          progreso: 85,
+          kpis: [
+            { id: 'KPI-INC-003', nombre: 'Precisión del modelo ML', meta: 92, escala: 'Porcentaje' },
+            { id: 'KPI-INC-004', nombre: 'Incidentes reclasificados', meta: 5, escala: 'Porcentaje' }
+          ]
+        }
+      ],
+      kpis: [
+        { id: 'KPI-INC-001', nombre: 'Tiempo medio de resolución', unidad: 'tiempo_horas', meta: 4, valorActual: 3.5, objetivoId: 'OBJ-INC-001', historico: [], alertas: { advertencia: 6, critico: 8, direccion: 'mayor' } },
+        { id: 'KPI-INC-002', nombre: 'Incidentes resueltos en SLA', unidad: 'porcentaje', meta: 95, valorActual: 91, objetivoId: 'OBJ-INC-001', historico: [], alertas: { advertencia: 90, critico: 80, direccion: 'menor' } },
+        { id: 'KPI-INC-003', nombre: 'Precisión del modelo ML', unidad: 'porcentaje', meta: 92, valorActual: 89, objetivoId: 'OBJ-INC-002', historico: [], alertas: { advertencia: 85, critico: 75, direccion: 'menor' } },
+        { id: 'KPI-INC-004', nombre: 'Incidentes reclasificados', unidad: 'porcentaje', meta: 5, valorActual: 8, objetivoId: 'OBJ-INC-002', historico: [], alertas: { advertencia: 10, critico: 15, direccion: 'mayor' } }
+      ],
       nodes: [
         {
           id: 'node-csv-2',
@@ -463,6 +640,25 @@ export class ProcessService {
       createdAt: new Date('2024-12-01'),
       updatedAt: new Date('2024-12-12'),
       createdBy: 'admin',
+      objetivos: [
+        {
+          id: 'OBJ-PROV-001',
+          nombre: 'Gestión de riesgo de terceros',
+          descripcion: 'Evaluar y mitigar riesgos asociados a proveedores críticos',
+          tipo: 'estrategico',
+          progreso: 60,
+          kpis: [
+            { id: 'KPI-PROV-001', nombre: 'Proveedores evaluados', meta: 100, escala: 'Porcentaje' },
+            { id: 'KPI-PROV-002', nombre: 'Score promedio proveedores', meta: 75, escala: 'Unidades' },
+            { id: 'KPI-PROV-003', nombre: 'Proveedores de alto riesgo', meta: 5, escala: 'Porcentaje' }
+          ]
+        }
+      ],
+      kpis: [
+        { id: 'KPI-PROV-001', nombre: 'Proveedores evaluados', unidad: 'porcentaje', meta: 100, valorActual: 72, objetivoId: 'OBJ-PROV-001', historico: [], alertas: { advertencia: 80, critico: 60, direccion: 'menor' } },
+        { id: 'KPI-PROV-002', nombre: 'Score promedio proveedores', unidad: 'numero', meta: 75, valorActual: 68, objetivoId: 'OBJ-PROV-001', historico: [], alertas: { advertencia: 60, critico: 50, direccion: 'menor' } },
+        { id: 'KPI-PROV-003', nombre: 'Proveedores de alto riesgo', unidad: 'porcentaje', meta: 5, valorActual: 12, objetivoId: 'OBJ-PROV-001', historico: [], alertas: { advertencia: 10, critico: 20, direccion: 'mayor' } }
+      ],
       nodes: [
         {
           id: 'node-csv-3',
@@ -551,6 +747,38 @@ export class ProcessService {
       createdAt: new Date('2024-06-15'),
       updatedAt: new Date('2024-12-11'),
       createdBy: 'admin',
+      objetivos: [
+        {
+          id: 'OBJ-SOX-001',
+          nombre: 'Cumplimiento SOX 100%',
+          descripcion: 'Asegurar el cumplimiento total de controles SOX',
+          tipo: 'estrategico',
+          progreso: 88,
+          kpis: [
+            { id: 'KPI-SOX-001', nombre: 'Controles efectivos', meta: 100, escala: 'Porcentaje' },
+            { id: 'KPI-SOX-002', nombre: 'Hallazgos pendientes', meta: 0, escala: 'Unidades' },
+            { id: 'KPI-SOX-003', nombre: 'Evidencias completas', meta: 100, escala: 'Porcentaje' }
+          ]
+        },
+        {
+          id: 'OBJ-SOX-002',
+          nombre: 'Eficiencia en auditorías',
+          descripcion: 'Optimizar el proceso de auditoría interna',
+          tipo: 'operativo',
+          progreso: 75,
+          kpis: [
+            { id: 'KPI-SOX-004', nombre: 'Tiempo de auditoría', meta: 5, escala: 'Días' },
+            { id: 'KPI-SOX-005', nombre: 'Costo por auditoría', meta: 5000, escala: 'USD' }
+          ]
+        }
+      ],
+      kpis: [
+        { id: 'KPI-SOX-001', nombre: 'Controles efectivos', unidad: 'porcentaje', meta: 100, valorActual: 94, objetivoId: 'OBJ-SOX-001', historico: [], alertas: { advertencia: 95, critico: 90, direccion: 'menor' } },
+        { id: 'KPI-SOX-002', nombre: 'Hallazgos pendientes', unidad: 'numero', meta: 0, valorActual: 3, objetivoId: 'OBJ-SOX-001', historico: [], alertas: { advertencia: 5, critico: 10, direccion: 'mayor' } },
+        { id: 'KPI-SOX-003', nombre: 'Evidencias completas', unidad: 'porcentaje', meta: 100, valorActual: 92, objetivoId: 'OBJ-SOX-001', historico: [], alertas: { advertencia: 95, critico: 85, direccion: 'menor' } },
+        { id: 'KPI-SOX-004', nombre: 'Tiempo de auditoría', unidad: 'tiempo_dias', meta: 5, valorActual: 4, objetivoId: 'OBJ-SOX-002', historico: [], alertas: { advertencia: 7, critico: 10, direccion: 'mayor' } },
+        { id: 'KPI-SOX-005', nombre: 'Costo por auditoría', unidad: 'moneda_usd', meta: 5000, valorActual: 4200, objetivoId: 'OBJ-SOX-002', historico: [], alertas: { advertencia: 6000, critico: 8000, direccion: 'mayor' } }
+      ],
       nodes: [
         {
           id: 'node-activo-3',
@@ -673,7 +901,26 @@ export class ProcessService {
 
   // =============== GESTIÓN DE PROCESOS ===============
 
-  createProceso(nombre: string, descripcion: string): Proceso {
+  createProceso(nombre: string, descripcion: string, objetivos?: ObjetivoProceso[]): Proceso {
+    // Convertir objetivos a lista flat de KPIs para fácil acceso
+    const kpis: KpiProceso[] = [];
+    if (objetivos) {
+      for (const objetivo of objetivos) {
+        for (const kpi of objetivo.kpis) {
+          kpis.push({
+            id: kpi.id,
+            nombre: kpi.nombre,
+            unidad: this.mapEscalaToUnidad(kpi.escala),
+            meta: kpi.meta,
+            valorActual: 0,
+            objetivoId: objetivo.id,
+            historico: [],
+            alertas: { direccion: 'menor' }
+          });
+        }
+      }
+    }
+
     const proceso: Proceso = {
       id: `proc-${crypto.randomUUID()}`,
       nombre,
@@ -682,6 +929,8 @@ export class ProcessService {
       estado: 'borrador',
       nodes: [],
       edges: [],
+      objetivos: objetivos || [],
+      kpis: kpis,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: 'current-user'
@@ -690,6 +939,18 @@ export class ProcessService {
     this._procesos.update(list => [...list, proceso]);
     this.saveToStorage();
     return proceso;
+  }
+
+  // Helper para mapear escala del wizard a unidad del KPI
+  private mapEscalaToUnidad(escala: string): string {
+    const map: Record<string, string> = {
+      'Porcentaje': 'porcentaje',
+      'Unidades': 'numero',
+      'Días': 'tiempo_dias',
+      'Horas': 'tiempo_horas',
+      'USD': 'moneda_usd'
+    };
+    return map[escala] || 'numero';
   }
 
   loadProceso(procesoId: string): boolean {
@@ -806,7 +1067,16 @@ export class ProcessService {
         tipoModelo: 'clasificacion',
         inputFeatures: [],
         outputField: 'prediccion'
-      } as MlNodeConfig)
+      } as MlNodeConfig),
+      kpi: () => ({
+        origenValor: 'variable',
+        kpiId: '',
+        kpiNombre: '',
+        kpiUnidad: 'porcentaje',
+        alertasHabilitadas: false,
+        umbrales: { direccion: 'menor' },
+        guardarHistorico: true
+      } as KpiNodeConfig)
     };
 
     const labels: Record<ProcessNodeType, string> = {
@@ -818,7 +1088,8 @@ export class ProcessService {
       branching: 'Branching',
       estado: 'Cambio de Estado',
       matematico: 'Matemático',
-      ml: 'Machine Learning'
+      ml: 'Machine Learning',
+      kpi: 'Actualizar KPI'
     };
 
     const node: ProcessNode = {
@@ -1304,7 +1575,7 @@ export class ProcessService {
   private countNodesByType(): Record<ProcessNodeType, number> {
     const counts: Record<ProcessNodeType, number> = {
       activo: 0, csv: 0, transformacion: 0, condicional: 0,
-      llm: 0, branching: 0, estado: 0, matematico: 0, ml: 0
+      llm: 0, branching: 0, estado: 0, matematico: 0, ml: 0, kpi: 0
     };
     for (const node of this._nodes()) {
       counts[node.type]++;

@@ -8,7 +8,8 @@ export type ProcessNodeType =
   | 'branching'
   | 'estado'
   | 'matematico'
-  | 'ml';
+  | 'ml'
+  | 'kpi';
 
 // Configuraciones específicas de cada tipo de nodo
 export interface ActivoNodeConfig {
@@ -81,6 +82,36 @@ export interface MlNodeConfig {
   threshold?: number;
 }
 
+// Configuración del nodo Actualizar KPI
+export interface KpiNodeConfig {
+  // Origen del valor
+  origenValor: 'variable' | 'fijo' | 'calculado';
+  variableOrigen?: string;          // Variable del flujo que contiene el valor
+  valorFijo?: number;               // Valor fijo manual
+  nodoPrevioId?: string;            // ID del nodo previo para valor calculado
+
+  // KPI destino
+  kpiId: string;                    // ID del KPI a actualizar
+  kpiNombre: string;                // Nombre del KPI para mostrar
+  kpiUnidad: string;                // Unidad de medida (%, número, moneda, etc.)
+  objetivoId?: string;              // ID del objetivo asociado
+
+  // Configuración de alertas
+  alertasHabilitadas: boolean;
+  umbrales: {
+    advertencia?: number;           // Umbral de advertencia
+    critico?: number;               // Umbral crítico
+    direccion: 'mayor' | 'menor';   // Si mayor o menor que el umbral dispara alerta
+  };
+
+  // Persistencia
+  guardarHistorico: boolean;        // Almacenar fecha + valor para gráficas
+  metadatosAdicionales?: {          // Datos adicionales a guardar
+    campo: string;
+    valor: string;
+  }[];
+}
+
 // Union type de todas las configuraciones
 export type ProcessNodeConfig =
   | ActivoNodeConfig
@@ -91,7 +122,8 @@ export type ProcessNodeConfig =
   | BranchingNodeConfig
   | EstadoNodeConfig
   | MatematicoNodeConfig
-  | MlNodeConfig;
+  | MlNodeConfig
+  | KpiNodeConfig;
 
 // Estructura de un nodo de proceso
 export interface ProcessNode {
@@ -113,6 +145,24 @@ export interface ProcessEdge {
   label?: string;
 }
 
+// Objetivo con KPIs asociados (usado en creación de proceso)
+export interface ObjetivoProceso {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  tipo: 'estrategico' | 'operativo';
+  progreso: number;
+  kpis: KpiObjetivo[];
+}
+
+// KPI asociado a un objetivo
+export interface KpiObjetivo {
+  id: string;
+  nombre: string;
+  meta: number;
+  escala: string;
+}
+
 // Proceso completo
 export interface Proceso {
   id: string;
@@ -122,6 +172,8 @@ export interface Proceso {
   estado: 'borrador' | 'activo' | 'inactivo' | 'archivado';
   nodes: ProcessNode[];
   edges: ProcessEdge[];
+  objetivos?: ObjetivoProceso[];  // Objetivos configurados en la creación
+  kpis?: KpiProceso[];            // KPIs del proceso (flat list para fácil acceso)
   createdAt: Date;
   updatedAt: Date;
   createdBy: string;
@@ -219,6 +271,15 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
     title: 'Machine Learning',
     descripcion: 'Ejecuta modelos de ML',
     categoria: 'ia'
+  },
+  {
+    type: 'kpi',
+    icon: 'speed',
+    iconColor: '#0d9488',
+    bgColor: '#ccfbf1',
+    title: 'Actualizar KPI',
+    descripcion: 'Actualiza el valor de un KPI del proceso',
+    categoria: 'estado'
   }
 ];
 
@@ -243,4 +304,59 @@ export const LLM_MODELS = {
     { id: 'gemini-pro', name: 'Gemini Pro', maxTokens: 32768 },
     { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', maxTokens: 1000000 }
   ]
+};
+
+// ==================== KPI Types ====================
+
+// Registro histórico de un KPI
+export interface KpiHistoricoEntry {
+  id: string;
+  kpiId: string;
+  valor: number;
+  timestamp: Date;
+  procesoId: string;
+  nodoId: string;
+  metadatos?: Record<string, any>;
+}
+
+// KPI asociado a un proceso
+export interface KpiProceso {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  unidad: string;
+  meta: number;
+  valorActual: number;
+  objetivoId?: string;
+  fechaUltimaActualizacion?: Date;
+  historico: KpiHistoricoEntry[];
+  alertas: {
+    advertencia?: number;
+    critico?: number;
+    direccion: 'mayor' | 'menor';
+  };
+}
+
+// Unidades disponibles para KPIs
+export const KPI_UNIDADES = [
+  { value: 'porcentaje', label: 'Porcentaje (%)', symbol: '%' },
+  { value: 'numero', label: 'Número', symbol: '' },
+  { value: 'moneda_mxn', label: 'Pesos MXN', symbol: '$' },
+  { value: 'moneda_usd', label: 'Dólares USD', symbol: 'USD' },
+  { value: 'tiempo_dias', label: 'Días', symbol: 'd' },
+  { value: 'tiempo_horas', label: 'Horas', symbol: 'h' },
+  { value: 'cantidad', label: 'Cantidad', symbol: 'u' }
+];
+
+// Configuración por defecto para nuevo nodo KPI
+export const DEFAULT_KPI_NODE_CONFIG: KpiNodeConfig = {
+  origenValor: 'variable',
+  kpiId: '',
+  kpiNombre: '',
+  kpiUnidad: 'porcentaje',
+  alertasHabilitadas: false,
+  umbrales: {
+    direccion: 'menor'
+  },
+  guardarHistorico: true
 };

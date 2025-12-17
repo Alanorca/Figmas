@@ -290,6 +290,42 @@ export class ProcesosComponent implements OnInit {
     { label: 'NLP', value: 'nlp' }
   ];
 
+  // Opciones para nodo KPI
+  origenValorOptions = [
+    { label: 'Variable del flujo', value: 'variable' },
+    { label: 'Valor fijo', value: 'fijo' },
+    { label: 'Calculado (nodo previo)', value: 'calculado' }
+  ];
+
+  kpiUnidadOptions = [
+    { label: 'Porcentaje (%)', value: 'porcentaje' },
+    { label: 'Número', value: 'numero' },
+    { label: 'Pesos MXN ($)', value: 'moneda_mxn' },
+    { label: 'Dólares USD', value: 'moneda_usd' },
+    { label: 'Días', value: 'tiempo_dias' },
+    { label: 'Horas', value: 'tiempo_horas' },
+    { label: 'Cantidad', value: 'cantidad' }
+  ];
+
+  direccionAlertaOptions = [
+    { label: 'Menor que el umbral', value: 'menor' },
+    { label: 'Mayor que el umbral', value: 'mayor' }
+  ];
+
+  // KPIs disponibles (obtenidos del proceso actual)
+  kpisDisponibles = computed(() => {
+    const proceso = this.processService.currentProceso();
+    if (proceso?.kpis && proceso.kpis.length > 0) {
+      return proceso.kpis.map(kpi => ({
+        id: kpi.id,
+        nombre: kpi.nombre,
+        unidad: kpi.unidad
+      }));
+    }
+    // Fallback: si no hay KPIs configurados, mostrar mensaje vacío
+    return [];
+  });
+
   // Modelos LLM disponibles
   llmModels = this.groqService.getAvailableModels();
 
@@ -966,6 +1002,35 @@ Responde UNICAMENTE con el JSON, sin texto adicional ni markdown.`;
 
   vincularActivo(): void {
     console.log('Vinculando activo...');
+  }
+
+  // Seleccionar KPI y actualizar nombre y unidad automáticamente
+  onKpiSelect(kpiId: string): void {
+    const kpi = this.kpisDisponibles().find(k => k.id === kpiId);
+    if (kpi) {
+      this.updateNodeConfig({
+        kpiId: kpi.id,
+        kpiNombre: kpi.nombre,
+        kpiUnidad: kpi.unidad
+      });
+    }
+  }
+
+  // Helper para obtener valor de umbral
+  getUmbralValue(node: ProcessNode, field: string): unknown {
+    const umbrales = (node.config as unknown as Record<string, unknown>)['umbrales'] as Record<string, unknown>;
+    return umbrales ? umbrales[field] : undefined;
+  }
+
+  // Helper para actualizar umbral
+  updateUmbral(field: string, value: unknown): void {
+    const node = this.processService.selectedNode();
+    if (node) {
+      const currentUmbrales = (node.config as unknown as Record<string, unknown>)['umbrales'] as Record<string, unknown> || { direccion: 'menor' };
+      this.updateNodeConfig({
+        umbrales: { ...currentUmbrales, [field]: value }
+      });
+    }
   }
 
   appendToFormula(op: string): void {

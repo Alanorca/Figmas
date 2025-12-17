@@ -458,9 +458,25 @@ export class ProcesoCrearComponent {
 
   // ========== Finalizar ==========
   guardarEIrEditor(): void {
+    // Convertir objetivos al formato esperado por el servicio
+    const objetivosParaGuardar = this.objetivos().map(obj => ({
+      id: obj.id,
+      nombre: obj.nombre,
+      descripcion: obj.descripcion,
+      tipo: obj.tipo,
+      progreso: obj.progreso,
+      kpis: obj.kpis.map(kpi => ({
+        id: kpi.id,
+        nombre: kpi.nombre,
+        meta: kpi.meta,
+        escala: kpi.escala
+      }))
+    }));
+
     const proceso = this.processService.createProceso(
       this.nombreProceso(),
-      this.descripcionProceso()
+      this.descripcionProceso(),
+      objetivosParaGuardar
     );
 
     this.messageService.add({
