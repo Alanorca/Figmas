@@ -153,6 +153,8 @@ export class ProcessService {
     this.createDemoProcess4();
     // 5. Auditoría de Cumplimiento
     this.createDemoProcess5();
+    // 6. Dashboard KPIs (Ejemplo con muchos KPIs)
+    this.createDemoProcess6();
   }
 
   private createDemoProcess1(): void {
@@ -865,6 +867,241 @@ export class ProcessService {
         { id: 'edge-22', sourceNodeId: 'node-cond-3', targetNodeId: 'node-llm-3', sourceHandle: 'true' },
         { id: 'edge-23', sourceNodeId: 'node-cond-3', targetNodeId: 'node-estado-6', sourceHandle: 'false' },
         { id: 'edge-24', sourceNodeId: 'node-llm-3', targetNodeId: 'node-estado-7' }
+      ]
+    };
+    this._procesos.update(list => [...list, proceso]);
+    this.saveToStorage();
+  }
+
+  // 6. Dashboard de KPIs - Ejemplo con múltiples objetivos y KPIs
+  private createDemoProcess6(): void {
+    const proceso: Proceso = {
+      id: 'proc-demo-006',
+      nombre: 'Dashboard de KPIs Empresariales',
+      descripcion: 'Proceso de ejemplo para demostrar la configuración de múltiples KPIs en nodos',
+      version: '1.0.0',
+      estado: 'activo',
+      createdAt: new Date('2024-12-01'),
+      updatedAt: new Date('2024-12-17'),
+      createdBy: 'admin',
+      objetivos: [
+        {
+          id: 'OBJ-FIN-001',
+          nombre: 'Rentabilidad Financiera',
+          descripcion: 'Maximizar la rentabilidad de la empresa',
+          tipo: 'estrategico',
+          progreso: 72,
+          kpis: [
+            { id: 'KPI-FIN-001', nombre: 'Margen de Utilidad Neta', meta: 15, escala: 'Porcentaje' },
+            { id: 'KPI-FIN-002', nombre: 'ROI (Retorno de Inversión)', meta: 20, escala: 'Porcentaje' },
+            { id: 'KPI-FIN-003', nombre: 'EBITDA', meta: 5000000, escala: 'USD' },
+            { id: 'KPI-FIN-004', nombre: 'Ratio de Liquidez', meta: 1.5, escala: 'Unidades' }
+          ]
+        },
+        {
+          id: 'OBJ-VEN-001',
+          nombre: 'Crecimiento en Ventas',
+          descripcion: 'Incrementar las ventas y participación de mercado',
+          tipo: 'estrategico',
+          progreso: 85,
+          kpis: [
+            { id: 'KPI-VEN-001', nombre: 'Ingresos Totales', meta: 10000000, escala: 'USD' },
+            { id: 'KPI-VEN-002', nombre: 'Crecimiento Mensual', meta: 5, escala: 'Porcentaje' },
+            { id: 'KPI-VEN-003', nombre: 'Ticket Promedio', meta: 250, escala: 'USD' },
+            { id: 'KPI-VEN-004', nombre: 'Tasa de Conversión', meta: 3.5, escala: 'Porcentaje' }
+          ]
+        },
+        {
+          id: 'OBJ-CLI-001',
+          nombre: 'Satisfacción del Cliente',
+          descripcion: 'Mejorar la experiencia y retención de clientes',
+          tipo: 'operativo',
+          progreso: 68,
+          kpis: [
+            { id: 'KPI-CLI-001', nombre: 'NPS (Net Promoter Score)', meta: 70, escala: 'Unidades' },
+            { id: 'KPI-CLI-002', nombre: 'Tasa de Retención', meta: 90, escala: 'Porcentaje' },
+            { id: 'KPI-CLI-003', nombre: 'Tiempo de Respuesta', meta: 2, escala: 'Horas' },
+            { id: 'KPI-CLI-004', nombre: 'CSAT (Satisfacción)', meta: 4.5, escala: 'Unidades' }
+          ]
+        },
+        {
+          id: 'OBJ-OPE-001',
+          nombre: 'Eficiencia Operativa',
+          descripcion: 'Optimizar procesos y reducir costos operativos',
+          tipo: 'operativo',
+          progreso: 55,
+          kpis: [
+            { id: 'KPI-OPE-001', nombre: 'Costo por Transacción', meta: 5, escala: 'USD' },
+            { id: 'KPI-OPE-002', nombre: 'Tiempo de Ciclo', meta: 24, escala: 'Horas' },
+            { id: 'KPI-OPE-003', nombre: 'Tasa de Error', meta: 1, escala: 'Porcentaje' },
+            { id: 'KPI-OPE-004', nombre: 'Utilización de Capacidad', meta: 85, escala: 'Porcentaje' }
+          ]
+        },
+        {
+          id: 'OBJ-RH-001',
+          nombre: 'Capital Humano',
+          descripcion: 'Desarrollar y retener talento',
+          tipo: 'estrategico',
+          progreso: 78,
+          kpis: [
+            { id: 'KPI-RH-001', nombre: 'Rotación de Personal', meta: 10, escala: 'Porcentaje' },
+            { id: 'KPI-RH-002', nombre: 'Satisfacción Empleados', meta: 80, escala: 'Porcentaje' },
+            { id: 'KPI-RH-003', nombre: 'Horas de Capacitación', meta: 40, escala: 'Horas' },
+            { id: 'KPI-RH-004', nombre: 'Productividad por Empleado', meta: 50000, escala: 'USD' }
+          ]
+        }
+      ],
+      kpis: [
+        // Financieros
+        { id: 'KPI-FIN-001', nombre: 'Margen de Utilidad Neta', unidad: 'porcentaje', meta: 15, valorActual: 12.5, objetivoId: 'OBJ-FIN-001', historico: [], alertas: { advertencia: 12, critico: 10, direccion: 'menor' } },
+        { id: 'KPI-FIN-002', nombre: 'ROI (Retorno de Inversión)', unidad: 'porcentaje', meta: 20, valorActual: 18, objetivoId: 'OBJ-FIN-001', historico: [], alertas: { advertencia: 15, critico: 10, direccion: 'menor' } },
+        { id: 'KPI-FIN-003', nombre: 'EBITDA', unidad: 'moneda_usd', meta: 5000000, valorActual: 4200000, objetivoId: 'OBJ-FIN-001', historico: [], alertas: { advertencia: 4000000, critico: 3000000, direccion: 'menor' } },
+        { id: 'KPI-FIN-004', nombre: 'Ratio de Liquidez', unidad: 'numero', meta: 1.5, valorActual: 1.3, objetivoId: 'OBJ-FIN-001', historico: [], alertas: { advertencia: 1.2, critico: 1.0, direccion: 'menor' } },
+        // Ventas
+        { id: 'KPI-VEN-001', nombre: 'Ingresos Totales', unidad: 'moneda_usd', meta: 10000000, valorActual: 8500000, objetivoId: 'OBJ-VEN-001', historico: [], alertas: { advertencia: 7000000, critico: 5000000, direccion: 'menor' } },
+        { id: 'KPI-VEN-002', nombre: 'Crecimiento Mensual', unidad: 'porcentaje', meta: 5, valorActual: 4.2, objetivoId: 'OBJ-VEN-001', historico: [], alertas: { advertencia: 3, critico: 0, direccion: 'menor' } },
+        { id: 'KPI-VEN-003', nombre: 'Ticket Promedio', unidad: 'moneda_usd', meta: 250, valorActual: 235, objetivoId: 'OBJ-VEN-001', historico: [], alertas: { advertencia: 200, critico: 150, direccion: 'menor' } },
+        { id: 'KPI-VEN-004', nombre: 'Tasa de Conversión', unidad: 'porcentaje', meta: 3.5, valorActual: 3.1, objetivoId: 'OBJ-VEN-001', historico: [], alertas: { advertencia: 2.5, critico: 2, direccion: 'menor' } },
+        // Clientes
+        { id: 'KPI-CLI-001', nombre: 'NPS (Net Promoter Score)', unidad: 'numero', meta: 70, valorActual: 62, objetivoId: 'OBJ-CLI-001', historico: [], alertas: { advertencia: 50, critico: 30, direccion: 'menor' } },
+        { id: 'KPI-CLI-002', nombre: 'Tasa de Retención', unidad: 'porcentaje', meta: 90, valorActual: 87, objetivoId: 'OBJ-CLI-001', historico: [], alertas: { advertencia: 80, critico: 70, direccion: 'menor' } },
+        { id: 'KPI-CLI-003', nombre: 'Tiempo de Respuesta', unidad: 'tiempo_horas', meta: 2, valorActual: 2.5, objetivoId: 'OBJ-CLI-001', historico: [], alertas: { advertencia: 4, critico: 8, direccion: 'mayor' } },
+        { id: 'KPI-CLI-004', nombre: 'CSAT (Satisfacción)', unidad: 'numero', meta: 4.5, valorActual: 4.2, objetivoId: 'OBJ-CLI-001', historico: [], alertas: { advertencia: 4.0, critico: 3.5, direccion: 'menor' } },
+        // Operativos
+        { id: 'KPI-OPE-001', nombre: 'Costo por Transacción', unidad: 'moneda_usd', meta: 5, valorActual: 6.2, objetivoId: 'OBJ-OPE-001', historico: [], alertas: { advertencia: 7, critico: 10, direccion: 'mayor' } },
+        { id: 'KPI-OPE-002', nombre: 'Tiempo de Ciclo', unidad: 'tiempo_horas', meta: 24, valorActual: 28, objetivoId: 'OBJ-OPE-001', historico: [], alertas: { advertencia: 36, critico: 48, direccion: 'mayor' } },
+        { id: 'KPI-OPE-003', nombre: 'Tasa de Error', unidad: 'porcentaje', meta: 1, valorActual: 1.8, objetivoId: 'OBJ-OPE-001', historico: [], alertas: { advertencia: 2, critico: 5, direccion: 'mayor' } },
+        { id: 'KPI-OPE-004', nombre: 'Utilización de Capacidad', unidad: 'porcentaje', meta: 85, valorActual: 72, objetivoId: 'OBJ-OPE-001', historico: [], alertas: { advertencia: 70, critico: 60, direccion: 'menor' } },
+        // Recursos Humanos
+        { id: 'KPI-RH-001', nombre: 'Rotación de Personal', unidad: 'porcentaje', meta: 10, valorActual: 12, objetivoId: 'OBJ-RH-001', historico: [], alertas: { advertencia: 15, critico: 20, direccion: 'mayor' } },
+        { id: 'KPI-RH-002', nombre: 'Satisfacción Empleados', unidad: 'porcentaje', meta: 80, valorActual: 76, objetivoId: 'OBJ-RH-001', historico: [], alertas: { advertencia: 70, critico: 60, direccion: 'menor' } },
+        { id: 'KPI-RH-003', nombre: 'Horas de Capacitación', unidad: 'tiempo_horas', meta: 40, valorActual: 35, objetivoId: 'OBJ-RH-001', historico: [], alertas: { advertencia: 30, critico: 20, direccion: 'menor' } },
+        { id: 'KPI-RH-004', nombre: 'Productividad por Empleado', unidad: 'moneda_usd', meta: 50000, valorActual: 48000, objetivoId: 'OBJ-RH-001', historico: [], alertas: { advertencia: 45000, critico: 40000, direccion: 'menor' } }
+      ],
+      nodes: [
+        // Nodo de datos CSV
+        {
+          id: 'node-csv-kpi',
+          type: 'csv',
+          label: 'Datos de Métricas',
+          position: { x: 100, y: 200 },
+          config: {
+            fileName: 'metricas_empresariales.csv',
+            columns: ['fecha', 'ingresos', 'costos', 'clientes', 'tickets', 'errores'],
+            rowCount: 365,
+            delimiter: ',',
+            hasHeaders: true
+          } as CsvNodeConfig
+        },
+        // Nodo matemático para calcular margen
+        {
+          id: 'node-math-1',
+          type: 'matematico',
+          label: 'Calcular Margen',
+          position: { x: 350, y: 100 },
+          config: {
+            formula: '((ingresos - costos) / ingresos) * 100',
+            precision: 2,
+            variablesSalida: 'margen_calculado'
+          } as MatematicoNodeConfig
+        },
+        // Nodo KPI - Margen de Utilidad
+        {
+          id: 'node-kpi-1',
+          type: 'kpi',
+          label: 'Actualizar Margen',
+          position: { x: 600, y: 100 },
+          config: {
+            origenValor: 'variable',
+            variableOrigen: 'margen_calculado',
+            kpiId: 'KPI-FIN-001',
+            kpiNombre: 'Margen de Utilidad Neta',
+            kpiUnidad: 'porcentaje',
+            alertasHabilitadas: true,
+            umbrales: { advertencia: 12, critico: 10, direccion: 'menor' }
+          } as KpiNodeConfig
+        },
+        // Nodo matemático para calcular conversión
+        {
+          id: 'node-math-2',
+          type: 'matematico',
+          label: 'Calcular Conversión',
+          position: { x: 350, y: 300 },
+          config: {
+            formula: '(tickets / clientes) * 100',
+            precision: 2,
+            variablesSalida: 'tasa_conversion'
+          } as MatematicoNodeConfig
+        },
+        // Nodo KPI - Tasa de Conversión
+        {
+          id: 'node-kpi-2',
+          type: 'kpi',
+          label: 'Actualizar Conversión',
+          position: { x: 600, y: 300 },
+          config: {
+            origenValor: 'variable',
+            variableOrigen: 'tasa_conversion',
+            kpiId: 'KPI-VEN-004',
+            kpiNombre: 'Tasa de Conversión',
+            kpiUnidad: 'porcentaje',
+            alertasHabilitadas: true,
+            umbrales: { advertencia: 2.5, critico: 2, direccion: 'menor' }
+          } as KpiNodeConfig
+        },
+        // Nodo matemático para calcular tasa de error
+        {
+          id: 'node-math-3',
+          type: 'matematico',
+          label: 'Calcular Tasa Error',
+          position: { x: 350, y: 500 },
+          config: {
+            formula: '(errores / tickets) * 100',
+            precision: 2,
+            variablesSalida: 'tasa_error'
+          } as MatematicoNodeConfig
+        },
+        // Nodo KPI - Tasa de Error
+        {
+          id: 'node-kpi-3',
+          type: 'kpi',
+          label: 'Actualizar Tasa Error',
+          position: { x: 600, y: 500 },
+          config: {
+            origenValor: 'variable',
+            variableOrigen: 'tasa_error',
+            kpiId: 'KPI-OPE-003',
+            kpiNombre: 'Tasa de Error',
+            kpiUnidad: 'porcentaje',
+            alertasHabilitadas: true,
+            umbrales: { advertencia: 2, critico: 5, direccion: 'mayor' }
+          } as KpiNodeConfig
+        },
+        // Nodo de estado final
+        {
+          id: 'node-estado-kpi',
+          type: 'estado',
+          label: 'KPIs Actualizados',
+          position: { x: 850, y: 300 },
+          config: {
+            tipoEstado: 'success',
+            nombreEstado: 'Completado',
+            mensaje: 'Todos los KPIs han sido actualizados correctamente.',
+            notificar: true,
+            accionSiguiente: 'continuar'
+          } as EstadoNodeConfig
+        }
+      ],
+      edges: [
+        { id: 'edge-kpi-1', sourceNodeId: 'node-csv-kpi', targetNodeId: 'node-math-1' },
+        { id: 'edge-kpi-2', sourceNodeId: 'node-csv-kpi', targetNodeId: 'node-math-2' },
+        { id: 'edge-kpi-3', sourceNodeId: 'node-csv-kpi', targetNodeId: 'node-math-3' },
+        { id: 'edge-kpi-4', sourceNodeId: 'node-math-1', targetNodeId: 'node-kpi-1' },
+        { id: 'edge-kpi-5', sourceNodeId: 'node-math-2', targetNodeId: 'node-kpi-2' },
+        { id: 'edge-kpi-6', sourceNodeId: 'node-math-3', targetNodeId: 'node-kpi-3' },
+        { id: 'edge-kpi-7', sourceNodeId: 'node-kpi-1', targetNodeId: 'node-estado-kpi' },
+        { id: 'edge-kpi-8', sourceNodeId: 'node-kpi-2', targetNodeId: 'node-estado-kpi' },
+        { id: 'edge-kpi-9', sourceNodeId: 'node-kpi-3', targetNodeId: 'node-estado-kpi' }
       ]
     };
     this._procesos.update(list => [...list, proceso]);
