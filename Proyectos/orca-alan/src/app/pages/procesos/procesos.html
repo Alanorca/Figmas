@@ -684,6 +684,92 @@
                 </div>
               }
 
+              @case ('kpi') {
+                <div class="props-section">
+                  <label class="props-label">KPI a actualizar</label>
+                  @if (kpisDisponibles().length > 0) {
+                    <p-select
+                      [options]="kpisDisponibles()"
+                      optionLabel="nombre"
+                      optionValue="id"
+                      [ngModel]="getConfigValue(node, 'kpiId')"
+                      (ngModelChange)="onKpiSelect($event)"
+                      placeholder="Seleccionar KPI..."
+                      styleClass="w-full">
+                    </p-select>
+                  } @else {
+                    <p-message severity="warn" text="No hay KPIs configurados en este proceso. Configúralos en la creación del proceso." [closable]="false" styleClass="w-full"></p-message>
+                  }
+                </div>
+
+                @if (getConfigValue(node, 'kpiId')) {
+                  <div class="props-section">
+                    <label class="props-label">Unidad</label>
+                    <input pInputText [ngModel]="getConfigValue(node, 'kpiUnidad')" disabled class="w-full" />
+                  </div>
+
+                  <div class="props-section">
+                    <label class="props-label">Origen del valor</label>
+                    <p-select
+                      [options]="origenValorOptions"
+                      [ngModel]="getConfigValue(node, 'origenValor')"
+                      (ngModelChange)="updateNodeConfig({ origenValor: $event })"
+                      styleClass="w-full">
+                    </p-select>
+                  </div>
+
+                  @if (getConfigValue(node, 'origenValor') === 'variable') {
+                    <div class="props-section">
+                      <label class="props-label">Variable de entrada</label>
+                      <input pInputText [ngModel]="getConfigValue(node, 'variableOrigen')"
+                             (ngModelChange)="updateNodeConfig({ variableOrigen: $event })"
+                             placeholder="nombre_variable" class="w-full" />
+                      <small class="props-help">Variable del flujo que contiene el valor</small>
+                    </div>
+                  }
+
+                  @if (getConfigValue(node, 'origenValor') === 'fijo') {
+                    <div class="props-section">
+                      <label class="props-label">Valor fijo</label>
+                      <p-inputNumber [ngModel]="getConfigValue(node, 'valorFijo')"
+                                     (ngModelChange)="updateNodeConfig({ valorFijo: $event })"
+                                     mode="decimal" styleClass="w-full"></p-inputNumber>
+                    </div>
+                  }
+
+                  <div class="props-section">
+                    <p-checkbox
+                      [ngModel]="getConfigValue(node, 'alertasHabilitadas')"
+                      (ngModelChange)="updateNodeConfig({ alertasHabilitadas: $event })"
+                      [binary]="true"
+                      label="Habilitar alertas">
+                    </p-checkbox>
+                  </div>
+
+                  @if (getConfigValue(node, 'alertasHabilitadas')) {
+                    <div class="props-section">
+                      <label class="props-label">Umbral de advertencia</label>
+                      <p-inputNumber [ngModel]="getUmbralValue(node, 'advertencia')"
+                                     (ngModelChange)="updateUmbral('advertencia', $event)"
+                                     mode="decimal" styleClass="w-full"></p-inputNumber>
+                    </div>
+                    <div class="props-section">
+                      <label class="props-label">Umbral crítico</label>
+                      <p-inputNumber [ngModel]="getUmbralValue(node, 'critico')"
+                                     (ngModelChange)="updateUmbral('critico', $event)"
+                                     mode="decimal" styleClass="w-full"></p-inputNumber>
+                    </div>
+                    <div class="props-section">
+                      <label class="props-label">Dirección de alerta</label>
+                      <p-select [options]="direccionAlertaOptions"
+                                [ngModel]="getUmbralValue(node, 'direccion')"
+                                (ngModelChange)="updateUmbral('direccion', $event)"
+                                styleClass="w-full"></p-select>
+                    </div>
+                  }
+                }
+              }
+
               @default {
                 <div class="props-section">
                   <p class="text-500">Selecciona un nodo para ver su configuracion</p>
