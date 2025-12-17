@@ -275,6 +275,22 @@ export class TablaUnificadaService {
   }
 
   reordenarColumnas(nuevoOrden: string[]): void {
+    // Obtener todas las columnas actuales
+    const todasLasColumnas = this.columnasConfig().map(c => c.field);
+
+    // Si el nuevo orden no incluye todas las columnas (por ejemplo, solo las visibles),
+    // necesitamos preservar las columnas faltantes en su posición relativa
+    const columnasEnNuevoOrden = new Set(nuevoOrden);
+    const columnasFaltantes = todasLasColumnas.filter(c => !columnasEnNuevoOrden.has(c));
+
+    // Combinar: columnas del nuevo orden + columnas faltantes al final
+    const ordenCompleto = [...nuevoOrden, ...columnasFaltantes];
+
+    this.estado.update(s => ({ ...s, ordenColumnas: ordenCompleto }));
+  }
+
+  // Reordenar columnas manteniendo el orden completo (para drag & drop del drawer)
+  reordenarColumnasCompleto(nuevoOrden: string[]): void {
     this.estado.update(s => ({ ...s, ordenColumnas: nuevoOrden }));
   }
 

@@ -103,8 +103,10 @@
       [filterDelay]="300"
       [rowHover]="true"
       [resizableColumns]="true"
+      [reorderableColumns]="true"
+      (onColReorder)="onColReorder($event)"
       columnResizeMode="expand"
-      styleClass="p-datatable-sm"
+      styleClass="p-datatable-sm p-datatable-reorderable"
       [tableStyle]="{ 'min-width': '60rem' }"
       [selection]="registrosSeleccionados()"
       (selectionChange)="onSelectionChange($event)"
@@ -121,8 +123,10 @@
             <th
               [pSortableColumn]="col.sortable ? col.field : undefined"
               [style.width]="col.width"
-              pResizableColumn>
+              pResizableColumn
+              pReorderableColumn>
               <div class="column-header">
+                <span class="drag-handle-grip" pTooltip="Arrastra para reordenar"></span>
                 <span>{{ col.header }}</span>
                 @if (col.sortable) {
                   <p-sortIcon [field]="col.field" />
@@ -586,7 +590,7 @@
 <p-drawer
   [(visible)]="showColumnasDialog"
   position="right"
-  [style]="{ width: '350px' }"
+  [style]="{ width: '380px' }"
   header="Configurar Columnas">
   <div class="columnas-drawer-content">
     <!-- Buscador -->
@@ -597,28 +601,49 @@
           type="text"
           pInputText
           placeholder="Buscar columna..."
-          [(ngModel)]="busquedaColumna"
+          [ngModel]="busquedaColumna()"
+          (ngModelChange)="busquedaColumna.set($event)"
           class="w-full" />
       </p-iconfield>
     </div>
 
     <p class="text-secondary text-sm mb-3">
-      Selecciona las columnas que deseas mostrar en la tabla.
+      <i class="pi pi-info-circle mr-1"></i>
+      Arrastra las columnas para cambiar su orden. El orden se sincroniza con la tabla.
     </p>
 
-    <!-- Lista de columnas -->
+    <!-- Lista de columnas con drag and drop -->
     <div class="columnas-list">
-      @for (col of columnasFiltradas(); track col.field) {
-        <div class="columna-item">
-          <p-checkbox
-            [ngModel]="col.visible"
-            (ngModelChange)="toggleColumnaVisibilidad(col.field)"
-            [binary]="true"
-            [inputId]="col.field" />
-          <label [for]="col.field" class="ml-2 flex-1">
-            <span>{{ col.header }}</span>
-            <span class="text-secondary text-xs ml-1">({{ col.tipo }})</span>
-          </label>
+      @for (col of columnasFiltradas(); track col.field; let i = $index) {
+        <div
+          class="columna-item"
+          [class.dragging]="draggedColumna?.field === col.field"
+          [class.drop-target]="draggedColumna && draggedColumna.field !== col.field"
+          [attr.data-field]="col.field"
+          pDraggable="columnas"
+          pDroppable="columnas"
+          [dragHandle]="'.drag-handle-config'"
+          (onDragStart)="onDragStartEvent($event, col)"
+          (onDragEnd)="onDragEnd()"
+          (onDrop)="onDropColumnaEvent($event, col)">
+          <div class="columna-item-content">
+            <i class="pi pi-bars drag-handle-config" pTooltip="Arrastra para reordenar"></i>
+            <span class="columna-orden-badge">{{ i + 1 }}</span>
+            <p-checkbox
+              [ngModel]="col.visible"
+              (ngModelChange)="toggleColumnaVisibilidad(col.field)"
+              [binary]="true"
+              [inputId]="col.field" />
+            <label [for]="col.field" class="ml-2 flex-1">
+              <span>{{ col.header }}</span>
+              <span class="text-secondary text-xs ml-1">({{ col.tipo }})</span>
+            </label>
+            @if (col.visible) {
+              <i class="pi pi-eye text-primary" pTooltip="Visible en tabla"></i>
+            } @else {
+              <i class="pi pi-eye-slash text-secondary" pTooltip="Oculta"></i>
+            }
+          </div>
         </div>
       }
       @if (columnasFiltradas().length === 0) {
@@ -637,7 +662,8 @@
         icon="pi pi-refresh"
         [text]="true"
         severity="secondary"
-        (onClick)="restaurarColumnas()" />
+        (onClick)="restaurarColumnas()"
+        pTooltip="Restaurar orden y visibilidad por defecto" />
       <p-button
         label="Cerrar"
         icon="pi pi-check"

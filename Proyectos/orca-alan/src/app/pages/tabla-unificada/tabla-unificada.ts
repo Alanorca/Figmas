@@ -123,10 +123,24 @@ export class TablaUnificadaComponent {
   nuevoResponsable = signal('');
   nuevoEstadoMasivo = signal('');
 
+  // Columnas ordenadas según el estado actual (para el drawer)
+  columnasOrdenadas = computed(() => {
+    const columnas = this.columnasConfig();
+    const orden = this.estado().ordenColumnas;
+    return [...columnas].sort((a, b) => {
+      const indexA = orden.indexOf(a.field);
+      const indexB = orden.indexOf(b.field);
+      // Si no está en el orden, ponerlo al final
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  });
+
   // Columnas filtradas por búsqueda
   columnasFiltradas = computed(() => {
     const busqueda = this.busquedaColumna().toLowerCase().trim();
-    const columnas = this.columnasConfig();
+    const columnas = this.columnasOrdenadas();
 
     if (!busqueda) {
       return columnas;
@@ -517,6 +531,44 @@ export class TablaUnificadaComponent {
 
   restaurarColumnas(): void {
     this.service.restaurarColumnasDefecto();
+  }
+
+  // Manejar reorden de columnas desde la tabla (drag en headers)
+  onColReorder(event: any): void {
+    const columns = event.columns as ColumnaConfig[];
+    const nuevoOrden = columns.map(col => col.field);
+    this.service.reordenarColumnas(nuevoOrden);
+  }
+
+  // Drag and drop en el drawer de configuración
+  draggedColumna: ColumnaConfig | null = null;
+
+  onDragStartEvent(event: DragEvent, columna: ColumnaConfig): void {
+    this.draggedColumna = columna;
+  }
+
+  onDragEnd(): void {
+    this.draggedColumna = null;
+  }
+
+  onDropColumnaEvent(event: DragEvent, targetColumna: ColumnaConfig): void {
+    if (this.draggedColumna && this.draggedColumna.field !== targetColumna.field) {
+      // Usar las columnas ordenadas actualmente
+      const columnas = [...this.columnasOrdenadas()];
+      const draggedIndex = columnas.findIndex(c => c.field === this.draggedColumna!.field);
+      const targetIndex = columnas.findIndex(c => c.field === targetColumna.field);
+
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        // Reordenar el array
+        const [removed] = columnas.splice(draggedIndex, 1);
+        columnas.splice(targetIndex, 0, removed);
+
+        // Actualizar el orden en el estado (usar método completo porque es desde el drawer)
+        const nuevoOrden = columnas.map(c => c.field);
+        this.service.reordenarColumnasCompleto(nuevoOrden);
+      }
+    }
+    this.draggedColumna = null;
   }
 
   // Métodos de ordenamiento
