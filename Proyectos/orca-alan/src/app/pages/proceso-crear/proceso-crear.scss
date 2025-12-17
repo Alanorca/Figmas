@@ -1039,6 +1039,79 @@ $white: #ffffff;
   border: 1px solid $border-color;
   border-radius: 8px;
   padding: 20px;
+  transition: all 0.2s ease;
+
+  &.colapsado {
+    padding: 12px 20px;
+  }
+}
+
+// Estilos para colapso de objetivos
+.objetivos-collapse-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btn-collapse-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: $bg-light;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  font-size: 12px;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  i {
+    font-size: 12px;
+  }
+
+  &:hover {
+    background: #e5e7eb;
+    color: $text-primary;
+  }
+}
+
+.objetivo-collapse-toggle {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  flex-shrink: 0;
+
+  i {
+    font-size: 14px;
+    color: $text-secondary;
+    transition: transform 0.2s ease;
+  }
+}
+
+.objetivo-header-colapsable {
+  cursor: pointer;
+  user-select: none;
+  border-radius: 6px;
+  margin: -8px;
+  padding: 8px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.kpis-count-badge {
+  padding: 3px 10px;
+  background: #e5e7eb;
+  color: $text-secondary;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .objetivo-header {
@@ -1381,10 +1454,19 @@ $white: #ffffff;
   line-height: 1.6;
 }
 
+.revision-collapse-actions {
+  margin-top: 16px;
+}
+
 .revision-objetivo {
   border: 1px solid $border-color;
   border-radius: 8px;
   padding: 16px;
+  transition: all 0.2s ease;
+
+  &.colapsado {
+    padding: 10px 16px;
+  }
 }
 
 .objetivo-header-rev {
@@ -1392,6 +1474,30 @@ $white: #ffffff;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  gap: 12px;
+
+  &.objetivo-header-colapsable {
+    cursor: pointer;
+    user-select: none;
+    border-radius: 6px;
+    margin: -8px;
+    padding: 8px;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.02);
+    }
+  }
+
+  .revision-objetivo.colapsado & {
+    margin-bottom: 0;
+  }
+}
+
+.objetivo-header-rev-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .objetivo-titulo-rev {

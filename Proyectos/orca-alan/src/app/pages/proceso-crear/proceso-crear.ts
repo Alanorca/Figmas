@@ -141,6 +141,9 @@ export class ProcesoCrearComponent {
   nuevoKPIMeta = signal<number>(75);
   nuevoKPIEscala = signal('Porcentaje');
 
+  // Estado de colapso de objetivos (por ID)
+  objetivosColapsados = signal<Set<string>>(new Set());
+
   escalasOptions = [
     { label: 'Porcentaje', value: 'Porcentaje' },
     { label: 'Unidades', value: 'Unidades' },
@@ -497,6 +500,32 @@ export class ProcesoCrearComponent {
   // Helpers
   getTipoLabel(tipo: string): string {
     return tipo === 'estrategico' ? 'Estratégico' : 'Operativo';
+  }
+
+  // ========== Colapso de Objetivos ==========
+  toggleObjetivoColapsado(objetivoId: string): void {
+    this.objetivosColapsados.update(set => {
+      const newSet = new Set(set);
+      if (newSet.has(objetivoId)) {
+        newSet.delete(objetivoId);
+      } else {
+        newSet.add(objetivoId);
+      }
+      return newSet;
+    });
+  }
+
+  isObjetivoColapsado(objetivoId: string): boolean {
+    return this.objetivosColapsados().has(objetivoId);
+  }
+
+  expandirTodosObjetivos(): void {
+    this.objetivosColapsados.set(new Set());
+  }
+
+  colapsarTodosObjetivos(): void {
+    const ids = this.objetivos().map(o => o.id);
+    this.objetivosColapsados.set(new Set(ids));
   }
 
   // Métodos para actualizar valores numéricos (evitar arrow functions en template)
