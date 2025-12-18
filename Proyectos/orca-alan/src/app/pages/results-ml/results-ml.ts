@@ -103,6 +103,7 @@ export class ResultsMLComponent {
   busquedaHallazgoService = this.service.busquedaHallazgo;
 
   // Estado local
+  tipoEntidadSeleccionado = signal<'activo' | 'proceso' | null>(null);
   tipoEntidadFiltro = signal<'activo' | 'proceso' | 'todos'>('todos');
   showDetalleDrawer = signal(false);
   hallazgoSeleccionado = signal<HallazgoBase | null>(null);
@@ -189,7 +190,35 @@ export class ResultsMLComponent {
     return this.entidadesFiltradas().reduce((sum, e) => sum + e.cantidadHallazgosPendientes, 0);
   });
 
+  // Computed: Contadores por tipo de entidad
+  contadorActivos = computed(() => {
+    const entidades = this.entidadesFiltradas().filter(e => e.tipo === 'activo');
+    return {
+      total: entidades.length,
+      pendientes: entidades.reduce((sum, e) => sum + e.cantidadHallazgosPendientes, 0)
+    };
+  });
+
+  contadorProcesos = computed(() => {
+    const entidades = this.entidadesFiltradas().filter(e => e.tipo === 'proceso');
+    return {
+      total: entidades.length,
+      pendientes: entidades.reduce((sum, e) => sum + e.cantidadHallazgosPendientes, 0)
+    };
+  });
+
   // Métodos de navegación
+  seleccionarTipoEntidad(tipo: 'activo' | 'proceso'): void {
+    this.tipoEntidadSeleccionado.set(tipo);
+    this.tipoEntidadFiltro.set(tipo);
+  }
+
+  volverASeleccionTipo(): void {
+    this.tipoEntidadSeleccionado.set(null);
+    this.tipoEntidadFiltro.set('todos');
+    this.busquedaEntidad.set('');
+  }
+
   seleccionarEntidad(entidad: EntidadML): void {
     this.service.seleccionarEntidad(entidad);
   }
