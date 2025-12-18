@@ -6,6 +6,7 @@ import {
   Tendencia,
   MitigacionSugerida,
   Oportunidad,
+  RiesgoML,
   ContextoUsuario,
   FeedbackUsuario,
   TipoHallazgo,
@@ -34,6 +35,13 @@ export class ResultsMLService {
 
   // Búsqueda
   busquedaEntidad = signal('');
+
+  // Filtros para tabla unificada
+  filtroTiposHallazgo = signal<TipoHallazgo[]>([]);
+  filtroEstadosHallazgo = signal<EstadoHallazgo[]>([]);
+  filtroConfianza = signal<string | null>(null);
+  filtroFechaRango = signal<Date[] | null>(null);
+  busquedaHallazgo = signal('');
 
   // Entidades recientes
   private entidadesRecientes = signal<EntidadML[]>([]);
@@ -71,7 +79,8 @@ export class ResultsMLService {
     return [
       ...resultado.tendencias,
       ...resultado.mitigaciones,
-      ...resultado.oportunidades
+      ...resultado.oportunidades,
+      ...resultado.riesgos
     ].filter(h => h.estado === 'pendiente').length;
   }
 
@@ -95,13 +104,15 @@ export class ResultsMLService {
           totalTendencias: Math.floor(Math.random() * 8) + 2,
           totalMitigaciones: Math.floor(Math.random() * 6) + 1,
           totalOportunidades: Math.floor(Math.random() * 5) + 1,
+          totalRiesgos: Math.floor(Math.random() * 4) + 1,
           pendientes: entidad.cantidadHallazgosPendientes,
           aprobados: Math.floor(Math.random() * 4),
           descartados: Math.floor(Math.random() * 2)
         },
         tendencias: this.generarTendenciasMock(entidad.id),
         mitigaciones: this.generarMitigacionesMock(entidad.id),
-        oportunidades: this.generarOportunidadesMock(entidad.id)
+        oportunidades: this.generarOportunidadesMock(entidad.id),
+        riesgos: this.generarRiesgosMock(entidad.id)
       };
       this.resultadosMock.set(entidad.id, resultado);
     });
@@ -296,6 +307,61 @@ export class ResultsMLService {
     return oportunidades.slice(0, Math.floor(Math.random() * 2) + 1);
   }
 
+  private generarRiesgosMock(entidadId: string): RiesgoML[] {
+    const riesgos: RiesgoML[] = [
+      {
+        id: `RIE-${entidadId}-001`,
+        tipoHallazgo: 'riesgo',
+        nivelRiesgo: 'alta',
+        titulo: 'Riesgo de interrupción del servicio por sobrecarga',
+        descripcion: 'El análisis predictivo indica alta probabilidad de interrupción del servicio durante períodos de alta demanda.',
+        confianza: 88,
+        fechaDeteccion: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        estado: 'pendiente',
+        fuentesDatos: ['Métricas de rendimiento', 'Logs de sistema'],
+        entidadId,
+        probabilidad: 4,
+        impacto: 5,
+        factoresRiesgo: ['Alta carga de usuarios', 'Recursos limitados'],
+        controlSugerido: 'Implementar escalado automático'
+      },
+      {
+        id: `RIE-${entidadId}-002`,
+        tipoHallazgo: 'riesgo',
+        nivelRiesgo: 'alta',
+        titulo: 'Vulnerabilidad potencial en autenticación',
+        descripcion: 'Se detectaron patrones de acceso sospechosos que podrían indicar intentos de acceso no autorizado.',
+        confianza: 92,
+        fechaDeteccion: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        estado: 'pendiente',
+        fuentesDatos: ['Logs de autenticación', 'Análisis de IPs'],
+        entidadId,
+        probabilidad: 3,
+        impacto: 5,
+        factoresRiesgo: ['Intentos de login fallidos', 'IPs sospechosas'],
+        controlSugerido: 'Implementar MFA y bloqueo de IPs'
+      },
+      {
+        id: `RIE-${entidadId}-003`,
+        tipoHallazgo: 'riesgo',
+        nivelRiesgo: 'media',
+        titulo: 'Posible incumplimiento de retención de datos',
+        descripcion: 'Los datos están siendo retenidos más allá del período permitido según las políticas de la organización.',
+        confianza: 75,
+        fechaDeteccion: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        estado: 'en_evaluacion',
+        fuentesDatos: ['Metadatos de almacenamiento', 'Políticas de retención'],
+        entidadId,
+        probabilidad: 2,
+        impacto: 4,
+        factoresRiesgo: ['Datos antiguos sin purgar', 'Sin política de archivado'],
+        controlSugerido: 'Implementar política de retención automática'
+      }
+    ];
+
+    return riesgos.slice(0, Math.floor(Math.random() * 2) + 1);
+  }
+
   // Computed: Entidades filtradas por búsqueda
   entidadesFiltradas = computed(() => {
     const busqueda = this.busquedaEntidad().toLowerCase();
@@ -317,6 +383,71 @@ export class ResultsMLService {
     const entidad = this.estado().entidadSeleccionada;
     if (!entidad) return null;
     return this.resultadosMock.get(entidad.id) || null;
+  });
+
+  // Computed: Todos los hallazgos unificados (para tabla sin tabs)
+  todosLosHallazgos = computed(() => {
+    const resultado = this.resultadoActual();
+    if (!resultado) return [];
+
+    let hallazgos: HallazgoBase[] = [
+      ...resultado.tendencias,
+      ...resultado.mitigaciones,
+      ...resultado.oportunidades,
+      ...resultado.riesgos
+    ];
+
+    // Filtrar por tipos de hallazgo seleccionados
+    const tiposFiltro = this.filtroTiposHallazgo();
+    if (tiposFiltro.length > 0) {
+      hallazgos = hallazgos.filter(h => tiposFiltro.includes(h.tipoHallazgo));
+    }
+
+    // Filtrar por estados seleccionados
+    const estadosFiltro = this.filtroEstadosHallazgo();
+    if (estadosFiltro.length > 0) {
+      hallazgos = hallazgos.filter(h => estadosFiltro.includes(h.estado));
+    }
+
+    // Filtrar por confianza
+    const confianzaFiltro = this.filtroConfianza();
+    if (confianzaFiltro) {
+      hallazgos = hallazgos.filter(h => {
+        switch (confianzaFiltro) {
+          case 'alta': return h.confianza >= 80;
+          case 'media': return h.confianza >= 50 && h.confianza < 80;
+          case 'baja': return h.confianza < 50;
+          default: return true;
+        }
+      });
+    }
+
+    // Filtrar por rango de fechas
+    const fechaRango = this.filtroFechaRango();
+    if (fechaRango && fechaRango.length === 2 && fechaRango[0] && fechaRango[1]) {
+      const fechaInicio = new Date(fechaRango[0]);
+      fechaInicio.setHours(0, 0, 0, 0);
+      const fechaFin = new Date(fechaRango[1]);
+      fechaFin.setHours(23, 59, 59, 999);
+      hallazgos = hallazgos.filter(h => {
+        const fechaHallazgo = new Date(h.fechaDeteccion);
+        return fechaHallazgo >= fechaInicio && fechaHallazgo <= fechaFin;
+      });
+    }
+
+    // Filtrar por búsqueda
+    const busqueda = this.busquedaHallazgo().toLowerCase();
+    if (busqueda) {
+      hallazgos = hallazgos.filter(h =>
+        h.titulo.toLowerCase().includes(busqueda) ||
+        h.descripcion.toLowerCase().includes(busqueda)
+      );
+    }
+
+    // Ordenar por fecha de detección (más recientes primero)
+    return hallazgos.sort((a, b) =>
+      new Date(b.fechaDeteccion).getTime() - new Date(a.fechaDeteccion).getTime()
+    );
   });
 
   // Computed: Hallazgos filtrados según categoría activa
@@ -495,7 +626,8 @@ export class ResultsMLService {
     const todosHallazgos = [
       ...resultado.tendencias,
       ...resultado.mitigaciones,
-      ...resultado.oportunidades
+      ...resultado.oportunidades,
+      ...resultado.riesgos
     ];
 
     return todosHallazgos.find(h => h.id === hallazgoId) || null;
@@ -557,12 +689,14 @@ export class ResultsMLService {
     actualizarEnLista(resultado.tendencias);
     actualizarEnLista(resultado.mitigaciones);
     actualizarEnLista(resultado.oportunidades);
+    actualizarEnLista(resultado.riesgos);
 
     // Actualizar contadores
     resultado.contadores.pendientes = [
       ...resultado.tendencias,
       ...resultado.mitigaciones,
-      ...resultado.oportunidades
+      ...resultado.oportunidades,
+      ...resultado.riesgos
     ].filter(h => h.estado === 'pendiente').length;
 
     // Forzar actualización

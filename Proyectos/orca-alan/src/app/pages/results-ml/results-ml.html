@@ -174,120 +174,84 @@
         </div>
 
         <div class="header-right">
-          @if (entidad.tipo === 'activo') {
-            <p-button
-              icon="pi pi-external-link"
-              label="Ver en Activos"
-              [outlined]="true"
-              severity="secondary"
-              (onClick)="navegarAActivo(entidad.id)" />
-            <p-button
-              icon="pi pi-exclamation-triangle"
-              label="Ver Riesgos"
-              [outlined]="true"
-              severity="secondary"
-              (onClick)="navegarARiesgos(entidad.id)" />
-          }
-          <p-button
-            icon="pi pi-plus"
-            label="Agregar Contexto"
-            [outlined]="true"
-            (onClick)="showContextoDialog.set(true)" />
-          <p-button
-            icon="pi pi-download"
-            label="Exportar"
-            (onClick)="exportarResultados()" />
+          <!-- Botones eliminados según diseño -->
         </div>
       </div>
     </div>
 
-    <!-- Panel de resumen -->
+    <!-- Barra de estadísticas horizontal -->
     @if (resultadoActual(); as resultado) {
-      <div class="resumen-panel">
-        <div class="resumen-card">
-          <div class="resumen-icon bg-blue-100">
-            <i class="pi pi-clock text-blue-600"></i>
-          </div>
-          <div class="resumen-info">
-            <span class="resumen-label">Último análisis</span>
-            <span class="resumen-value">{{ formatearFechaHora(resultado.fechaUltimoAnalisis) }}</span>
-          </div>
-        </div>
-
-        <div class="resumen-card">
-          <div class="resumen-icon bg-purple-100">
-            <i class="pi pi-chart-line text-purple-600"></i>
-          </div>
-          <div class="resumen-info">
-            <span class="resumen-label">Tendencias</span>
-            <span class="resumen-value">{{ resultado.contadores.totalTendencias }}</span>
-          </div>
-        </div>
-
-        <div class="resumen-card">
-          <div class="resumen-icon bg-orange-100">
-            <i class="pi pi-shield text-orange-600"></i>
-          </div>
-          <div class="resumen-info">
-            <span class="resumen-label">Mitigaciones</span>
-            <span class="resumen-value">{{ resultado.contadores.totalMitigaciones }}</span>
-          </div>
-        </div>
-
-        <div class="resumen-card">
-          <div class="resumen-icon bg-green-100">
-            <i class="pi pi-lightbulb text-green-600"></i>
-          </div>
-          <div class="resumen-info">
-            <span class="resumen-label">Oportunidades</span>
-            <span class="resumen-value">{{ resultado.contadores.totalOportunidades }}</span>
-          </div>
-        </div>
-
-        <div class="resumen-card">
-          <div class="resumen-icon bg-yellow-100">
-            <i class="pi pi-bell text-yellow-600"></i>
-          </div>
-          <div class="resumen-info">
-            <span class="resumen-label">Pendientes</span>
-            <span class="resumen-value text-yellow-600">{{ resultado.contadores.pendientes }}</span>
-          </div>
+      <div class="stats-bar mb-4">
+        <div class="stats-chips">
+          <p-chip styleClass="stat-chip">
+            <i class="pi pi-clock mr-2"></i>
+            <span class="stat-label">Último análisis:</span>
+            <span class="stat-value">{{ formatearFechaHora(resultado.fechaUltimoAnalisis) }}</span>
+          </p-chip>
+          <p-chip styleClass="stat-chip stat-tendencia">
+            <i class="pi pi-chart-line mr-2"></i>
+            <span class="stat-value">{{ resultado.contadores.totalTendencias }}</span>
+            <span class="stat-label">Tendencias</span>
+          </p-chip>
+          <p-chip styleClass="stat-chip stat-mitigacion">
+            <i class="pi pi-shield mr-2"></i>
+            <span class="stat-value">{{ resultado.contadores.totalMitigaciones }}</span>
+            <span class="stat-label">Mitigaciones</span>
+          </p-chip>
+          <p-chip styleClass="stat-chip stat-oportunidad">
+            <i class="pi pi-lightbulb mr-2"></i>
+            <span class="stat-value">{{ resultado.contadores.totalOportunidades }}</span>
+            <span class="stat-label">Oportunidades</span>
+          </p-chip>
+          <p-chip styleClass="stat-chip stat-riesgo">
+            <i class="pi pi-exclamation-triangle mr-2"></i>
+            <span class="stat-value">{{ resultado.contadores.totalRiesgos }}</span>
+            <span class="stat-label">Riesgos</span>
+          </p-chip>
+          <p-chip styleClass="stat-chip stat-pendiente">
+            <i class="pi pi-bell mr-2"></i>
+            <span class="stat-value">{{ resultado.contadores.pendientes }}</span>
+            <span class="stat-label">Pendientes</span>
+          </p-chip>
         </div>
       </div>
 
-      <!-- Toolbar de filtros y acciones masivas -->
-      <p-toolbar styleClass="mb-4 hallazgos-toolbar">
+      <!-- Toolbar de hallazgos -->
+      <p-toolbar styleClass="hallazgos-toolbar mb-4">
         <ng-template pTemplate="start">
           <div class="flex align-items-center gap-3">
-            <!-- Botón de acciones masivas -->
-            @if (hallazgosSeleccionados().length > 0) {
+            <!-- Checkbox de selección masiva -->
+            <div class="flex align-items-center gap-2">
+              <p-checkbox
+                [ngModel]="todosLosHallazgos().length > 0 && hallazgosSeleccionados().length === todosLosHallazgos().length"
+                (ngModelChange)="toggleSeleccionTodos($event)"
+                [binary]="true"
+                inputId="selectAll" />
+              @if (hallazgosSeleccionados().length > 0) {
+                <p-button
+                  [label]="hallazgosSeleccionados().length + ' seleccionados'"
+                  icon="pi pi-cog"
+                  severity="success"
+                  size="small"
+                  (onClick)="showAccionesMasivasDrawer.set(true)"
+                  pTooltip="Acciones masivas"
+                  tooltipPosition="bottom" />
+              }
+            </div>
+
+            @if (hayFiltrosActivos()) {
+              <p-divider layout="vertical" styleClass="mx-1" />
               <p-button
-                label="Acciones masivas"
-                icon="pi pi-check-square"
-                [badge]="hallazgosSeleccionados().length.toString()"
-                badgeSeverity="contrast"
-                severity="success"
-                [outlined]="true"
-                (onClick)="abrirAccionesMasivasDrawer()"
-                pTooltip="Gestionar hallazgos seleccionados"
+                icon="pi pi-filter-slash"
+                label="Limpiar filtros"
+                severity="secondary"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                (onClick)="limpiarFiltrosHallazgos()"
+                pTooltip="Limpiar filtros"
                 tooltipPosition="bottom" />
             }
-
-            <!-- Filtro por estado -->
-            <p-multiSelect
-              [options]="estadoOptions"
-              [ngModel]="filtroEstadoHallazgo()"
-              (ngModelChange)="onFiltroEstadoChange($event)"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Estado"
-              [style]="{ minWidth: '150px' }"
-              appendTo="body"
-              [showHeader]="false">
-              <ng-template let-option pTemplate="item">
-                <p-tag [value]="option.label" [severity]="getEstadoTag(option.value)" />
-              </ng-template>
-            </p-multiSelect>
           </div>
         </ng-template>
 
@@ -298,379 +262,225 @@
               type="text"
               pInputText
               placeholder="Buscar hallazgos..."
-              [ngModel]="busquedaHallazgo()"
-              (ngModelChange)="onBusquedaHallazgoChange($event)"
-              style="width: 300px" />
+              [ngModel]="busquedaHallazgoService()"
+              (ngModelChange)="onBusquedaHallazgoServiceChange($event)"
+              style="width: 280px" />
           </p-iconfield>
         </ng-template>
 
         <ng-template pTemplate="end">
-          <div class="flex gap-2 align-items-center">
-            @if (hayFiltrosActivos()) {
-              <p-button
-                icon="pi pi-filter-slash"
-                severity="secondary"
-                [rounded]="true"
-                [text]="true"
-                (onClick)="limpiarFiltrosHallazgos()"
-                pTooltip="Limpiar filtros"
-                tooltipPosition="bottom" />
-            }
-
-            <p-button
-              icon="pi pi-download"
-              severity="secondary"
-              [rounded]="true"
-              [text]="true"
-              (onClick)="exportarResultados()"
-              pTooltip="Exportar"
-              tooltipPosition="bottom" />
-          </div>
         </ng-template>
       </p-toolbar>
 
-      <!-- Tabs de categorías -->
-      <p-card styleClass="results-card">
-        <p-tabs [value]="getTabIndex()" (valueChange)="onTabChange($any($event))">
-          <p-tablist>
-            <p-tab [value]="0">
-              <i class="pi pi-chart-line mr-2"></i>
-              Tendencias
-              <p-badge [value]="resultado.tendencias.length.toString()" styleClass="ml-2" />
-            </p-tab>
-            <p-tab [value]="1">
-              <i class="pi pi-shield mr-2"></i>
-              Mitigaciones
-              <p-badge [value]="resultado.mitigaciones.length.toString()" styleClass="ml-2" />
-            </p-tab>
-            <p-tab [value]="2">
-              <i class="pi pi-lightbulb mr-2"></i>
-              Oportunidades
-              <p-badge [value]="resultado.oportunidades.length.toString()" styleClass="ml-2" />
-            </p-tab>
-          </p-tablist>
+      <!-- Tabla unificada de hallazgos -->
+      <p-card styleClass="table-card">
+        <p-table
+          #dtHallazgos
+          [value]="todosLosHallazgos()"
+          [rowHover]="true"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+          styleClass="p-datatable-sm hallazgos-table"
+          [selection]="hallazgosSeleccionados()"
+          (selectionChange)="onSelectionChange($event)"
+          dataKey="id">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 50px">
+                <p-tableHeaderCheckbox />
+              </th>
+              <th pSortableColumn="tipoHallazgo" style="width: 150px">
+                Tipo <p-sortIcon field="tipoHallazgo" />
+              </th>
+              <th pSortableColumn="titulo">Título <p-sortIcon field="titulo" /></th>
+              <th pSortableColumn="confianza" style="width: 150px">Confianza <p-sortIcon field="confianza" /></th>
+              <th pSortableColumn="fechaDeteccion" style="width: 180px">Fecha <p-sortIcon field="fechaDeteccion" /></th>
+              <th pSortableColumn="estado" style="width: 140px">Estado <p-sortIcon field="estado" /></th>
+              <th style="width: 120px">Acciones</th>
+            </tr>
+            <tr>
+              <th></th>
+              <th>
+                <p-multiSelect
+                  [options]="tipoHallazgoOptions"
+                  [ngModel]="filtroTiposHallazgo()"
+                  (ngModelChange)="onFiltroTipoChange($event)"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Todos"
+                  appendTo="body"
+                  [showHeader]="false"
+                  [style]="{ width: '100%' }">
+                  <ng-template let-option pTemplate="item">
+                    <div class="flex align-items-center gap-2">
+                      <i [class]="option.icon"></i>
+                      <span>{{ option.label }}</span>
+                    </div>
+                  </ng-template>
+                </p-multiSelect>
+              </th>
+              <th>
+                <input
+                  pInputText
+                  type="text"
+                  [ngModel]="busquedaHallazgoService()"
+                  (ngModelChange)="onBusquedaHallazgoServiceChange($event)"
+                  placeholder="Buscar..."
+                  style="width: 100%" />
+              </th>
+              <th>
+                <p-select
+                  [options]="confianzaFilterOptions"
+                  [ngModel]="filtroConfianza()"
+                  (ngModelChange)="onFiltroConfianzaChange($event)"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Todos"
+                  appendTo="body"
+                  [showClear]="true"
+                  [style]="{ width: '100%' }" />
+              </th>
+              <th>
+                <p-datePicker
+                  [ngModel]="filtroFecha()"
+                  (ngModelChange)="onFiltroFechaChange($event)"
+                  selectionMode="range"
+                  dateFormat="dd/mm/yy"
+                  placeholder="Rango de fechas"
+                  [showIcon]="true"
+                  [showButtonBar]="true"
+                  appendTo="body"
+                  [style]="{ width: '100%' }" />
+              </th>
+              <th>
+                <p-multiSelect
+                  [options]="estadoOptions"
+                  [ngModel]="filtroEstadoHallazgo()"
+                  (ngModelChange)="onFiltroEstadoChange($event)"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Todos"
+                  appendTo="body"
+                  [showHeader]="false"
+                  [style]="{ width: '100%' }">
+                  <ng-template let-option pTemplate="item">
+                    <p-tag [value]="option.label" [severity]="option.severity" />
+                  </ng-template>
+                </p-multiSelect>
+              </th>
+              <th>
+                @if (hayFiltrosActivos()) {
+                  <p-button
+                    icon="pi pi-filter-slash"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="secondary"
+                    (onClick)="limpiarFiltrosHallazgos()"
+                    pTooltip="Limpiar filtros" />
+                }
+              </th>
+            </tr>
+          </ng-template>
 
-          <p-tabpanels>
-            <!-- Panel de Tendencias -->
-            <p-tabpanel [value]="0">
-              <div class="tab-toolbar">
-                <div class="flex gap-2">
-                  <p-tag [value]="contadoresPorEstado().pendientes + ' Pendientes'" severity="warn" />
-                  <p-tag [value]="contadoresPorEstado().aprobados + ' Aprobados'" severity="success" />
+          <ng-template pTemplate="body" let-hallazgo>
+            <tr class="row-clickable" (click)="verDetalleHallazgo(hallazgo)">
+              <td (click)="$event.stopPropagation()">
+                <p-tableCheckbox [value]="hallazgo" />
+              </td>
+              <td>
+                <p-tag
+                  [value]="getTipoHallazgoLabel(hallazgo.tipoHallazgo)"
+                  [icon]="getTipoHallazgoIcon(hallazgo.tipoHallazgo)"
+                  [severity]="getTipoHallazgoSeverity(hallazgo.tipoHallazgo)" />
+              </td>
+              <td>
+                <div class="hallazgo-titulo">
+                  <span class="font-medium">{{ hallazgo.titulo }}</span>
+                  <div class="fuentes-badges">
+                    @for (fuente of hallazgo.fuentesDatos.slice(0, 2); track fuente) {
+                      <p-chip [label]="fuente" styleClass="chip-small" />
+                    }
+                    @if (hallazgo.fuentesDatos.length > 2) {
+                      <span class="text-secondary text-xs">+{{ hallazgo.fuentesDatos.length - 2 }}</span>
+                    }
+                  </div>
                 </div>
-              </div>
-
-              <p-table
-                #dtTendencias
-                [value]="hallazgosFiltrados()"
-                [rowHover]="true"
-                styleClass="p-datatable-sm hallazgos-table"
-                [selection]="hallazgosSeleccionados()"
-                (selectionChange)="onSelectionChange($event)"
-                dataKey="id">
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th style="width: 50px">
-                      <p-tableHeaderCheckbox />
-                    </th>
-                    <th style="width: 120px">Tipo</th>
-                    <th>Título</th>
-                    <th style="width: 100px">Confianza</th>
-                    <th style="width: 120px">Fecha</th>
-                    <th style="width: 120px">Estado</th>
-                    <th style="width: 100px">Acciones</th>
-                  </tr>
-                </ng-template>
-
-                <ng-template pTemplate="body" let-hallazgo>
-                  <tr class="row-clickable" (click)="verDetalleHallazgo(hallazgo)">
-                    <td (click)="$event.stopPropagation()">
-                      <p-tableCheckbox [value]="hallazgo" />
-                    </td>
-                    <td>
-                      <p-tag
-                        [value]="getTipoTendenciaLabel(asTendencia(hallazgo).tipoTendencia)"
-                        [icon]="getTipoTendenciaIcon(asTendencia(hallazgo).tipoTendencia)"
-                        severity="secondary" />
-                    </td>
-                    <td>
-                      <div class="hallazgo-titulo">
-                        <span class="font-medium">{{ hallazgo.titulo }}</span>
-                        <div class="fuentes-badges">
-                          @for (fuente of hallazgo.fuentesDatos.slice(0, 2); track fuente) {
-                            <p-chip [label]="fuente" styleClass="chip-small" />
-                          }
-                          @if (hallazgo.fuentesDatos.length > 2) {
-                            <span class="text-secondary text-xs">+{{ hallazgo.fuentesDatos.length - 2 }}</span>
-                          }
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="confianza-cell">
-                        <p-progressBar
-                          [value]="hallazgo.confianza"
-                          [showValue]="false"
-                          styleClass="h-0.5rem"
-                          [style]="{'--p-progressbar-value-background': hallazgo.confianza >= 80 ? 'var(--green-500)' : hallazgo.confianza >= 50 ? 'var(--yellow-500)' : 'var(--red-500)'}" />
-                        <span class="text-sm">{{ hallazgo.confianza }}%</span>
-                      </div>
-                    </td>
-                    <td>{{ formatearFecha(hallazgo.fechaDeteccion) }}</td>
-                    <td>
-                      <p-tag
-                        [value]="formatearEstado(hallazgo.estado)"
-                        [severity]="getEstadoTag(hallazgo.estado)" />
-                    </td>
-                    <td class="actions-cell" (click)="$event.stopPropagation()">
-                      @if (hallazgo.estado === 'pendiente') {
-                        <div class="flex gap-1">
-                          <p-button
-                            icon="pi pi-check"
-                            severity="success"
-                            [rounded]="true"
-                            [text]="true"
-                            size="small"
-                            pTooltip="Aprobar"
-                            (onClick)="abrirAprobarDialog(hallazgo)" />
-                          <p-button
-                            icon="pi pi-times"
-                            severity="secondary"
-                            [rounded]="true"
-                            [text]="true"
-                            size="small"
-                            pTooltip="Descartar"
-                            (onClick)="abrirDescartarDialog(hallazgo)" />
-                        </div>
-                      } @else {
-                        <p-button
-                          icon="pi pi-eye"
-                          [rounded]="true"
-                          [text]="true"
-                          size="small"
-                          pTooltip="Ver detalle"
-                          (onClick)="verDetalleHallazgo(hallazgo)" />
-                      }
-                    </td>
-                  </tr>
-                </ng-template>
-
-                <ng-template pTemplate="emptymessage">
-                  <tr>
-                    <td colspan="7" class="text-center py-6">
-                      <i class="pi pi-inbox text-4xl text-secondary mb-3"></i>
-                      <p class="text-secondary">No hay tendencias registradas</p>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            </p-tabpanel>
-
-            <!-- Panel de Mitigaciones -->
-            <p-tabpanel [value]="1">
-              <div class="tab-toolbar">
-                <div class="flex gap-2">
-                  <p-tag [value]="contadoresPorEstado().pendientes + ' Pendientes'" severity="warn" />
-                  <p-tag [value]="contadoresPorEstado().aprobados + ' Aprobados'" severity="success" />
+              </td>
+              <td>
+                <div class="confianza-cell">
+                  <p-progressBar
+                    [value]="hallazgo.confianza"
+                    [showValue]="false"
+                    styleClass="h-0.5rem"
+                    [style]="{'--p-progressbar-value-background': hallazgo.confianza >= 80 ? 'var(--green-500)' : hallazgo.confianza >= 50 ? 'var(--yellow-500)' : 'var(--red-500)'}" />
+                  <span class="text-sm">{{ hallazgo.confianza }}%</span>
                 </div>
-              </div>
-
-              <p-table
-                #dtMitigaciones
-                [value]="hallazgosFiltrados()"
-                [rowHover]="true"
-                styleClass="p-datatable-sm hallazgos-table"
-                [selection]="hallazgosSeleccionados()"
-                (selectionChange)="onSelectionChange($event)"
-                dataKey="id">
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th style="width: 50px">
-                      <p-tableHeaderCheckbox />
-                    </th>
-                    <th style="width: 100px">Prioridad</th>
-                    <th>Título</th>
-                    <th style="width: 180px">Riesgo Asociado</th>
-                    <th style="width: 100px">Confianza</th>
-                    <th style="width: 120px">Estado</th>
-                    <th style="width: 100px">Acciones</th>
-                  </tr>
-                </ng-template>
-
-                <ng-template pTemplate="body" let-hallazgo>
-                  <tr class="row-clickable" (click)="verDetalleHallazgo(hallazgo)">
-                    <td (click)="$event.stopPropagation()">
-                      <p-tableCheckbox [value]="hallazgo" />
-                    </td>
-                    <td>
-                      <p-tag
-                        [value]="asMitigacion(hallazgo).prioridadSugerida | titlecase"
-                        [severity]="getPrioridadTag(asMitigacion(hallazgo).prioridadSugerida)" />
-                    </td>
-                    <td>
-                      <span class="font-medium">{{ hallazgo.titulo }}</span>
-                    </td>
-                    <td>
-                      <span class="text-sm">{{ asMitigacion(hallazgo).riesgoAsociado }}</span>
-                    </td>
-                    <td>
-                      <div class="confianza-cell">
-                        <span class="text-sm font-medium" [class]="'text-' + (hallazgo.confianza >= 80 ? 'green' : hallazgo.confianza >= 50 ? 'yellow' : 'red') + '-600'">
-                          {{ hallazgo.confianza }}%
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <p-tag
-                        [value]="formatearEstado(hallazgo.estado)"
-                        [severity]="getEstadoTag(hallazgo.estado)" />
-                    </td>
-                    <td class="actions-cell" (click)="$event.stopPropagation()">
-                      @if (hallazgo.estado === 'pendiente') {
-                        <div class="flex gap-1">
-                          <p-button
-                            icon="pi pi-check"
-                            severity="success"
-                            [rounded]="true"
-                            [text]="true"
-                            size="small"
-                            pTooltip="Aprobar"
-                            (onClick)="abrirAprobarDialog(hallazgo)" />
-                          <p-button
-                            icon="pi pi-times"
-                            severity="secondary"
-                            [rounded]="true"
-                            [text]="true"
-                            size="small"
-                            pTooltip="Descartar"
-                            (onClick)="abrirDescartarDialog(hallazgo)" />
-                        </div>
-                      } @else {
-                        <p-button
-                          icon="pi pi-eye"
-                          [rounded]="true"
-                          [text]="true"
-                          size="small"
-                          (onClick)="verDetalleHallazgo(hallazgo)" />
-                      }
-                    </td>
-                  </tr>
-                </ng-template>
-
-                <ng-template pTemplate="emptymessage">
-                  <tr>
-                    <td colspan="7" class="text-center py-6">
-                      <i class="pi pi-inbox text-4xl text-secondary mb-3"></i>
-                      <p class="text-secondary">No hay mitigaciones sugeridas</p>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            </p-tabpanel>
-
-            <!-- Panel de Oportunidades -->
-            <p-tabpanel [value]="2">
-              <div class="tab-toolbar">
-                <div class="flex gap-2">
-                  <p-tag [value]="contadoresPorEstado().pendientes + ' Pendientes'" severity="warn" />
-                  <p-tag [value]="contadoresPorEstado().aprobados + ' Aprobados'" severity="success" />
+              </td>
+              <td>{{ formatearFecha(hallazgo.fechaDeteccion) }}</td>
+              <td>
+                <p-tag
+                  [value]="formatearEstado(hallazgo.estado)"
+                  [severity]="getEstadoTag(hallazgo.estado)" />
+              </td>
+              <td class="actions-cell" (click)="$event.stopPropagation()">
+                <div class="flex gap-1">
+                  @if (hallazgo.estado === 'pendiente') {
+                    <p-button
+                      icon="pi pi-check"
+                      severity="success"
+                      [rounded]="true"
+                      [text]="true"
+                      size="small"
+                      pTooltip="Aprobar"
+                      tooltipPosition="top"
+                      (onClick)="abrirAprobarDialog(hallazgo)" />
+                    <p-button
+                      icon="pi pi-times"
+                      severity="secondary"
+                      [rounded]="true"
+                      [text]="true"
+                      size="small"
+                      pTooltip="Descartar"
+                      tooltipPosition="top"
+                      (onClick)="abrirDescartarDialog(hallazgo)" />
+                  } @else {
+                    <p-button
+                      icon="pi pi-eye"
+                      [rounded]="true"
+                      [text]="true"
+                      size="small"
+                      pTooltip="Ver detalle"
+                      tooltipPosition="top"
+                      (onClick)="verDetalleHallazgo(hallazgo)" />
+                  }
+                  <p-button
+                    icon="pi pi-comment"
+                    severity="info"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    pTooltip="Agregar contexto"
+                    tooltipPosition="top"
+                    (onClick)="abrirContextoParaHallazgo(hallazgo)" />
                 </div>
-              </div>
+              </td>
+            </tr>
+          </ng-template>
 
-              <p-table
-                #dtOportunidades
-                [value]="hallazgosFiltrados()"
-                [rowHover]="true"
-                styleClass="p-datatable-sm hallazgos-table"
-                [selection]="hallazgosSeleccionados()"
-                (selectionChange)="onSelectionChange($event)"
-                dataKey="id">
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th style="width: 50px">
-                      <p-tableHeaderCheckbox />
-                    </th>
-                    <th style="width: 140px">Tipo</th>
-                    <th>Título</th>
-                    <th style="width: 120px">Impacto</th>
-                    <th style="width: 100px">Confianza</th>
-                    <th style="width: 120px">Estado</th>
-                    <th style="width: 100px">Acciones</th>
-                  </tr>
-                </ng-template>
-
-                <ng-template pTemplate="body" let-hallazgo>
-                  <tr class="row-clickable" (click)="verDetalleHallazgo(hallazgo)">
-                    <td (click)="$event.stopPropagation()">
-                      <p-tableCheckbox [value]="hallazgo" />
-                    </td>
-                    <td>
-                      <p-tag
-                        [value]="getTipoOportunidadLabel(asOportunidad(hallazgo).tipoOportunidad)"
-                        severity="success" />
-                    </td>
-                    <td>
-                      <span class="font-medium">{{ hallazgo.titulo }}</span>
-                    </td>
-                    <td>
-                      <p-tag
-                        [value]="asOportunidad(hallazgo).impactoEstimado"
-                        [severity]="asOportunidad(hallazgo).impactoEstimado === 'Alto' ? 'danger' : asOportunidad(hallazgo).impactoEstimado === 'Medio' ? 'warn' : 'success'" />
-                    </td>
-                    <td>
-                      <span class="text-sm font-medium" [class]="'text-' + (hallazgo.confianza >= 80 ? 'green' : hallazgo.confianza >= 50 ? 'yellow' : 'red') + '-600'">
-                        {{ hallazgo.confianza }}%
-                      </span>
-                    </td>
-                    <td>
-                      <p-tag
-                        [value]="formatearEstado(hallazgo.estado)"
-                        [severity]="getEstadoTag(hallazgo.estado)" />
-                    </td>
-                    <td class="actions-cell" (click)="$event.stopPropagation()">
-                      @if (hallazgo.estado === 'pendiente') {
-                        <div class="flex gap-1">
-                          <p-button
-                            icon="pi pi-check"
-                            severity="success"
-                            [rounded]="true"
-                            [text]="true"
-                            size="small"
-                            pTooltip="Aprobar"
-                            (onClick)="abrirAprobarDialog(hallazgo)" />
-                          <p-button
-                            icon="pi pi-times"
-                            severity="secondary"
-                            [rounded]="true"
-                            [text]="true"
-                            size="small"
-                            pTooltip="Descartar"
-                            (onClick)="abrirDescartarDialog(hallazgo)" />
-                        </div>
-                      } @else {
-                        <p-button
-                          icon="pi pi-eye"
-                          [rounded]="true"
-                          [text]="true"
-                          size="small"
-                          (onClick)="verDetalleHallazgo(hallazgo)" />
-                      }
-                    </td>
-                  </tr>
-                </ng-template>
-
-                <ng-template pTemplate="emptymessage">
-                  <tr>
-                    <td colspan="7" class="text-center py-6">
-                      <i class="pi pi-inbox text-4xl text-secondary mb-3"></i>
-                      <p class="text-secondary">No hay oportunidades identificadas</p>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            </p-tabpanel>
-          </p-tabpanels>
-        </p-tabs>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center py-6">
+                <div class="empty-state">
+                  <i class="pi pi-inbox text-4xl text-secondary mb-3"></i>
+                  <p class="text-secondary">No hay hallazgos registrados</p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
       </p-card>
     }
   }
@@ -735,7 +545,7 @@
       </div>
 
       <!-- Contenido específico por tipo -->
-      @if (estado().categoriaActiva === 'tendencia') {
+      @if (hallazgo.tipoHallazgo === 'tendencia') {
         @let tendencia = asTendencia(hallazgo);
         @if (tendencia.metricasEstadisticas && tendencia.metricasEstadisticas.length > 0) {
           <div class="seccion mb-4">
@@ -758,7 +568,7 @@
         }
       }
 
-      @if (estado().categoriaActiva === 'mitigacion') {
+      @if (hallazgo.tipoHallazgo === 'mitigacion') {
         @let mitigacion = asMitigacion(hallazgo);
         <div class="seccion mb-4">
           <h4><i class="pi pi-shield mr-2"></i>Riesgo Asociado</h4>
@@ -778,7 +588,7 @@
         }
       }
 
-      @if (estado().categoriaActiva === 'oportunidad') {
+      @if (hallazgo.tipoHallazgo === 'oportunidad') {
         @let oportunidad = asOportunidad(hallazgo);
         @if (oportunidad.beneficioCuantificado) {
           <div class="seccion mb-4">
@@ -790,6 +600,39 @@
           <div class="seccion mb-4">
             <h4><i class="pi pi-exclamation-triangle mr-2"></i>Riesgos de Implementación</h4>
             <p class="text-secondary">{{ oportunidad.riesgosImplementacion }}</p>
+          </div>
+        }
+      }
+
+      @if (hallazgo.tipoHallazgo === 'riesgo') {
+        @let riesgo = asRiesgo(hallazgo);
+        <div class="seccion mb-4">
+          <h4><i class="pi pi-chart-bar mr-2"></i>Evaluación del Riesgo</h4>
+          <div class="metricas-estadisticas">
+            <div class="metrica-stat">
+              <span class="stat-label">Probabilidad</span>
+              <span class="stat-value">{{ riesgo.probabilidad }}/5</span>
+            </div>
+            <div class="metrica-stat">
+              <span class="stat-label">Impacto</span>
+              <span class="stat-value">{{ riesgo.impacto }}/5</span>
+            </div>
+          </div>
+        </div>
+        @if (riesgo.factoresRiesgo && riesgo.factoresRiesgo.length > 0) {
+          <div class="seccion mb-4">
+            <h4><i class="pi pi-list mr-2"></i>Factores de Riesgo</h4>
+            <ul class="pl-4">
+              @for (factor of riesgo.factoresRiesgo; track factor) {
+                <li class="text-secondary mb-1">{{ factor }}</li>
+              }
+            </ul>
+          </div>
+        }
+        @if (riesgo.controlSugerido) {
+          <div class="seccion mb-4">
+            <h4><i class="pi pi-shield mr-2"></i>Control Sugerido</h4>
+            <p class="text-secondary">{{ riesgo.controlSugerido }}</p>
           </div>
         }
       }
@@ -1031,17 +874,17 @@
 
       <p-divider />
 
-      <!-- Eliminar - siempre disponible -->
-      <div class="accion-item">
+      <!-- Agregar contexto - siempre disponible -->
+      <div class="accion-item mb-3">
         <p-button
-          label="Eliminar seleccionados"
-          icon="pi pi-trash"
-          severity="danger"
+          label="Agregar contexto"
+          icon="pi pi-comment"
+          severity="info"
           [outlined]="true"
           [style]="{ width: '100%' }"
-          (onClick)="eliminarSeleccionados()" />
+          (onClick)="abrirContextoMasivo()" />
         <small class="text-secondary mt-1 block">
-          Eliminará permanentemente {{ hallazgosSeleccionados().length }} hallazgo(s)
+          Agregará contexto a {{ hallazgosSeleccionados().length }} hallazgo(s)
         </small>
       </div>
     </div>
@@ -1101,3 +944,143 @@
       (onClick)="confirmarEliminarSeleccionados()" />
   </ng-template>
 </p-dialog>
+
+<!-- Dialog: Agregar Contexto -->
+<p-dialog
+  header="Agregar Contexto"
+  [(visible)]="showContextoDialog"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false">
+  @if (hallazgoSeleccionado(); as hallazgo) {
+    <div class="contexto-form">
+      <!-- Resumen del hallazgo -->
+      <div class="resumen-hallazgo mb-4 p-3 surface-100 border-round">
+        <div class="flex align-items-center gap-2 mb-2">
+          <p-tag
+            [value]="getTipoHallazgoLabel(hallazgo.tipoHallazgo)"
+            [icon]="getTipoHallazgoIcon(hallazgo.tipoHallazgo)"
+            [severity]="getTipoHallazgoSeverity(hallazgo.tipoHallazgo)" />
+          <span class="text-secondary text-sm">{{ hallazgo.id }}</span>
+        </div>
+        <span class="font-medium">{{ hallazgo.titulo }}</span>
+      </div>
+
+      <!-- Tipo de contexto -->
+      <div class="field mb-3">
+        <label class="block mb-2 font-medium">Tipo de contexto</label>
+        <div class="flex gap-2">
+          @for (tipo of tiposContexto; track tipo.value) {
+            <p-button
+              [label]="tipo.label"
+              [icon]="tipo.icon"
+              [severity]="contextoForm().tipoContexto === tipo.value ? 'primary' : 'secondary'"
+              [outlined]="contextoForm().tipoContexto !== tipo.value"
+              size="small"
+              (onClick)="updateContextoTipo(tipo.value)" />
+          }
+        </div>
+      </div>
+
+      <!-- Contexto -->
+      <div class="field">
+        <label for="contextoTexto" class="block mb-2 font-medium">Contexto *</label>
+        <textarea
+          pTextarea
+          id="contextoTexto"
+          [ngModel]="contextoForm().contexto"
+          (ngModelChange)="updateContextoTexto($event)"
+          [rows]="5"
+          placeholder="Escribe el contexto adicional para este hallazgo..."
+          class="w-full"></textarea>
+      </div>
+
+      <p class="text-secondary text-sm mt-3">
+        <i class="pi pi-info-circle mr-1"></i>
+        El contexto ayuda a enriquecer la información del hallazgo y mejora la precisión del modelo.
+      </p>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      [text]="true"
+      severity="secondary"
+      (onClick)="showContextoDialog.set(false)" />
+    <p-button
+      label="Guardar Contexto"
+      icon="pi pi-check"
+      severity="primary"
+      (onClick)="confirmarContexto()"
+      [disabled]="!contextoForm().contexto" />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: Agregar Contexto Masivo -->
+<p-dialog
+  header="Agregar Contexto Masivo"
+  [(visible)]="showContextoMasivoDialog"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false">
+  <div class="contexto-form">
+    <!-- Resumen de selección -->
+    <div class="resumen-hallazgo mb-4 p-3 surface-100 border-round">
+      <div class="flex align-items-center gap-2 mb-2">
+        <p-tag
+          [value]="hallazgosSeleccionados().length + ' hallazgos seleccionados'"
+          severity="success"
+          icon="pi pi-check-circle" />
+      </div>
+      <span class="text-secondary text-sm">Se agregará el mismo contexto a todos los hallazgos seleccionados</span>
+    </div>
+
+    <!-- Tipo de contexto -->
+    <div class="field mb-3">
+      <label class="block mb-2 font-medium">Tipo de contexto</label>
+      <div class="flex gap-2">
+        @for (tipo of tiposContexto; track tipo.value) {
+          <p-button
+            [label]="tipo.label"
+            [icon]="tipo.icon"
+            [severity]="contextoForm().tipoContexto === tipo.value ? 'primary' : 'secondary'"
+            [outlined]="contextoForm().tipoContexto !== tipo.value"
+            size="small"
+            (onClick)="updateContextoTipo(tipo.value)" />
+        }
+      </div>
+    </div>
+
+    <!-- Contexto -->
+    <div class="field">
+      <label for="contextoMasivoTexto" class="block mb-2 font-medium">Contexto *</label>
+      <textarea
+        pTextarea
+        id="contextoMasivoTexto"
+        [ngModel]="contextoForm().contexto"
+        (ngModelChange)="updateContextoTexto($event)"
+        [rows]="5"
+        placeholder="Escribe el contexto adicional para los hallazgos seleccionados..."
+        class="w-full"></textarea>
+    </div>
+
+    <p class="text-secondary text-sm mt-3">
+      <i class="pi pi-info-circle mr-1"></i>
+      El contexto ayuda a enriquecer la información y mejora la precisión del modelo.
+    </p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      [text]="true"
+      severity="secondary"
+      (onClick)="showContextoMasivoDialog.set(false)" />
+    <p-button
+      label="Guardar Contexto"
+      icon="pi pi-check"
+      severity="primary"
+      (onClick)="confirmarContextoMasivo()"
+      [disabled]="!contextoForm().contexto" />
+  </ng-template>
+</p-dialog>
+

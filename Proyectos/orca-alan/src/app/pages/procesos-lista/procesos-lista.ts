@@ -92,8 +92,13 @@ export class ProcesosListaComponent {
     this.router.navigate(['/procesos/crear']);
   }
 
-  // Ver detalle en drawer
+  // Ver detalle en pantalla completa
   verDetalle(proceso: Proceso): void {
+    this.router.navigate(['/procesos', proceso.id, 'detalle']);
+  }
+
+  // Ver detalle en drawer (alternativo)
+  verDetalleDrawer(proceso: Proceso): void {
     this.procesoSeleccionado.set(proceso);
     this.showDrawer.set(true);
   }

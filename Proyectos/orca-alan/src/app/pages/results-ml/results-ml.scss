@@ -87,51 +87,117 @@
   }
 }
 
-// Resumen Panel
-.resumen-panel {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+// Stats Bar Horizontal
+.stats-bar {
+  .stats-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+  }
 }
 
-.resumen-card {
+:host ::ng-deep .stat-chip {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+
+  .stat-label {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+    margin-left: 0.25rem;
+  }
+
+  .stat-value {
+    font-weight: 700;
+    color: var(--text-color);
+    margin-right: 0.25rem;
+  }
+
+  &.stat-tendencia {
+    border-left: 3px solid var(--blue-500);
+    .stat-value { color: var(--blue-600); }
+  }
+
+  &.stat-mitigacion {
+    border-left: 3px solid var(--orange-500);
+    .stat-value { color: var(--orange-600); }
+  }
+
+  &.stat-oportunidad {
+    border-left: 3px solid var(--green-500);
+    .stat-value { color: var(--green-600); }
+  }
+
+  &.stat-riesgo {
+    border-left: 3px solid var(--red-500);
+    .stat-value { color: var(--red-600); }
+  }
+
+  &.stat-pendiente {
+    border-left: 3px solid var(--yellow-500);
+    .stat-value { color: var(--yellow-600); }
+  }
+}
+
+// Search Bar Container
+.search-bar-container {
+  display: flex;
+  justify-content: center;
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface-card);
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--surface-border);
+
+    .search-input {
+      width: 400px;
+    }
+
+    .search-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+  }
+}
+
+// Selection Bar
+.selection-bar {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
-  background: var(--surface-card);
+  background: var(--green-50);
+  padding: 0.75rem 1rem;
   border-radius: var(--border-radius);
-  border: 1px solid var(--surface-border);
+  border: 1px solid var(--green-200);
+}
 
-  .resumen-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+// Filter Multiselect in table header
+:host ::ng-deep .filter-multiselect {
+  .p-multiselect-label {
+    padding: 0;
+  }
 
-    i {
-      font-size: 1.25rem;
+  .p-multiselect-trigger {
+    width: 24px;
+    padding: 0;
+
+    .p-multiselect-trigger-icon {
+      font-size: 0.75rem;
     }
   }
 
-  .resumen-info {
-    display: flex;
-    flex-direction: column;
+  &.p-multiselect {
+    border: none;
+    background: transparent;
 
-    .resumen-label {
-      font-size: 0.75rem;
-      color: var(--text-color-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .resumen-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      line-height: 1.2;
+    &:not(.p-disabled):hover {
+      border: none;
     }
   }
 }
@@ -422,6 +488,7 @@
 
       .header-right {
         width: 100%;
+        flex-wrap: wrap;
 
         p-button {
           flex: 1;
@@ -430,22 +497,116 @@
     }
   }
 
-  .resumen-panel {
-    grid-template-columns: repeat(2, 1fr);
+  .stats-bar {
+    .stats-chips {
+      justify-content: center;
+    }
+  }
+
+  .search-bar-container {
+    .search-bar {
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+
+      .search-input {
+        width: 100%;
+      }
+    }
+  }
+
+  .selection-bar {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .metricas-grid {
     grid-template-columns: 1fr !important;
   }
+}
 
-  .hallazgos-toolbar {
-    :host ::ng-deep {
-      .p-toolbar-start,
-      .p-toolbar-center,
-      .p-toolbar-end {
-        flex-wrap: wrap;
-        gap: 0.5rem;
+// Menu Contextual Unificado
+:host ::ng-deep .menu-contextual-popover {
+  .p-popover-content {
+    padding: 0;
+  }
+}
+
+.menu-contextual-content {
+  transition: width 0.2s ease-in-out;
+}
+
+.menu-contextual-header {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--surface-border);
+
+  .hallazgo-resumen {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.menu-opciones {
+  padding: 0.5rem;
+
+  .menu-opcion-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: var(--surface-hover);
+    }
+
+    i {
+      font-size: 1rem;
+      width: 1.25rem;
+    }
+
+    span {
+      font-size: 0.875rem;
+    }
+
+    &[data-severity="success"] {
+      i { color: var(--green-500); }
+      &:hover {
+        background: var(--green-50);
+        color: var(--green-700);
+      }
+    }
+
+    &[data-severity="danger"] {
+      i { color: var(--red-500); }
+      &:hover {
+        background: var(--red-50);
+        color: var(--red-700);
+      }
+    }
+
+    &[data-severity="info"] {
+      i { color: var(--blue-500); }
+      &:hover {
+        background: var(--blue-50);
+        color: var(--blue-700);
       }
     }
   }
+}
+
+.menu-formulario {
+  padding: 1rem;
+}
+
+.menu-formulario-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid var(--surface-border);
 }

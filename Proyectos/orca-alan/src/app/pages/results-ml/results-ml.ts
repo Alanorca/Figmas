@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -26,22 +26,29 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { AccordionModule } from 'primeng/accordion';
 import { TimelineModule } from 'primeng/timeline';
 import { AvatarModule } from 'primeng/avatar';
-import { MenuItem } from 'primeng/api';
 import { ChipModule } from 'primeng/chip';
+import { DatePickerModule } from 'primeng/datepicker';
+import { PopoverModule, Popover } from 'primeng/popover';
+
+// Tipo para el menú contextual
+type AccionMenuContextual = 'menu' | 'aprobar' | 'descartar' | 'contexto';
 
 // Services & Models
 import { ResultsMLService } from '../../services/results-ml.service';
 import {
   EntidadML,
   TipoHallazgo,
+  EstadoHallazgo,
   Tendencia,
   MitigacionSugerida,
   Oportunidad,
+  RiesgoML,
   HallazgoBase,
   MOTIVOS_DESCARTE,
   ESTADO_HALLAZGO_OPTIONS,
   TIPO_TENDENCIA_OPTIONS,
-  PRIORIDAD_OPTIONS
+  PRIORIDAD_OPTIONS,
+  TIPO_HALLAZGO_OPTIONS
 } from '../../models/results-ml.models';
 
 @Component({
@@ -73,7 +80,9 @@ import {
     AccordionModule,
     TimelineModule,
     AvatarModule,
-    ChipModule
+    ChipModule,
+    DatePickerModule,
+    PopoverModule
   ],
   templateUrl: './results-ml.html',
   styleUrl: './results-ml.scss'
@@ -86,9 +95,12 @@ export class ResultsMLComponent {
   entidadesFiltradas = this.service.entidadesFiltradas;
   entidadesRecientes = this.service.getEntidadesRecientes();
   resultadoActual = this.service.resultadoActual;
+  todosLosHallazgos = this.service.todosLosHallazgos;
   hallazgosFiltrados = this.service.hallazgosFiltrados;
   contadoresPorEstado = this.service.contadoresPorEstado;
   busquedaEntidad = this.service.busquedaEntidad;
+  filtroTiposHallazgo = this.service.filtroTiposHallazgo;
+  busquedaHallazgoService = this.service.busquedaHallazgo;
 
   // Estado local
   tipoEntidadFiltro = signal<'activo' | 'proceso' | 'todos'>('todos');
@@ -99,15 +111,24 @@ export class ResultsMLComponent {
   hallazgosSeleccionados = signal<HallazgoBase[]>([]);
   showAccionesMasivasDrawer = signal(false);
 
-  // Filtros de hallazgos
-  filtroEstadoHallazgo = signal<string[]>([]);
-  filtroConfianzaMin = signal<number | null>(null);
+  // Filtros de hallazgos (conectados al servicio)
+  filtroEstadoHallazgo = this.service.filtroEstadosHallazgo;
+  filtroConfianza = signal<string | null>(null);
+  filtroFecha = signal<Date[] | null>(null);
   busquedaHallazgo = signal('');
+
+  // Opciones de filtro de confianza para el select
+  confianzaFilterOptions = [
+    { label: 'Alta (≥80%)', value: 'alta' },
+    { label: 'Media (50-79%)', value: 'media' },
+    { label: 'Baja (<50%)', value: 'baja' }
+  ];
 
   // Dialogs
   showAprobarDialog = signal(false);
   showDescartarDialog = signal(false);
   showContextoDialog = signal(false);
+  showContextoMasivoDialog = signal(false);
   showConfirmDeleteDialog = signal(false);
 
   // Formularios
@@ -122,11 +143,23 @@ export class ResultsMLComponent {
     justificacion: ''
   });
 
+  contextoForm = signal({
+    contexto: '',
+    tipoContexto: 'observacion' as 'observacion' | 'correccion' | 'informacion_adicional'
+  });
+
+  tiposContexto: { label: string; value: 'observacion' | 'correccion' | 'informacion_adicional'; icon: string }[] = [
+    { label: 'Observación', value: 'observacion', icon: 'pi pi-eye' },
+    { label: 'Corrección', value: 'correccion', icon: 'pi pi-pencil' },
+    { label: 'Información adicional', value: 'informacion_adicional', icon: 'pi pi-info-circle' }
+  ];
+
   // Opciones
   motivosDescarte = MOTIVOS_DESCARTE;
   estadoOptions = ESTADO_HALLAZGO_OPTIONS;
   tipoTendenciaOptions = TIPO_TENDENCIA_OPTIONS;
   prioridadOptions = PRIORIDAD_OPTIONS;
+  tipoHallazgoOptions = TIPO_HALLAZGO_OPTIONS;
 
   // Opciones de filtro de confianza
   confianzaOptions = [
@@ -171,20 +204,13 @@ export class ResultsMLComponent {
     this.busquedaEntidad.set('');
   }
 
-  // Métodos de tabs
-  onTabChange(index: number): void {
-    const categorias: TipoHallazgo[] = ['tendencia', 'mitigacion', 'oportunidad'];
-    this.service.setCategoriaActiva(categorias[index]);
+  // Métodos de filtros de tipo hallazgo
+  onFiltroTipoChange(tipos: TipoHallazgo[]): void {
+    this.filtroTiposHallazgo.set(tipos);
   }
 
-  getTabIndex(): number {
-    const categoria = this.estado().categoriaActiva;
-    const map: Record<TipoHallazgo, number> = {
-      'tendencia': 0,
-      'mitigacion': 1,
-      'oportunidad': 2
-    };
-    return map[categoria];
+  onBusquedaHallazgoServiceChange(texto: string): void {
+    this.busquedaHallazgoService.set(texto);
   }
 
   // Métodos de detalle
@@ -204,6 +230,12 @@ export class ResultsMLComponent {
     this.hallazgoSeleccionado.set(hallazgo);
     this.descarteForm.set({ motivo: '', justificacion: '' });
     this.showDescartarDialog.set(true);
+  }
+
+  abrirContextoParaHallazgo(hallazgo: HallazgoBase): void {
+    this.hallazgoSeleccionado.set(hallazgo);
+    this.contextoForm.set({ contexto: '', tipoContexto: 'observacion' });
+    this.showContextoDialog.set(true);
   }
 
   confirmarAprobacion(): void {
@@ -273,6 +305,37 @@ export class ResultsMLComponent {
     return labels[tipo] || tipo;
   }
 
+  // Helpers para tipo de hallazgo
+  getTipoHallazgoIcon(tipo: TipoHallazgo): string {
+    const icons: Record<TipoHallazgo, string> = {
+      'tendencia': 'pi pi-chart-line',
+      'mitigacion': 'pi pi-shield',
+      'oportunidad': 'pi pi-lightbulb',
+      'riesgo': 'pi pi-exclamation-triangle'
+    };
+    return icons[tipo] || 'pi pi-question';
+  }
+
+  getTipoHallazgoLabel(tipo: TipoHallazgo): string {
+    const labels: Record<TipoHallazgo, string> = {
+      'tendencia': 'Tendencia',
+      'mitigacion': 'Mitigación',
+      'oportunidad': 'Oportunidad',
+      'riesgo': 'Riesgo'
+    };
+    return labels[tipo] || tipo;
+  }
+
+  getTipoHallazgoSeverity(tipo: TipoHallazgo): 'info' | 'warn' | 'success' | 'danger' {
+    const severities: Record<TipoHallazgo, 'info' | 'warn' | 'success' | 'danger'> = {
+      'tendencia': 'info',
+      'mitigacion': 'warn',
+      'oportunidad': 'success',
+      'riesgo': 'danger'
+    };
+    return severities[tipo] || 'info';
+  }
+
   // Cast helpers para templates
   asTendencia(hallazgo: HallazgoBase): Tendencia {
     return hallazgo as Tendencia;
@@ -286,33 +349,8 @@ export class ResultsMLComponent {
     return hallazgo as Oportunidad;
   }
 
-  // Menú de acciones por hallazgo
-  getMenuItems(hallazgo: HallazgoBase): MenuItem[] {
-    const items: MenuItem[] = [
-      {
-        label: 'Ver detalle',
-        icon: 'pi pi-eye',
-        command: () => this.verDetalleHallazgo(hallazgo)
-      }
-    ];
-
-    if (hallazgo.estado === 'pendiente') {
-      items.push(
-        { separator: true },
-        {
-          label: 'Aprobar',
-          icon: 'pi pi-check',
-          command: () => this.abrirAprobarDialog(hallazgo)
-        },
-        {
-          label: 'Descartar',
-          icon: 'pi pi-times',
-          command: () => this.abrirDescartarDialog(hallazgo)
-        }
-      );
-    }
-
-    return items;
+  asRiesgo(hallazgo: HallazgoBase): RiesgoML {
+    return hallazgo as RiesgoML;
   }
 
   // Exportación
@@ -341,6 +379,30 @@ export class ResultsMLComponent {
     this.descarteForm.update(f => ({ ...f, justificacion: value }));
   }
 
+  updateContextoTexto(value: string): void {
+    this.contextoForm.update(f => ({ ...f, contexto: value }));
+  }
+
+  updateContextoTipo(value: 'observacion' | 'correccion' | 'informacion_adicional'): void {
+    this.contextoForm.update(f => ({ ...f, tipoContexto: value }));
+  }
+
+  confirmarContexto(): void {
+    const hallazgo = this.hallazgoSeleccionado();
+    if (!hallazgo) return;
+
+    const form = this.contextoForm();
+    // Aquí se podría llamar a un servicio para guardar el contexto
+    console.log('Contexto agregado:', {
+      hallazgoId: hallazgo.id,
+      contexto: form.contexto,
+      tipoContexto: form.tipoContexto
+    });
+
+    this.showContextoDialog.set(false);
+    this.contextoForm.set({ contexto: '', tipoContexto: 'observacion' });
+  }
+
   // Navegación entre módulos
   navegarAActivo(activoId: string): void {
     this.service.navegarAActivo(activoId);
@@ -361,6 +423,14 @@ export class ResultsMLComponent {
 
   limpiarSeleccion(): void {
     this.hallazgosSeleccionados.set([]);
+  }
+
+  toggleSeleccionTodos(seleccionar: boolean): void {
+    if (seleccionar) {
+      this.hallazgosSeleccionados.set([...this.todosLosHallazgos()]);
+    } else {
+      this.hallazgosSeleccionados.set([]);
+    }
   }
 
   // Eliminar seleccionados
@@ -414,9 +484,43 @@ export class ResultsMLComponent {
     return this.hallazgosSeleccionados().filter(h => h.estado === 'pendiente').length;
   }
 
+  // Abrir contexto masivo
+  abrirContextoMasivo(): void {
+    this.contextoForm.set({ contexto: '', tipoContexto: 'observacion' });
+    this.showContextoMasivoDialog.set(true);
+  }
+
+  // Confirmar contexto masivo
+  confirmarContextoMasivo(): void {
+    const seleccionados = this.hallazgosSeleccionados();
+    const form = this.contextoForm();
+
+    seleccionados.forEach(hallazgo => {
+      console.log('Contexto agregado:', {
+        hallazgoId: hallazgo.id,
+        contexto: form.contexto,
+        tipoContexto: form.tipoContexto
+      });
+    });
+
+    this.showContextoMasivoDialog.set(false);
+    this.showAccionesMasivasDrawer.set(false);
+    this.contextoForm.set({ contexto: '', tipoContexto: 'observacion' });
+  }
+
   // ========== Filtros de Hallazgos ==========
-  onFiltroEstadoChange(estados: string[]): void {
-    this.filtroEstadoHallazgo.set(estados);
+  onFiltroEstadoChange(estados: EstadoHallazgo[]): void {
+    this.service.filtroEstadosHallazgo.set(estados);
+  }
+
+  onFiltroConfianzaChange(valor: string | null): void {
+    this.filtroConfianza.set(valor);
+    this.service.filtroConfianza.set(valor);
+  }
+
+  onFiltroFechaChange(fechas: Date[] | null): void {
+    this.filtroFecha.set(fechas);
+    this.service.filtroFechaRango.set(fechas);
   }
 
   onBusquedaHallazgoChange(texto: string): void {
@@ -424,14 +528,21 @@ export class ResultsMLComponent {
   }
 
   limpiarFiltrosHallazgos(): void {
-    this.filtroEstadoHallazgo.set([]);
-    this.filtroConfianzaMin.set(null);
+    this.service.filtroEstadosHallazgo.set([]);
+    this.filtroConfianza.set(null);
+    this.service.filtroConfianza.set(null);
+    this.filtroFecha.set(null);
+    this.service.filtroFechaRango.set(null);
     this.busquedaHallazgo.set('');
+    this.service.filtroTiposHallazgo.set([]);
+    this.service.busquedaHallazgo.set('');
   }
 
   hayFiltrosActivos(): boolean {
-    return this.filtroEstadoHallazgo().length > 0 ||
-           this.filtroConfianzaMin() !== null ||
-           this.busquedaHallazgo().trim() !== '';
+    return this.service.filtroEstadosHallazgo().length > 0 ||
+           this.filtroConfianza() !== null ||
+           this.filtroFecha() !== null ||
+           this.service.filtroTiposHallazgo().length > 0 ||
+           this.service.busquedaHallazgo().trim() !== '';
   }
 }

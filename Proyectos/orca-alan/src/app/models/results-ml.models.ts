@@ -2,7 +2,7 @@
 
 // Tipos base
 export type TipoEntidadML = 'activo' | 'proceso';
-export type TipoHallazgo = 'tendencia' | 'mitigacion' | 'oportunidad';
+export type TipoHallazgo = 'tendencia' | 'mitigacion' | 'oportunidad' | 'riesgo';
 export type TipoTendencia = 'correlacion' | 'anomalia' | 'patron_temporal' | 'cluster';
 export type TipoOportunidad = 'optimizacion' | 'eficiencia' | 'reduccion_costos';
 export type TipoMitigacion = 'evitar' | 'transferir' | 'reducir' | 'aceptar';
@@ -32,6 +32,7 @@ export interface ResultadoAnalisis {
   tendencias: Tendencia[];
   mitigaciones: MitigacionSugerida[];
   oportunidades: Oportunidad[];
+  riesgos: RiesgoML[];
 }
 
 // Contadores de hallazgos
@@ -39,6 +40,7 @@ export interface ContadoresHallazgos {
   totalTendencias: number;
   totalMitigaciones: number;
   totalOportunidades: number;
+  totalRiesgos: number;
   pendientes: number;
   aprobados: number;
   descartados: number;
@@ -47,6 +49,7 @@ export interface ContadoresHallazgos {
 // Base para todos los hallazgos
 export interface HallazgoBase {
   id: string;
+  tipoHallazgo: TipoHallazgo;
   titulo: string;
   descripcion: string;
   confianza: number; // 0-100
@@ -89,6 +92,16 @@ export interface Oportunidad extends HallazgoBase {
   beneficioCuantificado?: string;
   riesgosImplementacion?: string;
   analisisModelo?: string;
+}
+
+// Riesgo identificado por ML
+export interface RiesgoML extends HallazgoBase {
+  tipoHallazgo: 'riesgo';
+  nivelRiesgo: NivelPrioridad;
+  probabilidad: number;
+  impacto: number;
+  factoresRiesgo?: string[];
+  controlSugerido?: string;
 }
 
 // Métricas estadísticas para tendencias
@@ -184,6 +197,13 @@ export const PRIORIDAD_OPTIONS = [
   { label: 'Alta', value: 'alta', severity: 'danger' as const },
   { label: 'Media', value: 'media', severity: 'warn' as const },
   { label: 'Baja', value: 'baja', severity: 'success' as const }
+];
+
+export const TIPO_HALLAZGO_OPTIONS = [
+  { label: 'Tendencia', value: 'tendencia', icon: 'pi pi-chart-line', severity: 'info' as const },
+  { label: 'Mitigación', value: 'mitigacion', icon: 'pi pi-shield', severity: 'warn' as const },
+  { label: 'Oportunidad', value: 'oportunidad', icon: 'pi pi-lightbulb', severity: 'success' as const },
+  { label: 'Riesgo', value: 'riesgo', icon: 'pi pi-exclamation-triangle', severity: 'danger' as const }
 ];
 
 export const CONFIANZA_RANGES = [
