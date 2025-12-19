@@ -42,10 +42,10 @@ export const routes: Routes = [
     path: 'procesos/:id',
     loadComponent: () => import('./pages/procesos/procesos').then(m => m.ProcesosComponent)
   },
-  // {
-  //   path: 'procesos/:id/detalle',
-  //   loadComponent: () => import('./pages/proceso-detalle/proceso-detalle').then(m => m.ProcesoDetalleComponent)
-  // },
+  {
+    path: 'procesos/:id/detalle',
+    loadComponent: () => import('./pages/proceso-detalle/proceso-detalle').then(m => m.ProcesoDetalleComponent)
+  },
   {
     path: 'cuestionarios',
     loadComponent: () => import('./pages/cuestionarios/cuestionarios').then(m => m.CuestionariosComponent)
