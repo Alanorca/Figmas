@@ -14,8 +14,8 @@
     color: var(--text-color);
   }
 
-  .text-secondary {
-    margin-top: 0.25rem;
+  .page-subtitle {
+    margin: 0.25rem 0 0 0;
     font-size: 0.9rem;
     color: var(--text-color-secondary);
   }
@@ -49,19 +49,19 @@
 
 // Botón de acciones masivas
 :host ::ng-deep .btn-acciones-masivas {
-  border-radius: 6px !important;
+  border-radius: var(--border-radius-md) !important;
 
   .p-button {
-    border-radius: 6px !important;
+    border-radius: var(--border-radius-md) !important;
   }
 }
 
 // Botón de editar
 :host ::ng-deep .btn-edit {
-  border-radius: 6px !important;
+  border-radius: var(--border-radius-md) !important;
 
   .p-button {
-    border-radius: 6px !important;
+    border-radius: var(--border-radius-md) !important;
   }
 }
 

@@ -4,6 +4,9 @@
 /* PrimeIcons */
 @use 'primeicons/primeicons.css';
 
+/* Design System Tokens */
+@use 'styles/design-tokens' as tokens;
+
 /* Global Styles */
 html, body {
   height: 100%;

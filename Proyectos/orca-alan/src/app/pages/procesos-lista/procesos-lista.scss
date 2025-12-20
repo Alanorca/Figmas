@@ -55,25 +55,19 @@
   padding: 1.5rem;
 
   .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
     margin-bottom: 1.5rem;
 
-    .header-left {
-      h1 {
-        margin: 0;
-        font-size: 1.75rem;
-        font-weight: 600;
-        color: var(--text-color);
-      }
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
 
-      .subtitle {
-        color: var(--text-color-secondary);
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-        display: block;
-      }
+    .page-subtitle {
+      margin: 0.25rem 0 0 0;
+      font-size: 0.9rem;
+      color: var(--text-color-secondary);
     }
   }
 
@@ -86,7 +80,7 @@
     .stat-card {
       flex: 1;
       background: var(--surface-card);
-      border-radius: 8px;
+      border-radius: var(--border-radius-lg);
       padding: 1rem 1.25rem;
       border: 1px solid var(--surface-border);
 
@@ -127,7 +121,7 @@
     font-size: 0.8rem;
     background: var(--surface-100);
     padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    border-radius: var(--border-radius-sm);
     color: var(--text-color-secondary);
   }
 
@@ -272,7 +266,7 @@
       align-items: center;
       background: var(--surface-100);
       padding: 1rem;
-      border-radius: 8px;
+      border-radius: var(--border-radius-lg);
 
       i {
         font-size: 1.25rem;

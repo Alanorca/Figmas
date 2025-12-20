@@ -1,0 +1,475 @@
+// ============================================================================
+// ORCA DESIGN SYSTEM - MIXINS SCSS
+// ============================================================================
+// Mixins reutilizables para patrones de diseño comunes.
+// Importar en componentes: @use 'styles/mixins' as *;
+// ============================================================================
+
+@use 'design-tokens' as *;
+
+// ----------------------------------------------------------------------------
+// LAYOUT DE PÁGINA
+// ----------------------------------------------------------------------------
+
+/// Estilos base para contenedor de página
+@mixin page-container {
+  padding: $page-padding;
+  min-height: 100%;
+
+  .page-header {
+    margin-bottom: $spacing-6;
+
+    h1 {
+      font-size: $font-size-3xl;
+      font-weight: $font-weight-semibold;
+      color: $surface-900;
+      margin: 0 0 $spacing-2 0;
+    }
+
+    .page-subtitle {
+      font-size: $font-size-base;
+      color: $surface-500;
+      margin: 0;
+    }
+  }
+}
+
+/// Estilos para toolbar de página
+@mixin page-toolbar {
+  :host ::ng-deep {
+    .p-toolbar {
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin-bottom: $spacing-4;
+      gap: $spacing-4;
+
+      .p-toolbar-start,
+      .p-toolbar-end {
+        gap: $spacing-3;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// TABLAS
+// ----------------------------------------------------------------------------
+
+/// Estilos base para páginas con tabla
+@mixin table-page {
+  @include page-container;
+  @include page-toolbar;
+
+  .table-card {
+    :host ::ng-deep {
+      .p-card-body {
+        padding: 0;
+      }
+
+      .p-card-content {
+        padding: 0;
+      }
+    }
+  }
+}
+
+/// Estilos para tabla con edición in-place
+@mixin table-editable {
+  :host ::ng-deep {
+    .p-datatable {
+      .p-datatable-thead > tr > th {
+        background: $surface-50;
+        font-weight: $font-weight-semibold;
+        font-size: $font-size-sm;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        color: $surface-600;
+        padding: $spacing-3 $spacing-4;
+        border-bottom: 1px solid $surface-200;
+      }
+
+      .p-datatable-tbody > tr {
+        transition: background $transition-fast;
+
+        > td {
+          padding: $spacing-3 $spacing-4;
+          border-bottom: 1px solid $surface-100;
+          vertical-align: middle;
+        }
+
+        &:hover {
+          background: $surface-50;
+        }
+
+        // Fila en modo edición
+        &.editing-row {
+          background: var(--primary-50);
+
+          > td {
+            padding: $spacing-2 $spacing-3;
+          }
+        }
+      }
+
+      // Columna de checkbox
+      .checkbox-column {
+        width: $table-checkbox-width;
+        text-align: center;
+      }
+
+      // Columna de acciones
+      .actions-column {
+        width: $table-actions-width;
+        text-align: center;
+      }
+    }
+  }
+}
+
+/// Estilos para footer de tabla con totales
+@mixin table-footer {
+  :host ::ng-deep {
+    .p-datatable-footer {
+      background: $surface-50;
+      padding: $spacing-3 $spacing-4;
+      border-top: 1px solid $surface-200;
+      font-size: $font-size-sm;
+      color: $surface-600;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CARDS
+// ----------------------------------------------------------------------------
+
+/// Card estándar con borde superior
+@mixin card-with-accent($color: var(--primary-color)) {
+  border-top: 3px solid $color;
+  border-radius: $border-radius-lg;
+
+  :host ::ng-deep {
+    .p-card {
+      border-top: 3px solid $color;
+    }
+  }
+}
+
+/// Card de KPI para dashboards
+@mixin kpi-card {
+  .kpi-card {
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-4;
+    padding: $spacing-5;
+    background: $surface-card;
+    border-radius: $border-radius-lg;
+    border: 1px solid $surface-200;
+
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: $border-radius-full;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $font-size-xl;
+      flex-shrink: 0;
+    }
+
+    .kpi-content {
+      flex: 1;
+
+      .kpi-label {
+        font-size: $font-size-sm;
+        color: $surface-500;
+        margin-bottom: $spacing-1;
+      }
+
+      .kpi-value {
+        font-size: $font-size-2xl;
+        font-weight: $font-weight-bold;
+        color: $surface-900;
+        line-height: $line-height-tight;
+      }
+
+      .kpi-subtitle {
+        font-size: $font-size-xs;
+        color: $surface-400;
+        margin-top: $spacing-1;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// DIALOGS Y DRAWERS
+// ----------------------------------------------------------------------------
+
+/// Estilos para dialog de formulario
+@mixin form-dialog {
+  :host ::ng-deep {
+    .p-dialog {
+      .p-dialog-header {
+        padding: $spacing-5 $spacing-6;
+        border-bottom: 1px solid $surface-200;
+      }
+
+      .p-dialog-content {
+        padding: $spacing-6;
+      }
+
+      .p-dialog-footer {
+        padding: $spacing-4 $spacing-6;
+        border-top: 1px solid $surface-200;
+        gap: $spacing-3;
+      }
+    }
+  }
+}
+
+/// Estilos para drawer lateral
+@mixin side-drawer {
+  :host ::ng-deep {
+    .p-drawer {
+      .p-drawer-header {
+        padding: $spacing-5 $spacing-6;
+        border-bottom: 1px solid $surface-200;
+      }
+
+      .p-drawer-content {
+        padding: $spacing-6;
+      }
+
+      .drawer-section {
+        margin-bottom: $spacing-6;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .section-title {
+          font-size: $font-size-sm;
+          font-weight: $font-weight-semibold;
+          color: $surface-600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: $spacing-3;
+        }
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// FORMULARIOS
+// ----------------------------------------------------------------------------
+
+/// Layout de formulario con grid
+@mixin form-grid {
+  display: grid;
+  gap: $spacing-4;
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-4;
+
+    &.full-width {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+
+    label {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $surface-700;
+
+      .required {
+        color: var(--red-500);
+        margin-left: $spacing-1;
+      }
+    }
+
+    .field-hint {
+      font-size: $font-size-xs;
+      color: $surface-500;
+    }
+
+    .field-error {
+      font-size: $font-size-xs;
+      color: var(--red-500);
+    }
+  }
+}
+
+/// Campo de formulario individual
+@mixin form-field {
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+
+    label {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $surface-700;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// ESTADOS
+// ----------------------------------------------------------------------------
+
+/// Empty state centrado
+@mixin empty-state {
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-12 $spacing-6;
+    text-align: center;
+
+    .empty-icon {
+      font-size: 3rem;
+      color: $surface-300;
+      margin-bottom: $spacing-4;
+    }
+
+    .empty-title {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $surface-700;
+      margin-bottom: $spacing-2;
+    }
+
+    .empty-message {
+      font-size: $font-size-base;
+      color: $surface-500;
+      max-width: 400px;
+      margin-bottom: $spacing-6;
+    }
+
+    .empty-action {
+      margin-top: $spacing-4;
+    }
+  }
+}
+
+/// Loading state con overlay
+@mixin loading-overlay {
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+
+    .loading-spinner {
+      font-size: 2rem;
+      color: var(--primary-color);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// UTILIDADES
+// ----------------------------------------------------------------------------
+
+/// Texto truncado con ellipsis
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/// Texto monospace para IDs y códigos
+@mixin text-mono {
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  background: $surface-100;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $border-radius-sm;
+}
+
+/// Scrollbar personalizado
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $surface-100;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $surface-300;
+    border-radius: 3px;
+
+    &:hover {
+      background: $surface-400;
+    }
+  }
+}
+
+/// Efecto hover para elementos clickeables
+@mixin hover-lift {
+  transition: transform $transition-fast, box-shadow $transition-fast;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+/// Focus visible para accesibilidad
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// RESPONSIVE
+// ----------------------------------------------------------------------------
+
+/// Media query para móvil
+@mixin mobile {
+  @media (max-width: #{$breakpoint-md - 1px}) {
+    @content;
+  }
+}
+
+/// Media query para tablet
+@mixin tablet {
+  @media (min-width: $breakpoint-md) and (max-width: #{$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+/// Media query para desktop
+@mixin desktop {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+/// Media query para pantallas grandes
+@mixin large-desktop {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}
