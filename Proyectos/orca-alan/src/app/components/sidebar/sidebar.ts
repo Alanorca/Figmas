@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { StyleClassModule } from 'primeng/styleclass';
 import { TooltipModule } from 'primeng/tooltip';
+import { NotificationsComponent } from '../notifications/notifications';
 
 interface MenuItem {
   label: string;
@@ -13,7 +14,7 @@ interface MenuItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, StyleClassModule, TooltipModule],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, StyleClassModule, TooltipModule, NotificationsComponent],
   template: `
     <div class="app-container">
       <!-- Sidebar -->
@@ -58,6 +59,12 @@ interface MenuItem {
 
       <!-- Main Content -->
       <main class="main-content">
+        <!-- Notificaciones flotante -->
+        <div class="notifications-floating">
+          <app-notifications />
+        </div>
+
+        <!-- Content Area -->
         <router-outlet></router-outlet>
       </main>
     </div>
@@ -213,6 +220,17 @@ interface MenuItem {
       display: flex;
       flex-direction: column;
       background: var(--surface-ground);
+      min-width: 0;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    // Notificaciones flotante
+    .notifications-floating {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 1000;
     }
   `]
 })

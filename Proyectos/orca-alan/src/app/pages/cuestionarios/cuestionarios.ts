@@ -43,6 +43,7 @@ import { MessageModule } from 'primeng/message';
 import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { AvatarModule } from 'primeng/avatar';
 import { TimelineModule } from 'primeng/timeline';
+import { ToolbarModule } from 'primeng/toolbar';
 
 // Shared Models
 import {
@@ -97,7 +98,8 @@ import {
     MessageModule,
     ScrollPanelModule,
     AvatarModule,
-    TimelineModule
+    TimelineModule,
+    ToolbarModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './cuestionarios.html',

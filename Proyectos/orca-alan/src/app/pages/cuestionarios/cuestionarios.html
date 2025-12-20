@@ -3,35 +3,31 @@
 
 <!-- ==================== VISTA: LISTA DE CUESTIONARIOS ==================== -->
 @if (vistaActual() === 'lista') {
-<div class="surface-ground min-h-screen">
-  <!-- Header Principal -->
-  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
-    <div class="flex justify-content-between align-items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-900 m-0">Cuestionarios</h1>
-        <p class="text-500 text-sm m-0 mt-1">Orca&#64;Securityby Design</p>
-      </div>
-      <div class="flex align-items-center gap-3">
-        <p-button label="Ir a Cumplimiento" icon="pi pi-chart-line" severity="secondary" [outlined]="true" (onClick)="irACumplimiento()" />
-      </div>
-    </div>
+<div class="cuestionarios-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Cuestionarios</h1>
+    <p class="page-subtitle">Gestión de cuestionarios de cumplimiento</p>
   </div>
 
-  <!-- Barra de herramientas -->
-  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
-    <div class="flex justify-content-between align-items-center">
-      <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" severity="secondary" />
-      <p-iconfield style="width: 300px">
+  <!-- Toolbar -->
+  <p-toolbar>
+    <ng-template pTemplate="start">
+      <p-iconfield>
         <p-inputicon styleClass="pi pi-search" />
-        <input type="text" pInputText placeholder="Buscar" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" class="w-full" />
+        <input type="text" pInputText placeholder="Buscar cuestionarios..." [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" style="width: 280px" />
       </p-iconfield>
-      <p-button label="Nuevo Cuestionario" icon="pi pi-plus" (onClick)="crearNuevoCuestionario()" styleClass="bg-teal-500 border-teal-500" />
-    </div>
-  </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <div class="flex gap-2">
+        <p-button label="Ir a Cumplimiento" icon="pi pi-chart-line" severity="secondary" [outlined]="true" (onClick)="irACumplimiento()" />
+        <p-button label="Nuevo Cuestionario" icon="pi pi-plus" (onClick)="crearNuevoCuestionario()" />
+      </div>
+    </ng-template>
+  </p-toolbar>
 
-  <!-- Contenido Principal: Tabla de Cuestionarios -->
-  <div class="p-4">
-    <div class="surface-card border-round-lg">
+  <!-- Tabla de Cuestionarios -->
+  <p-card styleClass="table-card">
       <p-table
         [value]="cuestionariosFiltrados()"
         [paginator]="true"
@@ -195,8 +191,7 @@
           </tr>
         </ng-template>
       </p-table>
-    </div>
-  </div>
+  </p-card>
 </div>
 }
 

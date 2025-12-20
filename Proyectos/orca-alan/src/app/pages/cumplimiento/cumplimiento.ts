@@ -43,6 +43,7 @@ import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { StepperModule } from 'primeng/stepper';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { ToolbarModule } from 'primeng/toolbar';
 
 // Componentes compartidos
 import { ChatComponent } from '../../components/chat/chat';
@@ -162,6 +163,7 @@ interface ArchivoAdjunto {
     InputGroupAddonModule,
     StepperModule,
     SelectButtonModule,
+    ToolbarModule,
     ChatComponent,
     ComplianceResultsComponent
   ],
