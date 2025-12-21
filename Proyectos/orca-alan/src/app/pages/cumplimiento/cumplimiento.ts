@@ -1,10 +1,10 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, signal, computed, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 // PrimeNG Components
-import { TableModule } from 'primeng/table';
+import { TableModule, Table } from 'primeng/table';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -37,6 +37,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { FileUploadModule } from 'primeng/fileupload';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { AvatarModule } from 'primeng/avatar';
+import { AvatarGroupModule } from 'primeng/avatargroup';
 import { TimelineModule } from 'primeng/timeline';
 import { ChartModule } from 'primeng/chart';
 import { InputGroupModule } from 'primeng/inputgroup';
@@ -157,6 +158,7 @@ interface ArchivoAdjunto {
     FileUploadModule,
     MultiSelectModule,
     AvatarModule,
+    AvatarGroupModule,
     TimelineModule,
     ChartModule,
     InputGroupModule,
@@ -175,6 +177,9 @@ export class CumplimientoComponent {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private router = inject(Router);
+
+  @ViewChild('dt') dt!: Table;
+  @ViewChild('dtDashboard') dtDashboard!: Table;
 
   // =============================================
   // ESTADO DE LA VISTA
@@ -703,8 +708,15 @@ export class CumplimientoComponent {
       cuestionarioId: '1',
       titulo: 'Evaluacion SOX Q4 2024',
       tipoRevision: 'interna',
-      usuariosAsignados: ['user1', 'user2'],
-      usuariosAsignadosNombres: ['Alice Johnson', 'Bob Smith'],
+      usuariosAsignados: ['user1', 'user2', 'user3', 'user4', 'user5'],
+      usuariosAsignadosNombres: ['Alice Johnson', 'Bob Smith', 'Carlos Garcia', 'Diana Martinez', 'Eduardo Lopez'],
+      usuariosAsignadosImagenes: [
+        'https://randomuser.me/api/portraits/women/44.jpg',
+        'https://randomuser.me/api/portraits/men/32.jpg',
+        '',
+        'https://randomuser.me/api/portraits/women/68.jpg',
+        'https://randomuser.me/api/portraits/men/75.jpg'
+      ],
       emailsExternos: [],
       activosObjetivo: ['activo1', 'activo2'],
       activosObjetivoNombres: ['Servidor Principal', 'Base de Datos'],
@@ -732,8 +744,14 @@ export class CumplimientoComponent {
       cuestionarioId: '2',
       titulo: 'Revision Trimestral ISO 27001',
       tipoRevision: 'interna',
-      usuariosAsignados: ['user3'],
-      usuariosAsignadosNombres: ['Carlos Garcia'],
+      usuariosAsignados: ['user3', 'user6', 'user7', 'user8'],
+      usuariosAsignadosNombres: ['Carlos Garcia', 'Fernando Ruiz', 'Gabriela Torres', 'Hugo Mendez'],
+      usuariosAsignadosImagenes: [
+        'https://randomuser.me/api/portraits/men/22.jpg',
+        '',
+        'https://randomuser.me/api/portraits/women/55.jpg',
+        'https://randomuser.me/api/portraits/men/41.jpg'
+      ],
       emailsExternos: [],
       activosObjetivo: ['activo3'],
       activosObjetivoNombres: ['Firewall Perimetral'],
@@ -761,8 +779,12 @@ export class CumplimientoComponent {
       cuestionarioId: '4',
       titulo: 'Auditoria GDPR Semestral',
       tipoRevision: 'externa',
-      usuariosAsignados: [],
-      usuariosAsignadosNombres: [],
+      usuariosAsignados: ['user9', 'user10'],
+      usuariosAsignadosNombres: ['Isabel Navarro', 'Jorge Perez'],
+      usuariosAsignadosImagenes: [
+        'https://randomuser.me/api/portraits/women/33.jpg',
+        'https://randomuser.me/api/portraits/men/56.jpg'
+      ],
       emailsExternos: ['auditor@external.com'],
       activosObjetivo: [],
       activosObjetivoNombres: [],

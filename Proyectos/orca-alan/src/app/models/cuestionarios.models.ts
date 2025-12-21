@@ -121,6 +121,7 @@ export interface AsignacionCuestionario {
   tipoRevision: 'interna' | 'externa';
   usuariosAsignados: string[];
   usuariosAsignadosNombres: string[];
+  usuariosAsignadosImagenes?: string[];
   emailsExternos: string[];
   contrasenaAcceso?: string;
   activosObjetivo: string[];

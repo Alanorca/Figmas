@@ -3,42 +3,46 @@
 
 <!-- ==================== VISTA: DASHBOARD DE CUMPLIMIENTO ==================== -->
 @if (vistaActual() === 'dashboard') {
-<div class="surface-ground min-h-screen">
+<div class="cumplimiento-container">
   <!-- Header -->
-  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
-    <div class="flex justify-content-between align-items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-900 m-0">Cumplimiento</h1>
-        <p class="text-500 text-sm m-0 mt-1">Orca&#64;Securityby Design</p>
-      </div>
-      <div class="flex align-items-center gap-2">
-        <p-button label="Ir a Cuestionarios" icon="pi pi-list" severity="secondary" [outlined]="true" (onClick)="irACuestionarios()" />
-        <p-button label="Marcos" icon="pi pi-book" severity="secondary" [text]="true" (onClick)="irAMarcos()" />
-        <p-button label="Reportes" icon="pi pi-file" severity="secondary" [text]="true" (onClick)="irAReportes()" />
-        <p-button label="Historial" icon="pi pi-history" severity="secondary" [text]="true" (onClick)="irAHistorial()" />
-      </div>
-    </div>
+  <div class="page-header">
+    <h1>Cumplimiento</h1>
+    <p class="page-subtitle">Gestión de cumplimiento normativo</p>
   </div>
 
-  <div class="p-4">
-    <!-- Tabs: Revisiones y Gráficas -->
-    <p-tabs value="0">
-      <p-tablist>
-        <p-tab value="0"><i class="pi pi-table mr-2"></i>Revisiones</p-tab>
-        <p-tab value="1"><i class="pi pi-chart-bar mr-2"></i>Gráficas</p-tab>
-      </p-tablist>
-      <p-tabpanels>
-        <!-- Tab Revisiones -->
-        <p-tabpanel value="0">
-          <div class="surface-card border-round-lg p-4 mt-3">
-            <div class="flex justify-content-between align-items-center mb-4">
-              <div>
-                <h3 class="text-lg font-semibold text-900 m-0">Revisiones</h3>
-                <p class="text-500 text-sm m-0 mt-1">Gestiona las revisiones de cuestionarios</p>
-              </div>
+  <!-- Tabs: Revisiones y Gráficas -->
+  <p-tabs value="0">
+    <p-tablist>
+      <p-tab value="0"><i class="pi pi-table mr-2"></i>Revisiones</p-tab>
+      <p-tab value="1"><i class="pi pi-chart-bar mr-2"></i>Gráficas</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <!-- Tab Revisiones -->
+      <p-tabpanel value="0">
+        <!-- Toolbar -->
+        <p-toolbar>
+          <ng-template pTemplate="start">
+            <p-iconfield>
+              <p-inputicon styleClass="pi pi-search" />
+              <input type="text" pInputText placeholder="Buscar revisiones..." #dtFilterDashboard
+                     (input)="dtDashboard.filterGlobal(dtFilterDashboard.value, 'contains')" style="width: 280px" />
+            </p-iconfield>
+          </ng-template>
+          <ng-template pTemplate="end">
+            <div class="flex align-items-center gap-2">
+              <p-button icon="pi pi-list" severity="secondary" [outlined]="true" (onClick)="irACuestionarios()" pTooltip="Ir a Cuestionarios" tooltipPosition="bottom" />
+              <p-button icon="pi pi-book" severity="secondary" [text]="true" (onClick)="irAMarcos()" pTooltip="Marcos Normativos" tooltipPosition="bottom" />
+              <p-button icon="pi pi-file-export" severity="secondary" [text]="true" (onClick)="irAReportes()" pTooltip="Reportes" tooltipPosition="bottom" />
+              <p-button icon="pi pi-history" severity="secondary" [text]="true" (onClick)="irAHistorial()" pTooltip="Historial" tooltipPosition="bottom" />
+              <p-divider layout="vertical" />
               <p-button label="Nueva Revisión" icon="pi pi-plus" (onClick)="abrirAsignarDialog()" />
             </div>
-            <p-table [value]="asignaciones()" styleClass="p-datatable-sm" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]">
+          </ng-template>
+        </p-toolbar>
+        <!-- Table Card -->
+        <p-card styleClass="table-card">
+          <p-table #dtDashboard [value]="asignaciones()" styleClass="p-datatable-sm" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
+                   [globalFilterFields]="['titulo', 'tipoRevision', 'estado']">
               <ng-template #header>
                 <tr>
                   <th>Titulo</th>
@@ -59,17 +63,21 @@
                   <td>{{ getCuestionario(asignacion.cuestionarioId)?.nombre }}</td>
                   <td><p-tag [value]="asignacion.tipoRevision | titlecase" [severity]="asignacion.tipoRevision === 'externa' ? 'info' : 'secondary'" /></td>
                   <td>
-                    <div class="flex align-items-center gap-1">
-                      @for (nombre of asignacion.usuariosAsignadosNombres | slice:0:2; track nombre) {
-                        <p-avatar [label]="getAvatarLabel(nombre)" shape="circle" styleClass="bg-primary" />
-                      }
-                      @if (asignacion.usuariosAsignadosNombres.length > 2) {
-                        <span class="text-500 text-sm">+{{ asignacion.usuariosAsignadosNombres.length - 2 }}</span>
+                    <p-avatargroup>
+                      @for (nombre of asignacion.usuariosAsignadosNombres | slice:0:3; track nombre; let i = $index) {
+                        @if (asignacion.usuariosAsignadosImagenes?.[i]) {
+                          <p-avatar [image]="asignacion.usuariosAsignadosImagenes[i]" shape="circle" />
+                        } @else {
+                          <p-avatar [label]="getAvatarLabel(nombre)" shape="circle" styleClass="bg-primary" />
+                        }
                       }
                       @if (asignacion.emailsExternos.length > 0) {
                         <p-avatar icon="pi pi-envelope" shape="circle" styleClass="bg-purple-500" />
                       }
-                    </div>
+                      @if (asignacion.usuariosAsignadosNombres.length > 3) {
+                        <p-avatar [label]="'+' + (asignacion.usuariosAsignadosNombres.length - 3)" shape="circle" styleClass="surface-100 text-900" />
+                      }
+                    </p-avatargroup>
                   </td>
                   <td>
                     <div class="flex flex-wrap gap-1">
@@ -86,9 +94,13 @@
                   </td>
                   <td>{{ asignacion.fechaInicio | date:'dd/MM/yyyy' }}</td>
                   <td>{{ asignacion.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
-                  <td style="width: 120px">
-                    <p-progressBar [value]="asignacion.progreso" [showValue]="false" styleClass="h-1rem" />
-                    <span class="text-xs text-500">{{ asignacion.progreso }}%</span>
+                  <td>
+                    <div class="flex align-items-center gap-2">
+                      <div class="w-5rem bg-gray-200 border-round" style="height: 4px;">
+                        <div class="bg-primary border-round" [style.width.%]="asignacion.progreso" style="height: 100%;"></div>
+                      </div>
+                      <span class="text-sm">{{ asignacion.progreso }}%</span>
+                    </div>
                   </td>
                   <td><p-tag [value]="asignacion.estado | titlecase" [severity]="getEstadoSeverity(asignacion.estado)" /></td>
                   <td class="text-center">
@@ -135,11 +147,11 @@
                   <td></td>
                 </tr>
               </ng-template>
-            </p-table>
-          </div>
-        </p-tabpanel>
+          </p-table>
+        </p-card>
+      </p-tabpanel>
 
-        <!-- Tab Gráficas -->
+      <!-- Tab Gráficas -->
         <p-tabpanel value="1">
           <div class="grid mt-3">
             <!-- Grafico de barras -->
@@ -192,7 +204,6 @@
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>
-  </div>
 </div>
 }
 
@@ -208,13 +219,37 @@
           <p class="text-500 text-sm m-0">Gestiona las asignaciones de cuestionarios</p>
         </div>
       </div>
-      <p-button label="Nueva Asignacion" icon="pi pi-plus" (onClick)="abrirAsignarDialog()" />
     </div>
   </div>
 
   <div class="p-4">
-    <p-table [value]="asignaciones()" styleClass="p-datatable-gridlines">
-      <ng-template #header>
+    <!-- Toolbar -->
+    <p-toolbar>
+      <ng-template pTemplate="start">
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input type="text" pInputText placeholder="Buscar revisiones..." #dtFilter
+                 (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
+        </p-iconfield>
+      </ng-template>
+      <ng-template pTemplate="end">
+        <div class="flex align-items-center gap-2">
+          <p-button icon="pi pi-list" severity="secondary" [outlined]="true" (onClick)="irACuestionarios()" pTooltip="Ir a Cuestionarios" tooltipPosition="bottom" />
+          <p-button icon="pi pi-book" severity="secondary" [text]="true" (onClick)="irAMarcos()" pTooltip="Marcos Normativos" tooltipPosition="bottom" />
+          <p-button icon="pi pi-file-export" severity="secondary" [text]="true" (onClick)="irAReportes()" pTooltip="Reportes" tooltipPosition="bottom" />
+          <p-button icon="pi pi-history" severity="secondary" [text]="true" (onClick)="irAHistorial()" pTooltip="Historial" tooltipPosition="bottom" />
+          <p-divider layout="vertical" />
+          <p-button label="Nueva Revisión" icon="pi pi-plus" (onClick)="abrirAsignarDialog()" />
+        </div>
+      </ng-template>
+    </p-toolbar>
+
+    <!-- Table Card -->
+    <p-card styleClass="table-card">
+      <p-table #dt [value]="asignaciones()" styleClass="p-datatable-striped" [paginator]="true" [rows]="10"
+               [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} revisiones"
+               [globalFilterFields]="['titulo', 'tipoRevision', 'estado']">
+        <ng-template #header>
         <tr>
           <th>Titulo</th>
           <th>Cuestionario</th>
@@ -234,17 +269,21 @@
           <td>{{ getCuestionario(asignacion.cuestionarioId)?.nombre }}</td>
           <td><p-tag [value]="asignacion.tipoRevision | titlecase" [severity]="asignacion.tipoRevision === 'externa' ? 'info' : 'secondary'" /></td>
           <td>
-            <div class="flex align-items-center gap-1">
-              @for (nombre of asignacion.usuariosAsignadosNombres | slice:0:2; track nombre) {
-                <p-avatar [label]="getAvatarLabel(nombre)" shape="circle" styleClass="bg-primary" />
-              }
-              @if (asignacion.usuariosAsignadosNombres.length > 2) {
-                <span class="text-500 text-sm">+{{ asignacion.usuariosAsignadosNombres.length - 2 }}</span>
+            <p-avatargroup>
+              @for (nombre of asignacion.usuariosAsignadosNombres | slice:0:3; track nombre; let i = $index) {
+                @if (asignacion.usuariosAsignadosImagenes?.[i]) {
+                  <p-avatar [image]="asignacion.usuariosAsignadosImagenes[i]" shape="circle" />
+                } @else {
+                  <p-avatar [label]="getAvatarLabel(nombre)" shape="circle" styleClass="bg-primary" />
+                }
               }
               @if (asignacion.emailsExternos.length > 0) {
                 <p-avatar icon="pi pi-envelope" shape="circle" styleClass="bg-purple-500" />
               }
-            </div>
+              @if (asignacion.usuariosAsignadosNombres.length > 3) {
+                <p-avatar [label]="'+' + (asignacion.usuariosAsignadosNombres.length - 3)" shape="circle" styleClass="surface-100 text-900" />
+              }
+            </p-avatargroup>
           </td>
           <td>
             <div class="flex flex-wrap gap-1">
@@ -261,9 +300,13 @@
           </td>
           <td>{{ asignacion.fechaInicio | date:'dd/MM/yyyy' }}</td>
           <td>{{ asignacion.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
-          <td style="width: 120px">
-            <p-progressBar [value]="asignacion.progreso" [showValue]="false" styleClass="h-1rem" />
-            <span class="text-xs text-500">{{ asignacion.progreso }}%</span>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <div class="w-5rem bg-gray-200 border-round" style="height: 4px;">
+                <div class="bg-primary border-round" [style.width.%]="asignacion.progreso" style="height: 100%;"></div>
+              </div>
+              <span class="text-sm">{{ asignacion.progreso }}%</span>
+            </div>
           </td>
           <td><p-tag [value]="asignacion.estado | titlecase" [severity]="getEstadoSeverity(asignacion.estado)" /></td>
           <td>
@@ -313,7 +356,8 @@
           <td></td>
         </tr>
       </ng-template>
-    </p-table>
+      </p-table>
+    </p-card>
   </div>
 </div>
 }
