@@ -47,6 +47,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/proceso-detalle/proceso-detalle').then(m => m.ProcesoDetalleComponent)
   },
   {
+    path: 'procesos/:id/objetivos-kpis',
+    loadComponent: () => import('./pages/objetivos-kpis/objetivos-kpis').then(m => m.ObjetivosKpisComponent)
+  },
+  {
     path: 'cuestionarios',
     loadComponent: () => import('./pages/cuestionarios/cuestionarios').then(m => m.CuestionariosComponent)
   },

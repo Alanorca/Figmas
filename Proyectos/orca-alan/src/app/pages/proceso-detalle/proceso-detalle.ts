@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -15,7 +15,8 @@ import { TimelineModule } from 'primeng/timeline';
 import { TableModule } from 'primeng/table';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
-import { MenuItem } from 'primeng/api';
+import { MenuItem, MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 import { ProcessService } from '../../services/process.service';
 import { Proceso } from '../../models/process-nodes';
 
@@ -47,8 +48,10 @@ interface ObjetivoKPI {
     TimelineModule,
     TableModule,
     ProgressBarModule,
-    BreadcrumbModule
+    BreadcrumbModule,
+    ToastModule
   ],
+  providers: [MessageService],
   templateUrl: './proceso-detalle.html',
   styleUrl: './proceso-detalle.scss'
 })
@@ -56,6 +59,7 @@ export class ProcesoDetalleComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private processService = inject(ProcessService);
+  private messageService = inject(MessageService);
 
   // Proceso actual
   proceso = signal<Proceso | null>(null);
@@ -311,6 +315,7 @@ export class ProcesoDetalleComponent implements OnInit {
     { titulo: 'Proceso creado', fecha: '01 Dic 2024, 11:20', usuario: 'Admin Sistema', icono: 'pi-plus-circle', color: 'cyan-500' }
   ]);
 
+  
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -448,5 +453,20 @@ export class ProcesoDetalleComponent implements OnInit {
       month: 'short',
       year: 'numeric'
     });
+  }
+
+  // ========== Navegación a Objetivos y KPIs ==========
+  navegarObjetivosVer(): void {
+    const id = this.procesoId();
+    if (id) {
+      this.router.navigate(['/procesos', id, 'objetivos-kpis']);
+    }
+  }
+
+  navegarObjetivosEditar(): void {
+    const id = this.procesoId();
+    if (id) {
+      this.router.navigate(['/procesos', id, 'objetivos-kpis'], { queryParams: { modo: 'editar' } });
+    }
   }
 }

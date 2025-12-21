@@ -349,8 +349,8 @@
           @if (tabDerecho() === 'kpis') {
             <div class="tab-content">
               <div class="kpis-header-actions">
-                <button class="btn-edit-link">Editar</button>
-                <button class="btn-view-link">Ver todo</button>
+                <button class="btn-edit-link" (click)="navegarObjetivosEditar()">Editar</button>
+                <button class="btn-view-link" (click)="navegarObjetivosVer()">Ver todo</button>
               </div>
               <div class="kpis-list">
                 @for (kpi of objetivosKPIs(); track kpi.id) {
@@ -387,3 +387,5 @@
     </div>
   }
 </div>
+
+<p-toast />
