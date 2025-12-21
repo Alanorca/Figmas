@@ -13,7 +13,10 @@ interface KPI {
   id: string;
   nombre: string;
   meta: number;
+  actual: number;
   escala: string;
+  umbralAlerta: number; // Porcentaje mínimo de progreso antes de alerta (ej: 50)
+  direccion: 'mayor_mejor' | 'menor_mejor'; // Indica si es mejor que el valor sea mayor o menor
 }
 
 interface Objetivo {
@@ -64,11 +67,11 @@ export class ObjetivosKpisComponent implements OnInit {
       tipo: 'estrategico',
       progreso: 50,
       kpis: [
-        { id: 'KPI-001', nombre: 'Índice de Riesgo Operacional', meta: 5, escala: 'Escala 1-5' },
-        { id: 'KPI-002', nombre: 'Pérdidas por Riesgo Operacional', meta: 5, escala: '%' },
-        { id: 'KPI-003', nombre: 'Tiempo de Resolución de Incidentes', meta: 5, escala: 'Horas' },
-        { id: 'KPI-004', nombre: 'Cumplimiento de Auditorías', meta: 5, escala: '%' },
-        { id: 'KPI-005', nombre: 'Capacitaciones en Gestión de Riesgos', meta: 5, escala: '%' }
+        { id: 'KPI-001', nombre: 'Índice de Riesgo Operacional', meta: 5, actual: 3, escala: 'Escala 1-5', umbralAlerta: 50, direccion: 'menor_mejor' },
+        { id: 'KPI-002', nombre: 'Pérdidas por Riesgo Operacional', meta: 5, actual: 2, escala: '%', umbralAlerta: 50, direccion: 'menor_mejor' },
+        { id: 'KPI-003', nombre: 'Tiempo de Resolución de Incidentes', meta: 5, actual: 4, escala: 'Horas', umbralAlerta: 50, direccion: 'menor_mejor' },
+        { id: 'KPI-004', nombre: 'Cumplimiento de Auditorías', meta: 100, actual: 75, escala: '%', umbralAlerta: 70, direccion: 'mayor_mejor' },
+        { id: 'KPI-005', nombre: 'Capacitaciones en Gestión de Riesgos', meta: 100, actual: 60, escala: '%', umbralAlerta: 70, direccion: 'mayor_mejor' }
       ]
     },
     {
@@ -86,8 +89,8 @@ export class ObjetivosKpisComponent implements OnInit {
       tipo: 'estrategico',
       progreso: 80,
       kpis: [
-        { id: 'KPI-006', nombre: 'NPS Score', meta: 75, escala: '%' },
-        { id: 'KPI-007', nombre: 'Tiempo de respuesta', meta: 24, escala: 'Horas' }
+        { id: 'KPI-006', nombre: 'NPS Score', meta: 75, actual: 68, escala: '%', umbralAlerta: 60, direccion: 'mayor_mejor' },
+        { id: 'KPI-007', nombre: 'Tiempo de respuesta', meta: 24, actual: 18, escala: 'Horas', umbralAlerta: 50, direccion: 'menor_mejor' }
       ]
     },
     {
@@ -97,7 +100,7 @@ export class ObjetivosKpisComponent implements OnInit {
       tipo: 'operativo',
       progreso: 30,
       kpis: [
-        { id: 'KPI-008', nombre: 'Market Share', meta: 15, escala: '%' }
+        { id: 'KPI-008', nombre: 'Market Share', meta: 15, actual: 8, escala: '%', umbralAlerta: 50, direccion: 'mayor_mejor' }
       ]
     },
     {
@@ -107,7 +110,7 @@ export class ObjetivosKpisComponent implements OnInit {
       tipo: 'operativo',
       progreso: 55,
       kpis: [
-        { id: 'KPI-009', nombre: 'Cumplimiento normativo', meta: 100, escala: '%' }
+        { id: 'KPI-009', nombre: 'Cumplimiento normativo', meta: 100, actual: 85, escala: '%', umbralAlerta: 80, direccion: 'mayor_mejor' }
       ]
     },
     {
@@ -148,7 +151,10 @@ export class ObjetivosKpisComponent implements OnInit {
   formTipo = signal<'estrategico' | 'operativo'>('estrategico');
   formKPINombre = signal('');
   formKPIMeta = signal<number>(75);
+  formKPIActual = signal<number>(0);
   formKPIEscala = signal('Porcentaje');
+  formKPIUmbralAlerta = signal<number>(50);
+  formKPIDireccion = signal<'mayor_mejor' | 'menor_mejor'>('mayor_mejor');
 
   escalasOptions = [
     { label: 'Porcentaje', value: 'Porcentaje' },
@@ -158,6 +164,11 @@ export class ObjetivosKpisComponent implements OnInit {
     { label: 'Horas', value: 'Horas' },
     { label: 'Escala 1-5', value: 'Escala 1-5' },
     { label: 'USD', value: 'USD' }
+  ];
+
+  direccionOptions = [
+    { label: 'Mejor si es más', value: 'mayor_mejor' },
+    { label: 'Mejor si es menos', value: 'menor_mejor' }
   ];
 
   ngOnInit(): void {
@@ -190,7 +201,11 @@ export class ObjetivosKpisComponent implements OnInit {
 
   cambiarModo(nuevoModo: 'ver' | 'editar'): void {
     this.modo.set(nuevoModo);
-    this.resetEditStates();
+    if (nuevoModo === 'editar' && this.objetivoSeleccionado()) {
+      this.iniciarEdicionObjetivo();
+    } else {
+      this.resetEditStates();
+    }
   }
 
   seleccionarObjetivo(objetivoId: string): void {
@@ -276,7 +291,10 @@ export class ObjetivosKpisComponent implements OnInit {
   iniciarNuevoKPI(): void {
     this.formKPINombre.set('');
     this.formKPIMeta.set(75);
+    this.formKPIActual.set(0);
     this.formKPIEscala.set('Porcentaje');
+    this.formKPIUmbralAlerta.set(50);
+    this.formKPIDireccion.set('mayor_mejor');
     this.nuevoKPI.set(true);
     this.editandoKPIId.set(null);
   }
@@ -284,7 +302,10 @@ export class ObjetivosKpisComponent implements OnInit {
   iniciarEdicionKPI(kpi: KPI): void {
     this.formKPINombre.set(kpi.nombre);
     this.formKPIMeta.set(kpi.meta);
+    this.formKPIActual.set(kpi.actual);
     this.formKPIEscala.set(kpi.escala);
+    this.formKPIUmbralAlerta.set(kpi.umbralAlerta);
+    this.formKPIDireccion.set(kpi.direccion);
     this.editandoKPIId.set(kpi.id);
     this.nuevoKPI.set(false);
   }
@@ -306,7 +327,10 @@ export class ObjetivosKpisComponent implements OnInit {
       id: editandoId || `KPI-${Date.now()}`,
       nombre: this.formKPINombre(),
       meta: this.formKPIMeta(),
-      escala: this.formKPIEscala()
+      actual: this.formKPIActual(),
+      escala: this.formKPIEscala(),
+      umbralAlerta: this.formKPIUmbralAlerta(),
+      direccion: this.formKPIDireccion()
     };
 
     if (editandoId) {
@@ -348,13 +372,40 @@ export class ObjetivosKpisComponent implements OnInit {
 
   // Helpers
   getProgresoColor(progreso: number): string {
-    if (progreso >= 75) return 'bg-green-500';
-    if (progreso >= 50) return 'bg-blue-500';
-    if (progreso >= 25) return 'bg-orange-500';
-    return 'bg-red-500';
+    if (progreso >= 66) return 'progress-green';
+    if (progreso >= 33) return 'progress-yellow';
+    return 'progress-red';
   }
 
   getTipoLabel(tipo: string): string {
     return tipo === 'estrategico' ? 'Estratégico' : 'Operativo';
+  }
+
+  getKPIProgreso(kpi: KPI): number {
+    if (kpi.meta === 0) return 0;
+
+    if (kpi.direccion === 'menor_mejor') {
+      // Para "mejor si es menos": si actual <= meta, es 100% o más
+      // Si actual > meta, el progreso disminuye proporcionalmente
+      if (kpi.actual <= kpi.meta) {
+        return 100;
+      }
+      // Cuanto más exceda la meta, menos progreso (invertido)
+      const exceso = (kpi.actual - kpi.meta) / kpi.meta;
+      return Math.max(0, Math.round((1 - exceso) * 100));
+    }
+
+    // Para "mejor si es más": comportamiento normal
+    const progreso = Math.round((kpi.actual / kpi.meta) * 100);
+    return Math.min(progreso, 100);
+  }
+
+  tieneAlertaKPI(kpi: KPI): boolean {
+    const progreso = this.getKPIProgreso(kpi);
+    return progreso < kpi.umbralAlerta;
+  }
+
+  getDireccionLabel(direccion: 'mayor_mejor' | 'menor_mejor'): string {
+    return direccion === 'mayor_mejor' ? 'Mejor +' : 'Mejor -';
   }
 }

@@ -5,6 +5,53 @@
 }
 
 // =============================================
+// ESTILOS BASE DE PÁGINA
+// =============================================
+
+.cumplimiento-container {
+  padding: 1.5rem;
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .page-subtitle {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.9rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+// Toolbar pegado a tabla
+:host ::ng-deep .p-toolbar {
+  margin-bottom: 0 !important;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+:host ::ng-deep .table-card {
+  .p-card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
+  .p-card-body {
+    padding: 0;
+  }
+
+  .p-card-content {
+    padding: 0;
+  }
+}
+
+// =============================================
 // VISTA DE REVISIONES - Nuevo diseño
 // =============================================
 

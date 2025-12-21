@@ -17,6 +17,8 @@ import { ConfirmationService, MessageService, MenuItem } from 'primeng/api';
 import { MenuModule } from 'primeng/menu';
 import { ToolbarModule } from 'primeng/toolbar';
 import { CheckboxModule } from 'primeng/checkbox';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { ProcessService } from '../../services/process.service';
 import { Proceso } from '../../models/process-nodes';
 
@@ -39,7 +41,9 @@ import { Proceso } from '../../models/process-nodes';
     SelectModule,
     MenuModule,
     ToolbarModule,
-    CheckboxModule
+    CheckboxModule,
+    IconFieldModule,
+    InputIconModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './procesos-lista.html',

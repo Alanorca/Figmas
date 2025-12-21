@@ -4,6 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { OrganizationChartModule } from 'primeng/organizationchart';
 import { DialogModule } from 'primeng/dialog';
 import { AvatarModule } from 'primeng/avatar';
+import { ToolbarModule } from 'primeng/toolbar';
 import { TreeNode } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { NodoOrganigrama } from '../../models';
@@ -11,7 +12,7 @@ import { NodoOrganigrama } from '../../models';
 @Component({
   selector: 'app-organigramas',
   standalone: true,
-  imports: [CardModule, ButtonModule, OrganizationChartModule, DialogModule, AvatarModule],
+  imports: [CardModule, ButtonModule, OrganizationChartModule, DialogModule, AvatarModule, ToolbarModule],
   templateUrl: './organigramas.html',
   styleUrl: './organigramas.scss'
 })

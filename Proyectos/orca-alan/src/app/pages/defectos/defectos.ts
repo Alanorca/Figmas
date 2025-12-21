@@ -14,6 +14,8 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DrawerModule } from 'primeng/drawer';
 import { TooltipModule } from 'primeng/tooltip';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { MenuItem } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { Defecto, TipoDefecto, Severidad, EstadoDefecto } from '../../models';
@@ -28,7 +30,7 @@ interface DefectoConActivo extends Defecto {
   imports: [
     CommonModule, FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
     InputTextModule, SelectModule, TextareaModule, TagModule, MenuModule, ToolbarModule,
-    CheckboxModule, DrawerModule, TooltipModule
+    CheckboxModule, DrawerModule, TooltipModule, IconFieldModule, InputIconModule
   ],
   templateUrl: './defectos.html',
   styleUrl: './defectos.scss'

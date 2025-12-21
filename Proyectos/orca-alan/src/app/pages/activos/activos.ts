@@ -15,6 +15,8 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { DrawerModule } from 'primeng/drawer';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { MenuItem } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { Activo, TipoActivo, Criticidad } from '../../models';
@@ -25,7 +27,8 @@ import { Activo, TipoActivo, Criticidad } from '../../models';
   imports: [
     FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
     InputTextModule, SelectModule, TextareaModule, TagModule, TooltipModule,
-    TabsModule, MenuModule, ToolbarModule, CheckboxModule, MultiSelectModule, DrawerModule
+    TabsModule, MenuModule, ToolbarModule, CheckboxModule, MultiSelectModule,
+    DrawerModule, IconFieldModule, InputIconModule
   ],
   templateUrl: './activos.html',
   styleUrl: './activos.scss'

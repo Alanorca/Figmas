@@ -1,10 +1,8 @@
 <div class="tabla-unificada-container">
   <!-- Header -->
   <div class="page-header">
-    <div class="header-content">
-      <h1><i class="pi pi-table mr-2"></i>Tabla Unificada</h1>
-      <p class="text-secondary">Gestión unificada de Riesgos e Incidentes</p>
-    </div>
+    <h1>Tabla Unificada</h1>
+    <p class="page-subtitle">Gestión unificada de Riesgos e Incidentes</p>
   </div>
 
   <!-- Toolbar -->
@@ -59,7 +57,7 @@
           pInputText
           placeholder="Buscar en todos los campos..."
           (input)="dt.filterGlobal($any($event.target).value, 'contains')"
-          style="width: 300px" />
+          style="width: 280px" />
       </p-iconfield>
     </ng-template>
 

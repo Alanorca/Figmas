@@ -3,14 +3,12 @@
   @if (!estado().entidadSeleccionada) {
     <!-- Header -->
     <div class="page-header">
-      <div class="header-content">
-        <h1><i class="pi pi-microchip mr-2"></i>Resultados de Inteligencia</h1>
-        <p class="text-secondary">Gestión de insights de IA/ML para activos y procesos</p>
-      </div>
+      <h1>Resultados de Inteligencia</h1>
+      <p class="page-subtitle">Gestión de insights de IA/ML para activos y procesos</p>
     </div>
 
     <!-- Toolbar -->
-    <p-toolbar styleClass="mb-4">
+    <p-toolbar styleClass="toolbar-attached">
       <ng-template pTemplate="start">
         <div class="flex align-items-center gap-3">
           <!-- Botón de hallazgos pendientes -->
@@ -56,7 +54,7 @@
             placeholder="Buscar en todos los campos..."
             [ngModel]="busquedaEntidad()"
             (ngModelChange)="busquedaEntidad.set($event)"
-            style="width: 300px" />
+            style="width: 280px" />
         </p-iconfield>
       </ng-template>
 
@@ -217,7 +215,7 @@
       </div>
 
       <!-- Toolbar de hallazgos -->
-      <p-toolbar styleClass="hallazgos-toolbar mb-4">
+      <p-toolbar styleClass="hallazgos-toolbar toolbar-attached">
         <ng-template pTemplate="start">
           <div class="flex align-items-center gap-3">
             <!-- Checkbox de selección masiva -->
@@ -410,13 +408,14 @@
                 </div>
               </td>
               <td>
-                <div class="confianza-cell">
-                  <p-progressBar
-                    [value]="hallazgo.confianza"
-                    [showValue]="false"
-                    styleClass="h-0.5rem"
-                    [style]="{'--p-progressbar-value-background': hallazgo.confianza >= 80 ? 'var(--green-500)' : hallazgo.confianza >= 50 ? 'var(--yellow-500)' : 'var(--red-500)'}" />
-                  <span class="text-sm">{{ hallazgo.confianza }}%</span>
+                <div class="flex align-items-center gap-2">
+                  <div class="w-6rem bg-gray-200 border-round" style="height: 8px;">
+                    <div class="border-round"
+                         [class]="hallazgo.confianza >= 80 ? 'bg-green-500' : hallazgo.confianza >= 50 ? 'bg-yellow-500' : 'bg-red-500'"
+                         [style.width.%]="hallazgo.confianza"
+                         style="height: 100%;"></div>
+                  </div>
+                  <span class="font-bold">{{ hallazgo.confianza }}%</span>
                 </div>
               </td>
               <td>{{ formatearFecha(hallazgo.fechaDeteccion) }}</td>
@@ -512,11 +511,12 @@
         <div class="metrica-item">
           <span class="metrica-label">Confianza</span>
           <div class="flex align-items-center gap-2">
-            <p-progressBar
-              [value]="hallazgo.confianza"
-              [showValue]="false"
-              styleClass="h-0.5rem flex-1"
-              [style]="{'--p-progressbar-value-background': hallazgo.confianza >= 80 ? 'var(--green-500)' : hallazgo.confianza >= 50 ? 'var(--yellow-500)' : 'var(--red-500)'}" />
+            <div class="flex-1 bg-gray-200 border-round" style="height: 8px;">
+              <div class="border-round"
+                   [class]="hallazgo.confianza >= 80 ? 'bg-green-500' : hallazgo.confianza >= 50 ? 'bg-yellow-500' : 'bg-red-500'"
+                   [style.width.%]="hallazgo.confianza"
+                   style="height: 100%;"></div>
+            </div>
             <span class="font-bold">{{ hallazgo.confianza }}%</span>
           </div>
         </div>

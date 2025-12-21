@@ -252,50 +252,48 @@ interface TabItem {
     // ------------------------------------------------------------------------
     .notification-bell {
       position: relative;
-      width: 40px;
-      height: 40px;
-      border-radius: $border-radius-lg;
-      border: 1px solid var(--surface-200);
-      background: var(--surface-0);
+      width: 32px;
+      height: 32px;
+      border-radius: $border-radius-md;
+      border: none;
+      background: transparent;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all $transition-normal;
-      box-shadow: $shadow-md;
 
       &:hover {
-        background: var(--surface-50);
-        border-color: var(--surface-300);
+        background: var(--surface-100);
       }
 
       i {
-        font-size: 1.125rem;
-        color: var(--text-color-secondary);
+        font-size: 1rem;
+        color: var(--surface-600);
         transition: color $transition-fast;
       }
 
       &:hover i {
-        color: var(--text-color);
+        color: var(--surface-900);
       }
     }
 
     .notification-badge {
       position: absolute;
-      top: -4px;
-      right: -4px;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 $spacing-1;
-      border-radius: 9px;
+      top: -2px;
+      right: -2px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 8px;
       background: var(--red-500);
       color: white;
-      font-size: $font-size-xs;
+      font-size: 10px;
       font-weight: $font-weight-semibold;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid var(--surface-0);
+      border: 2px solid var(--surface-ground);
     }
 
     // ------------------------------------------------------------------------

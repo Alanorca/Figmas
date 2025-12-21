@@ -15,6 +15,8 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DrawerModule } from 'primeng/drawer';
 import { TooltipModule } from 'primeng/tooltip';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { MenuItem } from 'primeng/api';
 import { MockDataService } from '../../services/mock-data.service';
 import { Incidente, Severidad, EstadoIncidente } from '../../models';
@@ -29,7 +31,7 @@ interface IncidenteConActivo extends Incidente {
   imports: [
     CommonModule, FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
     InputTextModule, SelectModule, TextareaModule, TagModule, TimelineModule, MenuModule,
-    ToolbarModule, CheckboxModule, DrawerModule, TooltipModule
+    ToolbarModule, CheckboxModule, DrawerModule, TooltipModule, IconFieldModule, InputIconModule
   ],
   templateUrl: './incidentes.html',
   styleUrl: './incidentes.scss'

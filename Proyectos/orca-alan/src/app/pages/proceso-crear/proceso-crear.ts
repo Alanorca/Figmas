@@ -5,6 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ProcessService } from '../../services/process.service';
+import { DrawerModule } from 'primeng/drawer';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
 
 // Interfaces
 interface Objetivo {
@@ -20,7 +26,10 @@ interface KPI {
   id: string;
   nombre: string;
   meta: number;
+  actual: number;
   escala: string;
+  umbralAlerta: number;
+  direccion: 'mayor_mejor' | 'menor_mejor';
 }
 
 interface ApetitoCelda {
@@ -35,7 +44,13 @@ interface ApetitoCelda {
     CommonModule,
     FormsModule,
     RouterLink,
-    ToastModule
+    ToastModule,
+    DrawerModule,
+    ButtonModule,
+    InputTextModule,
+    SelectModule,
+    TooltipModule,
+    TagModule
   ],
   providers: [MessageService],
   templateUrl: './proceso-crear.html',
@@ -122,7 +137,7 @@ export class ProcesoCrearComponent {
       tipo: 'estrategico',
       progreso: 50,
       kpis: [
-        { id: 'KPI-001', nombre: 'Reducir riesgos operacionales', meta: 75, escala: 'Porcentaje' }
+        { id: 'KPI-001', nombre: 'Reducir riesgos operacionales', meta: 75, actual: 40, escala: 'Porcentaje', umbralAlerta: 50, direccion: 'mayor_mejor' }
       ]
     }
   ]);
@@ -139,10 +154,40 @@ export class ProcesoCrearComponent {
   kpiEditandoId = signal<string | null>(null);
   nuevoKPINombre = signal('');
   nuevoKPIMeta = signal<number>(75);
+  nuevoKPIActual = signal<number>(0);
   nuevoKPIEscala = signal('Porcentaje');
+  nuevoKPIUmbralAlerta = signal<number>(50);
+  nuevoKPIDireccion = signal<'mayor_mejor' | 'menor_mejor'>('mayor_mejor');
 
   // Estado de colapso de objetivos (por ID)
   objetivosColapsados = signal<Set<string>>(new Set());
+
+  // ========== Drawer Ver Todo Objetivos/KPIs ==========
+  showObjetivosDrawer = signal(false);
+  objetivoSeleccionadoId = signal<string | null>(null);
+  busquedaObjetivos = signal('');
+
+  // Objetivo seleccionado para el panel derecho
+  objetivoSeleccionado = computed(() => {
+    const id = this.objetivoSeleccionadoId();
+    if (!id) return null;
+    return this.objetivos().find(o => o.id === id) || null;
+  });
+
+  // Objetivos filtrados por búsqueda
+  objetivosFiltrados = computed(() => {
+    const busqueda = this.busquedaObjetivos().toLowerCase();
+    if (!busqueda) return this.objetivos();
+    return this.objetivos().filter(o =>
+      o.nombre.toLowerCase().includes(busqueda) ||
+      o.descripcion.toLowerCase().includes(busqueda)
+    );
+  });
+
+  // Form inline para editar en drawer
+  drawerEditandoObjetivo = signal(false);
+  drawerEditandoKPIId = signal<string | null>(null);
+  drawerNuevoKPI = signal(false);
 
   escalasOptions = [
     { label: 'Porcentaje', value: 'Porcentaje' },
@@ -150,6 +195,11 @@ export class ProcesoCrearComponent {
     { label: 'Días', value: 'Días' },
     { label: 'Horas', value: 'Horas' },
     { label: 'USD', value: 'USD' }
+  ];
+
+  direccionOptions = [
+    { label: 'Mejor si es más', value: 'mayor_mejor' },
+    { label: 'Mejor si es menos', value: 'menor_mejor' }
   ];
 
   // Computed: Total de KPIs
@@ -382,12 +432,18 @@ export class ProcesoCrearComponent {
       this.kpiEditandoId.set(kpi.id);
       this.nuevoKPINombre.set(kpi.nombre);
       this.nuevoKPIMeta.set(kpi.meta);
+      this.nuevoKPIActual.set(kpi.actual);
       this.nuevoKPIEscala.set(kpi.escala);
+      this.nuevoKPIUmbralAlerta.set(kpi.umbralAlerta);
+      this.nuevoKPIDireccion.set(kpi.direccion);
     } else {
       this.kpiEditandoId.set(null);
       this.nuevoKPINombre.set('');
       this.nuevoKPIMeta.set(75);
+      this.nuevoKPIActual.set(0);
       this.nuevoKPIEscala.set('Porcentaje');
+      this.nuevoKPIUmbralAlerta.set(50);
+      this.nuevoKPIDireccion.set('mayor_mejor');
     }
 
     this.mostrarFormKPIInline.set(objetivoId);
@@ -398,6 +454,9 @@ export class ProcesoCrearComponent {
     this.kpiEditandoId.set(null);
     this.nuevoKPINombre.set('');
     this.nuevoKPIMeta.set(75);
+    this.nuevoKPIActual.set(0);
+    this.nuevoKPIUmbralAlerta.set(50);
+    this.nuevoKPIDireccion.set('mayor_mejor');
   }
 
   guardarKPI(): void {
@@ -414,7 +473,10 @@ export class ProcesoCrearComponent {
       id: editandoId || `KPI-${Date.now()}`,
       nombre: this.nuevoKPINombre(),
       meta: this.nuevoKPIMeta(),
-      escala: this.nuevoKPIEscala()
+      actual: this.nuevoKPIActual(),
+      escala: this.nuevoKPIEscala(),
+      umbralAlerta: this.nuevoKPIUmbralAlerta(),
+      direccion: this.nuevoKPIDireccion()
     };
 
     if (editandoId) {
@@ -472,7 +534,9 @@ export class ProcesoCrearComponent {
         id: kpi.id,
         nombre: kpi.nombre,
         meta: kpi.meta,
-        escala: kpi.escala
+        actual: kpi.actual,
+        escala: kpi.escala,
+        umbralAlerta: kpi.umbralAlerta
       }))
     }));
 
@@ -551,5 +615,213 @@ export class ProcesoCrearComponent {
 
   decrementarApetito(): void {
     this.apetitoRiesgo.update(v => Math.max(v - 5, 0));
+  }
+
+  // ========== Drawer Objetivos/KPIs ==========
+  abrirDrawerObjetivos(): void {
+    this.showObjetivosDrawer.set(true);
+    this.busquedaObjetivos.set('');
+    // Seleccionar el primer objetivo si hay alguno
+    if (this.objetivos().length > 0) {
+      this.objetivoSeleccionadoId.set(this.objetivos()[0].id);
+    }
+    this.resetDrawerEditStates();
+  }
+
+  cerrarDrawerObjetivos(): void {
+    this.showObjetivosDrawer.set(false);
+    this.objetivoSeleccionadoId.set(null);
+    this.resetDrawerEditStates();
+  }
+
+  seleccionarObjetivoEnDrawer(objetivoId: string): void {
+    this.objetivoSeleccionadoId.set(objetivoId);
+    this.resetDrawerEditStates();
+  }
+
+  resetDrawerEditStates(): void {
+    this.drawerEditandoObjetivo.set(false);
+    this.drawerEditandoKPIId.set(null);
+    this.drawerNuevoKPI.set(false);
+  }
+
+  // Editar objetivo en drawer
+  iniciarEdicionObjetivoDrawer(): void {
+    const obj = this.objetivoSeleccionado();
+    if (obj) {
+      this.nuevoObjetivoNombre.set(obj.nombre);
+      this.nuevoObjetivoDescripcion.set(obj.descripcion);
+      this.nuevoObjetivoTipo.set(obj.tipo);
+      this.drawerEditandoObjetivo.set(true);
+    }
+  }
+
+  cancelarEdicionObjetivoDrawer(): void {
+    this.drawerEditandoObjetivo.set(false);
+  }
+
+  guardarObjetivoDrawer(): void {
+    const id = this.objetivoSeleccionadoId();
+    if (!id || !this.nuevoObjetivoNombre().trim()) {
+      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre es requerido' });
+      return;
+    }
+
+    this.objetivos.update(list =>
+      list.map(o =>
+        o.id === id
+          ? {
+              ...o,
+              nombre: this.nuevoObjetivoNombre(),
+              descripcion: this.nuevoObjetivoDescripcion(),
+              tipo: this.nuevoObjetivoTipo()
+            }
+          : o
+      )
+    );
+    this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Objetivo actualizado' });
+    this.drawerEditandoObjetivo.set(false);
+  }
+
+  eliminarObjetivoDrawer(): void {
+    const id = this.objetivoSeleccionadoId();
+    if (!id) return;
+
+    this.objetivos.update(list => list.filter(o => o.id !== id));
+    this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'Objetivo eliminado' });
+
+    // Seleccionar otro objetivo
+    const remaining = this.objetivos();
+    if (remaining.length > 0) {
+      this.objetivoSeleccionadoId.set(remaining[0].id);
+    } else {
+      this.objetivoSeleccionadoId.set(null);
+    }
+    this.resetDrawerEditStates();
+  }
+
+  // Crear objetivo desde drawer
+  crearObjetivoDesdeDrawer(): void {
+    const nuevoObjetivo: Objetivo = {
+      id: `OBJ-${Date.now()}`,
+      nombre: 'Nuevo Objetivo',
+      descripcion: '',
+      tipo: 'estrategico',
+      progreso: 0,
+      kpis: []
+    };
+    this.objetivos.update(list => [...list, nuevoObjetivo]);
+    this.objetivoSeleccionadoId.set(nuevoObjetivo.id);
+    this.iniciarEdicionObjetivoDrawer();
+  }
+
+  // KPIs en drawer
+  iniciarNuevoKPIDrawer(): void {
+    this.nuevoKPINombre.set('');
+    this.nuevoKPIMeta.set(75);
+    this.nuevoKPIActual.set(0);
+    this.nuevoKPIEscala.set('Porcentaje');
+    this.nuevoKPIUmbralAlerta.set(50);
+    this.nuevoKPIDireccion.set('mayor_mejor');
+    this.drawerNuevoKPI.set(true);
+    this.drawerEditandoKPIId.set(null);
+  }
+
+  iniciarEdicionKPIDrawer(kpi: KPI): void {
+    this.nuevoKPINombre.set(kpi.nombre);
+    this.nuevoKPIMeta.set(kpi.meta);
+    this.nuevoKPIActual.set(kpi.actual);
+    this.nuevoKPIEscala.set(kpi.escala);
+    this.nuevoKPIUmbralAlerta.set(kpi.umbralAlerta);
+    this.nuevoKPIDireccion.set(kpi.direccion);
+    this.drawerEditandoKPIId.set(kpi.id);
+    this.drawerNuevoKPI.set(false);
+  }
+
+  cancelarKPIDrawer(): void {
+    this.drawerNuevoKPI.set(false);
+    this.drawerEditandoKPIId.set(null);
+  }
+
+  guardarKPIDrawer(): void {
+    const objetivoId = this.objetivoSeleccionadoId();
+    if (!objetivoId || !this.nuevoKPINombre().trim()) {
+      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre del KPI es requerido' });
+      return;
+    }
+
+    const editandoId = this.drawerEditandoKPIId();
+    const nuevoKPI: KPI = {
+      id: editandoId || `KPI-${Date.now()}`,
+      nombre: this.nuevoKPINombre(),
+      meta: this.nuevoKPIMeta(),
+      actual: this.nuevoKPIActual(),
+      escala: this.nuevoKPIEscala(),
+      umbralAlerta: this.nuevoKPIUmbralAlerta(),
+      direccion: this.nuevoKPIDireccion()
+    };
+
+    if (editandoId) {
+      this.objetivos.update(list =>
+        list.map(o =>
+          o.id === objetivoId
+            ? { ...o, kpis: o.kpis.map(k => k.id === nuevoKPI.id ? nuevoKPI : k) }
+            : o
+        )
+      );
+      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'KPI actualizado' });
+    } else {
+      this.objetivos.update(list =>
+        list.map(o =>
+          o.id === objetivoId
+            ? { ...o, kpis: [...o.kpis, nuevoKPI] }
+            : o
+        )
+      );
+      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'KPI agregado' });
+    }
+
+    this.cancelarKPIDrawer();
+  }
+
+  eliminarKPIDrawer(kpiId: string): void {
+    const objetivoId = this.objetivoSeleccionadoId();
+    if (!objetivoId) return;
+
+    this.objetivos.update(list =>
+      list.map(o =>
+        o.id === objetivoId
+          ? { ...o, kpis: o.kpis.filter(k => k.id !== kpiId) }
+          : o
+      )
+    );
+    this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'KPI eliminado' });
+  }
+
+  // Helper para obtener color de progreso
+  getProgresoColor(progreso: number): string {
+    if (progreso >= 75) return 'bg-green-500';
+    if (progreso >= 50) return 'bg-blue-500';
+    if (progreso >= 25) return 'bg-orange-500';
+    return 'bg-red-500';
+  }
+
+  // Helpers para KPI
+  getKPIProgreso(kpi: KPI): number {
+    if (kpi.meta === 0) return 0;
+    const progreso = Math.round((kpi.actual / kpi.meta) * 100);
+    return Math.min(progreso, 100);
+  }
+
+  tieneAlertaKPI(kpi: KPI): boolean {
+    const progreso = this.getKPIProgreso(kpi);
+    return progreso < kpi.umbralAlerta;
+  }
+
+  getKPIProgresoColor(kpi: KPI): string {
+    const progreso = this.getKPIProgreso(kpi);
+    if (progreso >= 66) return 'progress-green';
+    if (progreso >= 33) return 'progress-yellow';
+    return 'progress-red';
   }
 }

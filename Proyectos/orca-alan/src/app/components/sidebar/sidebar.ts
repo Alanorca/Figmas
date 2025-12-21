@@ -1,14 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { StyleClassModule } from 'primeng/styleclass';
 import { TooltipModule } from 'primeng/tooltip';
 import { NotificationsComponent } from '../notifications/notifications';
+import { filter } from 'rxjs/operators';
 
 interface MenuItem {
   label: string;
   icon: string;
   routerLink: string;
+}
+
+interface BreadcrumbItem {
+  label?: string;
+  routerLink?: string;
+  icon?: string;
 }
 
 @Component({
@@ -59,13 +66,33 @@ interface MenuItem {
 
       <!-- Main Content -->
       <main class="main-content">
-        <!-- Notificaciones flotante -->
-        <div class="notifications-floating">
-          <app-notifications />
-        </div>
+        <!-- Top Header with Breadcrumbs and Notifications -->
+        <header class="top-header">
+          <nav class="breadcrumb-nav">
+            @for (item of breadcrumbs; track $index; let last = $last) {
+              @if (item.icon) {
+                <a [routerLink]="item.routerLink" class="breadcrumb-item breadcrumb-home">
+                  <i [class]="item.icon"></i>
+                </a>
+              } @else if (item.routerLink && !last) {
+                <a [routerLink]="item.routerLink" class="breadcrumb-item">{{ item.label }}</a>
+              } @else {
+                <span class="breadcrumb-current">{{ item.label }}</span>
+              }
+              @if (!last) {
+                <span class="breadcrumb-separator">/</span>
+              }
+            }
+          </nav>
+          <div class="header-actions">
+            <app-notifications />
+          </div>
+        </header>
 
         <!-- Content Area -->
-        <router-outlet></router-outlet>
+        <div class="content-area">
+          <router-outlet></router-outlet>
+        </div>
       </main>
     </div>
   `,
@@ -221,20 +248,71 @@ interface MenuItem {
       flex-direction: column;
       background: var(--surface-ground);
       min-width: 0;
-      position: relative;
-      overflow-y: auto;
+      overflow: hidden;
     }
 
-    // Notificaciones flotante
-    .notifications-floating {
-      position: fixed;
-      top: 1.5rem;
-      right: 1.5rem;
-      z-index: 1000;
+    // Top Header with Breadcrumbs and Notifications
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.375rem 2rem;
+      background: transparent;
+      flex-shrink: 0;
+    }
+
+    .breadcrumb-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 14px;
+    }
+
+    .breadcrumb-item {
+      color: var(--text-color-secondary);
+      text-decoration: none;
+      transition: color 0.15s;
+
+      &:hover {
+        color: var(--primary-color);
+      }
+    }
+
+    .breadcrumb-home {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      i {
+        font-size: 14px;
+      }
+    }
+
+    .breadcrumb-separator {
+      color: var(--surface-400);
+      font-size: 12px;
+    }
+
+    .breadcrumb-current {
+      color: var(--surface-700);
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
     }
   `]
 })
 export class SidebarComponent {
+  private router = inject(Router);
+
   menuItems: MenuItem[] = [
     { label: 'Dashboard', icon: 'pi pi-home', routerLink: '/dashboard' },
     { label: 'Activos', icon: 'pi pi-box', routerLink: '/activos' },
@@ -248,4 +326,69 @@ export class SidebarComponent {
     { label: 'Tabla Unificada', icon: 'pi pi-table', routerLink: '/tabla-unificada' },
     { label: 'Results ML', icon: 'pi pi-chart-line', routerLink: '/results-ml' }
   ];
+
+  breadcrumbs: BreadcrumbItem[] = [];
+
+  // Route to label mapping
+  private routeLabels: Record<string, string> = {
+    'dashboard': 'Dashboard',
+    'activos': 'Activos',
+    'organigramas': 'Organigrama',
+    'riesgos': 'Riesgos',
+    'incidentes': 'Incidentes',
+    'defectos': 'Defectos',
+    'procesos': 'Procesos',
+    'cuestionarios': 'Cuestionarios',
+    'cumplimiento': 'Cumplimiento',
+    'tabla-unificada': 'Tabla Unificada',
+    'results-ml': 'Results ML',
+    'crear': 'Crear',
+    'detalle': 'Detalle',
+    'objetivos-kpis': 'Objetivos y KPIs'
+  };
+
+  constructor() {
+    // Initial breadcrumb
+    this.updateBreadcrumbs(this.router.url);
+
+    // Listen for route changes
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        this.updateBreadcrumbs(event.urlAfterRedirects);
+      });
+  }
+
+  private updateBreadcrumbs(url: string): void {
+    const segments = url.split('/').filter(s => s && !s.startsWith('?'));
+
+    this.breadcrumbs = [
+      { icon: 'pi pi-home', routerLink: '/dashboard' }
+    ];
+
+    let currentPath = '';
+
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      currentPath += '/' + segment;
+
+      // Skip numeric IDs in breadcrumb labels but keep them in path
+      if (/^\d+$/.test(segment) || segment.startsWith('PROC-')) {
+        continue;
+      }
+
+      const label = this.routeLabels[segment] || this.capitalizeFirst(segment);
+
+      // For the last segment, don't add routerLink
+      if (i === segments.length - 1) {
+        this.breadcrumbs.push({ label });
+      } else {
+        this.breadcrumbs.push({ label, routerLink: currentPath });
+      }
+    }
+  }
+
+  private capitalizeFirst(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1).replace(/-/g, ' ');
+  }
 }

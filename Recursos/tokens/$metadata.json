@@ -1,0 +1,12 @@
+{
+  "tokenSetOrder": [
+    "aura/primitive",
+    "aura/semantic",
+    "aura/semantic/light",
+    "aura/semantic/dark",
+    "aura/component",
+    "aura/component/light",
+    "aura/component/dark",
+    "app"
+  ]
+}
