@@ -1,23 +1,14 @@
 <div class="activos-container">
   <!-- Header -->
   <div class="page-header">
-    <div class="header-content">
-      <h1>Gestión de Activos</h1>
-      <p class="text-secondary">Administra los activos de la organización</p>
-    </div>
+    <h1>Gestión de Activos</h1>
+    <p class="page-subtitle">Administra los activos de la organización</p>
   </div>
 
   <!-- Toolbar -->
   <p-toolbar>
     <ng-template pTemplate="start">
-      <span class="p-input-icon-left">
-        <i class="pi pi-search"></i>
-        <input type="text" pInputText placeholder="Buscar activos..." #dtFilter
-               (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 250px" />
-      </span>
-    </ng-template>
-    <ng-template pTemplate="end">
-      <div class="flex gap-2">
+      <div class="flex align-items-center gap-3">
         @if (activosSeleccionados().length > 0) {
           <p-button
             label="Acciones masivas"
@@ -29,8 +20,15 @@
             styleClass="btn-acciones-masivas"
             (onClick)="abrirAccionesMasivasDrawer()" />
         }
-        <p-button label="Nuevo Activo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input type="text" pInputText placeholder="Buscar activos..." #dtFilter
+                 (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
+        </p-iconfield>
       </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Nuevo Activo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
     </ng-template>
   </p-toolbar>
 

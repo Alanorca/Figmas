@@ -1,23 +1,14 @@
 <div class="defectos-container">
   <!-- Header -->
   <div class="page-header">
-    <div class="header-content">
-      <h1>Gestión de Defectos</h1>
-      <p class="text-secondary">Registra y da seguimiento a defectos y no conformidades</p>
-    </div>
+    <h1>Gestión de Defectos</h1>
+    <p class="page-subtitle">Registra y da seguimiento a defectos y no conformidades</p>
   </div>
 
   <!-- Toolbar -->
   <p-toolbar>
     <ng-template pTemplate="start">
-      <span class="p-input-icon-left">
-        <i class="pi pi-search"></i>
-        <input type="text" pInputText placeholder="Buscar defectos..." #dtFilter
-               (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 250px" />
-      </span>
-    </ng-template>
-    <ng-template pTemplate="end">
-      <div class="flex gap-2">
+      <div class="flex align-items-center gap-3">
         @if (defectosSeleccionados().length > 0) {
           <p-button
             label="Acciones masivas"
@@ -29,8 +20,15 @@
             styleClass="btn-acciones-masivas"
             (onClick)="abrirAccionesMasivasDrawer()" />
         }
-        <p-button label="Registrar Defecto" icon="pi pi-plus" severity="help" (onClick)="openNewDialog()"></p-button>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input type="text" pInputText placeholder="Buscar defectos..." #dtFilter
+                 (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
+        </p-iconfield>
       </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Registrar Defecto" icon="pi pi-plus" severity="help" (onClick)="openNewDialog()"></p-button>
     </ng-template>
   </p-toolbar>
 

@@ -137,8 +137,10 @@
                   </td>
                   <td>
                     <div class="flex align-items-center gap-2">
-                      <p-progressBar [value]="promedioCompletado()" [showValue]="false" styleClass="h-1rem flex-1" />
-                      <span class="text-sm font-medium">{{ promedioCompletado() }}%</span>
+                      <div class="w-5rem bg-gray-200 border-round" style="height: 4px;">
+                        <div class="bg-primary border-round" [style.width.%]="promedioCompletado()" style="height: 100%;"></div>
+                      </div>
+                      <span class="text-sm">{{ promedioCompletado() }}%</span>
                     </div>
                   </td>
                   <td>
@@ -346,8 +348,10 @@
           </td>
           <td>
             <div class="flex align-items-center gap-2">
-              <p-progressBar [value]="promedioCompletado()" [showValue]="false" styleClass="h-1rem flex-1" />
-              <span class="text-sm font-medium">{{ promedioCompletado() }}%</span>
+              <div class="w-5rem bg-gray-200 border-round" style="height: 4px;">
+                <div class="bg-primary border-round" [style.width.%]="promedioCompletado()" style="height: 100%;"></div>
+              </div>
+              <span class="text-sm">{{ promedioCompletado() }}%</span>
             </div>
           </td>
           <td>

@@ -4,21 +4,30 @@
 <div class="procesos-lista-container">
   <!-- Header -->
   <div class="page-header">
-    <div class="header-left">
-      <h1>Procesos</h1>
-      <span class="subtitle">Gestiona tus procesos de automatización</span>
-    </div>
+    <h1>Procesos</h1>
+    <p class="page-subtitle">Gestiona tus procesos de automatización</p>
   </div>
 
   <!-- Toolbar -->
   <p-toolbar>
     <ng-template pTemplate="start">
       <div class="flex align-items-center gap-3">
-        <span class="p-input-icon-left">
-          <i class="pi pi-search"></i>
+        @if (procesosSeleccionados().length > 0) {
+          <p-button
+            label="Acciones masivas"
+            icon="pi pi-check-square"
+            [badge]="procesosSeleccionados().length.toString()"
+            badgeSeverity="contrast"
+            severity="success"
+            [outlined]="true"
+            styleClass="btn-acciones-masivas"
+            (onClick)="abrirAccionesMasivasDrawer()" />
+        }
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
           <input type="text" pInputText placeholder="Buscar procesos..."
-                 (input)="dt.filterGlobal($any($event.target).value, 'contains')" style="width: 250px" />
-        </span>
+                 (input)="dt.filterGlobal($any($event.target).value, 'contains')" style="width: 280px" />
+        </p-iconfield>
         <p-select
           [options]="estadoOptions"
           placeholder="Filtrar por estado"
@@ -31,17 +40,6 @@
     </ng-template>
     <ng-template pTemplate="end">
       <div class="flex gap-2">
-        @if (procesosSeleccionados().length > 0) {
-          <p-button
-            label="Acciones masivas"
-            icon="pi pi-check-square"
-            [badge]="procesosSeleccionados().length.toString()"
-            badgeSeverity="contrast"
-            severity="success"
-            [outlined]="true"
-            styleClass="btn-acciones-masivas"
-            (onClick)="abrirAccionesMasivasDrawer()" />
-        }
         <p-button
           label="Cargar Demo"
           icon="pi pi-database"
