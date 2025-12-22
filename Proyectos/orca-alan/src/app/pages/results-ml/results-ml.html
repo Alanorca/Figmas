@@ -143,19 +143,8 @@
 
   <!-- Vista de resultados (cuando hay entidad seleccionada) -->
   @if (estado().entidadSeleccionada; as entidad) {
-    <!-- Header con breadcrumb -->
+    <!-- Header -->
     <div class="results-header">
-      <div class="breadcrumb-nav">
-        <p-button
-          icon="pi pi-arrow-left"
-          label="Volver"
-          [text]="true"
-          severity="secondary"
-          (onClick)="volverABusqueda()" />
-        <span class="text-secondary mx-2">/</span>
-        <span class="font-medium">{{ entidad.nombre }}</span>
-      </div>
-
       <div class="header-main">
         <div class="header-left">
           <div class="flex align-items-center gap-3 mb-2">

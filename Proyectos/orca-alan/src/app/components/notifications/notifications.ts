@@ -1,39 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal, computed, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, signal, computed, ViewChild, ElementRef, AfterViewInit, inject } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
 import { RippleModule } from 'primeng/ripple';
-
-type NotificationType = 'riesgo' | 'control' | 'cuestionario' | 'incidente' | 'cumplimiento' | 'aprobacion' | 'alerta';
-
-interface NotificationAction {
-  label: string;
-  type: 'primary' | 'secondary';
-  callback?: () => void;
-}
-
-interface NotificationAttachment {
-  type: 'image' | 'document';
-  url: string;
-  title?: string;
-  subtitle?: string;
-}
-
-interface Notification {
-  id: string;
-  tipo: NotificationType;
-  usuario: {
-    nombre: string;
-    avatar?: string;
-  };
-  mensaje: string;
-  fecha: Date;
-  leida: boolean;
-  attachment?: NotificationAttachment;
-  actions?: NotificationAction[];
-}
+import { NotificationsService, Notification, NotificationAction } from '../../services/notifications.service';
 
 interface TabItem {
   id: string;
@@ -103,7 +75,7 @@ interface TabItem {
             <!-- Hoy -->
             @if (todayNotifications().length > 0) {
               <div class="date-group">
-                <span class="date-label">TODAY</span>
+                <span class="date-label">HOY</span>
               </div>
               @for (notif of todayNotifications(); track notif.id) {
                 <ng-container *ngTemplateOutlet="notificationItem; context: { $implicit: notif }"></ng-container>
@@ -113,7 +85,7 @@ interface TabItem {
             <!-- Ayer -->
             @if (yesterdayNotifications().length > 0) {
               <div class="date-group">
-                <span class="date-label">YESTERDAY</span>
+                <span class="date-label">AYER</span>
               </div>
               @for (notif of yesterdayNotifications(); track notif.id) {
                 <ng-container *ngTemplateOutlet="notificationItem; context: { $implicit: notif }"></ng-container>
@@ -123,7 +95,7 @@ interface TabItem {
             <!-- Anteriores -->
             @if (olderNotifications().length > 0) {
               <div class="date-group">
-                <span class="date-label">EARLIER</span>
+                <span class="date-label">ANTERIORES</span>
               </div>
               @for (notif of olderNotifications(); track notif.id) {
                 <ng-container *ngTemplateOutlet="notificationItem; context: { $implicit: notif }"></ng-container>
@@ -138,21 +110,70 @@ interface TabItem {
         <div
           class="notification-item"
           [class.unread]="!notif.leida"
+          [class.kpi-alert]="notif.tipo === 'kpi-alert'"
+          [class.chat-message]="notif.tipo === 'chat'"
+          [class.severity-critical]="notif.severity === 'critical'"
+          [class.severity-warning]="notif.severity === 'warning'"
+          [class.severity-info]="notif.severity === 'info'"
           (click)="onNotificationClick(notif)"
           pRipple
         >
-          <!-- Avatar -->
-          <p-avatar
-            [image]="notif.usuario.avatar"
-            [label]="!notif.usuario.avatar ? getInitials(notif.usuario.nombre) : undefined"
-            shape="circle"
-            size="large"
-            styleClass="notification-avatar"
-          />
+          <!-- Avatar o ícono según tipo -->
+          @if (notif.tipo === 'kpi-alert') {
+            <div class="alert-icon" [class]="'severity-' + notif.severity">
+              <i class="pi pi-exclamation-triangle"></i>
+            </div>
+          } @else if (notif.tipo === 'chat') {
+            <div class="chat-icon">
+              <i class="pi pi-comments"></i>
+            </div>
+          } @else {
+            <p-avatar
+              [image]="notif.usuario.avatar"
+              [label]="!notif.usuario.avatar ? getInitials(notif.usuario.nombre) : undefined"
+              shape="circle"
+              size="large"
+              styleClass="notification-avatar"
+            />
+          }
 
           <!-- Content -->
           <div class="notification-content">
-            <div class="notification-user">{{ notif.usuario.nombre }}</div>
+            <div class="notification-header-row">
+              <div class="notification-user">
+                {{ notif.usuario.nombre }}
+                @if (notif.enSeguimiento) {
+                  <i class="pi pi-bookmark-fill following-icon" pTooltip="En seguimiento"></i>
+                }
+              </div>
+              <button class="menu-trigger" (click)="toggleMenu($event, notif.id)" pTooltip="Opciones">
+                <i class="pi pi-ellipsis-h"></i>
+              </button>
+              <!-- Menú contextual -->
+              @if (menuAbierto() === notif.id) {
+                <div class="context-menu">
+                  <button class="menu-item" (click)="onSeguimiento($event, notif.id)">
+                    <i class="pi" [class.pi-bookmark]="!notif.enSeguimiento" [class.pi-bookmark-fill]="notif.enSeguimiento"></i>
+                    {{ notif.enSeguimiento ? 'Quitar seguimiento' : 'Seguimiento' }}
+                  </button>
+                  @if (!notif.archivada) {
+                    <button class="menu-item" (click)="onArchivar($event, notif.id)">
+                      <i class="pi pi-inbox"></i>
+                      Archivar
+                    </button>
+                  } @else {
+                    <button class="menu-item" (click)="onDesarchivar($event, notif.id)">
+                      <i class="pi pi-inbox"></i>
+                      Desarchivar
+                    </button>
+                  }
+                  <button class="menu-item delete" (click)="onEliminar($event, notif.id)">
+                    <i class="pi pi-trash"></i>
+                    Eliminar
+                  </button>
+                </div>
+              }
+            </div>
             <div class="notification-message">{{ notif.mensaje }}</div>
 
             <!-- Attachment -->
@@ -196,56 +217,8 @@ interface TabItem {
   `,
   styles: [`
     // ============================================================================
-    // NOTIFICACIONES - ESTILO BASADO EN DISEÑO DE REFERENCIA
+    // NOTIFICACIONES - Usando Design Tokens del Sistema
     // ============================================================================
-
-    // ------------------------------------------------------------------------
-    // TOKENS DE COLOR - VERDE EMERALD (COLOR PRIMARIO DEL COMPONENTE)
-    // ------------------------------------------------------------------------
-    $color-primary: var(--emerald-500);
-    $color-primary-hover: var(--emerald-600);
-    $color-primary-text: var(--emerald-500);
-    $color-primary-light: var(--emerald-50);
-    $color-primary-100: var(--emerald-100);
-
-    // ------------------------------------------------------------------------
-    // TOKENS DE ESPACIADO
-    // ------------------------------------------------------------------------
-    $spacing-1: 0.25rem;
-    $spacing-2: 0.5rem;
-    $spacing-3: 0.75rem;
-    $spacing-4: 1rem;
-    $spacing-5: 1.25rem;
-    $spacing-6: 1.5rem;
-
-    // ------------------------------------------------------------------------
-    // TOKENS DE TIPOGRAFÍA
-    // ------------------------------------------------------------------------
-    $font-size-xs: 0.75rem;
-    $font-size-sm: 0.8125rem;
-    $font-size-base: 0.875rem;
-    $font-size-lg: 1rem;
-
-    $font-weight-normal: 400;
-    $font-weight-medium: 500;
-    $font-weight-semibold: 600;
-
-    // ------------------------------------------------------------------------
-    // TOKENS DE BORDES Y SOMBRAS
-    // ------------------------------------------------------------------------
-    $border-radius-sm: 4px;
-    $border-radius-md: 6px;
-    $border-radius-lg: 8px;
-    $border-radius-xl: 12px;
-    $border-radius-full: 9999px;
-
-    $shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-
-    // ------------------------------------------------------------------------
-    // TOKENS DE TRANSICIONES
-    // ------------------------------------------------------------------------
-    $transition-fast: 150ms ease;
-    $transition-normal: 200ms ease;
 
     // ------------------------------------------------------------------------
     // BOTÓN DE CAMPANITA
@@ -254,23 +227,23 @@ interface TabItem {
       position: relative;
       width: 32px;
       height: 32px;
-      border-radius: $border-radius-md;
+      border-radius: var(--border-radius-md);
       border: none;
       background: transparent;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all $transition-normal;
+      transition: all var(--transition-duration);
 
       &:hover {
         background: var(--surface-100);
       }
 
       i {
-        font-size: 1rem;
+        font-size: var(--icon-size);
         color: var(--surface-600);
-        transition: color $transition-fast;
+        transition: color var(--transition-duration);
       }
 
       &:hover i {
@@ -285,11 +258,11 @@ interface TabItem {
       min-width: 16px;
       height: 16px;
       padding: 0 4px;
-      border-radius: 8px;
+      border-radius: var(--border-radius-full);
       background: var(--red-500);
-      color: white;
-      font-size: 10px;
-      font-weight: $font-weight-semibold;
+      color: var(--surface-0);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-semibold);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -304,7 +277,7 @@ interface TabItem {
       flex-direction: column;
       max-height: 600px;
       background: var(--surface-0);
-      border-radius: $border-radius-xl;
+      border-radius: var(--border-radius-xl);
       overflow: hidden;
     }
 
@@ -314,7 +287,7 @@ interface TabItem {
     .notifications-tabs {
       position: relative;
       border-bottom: 1px solid var(--surface-200);
-      padding: 0 $spacing-4;
+      padding: 0 var(--spacing-4);
     }
 
     .tabs-scroll {
@@ -331,28 +304,28 @@ interface TabItem {
       list-style: none;
       margin: 0;
       padding: 0;
-      gap: $spacing-6;
+      gap: var(--spacing-6);
     }
 
     .tab-btn {
-      padding: $spacing-4 0;
+      padding: var(--spacing-4) 0;
       border: none;
       background: none;
-      font-size: $font-size-base;
-      font-weight: $font-weight-medium;
-      color: #1e293b; // slate-800 - texto oscuro para tabs inactivos
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--surface-800);
       cursor: pointer;
       white-space: nowrap;
-      transition: color $transition-fast;
+      transition: color var(--transition-duration);
       position: relative;
 
       &:hover {
-        color: #0f172a; // slate-900
+        color: var(--surface-900);
       }
 
       &.active {
-        color: #10B981; // emerald-500 - verde primario para tab activo
-        font-weight: $font-weight-semibold;
+        color: var(--primary-color);
+        font-weight: var(--font-weight-semibold);
       }
     }
 
@@ -361,7 +334,7 @@ interface TabItem {
       bottom: 0;
       left: 0;
       height: 2px;
-      background: #10B981; // emerald-500
+      background: var(--primary-color);
       border-radius: 1px 1px 0 0;
       transition: transform 300ms ease, width 300ms ease;
     }
@@ -373,7 +346,7 @@ interface TabItem {
       flex: 1;
       overflow-y: auto;
       max-height: 520px;
-      padding: $spacing-4 $spacing-5;
+      padding: var(--spacing-4) var(--spacing-5);
 
       &::-webkit-scrollbar {
         width: 6px;
@@ -390,13 +363,13 @@ interface TabItem {
     }
 
     .date-group {
-      padding: $spacing-3 0 $spacing-4;
+      padding: var(--spacing-3) 0 var(--spacing-4);
     }
 
     .date-label {
-      font-size: $font-size-xs;
-      font-weight: $font-weight-medium;
-      color: var(--surface-500);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-color-secondary);
       letter-spacing: 0.02em;
       text-transform: uppercase;
     }
@@ -406,10 +379,10 @@ interface TabItem {
     // ------------------------------------------------------------------------
     .notification-item {
       display: flex;
-      gap: $spacing-4;
-      padding: $spacing-4 0;
+      gap: var(--spacing-4);
+      padding: var(--spacing-4) 0;
       cursor: pointer;
-      transition: opacity $transition-fast;
+      transition: opacity var(--transition-duration);
 
       &:hover {
         opacity: 0.85;
@@ -417,7 +390,7 @@ interface TabItem {
 
       &.unread {
         .notification-user {
-          color: #10B981; // emerald-500 - verde primario para nombre de usuario no leído
+          color: var(--primary-color);
         }
       }
     }
@@ -440,23 +413,23 @@ interface TabItem {
     }
 
     .notification-user {
-      font-size: $font-size-base;
-      font-weight: $font-weight-semibold;
-      color: var(--surface-900);
-      margin-bottom: $spacing-1;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-color);
+      margin-bottom: var(--spacing-1);
     }
 
     .notification-message {
-      font-size: $font-size-base;
-      font-weight: $font-weight-normal;
-      color: var(--surface-700);
-      line-height: 1.5;
-      margin-bottom: $spacing-2;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-normal);
+      color: var(--text-color);
+      line-height: var(--line-height-normal);
+      margin-bottom: var(--spacing-2);
     }
 
     .notification-time {
-      font-size: $font-size-sm;
-      color: var(--surface-500);
+      font-size: var(--font-size-xs);
+      color: var(--text-color-secondary);
     }
 
     // ------------------------------------------------------------------------
@@ -464,18 +437,18 @@ interface TabItem {
     // ------------------------------------------------------------------------
     .notification-attachment {
       display: flex;
-      gap: $spacing-3;
-      padding: $spacing-3;
-      margin: $spacing-3 0;
+      gap: var(--spacing-3);
+      padding: var(--spacing-3);
+      margin: var(--spacing-3) 0;
       background: var(--surface-50);
       border: 1px solid var(--surface-200);
-      border-radius: $border-radius-lg;
+      border-radius: var(--border-radius-lg);
     }
 
     .attachment-image {
       width: 108px;
       height: 80px;
-      border-radius: $border-radius-md;
+      border-radius: var(--border-radius-md);
       object-fit: cover;
     }
 
@@ -483,18 +456,18 @@ interface TabItem {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: $spacing-1;
+      gap: var(--spacing-1);
     }
 
     .attachment-title {
-      font-size: $font-size-sm;
+      font-size: var(--font-size-xs);
       color: var(--surface-900);
       line-height: 1.4;
     }
 
     .attachment-subtitle {
-      font-size: $font-size-xs;
-      color: var(--surface-500);
+      font-size: var(--font-size-xs);
+      color: var(--text-color-secondary);
     }
 
     // ------------------------------------------------------------------------
@@ -502,40 +475,41 @@ interface TabItem {
     // ------------------------------------------------------------------------
     .notification-actions {
       display: flex;
-      gap: $spacing-3;
-      margin-top: $spacing-4;
+      gap: var(--spacing-3);
+      margin-top: var(--spacing-4);
     }
 
     .action-btn {
       flex: 1;
-      padding: $spacing-3 $spacing-4;
-      border-radius: $border-radius-full;
-      font-size: $font-size-base;
-      font-weight: $font-weight-medium;
+      padding: var(--spacing-3) var(--spacing-4);
+      border-radius: var(--border-radius-full);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
       cursor: pointer;
-      transition: all $transition-fast;
+      transition: all var(--transition-duration);
       text-align: center;
 
-      // Botón Cancel - fondo gris claro, texto oscuro
+      // Botón Cancel - usando tokens de botón secundario
       &.action-secondary {
-        background: #f1f5f9; // slate-100
-        border: 1px solid #e2e8f0; // slate-200
-        color: #1e293b; // slate-800 - TEXTO OSCURO
+        background: var(--button-secondary-background);
+        border: 1px solid var(--surface-200);
+        color: var(--button-secondary-color);
 
         &:hover {
-          background: #e2e8f0; // slate-200
+          background: var(--button-secondary-hover-background);
+          color: var(--button-secondary-hover-color);
         }
       }
 
-      // Botón Confirm - fondo verde, texto blanco
+      // Botón Confirm - usando tokens de botón primario
       &.action-primary {
-        background: #10B981; // emerald-500
-        border: 1px solid #10B981;
-        color: #ffffff; // TEXTO BLANCO
+        background: var(--button-primary-background);
+        border: 1px solid var(--button-primary-border-color);
+        color: var(--button-primary-color);
 
         &:hover {
-          background: #059669; // emerald-600
-          border-color: #059669;
+          background: var(--button-primary-hover-background);
+          border-color: var(--button-primary-hover-border-color);
         }
       }
     }
@@ -548,18 +522,229 @@ interface TabItem {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: $spacing-6 * 3;
-      color: var(--surface-500);
+      padding: calc(var(--spacing-6) * 3);
+      color: var(--text-color-secondary);
 
       i {
         font-size: 3rem;
-        margin-bottom: $spacing-4;
+        margin-bottom: var(--spacing-4);
         color: var(--surface-300);
       }
 
       p {
         margin: 0;
-        font-size: $font-size-base;
+        font-size: var(--font-size-sm);
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // ALERTAS KPI
+    // ------------------------------------------------------------------------
+    .alert-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      i {
+        font-size: 1.25rem;
+      }
+
+      &.severity-critical {
+        background: var(--red-100);
+        color: var(--red-600);
+      }
+
+      &.severity-warning {
+        background: var(--orange-100);
+        color: var(--orange-600);
+      }
+
+      &.severity-info {
+        background: var(--blue-100);
+        color: var(--blue-600);
+      }
+    }
+
+    .notification-item.kpi-alert {
+      border-left: 3px solid transparent;
+      padding-left: calc(var(--spacing-4) - 3px);
+
+      &.severity-critical {
+        border-left-color: var(--red-500);
+        background: color-mix(in srgb, var(--red-500) 3%, transparent);
+
+        .notification-user {
+          color: var(--red-600) !important;
+        }
+      }
+
+      &.severity-warning {
+        border-left-color: var(--orange-500);
+        background: color-mix(in srgb, var(--orange-500) 3%, transparent);
+
+        .notification-user {
+          color: var(--orange-600) !important;
+        }
+      }
+
+      &.severity-info {
+        border-left-color: var(--blue-500);
+        background: color-mix(in srgb, var(--blue-500) 3%, transparent);
+
+        .notification-user {
+          color: var(--blue-600) !important;
+        }
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // MENSAJES DE CHAT
+    // ------------------------------------------------------------------------
+    .chat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--primary-100);
+      color: var(--primary-600);
+
+      i {
+        font-size: 1.25rem;
+      }
+    }
+
+    .notification-item.chat-message {
+      border-left: 3px solid var(--primary-500);
+      padding-left: calc(var(--spacing-4) - 3px);
+      background: color-mix(in srgb, var(--primary-500) 3%, transparent);
+
+      .notification-user {
+        color: var(--primary-600) !important;
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // MENÚ CONTEXTUAL
+    // ------------------------------------------------------------------------
+    .notification-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--spacing-2);
+      position: relative;
+    }
+
+    .notification-user {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      flex: 1;
+
+      .following-icon {
+        font-size: var(--font-size-xs);
+        color: var(--emerald-500);
+      }
+    }
+
+    .menu-trigger {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      border-radius: var(--border-radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: all var(--transition-duration);
+      flex-shrink: 0;
+
+      i {
+        font-size: var(--font-size-sm);
+        color: var(--surface-500);
+      }
+
+      &:hover {
+        background: var(--surface-100);
+
+        i {
+          color: var(--surface-700);
+        }
+      }
+    }
+
+    .notification-item:hover .menu-trigger {
+      opacity: 1;
+    }
+
+    .context-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      z-index: 1000;
+      min-width: 180px;
+      background: var(--surface-0);
+      border: 1px solid var(--surface-200);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: var(--spacing-2);
+      margin-top: var(--spacing-1);
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      width: 100%;
+      padding: var(--spacing-3);
+      border: none;
+      background: transparent;
+      border-radius: var(--border-radius-md);
+      font-size: var(--font-size-sm);
+      color: var(--surface-700);
+      cursor: pointer;
+      text-align: left;
+      transition: all var(--transition-duration);
+
+      i {
+        font-size: var(--font-size-sm);
+        width: 16px;
+        text-align: center;
+        color: var(--surface-500);
+      }
+
+      &:hover {
+        background: var(--surface-100);
+        color: var(--surface-900);
+
+        i {
+          color: var(--surface-700);
+        }
+      }
+
+      &.delete {
+        color: var(--red-600);
+
+        i {
+          color: var(--red-500);
+        }
+
+        &:hover {
+          background: var(--red-50);
+          color: var(--red-700);
+
+          i {
+            color: var(--red-600);
+          }
+        }
       }
     }
   `]
@@ -568,89 +753,30 @@ export class NotificationsComponent implements AfterViewInit {
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('op') popover!: Popover;
 
-  // Datos de ejemplo contextualizados para GRC
-  notifications = signal<Notification[]>([
-    {
-      id: '1',
-      tipo: 'riesgo',
-      usuario: {
-        nombre: 'María López',
-        avatar: 'https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/circle/avatar-f-6.png'
-      },
-      mensaje: 'Te ha asignado el cuestionario de evaluación ISO 27001 - Controles de Acceso. Fecha límite: 25 de diciembre.',
-      fecha: new Date(Date.now() - 30 * 60 * 1000),
-      leida: false
-    },
-    {
-      id: '2',
-      tipo: 'control',
-      usuario: {
-        nombre: 'Carlos Mendoza',
-        avatar: 'https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/circle/avatar-m-2.png'
-      },
-      mensaje: 'Ha identificado un nuevo riesgo crítico en el proceso de gestión de accesos que requiere tu revisión.',
-      fecha: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      leida: false,
-      attachment: {
-        type: 'image',
-        url: 'https://fqjltiegiezfetthbags.supabase.co/storage/v1/object/public/block.images/blocks/feed/feed-image.jpg',
-        title: 'Riesgo RSG-2024-089: Vulnerabilidad en sistema de autenticación',
-        subtitle: 'Dec 18 at 03:45 PM'
-      }
-    },
-    {
-      id: '3',
-      tipo: 'aprobacion',
-      usuario: {
-        nombre: 'Ana Rodríguez',
-        avatar: 'https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/circle/avatar-f-10.png'
-      },
-      mensaje: 'Ha enviado una solicitud de tratamiento de riesgo que requiere tu aprobación para el área de Operaciones.',
-      fecha: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      leida: false,
-      actions: [
-        { label: 'Rechazar', type: 'secondary' },
-        { label: 'Aprobar', type: 'primary' }
-      ]
-    },
-    {
-      id: '4',
-      tipo: 'incidente',
-      usuario: {
-        nombre: 'Roberto Sánchez',
-        avatar: 'https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/circle/avatar-f-4.png'
-      },
-      mensaje: 'Ha reportado un incidente de seguridad: Intento de acceso no autorizado al sistema de nómina.',
-      fecha: new Date(Date.now() - 26 * 60 * 60 * 1000),
-      leida: true
-    },
-    {
-      id: '5',
-      tipo: 'cumplimiento',
-      usuario: {
-        nombre: 'Laura García',
-        avatar: 'https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/circle/avatar-f-1.png'
-      },
-      mensaje: 'Ha completado la evaluación de controles SOX Q4 2024 con un 94% de cumplimiento.',
-      fecha: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      leida: true
-    }
-  ]);
+  // Inyectar el servicio de notificaciones
+  private notificationsService = inject(NotificationsService);
+
+  // Usar las notificaciones del servicio
+  notifications = this.notificationsService.notifications;
 
   tabs = signal<TabItem[]>([
-    { id: 'inbox', label: 'Inbox' },
-    { id: 'following', label: 'Following' },
-    { id: 'all', label: 'All' },
-    { id: 'archived', label: 'Archived' }
+    { id: 'inbox', label: 'Nuevos' },
+    { id: 'following', label: 'Seguimiento' },
+    { id: 'all', label: 'Todas' },
+    { id: 'archived', label: 'Archivadas' }
   ]);
 
   selectedTab = signal('inbox');
   indicatorWidth = signal(0);
   indicatorLeft = signal(0);
 
-  unreadCount = computed(() =>
-    this.notifications().filter(n => !n.leida).length
-  );
+  // Usar el contador del servicio
+  unreadCount = this.notificationsService.unreadCount;
+  kpiAlertsCount = this.notificationsService.kpiAlertsCount;
+  criticalAlertsCount = this.notificationsService.criticalAlertsCount;
+
+  // Signal para menú contextual abierto
+  menuAbierto = signal<string | null>(null);
 
   filteredNotifications = computed(() => {
     const tab = this.selectedTab();
@@ -658,11 +784,13 @@ export class NotificationsComponent implements AfterViewInit {
 
     switch (tab) {
       case 'following':
-        return notifs.filter(n => !n.leida);
+        return notifs.filter(n => n.enSeguimiento && !n.archivada);
       case 'archived':
-        return [];
-      default:
-        return notifs;
+        return notifs.filter(n => n.archivada);
+      case 'all':
+        return notifs.filter(n => !n.archivada);
+      default: // inbox - nuevos (no leídos y no archivados)
+        return notifs.filter(n => !n.leida && !n.archivada);
     }
   });
 
@@ -746,11 +874,8 @@ export class NotificationsComponent implements AfterViewInit {
   }
 
   onNotificationClick(notification: Notification): void {
-    const notifs = this.notifications();
-    const index = notifs.findIndex(n => n.id === notification.id);
-    if (index !== -1 && !notifs[index].leida) {
-      notifs[index].leida = true;
-      this.notifications.set([...notifs]);
+    if (!notification.leida) {
+      this.notificationsService.markAsRead(notification.id);
     }
   }
 
@@ -760,5 +885,43 @@ export class NotificationsComponent implements AfterViewInit {
     if (action.callback) {
       action.callback();
     }
+  }
+
+  // Menú contextual
+  toggleMenu(event: Event, notifId: string): void {
+    event.stopPropagation();
+    if (this.menuAbierto() === notifId) {
+      this.menuAbierto.set(null);
+    } else {
+      this.menuAbierto.set(notifId);
+    }
+  }
+
+  cerrarMenu(): void {
+    this.menuAbierto.set(null);
+  }
+
+  onSeguimiento(event: Event, notifId: string): void {
+    event.stopPropagation();
+    this.notificationsService.toggleSeguimiento(notifId);
+    this.menuAbierto.set(null);
+  }
+
+  onEliminar(event: Event, notifId: string): void {
+    event.stopPropagation();
+    this.notificationsService.removeNotification(notifId);
+    this.menuAbierto.set(null);
+  }
+
+  onArchivar(event: Event, notifId: string): void {
+    event.stopPropagation();
+    this.notificationsService.archivarNotification(notifId);
+    this.menuAbierto.set(null);
+  }
+
+  onDesarchivar(event: Event, notifId: string): void {
+    event.stopPropagation();
+    this.notificationsService.desarchivarNotification(notifId);
+    this.menuAbierto.set(null);
   }
 }

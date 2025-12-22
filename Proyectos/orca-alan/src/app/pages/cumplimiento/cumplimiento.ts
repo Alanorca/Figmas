@@ -50,6 +50,9 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { ChatComponent } from '../../components/chat/chat';
 import { ComplianceResultsComponent } from '../../components/compliance-results/compliance-results';
 
+// Servicios
+import { NotificationsService } from '../../services/notifications.service';
+
 // Utilidades de Scoring
 import {
   calculateTotalScore,
@@ -177,6 +180,7 @@ export class CumplimientoComponent {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private router = inject(Router);
+  private notificationsService = inject(NotificationsService);
 
   @ViewChild('dt') dt!: Table;
   @ViewChild('dtDashboard') dtDashboard!: Table;
@@ -3137,6 +3141,24 @@ export class CumplimientoComponent {
 
     this.mensajesChat.update(msgs => [...msgs, nuevoMensaje]);
     this.mensajeChat.set('');
+
+    // Generar notificación para los otros participantes del chat
+    const cuestionario = this.getCuestionario(asignacion.cuestionarioId);
+    const cuestionarioNombre = cuestionario?.nombre || 'Cuestionario';
+    const mensajeCorto = mensaje.length > 80 ? mensaje.substring(0, 80) + '...' : mensaje;
+
+    this.notificationsService.addNotification({
+      tipo: 'chat',
+      usuario: {
+        nombre: this.usuarioActual().nombre
+      },
+      mensaje: `Nuevo mensaje en "${cuestionarioNombre}": ${mensajeCorto}`,
+      metadata: {
+        asignacionId: asignacion.id,
+        cuestionarioId: asignacion.cuestionarioId,
+        mensajeCompleto: mensaje
+      }
+    });
   }
 
   getMensajeHora(fecha: Date): string {

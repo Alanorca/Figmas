@@ -504,7 +504,7 @@
                             </div>
                           </div>
                           <div class="form-field flex-1">
-                            <label class="field-label">Umbral %</label>
+                            <label class="field-label">Umbral Mín %</label>
                             <input
                               type="number"
                               class="field-input umbral-input"
@@ -514,7 +514,7 @@
                               max="100">
                           </div>
                           <div class="form-field flex-1">
-                            <label class="field-label">Alerta</label>
+                            <label class="field-label">Dirección</label>
                             <div class="select-wrapper">
                               <select
                                 class="field-select"
@@ -525,6 +525,76 @@
                                 }
                               </select>
                               <i class="pi pi-chevron-down select-icon"></i>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- Configuración de alertas -->
+                        <div class="kpi-alertas-config">
+                          <div class="inline-form-row">
+                            <div class="form-field flex-1">
+                              <label class="field-label">Umbral Máx %</label>
+                              <input
+                                type="number"
+                                class="field-input"
+                                [ngModel]="nuevoKPIUmbralMaximo()"
+                                (ngModelChange)="nuevoKPIUmbralMaximo.set($event)"
+                                min="0"
+                                max="100"
+                                placeholder="Opcional">
+                            </div>
+                            <div class="form-field flex-1">
+                              <label class="field-label">Severidad</label>
+                              <div class="select-wrapper">
+                                <select
+                                  class="field-select"
+                                  [ngModel]="nuevoKPISeveridad()"
+                                  (ngModelChange)="nuevoKPISeveridad.set($event)">
+                                  @for (sev of severidadOptions; track sev.value) {
+                                    <option [value]="sev.value">{{ sev.label }}</option>
+                                  }
+                                </select>
+                                <i class="pi pi-chevron-down select-icon"></i>
+                              </div>
+                            </div>
+                            <div class="form-field flex-1">
+                              <label class="field-label">Frecuencia</label>
+                              <div class="select-wrapper">
+                                <select
+                                  class="field-select"
+                                  [ngModel]="nuevoKPIFrecuencia()"
+                                  (ngModelChange)="nuevoKPIFrecuencia.set($event)">
+                                  @for (freq of frecuenciaOptions; track freq.value) {
+                                    <option [value]="freq.value">{{ freq.label }}</option>
+                                  }
+                                </select>
+                                <i class="pi pi-chevron-down select-icon"></i>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="inline-form-row canales-row">
+                            <label class="field-label canales-label">Canales</label>
+                            <div class="channels-group">
+                              <label class="channel-checkbox">
+                                <input
+                                  type="checkbox"
+                                  [checked]="isChannelSelected('email')"
+                                  (change)="toggleChannel('email')">
+                                <i class="pi pi-envelope"></i> Email
+                              </label>
+                              <label class="channel-checkbox">
+                                <input
+                                  type="checkbox"
+                                  [checked]="isChannelSelected('in-app')"
+                                  (change)="toggleChannel('in-app')">
+                                <i class="pi pi-bell"></i> In-App
+                              </label>
+                              <label class="channel-checkbox">
+                                <input
+                                  type="checkbox"
+                                  [checked]="isChannelSelected('webhook')"
+                                  (change)="toggleChannel('webhook')">
+                                <i class="pi pi-link"></i> Webhook
+                              </label>
                             </div>
                           </div>
                         </div>
@@ -617,7 +687,7 @@
                                   </div>
                                 </div>
                                 <div class="form-field flex-1">
-                                  <label class="field-label">Umbral %</label>
+                                  <label class="field-label">Umbral Mín %</label>
                                   <input
                                     type="number"
                                     class="field-input umbral-input"
@@ -627,7 +697,7 @@
                                     max="100">
                                 </div>
                                 <div class="form-field flex-1">
-                                  <label class="field-label">Alerta</label>
+                                  <label class="field-label">Dirección</label>
                                   <div class="select-wrapper">
                                     <select
                                       class="field-select"
@@ -638,6 +708,76 @@
                                       }
                                     </select>
                                     <i class="pi pi-chevron-down select-icon"></i>
+                                  </div>
+                                </div>
+                              </div>
+                              <!-- Configuración de alertas -->
+                              <div class="kpi-alertas-config">
+                                <div class="inline-form-row">
+                                  <div class="form-field flex-1">
+                                    <label class="field-label">Umbral Máx %</label>
+                                    <input
+                                      type="number"
+                                      class="field-input"
+                                      [ngModel]="nuevoKPIUmbralMaximo()"
+                                      (ngModelChange)="nuevoKPIUmbralMaximo.set($event)"
+                                      min="0"
+                                      max="100"
+                                      placeholder="Opcional">
+                                  </div>
+                                  <div class="form-field flex-1">
+                                    <label class="field-label">Severidad</label>
+                                    <div class="select-wrapper">
+                                      <select
+                                        class="field-select"
+                                        [ngModel]="nuevoKPISeveridad()"
+                                        (ngModelChange)="nuevoKPISeveridad.set($event)">
+                                        @for (sev of severidadOptions; track sev.value) {
+                                          <option [value]="sev.value">{{ sev.label }}</option>
+                                        }
+                                      </select>
+                                      <i class="pi pi-chevron-down select-icon"></i>
+                                    </div>
+                                  </div>
+                                  <div class="form-field flex-1">
+                                    <label class="field-label">Frecuencia</label>
+                                    <div class="select-wrapper">
+                                      <select
+                                        class="field-select"
+                                        [ngModel]="nuevoKPIFrecuencia()"
+                                        (ngModelChange)="nuevoKPIFrecuencia.set($event)">
+                                        @for (freq of frecuenciaOptions; track freq.value) {
+                                          <option [value]="freq.value">{{ freq.label }}</option>
+                                        }
+                                      </select>
+                                      <i class="pi pi-chevron-down select-icon"></i>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="inline-form-row canales-row">
+                                  <label class="field-label canales-label">Canales</label>
+                                  <div class="channels-group">
+                                    <label class="channel-checkbox">
+                                      <input
+                                        type="checkbox"
+                                        [checked]="isChannelSelected('email')"
+                                        (change)="toggleChannel('email')">
+                                      <i class="pi pi-envelope"></i> Email
+                                    </label>
+                                    <label class="channel-checkbox">
+                                      <input
+                                        type="checkbox"
+                                        [checked]="isChannelSelected('in-app')"
+                                        (change)="toggleChannel('in-app')">
+                                      <i class="pi pi-bell"></i> In-App
+                                    </label>
+                                    <label class="channel-checkbox">
+                                      <input
+                                        type="checkbox"
+                                        [checked]="isChannelSelected('webhook')"
+                                        (change)="toggleChannel('webhook')">
+                                      <i class="pi pi-link"></i> Webhook
+                                    </label>
                                   </div>
                                 </div>
                               </div>

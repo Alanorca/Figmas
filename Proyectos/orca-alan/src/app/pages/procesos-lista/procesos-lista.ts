@@ -19,8 +19,63 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { TabsModule } from 'primeng/tabs';
+import { ChartModule } from 'primeng/chart';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ProcessService } from '../../services/process.service';
 import { Proceso } from '../../models/process-nodes';
+
+// Types for KPI Dashboard
+type PeriodoFiltro = 'semana' | 'mes' | 'trimestre' | 'anio';
+type TendenciaDir = 'up' | 'down' | 'neutral';
+type AlertSeverity = 'info' | 'warning' | 'critical';
+type AlertStatus = 'activa' | 'atendida' | 'resuelta';
+
+// Resumen de KPIs por proceso (para drill-down)
+interface ProcesoKPIResumen {
+  procesoId: string;
+  procesoNombre: string;
+  estado: 'activo' | 'borrador' | 'inactivo' | 'archivado';
+  totalObjetivos: number;
+  totalKPIs: number;
+  cumplimientoPromedio: number;
+  cumplimientoAnterior: number;
+  tendencia: TendenciaDir;
+  alertasActivas: number;
+  alertasCriticas: number;
+  ultimaActualizacion: Date;
+}
+
+// Alerta consolidada de cualquier proceso
+interface AlertaConsolidada {
+  id: string;
+  procesoId: string;
+  procesoNombre: string;
+  objetivoId: string;
+  objetivoNombre: string;
+  kpiId: string;
+  kpiNombre: string;
+  severity: AlertSeverity;
+  status: AlertStatus;
+  mensaje: string;
+  valorActual: number;
+  valorUmbral: number;
+  fechaCreacion: Date;
+  diasAbierto: number;
+}
+
+// KPI Metric para widgets top
+interface KPIMetricGlobal {
+  id: string;
+  nombre: string;
+  valor: number;
+  valorAnterior: number;
+  meta?: number;
+  unidad: string;
+  tendencia: TendenciaDir;
+  porcentajeCambio: number;
+  color: string;
+}
 
 @Component({
   selector: 'app-procesos-lista',
@@ -43,7 +98,10 @@ import { Proceso } from '../../models/process-nodes';
     ToolbarModule,
     CheckboxModule,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    TabsModule,
+    ChartModule,
+    DatePickerModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './procesos-lista.html',
@@ -79,6 +137,290 @@ export class ProcesosListaComponent {
     { label: 'Inactivo', value: 'inactivo' },
     { label: 'Archivado', value: 'archivado' }
   ];
+
+  // ==================== DASHBOARD KPIs ====================
+  tabActivo = signal<'tabla' | 'dashboard'>('tabla');
+
+  // Filtros del dashboard
+  periodoFiltro = signal<PeriodoFiltro>('mes');
+  severidadFiltro = signal<AlertSeverity | null>(null);
+  estadoProcesoFiltro = signal<string | null>(null);
+
+  periodoOptions = [
+    { label: 'Última semana', value: 'semana' },
+    { label: 'Último mes', value: 'mes' },
+    { label: 'Último trimestre', value: 'trimestre' },
+    { label: 'Último año', value: 'anio' }
+  ];
+
+  severidadOptions = [
+    { label: 'Todas', value: null },
+    { label: 'Crítico', value: 'critical' },
+    { label: 'Advertencia', value: 'warning' },
+    { label: 'Info', value: 'info' }
+  ];
+
+  // KPIs Globales calculados desde datos reales
+  kpiMetricsGlobal = computed<KPIMetricGlobal[]>(() => {
+    const procesos = this.procesosKPIResumen();
+    const alertas = this.alertasConsolidadas();
+
+    // Procesos activos
+    const procesosActivos = procesos.filter(p => p.estado === 'activo').length;
+    const procesosActivosAnterior = Math.max(1, procesosActivos - 1); // Mock para periodo anterior
+
+    // Cumplimiento promedio (solo procesos activos)
+    const procesosParaCumplimiento = procesos.filter(p => p.estado === 'activo');
+    const cumplimientoActual = procesosParaCumplimiento.length > 0
+      ? procesosParaCumplimiento.reduce((sum, p) => sum + p.cumplimientoPromedio, 0) / procesosParaCumplimiento.length
+      : 0;
+    const cumplimientoAnterior = procesosParaCumplimiento.length > 0
+      ? procesosParaCumplimiento.reduce((sum, p) => sum + p.cumplimientoAnterior, 0) / procesosParaCumplimiento.length
+      : 0;
+
+    // Alertas activas
+    const alertasActivas = alertas.filter(a => a.status === 'activa').length;
+    const alertasActivasAnterior = alertasActivas + 2; // Mock
+
+    // KPIs en riesgo (alertas críticas)
+    const kpisEnRiesgo = alertas.filter(a => a.status === 'activa' && a.severity === 'critical').length;
+    const kpisEnRiesgoAnterior = kpisEnRiesgo + 1; // Mock
+
+    const calcPorcentaje = (actual: number, anterior: number) =>
+      anterior !== 0 ? ((actual - anterior) / anterior) * 100 : 0;
+
+    return [
+      {
+        id: 'g1', nombre: 'Procesos Activos',
+        valor: procesosActivos, valorAnterior: procesosActivosAnterior,
+        unidad: '', tendencia: procesosActivos >= procesosActivosAnterior ? 'up' : 'down',
+        porcentajeCambio: calcPorcentaje(procesosActivos, procesosActivosAnterior), color: 'primary'
+      },
+      {
+        id: 'g2', nombre: 'Cumplimiento Promedio',
+        valor: Math.round(cumplimientoActual * 10) / 10, valorAnterior: Math.round(cumplimientoAnterior * 10) / 10,
+        unidad: '%', tendencia: cumplimientoActual >= cumplimientoAnterior ? 'up' : 'down',
+        porcentajeCambio: Math.round(calcPorcentaje(cumplimientoActual, cumplimientoAnterior) * 10) / 10, color: 'success'
+      },
+      {
+        id: 'g3', nombre: 'Alertas Activas',
+        valor: alertasActivas, valorAnterior: alertasActivasAnterior,
+        unidad: '', tendencia: alertasActivas <= alertasActivasAnterior ? 'up' : 'down',
+        porcentajeCambio: calcPorcentaje(alertasActivas, alertasActivasAnterior), color: 'warning'
+      },
+      {
+        id: 'g4', nombre: 'KPIs en Riesgo',
+        valor: kpisEnRiesgo, valorAnterior: kpisEnRiesgoAnterior,
+        unidad: '', tendencia: kpisEnRiesgo <= kpisEnRiesgoAnterior ? 'up' : 'down',
+        porcentajeCambio: calcPorcentaje(kpisEnRiesgo, kpisEnRiesgoAnterior), color: 'danger'
+      }
+    ];
+  });
+
+  // Resumen de KPIs por proceso (para drill-down)
+  procesosKPIResumen = signal<ProcesoKPIResumen[]>([
+    {
+      procesoId: 'proc-demo-001',
+      procesoNombre: 'Gestión de Riesgos Operacionales',
+      estado: 'activo',
+      totalObjetivos: 6,
+      totalKPIs: 9,
+      cumplimientoPromedio: 68,
+      cumplimientoAnterior: 62,
+      tendencia: 'up',
+      alertasActivas: 3,
+      alertasCriticas: 1,
+      ultimaActualizacion: new Date()
+    },
+    {
+      procesoId: 'proc-demo-002',
+      procesoNombre: 'Control de Accesos y Seguridad',
+      estado: 'activo',
+      totalObjetivos: 4,
+      totalKPIs: 7,
+      cumplimientoPromedio: 82,
+      cumplimientoAnterior: 78,
+      tendencia: 'up',
+      alertasActivas: 1,
+      alertasCriticas: 0,
+      ultimaActualizacion: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+    },
+    {
+      procesoId: 'proc-demo-003',
+      procesoNombre: 'Cumplimiento Normativo SOX',
+      estado: 'activo',
+      totalObjetivos: 3,
+      totalKPIs: 5,
+      cumplimientoPromedio: 75,
+      cumplimientoAnterior: 80,
+      tendencia: 'down',
+      alertasActivas: 2,
+      alertasCriticas: 1,
+      ultimaActualizacion: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+    },
+    {
+      procesoId: 'proc-demo-004',
+      procesoNombre: 'Gestión de Incidentes',
+      estado: 'activo',
+      totalObjetivos: 2,
+      totalKPIs: 4,
+      cumplimientoPromedio: 91,
+      cumplimientoAnterior: 88,
+      tendencia: 'up',
+      alertasActivas: 0,
+      alertasCriticas: 0,
+      ultimaActualizacion: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+    },
+    {
+      procesoId: 'proc-demo-005',
+      procesoNombre: 'Auditoría Interna',
+      estado: 'borrador',
+      totalObjetivos: 5,
+      totalKPIs: 8,
+      cumplimientoPromedio: 45,
+      cumplimientoAnterior: 40,
+      tendencia: 'up',
+      alertasActivas: 2,
+      alertasCriticas: 1,
+      ultimaActualizacion: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+    }
+  ]);
+
+  // Alertas consolidadas de todos los procesos
+  alertasConsolidadas = signal<AlertaConsolidada[]>([
+    {
+      id: 'ALERT-001', procesoId: 'proc-demo-001', procesoNombre: 'Gestión de Riesgos Operacionales',
+      objetivoId: '1', objetivoNombre: 'Reducir riesgos Operacionales',
+      kpiId: 'KPI-004', kpiNombre: 'Cumplimiento de Auditorías',
+      severity: 'critical', status: 'activa',
+      mensaje: 'Cumplimiento de auditorías por debajo del umbral crítico (75% < 80%)',
+      valorActual: 75, valorUmbral: 80, fechaCreacion: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), diasAbierto: 2
+    },
+    {
+      id: 'ALERT-002', procesoId: 'proc-demo-001', procesoNombre: 'Gestión de Riesgos Operacionales',
+      objetivoId: '1', objetivoNombre: 'Reducir riesgos Operacionales',
+      kpiId: 'KPI-005', kpiNombre: 'Capacitaciones en Gestión de Riesgos',
+      severity: 'warning', status: 'activa',
+      mensaje: 'Capacitaciones por debajo del objetivo (60% < 70%)',
+      valorActual: 60, valorUmbral: 70, fechaCreacion: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), diasAbierto: 5
+    },
+    {
+      id: 'ALERT-003', procesoId: 'proc-demo-003', procesoNombre: 'Cumplimiento Normativo SOX',
+      objetivoId: '5', objetivoNombre: 'Garantizar el cumplimiento regulatorio',
+      kpiId: 'KPI-009', kpiNombre: 'Cumplimiento normativo',
+      severity: 'critical', status: 'activa',
+      mensaje: 'Cumplimiento normativo crítico (85% < 90%)',
+      valorActual: 85, valorUmbral: 90, fechaCreacion: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), diasAbierto: 1
+    },
+    {
+      id: 'ALERT-004', procesoId: 'proc-demo-002', procesoNombre: 'Control de Accesos y Seguridad',
+      objetivoId: '3', objetivoNombre: 'Mejora experiencia del cliente',
+      kpiId: 'KPI-006', kpiNombre: 'NPS Score',
+      severity: 'warning', status: 'activa',
+      mensaje: 'NPS Score por debajo del umbral (68% < 70%)',
+      valorActual: 68, valorUmbral: 70, fechaCreacion: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), diasAbierto: 3
+    },
+    {
+      id: 'ALERT-005', procesoId: 'proc-demo-001', procesoNombre: 'Gestión de Riesgos Operacionales',
+      objetivoId: '1', objetivoNombre: 'Reducir riesgos Operacionales',
+      kpiId: 'KPI-002', kpiNombre: 'Pérdidas por Riesgo Operacional',
+      severity: 'info', status: 'atendida',
+      mensaje: 'Pérdidas controladas pero requiere monitoreo',
+      valorActual: 2, valorUmbral: 3, fechaCreacion: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), diasAbierto: 7
+    }
+  ]);
+
+  // Computed: Alertas filtradas
+  alertasFiltradas = computed(() => {
+    let alertas = this.alertasConsolidadas().filter(a => a.status === 'activa');
+    if (this.severidadFiltro()) {
+      alertas = alertas.filter(a => a.severity === this.severidadFiltro());
+    }
+    return alertas.sort((a, b) => {
+      const severityOrder = { critical: 0, warning: 1, info: 2 };
+      return severityOrder[a.severity] - severityOrder[b.severity];
+    });
+  });
+
+  // Computed: Procesos filtrados
+  procesosFiltrados = computed(() => {
+    let procs = this.procesosKPIResumen();
+    if (this.estadoProcesoFiltro()) {
+      procs = procs.filter(p => p.estado === this.estadoProcesoFiltro());
+    }
+    return procs.sort((a, b) => b.alertasCriticas - a.alertasCriticas || b.alertasActivas - a.alertasActivas);
+  });
+
+  // Datos de gráficos - Tendencia por proceso
+  chartTendenciaData = computed(() => ({
+    labels: ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'],
+    datasets: this.procesosKPIResumen().slice(0, 4).map((p, i) => ({
+      label: p.procesoNombre.split(' ').slice(0, 2).join(' '),
+      data: this.generarTendenciaRandom(p.cumplimientoPromedio),
+      borderColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'][i],
+      backgroundColor: 'transparent',
+      tension: 0.4
+    }))
+  }));
+
+  // Chart: Cumplimiento por proceso (horizontal bar)
+  chartProcesosCumplimiento = computed(() => ({
+    labels: this.procesosKPIResumen().map(p => p.procesoNombre.split(' ').slice(0, 3).join(' ')),
+    datasets: [{
+      label: 'Cumplimiento %',
+      data: this.procesosKPIResumen().map(p => p.cumplimientoPromedio),
+      backgroundColor: this.procesosKPIResumen().map(p =>
+        p.cumplimientoPromedio >= 80 ? '#10b981' :
+        p.cumplimientoPromedio >= 60 ? '#f59e0b' : '#ef4444'
+      )
+    }]
+  }));
+
+  // Chart: Alertas por severidad
+  chartAlertasSeveridad = computed(() => {
+    const alertas = this.alertasConsolidadas().filter(a => a.status === 'activa');
+    return {
+      labels: ['Crítico', 'Advertencia', 'Info'],
+      datasets: [{
+        data: [
+          alertas.filter(a => a.severity === 'critical').length,
+          alertas.filter(a => a.severity === 'warning').length,
+          alertas.filter(a => a.severity === 'info').length
+        ],
+        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6']
+      }]
+    };
+  });
+
+  chartLineOptions = {
+    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } } },
+    responsive: true, maintainAspectRatio: false,
+    scales: { y: { beginAtZero: false, min: 40, max: 100 } }
+  };
+
+  chartBarOptions = {
+    plugins: { legend: { display: false } },
+    responsive: true, maintainAspectRatio: false,
+    indexAxis: 'y' as const,
+    scales: { x: { beginAtZero: true, max: 100 } }
+  };
+
+  chartPieOptions = {
+    plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 15 } } },
+    responsive: true, maintainAspectRatio: false
+  };
+
+  // Helper para generar tendencia mock
+  private generarTendenciaRandom(valorFinal: number): number[] {
+    const result = [];
+    let val = valorFinal - 15 + Math.random() * 10;
+    for (let i = 0; i < 6; i++) {
+      result.push(Math.round(val));
+      val += (valorFinal - val) * 0.3 + (Math.random() - 0.5) * 5;
+    }
+    result[5] = valorFinal;
+    return result;
+  }
 
   // Estadísticas
   stats = computed(() => {
@@ -334,5 +676,108 @@ export class ProcesosListaComponent {
   aplicarAccionesMasivas(): void {
     console.log('Aplicando acciones masivas a:', this.procesosSeleccionados());
     this.showAccionesMasivasDrawer.set(false);
+  }
+
+  // ==================== MÉTODOS DASHBOARD ====================
+
+  // Obtener clase de tendencia global
+  getTendenciaClassGlobal(kpi: KPIMetricGlobal): string {
+    // Para alertas y KPIs en riesgo, menos es mejor
+    if (kpi.id === 'g3' || kpi.id === 'g4') {
+      return kpi.porcentajeCambio < 0 ? 'tendencia-positiva' : 'tendencia-negativa';
+    }
+    return kpi.porcentajeCambio > 0 ? 'tendencia-positiva' : 'tendencia-negativa';
+  }
+
+  // Obtener icono de tendencia
+  getTendenciaIconGlobal(kpi: KPIMetricGlobal): string {
+    if (kpi.id === 'g3' || kpi.id === 'g4') {
+      return kpi.porcentajeCambio < 0 ? 'pi pi-arrow-down' : 'pi pi-arrow-up';
+    }
+    return kpi.porcentajeCambio > 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down';
+  }
+
+  // Obtener clase de color para KPI card
+  getKpiColorClass(kpi: KPIMetricGlobal): string {
+    return `kpi-${kpi.color}`;
+  }
+
+  // Obtener clase de tendencia para proceso
+  getTendenciaClassProceso(proceso: ProcesoKPIResumen): string {
+    return proceso.tendencia === 'up' ? 'tendencia-positiva' : proceso.tendencia === 'down' ? 'tendencia-negativa' : '';
+  }
+
+  // Obtener severity para alertas
+  getAlertaSeverity(severity: AlertSeverity): 'danger' | 'warn' | 'info' {
+    const map: Record<AlertSeverity, 'danger' | 'warn' | 'info'> = {
+      'critical': 'danger',
+      'warning': 'warn',
+      'info': 'info'
+    };
+    return map[severity];
+  }
+
+  // Obtener color de barra de progreso
+  getProgresoClass(valor: number): string {
+    if (valor >= 85) return 'progreso-excelente';
+    if (valor >= 70) return 'progreso-bueno';
+    if (valor >= 50) return 'progreso-regular';
+    return 'progreso-bajo';
+  }
+
+  // ========== DRILL-DOWN NAVIGATION ==========
+
+  // Navegar a objetivos-kpis de un proceso específico
+  navegarAObjetivosKPIs(procesoId: string): void {
+    this.router.navigate(['/procesos', procesoId, 'objetivos-kpis']);
+  }
+
+  // Navegar a alerta específica (va a objetivos-kpis del proceso con la alerta)
+  navegarAAlerta(alerta: AlertaConsolidada): void {
+    // Navega al proceso y podría pasar query params para resaltar la alerta
+    this.router.navigate(['/procesos', alerta.procesoId, 'objetivos-kpis'], {
+      queryParams: { objetivoId: alerta.objetivoId, alertaId: alerta.id }
+    });
+  }
+
+  // Ver detalle de proceso en drawer
+  verResumenProceso(proceso: ProcesoKPIResumen): void {
+    // Buscar proceso en la lista y mostrarlo en drawer
+    const proc = this.procesos().find(p => p.id === proceso.procesoId);
+    if (proc) {
+      this.procesoSeleccionado.set(proc);
+      this.showDrawer.set(true);
+    } else {
+      // Si no existe, navegar directamente
+      this.navegarAObjetivosKPIs(proceso.procesoId);
+    }
+  }
+
+  // Limpiar filtros del dashboard
+  limpiarFiltrosDashboard(): void {
+    this.periodoFiltro.set('mes');
+    this.severidadFiltro.set(null);
+    this.estadoProcesoFiltro.set(null);
+  }
+
+  // Exportar dashboard a PDF
+  exportarDashboardPDF(): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Exportando...',
+      detail: 'Generando PDF del dashboard ejecutivo'
+    });
+  }
+
+  // Formatear fecha relativa
+  formatFechaRelativa(fecha: Date): string {
+    const ahora = new Date();
+    const diff = ahora.getTime() - fecha.getTime();
+    const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (dias === 0) return 'Hoy';
+    if (dias === 1) return 'Ayer';
+    if (dias < 7) return `Hace ${dias} días`;
+    return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
   }
 }

@@ -22,6 +22,10 @@ interface Objetivo {
   kpis: KPI[];
 }
 
+type AlertSeverity = 'info' | 'warning' | 'critical';
+type NotificationChannel = 'email' | 'in-app' | 'webhook';
+type EvaluationFrequency = 'inmediata' | 'diaria' | 'semanal' | 'mensual';
+
 interface KPI {
   id: string;
   nombre: string;
@@ -29,6 +33,10 @@ interface KPI {
   actual: number;
   escala: string;
   umbralAlerta: number;
+  umbralMaximo: number | null;
+  severidad: AlertSeverity;
+  canalesNotificacion: NotificationChannel[];
+  frecuenciaEvaluacion: EvaluationFrequency;
   direccion: 'mayor_mejor' | 'menor_mejor';
 }
 
@@ -137,7 +145,7 @@ export class ProcesoCrearComponent {
       tipo: 'estrategico',
       progreso: 50,
       kpis: [
-        { id: 'KPI-001', nombre: 'Reducir riesgos operacionales', meta: 75, actual: 40, escala: 'Porcentaje', umbralAlerta: 50, direccion: 'mayor_mejor' }
+        { id: 'KPI-001', nombre: 'Reducir riesgos operacionales', meta: 75, actual: 40, escala: 'Porcentaje', umbralAlerta: 50, umbralMaximo: null, severidad: 'warning', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'diaria', direccion: 'mayor_mejor' }
       ]
     }
   ]);
@@ -157,6 +165,10 @@ export class ProcesoCrearComponent {
   nuevoKPIActual = signal<number>(0);
   nuevoKPIEscala = signal('Porcentaje');
   nuevoKPIUmbralAlerta = signal<number>(50);
+  nuevoKPIUmbralMaximo = signal<number | null>(null);
+  nuevoKPISeveridad = signal<AlertSeverity>('warning');
+  nuevoKPICanales = signal<NotificationChannel[]>(['in-app']);
+  nuevoKPIFrecuencia = signal<EvaluationFrequency>('diaria');
   nuevoKPIDireccion = signal<'mayor_mejor' | 'menor_mejor'>('mayor_mejor');
 
   // Estado de colapso de objetivos (por ID)
@@ -200,6 +212,19 @@ export class ProcesoCrearComponent {
   direccionOptions = [
     { label: 'Mejor si es más', value: 'mayor_mejor' },
     { label: 'Mejor si es menos', value: 'menor_mejor' }
+  ];
+
+  severidadOptions = [
+    { label: 'Info', value: 'info' },
+    { label: 'Warning', value: 'warning' },
+    { label: 'Critical', value: 'critical' }
+  ];
+
+  frecuenciaOptions = [
+    { label: 'Inmediata', value: 'inmediata' },
+    { label: 'Diaria', value: 'diaria' },
+    { label: 'Semanal', value: 'semanal' },
+    { label: 'Mensual', value: 'mensual' }
   ];
 
   // Computed: Total de KPIs
@@ -435,6 +460,10 @@ export class ProcesoCrearComponent {
       this.nuevoKPIActual.set(kpi.actual);
       this.nuevoKPIEscala.set(kpi.escala);
       this.nuevoKPIUmbralAlerta.set(kpi.umbralAlerta);
+      this.nuevoKPIUmbralMaximo.set(kpi.umbralMaximo);
+      this.nuevoKPISeveridad.set(kpi.severidad);
+      this.nuevoKPICanales.set([...kpi.canalesNotificacion]);
+      this.nuevoKPIFrecuencia.set(kpi.frecuenciaEvaluacion);
       this.nuevoKPIDireccion.set(kpi.direccion);
     } else {
       this.kpiEditandoId.set(null);
@@ -443,6 +472,10 @@ export class ProcesoCrearComponent {
       this.nuevoKPIActual.set(0);
       this.nuevoKPIEscala.set('Porcentaje');
       this.nuevoKPIUmbralAlerta.set(50);
+      this.nuevoKPIUmbralMaximo.set(null);
+      this.nuevoKPISeveridad.set('warning');
+      this.nuevoKPICanales.set(['in-app']);
+      this.nuevoKPIFrecuencia.set('diaria');
       this.nuevoKPIDireccion.set('mayor_mejor');
     }
 
@@ -456,6 +489,10 @@ export class ProcesoCrearComponent {
     this.nuevoKPIMeta.set(75);
     this.nuevoKPIActual.set(0);
     this.nuevoKPIUmbralAlerta.set(50);
+    this.nuevoKPIUmbralMaximo.set(null);
+    this.nuevoKPISeveridad.set('warning');
+    this.nuevoKPICanales.set(['in-app']);
+    this.nuevoKPIFrecuencia.set('diaria');
     this.nuevoKPIDireccion.set('mayor_mejor');
   }
 
@@ -476,6 +513,10 @@ export class ProcesoCrearComponent {
       actual: this.nuevoKPIActual(),
       escala: this.nuevoKPIEscala(),
       umbralAlerta: this.nuevoKPIUmbralAlerta(),
+      umbralMaximo: this.nuevoKPIUmbralMaximo(),
+      severidad: this.nuevoKPISeveridad(),
+      canalesNotificacion: [...this.nuevoKPICanales()],
+      frecuenciaEvaluacion: this.nuevoKPIFrecuencia(),
       direccion: this.nuevoKPIDireccion()
     };
 
@@ -715,6 +756,20 @@ export class ProcesoCrearComponent {
     this.iniciarEdicionObjetivoDrawer();
   }
 
+  // Helper para canales de notificación
+  isChannelSelected(channel: NotificationChannel): boolean {
+    return this.nuevoKPICanales().includes(channel);
+  }
+
+  toggleChannel(channel: NotificationChannel): void {
+    const current = this.nuevoKPICanales();
+    if (current.includes(channel)) {
+      this.nuevoKPICanales.set(current.filter(c => c !== channel));
+    } else {
+      this.nuevoKPICanales.set([...current, channel]);
+    }
+  }
+
   // KPIs en drawer
   iniciarNuevoKPIDrawer(): void {
     this.nuevoKPINombre.set('');
@@ -722,6 +777,10 @@ export class ProcesoCrearComponent {
     this.nuevoKPIActual.set(0);
     this.nuevoKPIEscala.set('Porcentaje');
     this.nuevoKPIUmbralAlerta.set(50);
+    this.nuevoKPIUmbralMaximo.set(null);
+    this.nuevoKPISeveridad.set('warning');
+    this.nuevoKPICanales.set(['in-app']);
+    this.nuevoKPIFrecuencia.set('diaria');
     this.nuevoKPIDireccion.set('mayor_mejor');
     this.drawerNuevoKPI.set(true);
     this.drawerEditandoKPIId.set(null);
@@ -733,6 +792,10 @@ export class ProcesoCrearComponent {
     this.nuevoKPIActual.set(kpi.actual);
     this.nuevoKPIEscala.set(kpi.escala);
     this.nuevoKPIUmbralAlerta.set(kpi.umbralAlerta);
+    this.nuevoKPIUmbralMaximo.set(kpi.umbralMaximo);
+    this.nuevoKPISeveridad.set(kpi.severidad);
+    this.nuevoKPICanales.set([...kpi.canalesNotificacion]);
+    this.nuevoKPIFrecuencia.set(kpi.frecuenciaEvaluacion);
     this.nuevoKPIDireccion.set(kpi.direccion);
     this.drawerEditandoKPIId.set(kpi.id);
     this.drawerNuevoKPI.set(false);
@@ -758,6 +821,10 @@ export class ProcesoCrearComponent {
       actual: this.nuevoKPIActual(),
       escala: this.nuevoKPIEscala(),
       umbralAlerta: this.nuevoKPIUmbralAlerta(),
+      umbralMaximo: this.nuevoKPIUmbralMaximo(),
+      severidad: this.nuevoKPISeveridad(),
+      canalesNotificacion: [...this.nuevoKPICanales()],
+      frecuenciaEvaluacion: this.nuevoKPIFrecuencia(),
       direccion: this.nuevoKPIDireccion()
     };
 

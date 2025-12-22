@@ -50,7 +50,7 @@
             {{ proc.descripcion || 'El sistema GRC ACT-001 optimiza la gestión financiera mediante un enfoque integral que asegura la transparencia y el control en cada fase del proceso. Con herramientas avanzadas, permite a las organizaciones gestionar riesgos y cumplir con normativas de manera eficiente, garantizando así una administración financiera sólida y confiable.' }}
           </p>
           <button class="btn-contenido-activo" (click)="verContenidoActivo()">
-            Contenido de Activo
+            Edición de Nodos
           </button>
         </div>
 
@@ -342,7 +342,6 @@
           @if (tabDerecho() === 'kpis') {
             <div class="tab-content">
               <div class="kpis-header-actions">
-                <button class="btn-edit-link" (click)="navegarObjetivosEditar()">Editar</button>
                 <button class="btn-view-link" (click)="navegarObjetivosVer()">Ver todo</button>
               </div>
               <div class="kpis-list">

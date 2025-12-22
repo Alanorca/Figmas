@@ -6,7 +6,36 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
+import { NotificationsService } from '../../services/notifications.service';
+
+// Tipos para alertas
+type AlertSeverity = 'info' | 'warning' | 'critical';
+type NotificationChannel = 'email' | 'in-app' | 'webhook';
+type EvaluationFrequency = 'inmediata' | 'diaria' | 'semanal' | 'mensual';
+type AlertStatus = 'activa' | 'atendida' | 'resuelta';
+
+// Interfaz de Alerta KPI
+interface KPIAlert {
+  id: string;
+  kpiId: string;
+  kpiNombre: string;
+  objetivoId: string;
+  objetivoNombre: string;
+  severity: AlertSeverity;
+  mensaje: string;
+  valorActual: number;
+  valorUmbral: number;
+  tipoViolacion: 'bajo_minimo' | 'sobre_maximo';
+  status: AlertStatus;
+  fechaCreacion: Date;
+  fechaAtendida?: Date;
+  atendidaPor?: string;
+  comentarioResolucion?: string;
+  notificacionesEnviadas: { channel: NotificationChannel; fecha: Date; exitosa: boolean }[];
+}
 
 // Interfaces
 interface KPI {
@@ -15,8 +44,12 @@ interface KPI {
   meta: number;
   actual: number;
   escala: string;
-  umbralAlerta: number; // Porcentaje mínimo de progreso antes de alerta (ej: 50)
-  direccion: 'mayor_mejor' | 'menor_mejor'; // Indica si es mejor que el valor sea mayor o menor
+  umbralAlerta: number;
+  umbralMaximo: number | null;
+  severidad: AlertSeverity;
+  canalesNotificacion: NotificationChannel[];
+  frecuenciaEvaluacion: EvaluationFrequency;
+  direccion: 'mayor_mejor' | 'menor_mejor';
 }
 
 interface Objetivo {
@@ -38,7 +71,9 @@ interface Objetivo {
     ButtonModule,
     InputTextModule,
     TagModule,
-    ToastModule
+    ToastModule,
+    DialogModule,
+    TooltipModule
   ],
   providers: [MessageService],
   templateUrl: './objetivos-kpis.html',
@@ -48,6 +83,7 @@ export class ObjetivosKpisComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private messageService = inject(MessageService);
+  private notificationsService = inject(NotificationsService);
 
   // Modo de la página
   modo = signal<'ver' | 'editar'>('ver');
@@ -67,11 +103,11 @@ export class ObjetivosKpisComponent implements OnInit {
       tipo: 'estrategico',
       progreso: 50,
       kpis: [
-        { id: 'KPI-001', nombre: 'Índice de Riesgo Operacional', meta: 5, actual: 3, escala: 'Escala 1-5', umbralAlerta: 50, direccion: 'menor_mejor' },
-        { id: 'KPI-002', nombre: 'Pérdidas por Riesgo Operacional', meta: 5, actual: 2, escala: '%', umbralAlerta: 50, direccion: 'menor_mejor' },
-        { id: 'KPI-003', nombre: 'Tiempo de Resolución de Incidentes', meta: 5, actual: 4, escala: 'Horas', umbralAlerta: 50, direccion: 'menor_mejor' },
-        { id: 'KPI-004', nombre: 'Cumplimiento de Auditorías', meta: 100, actual: 75, escala: '%', umbralAlerta: 70, direccion: 'mayor_mejor' },
-        { id: 'KPI-005', nombre: 'Capacitaciones en Gestión de Riesgos', meta: 100, actual: 60, escala: '%', umbralAlerta: 70, direccion: 'mayor_mejor' }
+        { id: 'KPI-001', nombre: 'Índice de Riesgo Operacional', meta: 5, actual: 3, escala: 'Escala 1-5', umbralAlerta: 50, umbralMaximo: null, severidad: 'warning', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'diaria', direccion: 'menor_mejor' },
+        { id: 'KPI-002', nombre: 'Pérdidas por Riesgo Operacional', meta: 5, actual: 2, escala: '%', umbralAlerta: 50, umbralMaximo: null, severidad: 'critical', canalesNotificacion: ['in-app', 'email'], frecuenciaEvaluacion: 'inmediata', direccion: 'menor_mejor' },
+        { id: 'KPI-003', nombre: 'Tiempo de Resolución de Incidentes', meta: 5, actual: 4, escala: 'Horas', umbralAlerta: 50, umbralMaximo: 120, severidad: 'warning', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'diaria', direccion: 'menor_mejor' },
+        { id: 'KPI-004', nombre: 'Cumplimiento de Auditorías', meta: 100, actual: 75, escala: '%', umbralAlerta: 70, umbralMaximo: null, severidad: 'critical', canalesNotificacion: ['in-app', 'email'], frecuenciaEvaluacion: 'semanal', direccion: 'mayor_mejor' },
+        { id: 'KPI-005', nombre: 'Capacitaciones en Gestión de Riesgos', meta: 100, actual: 60, escala: '%', umbralAlerta: 70, umbralMaximo: null, severidad: 'info', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'mensual', direccion: 'mayor_mejor' }
       ]
     },
     {
@@ -89,8 +125,8 @@ export class ObjetivosKpisComponent implements OnInit {
       tipo: 'estrategico',
       progreso: 80,
       kpis: [
-        { id: 'KPI-006', nombre: 'NPS Score', meta: 75, actual: 68, escala: '%', umbralAlerta: 60, direccion: 'mayor_mejor' },
-        { id: 'KPI-007', nombre: 'Tiempo de respuesta', meta: 24, actual: 18, escala: 'Horas', umbralAlerta: 50, direccion: 'menor_mejor' }
+        { id: 'KPI-006', nombre: 'NPS Score', meta: 75, actual: 68, escala: '%', umbralAlerta: 60, umbralMaximo: null, severidad: 'warning', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'semanal', direccion: 'mayor_mejor' },
+        { id: 'KPI-007', nombre: 'Tiempo de respuesta', meta: 24, actual: 18, escala: 'Horas', umbralAlerta: 50, umbralMaximo: 48, severidad: 'critical', canalesNotificacion: ['in-app', 'email', 'webhook'], frecuenciaEvaluacion: 'inmediata', direccion: 'menor_mejor' }
       ]
     },
     {
@@ -100,7 +136,7 @@ export class ObjetivosKpisComponent implements OnInit {
       tipo: 'operativo',
       progreso: 30,
       kpis: [
-        { id: 'KPI-008', nombre: 'Market Share', meta: 15, actual: 8, escala: '%', umbralAlerta: 50, direccion: 'mayor_mejor' }
+        { id: 'KPI-008', nombre: 'Market Share', meta: 15, actual: 8, escala: '%', umbralAlerta: 50, umbralMaximo: null, severidad: 'info', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'mensual', direccion: 'mayor_mejor' }
       ]
     },
     {
@@ -110,7 +146,7 @@ export class ObjetivosKpisComponent implements OnInit {
       tipo: 'operativo',
       progreso: 55,
       kpis: [
-        { id: 'KPI-009', nombre: 'Cumplimiento normativo', meta: 100, actual: 85, escala: '%', umbralAlerta: 80, direccion: 'mayor_mejor' }
+        { id: 'KPI-009', nombre: 'Cumplimiento normativo', meta: 100, actual: 85, escala: '%', umbralAlerta: 80, umbralMaximo: null, severidad: 'critical', canalesNotificacion: ['in-app', 'email'], frecuenciaEvaluacion: 'diaria', direccion: 'mayor_mejor' }
       ]
     },
     {
@@ -122,6 +158,149 @@ export class ObjetivosKpisComponent implements OnInit {
       kpis: []
     }
   ]);
+
+  // ========== ALERTAS ==========
+  alertas = signal<KPIAlert[]>([
+    {
+      id: 'ALERT-001',
+      kpiId: 'KPI-004',
+      kpiNombre: 'Cumplimiento de Auditorías',
+      objetivoId: '1',
+      objetivoNombre: 'Reducir riesgos Operacionales',
+      severity: 'critical',
+      mensaje: 'El cumplimiento de auditorías está por debajo del umbral crítico (70%)',
+      valorActual: 75,
+      valorUmbral: 70,
+      tipoViolacion: 'bajo_minimo',
+      status: 'activa',
+      fechaCreacion: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      notificacionesEnviadas: [
+        { channel: 'in-app', fecha: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), exitosa: true },
+        { channel: 'email', fecha: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), exitosa: true }
+      ]
+    },
+    {
+      id: 'ALERT-002',
+      kpiId: 'KPI-005',
+      kpiNombre: 'Capacitaciones en Gestión de Riesgos',
+      objetivoId: '1',
+      objetivoNombre: 'Reducir riesgos Operacionales',
+      severity: 'warning',
+      mensaje: 'Las capacitaciones están por debajo del objetivo (60% vs 70%)',
+      valorActual: 60,
+      valorUmbral: 70,
+      tipoViolacion: 'bajo_minimo',
+      status: 'activa',
+      fechaCreacion: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      notificacionesEnviadas: [
+        { channel: 'in-app', fecha: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), exitosa: true }
+      ]
+    },
+    {
+      id: 'ALERT-003',
+      kpiId: 'KPI-008',
+      kpiNombre: 'Market Share',
+      objetivoId: '4',
+      objetivoNombre: 'Fortalecer posicionamiento competitivo',
+      severity: 'info',
+      mensaje: 'El Market Share está por debajo del objetivo esperado',
+      valorActual: 53,
+      valorUmbral: 50,
+      tipoViolacion: 'bajo_minimo',
+      status: 'atendida',
+      fechaCreacion: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      fechaAtendida: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      atendidaPor: 'María García',
+      comentarioResolucion: 'Se están implementando nuevas estrategias de mercado para Q1 2025. Se espera mejora gradual.',
+      notificacionesEnviadas: [
+        { channel: 'in-app', fecha: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), exitosa: true }
+      ]
+    },
+    {
+      id: 'ALERT-004',
+      kpiId: 'KPI-009',
+      kpiNombre: 'Cumplimiento normativo',
+      objetivoId: '5',
+      objetivoNombre: 'Garantizar el cumplimiento regulatorio',
+      severity: 'critical',
+      mensaje: 'Cumplimiento normativo por debajo del umbral requerido (85% vs 80%)',
+      valorActual: 85,
+      valorUmbral: 80,
+      tipoViolacion: 'bajo_minimo',
+      status: 'activa',
+      fechaCreacion: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      notificacionesEnviadas: [
+        { channel: 'in-app', fecha: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), exitosa: true },
+        { channel: 'email', fecha: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), exitosa: true }
+      ]
+    }
+  ]);
+
+  // Tab activo en la sección de detalle
+  tabActivo = signal<'kpis' | 'alertas'>('kpis');
+
+  // Filtros para alertas
+  filtroAlertaSeveridad = signal<AlertSeverity | null>(null);
+  filtroAlertaStatus = signal<AlertStatus | null>(null);
+  busquedaAlertas = signal('');
+
+  // Dialog para atender alerta
+  showAtenderAlertaDialog = signal(false);
+  alertaSeleccionada = signal<KPIAlert | null>(null);
+  comentarioAtencion = signal('');
+
+  // Alertas filtradas
+  alertasFiltradas = computed(() => {
+    let resultado = this.alertas();
+
+    const objetivoId = this.objetivoSeleccionadoId();
+    if (objetivoId) {
+      resultado = resultado.filter(a => a.objetivoId === objetivoId);
+    }
+
+    const severidad = this.filtroAlertaSeveridad();
+    if (severidad) {
+      resultado = resultado.filter(a => a.severity === severidad);
+    }
+
+    const status = this.filtroAlertaStatus();
+    if (status) {
+      resultado = resultado.filter(a => a.status === status);
+    }
+
+    const busqueda = this.busquedaAlertas().toLowerCase();
+    if (busqueda) {
+      resultado = resultado.filter(a =>
+        a.kpiNombre.toLowerCase().includes(busqueda) ||
+        a.mensaje.toLowerCase().includes(busqueda)
+      );
+    }
+
+    return resultado;
+  });
+
+  // Contadores de alertas
+  alertasActivasCount = computed(() =>
+    this.alertas().filter(a => a.status === 'activa').length
+  );
+
+  alertasDelObjetivo = computed(() => {
+    const objetivoId = this.objetivoSeleccionadoId();
+    if (!objetivoId) return [];
+    return this.alertas().filter(a => a.objetivoId === objetivoId);
+  });
+
+  tieneAlertasActivas = computed(() =>
+    this.alertasDelObjetivo().some(a => a.status === 'activa')
+  );
+
+  alertasActivasDelObjetivoCount = computed(() =>
+    this.alertasDelObjetivo().filter(a => a.status === 'activa').length
+  );
+
+  tieneAlertaCriticaActiva = computed(() =>
+    this.alertasDelObjetivo().some(a => a.severity === 'critical' && a.status === 'activa')
+  );
 
   // Objetivo seleccionado
   objetivoSeleccionado = computed(() => {
@@ -170,6 +349,25 @@ export class ObjetivosKpisComponent implements OnInit {
     { label: 'Mejor si es más', value: 'mayor_mejor' },
     { label: 'Mejor si es menos', value: 'menor_mejor' }
   ];
+
+  severidadOptions = [
+    { label: 'Info', value: 'info' },
+    { label: 'Warning', value: 'warning' },
+    { label: 'Critical', value: 'critical' }
+  ];
+
+  frecuenciaOptions = [
+    { label: 'Inmediata', value: 'inmediata' },
+    { label: 'Diaria', value: 'diaria' },
+    { label: 'Semanal', value: 'semanal' },
+    { label: 'Mensual', value: 'mensual' }
+  ];
+
+  // Signals para formulario KPI extendido
+  formKPIUmbralMaximo = signal<number | null>(null);
+  formKPISeveridad = signal<AlertSeverity>('warning');
+  formKPICanales = signal<NotificationChannel[]>(['in-app']);
+  formKPIFrecuencia = signal<EvaluationFrequency>('diaria');
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -294,6 +492,10 @@ export class ObjetivosKpisComponent implements OnInit {
     this.formKPIActual.set(0);
     this.formKPIEscala.set('Porcentaje');
     this.formKPIUmbralAlerta.set(50);
+    this.formKPIUmbralMaximo.set(null);
+    this.formKPISeveridad.set('warning');
+    this.formKPICanales.set(['in-app']);
+    this.formKPIFrecuencia.set('diaria');
     this.formKPIDireccion.set('mayor_mejor');
     this.nuevoKPI.set(true);
     this.editandoKPIId.set(null);
@@ -305,6 +507,10 @@ export class ObjetivosKpisComponent implements OnInit {
     this.formKPIActual.set(kpi.actual);
     this.formKPIEscala.set(kpi.escala);
     this.formKPIUmbralAlerta.set(kpi.umbralAlerta);
+    this.formKPIUmbralMaximo.set(kpi.umbralMaximo);
+    this.formKPISeveridad.set(kpi.severidad);
+    this.formKPICanales.set([...kpi.canalesNotificacion]);
+    this.formKPIFrecuencia.set(kpi.frecuenciaEvaluacion);
     this.formKPIDireccion.set(kpi.direccion);
     this.editandoKPIId.set(kpi.id);
     this.nuevoKPI.set(false);
@@ -330,6 +536,10 @@ export class ObjetivosKpisComponent implements OnInit {
       actual: this.formKPIActual(),
       escala: this.formKPIEscala(),
       umbralAlerta: this.formKPIUmbralAlerta(),
+      umbralMaximo: this.formKPIUmbralMaximo(),
+      severidad: this.formKPISeveridad(),
+      canalesNotificacion: this.formKPICanales(),
+      frecuenciaEvaluacion: this.formKPIFrecuencia(),
       direccion: this.formKPIDireccion()
     };
 
@@ -353,7 +563,87 @@ export class ObjetivosKpisComponent implements OnInit {
       this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'KPI agregado' });
     }
 
+    // Verificar y generar alertas si el KPI viola los umbrales
+    this.evaluarYGenerarAlerta(kpi, objetivoId);
+
     this.cancelarKPI();
+  }
+
+  // Evaluar KPI y generar alerta si viola umbrales
+  private evaluarYGenerarAlerta(kpi: KPI, objetivoId: string): void {
+    const objetivo = this.objetivos().find(o => o.id === objetivoId);
+    if (!objetivo) return;
+
+    const progreso = kpi.meta > 0 ? (kpi.actual / kpi.meta) * 100 : 0;
+    let violacion: 'bajo_minimo' | 'sobre_maximo' | null = null;
+    let valorUmbral = 0;
+
+    // Verificar umbral mínimo
+    if (progreso < kpi.umbralAlerta) {
+      violacion = 'bajo_minimo';
+      valorUmbral = kpi.umbralAlerta;
+    }
+    // Verificar umbral máximo (si está definido)
+    else if (kpi.umbralMaximo !== null && progreso > kpi.umbralMaximo) {
+      violacion = 'sobre_maximo';
+      valorUmbral = kpi.umbralMaximo;
+    }
+
+    if (violacion) {
+      const mensaje = violacion === 'bajo_minimo'
+        ? `El KPI "${kpi.nombre}" está por debajo del umbral mínimo (${progreso.toFixed(1)}% < ${valorUmbral}%)`
+        : `El KPI "${kpi.nombre}" excede el umbral máximo (${progreso.toFixed(1)}% > ${valorUmbral}%)`;
+
+      // Enviar al servicio de notificaciones
+      this.notificationsService.addKPIAlert({
+        kpiId: kpi.id,
+        kpiNombre: kpi.nombre,
+        objetivoId: objetivoId,
+        objetivoNombre: objetivo.nombre,
+        severity: kpi.severidad,
+        mensaje: mensaje,
+        valorActual: progreso,
+        valorUmbral: valorUmbral,
+        tipoViolacion: violacion
+      });
+
+      // También agregar a las alertas locales
+      const nuevaAlerta: KPIAlert = {
+        id: `alert-${Date.now()}`,
+        kpiId: kpi.id,
+        kpiNombre: kpi.nombre,
+        objetivoId: objetivoId,
+        objetivoNombre: objetivo.nombre,
+        severity: kpi.severidad,
+        mensaje: mensaje,
+        valorActual: progreso,
+        valorUmbral: valorUmbral,
+        tipoViolacion: violacion,
+        status: 'activa',
+        fechaCreacion: new Date(),
+        notificacionesEnviadas: kpi.canalesNotificacion.map(channel => ({
+          channel,
+          fecha: new Date(),
+          exitosa: true
+        }))
+      };
+
+      this.alertas.update(list => [nuevaAlerta, ...list]);
+
+      // Mostrar toast de alerta
+      const severityMap: Record<AlertSeverity, 'info' | 'warn' | 'error'> = {
+        info: 'info',
+        warning: 'warn',
+        critical: 'error'
+      };
+
+      this.messageService.add({
+        severity: severityMap[kpi.severidad],
+        summary: `Alerta ${this.getSeverityLabel(kpi.severidad)}`,
+        detail: mensaje,
+        life: 5000
+      });
+    }
   }
 
   eliminarKPI(kpiId: string): void {
@@ -407,5 +697,105 @@ export class ObjetivosKpisComponent implements OnInit {
 
   getDireccionLabel(direccion: 'mayor_mejor' | 'menor_mejor'): string {
     return direccion === 'mayor_mejor' ? 'Mejor +' : 'Mejor -';
+  }
+
+  // ========== MÉTODOS PARA ALERTAS ==========
+  getSeverityLabel(severity: AlertSeverity): string {
+    const labels: Record<AlertSeverity, string> = {
+      'info': 'Info',
+      'warning': 'Warning',
+      'critical': 'Crítico'
+    };
+    return labels[severity];
+  }
+
+  getStatusLabel(status: AlertStatus): string {
+    const labels: Record<AlertStatus, string> = {
+      'activa': 'Activa',
+      'atendida': 'Atendida',
+      'resuelta': 'Resuelta'
+    };
+    return labels[status];
+  }
+
+  isChannelSelected(channel: NotificationChannel): boolean {
+    return this.formKPICanales().includes(channel);
+  }
+
+  toggleChannel(channel: NotificationChannel): void {
+    this.formKPICanales.update(channels => {
+      if (channels.includes(channel)) {
+        return channels.filter(c => c !== channel);
+      }
+      return [...channels, channel];
+    });
+  }
+
+  abrirAtenderAlerta(alerta: KPIAlert): void {
+    this.alertaSeleccionada.set(alerta);
+    this.comentarioAtencion.set('');
+    this.showAtenderAlertaDialog.set(true);
+  }
+
+  cancelarAtencion(): void {
+    this.showAtenderAlertaDialog.set(false);
+    this.alertaSeleccionada.set(null);
+    this.comentarioAtencion.set('');
+  }
+
+  confirmarAtencion(): void {
+    const alerta = this.alertaSeleccionada();
+    const comentario = this.comentarioAtencion();
+
+    if (!alerta || !comentario.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validación',
+        detail: 'El comentario es requerido'
+      });
+      return;
+    }
+
+    this.alertas.update(alertas =>
+      alertas.map(a =>
+        a.id === alerta.id
+          ? {
+              ...a,
+              status: 'atendida' as AlertStatus,
+              fechaAtendida: new Date(),
+              atendidaPor: 'Usuario Actual',
+              comentarioResolucion: comentario
+            }
+          : a
+      )
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Alerta Atendida',
+      detail: 'La alerta ha sido marcada como atendida'
+    });
+
+    this.cancelarAtencion();
+  }
+
+  verHistorialKPI(kpiId: string): void {
+    const historial = this.alertas().filter(a => a.kpiId === kpiId);
+    console.log('Historial del KPI:', historial);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Historial',
+      detail: `Se encontraron ${historial.length} alertas para este KPI`
+    });
+  }
+
+  formatDate(date: Date): string {
+    return new Date(date).toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 }

@@ -360,7 +360,10 @@ export class ProcesoDetalleComponent implements OnInit {
   }
 
   verContenidoActivo(): void {
-    console.log('Ver contenido de activo');
+    const id = this.procesoId();
+    if (id) {
+      this.router.navigate(['/procesos', id]);
+    }
   }
 
   editarApetito(): void {
