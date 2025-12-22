@@ -184,9 +184,8 @@
               </div>
             } @else {
               <div class="flex justify-content-center">
-                <p-menu #menu [model]="getMenuItems(proceso)" [popup]="true" appendTo="body"></p-menu>
                 <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
-                          (onClick)="menu.toggle($event)" />
+                          (onClick)="abrirMenuProceso(proceso, procesoMenu, $event)" />
               </div>
             }
           </td>
@@ -236,6 +235,9 @@
         </tr>
       </ng-template>
     </p-table>
+
+    <!-- Menú contextual global para procesos -->
+    <p-menu #procesoMenu [model]="menuItems()" [popup]="true" appendTo="body"></p-menu>
   </div>
 
       </p-tabpanel>
@@ -307,37 +309,142 @@
             }
           </div>
 
-          <!-- Gráficas en fila horizontal -->
+          <!-- Gráficas ApexCharts Configurables -->
           <div class="charts-row">
-            <!-- Tendencia de Cumplimiento por Proceso -->
+            <!-- Tendencia de Cumplimiento por Proceso (ApexCharts) -->
             <div class="chart-card chart-wide">
               <div class="chart-header">
-                <h3>Tendencia por Proceso</h3>
-                <span class="chart-subtitle">Últimos 6 meses</span>
+                <h3><i class="pi pi-chart-line"></i> Tendencia por Proceso</h3>
+                <div class="chart-controls">
+                  <p-select
+                    [options]="periodoOptionsAMCharts"
+                    [ngModel]="periodoTendenciaAMCharts()"
+                    (ngModelChange)="onPeriodoTendenciaChange($event)"
+                    placeholder="Período"
+                    [style]="{ width: '140px' }"
+                    styleClass="p-select-sm">
+                  </p-select>
+                  @if (periodoTendenciaAMCharts() === 'custom') {
+                    <p-datepicker
+                      selectionMode="range"
+                      [ngModel]="rangoCustomTendencia()"
+                      (ngModelChange)="onRangoCustomChange($event)"
+                      dateFormat="dd/mm/yy"
+                      placeholder="Rango de fechas"
+                      [style]="{ width: '200px' }"
+                      styleClass="p-inputtext-sm">
+                    </p-datepicker>
+                  }
+                  <p-select
+                    [options]="metricaOptionsAMCharts"
+                    [ngModel]="metricaTendenciaAMCharts()"
+                    (ngModelChange)="onMetricaTendenciaChange($event)"
+                    placeholder="Métrica"
+                    [style]="{ width: '150px' }"
+                    styleClass="p-select-sm">
+                  </p-select>
+                  <p-button
+                    icon="pi pi-download"
+                    severity="secondary"
+                    [text]="true"
+                    size="small"
+                    pTooltip="Exportar gráfica"
+                    (onClick)="exportarGraficaAMCharts('tendencia-procesos')">
+                  </p-button>
+                </div>
               </div>
               <div class="chart-body">
-                <p-chart type="line" [data]="chartTendenciaData()" [options]="chartLineOptions" height="200px"></p-chart>
+                <apx-chart
+                  [series]="tendenciaSeries()"
+                  [chart]="tendenciaChart()"
+                  [xaxis]="tendenciaXaxis()"
+                  [yaxis]="tendenciaYaxis()"
+                  [stroke]="tendenciaStroke"
+                  [colors]="chartColors"
+                  [markers]="tendenciaMarkers"
+                  [legend]="tendenciaLegend"
+                  [tooltip]="tendenciaTooltip"
+                  [grid]="tendenciaGrid">
+                </apx-chart>
               </div>
             </div>
 
-            <!-- Cumplimiento por Proceso -->
-            <div class="chart-card">
+            <!-- Cumplimiento por Proceso (ApexCharts con Drill-Down) -->
+            <div class="chart-card chart-cumplimiento">
               <div class="chart-header">
-                <h3>Cumplimiento por Proceso</h3>
+                <h3><i class="pi pi-chart-bar"></i> Cumplimiento por Proceso</h3>
+                <div class="chart-controls">
+                  <p-multiselect
+                    [options]="procesosOptionsChart()"
+                    [ngModel]="procesosSeleccionadosChart()"
+                    (ngModelChange)="procesosSeleccionadosChart.set($event)"
+                    placeholder="Todos los procesos"
+                    [showClear]="true"
+                    [filter]="true"
+                    filterPlaceholder="Buscar..."
+                    [style]="{ width: '220px' }"
+                    [maxSelectedLabels]="1"
+                    selectedItemsLabel="{0} procesos"
+                    styleClass="p-multiselect-sm"
+                    appendTo="body">
+                  </p-multiselect>
+                  <p-select
+                    [options]="periodoOptionsAMCharts"
+                    [ngModel]="periodoCumplimiento()"
+                    (ngModelChange)="periodoCumplimiento.set($event)"
+                    placeholder="Período"
+                    [style]="{ width: '140px' }"
+                    styleClass="p-select-sm">
+                  </p-select>
+                </div>
+              </div>
+              <div class="chart-hint-row">
+                <i class="pi pi-info-circle"></i>
+                <span>Clic en una barra para ver detalle del proceso</span>
               </div>
               <div class="chart-body">
-                <p-chart type="bar" [data]="chartProcesosCumplimiento()" [options]="chartBarOptions" height="200px"></p-chart>
+                <apx-chart
+                  [series]="cumplimientoSeries()"
+                  [chart]="cumplimientoChart()"
+                  [plotOptions]="cumplimientoPlotOptions"
+                  [xaxis]="cumplimientoXaxis()"
+                  [colors]="cumplimientoColors()"
+                  [dataLabels]="cumplimientoDataLabels">
+                </apx-chart>
               </div>
             </div>
 
-            <!-- Alertas por Severidad -->
-            <div class="chart-card chart-compact">
+            <!-- Alertas por Severidad (ApexCharts Donut con Drill-Down) -->
+            <div class="chart-card chart-alertas">
               <div class="chart-header">
-                <h3>Alertas</h3>
-                <span class="chart-subtitle">{{ alertasFiltradas().length }} activas</span>
+                <h3><i class="pi pi-chart-pie"></i> Alertas</h3>
+                <div class="chart-controls">
+                  <p-select
+                    [options]="procesosOptionsChart()"
+                    [ngModel]="procesoFiltroAlertas()"
+                    (ngModelChange)="procesoFiltroAlertas.set($event)"
+                    placeholder="Todos los procesos"
+                    [showClear]="true"
+                    [style]="{ width: '160px' }"
+                    styleClass="p-select-sm"
+                    appendTo="body">
+                  </p-select>
+                </div>
+              </div>
+              <div class="chart-hint-row">
+                <i class="pi pi-info-circle"></i>
+                <span>Clic en sección para ver detalle</span>
+                <span class="alertas-count">{{ alertasParaDona().length }} activas</span>
               </div>
               <div class="chart-body">
-                <p-chart type="doughnut" [data]="chartAlertasSeveridad()" [options]="chartPieOptions" height="160px"></p-chart>
+                <apx-chart
+                  [series]="alertasSeries()"
+                  [chart]="alertasChart()"
+                  [labels]="alertasLabels"
+                  [colors]="alertasColors"
+                  [plotOptions]="alertasPlotOptions"
+                  [legend]="alertasLegend">
+                </apx-chart>
               </div>
             </div>
           </div>
@@ -613,6 +720,230 @@
                 (onClick)="showAccionesMasivasDrawer.set(false)" />
       <p-button label="Aplicar cambios" icon="pi pi-check"
                 (onClick)="aplicarAccionesMasivas()" />
+    </div>
+  </ng-template>
+</p-drawer>
+
+<!-- Drawer de Drill-Down -->
+<p-drawer
+  [(visible)]="showDrilldownDrawer"
+  position="right"
+  [style]="{ width: '600px' }"
+  [header]="drilldownData()?.procesoNombre || 'Detalle del Proceso'">
+  @if (drilldownData()) {
+    <div class="drilldown-content">
+      <!-- Header con cumplimiento general -->
+      <div class="drilldown-header">
+        <div class="cumplimiento-general">
+          <span class="cumplimiento-valor-grande">{{ drilldownData()!.cumplimientoGeneral }}%</span>
+          <span class="cumplimiento-label">Cumplimiento General</span>
+        </div>
+        <div class="drilldown-stats">
+          <div class="stat-item">
+            <span class="stat-value">{{ drilldownData()!.objetivos.length }}</span>
+            <span class="stat-label">Objetivos</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ drilldownData()!.objetivos.reduce(sumKpis, 0) }}</span>
+            <span class="stat-label">KPIs</span>
+          </div>
+          @if (drilldownData()!.alertasActivas > 0) {
+            <p-tag [value]="drilldownData()!.alertasActivas + ' alertas'" severity="danger"></p-tag>
+          }
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Gráfica de Drill-Down -->
+      <div class="drilldown-chart-section">
+        <div class="drilldown-chart-header">
+          <h4><i class="pi pi-chart-bar"></i> Desglose de Cumplimiento</h4>
+          <p-select
+            [options]="metricaDrilldownOptions"
+            [ngModel]="metricaDrilldown()"
+            (ngModelChange)="metricaDrilldown.set($event)"
+            [style]="{ width: '150px' }"
+            styleClass="p-select-sm">
+          </p-select>
+        </div>
+        <div class="drilldown-chart-body">
+          <apx-chart
+            [series]="drilldownSeries()"
+            [chart]="drilldownChart()"
+            [plotOptions]="drilldownPlotOptions"
+            [xaxis]="drilldownXaxis()"
+            [colors]="drilldownColors()"
+            [dataLabels]="drilldownDataLabels">
+          </apx-chart>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Lista de objetivos (colapsable) -->
+      <div class="drilldown-objetivos">
+        <h4><i class="pi pi-list"></i> Detalle por Objetivo</h4>
+        @for (objetivo of drilldownData()!.objetivos; track objetivo.id) {
+          <p-accordion>
+            <p-accordionpanel>
+              <p-accordionheader>
+                <div class="objetivo-header">
+                  <span class="objetivo-nombre">{{ objetivo.nombre }}</span>
+                  <div class="objetivo-progreso">
+                    <div class="progreso-bar-mini" [ngClass]="getProgresoClass(objetivo.cumplimiento)">
+                      <div class="progreso-fill" [style.width.%]="objetivo.cumplimiento"></div>
+                    </div>
+                    <span class="progreso-valor">{{ objetivo.cumplimiento }}%</span>
+                  </div>
+                </div>
+              </p-accordionheader>
+              <p-accordioncontent>
+                <div class="kpis-list">
+                  @for (kpi of objetivo.kpis; track kpi.id) {
+                    <div class="kpi-item" [class.kpi-alerta]="kpi.tieneAlerta">
+                      <div class="kpi-info">
+                        <span class="kpi-nombre">{{ kpi.nombre }}</span>
+                        <div class="kpi-valores">
+                          <span class="valor-actual">{{ kpi.valorActual }} {{ kpi.unidad }}</span>
+                          <span class="valor-meta">/ {{ kpi.valorMeta }} {{ kpi.unidad }}</span>
+                        </div>
+                      </div>
+                      <div class="kpi-progress">
+                        <div class="progress-bar" [ngClass]="getProgresoClass(kpi.cumplimiento)">
+                          <div class="progress-fill" [style.width.%]="kpi.cumplimiento"></div>
+                        </div>
+                        <span class="cumplimiento-pct">{{ kpi.cumplimiento }}%</span>
+                      </div>
+                      @if (kpi.tieneAlerta) {
+                        <i class="pi pi-exclamation-triangle text-orange-500" pTooltip="Tiene alerta activa"></i>
+                      }
+                      <i class="pi pi-arrow-{{ kpi.tendencia === 'up' ? 'up text-green-500' : kpi.tendencia === 'down' ? 'down text-red-500' : 'right text-gray-400' }}"></i>
+                    </div>
+                  }
+                </div>
+              </p-accordioncontent>
+            </p-accordionpanel>
+          </p-accordion>
+        }
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="drilldown-footer">
+        <p-button
+          label="Ver detalle completo"
+          icon="pi pi-arrow-right"
+          (onClick)="onNavegueADetalleDrillDown(drilldownData()!.procesoId)">
+        </p-button>
+      </div>
+    </ng-template>
+  }
+</p-drawer>
+
+<!-- Drawer de Drill-Down de Alertas -->
+<p-drawer
+  [(visible)]="showAlertasDrilldown"
+  position="right"
+  [style]="{ width: '600px' }"
+  [header]="'Alertas ' + getSeverityLabel(alertaDrilldownSeverity())">
+
+  <div class="alertas-drilldown-content">
+    <!-- Header con estadísticas -->
+    <div class="alertas-drilldown-header">
+      <div class="severity-indicator" [style.background-color]="getSeverityColor(alertaDrilldownSeverity())">
+        <i [class]="alertaDrilldownSeverity() === 'critical' ? 'pi pi-exclamation-circle' :
+                    alertaDrilldownSeverity() === 'warning' ? 'pi pi-exclamation-triangle' : 'pi pi-info-circle'"></i>
+      </div>
+      <div class="alertas-stats">
+        <div class="stat-item">
+          <span class="stat-value">{{ alertasDrilldownFiltradas().length }}</span>
+          <span class="stat-label">Total alertas</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ alertasDrilldownFiltradas().length > 0 ?
+            (alertasDrilldownFiltradas() | slice:0:1)[0]?.diasAbierto || 0 : 0 }}</span>
+          <span class="stat-label">Días máx. abierto</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ getUniqueProcesosCount() }}</span>
+          <span class="stat-label">Procesos afectados</span>
+        </div>
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <!-- Gráfica de Drill-Down -->
+    <div class="alertas-drilldown-chart-section">
+      <div class="drilldown-chart-header">
+        <h4><i class="pi pi-chart-bar"></i> Distribución de Alertas</h4>
+        <p-select
+          [options]="vistaAlertasOptions"
+          [ngModel]="vistaAlertasDrilldown()"
+          (ngModelChange)="vistaAlertasDrilldown.set($event)"
+          [style]="{ width: '150px' }"
+          styleClass="p-select-sm">
+        </p-select>
+      </div>
+      <div class="drilldown-chart-body">
+        <apx-chart
+          [series]="alertasDrilldownSeries()"
+          [chart]="alertasDrilldownChart()"
+          [plotOptions]="alertasDrilldownPlotOptions()"
+          [xaxis]="alertasDrilldownXaxis()"
+          [colors]="alertasDrilldownColors()"
+          [dataLabels]="alertasDrilldownDataLabels">
+        </apx-chart>
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <!-- Lista de alertas -->
+    <div class="alertas-drilldown-list">
+      <h4><i class="pi pi-list"></i> Detalle de Alertas</h4>
+      <div class="alertas-items">
+        @for (alerta of alertasDrilldownFiltradas(); track alerta.id) {
+          <div class="alerta-drilldown-item" (click)="navegarAAlerta(alerta)">
+            <div class="alerta-icon" [style.background-color]="getSeverityColor(alerta.severity)">
+              <i [class]="alerta.severity === 'critical' ? 'pi pi-exclamation-circle' :
+                          alerta.severity === 'warning' ? 'pi pi-exclamation-triangle' : 'pi pi-info-circle'"></i>
+            </div>
+            <div class="alerta-info">
+              <span class="alerta-kpi">{{ alerta.kpiNombre }}</span>
+              <span class="alerta-proceso">{{ alerta.procesoNombre }}</span>
+              <span class="alerta-mensaje">{{ alerta.mensaje }}</span>
+            </div>
+            <div class="alerta-valores">
+              <span class="valor-actual">{{ alerta.valorActual }}%</span>
+              <span class="valor-umbral">umbral: {{ alerta.valorUmbral }}%</span>
+            </div>
+            <div class="alerta-dias">
+              <span class="dias-numero">{{ alerta.diasAbierto }}</span>
+              <span class="dias-label">días</span>
+            </div>
+            <i class="pi pi-chevron-right alerta-arrow"></i>
+          </div>
+        } @empty {
+          <div class="alertas-empty">
+            <i class="pi pi-check-circle"></i>
+            <p>No hay alertas de este tipo</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="drilldown-footer">
+      <p-button
+        label="Ver todas las alertas"
+        icon="pi pi-list"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="cerrarAlertasDrillDown()">
+      </p-button>
     </div>
   </ng-template>
 </p-drawer>

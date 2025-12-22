@@ -22,8 +22,59 @@ import { InputIconModule } from 'primeng/inputicon';
 import { TabsModule } from 'primeng/tabs';
 import { ChartModule } from 'primeng/chart';
 import { DatePickerModule } from 'primeng/datepicker';
+import { AccordionModule } from 'primeng/accordion';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ProcessService } from '../../services/process.service';
 import { Proceso } from '../../models/process-nodes';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import {
+  ApexChart,
+  ApexAxisChartSeries,
+  ApexNonAxisChartSeries,
+  ApexXAxis,
+  ApexYAxis,
+  ApexDataLabels,
+  ApexPlotOptions,
+  ApexLegend,
+  ApexTooltip,
+  ApexStroke,
+  ApexFill,
+  ApexGrid,
+  ApexResponsive,
+  ApexTitleSubtitle
+} from 'ng-apexcharts';
+
+// Tipos para controles de gráficas
+type ChartPeriodo = 'semana' | 'mes' | 'trimestre' | 'anio' | 'custom';
+type MetricaDisponible = 'cumplimiento' | 'alertas' | 'kpisActivos' | 'objetivosCumplidos';
+interface RangoFechas { desde: Date; hasta: Date; }
+
+// Interfaces para drill-down
+interface DrillDownData {
+  procesoId: string;
+  procesoNombre: string;
+  cumplimientoGeneral: number;
+  objetivos: DrillDownObjetivo[];
+  alertasActivas: number;
+}
+
+interface DrillDownObjetivo {
+  id: string;
+  nombre: string;
+  cumplimiento: number;
+  kpis: DrillDownKPI[];
+}
+
+interface DrillDownKPI {
+  id: string;
+  nombre: string;
+  valorActual: number;
+  valorMeta: number;
+  unidad: string;
+  cumplimiento: number;
+  tendencia: 'up' | 'down' | 'neutral';
+  tieneAlerta: boolean;
+}
 
 // Types for KPI Dashboard
 type PeriodoFiltro = 'semana' | 'mes' | 'trimestre' | 'anio';
@@ -101,7 +152,10 @@ interface KPIMetricGlobal {
     InputIconModule,
     TabsModule,
     ChartModule,
-    DatePickerModule
+    DatePickerModule,
+    AccordionModule,
+    MultiSelectModule,
+    NgApexchartsModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './procesos-lista.html',
@@ -126,6 +180,10 @@ export class ProcesosListaComponent {
   // Edición in-place
   procesoEditando = signal<string | null>(null);
   valoresEdicion = signal<Record<string, any>>({});
+
+  // Menú contextual
+  procesoMenuActual = signal<Proceso | null>(null);
+  menuItems = signal<MenuItem[]>([]);
 
   // Drawer de acciones masivas
   showAccionesMasivasDrawer = signal(false);
@@ -152,6 +210,468 @@ export class ProcesosListaComponent {
     { label: 'Último trimestre', value: 'trimestre' },
     { label: 'Último año', value: 'anio' }
   ];
+
+  // ==================== AMCHARTS CONFIGURABLES ====================
+  // Controles de tendencia AMCharts
+  periodoTendenciaAMCharts = signal<ChartPeriodo>('mes');
+  metricaTendenciaAMCharts = signal<MetricaDisponible>('cumplimiento');
+  rangoCustomTendencia = signal<RangoFechas | null>(null);
+
+  // Drill-down drawer
+  showDrilldownDrawer = signal(false);
+  drilldownData = signal<DrillDownData | null>(null);
+
+  // Controles para gráfica de cumplimiento
+  periodoCumplimiento = signal<ChartPeriodo>('mes');
+  procesosSeleccionadosChart = signal<string[]>([]); // IDs de procesos a mostrar
+  metricaDrilldown = signal<'objetivos' | 'kpis'>('objetivos');
+
+  // Controles para gráfica de alertas
+  procesoFiltroAlertas = signal<string | null>(null); // Filtrar alertas por proceso
+  showAlertasDrilldown = signal(false);
+  alertaDrilldownSeverity = signal<AlertSeverity | null>(null);
+  vistaAlertasDrilldown = signal<'proceso' | 'dias' | 'timeline'>('proceso');
+
+  // Opciones para selectores AMCharts
+  periodoOptionsAMCharts = [
+    { label: 'Última semana', value: 'semana' as ChartPeriodo },
+    { label: 'Último mes', value: 'mes' as ChartPeriodo },
+    { label: 'Último trimestre', value: 'trimestre' as ChartPeriodo },
+    { label: 'Último año', value: 'anio' as ChartPeriodo },
+    { label: 'Personalizado', value: 'custom' as ChartPeriodo }
+  ];
+
+  metricaOptionsAMCharts = [
+    { label: 'Cumplimiento', value: 'cumplimiento' as MetricaDisponible },
+    { label: 'Alertas', value: 'alertas' as MetricaDisponible },
+    { label: 'KPIs Activos', value: 'kpisActivos' as MetricaDisponible },
+    { label: 'Objetivos Cumplidos', value: 'objetivosCumplidos' as MetricaDisponible }
+  ];
+
+  // Opciones de procesos para selector multi-select
+  procesosOptionsChart = computed(() =>
+    this.procesosKPIResumen().map(p => ({
+      label: p.procesoNombre,
+      value: p.procesoId
+    }))
+  );
+
+  metricaDrilldownOptions = [
+    { label: 'Por Objetivos', value: 'objetivos' as const },
+    { label: 'Por KPIs', value: 'kpis' as const }
+  ];
+
+  vistaAlertasOptions = [
+    { label: 'Por Proceso', value: 'proceso' as const },
+    { label: 'Por Días Abierto', value: 'dias' as const },
+    { label: 'Timeline', value: 'timeline' as const }
+  ];
+
+  // Alertas filtradas por proceso para la dona
+  alertasParaDona = computed(() => {
+    const alertas = this.alertasConsolidadas();
+    const procesoId = this.procesoFiltroAlertas();
+    if (!procesoId) return alertas;
+    return alertas.filter(a => a.procesoId === procesoId);
+  });
+
+  // Alertas filtradas por severidad para drill-down
+  alertasDrilldownFiltradas = computed(() => {
+    const alertas = this.alertasParaDona();
+    const severity = this.alertaDrilldownSeverity();
+    if (!severity) return alertas;
+    return alertas.filter(a => a.severity === severity);
+  });
+
+  // Procesos filtrados para la gráfica de cumplimiento
+  procesosCumplimientoFiltrados = computed(() => {
+    const procesos = this.procesosKPIResumen();
+    const seleccionados = this.procesosSeleccionadosChart();
+    if (seleccionados.length === 0) return procesos;
+    return procesos.filter(p => seleccionados.includes(p.procesoId));
+  });
+
+  // ==================== APEXCHARTS CONFIGURABLES ====================
+  // Paleta de colores para gráficas
+  chartColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f43f5e'];
+
+  // Gráfica de líneas (Tendencia)
+  tendenciaChart = computed<ApexChart>(() => ({
+    type: 'line',
+    height: 320,
+    fontFamily: 'Inter, sans-serif',
+    toolbar: { show: true },
+    zoom: { enabled: true },
+    animations: { enabled: true, speed: 800 }
+  }));
+
+  tendenciaXaxis = computed<ApexXAxis>(() => ({
+    categories: this.generarLabelsTemporales(this.periodoTendenciaAMCharts()),
+    labels: { style: { fontSize: '11px' } }
+  }));
+
+  tendenciaYaxis = computed<ApexYAxis>(() => ({
+    title: { text: this.getMetricaLabel(this.metricaTendenciaAMCharts()) },
+    labels: { style: { fontSize: '11px' } }
+  }));
+
+  tendenciaStroke: ApexStroke = { curve: 'smooth', width: 2 };
+  tendenciaMarkers = { size: 3, hover: { size: 5 } };
+  tendenciaLegend: ApexLegend = { show: true, position: 'bottom' };
+  tendenciaTooltip: ApexTooltip = { shared: true, intersect: false };
+  tendenciaGrid: ApexGrid = { borderColor: '#e5e7eb', strokeDashArray: 3 };
+
+  tendenciaSeries = computed<ApexAxisChartSeries>(() => {
+    const procesos = this.procesosKPIResumen();
+    const metrica = this.metricaTendenciaAMCharts();
+    const periodo = this.periodoTendenciaAMCharts();
+
+    return procesos.slice(0, 5).map(p => ({
+      name: p.procesoNombre.split(' ').slice(0, 3).join(' '),
+      data: this.generarDatosTendencia(p, metrica, periodo)
+    }));
+  });
+
+  // Gráfica de barras (Cumplimiento) - usa procesos filtrados
+  cumplimientoChart = computed<ApexChart>(() => {
+    const procesos = this.procesosCumplimientoFiltrados();
+    return {
+      type: 'bar',
+      height: Math.max(200, procesos.length * 45),
+      fontFamily: 'Inter, sans-serif',
+      toolbar: { show: true, tools: { download: true, selection: false, zoom: false, pan: false, reset: false } },
+      events: {
+        dataPointSelection: (event: any, chartContext: any, config: any) => {
+          const procesoIndex = config.dataPointIndex;
+          if (procesos[procesoIndex]) {
+            this.onBarDrillDown({
+              id: procesos[procesoIndex].procesoId,
+              nombre: procesos[procesoIndex].procesoNombre,
+              valor: procesos[procesoIndex].cumplimientoPromedio
+            });
+          }
+        }
+      }
+    };
+  });
+
+  cumplimientoPlotOptions: ApexPlotOptions = {
+    bar: {
+      horizontal: true,
+      borderRadius: 4,
+      distributed: true,
+      barHeight: '70%'
+    }
+  };
+
+  cumplimientoXaxis = computed<ApexXAxis>(() => ({
+    categories: this.procesosCumplimientoFiltrados().map(p => p.procesoNombre.split(' ').slice(0, 3).join(' ')),
+    max: 100,
+    labels: { style: { fontSize: '11px' } }
+  }));
+
+  cumplimientoColors = computed(() =>
+    this.procesosCumplimientoFiltrados().map(p => this.getCumplimientoColor(p.cumplimientoPromedio))
+  );
+
+  cumplimientoDataLabels: ApexDataLabels = {
+    enabled: true,
+    formatter: (val: number) => val?.toFixed(0) + '%',
+    style: { fontSize: '11px', fontWeight: 600, colors: ['#fff'] }
+  };
+
+  cumplimientoSeries = computed<ApexAxisChartSeries>(() => [{
+    name: 'Cumplimiento',
+    data: this.procesosCumplimientoFiltrados().map(p => p.cumplimientoPromedio)
+  }]);
+
+  // ==================== GRÁFICA DRILL-DOWN (Detalle de proceso) ====================
+  drilldownChart = computed<ApexChart>(() => ({
+    type: 'bar',
+    height: 280,
+    fontFamily: 'Inter, sans-serif',
+    toolbar: { show: true },
+    animations: { enabled: true, speed: 500 }
+  }));
+
+  drilldownPlotOptions: ApexPlotOptions = {
+    bar: {
+      horizontal: true,
+      borderRadius: 4,
+      distributed: true,
+      barHeight: '65%'
+    }
+  };
+
+  drilldownXaxis = computed<ApexXAxis>(() => {
+    const data = this.drilldownData();
+    if (!data) return { categories: [], max: 100 };
+
+    const metrica = this.metricaDrilldown();
+    if (metrica === 'objetivos') {
+      return {
+        categories: data.objetivos.map(o => o.nombre.split(':')[0] || o.nombre),
+        max: 100,
+        labels: { style: { fontSize: '11px' } }
+      };
+    } else {
+      // Mostrar todos los KPIs de todos los objetivos
+      const allKpis = data.objetivos.flatMap(o => o.kpis);
+      return {
+        categories: allKpis.map(k => k.nombre),
+        max: 100,
+        labels: { style: { fontSize: '11px' } }
+      };
+    }
+  });
+
+  drilldownColors = computed(() => {
+    const data = this.drilldownData();
+    if (!data) return [];
+
+    const metrica = this.metricaDrilldown();
+    if (metrica === 'objetivos') {
+      return data.objetivos.map(o => this.getCumplimientoColor(o.cumplimiento));
+    } else {
+      const allKpis = data.objetivos.flatMap(o => o.kpis);
+      return allKpis.map(k => this.getCumplimientoColor(k.cumplimiento));
+    }
+  });
+
+  drilldownDataLabels: ApexDataLabels = {
+    enabled: true,
+    formatter: (val: number) => val?.toFixed(0) + '%',
+    style: { fontSize: '11px', fontWeight: 600, colors: ['#fff'] }
+  };
+
+  drilldownSeries = computed<ApexAxisChartSeries>(() => {
+    const data = this.drilldownData();
+    if (!data) return [{ name: 'Cumplimiento', data: [] }];
+
+    const metrica = this.metricaDrilldown();
+    if (metrica === 'objetivos') {
+      return [{
+        name: 'Cumplimiento',
+        data: data.objetivos.map(o => o.cumplimiento)
+      }];
+    } else {
+      const allKpis = data.objetivos.flatMap(o => o.kpis);
+      return [{
+        name: 'Cumplimiento',
+        data: allKpis.map(k => k.cumplimiento)
+      }];
+    }
+  });
+
+  // Gráfica donut (Alertas) con drill-down
+  alertasChart = computed<ApexChart>(() => ({
+    type: 'donut',
+    height: 220,
+    fontFamily: 'Inter, sans-serif',
+    events: {
+      dataPointSelection: (event: any, chartContext: any, config: any) => {
+        const severities: AlertSeverity[] = ['critical', 'warning', 'info'];
+        const selectedSeverity = severities[config.dataPointIndex];
+        if (selectedSeverity) {
+          this.onAlertaDrillDown(selectedSeverity);
+        }
+      }
+    }
+  }));
+
+  alertasLabels = ['Críticas', 'Advertencias', 'Información'];
+  alertasColors = ['#ef4444', '#f59e0b', '#3b82f6'];
+
+  alertasPlotOptions: ApexPlotOptions = {
+    pie: {
+      donut: {
+        size: '60%',
+        labels: {
+          show: true,
+          total: {
+            show: true,
+            label: 'Total',
+            fontSize: '12px',
+            fontWeight: 600
+          }
+        }
+      }
+    }
+  };
+
+  alertasLegend: ApexLegend = { show: true, position: 'bottom' };
+
+  alertasSeries = computed<ApexNonAxisChartSeries>(() => {
+    const alertas = this.alertasParaDona();
+    return [
+      alertas.filter(a => a.severity === 'critical').length,
+      alertas.filter(a => a.severity === 'warning').length,
+      alertas.filter(a => a.severity === 'info').length
+    ];
+  });
+
+  // ==================== GRÁFICA DRILL-DOWN ALERTAS ====================
+  alertasDrilldownChart = computed<ApexChart>(() => ({
+    type: 'bar',
+    height: 250,
+    fontFamily: 'Inter, sans-serif',
+    toolbar: { show: true },
+    animations: { enabled: true, speed: 500 }
+  }));
+
+  alertasDrilldownPlotOptions = computed<ApexPlotOptions>(() => {
+    const vista = this.vistaAlertasDrilldown();
+    return {
+      bar: {
+        horizontal: vista !== 'timeline',
+        borderRadius: 4,
+        distributed: vista !== 'timeline',
+        barHeight: '65%'
+      }
+    };
+  });
+
+  alertasDrilldownXaxis = computed<ApexXAxis>(() => {
+    const alertas = this.alertasDrilldownFiltradas();
+    const vista = this.vistaAlertasDrilldown();
+
+    if (vista === 'proceso') {
+      // Agrupar por proceso
+      const porProceso = new Map<string, number>();
+      alertas.forEach(a => {
+        const count = porProceso.get(a.procesoNombre) || 0;
+        porProceso.set(a.procesoNombre, count + 1);
+      });
+      return {
+        categories: Array.from(porProceso.keys()).map(n => n.split(' ').slice(0, 3).join(' ')),
+        labels: { style: { fontSize: '11px' } }
+      };
+    } else if (vista === 'dias') {
+      // Agrupar por rangos de días
+      return {
+        categories: ['< 7 días', '7-14 días', '15-30 días', '> 30 días'],
+        labels: { style: { fontSize: '11px' } }
+      };
+    } else {
+      // Timeline - últimos 7 días
+      const labels = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' }));
+      }
+      return {
+        categories: labels,
+        labels: { style: { fontSize: '11px' } }
+      };
+    }
+  });
+
+  alertasDrilldownColors = computed(() => {
+    const severity = this.alertaDrilldownSeverity();
+    const baseColor = severity === 'critical' ? '#ef4444' :
+                      severity === 'warning' ? '#f59e0b' : '#3b82f6';
+    return [baseColor];
+  });
+
+  alertasDrilldownSeries = computed<ApexAxisChartSeries>(() => {
+    const alertas = this.alertasDrilldownFiltradas();
+    const vista = this.vistaAlertasDrilldown();
+
+    if (vista === 'proceso') {
+      const porProceso = new Map<string, number>();
+      alertas.forEach(a => {
+        const count = porProceso.get(a.procesoNombre) || 0;
+        porProceso.set(a.procesoNombre, count + 1);
+      });
+      return [{
+        name: 'Alertas',
+        data: Array.from(porProceso.values())
+      }];
+    } else if (vista === 'dias') {
+      const rangos = [0, 0, 0, 0]; // < 7, 7-14, 15-30, > 30
+      alertas.forEach(a => {
+        if (a.diasAbierto < 7) rangos[0]++;
+        else if (a.diasAbierto <= 14) rangos[1]++;
+        else if (a.diasAbierto <= 30) rangos[2]++;
+        else rangos[3]++;
+      });
+      return [{
+        name: 'Alertas',
+        data: rangos
+      }];
+    } else {
+      // Timeline mock data
+      return [{
+        name: 'Nuevas alertas',
+        data: Array.from({ length: 7 }, () => Math.floor(Math.random() * alertas.length / 2))
+      }];
+    }
+  });
+
+  alertasDrilldownDataLabels: ApexDataLabels = {
+    enabled: true,
+    style: { fontSize: '11px', fontWeight: 600 }
+  };
+
+  // Helpers para generar datos de gráficas
+  private generarLabelsTemporales(periodo: ChartPeriodo): string[] {
+    const labels: string[] = [];
+    const now = new Date();
+    let count = 0;
+
+    switch (periodo) {
+      case 'semana': count = 7; break;
+      case 'mes': count = 4; break;
+      case 'trimestre': count = 12; break;
+      case 'anio': count = 12; break;
+      default: count = 4;
+    }
+
+    for (let i = count - 1; i >= 0; i--) {
+      const date = new Date(now);
+      if (periodo === 'semana') {
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' }));
+      } else if (periodo === 'mes') {
+        date.setDate(date.getDate() - (i * 7));
+        labels.push(`Sem ${count - i}`);
+      } else {
+        date.setMonth(date.getMonth() - i);
+        labels.push(date.toLocaleDateString('es-MX', { month: 'short' }));
+      }
+    }
+    return labels;
+  }
+
+  private generarDatosTendencia(proceso: ProcesoKPIResumen, metrica: MetricaDisponible, periodo: ChartPeriodo): number[] {
+    const count = periodo === 'semana' ? 7 : periodo === 'mes' ? 4 : 12;
+    const base = metrica === 'cumplimiento' ? proceso.cumplimientoPromedio :
+                 metrica === 'alertas' ? proceso.alertasActivas :
+                 metrica === 'kpisActivos' ? proceso.totalKPIs : proceso.totalObjetivos;
+
+    return Array.from({ length: count }, (_, i) => {
+      const variation = (Math.random() - 0.5) * 20;
+      return Math.max(0, Math.min(100, base + variation));
+    });
+  }
+
+  private getMetricaLabel(metrica: MetricaDisponible): string {
+    const labels: Record<MetricaDisponible, string> = {
+      cumplimiento: 'Cumplimiento (%)',
+      alertas: 'Alertas',
+      kpisActivos: 'KPIs Activos',
+      objetivosCumplidos: 'Objetivos'
+    };
+    return labels[metrica];
+  }
+
+  private getCumplimientoColor(valor: number): string {
+    if (valor >= 85) return '#10b981'; // Verde
+    if (valor >= 70) return '#3b82f6'; // Azul
+    if (valor >= 50) return '#f59e0b'; // Amarillo
+    return '#ef4444'; // Rojo
+  }
 
   severidadOptions = [
     { label: 'Todas', value: null },
@@ -562,8 +1082,15 @@ export class ProcesosListaComponent {
     });
   }
 
+  // Abrir menú contextual con items actualizados
+  abrirMenuProceso(proceso: Proceso, menu: any, event: Event): void {
+    this.procesoMenuActual.set(proceso);
+    this.menuItems.set(this.generarMenuItems(proceso));
+    menu.toggle(event);
+  }
+
   // Generar items del menú contextual
-  getMenuItems(proceso: Proceso): MenuItem[] {
+  private generarMenuItems(proceso: Proceso): MenuItem[] {
     const items: MenuItem[] = [
       {
         label: 'Ver detalle',
@@ -607,6 +1134,11 @@ export class ProcesosListaComponent {
     });
 
     return items;
+  }
+
+  // Mantener compatibilidad con getMenuItems si se usa en otro lugar
+  getMenuItems(proceso: Proceso): MenuItem[] {
+    return this.generarMenuItems(proceso);
   }
 
   // Métodos para el resumen del footer
@@ -780,4 +1312,148 @@ export class ProcesosListaComponent {
     if (dias < 7) return `Hace ${dias} días`;
     return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
   }
+
+  // ==================== AMCHARTS EVENT HANDLERS ====================
+
+  // Manejar cambio de período en gráfica de tendencia
+  onPeriodoTendenciaChange(periodo: ChartPeriodo): void {
+    this.periodoTendenciaAMCharts.set(periodo);
+    if (periodo !== 'custom') {
+      this.rangoCustomTendencia.set(null);
+    }
+  }
+
+  // Manejar cambio de métrica en gráfica de tendencia
+  onMetricaTendenciaChange(metrica: MetricaDisponible): void {
+    this.metricaTendenciaAMCharts.set(metrica);
+  }
+
+  // Manejar cambio de rango personalizado
+  onRangoCustomChange(rango: RangoFechas | null): void {
+    this.rangoCustomTendencia.set(rango);
+  }
+
+  // Manejar click en barra para drill-down
+  onBarDrillDown(event: { id: string; nombre: string; valor: number } | string): void {
+    const procesoId = typeof event === 'string' ? event : event.id;
+    const drillData = this.generarDrillDownData(procesoId);
+    this.drilldownData.set(drillData);
+    this.showDrilldownDrawer.set(true);
+  }
+
+  // Manejar click en dona de alertas para drill-down
+  onAlertaDrillDown(severity: AlertSeverity): void {
+    this.alertaDrilldownSeverity.set(severity);
+    this.showAlertasDrilldown.set(true);
+  }
+
+  // Cerrar drawer de drill-down de alertas
+  cerrarAlertasDrillDown(): void {
+    this.showAlertasDrilldown.set(false);
+    this.alertaDrilldownSeverity.set(null);
+  }
+
+  // Obtener label de severidad
+  getSeverityLabel(severity: AlertSeverity | null): string {
+    if (!severity) return 'Todas';
+    const labels: Record<AlertSeverity, string> = {
+      critical: 'Críticas',
+      warning: 'Advertencias',
+      info: 'Información'
+    };
+    return labels[severity];
+  }
+
+  // Obtener color de severidad
+  getSeverityColor(severity: AlertSeverity | null): string {
+    if (!severity) return '#6b7280';
+    const colors: Record<AlertSeverity, string> = {
+      critical: '#ef4444',
+      warning: '#f59e0b',
+      info: '#3b82f6'
+    };
+    return colors[severity];
+  }
+
+  // Obtener cantidad de procesos únicos afectados por alertas
+  getUniqueProcesosCount(): number {
+    const alertas = this.alertasDrilldownFiltradas();
+    const uniqueProcesos = new Set(alertas.map(a => a.procesoId));
+    return uniqueProcesos.size;
+  }
+
+  // Generar datos para drill-down
+  private generarDrillDownData(procesoId: string): DrillDownData | null {
+    const procesos = this.procesosKPIResumen();
+    const alertas = this.alertasConsolidadas();
+    const proceso = procesos.find(p => p.procesoId === procesoId);
+    if (!proceso) return null;
+
+    // Generar objetivos mock con KPIs
+    const objetivos: DrillDownObjetivo[] = [];
+    const numObjetivos = proceso.totalObjetivos || 2;
+
+    for (let i = 0; i < numObjetivos; i++) {
+      const kpis: DrillDownKPI[] = [];
+      const numKpis = Math.ceil(proceso.totalKPIs / numObjetivos);
+
+      for (let j = 0; j < numKpis; j++) {
+        const cumplimiento = Math.floor(40 + Math.random() * 60);
+        const alertaKpi = alertas.find(a =>
+          a.procesoId === procesoId && a.status === 'activa'
+        );
+
+        kpis.push({
+          id: `kpi-${i}-${j}`,
+          nombre: `KPI ${i + 1}.${j + 1}`,
+          valorActual: Math.floor(cumplimiento * 0.9),
+          valorMeta: 100,
+          unidad: '%',
+          cumplimiento,
+          tendencia: cumplimiento > 70 ? 'up' : cumplimiento > 50 ? 'neutral' : 'down',
+          tieneAlerta: !!alertaKpi && j === 0
+        });
+      }
+
+      const objetivoCumplimiento = Math.floor(kpis.reduce((sum, k) => sum + k.cumplimiento, 0) / kpis.length);
+      objetivos.push({
+        id: `obj-${i}`,
+        nombre: `Objetivo ${i + 1}: ${['Reducir riesgos', 'Mejorar eficiencia', 'Optimizar costos', 'Aumentar calidad', 'Cumplimiento normativo'][i % 5]}`,
+        cumplimiento: objetivoCumplimiento,
+        kpis
+      });
+    }
+
+    return {
+      procesoId: proceso.procesoId,
+      procesoNombre: proceso.procesoNombre,
+      cumplimientoGeneral: proceso.cumplimientoPromedio,
+      objetivos,
+      alertasActivas: proceso.alertasActivas
+    };
+  }
+
+  // Cerrar drawer de drill-down
+  cerrarDrillDown(): void {
+    this.showDrilldownDrawer.set(false);
+    this.drilldownData.set(null);
+  }
+
+  // Navegar a detalle desde drill-down
+  onNavegueADetalleDrillDown(procesoId: string): void {
+    this.cerrarDrillDown();
+    this.navegarAObjetivosKPIs(procesoId);
+  }
+
+  // Exportar gráfica AMCharts
+  exportarGraficaAMCharts(chartId: string): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Exportando...',
+      detail: `Generando imagen de la gráfica`
+    });
+  }
+
+  // Helper para sumar KPIs en template
+  sumKpis = (acc: number, obj: DrillDownObjetivo) => acc + obj.kpis.length;
 }
