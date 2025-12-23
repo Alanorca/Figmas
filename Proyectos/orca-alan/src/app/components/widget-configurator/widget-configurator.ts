@@ -358,6 +358,84 @@ export class WidgetConfiguratorComponent {
     { label: 'Neón', value: 'neon', colores: ['#A855F7', '#EC4899', '#F43F5E', '#FB7185'] },
   ];
 
+  // ==================== CONFIGURACIÓN DE MAPA DE RIESGOS ====================
+
+  // Tipo de mapa de riesgos
+  mrTipo = signal<'probabilidad-impacto' | 'activos-amenazas' | 'controles-efectividad' | 'vulnerabilidades'>('probabilidad-impacto');
+
+  // Configuración visual
+  mrMostrarEtiquetas = signal(true);
+  mrMostrarValores = signal(true);
+  mrMostrarLeyenda = signal(true);
+  mrAnimaciones = signal(true);
+  mrColorScheme = signal<'semaforo' | 'calor' | 'corporativo'>('semaforo');
+
+  // Configuración de ejes
+  mrEjeXLabel = signal('Probabilidad');
+  mrEjeYLabel = signal('Impacto');
+  mrNiveles = signal(5); // 3, 4, 5
+
+  // Filtros
+  mrFiltrarPorArea = signal<string | null>(null);
+  mrFiltrarPorResponsable = signal<string | null>(null);
+
+  // Opciones de tipo de mapa
+  mrTipoOptions = [
+    {
+      label: 'Probabilidad vs Impacto',
+      value: 'probabilidad-impacto',
+      icon: 'pi pi-th-large',
+      descripcion: 'Matriz clásica de evaluación de riesgos'
+    },
+    {
+      label: 'Activos vs Amenazas',
+      value: 'activos-amenazas',
+      icon: 'pi pi-shield',
+      descripcion: 'Relación entre activos y sus amenazas'
+    },
+    {
+      label: 'Controles vs Efectividad',
+      value: 'controles-efectividad',
+      icon: 'pi pi-check-square',
+      descripcion: 'Evaluación de efectividad de controles'
+    },
+    {
+      label: 'Vulnerabilidades',
+      value: 'vulnerabilidades',
+      icon: 'pi pi-exclamation-triangle',
+      descripcion: 'Mapa de vulnerabilidades detectadas'
+    },
+  ];
+
+  // Esquemas de color
+  mrColorSchemeOptions = [
+    {
+      label: 'Semáforo',
+      value: 'semaforo',
+      colores: ['#22C55E', '#EAB308', '#F97316', '#EF4444'],
+      descripcion: 'Verde, amarillo, naranja, rojo'
+    },
+    {
+      label: 'Mapa de Calor',
+      value: 'calor',
+      colores: ['#FEF3C7', '#FCD34D', '#F97316', '#DC2626'],
+      descripcion: 'Degradado de calor'
+    },
+    {
+      label: 'Corporativo',
+      value: 'corporativo',
+      colores: ['#DBEAFE', '#60A5FA', '#3B82F6', '#1E40AF'],
+      descripcion: 'Tonos azules institucionales'
+    },
+  ];
+
+  // Opciones de niveles
+  mrNivelesOptions = [
+    { label: '3x3', value: 3 },
+    { label: '4x4', value: 4 },
+    { label: '5x5', value: 5 },
+  ];
+
   // Interactividad
   chartClickable = signal(true);
   chartZoomEnabled = signal(false);
@@ -479,6 +557,12 @@ export class WidgetConfiguratorComponent {
   esGraficaInteractiva = computed(() => {
     const item = this.catalogItem();
     return item?.tipo === 'graficas-interactivas';
+  });
+
+  // Computed: es widget de mapa de riesgos
+  esMapaRiesgos = computed(() => {
+    const item = this.catalogItem();
+    return item?.tipo === 'mapa-riesgos';
   });
 
   // Computed: info del KPI seleccionado

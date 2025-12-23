@@ -885,12 +885,13 @@ export class DashboardCustomizableComponent implements OnInit {
     console.log('[Dashboard] agregarWidget llamado con:', catalogItem.tipo);
     console.log('[Dashboard] esGraficaConfigurable:', esGraficaConfigurable(catalogItem.tipo));
 
-    // Usar configurador avanzado para tablas, gráficas, KPIs y gráficas interactivas
+    // Usar configurador avanzado para tablas, gráficas, KPIs, gráficas interactivas y mapa de riesgos
     const usaConfiguradorAvanzado =
       catalogItem.tipo === 'table-mini' ||
       catalogItem.tipo === 'kpi-card' ||
       catalogItem.tipo === 'kpi-grid' ||
       catalogItem.tipo === 'graficas-interactivas' ||
+      catalogItem.tipo === 'mapa-riesgos' ||
       esGraficaConfigurable(catalogItem.tipo);
 
     if (usaConfiguradorAvanzado) {

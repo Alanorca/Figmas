@@ -97,6 +97,22 @@
           </p-tab>
         }
 
+        <!-- Tabs específicas para MAPA DE RIESGOS -->
+        @if (esMapaRiesgos()) {
+          <p-tab [value]="1">
+            <i class="pi pi-th-large"></i>
+            <span>Tipo</span>
+          </p-tab>
+          <p-tab [value]="2">
+            <i class="pi pi-palette"></i>
+            <span>Estilo</span>
+          </p-tab>
+          <p-tab [value]="3">
+            <i class="pi pi-sliders-h"></i>
+            <span>Opciones</span>
+          </p-tab>
+        }
+
         <p-tab [value]="4">
           <i class="pi pi-eye"></i>
           <span>Preview</span>
@@ -1231,6 +1247,167 @@
                     (ngModelChange)="giMostrarTooltip.set($event)"
                   />
                   <span>Mostrar tooltips</span>
+                </div>
+              </div>
+            </div>
+          </p-tabpanel>
+        }
+
+        <!-- ==================== TABS PARA MAPA DE RIESGOS ==================== -->
+        @if (esMapaRiesgos()) {
+          <!-- Tab 1: Tipo de Mapa -->
+          <p-tabpanel [value]="1">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Tipo de Mapa</h4>
+                <span class="section-hint">Selecciona el tipo de análisis</span>
+              </div>
+
+              <div class="mr-tipos-grid">
+                @for (tipo of mrTipoOptions; track tipo.value) {
+                  <div
+                    class="mr-tipo-card"
+                    [class.selected]="mrTipo() === tipo.value"
+                    (click)="mrTipo.set($any(tipo.value))"
+                  >
+                    <i [class]="tipo.icon" class="mr-tipo-icon"></i>
+                    <span class="mr-tipo-label">{{ tipo.label }}</span>
+                    <small class="mr-tipo-desc">{{ tipo.descripcion }}</small>
+                  </div>
+                }
+              </div>
+
+              <p-divider />
+
+              <div class="form-field">
+                <label>Tamaño de la Matriz</label>
+                <p-selectButton
+                  [options]="mrNivelesOptions"
+                  [ngModel]="mrNiveles()"
+                  (ngModelChange)="mrNiveles.set($event)"
+                  optionLabel="label"
+                  optionValue="value"
+                />
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 2: Estilo Visual -->
+          <p-tabpanel [value]="2">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Estilo Visual</h4>
+                <span class="section-hint">Personaliza la apariencia</span>
+              </div>
+
+              <div class="form-field">
+                <label>Esquema de Colores</label>
+                <div class="mr-color-schemes">
+                  @for (scheme of mrColorSchemeOptions; track scheme.value) {
+                    <div
+                      class="mr-color-scheme-card"
+                      [class.selected]="mrColorScheme() === scheme.value"
+                      (click)="mrColorScheme.set($any(scheme.value))"
+                    >
+                      <div class="scheme-colors">
+                        @for (color of scheme.colores; track $index) {
+                          <span class="scheme-color" [style.background]="color"></span>
+                        }
+                      </div>
+                      <span class="scheme-label">{{ scheme.label }}</span>
+                      <small class="scheme-desc">{{ scheme.descripcion }}</small>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <p-divider />
+
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="mrMostrarEtiquetas()"
+                    (ngModelChange)="mrMostrarEtiquetas.set($event)"
+                  />
+                  <span>Mostrar etiquetas de ejes</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="mrMostrarValores()"
+                    (ngModelChange)="mrMostrarValores.set($event)"
+                  />
+                  <span>Mostrar valores en celdas</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="mrMostrarLeyenda()"
+                    (ngModelChange)="mrMostrarLeyenda.set($event)"
+                  />
+                  <span>Mostrar leyenda</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="mrAnimaciones()"
+                    (ngModelChange)="mrAnimaciones.set($event)"
+                  />
+                  <span>Animaciones</span>
+                </div>
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 3: Opciones -->
+          <p-tabpanel [value]="3">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Configuración de Ejes</h4>
+                <span class="section-hint">Personaliza las etiquetas</span>
+              </div>
+
+              <div class="form-field">
+                <label>Etiqueta Eje X</label>
+                <input
+                  pInputText
+                  [ngModel]="mrEjeXLabel()"
+                  (ngModelChange)="mrEjeXLabel.set($event)"
+                  placeholder="Ej: Probabilidad"
+                />
+              </div>
+
+              <div class="form-field">
+                <label>Etiqueta Eje Y</label>
+                <input
+                  pInputText
+                  [ngModel]="mrEjeYLabel()"
+                  (ngModelChange)="mrEjeYLabel.set($event)"
+                  placeholder="Ej: Impacto"
+                />
+              </div>
+
+              <p-divider />
+
+              <div class="section-header">
+                <h4>Interactividad</h4>
+              </div>
+
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="chartClickable()"
+                    (ngModelChange)="chartClickable.set($event)"
+                  />
+                  <span>Permitir click en celdas</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="chartExportable()"
+                    (ngModelChange)="chartExportable.set($event)"
+                  />
+                  <span>Permitir exportar</span>
                 </div>
               </div>
             </div>
