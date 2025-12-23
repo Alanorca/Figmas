@@ -21,9 +21,22 @@ import { PanelModule } from 'primeng/panel';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { ChipModule } from 'primeng/chip';
 import { ProcessService } from '../../services/process.service';
 import { GroqService } from '../../services/groq.service';
-import { NODE_TYPES_METADATA, ProcessNodeType, ProcessNode } from '../../models/process-nodes';
+import { MockDataService } from '../../services/mock-data.service';
+import {
+  NODE_TYPES_METADATA,
+  ProcessNodeType,
+  ProcessNode,
+  ACTIVO_PROPIEDADES_BASE,
+  FILTRO_CAMPOS_RIESGOS,
+  FILTRO_CAMPOS_INCIDENTES,
+  FILTRO_CAMPOS_DEFECTOS,
+  FILTRO_OPERADORES,
+  FiltroRelacionados
+} from '../../models/process-nodes';
+import { Activo, PlantillaActivo, PropiedadCustomDefinicion } from '../../models';
 
 // Interfaces para el panel de configuracion
 interface SchemaField {
@@ -69,7 +82,8 @@ interface TestResult {
     PanelModule,
     CheckboxModule,
     TableModule,
-    MultiSelectModule
+    MultiSelectModule,
+    ChipModule
   ],
   templateUrl: './procesos.html',
   styleUrl: './procesos.scss',
@@ -80,6 +94,7 @@ export class ProcesosComponent implements OnInit {
   private route = inject(ActivatedRoute);
   processService = inject(ProcessService);
   groqService = inject(GroqService);
+  mockDataService = inject(MockDataService);
 
   // ID del proceso actual (de la ruta)
   procesoId = signal<string | null>(null);
@@ -172,38 +187,250 @@ export class ProcesosComponent implements OnInit {
     { label: 'Marketing', value: 'MKT' }
   ];
 
-  // Opciones de activos por area (computed)
+  // Opciones de activos desde MockDataService
   activoOptions = computed(() => {
-    const node = this.processService.selectedNode();
-    if (!node) return [];
-    const area = (node.config as unknown as Record<string, unknown>)['area'] as string;
-    if (!area) return [];
-
-    const activosPorArea: Record<string, { label: string; value: string }[]> = {
-      'TI': [
-        { label: 'Servidor Principal', value: 'servidor-principal' },
-        { label: 'Base de Datos CRM', value: 'db-crm' },
-        { label: 'Firewall Corporativo', value: 'firewall' }
-      ],
-      'RRHH': [
-        { label: 'Sistema de Nomina', value: 'nomina' },
-        { label: 'Portal de Empleados', value: 'portal-emp' }
-      ],
-      'FIN': [
-        { label: 'Software Contable', value: 'contable' },
-        { label: 'Sistema Facturacion', value: 'facturacion' }
-      ],
-      'OPS': [
-        { label: 'Sistema Produccion', value: 'produccion' },
-        { label: 'Control Inventario', value: 'inventario' }
-      ],
-      'MKT': [
-        { label: 'CRM Marketing', value: 'crm-mkt' },
-        { label: 'Plataforma Email', value: 'email-mkt' }
-      ]
-    };
-    return activosPorArea[area] || [];
+    return this.mockDataService.activos().map(a => ({
+      label: `${a.nombre} (${a.tipo})`,
+      value: a.id
+    }));
   });
+
+  // ==================== CONFIGURACIÓN NODO ACTIVO ====================
+
+  // Propiedades base disponibles
+  propiedadesBaseOptions = ACTIVO_PROPIEDADES_BASE;
+
+  // Opciones de filtros
+  filtroRiesgosCampos = FILTRO_CAMPOS_RIESGOS.map(c => ({ label: c.nombre, value: c.campo }));
+  filtroIncidentesCampos = FILTRO_CAMPOS_INCIDENTES.map(c => ({ label: c.nombre, value: c.campo }));
+  filtroDefectosCampos = FILTRO_CAMPOS_DEFECTOS.map(c => ({ label: c.nombre, value: c.campo }));
+  filtroOperadores = FILTRO_OPERADORES;
+
+  // Signals para formularios de filtros
+  nuevoFiltroRiesgosCampo = '';
+  nuevoFiltroRiesgosOperador = '';
+  nuevoFiltroRiesgosValor = '';
+  nuevoFiltroIncidentesCampo = '';
+  nuevoFiltroIncidentesOperador = '';
+  nuevoFiltroIncidentesValor = '';
+  nuevoFiltroDefectosCampo = '';
+  nuevoFiltroDefectosOperador = '';
+  nuevoFiltroDefectosValor = '';
+
+  // Filtros activos (signals)
+  filtrosRiesgosActivos = signal<FiltroRelacionados[]>([]);
+  filtrosIncidentesActivos = signal<FiltroRelacionados[]>([]);
+  filtrosDefectosActivos = signal<FiltroRelacionados[]>([]);
+
+  // Activo seleccionado en el nodo actual
+  activoSeleccionadoParaNodo = computed<Activo | null>(() => {
+    const node = this.processService.selectedNode();
+    if (!node || node.type !== 'activo') return null;
+    const activoId = (node.config as unknown as Record<string, unknown>)['activoId'] as string;
+    if (!activoId) return null;
+    return this.mockDataService.getActivoById(activoId) || null;
+  });
+
+  // Plantilla del activo seleccionado
+  plantillaDelActivo = computed<PlantillaActivo | null>(() => {
+    const activo = this.activoSeleccionadoParaNodo();
+    if (!activo) return null;
+    if (activo.plantillaId) {
+      return this.mockDataService.getPlantillaById(activo.plantillaId) || null;
+    }
+    return this.mockDataService.getPlantillaByTipoActivo(activo.tipo) || null;
+  });
+
+  // Propiedades custom disponibles para el activo
+  propiedadesCustomDelActivo = computed<PropiedadCustomDefinicion[]>(() => {
+    const plantilla = this.plantillaDelActivo();
+    return plantilla?.propiedades || [];
+  });
+
+  // Variables de salida generadas
+  variablesSalidaActivo = computed<string[]>(() => {
+    const node = this.processService.selectedNode();
+    if (!node || node.type !== 'activo') return [];
+    const config = node.config as unknown as Record<string, unknown>;
+    const propExpuestas = (config['propiedadesExpuestas'] as string[]) || [];
+    const propCustomExpuestas = (config['propiedadesCustomExpuestas'] as string[]) || [];
+    const exponerRiesgos = config['exponerRiesgos'] as boolean;
+    const exponerIncidentes = config['exponerIncidentes'] as boolean;
+    const exponerDefectos = config['exponerDefectos'] as boolean;
+
+    const variables: string[] = [];
+
+    // Variables de propiedades base
+    propExpuestas.forEach(p => variables.push(`activo.${p}`));
+
+    // Variables de propiedades custom
+    propCustomExpuestas.forEach(p => variables.push(`activo.custom.${p}`));
+
+    // Variables de arrays
+    if (exponerRiesgos) variables.push('activo.riesgos');
+    if (exponerIncidentes) variables.push('activo.incidentes');
+    if (exponerDefectos) variables.push('activo.defectos');
+
+    return variables;
+  });
+
+  // Métodos para manejo de activo
+  onAreaChange(area: string): void {
+    this.updateNodeConfig({ area });
+  }
+
+  onActivoChange(activoId: string): void {
+    const activo = this.mockDataService.getActivoById(activoId);
+    if (activo) {
+      this.updateNodeConfig({
+        activoId,
+        activoNombre: activo.nombre,
+        criticidad: activo.criticidad,
+        plantillaId: activo.plantillaId || '',
+        propiedadesExpuestas: ['nombre', 'tipo', 'criticidad'],
+        propiedadesCustomExpuestas: [],
+        exponerRiesgos: false,
+        exponerIncidentes: false,
+        exponerDefectos: false
+      });
+    }
+  }
+
+  isPropiedadExpuesta(campo: string): boolean {
+    const node = this.processService.selectedNode();
+    if (!node) return false;
+    const config = node.config as unknown as Record<string, unknown>;
+    const expuestas = (config['propiedadesExpuestas'] as string[]) || [];
+    return expuestas.includes(campo);
+  }
+
+  togglePropiedadExpuesta(campo: string, checked: boolean): void {
+    const node = this.processService.selectedNode();
+    if (!node) return;
+    const config = node.config as unknown as Record<string, unknown>;
+    const expuestas = [...((config['propiedadesExpuestas'] as string[]) || [])];
+
+    if (checked && !expuestas.includes(campo)) {
+      expuestas.push(campo);
+    } else if (!checked) {
+      const idx = expuestas.indexOf(campo);
+      if (idx > -1) expuestas.splice(idx, 1);
+    }
+
+    this.updateNodeConfig({ propiedadesExpuestas: expuestas });
+  }
+
+  isPropiedadCustomExpuesta(campo: string): boolean {
+    const node = this.processService.selectedNode();
+    if (!node) return false;
+    const config = node.config as unknown as Record<string, unknown>;
+    const expuestas = (config['propiedadesCustomExpuestas'] as string[]) || [];
+    return expuestas.includes(campo);
+  }
+
+  togglePropiedadCustomExpuesta(campo: string, checked: boolean): void {
+    const node = this.processService.selectedNode();
+    if (!node) return;
+    const config = node.config as unknown as Record<string, unknown>;
+    const expuestas = [...((config['propiedadesCustomExpuestas'] as string[]) || [])];
+
+    if (checked && !expuestas.includes(campo)) {
+      expuestas.push(campo);
+    } else if (!checked) {
+      const idx = expuestas.indexOf(campo);
+      if (idx > -1) expuestas.splice(idx, 1);
+    }
+
+    this.updateNodeConfig({ propiedadesCustomExpuestas: expuestas });
+  }
+
+  getValorPropiedadCustom(campo: string): any {
+    const activo = this.activoSeleccionadoParaNodo();
+    if (!activo || !activo.propiedadesCustom) return null;
+    const prop = activo.propiedadesCustom.find(p => p.campo === campo);
+    if (!prop) return null;
+
+    // Formatear el valor para mostrar
+    const valor = prop.valor;
+    if (Array.isArray(valor)) {
+      return valor.join(', ');
+    }
+    if (valor instanceof Date) {
+      return valor.toLocaleDateString();
+    }
+    if (typeof valor === 'boolean') {
+      return valor ? 'Sí' : 'No';
+    }
+    return valor;
+  }
+
+  agregarFiltroRiesgos(): void {
+    if (!this.nuevoFiltroRiesgosCampo || !this.nuevoFiltroRiesgosOperador) return;
+    const filtros = [...this.filtrosRiesgosActivos()];
+    filtros.push({
+      campo: this.nuevoFiltroRiesgosCampo,
+      operador: this.nuevoFiltroRiesgosOperador as FiltroRelacionados['operador'],
+      valor: this.nuevoFiltroRiesgosValor
+    });
+    this.filtrosRiesgosActivos.set(filtros);
+    this.updateNodeConfig({ filtrosRiesgos: filtros });
+    this.nuevoFiltroRiesgosCampo = '';
+    this.nuevoFiltroRiesgosOperador = '';
+    this.nuevoFiltroRiesgosValor = '';
+  }
+
+  removerFiltroRiesgos(index: number): void {
+    const filtros = [...this.filtrosRiesgosActivos()];
+    filtros.splice(index, 1);
+    this.filtrosRiesgosActivos.set(filtros);
+    this.updateNodeConfig({ filtrosRiesgos: filtros });
+  }
+
+  agregarFiltroIncidentes(): void {
+    if (!this.nuevoFiltroIncidentesCampo || !this.nuevoFiltroIncidentesOperador) return;
+    const filtros = [...this.filtrosIncidentesActivos()];
+    filtros.push({
+      campo: this.nuevoFiltroIncidentesCampo,
+      operador: this.nuevoFiltroIncidentesOperador as FiltroRelacionados['operador'],
+      valor: this.nuevoFiltroIncidentesValor
+    });
+    this.filtrosIncidentesActivos.set(filtros);
+    this.updateNodeConfig({ filtrosIncidentes: filtros });
+    this.nuevoFiltroIncidentesCampo = '';
+    this.nuevoFiltroIncidentesOperador = '';
+    this.nuevoFiltroIncidentesValor = '';
+  }
+
+  removerFiltroIncidentes(index: number): void {
+    const filtros = [...this.filtrosIncidentesActivos()];
+    filtros.splice(index, 1);
+    this.filtrosIncidentesActivos.set(filtros);
+    this.updateNodeConfig({ filtrosIncidentes: filtros });
+  }
+
+  agregarFiltroDefectos(): void {
+    if (!this.nuevoFiltroDefectosCampo || !this.nuevoFiltroDefectosOperador) return;
+    const filtros = [...this.filtrosDefectosActivos()];
+    filtros.push({
+      campo: this.nuevoFiltroDefectosCampo,
+      operador: this.nuevoFiltroDefectosOperador as FiltroRelacionados['operador'],
+      valor: this.nuevoFiltroDefectosValor
+    });
+    this.filtrosDefectosActivos.set(filtros);
+    this.updateNodeConfig({ filtrosDefectos: filtros });
+    this.nuevoFiltroDefectosCampo = '';
+    this.nuevoFiltroDefectosOperador = '';
+    this.nuevoFiltroDefectosValor = '';
+  }
+
+  removerFiltroDefectos(index: number): void {
+    const filtros = [...this.filtrosDefectosActivos()];
+    filtros.splice(index, 1);
+    this.filtrosDefectosActivos.set(filtros);
+    this.updateNodeConfig({ filtrosDefectos: filtros });
+  }
+
+  // ==================== FIN CONFIGURACIÓN NODO ACTIVO ====================
 
   // Opciones de modelos LLM para selector
   llmModelOptions = this.groqService.getAvailableModels().map(m => ({

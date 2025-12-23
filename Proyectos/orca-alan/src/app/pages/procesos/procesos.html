@@ -35,16 +35,9 @@
 
   <!-- Main Content -->
   <div class="main-editor-content">
-    <!-- Top Header con Breadcrumb -->
+    <!-- Top Header -->
     <header class="top-header-bar">
       <div class="breadcrumb-section">
-        <nav class="breadcrumb-nav">
-          <a routerLink="/dashboard" class="breadcrumb-item"><i class="pi pi-home"></i></a>
-          <span class="breadcrumb-separator"><i class="pi pi-angle-right"></i></span>
-          <a routerLink="/procesos" class="breadcrumb-item">Procesos</a>
-          <span class="breadcrumb-separator"><i class="pi pi-angle-right"></i></span>
-          <span class="breadcrumb-current">Editor</span>
-        </nav>
         <div class="page-title-section">
           <div class="title-with-icon">
             <div class="page-icon">
@@ -514,23 +507,228 @@
               }
 
               @case ('activo') {
+                <!-- Identificación del Activo -->
                 <div class="props-section">
-                  <label class="props-label">Area del Activo:</label>
+                  <label class="props-label">Área del Activo:</label>
                   <p-select [options]="areaOptions" [ngModel]="getConfigValue(node, 'area')"
-                            (ngModelChange)="updateNodeConfig({ area: $event })"
-                            placeholder="Seleccionar area..." styleClass="w-full"></p-select>
+                            (ngModelChange)="onAreaChange($event)"
+                            placeholder="Seleccionar área..." styleClass="w-full"></p-select>
                 </div>
 
                 <div class="props-section">
                   <label class="props-label">Activo:</label>
                   <p-select [options]="activoOptions()" [ngModel]="getConfigValue(node, 'activoId')"
-                            (ngModelChange)="updateNodeConfig({ activoId: $event })"
+                            (ngModelChange)="onActivoChange($event)"
                             placeholder="Seleccionar activo..." styleClass="w-full"></p-select>
                 </div>
 
-                <button class="props-action-btn primary" (click)="vincularActivo()">
-                  Vincular activos
-                </button>
+                <!-- Info del activo seleccionado -->
+                @if (activoSeleccionadoParaNodo()) {
+                  <div class="activo-info-card">
+                    <div class="activo-info-header">
+                      <span class="material-symbols-rounded">inventory_2</span>
+                      <div>
+                        <strong>{{ activoSeleccionadoParaNodo()!.nombre }}</strong>
+                        <small>{{ activoSeleccionadoParaNodo()!.tipo | titlecase }} - {{ activoSeleccionadoParaNodo()!.criticidad | titlecase }}</small>
+                      </div>
+                    </div>
+                    @if (plantillaDelActivo()) {
+                      <p-tag [value]="plantillaDelActivo()!.nombre" severity="info" [style]="{ marginTop: '0.5rem' }"></p-tag>
+                    }
+                  </div>
+
+                  <p-divider></p-divider>
+
+                  <!-- Propiedades Base a Exponer -->
+                  <div class="props-section">
+                    <label class="props-label">
+                      <span class="material-symbols-rounded" style="font-size: 1rem; vertical-align: middle;">output</span>
+                      Propiedades Base a Exponer:
+                    </label>
+                    <div class="props-checkbox-grid">
+                      @for (prop of propiedadesBaseOptions; track prop.campo) {
+                        <div class="props-checkbox-item">
+                          <p-checkbox [ngModel]="isPropiedadExpuesta(prop.campo)"
+                                      (ngModelChange)="togglePropiedadExpuesta(prop.campo, $event)"
+                                      [binary]="true" [inputId]="'prop-' + prop.campo"></p-checkbox>
+                          <label [for]="'prop-' + prop.campo">{{ prop.nombre }}</label>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Propiedades Custom del Activo -->
+                  @if (propiedadesCustomDelActivo().length > 0) {
+                    <p-divider></p-divider>
+                    <div class="props-section">
+                      <label class="props-label">
+                        <span class="material-symbols-rounded" style="font-size: 1rem; vertical-align: middle;">tune</span>
+                        Propiedades Custom a Exponer:
+                      </label>
+                      <div class="props-checkbox-grid">
+                        @for (prop of propiedadesCustomDelActivo(); track prop.campo) {
+                          <div class="props-checkbox-item">
+                            <p-checkbox [ngModel]="isPropiedadCustomExpuesta(prop.campo)"
+                                        (ngModelChange)="togglePropiedadCustomExpuesta(prop.campo, $event)"
+                                        [binary]="true" [inputId]="'cprop-' + prop.campo"></p-checkbox>
+                            <label [for]="'cprop-' + prop.campo">
+                              {{ prop.nombre }}
+                              @if (getValorPropiedadCustom(prop.campo); as valor) {
+                                <span class="prop-value-preview">= {{ valor }}</span>
+                              }
+                            </label>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+
+                  <p-divider></p-divider>
+
+                  <!-- Arrays Relacionados -->
+                  <div class="props-section">
+                    <label class="props-label">
+                      <span class="material-symbols-rounded" style="font-size: 1rem; vertical-align: middle;">dataset</span>
+                      Arrays Relacionados:
+                    </label>
+
+                    <!-- Riesgos -->
+                    <div class="array-config-item">
+                      <div class="array-config-header">
+                        <p-checkbox [ngModel]="getConfigValue(node, 'exponerRiesgos') || false"
+                                    (ngModelChange)="updateNodeConfig({ exponerRiesgos: $event })"
+                                    [binary]="true" inputId="exp-riesgos"></p-checkbox>
+                        <label for="exp-riesgos" class="array-config-label">
+                          <span class="material-symbols-rounded" style="color: #EF4444;">warning</span>
+                          Riesgos ({{ activoSeleccionadoParaNodo()!.riesgos.length }})
+                        </label>
+                      </div>
+                      @if (getConfigValue(node, 'exponerRiesgos')) {
+                        <div class="array-filters">
+                          <small class="filter-hint">Filtros opcionales:</small>
+                          <div class="filter-row">
+                            <p-select [options]="filtroRiesgosCampos" [(ngModel)]="nuevoFiltroRiesgosCampo"
+                                      placeholder="Campo..." styleClass="filter-select"></p-select>
+                            <p-select [options]="filtroOperadores" [(ngModel)]="nuevoFiltroRiesgosOperador"
+                                      placeholder="Operador..." styleClass="filter-select"></p-select>
+                            <input pInputText [(ngModel)]="nuevoFiltroRiesgosValor" placeholder="Valor..."
+                                   class="filter-input" />
+                            <button class="filter-add-btn" (click)="agregarFiltroRiesgos()" pTooltip="Agregar filtro">
+                              <span class="material-symbols-rounded">add</span>
+                            </button>
+                          </div>
+                          @if (filtrosRiesgosActivos().length > 0) {
+                            <div class="active-filters">
+                              @for (filtro of filtrosRiesgosActivos(); track $index) {
+                                <p-chip [label]="filtro.campo + ' ' + filtro.operador + ' ' + filtro.valor"
+                                        [removable]="true" (onRemove)="removerFiltroRiesgos($index)"></p-chip>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Incidentes -->
+                    <div class="array-config-item">
+                      <div class="array-config-header">
+                        <p-checkbox [ngModel]="getConfigValue(node, 'exponerIncidentes') || false"
+                                    (ngModelChange)="updateNodeConfig({ exponerIncidentes: $event })"
+                                    [binary]="true" inputId="exp-incidentes"></p-checkbox>
+                        <label for="exp-incidentes" class="array-config-label">
+                          <span class="material-symbols-rounded" style="color: #F59E0B;">report</span>
+                          Incidentes ({{ activoSeleccionadoParaNodo()!.incidentes.length }})
+                        </label>
+                      </div>
+                      @if (getConfigValue(node, 'exponerIncidentes')) {
+                        <div class="array-filters">
+                          <small class="filter-hint">Filtros opcionales:</small>
+                          <div class="filter-row">
+                            <p-select [options]="filtroIncidentesCampos" [(ngModel)]="nuevoFiltroIncidentesCampo"
+                                      placeholder="Campo..." styleClass="filter-select"></p-select>
+                            <p-select [options]="filtroOperadores" [(ngModel)]="nuevoFiltroIncidentesOperador"
+                                      placeholder="Operador..." styleClass="filter-select"></p-select>
+                            <input pInputText [(ngModel)]="nuevoFiltroIncidentesValor" placeholder="Valor..."
+                                   class="filter-input" />
+                            <button class="filter-add-btn" (click)="agregarFiltroIncidentes()" pTooltip="Agregar filtro">
+                              <span class="material-symbols-rounded">add</span>
+                            </button>
+                          </div>
+                          @if (filtrosIncidentesActivos().length > 0) {
+                            <div class="active-filters">
+                              @for (filtro of filtrosIncidentesActivos(); track $index) {
+                                <p-chip [label]="filtro.campo + ' ' + filtro.operador + ' ' + filtro.valor"
+                                        [removable]="true" (onRemove)="removerFiltroIncidentes($index)"></p-chip>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Defectos -->
+                    <div class="array-config-item">
+                      <div class="array-config-header">
+                        <p-checkbox [ngModel]="getConfigValue(node, 'exponerDefectos') || false"
+                                    (ngModelChange)="updateNodeConfig({ exponerDefectos: $event })"
+                                    [binary]="true" inputId="exp-defectos"></p-checkbox>
+                        <label for="exp-defectos" class="array-config-label">
+                          <span class="material-symbols-rounded" style="color: #8B5CF6;">bug_report</span>
+                          Defectos ({{ activoSeleccionadoParaNodo()!.defectos.length }})
+                        </label>
+                      </div>
+                      @if (getConfigValue(node, 'exponerDefectos')) {
+                        <div class="array-filters">
+                          <small class="filter-hint">Filtros opcionales:</small>
+                          <div class="filter-row">
+                            <p-select [options]="filtroDefectosCampos" [(ngModel)]="nuevoFiltroDefectosCampo"
+                                      placeholder="Campo..." styleClass="filter-select"></p-select>
+                            <p-select [options]="filtroOperadores" [(ngModel)]="nuevoFiltroDefectosOperador"
+                                      placeholder="Operador..." styleClass="filter-select"></p-select>
+                            <input pInputText [(ngModel)]="nuevoFiltroDefectosValor" placeholder="Valor..."
+                                   class="filter-input" />
+                            <button class="filter-add-btn" (click)="agregarFiltroDefectos()" pTooltip="Agregar filtro">
+                              <span class="material-symbols-rounded">add</span>
+                            </button>
+                          </div>
+                          @if (filtrosDefectosActivos().length > 0) {
+                            <div class="active-filters">
+                              @for (filtro of filtrosDefectosActivos(); track $index) {
+                                <p-chip [label]="filtro.campo + ' ' + filtro.operador + ' ' + filtro.valor"
+                                        [removable]="true" (onRemove)="removerFiltroDefectos($index)"></p-chip>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <p-divider></p-divider>
+
+                  <!-- Resumen de Variables de Salida -->
+                  <div class="props-section">
+                    <label class="props-label">
+                      <span class="material-symbols-rounded" style="font-size: 1rem; vertical-align: middle;">code</span>
+                      Variables de Salida:
+                    </label>
+                    <div class="output-vars-preview">
+                      @for (variable of variablesSalidaActivo(); track variable) {
+                        <code class="output-var">{{ '{{' }}{{ variable }}{{ '}}' }}</code>
+                      }
+                      @if (variablesSalidaActivo().length === 0) {
+                        <small class="text-muted">Selecciona propiedades para generar variables</small>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (!activoSeleccionadoParaNodo()) {
+                  <div class="props-empty-state">
+                    <span class="material-symbols-rounded">inventory_2</span>
+                    <p>Selecciona un activo para configurar sus propiedades</p>
+                  </div>
+                }
               }
 
               @case ('llm') {
