@@ -422,10 +422,64 @@
         </div>
         <div class="col-12 md:col-6">
           <label class="block font-medium mb-2 text-900">Marco Normativo</label>
-          <p-select [options]="marcosNormativos()" optionLabel="acronimo" optionValue="id"
-                    [ngModel]="wizardDatosGenerales().marcoNormativo"
-                    (ngModelChange)="actualizarDatosGenerales('marcoNormativo', $event)"
-                    placeholder="Seleccionar marco" styleClass="w-full" [showClear]="true" />
+          <p-multiselect [options]="marcosNormativos()" [(ngModel)]="wizardMarcosSeleccionados"
+                         (ngModelChange)="actualizarMarcosSeleccionados($event)"
+                         placeholder="Seleccionar marcos" optionLabel="acronimo"
+                         class="w-full" display="chip" [showClear]="true">
+            <ng-template let-marco #item>
+              <div class="flex items-center gap-2">
+                <i class="pi pi-book text-primary"></i>
+                <div>
+                  <span class="font-medium">{{ marco.acronimo }}</span>
+                  <span class="text-500 text-xs ml-2">{{ marco.version }}</span>
+                </div>
+              </div>
+            </ng-template>
+            <ng-template #dropdownicon>
+              <i class="pi pi-chevron-down"></i>
+            </ng-template>
+            <ng-template #header>
+              <div class="font-medium px-3 py-2 surface-100">Marcos Normativos Disponibles</div>
+            </ng-template>
+            <ng-template #footer>
+              <div class="border-top-1 surface-border">
+                <!-- Formulario inline para agregar nuevo marco -->
+                @if (mostrandoFormularioMarco()) {
+                  <div class="p-3">
+                    <div class="flex flex-column gap-2">
+                      <div class="flex gap-2">
+                        <input pInputText [(ngModel)]="nuevoMarcoInline().acronimo"
+                               class="flex-1" placeholder="Acrónimo *"
+                               (click)="$event.stopPropagation()" />
+                        <input pInputText [(ngModel)]="nuevoMarcoInline().version"
+                               style="width: 80px" placeholder="Versión"
+                               (click)="$event.stopPropagation()" />
+                      </div>
+                      <input pInputText [(ngModel)]="nuevoMarcoInline().nombre"
+                             class="w-full" placeholder="Nombre completo *"
+                             (click)="$event.stopPropagation()" />
+                      <div class="flex justify-content-end gap-2 mt-1">
+                        <p-button icon="pi pi-times" severity="secondary" text size="small"
+                                  (onClick)="cancelarNuevoMarcoInline(); $event.stopPropagation()"
+                                  pTooltip="Cancelar" />
+                        <p-button icon="pi pi-check" severity="success" size="small"
+                                  (onClick)="agregarMarcoInline(); $event.stopPropagation()"
+                                  [disabled]="!nuevoMarcoInline().acronimo || !nuevoMarcoInline().nombre"
+                                  pTooltip="Agregar" />
+                      </div>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="p-3 flex justify-content-between">
+                    <p-button label="Agregar Nuevo" severity="secondary" text size="small" icon="pi pi-plus"
+                              (onClick)="mostrarFormularioMarcoInline(); $event.stopPropagation()" />
+                    <p-button label="Quitar Todos" severity="danger" text size="small" icon="pi pi-times"
+                              (onClick)="limpiarMarcosSeleccionados()" [disabled]="!wizardMarcosSeleccionados.length" />
+                  </div>
+                }
+              </div>
+            </ng-template>
+          </p-multiselect>
         </div>
         <div class="col-12 md:col-6">
           <label class="block font-medium mb-2 text-900">Tipo de Evaluación</label>
@@ -1419,6 +1473,36 @@
     <div class="flex justify-content-end gap-2">
       <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="cerrarDialogoMarco()" />
       <p-button label="Agregar" icon="pi pi-plus" (onClick)="agregarNuevoMarco()" [disabled]="!nuevoMarco().acronimo || !nuevoMarco().nombre" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Diálogo para agregar nuevo Marco Normativo desde Wizard -->
+<p-dialog header="Agregar Nuevo Marco Normativo" [(visible)]="mostrarDialogoMarcoWizard" [modal]="true" [style]="{width: '500px'}" [draggable]="false">
+  <div class="flex flex-column gap-4 pt-3">
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <label class="block text-700 text-sm font-medium mb-2">Acrónimo *</label>
+        <input pInputText [(ngModel)]="nuevoMarco().acronimo" class="w-full" placeholder="Ej: ISO 27001" />
+      </div>
+      <div class="col-12 md:col-6">
+        <label class="block text-700 text-sm font-medium mb-2">Versión</label>
+        <input pInputText [(ngModel)]="nuevoMarco().version" class="w-full" placeholder="Ej: 2022" />
+      </div>
+    </div>
+    <div>
+      <label class="block text-700 text-sm font-medium mb-2">Nombre Completo *</label>
+      <input pInputText [(ngModel)]="nuevoMarco().nombre" class="w-full" placeholder="Ej: Sistema de Gestión de Seguridad de la Información" />
+    </div>
+    <div>
+      <label class="block text-700 text-sm font-medium mb-2">Descripción</label>
+      <textarea pTextarea [(ngModel)]="nuevoMarco().descripcion" class="w-full" rows="3" placeholder="Descripción breve del marco normativo..."></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="cerrarDialogoMarcoWizard()" />
+      <p-button label="Agregar Marco" icon="pi pi-plus" (onClick)="agregarNuevoMarcoWizard()" [disabled]="!nuevoMarco().acronimo || !nuevoMarco().nombre" />
     </div>
   </ng-template>
 </p-dialog>

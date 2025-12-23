@@ -637,6 +637,18 @@
   }
 }
 
+.persona-con-menu {
+  display: flex;
+  align-items: center;
+
+  ::ng-deep .p-button.p-button-text {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    flex-shrink: 0;
+  }
+}
+
 // Pregunta field nuevo
 .pregunta-field-new {
   padding: 1rem;

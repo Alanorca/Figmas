@@ -1100,3 +1100,248 @@
     }
   }
 }
+
+// ==================== DRILLDOWN DRAWER ====================
+.drilldown-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.drilldown-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.drilldown-kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  background: var(--surface-ground);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--surface-border);
+
+  .kpi-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius);
+
+    i {
+      font-size: 1.125rem;
+    }
+  }
+
+  .kpi-info {
+    display: flex;
+    flex-direction: column;
+
+    .kpi-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-color);
+      line-height: 1.2;
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      color: var(--text-color-secondary);
+    }
+  }
+}
+
+.drilldown-section {
+  background: var(--surface-ground);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  border: 1px solid var(--surface-border);
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+
+    i {
+      color: var(--primary-color);
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.chart-container-drilldown {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.objetivos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.objetivo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface-card);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--surface-border);
+
+  .objetivo-info {
+    flex: 1;
+    min-width: 0;
+
+    .objetivo-nombre {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .objetivo-meta {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+
+      span {
+        font-size: 0.6875rem;
+        color: var(--text-color-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+
+        i {
+          font-size: 0.625rem;
+        }
+      }
+
+      .alertas-count {
+        color: var(--orange-500);
+      }
+    }
+  }
+
+  .objetivo-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .progress-bar-mini {
+      width: 60px;
+      height: 6px;
+      background: var(--surface-200);
+      border-radius: 3px;
+      overflow: hidden;
+
+      .progress-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+
+        &.progreso-bueno {
+          background: var(--green-500);
+        }
+
+        &.progreso-regular {
+          background: var(--orange-500);
+        }
+
+        &.progreso-bajo {
+          background: var(--red-500);
+        }
+      }
+    }
+
+    .progress-value {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-color);
+      min-width: 35px;
+      text-align: right;
+    }
+  }
+}
+
+.alertas-mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.alerta-mini-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-card);
+  border-radius: var(--border-radius);
+  border-left: 3px solid;
+
+  &.severity-critical {
+    border-left-color: var(--red-500);
+
+    > i {
+      color: var(--red-500);
+    }
+  }
+
+  &.severity-warning {
+    border-left-color: var(--orange-500);
+
+    > i {
+      color: var(--orange-500);
+    }
+  }
+
+  &.severity-info {
+    border-left-color: var(--blue-500);
+
+    > i {
+      color: var(--blue-500);
+    }
+  }
+
+  > i {
+    font-size: 0.875rem;
+  }
+
+  .alerta-mini-content {
+    flex: 1;
+    min-width: 0;
+
+    .alerta-mini-kpi {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .alerta-mini-msg {
+      display: block;
+      font-size: 0.6875rem;
+      color: var(--text-color-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .alerta-mini-valor {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+}

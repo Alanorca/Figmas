@@ -204,7 +204,8 @@ export class CumplimientoComponent {
   showMarcoDialog = signal(false);
   modoEdicionAsignacion = signal(false);
   asignacionEditandoId = signal<string | null>(null);
-  pasoAsignacion = signal(0); // 0: Tipo, 1: Info, 2: Asignados, 3: Config
+  pasoAsignacion = signal(0); // 0: Tipo, 1: Info, 2: Asignados, 3: Config, 4: Éxito
+  revisionCreada = signal(false); // Para controlar el paso de éxito
 
   // =============================================
   // SELECCIONES
@@ -314,6 +315,7 @@ export class CumplimientoComponent {
   sidebarTabActivo = signal<'navegacion' | 'participantes' | 'chat'>('navegacion');
   seccionRespuestasExpandida = signal(true);
   seccionAprobadoresExpandida = signal(true);
+  seccionEvaluadosExternosExpandida = signal(true);
   showChatSidebar = signal(false); // Mantener por compatibilidad
   mensajeChat = signal('');
   mensajesChat = signal<MensajeChat[]>([]);
@@ -1570,6 +1572,138 @@ export class CumplimientoComponent {
       this.showAsignarDialog.set(false);
       this.messageService.add({ severity: 'success', summary: 'Asignado', detail: 'Cuestionario asignado exitosamente' });
     }
+  }
+
+  // Método para crear revisión y mostrar pantalla de éxito
+  crearRevisionYMostrarExito(activateCallback: (step: number) => void) {
+    const nueva = this.nuevaAsignacion();
+
+    if (!nueva.titulo || !nueva.cuestionarioIds || nueva.cuestionarioIds.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Complete los campos requeridos (título y al menos un cuestionario)' });
+      return;
+    }
+
+    // Si es modo edición, usar el método normal
+    if (this.modoEdicionAsignacion()) {
+      this.guardarAsignacion();
+      return;
+    }
+
+    // Crear la asignación (mismo código que guardarAsignacion pero sin cerrar el diálogo)
+    const usuariosNombres = (nueva.usuariosAsignados || []).map(id =>
+      this.usuariosDisponibles.find(u => u.value === id)?.label || ''
+    ).filter(n => n);
+    const activosNombres = (nueva.activosObjetivo || []).map(id =>
+      this.activosDisponibles.find(a => a.value === id)?.label || ''
+    ).filter(n => n);
+    const procesosNombres = (nueva.procesosObjetivo || []).map(id =>
+      this.procesosDisponibles.find(p => p.value === id)?.label || ''
+    ).filter(n => n);
+    const aprobadoresNombres = (nueva.aprobadores || []).map(id =>
+      this.usuariosDisponibles.find(u => u.value === id)?.label || ''
+    ).filter(n => n);
+    const evaluadosInternosNombres = (nueva.evaluadosInternos || []).map(id =>
+      this.usuariosDisponibles.find(u => u.value === id)?.label || ''
+    ).filter(n => n);
+
+    const asignacion: AsignacionCuestionario = {
+      id: crypto.randomUUID(),
+      cuestionarioId: nueva.cuestionarioIds![0],
+      cuestionarioIds: nueva.cuestionarioIds,
+      titulo: nueva.titulo!,
+      tipoRevision: nueva.tipoRevision as 'interna' | 'externa',
+      usuariosAsignados: nueva.usuariosAsignados || [],
+      usuariosAsignadosNombres: usuariosNombres,
+      emailsExternos: nueva.emailsExternos || [],
+      activosObjetivo: nueva.activosObjetivo || [],
+      activosObjetivoNombres: activosNombres,
+      procesosObjetivo: nueva.procesosObjetivo || [],
+      procesosObjetivoNombres: procesosNombres,
+      aprobadores: nueva.aprobadores || [],
+      aprobadoresNombres: aprobadoresNombres,
+      evaluadosInternos: nueva.evaluadosInternos || [],
+      evaluadosInternosNombres: evaluadosInternosNombres,
+      evaluadosExternos: nueva.evaluadosExternos || [],
+      tokenAccesoExterno: nueva.tokenAccesoExterno || crypto.randomUUID(),
+      areaId: '',
+      areaNombre: '',
+      responsableId: nueva.responsableId || '',
+      responsableNombre: this.usuariosDisponibles.find(u => u.value === nueva.responsableId)?.label || '',
+      fechaAsignacion: new Date(),
+      fechaInicio: nueva.fechaInicio!,
+      fechaVencimiento: nueva.fechaVencimiento!,
+      estado: 'pendiente',
+      progreso: 0,
+      instrucciones: nueva.instrucciones || '',
+      recordatorios: nueva.recordatorios!,
+      recurrencia: nueva.recurrencia
+    };
+
+    this.asignaciones.update(lista => [...lista, asignacion]);
+
+    // Actualizar el token en la asignación para el link
+    this.nuevaAsignacion.update(a => ({ ...a, tokenAccesoExterno: asignacion.tokenAccesoExterno }));
+
+    // Marcar como creada y mostrar paso de éxito
+    this.revisionCreada.set(true);
+    activateCallback(4); // Ir al paso de éxito
+  }
+
+  // Obtener link de acceso externo
+  getLinkAccesoExterno(): string {
+    const token = this.nuevaAsignacion().tokenAccesoExterno || 'demo-token';
+    return `${window.location.origin}/cumplimiento?portal=externo&token=${token}`;
+  }
+
+  // Copiar link de acceso en pantalla de éxito
+  copiarLinkAccesoExito() {
+    const link = this.getLinkAccesoExterno();
+    navigator.clipboard.writeText(link);
+    this.messageService.add({ severity: 'success', summary: 'Copiado', detail: 'Link de acceso copiado al portapapeles' });
+  }
+
+  // Exportar credenciales de evaluados externos
+  exportarCredenciales() {
+    const evaluados = this.nuevaAsignacion().evaluadosExternos || [];
+    if (evaluados.length === 0) return;
+
+    let csv = 'Nombre,Email,Contraseña\n';
+    evaluados.forEach(e => {
+      csv += `"${e.nombre}","${e.email}","${e.password}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `credenciales_evaluados_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    this.messageService.add({ severity: 'success', summary: 'Exportado', detail: 'Credenciales exportadas a CSV' });
+  }
+
+  // Cerrar diálogo de asignación y resetear
+  cerrarDialogoAsignacion() {
+    this.showAsignarDialog.set(false);
+    this.revisionCreada.set(false);
+    this.pasoAsignacion.set(0);
+    this.nuevaAsignacion.set({
+      titulo: '',
+      tipoRevision: 'interna',
+      cuestionarioIds: [],
+      usuariosAsignados: [],
+      emailsExternos: [],
+      activosObjetivo: [],
+      procesosObjetivo: [],
+      aprobadores: [],
+      evaluadosInternos: [],
+      evaluadosExternos: [],
+      fechaInicio: new Date(),
+      fechaVencimiento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      instrucciones: '',
+      recordatorios: true,
+      recurrencia: { habilitada: false, frecuencia: 'mensual', intervalo: 1 }
+    });
   }
 
   responderCuestionario(asignacion: AsignacionCuestionario) {
@@ -3000,6 +3134,59 @@ export class CumplimientoComponent {
 
   toggleSeccionAprobadores() {
     this.seccionAprobadoresExpandida.update(v => !v);
+  }
+
+  toggleSeccionEvaluadosExternos() {
+    this.seccionEvaluadosExternosExpandida.update(v => !v);
+  }
+
+  getMenuEvaluadoExterno(evaluado: { id: string; nombre: string; email: string; password?: string }): MenuItem[] {
+    return [
+      {
+        label: 'Reenviar Credenciales',
+        icon: 'pi pi-send',
+        command: () => this.reenviarCredenciales(evaluado)
+      }
+    ];
+  }
+
+  getMenuPersonaExterna(persona: { id: string; nombre: string; email?: string }): MenuItem[] {
+    return [
+      {
+        label: 'Reenviar Credenciales',
+        icon: 'pi pi-send',
+        command: () => this.reenviarCredencialesPersona(persona)
+      }
+    ];
+  }
+
+  reenviarCredencialesPersona(persona: { id: string; nombre: string; email?: string }) {
+    const linkAcceso = this.getLinkAccesoExterno();
+    const email = persona.email || 'correo no disponible';
+
+    console.log('Reenviando credenciales a:', email);
+    console.log('Link de acceso:', linkAcceso);
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Credenciales reenviadas',
+      detail: `Se ha enviado un correo a ${persona.nombre} con su contraseña y link de acceso al portal.`
+    });
+  }
+
+  reenviarCredenciales(evaluado: { id: string; nombre: string; email: string; password?: string }) {
+    // Simular envío de correo con contraseña y link de acceso al portal
+    const linkAcceso = this.getLinkAccesoExterno();
+
+    // En producción aquí se haría la llamada al backend para enviar el correo
+    console.log('Reenviando credenciales a:', evaluado.email);
+    console.log('Link de acceso:', linkAcceso);
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Credenciales reenviadas',
+      detail: `Se ha enviado un correo a ${evaluado.email} con su contraseña y link de acceso al portal.`
+    });
   }
 
   // Helpers para mostrar estado

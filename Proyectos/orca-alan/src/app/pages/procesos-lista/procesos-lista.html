@@ -364,7 +364,7 @@
                 </thead>
                 <tbody>
                   @for (proceso of procesosFiltrados(); track proceso.procesoId) {
-                    <tr class="proceso-row" (click)="navegarAObjetivosKPIs(proceso.procesoId)">
+                    <tr class="proceso-row" (click)="abrirDrilldownProceso(proceso)">
                       <td class="col-proceso">
                         <span class="proceso-nombre">{{ proceso.procesoNombre }}</span>
                       </td>
@@ -613,6 +613,134 @@
                 (onClick)="showAccionesMasivasDrawer.set(false)" />
       <p-button label="Aplicar cambios" icon="pi pi-check"
                 (onClick)="aplicarAccionesMasivas()" />
+    </div>
+  </ng-template>
+</p-drawer>
+
+<!-- Drawer Drilldown Proceso -->
+<p-drawer [(visible)]="showDrilldownDrawer" position="right" [style]="{width: '550px'}">
+  <ng-template pTemplate="header">
+    <div class="flex align-items-center gap-3 w-full">
+      <div class="flex align-items-center justify-content-center bg-primary border-circle" style="width: 40px; height: 40px;">
+        <i class="pi pi-sitemap text-white"></i>
+      </div>
+      <div class="flex-1">
+        <h3 class="m-0 text-lg font-semibold">{{ drilldownProceso()?.procesoNombre }}</h3>
+        <span class="text-500 text-sm">Resumen de KPIs y Objetivos</span>
+      </div>
+    </div>
+  </ng-template>
+
+  @if (drilldownProceso()) {
+    <div class="drilldown-content">
+      <!-- KPIs Resumen -->
+      <div class="drilldown-kpis-grid">
+        <div class="drilldown-kpi-card">
+          <div class="kpi-icon bg-blue-100">
+            <i class="pi pi-flag text-blue-500"></i>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ drilldownProceso()!.totalObjetivos }}</span>
+            <span class="kpi-label">Objetivos</span>
+          </div>
+        </div>
+        <div class="drilldown-kpi-card">
+          <div class="kpi-icon bg-purple-100">
+            <i class="pi pi-chart-line text-purple-500"></i>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ drilldownProceso()!.totalKPIs }}</span>
+            <span class="kpi-label">KPIs</span>
+          </div>
+        </div>
+        <div class="drilldown-kpi-card">
+          <div class="kpi-icon" [ngClass]="drilldownProceso()!.cumplimientoPromedio >= 70 ? 'bg-green-100' : 'bg-orange-100'">
+            <i class="pi pi-percentage" [ngClass]="drilldownProceso()!.cumplimientoPromedio >= 70 ? 'text-green-500' : 'text-orange-500'"></i>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ drilldownProceso()!.cumplimientoPromedio }}%</span>
+            <span class="kpi-label">Cumplimiento</span>
+          </div>
+        </div>
+        <div class="drilldown-kpi-card">
+          <div class="kpi-icon" [ngClass]="drilldownProceso()!.alertasCriticas > 0 ? 'bg-red-100' : 'bg-green-100'">
+            <i class="pi pi-bell" [ngClass]="drilldownProceso()!.alertasCriticas > 0 ? 'text-red-500' : 'text-green-500'"></i>
+          </div>
+          <div class="kpi-info">
+            <span class="kpi-value">{{ drilldownProceso()!.alertasActivas }}</span>
+            <span class="kpi-label">Alertas</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfica de Cumplimiento Radial -->
+      <div class="drilldown-section">
+        <h4 class="section-title"><i class="pi pi-chart-pie"></i> Cumplimiento General</h4>
+        <div class="chart-container-drilldown">
+          <p-chart type="doughnut" [data]="drilldownChartCumplimiento()" [options]="drilldownChartOptions" height="180px"></p-chart>
+        </div>
+      </div>
+
+      <!-- Gráfica de Tendencia -->
+      <div class="drilldown-section">
+        <h4 class="section-title"><i class="pi pi-chart-line"></i> Tendencia Últimos 6 Meses</h4>
+        <div class="chart-container-drilldown">
+          <p-chart type="line" [data]="drilldownChartTendencia()" [options]="drilldownLineOptions" height="150px"></p-chart>
+        </div>
+      </div>
+
+      <!-- Lista de Objetivos -->
+      <div class="drilldown-section">
+        <h4 class="section-title"><i class="pi pi-list"></i> Objetivos del Proceso</h4>
+        <div class="objetivos-list">
+          @for (objetivo of drilldownObjetivos(); track objetivo.id) {
+            <div class="objetivo-item">
+              <div class="objetivo-info">
+                <span class="objetivo-nombre">{{ objetivo.nombre }}</span>
+                <div class="objetivo-meta">
+                  <span class="kpis-count"><i class="pi pi-chart-bar"></i> {{ objetivo.kpis }} KPIs</span>
+                  @if (objetivo.alertas > 0) {
+                    <span class="alertas-count"><i class="pi pi-exclamation-triangle"></i> {{ objetivo.alertas }}</span>
+                  }
+                </div>
+              </div>
+              <div class="objetivo-progress">
+                <div class="progress-bar-mini">
+                  <div class="progress-fill" [ngClass]="getProgresoClass(objetivo.cumplimiento)" [style.width.%]="objetivo.cumplimiento"></div>
+                </div>
+                <span class="progress-value">{{ objetivo.cumplimiento }}%</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Alertas Activas -->
+      @if (drilldownProceso()!.alertasActivas > 0) {
+        <div class="drilldown-section">
+          <h4 class="section-title"><i class="pi pi-bell"></i> Alertas Activas</h4>
+          <div class="alertas-mini-list">
+            @for (alerta of drilldownAlertas(); track alerta.id) {
+              <div class="alerta-mini-item" [ngClass]="'severity-' + alerta.severity">
+                <i [class]="alerta.severity === 'critical' ? 'pi pi-times-circle' : 'pi pi-exclamation-circle'"></i>
+                <div class="alerta-mini-content">
+                  <span class="alerta-mini-kpi">{{ alerta.kpiNombre }}</span>
+                  <span class="alerta-mini-msg">{{ alerta.mensaje }}</span>
+                </div>
+                <span class="alerta-mini-valor">{{ alerta.valorActual }}%</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-content-between w-full">
+      <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="showDrilldownDrawer.set(false)" />
+      <p-button label="Ver Detalle Completo" icon="pi pi-external-link" iconPos="right"
+                (onClick)="navegarAObjetivosKPIs(drilldownProceso()!.procesoId)" />
     </div>
   </ng-template>
 </p-drawer>

@@ -130,6 +130,10 @@ export class ProcesosListaComponent {
   // Drawer de acciones masivas
   showAccionesMasivasDrawer = signal(false);
 
+  // Drawer de drilldown
+  showDrilldownDrawer = signal(false);
+  drilldownProceso = signal<ProcesoKPIResumen | null>(null);
+
   // Opciones de estado para filtro
   estadoOptions: { label: string; value: Proceso['estado'] }[] = [
     { label: 'Borrador', value: 'borrador' },
@@ -752,6 +756,103 @@ export class ProcesosListaComponent {
       this.navegarAObjetivosKPIs(proceso.procesoId);
     }
   }
+
+  // ========== DRILLDOWN DRAWER ==========
+  abrirDrilldownProceso(proceso: ProcesoKPIResumen): void {
+    this.drilldownProceso.set(proceso);
+    this.showDrilldownDrawer.set(true);
+  }
+
+  // Objetivos del proceso para el drilldown
+  drilldownObjetivos = computed(() => {
+    const proceso = this.drilldownProceso();
+    if (!proceso) return [];
+    // Datos mock de objetivos basados en el proceso
+    return [
+      { id: 'obj1', nombre: 'Reducir tiempo de respuesta', kpis: 3, cumplimiento: 78, alertas: 0 },
+      { id: 'obj2', nombre: 'Mejorar satisfacción del cliente', kpis: 2, cumplimiento: 65, alertas: 1 },
+      { id: 'obj3', nombre: 'Optimizar recursos operativos', kpis: 2, cumplimiento: 82, alertas: 0 },
+      { id: 'obj4', nombre: 'Cumplimiento normativo', kpis: 2, cumplimiento: 55, alertas: 2 }
+    ].slice(0, proceso.totalObjetivos);
+  });
+
+  // Alertas del proceso para el drilldown
+  drilldownAlertas = computed(() => {
+    const proceso = this.drilldownProceso();
+    if (!proceso) return [];
+    return this.alertasConsolidadas()
+      .filter(a => a.procesoId === proceso.procesoId)
+      .slice(0, 5);
+  });
+
+  // Gráfica de cumplimiento para drilldown (doughnut)
+  drilldownChartCumplimiento = computed(() => {
+    const proceso = this.drilldownProceso();
+    if (!proceso) return { labels: [], datasets: [] };
+    const cumplido = proceso.cumplimientoPromedio;
+    const pendiente = 100 - cumplido;
+    return {
+      labels: ['Cumplido', 'Pendiente'],
+      datasets: [{
+        data: [cumplido, pendiente],
+        backgroundColor: [
+          cumplido >= 70 ? '#22c55e' : cumplido >= 50 ? '#f59e0b' : '#ef4444',
+          '#e5e7eb'
+        ],
+        borderWidth: 0
+      }]
+    };
+  });
+
+  // Gráfica de tendencia para drilldown (line)
+  drilldownChartTendencia = computed(() => {
+    const proceso = this.drilldownProceso();
+    if (!proceso) return { labels: [], datasets: [] };
+    // Generar datos de tendencia basados en el cumplimiento actual
+    const base = proceso.cumplimientoPromedio;
+    const variacion = proceso.tendencia === 'up' ? 5 : proceso.tendencia === 'down' ? -5 : 0;
+    return {
+      labels: ['Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+      datasets: [{
+        label: 'Cumplimiento',
+        data: [
+          Math.max(0, base - 15 + variacion),
+          Math.max(0, base - 10 + variacion),
+          Math.max(0, base - 8),
+          Math.max(0, base - 5),
+          Math.max(0, base - 2),
+          base
+        ],
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: '#3b82f6'
+      }]
+    };
+  });
+
+  // Opciones de gráfica doughnut para drilldown
+  drilldownChartOptions = {
+    cutout: '70%',
+    plugins: {
+      legend: { display: false }
+    },
+    maintainAspectRatio: false
+  };
+
+  // Opciones de gráfica line para drilldown
+  drilldownLineOptions = {
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { min: 0, max: 100, grid: { color: '#f3f4f6' } }
+    },
+    maintainAspectRatio: false
+  };
 
   // Limpiar filtros del dashboard
   limpiarFiltrosDashboard(): void {
