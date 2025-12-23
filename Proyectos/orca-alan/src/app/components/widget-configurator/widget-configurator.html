@@ -1,0 +1,1536 @@
+<p-drawer
+  [visible]="visible()"
+  (visibleChange)="visibleChange.emit($event)"
+  position="right"
+  [style]="{ width: '50vw', minWidth: '600px' }"
+  styleClass="configurator-drawer"
+  [modal]="true"
+  [dismissible]="true"
+  (onHide)="cerrar()"
+>
+  <ng-template pTemplate="header">
+    <div class="configurator-header">
+      <div class="header-info">
+        @if (catalogItem()) {
+          <i [class]="catalogItem()!.icono" class="header-icon"></i>
+        }
+        <div>
+          <h3>Configurar Widget</h3>
+          <span class="header-subtitle">{{ catalogItem()?.nombre }}</span>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="configurator-content">
+    <!-- Tabs de navegación -->
+    <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($any($event))">
+      <p-tablist>
+        <p-tab [value]="0">
+          <i class="pi pi-info-circle"></i>
+          <span>Básico</span>
+        </p-tab>
+
+        <!-- Tabs específicas para TABLAS -->
+        @if (esTabla()) {
+          <p-tab [value]="1">
+            <i class="pi pi-table"></i>
+            <span>Columnas</span>
+            @if (resumenConfig().columnas > 0) {
+              <p-badge [value]="resumenConfig().columnas" severity="info" />
+            }
+          </p-tab>
+          <p-tab [value]="2">
+            <i class="pi pi-filter"></i>
+            <span>Filtros</span>
+            @if (resumenConfig().filtros > 0) {
+              <p-badge [value]="resumenConfig().filtros" severity="warn" />
+            }
+          </p-tab>
+          <p-tab [value]="3">
+            <i class="pi pi-sort-alt"></i>
+            <span>Orden</span>
+          </p-tab>
+        }
+
+        <!-- Tabs específicas para GRÁFICAS -->
+        @if (esGrafica()) {
+          <p-tab [value]="1">
+            <i class="pi pi-database"></i>
+            <span>Datos</span>
+          </p-tab>
+          <p-tab [value]="2">
+            <i class="pi pi-palette"></i>
+            <span>Estilo</span>
+          </p-tab>
+          <p-tab [value]="3">
+            <i class="pi pi-sliders-h"></i>
+            <span>Opciones</span>
+          </p-tab>
+        }
+
+        <!-- Tabs específicas para KPIs -->
+        @if (esKPI()) {
+          <p-tab [value]="1">
+            <i class="pi pi-chart-line"></i>
+            <span>Tipo</span>
+          </p-tab>
+          <p-tab [value]="2">
+            <i class="pi pi-palette"></i>
+            <span>Estilo</span>
+          </p-tab>
+        }
+
+        <!-- Tabs específicas para GRÁFICAS INTERACTIVAS -->
+        @if (esGraficaInteractiva()) {
+          <p-tab [value]="1">
+            <i class="pi pi-chart-bar"></i>
+            <span>Tipo</span>
+          </p-tab>
+          <p-tab [value]="2">
+            <i class="pi pi-database"></i>
+            <span>Datos</span>
+          </p-tab>
+          <p-tab [value]="3">
+            <i class="pi pi-palette"></i>
+            <span>Estilo</span>
+          </p-tab>
+        }
+
+        <p-tab [value]="4">
+          <i class="pi pi-eye"></i>
+          <span>Preview</span>
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Tab 0: Información Básica -->
+        <p-tabpanel [value]="0">
+          <div class="tab-content">
+            <div class="form-field">
+              <label for="titulo">Título del Widget</label>
+              <input
+                pInputText
+                id="titulo"
+                [ngModel]="titulo()"
+                (ngModelChange)="titulo.set($event)"
+                placeholder="Ingresa un título"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="subtitulo">Subtítulo (opcional)</label>
+              <input
+                pInputText
+                id="subtitulo"
+                [ngModel]="subtitulo()"
+                (ngModelChange)="subtitulo.set($event)"
+                placeholder="Descripción breve"
+              />
+            </div>
+
+            <!-- Opciones específicas para TABLAS -->
+            @if (esTabla()) {
+              <div class="form-field">
+                <label for="dataSource">Fuente de Datos</label>
+                <p-select
+                  id="dataSource"
+                  [options]="dataSourceOptions"
+                  [ngModel]="tableDataSource()"
+                  (ngModelChange)="onDataSourceChange($event)"
+                  placeholder="Selecciona una fuente"
+                  [style]="{ width: '100%' }"
+                />
+              </div>
+
+              <div class="form-field">
+                <label for="tableLimit">Filas a mostrar</label>
+                <p-inputNumber
+                  id="tableLimit"
+                  [ngModel]="tableLimit()"
+                  (ngModelChange)="tableLimit.set($event)"
+                  [min]="1"
+                  [max]="20"
+                  [showButtons]="true"
+                />
+              </div>
+            }
+
+            <!-- Opciones específicas para GRÁFICAS -->
+            @if (esGrafica()) {
+              <div class="form-field">
+                <label for="chartDataSource">Fuente de Datos</label>
+                <p-select
+                  id="chartDataSource"
+                  [options]="chartDataSourceOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="chartDataSource()"
+                  (ngModelChange)="onChartDataSourceChange($event)"
+                  placeholder="Selecciona una fuente"
+                  [style]="{ width: '100%' }"
+                />
+              </div>
+            }
+
+            <div class="form-field">
+              <p-checkbox
+                [ngModel]="showHeader()"
+                (ngModelChange)="showHeader.set($event)"
+                [binary]="true"
+                label="Mostrar encabezado del widget"
+              />
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab 1: Columnas -->
+        @if (esTabla()) {
+          <p-tabpanel [value]="1">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Columnas Visibles</h4>
+                <span class="section-hint">Arrastra para reordenar</span>
+              </div>
+
+              <div class="columns-list">
+                @for (columna of columnasDisponibles(); track columna.field) {
+                  <div
+                    class="column-item"
+                    [class.visible]="columna.visible"
+                    pDraggable="columns"
+                    pDroppable="columns"
+                    (onDragStart)="dragStart(columna)"
+                    (onDragEnd)="dragEnd()"
+                    (onDrop)="drop(columna)"
+                  >
+                    <div class="column-drag-handle">
+                      <i class="pi pi-bars"></i>
+                    </div>
+                    <p-checkbox
+                      [ngModel]="columna.visible"
+                      (ngModelChange)="toggleColumna(columna)"
+                      [binary]="true"
+                    />
+                    <span class="column-name">{{ columna.header }}</span>
+                    <p-tag
+                      [value]="columna.tipo"
+                      [severity]="
+                        columna.tipo === 'numero'
+                          ? 'info'
+                          : columna.tipo === 'fecha'
+                            ? 'warn'
+                            : columna.tipo === 'seleccion'
+                              ? 'success'
+                              : 'secondary'
+                      "
+                      [rounded]="true"
+                    />
+                  </div>
+                }
+              </div>
+
+              <div class="columns-summary">
+                <span>{{ columnasVisibles().length }} columnas seleccionadas</span>
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 2: Filtros -->
+          <p-tabpanel [value]="2">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Filtros Predeterminados</h4>
+                <span class="section-hint">Se aplicarán al cargar el widget</span>
+              </div>
+
+              <!-- Chips de filtros activos -->
+              @if (filtrosActivos().length > 0) {
+                <div class="active-filters">
+                  @for (filtro of filtrosActivos(); track $index) {
+                    <p-chip
+                      [label]="filtro.etiqueta"
+                      [removable]="true"
+                      (onRemove)="eliminarFiltro($index)"
+                    />
+                  }
+                  <p-button
+                    label="Limpiar todos"
+                    icon="pi pi-times"
+                    severity="secondary"
+                    [text]="true"
+                    size="small"
+                    (onClick)="limpiarFiltros()"
+                  />
+                </div>
+              }
+
+              <p-divider />
+
+              <!-- Agregar nuevo filtro -->
+              <div class="filter-builder">
+                <div class="filter-row">
+                  <div class="filter-field">
+                    <label>Columna</label>
+                    <p-select
+                      [options]="columnasParaFiltro()"
+                      optionLabel="header"
+                      optionValue="field"
+                      [ngModel]="nuevoFiltroColumna()"
+                      (ngModelChange)="nuevoFiltroColumna.set($event); nuevoFiltroOperador.set('')"
+                      placeholder="Seleccionar"
+                      [style]="{ width: '100%' }"
+                    />
+                  </div>
+
+                  <div class="filter-field">
+                    <label>Operador</label>
+                    <p-select
+                      [options]="operadoresDisponibles()"
+                      optionLabel="label"
+                      optionValue="value"
+                      [ngModel]="nuevoFiltroOperador()"
+                      (ngModelChange)="nuevoFiltroOperador.set($event)"
+                      placeholder="Seleccionar"
+                      [style]="{ width: '100%' }"
+                      [disabled]="!nuevoFiltroColumna()"
+                    />
+                  </div>
+                </div>
+
+                <div class="filter-row">
+                  <div class="filter-field filter-value">
+                    <label>Valor</label>
+                    @switch (tipoColumnaSeleccionada()) {
+                      @case ('numero') {
+                        <p-inputNumber
+                          [ngModel]="nuevoFiltroValor()"
+                          (ngModelChange)="nuevoFiltroValor.set($event)"
+                          placeholder="Valor"
+                          [style]="{ width: '100%' }"
+                        />
+                      }
+                      @case ('fecha') {
+                        <p-datePicker
+                          [ngModel]="nuevoFiltroValor()"
+                          (ngModelChange)="nuevoFiltroValor.set($event)"
+                          dateFormat="dd/mm/yy"
+                          [style]="{ width: '100%' }"
+                        />
+                      }
+                      @case ('seleccion') {
+                        <p-select
+                          [options]="opcionesColumnaSeleccionada()"
+                          optionLabel="label"
+                          optionValue="value"
+                          [ngModel]="nuevoFiltroValor()"
+                          (ngModelChange)="nuevoFiltroValor.set($event)"
+                          placeholder="Seleccionar"
+                          [style]="{ width: '100%' }"
+                        />
+                      }
+                      @default {
+                        <input
+                          pInputText
+                          [ngModel]="nuevoFiltroValor()"
+                          (ngModelChange)="nuevoFiltroValor.set($event)"
+                          placeholder="Valor"
+                        />
+                      }
+                    }
+                  </div>
+
+                  @if (nuevoFiltroOperador() === 'entre') {
+                    <div class="filter-field filter-value">
+                      <label>Hasta</label>
+                      @if (tipoColumnaSeleccionada() === 'numero') {
+                        <p-inputNumber
+                          [ngModel]="nuevoFiltroValorHasta()"
+                          (ngModelChange)="nuevoFiltroValorHasta.set($event)"
+                          placeholder="Valor hasta"
+                        />
+                      } @else if (tipoColumnaSeleccionada() === 'fecha') {
+                        <p-datePicker
+                          [ngModel]="nuevoFiltroValorHasta()"
+                          (ngModelChange)="nuevoFiltroValorHasta.set($event)"
+                          dateFormat="dd/mm/yy"
+                        />
+                      }
+                    </div>
+                  }
+                </div>
+
+                <p-button
+                  label="Agregar Filtro"
+                  icon="pi pi-plus"
+                  (onClick)="agregarFiltro()"
+                  [disabled]="!nuevoFiltroColumna() || !nuevoFiltroOperador() || nuevoFiltroValor() === null"
+                  size="small"
+                />
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 3: Ordenamiento -->
+          <p-tabpanel [value]="3">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Ordenamiento por Defecto</h4>
+              </div>
+
+              <div class="form-field">
+                <label>Ordenar por</label>
+                <p-select
+                  [options]="columnasParaFiltro()"
+                  optionLabel="header"
+                  optionValue="field"
+                  [ngModel]="ordenamientoCampo()"
+                  (ngModelChange)="ordenamientoCampo.set($event)"
+                  placeholder="Sin ordenamiento"
+                  [showClear]="true"
+                  [style]="{ width: '100%' }"
+                />
+              </div>
+
+              @if (ordenamientoCampo()) {
+                <div class="form-field">
+                  <label>Dirección</label>
+                  <div class="direction-buttons">
+                    <p-button
+                      label="Ascendente"
+                      icon="pi pi-sort-amount-up"
+                      [outlined]="ordenamientoDireccion() !== 'asc'"
+                      (onClick)="ordenamientoDireccion.set('asc')"
+                    />
+                    <p-button
+                      label="Descendente"
+                      icon="pi pi-sort-amount-down"
+                      [outlined]="ordenamientoDireccion() !== 'desc'"
+                      (onClick)="ordenamientoDireccion.set('desc')"
+                    />
+                  </div>
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+        }
+
+        <!-- ==================== TABS PARA GRÁFICAS ==================== -->
+        @if (esGrafica()) {
+          <!-- Tab 1: Datos de la Gráfica -->
+          <p-tabpanel [value]="1">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Configuración de Datos</h4>
+                <span class="section-hint">Qué datos mostrar y cómo agruparlos</span>
+              </div>
+
+              <div class="form-field">
+                <label>Métrica</label>
+                <p-select
+                  [options]="chartMetricasDisponibles()"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="chartMetrica()"
+                  (ngModelChange)="chartMetrica.set($event)"
+                  placeholder="Selecciona métrica"
+                  [style]="{ width: '100%' }"
+                />
+              </div>
+
+              <div class="form-field">
+                <label>Agrupar por</label>
+                <p-select
+                  [options]="chartAgrupacionesDisponibles()"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="chartAgrupacion()"
+                  (ngModelChange)="chartAgrupacion.set($event)"
+                  placeholder="Selecciona agrupación"
+                  [style]="{ width: '100%' }"
+                />
+              </div>
+
+              <div class="form-field">
+                <label>Período de tiempo</label>
+                <p-select
+                  [options]="chartPeriodosOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="chartPeriodo()"
+                  (ngModelChange)="chartPeriodo.set($event)"
+                  placeholder="Selecciona período"
+                  [style]="{ width: '100%' }"
+                />
+              </div>
+
+              @if (chartPeriodo() === 'personalizado') {
+                <div class="form-row">
+                  <div class="form-field">
+                    <label>Fecha inicio</label>
+                    <p-datePicker
+                      [ngModel]="chartFechaInicio()"
+                      (ngModelChange)="chartFechaInicio.set($event)"
+                      dateFormat="dd/mm/yy"
+                      [style]="{ width: '100%' }"
+                    />
+                  </div>
+                  <div class="form-field">
+                    <label>Fecha fin</label>
+                    <p-datePicker
+                      [ngModel]="chartFechaFin()"
+                      (ngModelChange)="chartFechaFin.set($event)"
+                      dateFormat="dd/mm/yy"
+                      [style]="{ width: '100%' }"
+                    />
+                  </div>
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 2: Estilo Visual -->
+          <p-tabpanel [value]="2">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Estilo Visual</h4>
+                <span class="section-hint">Personaliza la apariencia</span>
+              </div>
+
+              <div class="form-field">
+                <label>Paleta de Colores</label>
+                <p-select
+                  [options]="chartPaletasOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="chartPaleta()"
+                  (ngModelChange)="chartPaleta.set($event)"
+                  [style]="{ width: '100%' }"
+                >
+                  <ng-template pTemplate="selectedItem" let-selected>
+                    <div class="paleta-item">
+                      <span>{{ selected?.label }}</span>
+                      <div class="paleta-colors">
+                        @for (color of selected?.colores?.slice(0, 5); track $index) {
+                          <span class="color-dot" [style.background]="color"></span>
+                        }
+                      </div>
+                    </div>
+                  </ng-template>
+                  <ng-template pTemplate="item" let-item>
+                    <div class="paleta-item">
+                      <span>{{ item.label }}</span>
+                      <div class="paleta-colors">
+                        @for (color of item.colores.slice(0, 5); track $index) {
+                          <span class="color-dot" [style.background]="color"></span>
+                        }
+                      </div>
+                    </div>
+                  </ng-template>
+                </p-select>
+              </div>
+
+              <div class="form-field">
+                <label>Posición de Leyenda</label>
+                <p-select
+                  [options]="chartLeyendaOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="chartLeyendaPosicion()"
+                  (ngModelChange)="chartLeyendaPosicion.set($event)"
+                  [style]="{ width: '100%' }"
+                />
+              </div>
+
+              <p-divider />
+
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="chartMostrarGrid()"
+                    (ngModelChange)="chartMostrarGrid.set($event)"
+                  />
+                  <span>Mostrar cuadrícula</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="chartMostrarEjes()"
+                    (ngModelChange)="chartMostrarEjes.set($event)"
+                  />
+                  <span>Mostrar ejes</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="chartAnimaciones()"
+                    (ngModelChange)="chartAnimaciones.set($event)"
+                  />
+                  <span>Animaciones</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="chartTooltipEnabled()"
+                    (ngModelChange)="chartTooltipEnabled.set($event)"
+                  />
+                  <span>Mostrar tooltips</span>
+                </div>
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 3: Opciones Específicas -->
+          <p-tabpanel [value]="3">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Opciones del Gráfico</h4>
+                <span class="section-hint">Configuración específica del tipo</span>
+              </div>
+
+              <!-- Opciones para BARRAS -->
+              @if (chartTipo() === 'bar') {
+                <div class="form-field">
+                  <label>Orientación</label>
+                  <p-selectButton
+                    [options]="barOrientacionOptions"
+                    [ngModel]="barOrientacion()"
+                    (ngModelChange)="barOrientacion.set($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Ancho de Barras: {{ barAnchoBarras() }}%</label>
+                  <p-slider
+                    [ngModel]="barAnchoBarras()"
+                    (ngModelChange)="barAnchoBarras.set($event)"
+                    [min]="20"
+                    [max]="100"
+                  />
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="barApilado()"
+                      (ngModelChange)="barApilado.set($event)"
+                    />
+                    <span>Barras apiladas</span>
+                  </div>
+
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="barMostrarValores()"
+                      (ngModelChange)="barMostrarValores.set($event)"
+                    />
+                    <span>Mostrar valores</span>
+                  </div>
+
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="barBordeRedondeado()"
+                      (ngModelChange)="barBordeRedondeado.set($event)"
+                    />
+                    <span>Bordes redondeados</span>
+                  </div>
+                </div>
+              }
+
+              <!-- Opciones para LÍNEAS -->
+              @if (chartTipo() === 'line') {
+                <div class="form-field">
+                  <label>Grosor de Línea: {{ lineGrosorLinea() }}px</label>
+                  <p-slider
+                    [ngModel]="lineGrosorLinea()"
+                    (ngModelChange)="lineGrosorLinea.set($event)"
+                    [min]="1"
+                    [max]="5"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Tamaño de Puntos: {{ lineTamanoPuntos() }}px</label>
+                  <p-slider
+                    [ngModel]="lineTamanoPuntos()"
+                    (ngModelChange)="lineTamanoPuntos.set($event)"
+                    [min]="2"
+                    [max]="10"
+                  />
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="lineCurvaSuave()"
+                      (ngModelChange)="lineCurvaSuave.set($event)"
+                    />
+                    <span>Curva suave</span>
+                  </div>
+
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="lineMostrarPuntos()"
+                      (ngModelChange)="lineMostrarPuntos.set($event)"
+                    />
+                    <span>Mostrar puntos</span>
+                  </div>
+
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="lineAreaRellena()"
+                      (ngModelChange)="lineAreaRellena.set($event)"
+                    />
+                    <span>Área rellena</span>
+                  </div>
+
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="lineLineaPunteada()"
+                      (ngModelChange)="lineLineaPunteada.set($event)"
+                    />
+                    <span>Línea punteada</span>
+                  </div>
+                </div>
+              }
+
+              <!-- Opciones para DONA -->
+              @if (chartTipo() === 'donut') {
+                <div class="form-field">
+                  <label>Grosor del Anillo: {{ donutGrosorAnillo() }}%</label>
+                  <p-slider
+                    [ngModel]="donutGrosorAnillo()"
+                    (ngModelChange)="donutGrosorAnillo.set($event)"
+                    [min]="30"
+                    [max]="90"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Máximo de Segmentos</label>
+                  <p-inputNumber
+                    [ngModel]="donutMaxSegmentos()"
+                    (ngModelChange)="donutMaxSegmentos.set($event)"
+                    [min]="3"
+                    [max]="12"
+                    [showButtons]="true"
+                  />
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="donutMostrarValorCentral()"
+                      (ngModelChange)="donutMostrarValorCentral.set($event)"
+                    />
+                    <span>Mostrar valor central</span>
+                  </div>
+
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="donutMostrarPorcentajes()"
+                      (ngModelChange)="donutMostrarPorcentajes.set($event)"
+                    />
+                    <span>Mostrar porcentajes</span>
+                  </div>
+                </div>
+
+                @if (donutMostrarValorCentral()) {
+                  <div class="form-field">
+                    <label>Tipo de valor central</label>
+                    <p-select
+                      [options]="donutValorCentralOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      [ngModel]="donutValorCentralTipo()"
+                      (ngModelChange)="donutValorCentralTipo.set($event)"
+                      [style]="{ width: '100%' }"
+                    />
+                  </div>
+
+                  @if (donutValorCentralTipo() === 'etiqueta') {
+                    <div class="form-field">
+                      <label>Etiqueta personalizada</label>
+                      <input
+                        pInputText
+                        [ngModel]="donutEtiquetaCentral()"
+                        (ngModelChange)="donutEtiquetaCentral.set($event)"
+                        placeholder="Ej: Total"
+                      />
+                    </div>
+                  }
+                }
+              }
+
+              <!-- Opciones para ÁREA -->
+              @if (chartTipo() === 'area') {
+                <div class="form-field">
+                  <label>Opacidad: {{ areaOpacidad() * 100 | number:'1.0-0' }}%</label>
+                  <p-slider
+                    [ngModel]="areaOpacidad()"
+                    (ngModelChange)="areaOpacidad.set($event)"
+                    [min]="0.1"
+                    [max]="1"
+                    [step]="0.1"
+                  />
+                </div>
+
+                <div class="toggle-group">
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="areaGradiente()"
+                      (ngModelChange)="areaGradiente.set($event)"
+                    />
+                    <span>Gradiente</span>
+                  </div>
+
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="areaCurvaSuave()"
+                      (ngModelChange)="areaCurvaSuave.set($event)"
+                    />
+                    <span>Curva suave</span>
+                  </div>
+
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="areaMostrarLineaSuperior()"
+                      (ngModelChange)="areaMostrarLineaSuperior.set($event)"
+                    />
+                    <span>Mostrar línea superior</span>
+                  </div>
+
+                  <div class="toggle-item">
+                    <p-toggleSwitch
+                      [ngModel]="areaApilado()"
+                      (ngModelChange)="areaApilado.set($event)"
+                    />
+                    <span>Áreas apiladas</span>
+                  </div>
+                </div>
+              }
+
+              <p-divider />
+
+              <!-- Opciones comunes de interactividad -->
+              <div class="section-header">
+                <h4>Interactividad</h4>
+              </div>
+
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="chartClickable()"
+                    (ngModelChange)="chartClickable.set($event)"
+                  />
+                  <span>Permite hacer click</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="chartExportable()"
+                    (ngModelChange)="chartExportable.set($event)"
+                  />
+                  <span>Permitir exportar</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="chartAutoRefresh()"
+                    (ngModelChange)="chartAutoRefresh.set($event)"
+                  />
+                  <span>Auto actualización</span>
+                </div>
+              </div>
+
+              @if (chartAutoRefresh()) {
+                <div class="form-field">
+                  <label>Intervalo de actualización (segundos)</label>
+                  <p-inputNumber
+                    [ngModel]="chartRefreshInterval()"
+                    (ngModelChange)="chartRefreshInterval.set($event)"
+                    [min]="10"
+                    [max]="300"
+                    [showButtons]="true"
+                    suffix=" seg"
+                  />
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+        }
+
+        <!-- ==================== TABS PARA KPIs ==================== -->
+
+        <!-- Tab 1 para KPIs: Tipo de KPI -->
+        @if (esKPI()) {
+          <p-tabpanel [value]="1">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Tipo de KPI</h4>
+                <span class="section-hint">Selecciona qué métrica mostrar</span>
+              </div>
+
+              <div class="kpi-type-grid">
+                @for (kpi of kpiTypeOptions; track kpi.value) {
+                  <div
+                    class="kpi-type-card"
+                    [class.selected]="kpiType() === kpi.value"
+                    (click)="onKPITypeChange(kpi.value)"
+                  >
+                    <div class="kpi-type-icon" [style.color]="kpiType() === kpi.value ? kpiColorPrimario() : 'var(--text-color-secondary)'">
+                      <i [class]="kpi.icon"></i>
+                    </div>
+                    <div class="kpi-type-info">
+                      <span class="kpi-type-label">{{ kpi.label }}</span>
+                      <span class="kpi-type-desc">{{ kpi.descripcion }}</span>
+                    </div>
+                    @if (kpiType() === kpi.value) {
+                      <i class="pi pi-check kpi-type-check"></i>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Campos personalizados si es tipo personalizado -->
+              @if (kpiType() === 'personalizado') {
+                <p-divider />
+
+                <div class="section-header">
+                  <h4>Configuración Personalizada</h4>
+                </div>
+
+                <div class="form-field">
+                  <label>Título del KPI</label>
+                  <input
+                    pInputText
+                    [ngModel]="kpiTituloPersonalizado()"
+                    (ngModelChange)="kpiTituloPersonalizado.set($event)"
+                    placeholder="Ej: Ventas Mensuales"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Valor</label>
+                  <p-inputNumber
+                    [ngModel]="kpiValorPersonalizado()"
+                    (ngModelChange)="kpiValorPersonalizado.set($event)"
+                    [showButtons]="true"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Descripción</label>
+                  <input
+                    pInputText
+                    [ngModel]="kpiDescripcionPersonalizado()"
+                    (ngModelChange)="kpiDescripcionPersonalizado.set($event)"
+                    placeholder="Descripción opcional"
+                  />
+                </div>
+
+                <div class="form-row">
+                  <div class="form-field">
+                    <label>Formato</label>
+                    <p-select
+                      [options]="kpiFormatoOptions"
+                      [ngModel]="kpiFormato()"
+                      (ngModelChange)="kpiFormato.set($event)"
+                      optionLabel="label"
+                      optionValue="value"
+                    />
+                  </div>
+                  <div class="form-field">
+                    <label>Unidad</label>
+                    <input
+                      pInputText
+                      [ngModel]="kpiUnidad()"
+                      (ngModelChange)="kpiUnidad.set($event)"
+                      placeholder="%, $, etc."
+                    />
+                  </div>
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 2 para KPIs: Estilo -->
+          <p-tabpanel [value]="2">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Color Principal</h4>
+                <span class="section-hint">Color del valor y acentos</span>
+              </div>
+
+              <div class="color-picker-grid">
+                @for (color of kpiColoresOptions; track color.value) {
+                  <div
+                    class="color-option"
+                    [class.selected]="kpiColorPrimario() === color.value"
+                    [style.background-color]="color.value"
+                    (click)="kpiColorPrimario.set(color.value)"
+                    [pTooltip]="color.label"
+                  >
+                    @if (kpiColorPrimario() === color.value) {
+                      <i class="pi pi-check"></i>
+                    }
+                  </div>
+                }
+              </div>
+
+              <p-divider />
+
+              <div class="section-header">
+                <h4>Icono</h4>
+              </div>
+
+              <div class="icon-picker-grid">
+                @for (icono of kpiIconoOptions; track icono.value) {
+                  <div
+                    class="icon-option"
+                    [class.selected]="kpiIcono() === icono.value"
+                    (click)="kpiIcono.set(icono.value)"
+                    [pTooltip]="icono.label"
+                  >
+                    <i [class]="icono.value"></i>
+                  </div>
+                }
+              </div>
+
+              <p-divider />
+
+              <div class="section-header">
+                <h4>Opciones de Visualización</h4>
+              </div>
+
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="kpiMostrarTendencia()"
+                    (ngModelChange)="kpiMostrarTendencia.set($event)"
+                  />
+                  <span>Mostrar tendencia</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="kpiMostrarMeta()"
+                    (ngModelChange)="kpiMostrarMeta.set($event)"
+                  />
+                  <span>Mostrar meta/objetivo</span>
+                </div>
+              </div>
+
+              @if (kpiMostrarMeta()) {
+                <div class="form-field">
+                  <label>Valor de la meta</label>
+                  <p-inputNumber
+                    [ngModel]="kpiMetaValor()"
+                    (ngModelChange)="kpiMetaValor.set($event)"
+                    [showButtons]="true"
+                    [min]="0"
+                  />
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+        }
+
+        <!-- ==================== TABS PARA GRÁFICAS INTERACTIVAS ==================== -->
+        @if (esGraficaInteractiva()) {
+          <!-- Tab 1: Tipo de Gráfica -->
+          <p-tabpanel [value]="1">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Tipo de Gráfica</h4>
+                <span class="section-hint">Selecciona el tipo de visualización</span>
+              </div>
+
+              @for (grupo of giTiposGraficaGrupos; track grupo.label) {
+                <div class="gi-grupo-tipos">
+                  <h5 class="gi-grupo-label">{{ grupo.label }}</h5>
+                  <div class="gi-tipos-grid">
+                    @for (tipo of grupo.items; track tipo.value) {
+                      <div
+                        class="gi-tipo-card"
+                        [class.selected]="giTipoGrafica() === tipo.value"
+                        (click)="giTipoGrafica.set(tipo.value)"
+                      >
+                        <i [class]="tipo.icon" class="gi-tipo-icon"></i>
+                        <span class="gi-tipo-label">{{ tipo.label }}</span>
+                        <small class="gi-tipo-desc">{{ tipo.descripcion }}</small>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 2: Datos -->
+          <p-tabpanel [value]="2">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Configuración de Datos</h4>
+                <span class="section-hint">Define qué datos mostrar</span>
+              </div>
+
+              <div class="form-field">
+                <label>Campo Eje X (Categorías)</label>
+                <p-select
+                  [options]="giCamposDisponibles"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="giCampoEjeX()"
+                  (ngModelChange)="giCampoEjeX.set($event)"
+                  [style]="{ width: '100%' }"
+                  placeholder="Selecciona el campo para categorías"
+                >
+                  <ng-template pTemplate="item" let-item>
+                    <div class="gi-campo-option">
+                      <span>{{ item.label }}</span>
+                      <small>{{ item.descripcion }}</small>
+                    </div>
+                  </ng-template>
+                </p-select>
+              </div>
+
+              <div class="form-field">
+                <label>Campo Eje Y (Valores)</label>
+                <p-select
+                  [options]="giCamposDisponibles"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="giCampoEjeY()"
+                  (ngModelChange)="giCampoEjeY.set($event)"
+                  [style]="{ width: '100%' }"
+                  placeholder="Selecciona el campo de valores"
+                  [showClear]="true"
+                >
+                  <ng-template pTemplate="item" let-item>
+                    <div class="gi-campo-option">
+                      <span>{{ item.label }}</span>
+                      <small>{{ item.descripcion }}</small>
+                    </div>
+                  </ng-template>
+                </p-select>
+              </div>
+
+              <div class="form-field">
+                <label>Agrupar por (opcional)</label>
+                <p-select
+                  [options]="giCamposDisponibles"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="giCampoAgrupacion()"
+                  (ngModelChange)="giCampoAgrupacion.set($event)"
+                  [style]="{ width: '100%' }"
+                  placeholder="Sin agrupación"
+                  [showClear]="true"
+                />
+              </div>
+
+              <p-divider />
+
+              <div class="form-field">
+                <label>Altura del gráfico: {{ giAltura() }}px</label>
+                <p-slider
+                  [ngModel]="giAltura()"
+                  (ngModelChange)="giAltura.set($event)"
+                  [min]="200"
+                  [max]="600"
+                  [step]="50"
+                />
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab 3: Estilo -->
+          <p-tabpanel [value]="3">
+            <div class="tab-content">
+              <div class="section-header">
+                <h4>Estilo Visual</h4>
+                <span class="section-hint">Personaliza la apariencia</span>
+              </div>
+
+              <div class="form-field">
+                <label>Paleta de Colores</label>
+                <p-select
+                  [options]="giPaletasOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [ngModel]="giPaleta()"
+                  (ngModelChange)="giPaleta.set($event)"
+                  [style]="{ width: '100%' }"
+                >
+                  <ng-template pTemplate="selectedItem" let-selected>
+                    <div class="paleta-item">
+                      <span>{{ selected?.label }}</span>
+                      <div class="paleta-colors">
+                        @for (color of selected?.colores; track $index) {
+                          <span class="color-dot" [style.background]="color"></span>
+                        }
+                      </div>
+                    </div>
+                  </ng-template>
+                  <ng-template pTemplate="item" let-item>
+                    <div class="paleta-item">
+                      <span>{{ item.label }}</span>
+                      <div class="paleta-colors">
+                        @for (color of item.colores; track $index) {
+                          <span class="color-dot" [style.background]="color"></span>
+                        }
+                      </div>
+                    </div>
+                  </ng-template>
+                </p-select>
+              </div>
+
+              <div class="form-field">
+                <label>Tema</label>
+                <p-selectButton
+                  [options]="[{ label: 'Claro', value: 'light' }, { label: 'Oscuro', value: 'dark' }]"
+                  [ngModel]="giTema()"
+                  (ngModelChange)="giTema.set($event)"
+                  optionLabel="label"
+                  optionValue="value"
+                />
+              </div>
+
+              <p-divider />
+
+              <div class="toggle-group">
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="giAnimaciones()"
+                    (ngModelChange)="giAnimaciones.set($event)"
+                  />
+                  <span>Animaciones</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="giMostrarLeyenda()"
+                    (ngModelChange)="giMostrarLeyenda.set($event)"
+                  />
+                  <span>Mostrar leyenda</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="giMostrarDataLabels()"
+                    (ngModelChange)="giMostrarDataLabels.set($event)"
+                  />
+                  <span>Mostrar valores en gráfica</span>
+                </div>
+
+                <div class="toggle-item">
+                  <p-toggleSwitch
+                    [ngModel]="giMostrarTooltip()"
+                    (ngModelChange)="giMostrarTooltip.set($event)"
+                  />
+                  <span>Mostrar tooltips</span>
+                </div>
+              </div>
+            </div>
+          </p-tabpanel>
+        }
+
+        <!-- Tab 4: Preview -->
+        <p-tabpanel [value]="4">
+          <div class="tab-content">
+            <div class="section-header">
+              <h4>Vista Previa</h4>
+              <span class="section-hint">Así se verá el widget</span>
+            </div>
+
+            <div class="preview-container">
+              <div class="preview-widget">
+                @if (showHeader()) {
+                  <div class="preview-header">
+                    @if (catalogItem()) {
+                      <i [class]="catalogItem()!.icono"></i>
+                    }
+                    <span>{{ titulo() || 'Sin título' }}</span>
+                  </div>
+                }
+
+                <div class="preview-body">
+                  <!-- Preview para TABLAS -->
+                  @if (esTabla() && previewData().length > 0) {
+                    <table class="preview-table">
+                      <thead>
+                        <tr>
+                          @for (col of columnasVisibles(); track col.field) {
+                            <th>{{ col.header }}</th>
+                          }
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (row of previewData().slice(0, tableLimit()); track $index) {
+                          <tr>
+                            @for (col of columnasVisibles(); track col.field) {
+                              <td>
+                                @if (col.tipo === 'seleccion') {
+                                  <p-tag [value]="row[col.field]" [rounded]="true" />
+                                } @else {
+                                  {{ row[col.field] }}
+                                }
+                              </td>
+                            }
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+
+                  <!-- Preview para GRÁFICAS -->
+                  @else if (esGrafica() && chartPreviewData()) {
+                    <div class="chart-preview">
+                      <div class="chart-preview-mock" [ngClass]="'chart-' + chartTipo()">
+                        <!-- Representación visual simplificada de la gráfica -->
+                        @if (chartTipo() === 'bar') {
+                          <div class="mock-bars">
+                            @for (value of chartPreviewData()!.datasets[0].data.slice(0, 5); track $index) {
+                              <div
+                                class="mock-bar"
+                                [style.height.%]="value"
+                                [style.background]="chartColoresPaleta()[$index % chartColoresPaleta().length]"
+                              ></div>
+                            }
+                          </div>
+                        }
+
+                        @if (chartTipo() === 'line') {
+                          <div class="mock-line">
+                            <svg viewBox="0 0 200 100" preserveAspectRatio="none">
+                              <polyline
+                                fill="none"
+                                [attr.stroke]="chartColoresPaleta()[0]"
+                                stroke-width="2"
+                                points="0,80 40,60 80,70 120,40 160,50 200,30"
+                              />
+                              @if (lineMostrarPuntos()) {
+                                <circle [attr.fill]="chartColoresPaleta()[0]" cx="0" cy="80" r="4"/>
+                                <circle [attr.fill]="chartColoresPaleta()[0]" cx="40" cy="60" r="4"/>
+                                <circle [attr.fill]="chartColoresPaleta()[0]" cx="80" cy="70" r="4"/>
+                                <circle [attr.fill]="chartColoresPaleta()[0]" cx="120" cy="40" r="4"/>
+                                <circle [attr.fill]="chartColoresPaleta()[0]" cx="160" cy="50" r="4"/>
+                                <circle [attr.fill]="chartColoresPaleta()[0]" cx="200" cy="30" r="4"/>
+                              }
+                            </svg>
+                          </div>
+                        }
+
+                        @if (chartTipo() === 'donut') {
+                          <div class="mock-donut">
+                            <svg viewBox="0 0 100 100">
+                              <circle
+                                cx="50" cy="50" r="40"
+                                fill="none"
+                                [attr.stroke]="chartColoresPaleta()[0]"
+                                stroke-width="15"
+                                stroke-dasharray="100 151"
+                              />
+                              <circle
+                                cx="50" cy="50" r="40"
+                                fill="none"
+                                [attr.stroke]="chartColoresPaleta()[1]"
+                                stroke-width="15"
+                                stroke-dasharray="60 191"
+                                stroke-dashoffset="-100"
+                              />
+                              <circle
+                                cx="50" cy="50" r="40"
+                                fill="none"
+                                [attr.stroke]="chartColoresPaleta()[2]"
+                                stroke-width="15"
+                                stroke-dasharray="40 211"
+                                stroke-dashoffset="-160"
+                              />
+                              @if (donutMostrarValorCentral()) {
+                                <text x="50" y="55" text-anchor="middle" font-size="12" fill="currentColor">
+                                  {{ donutValorCentralTipo() === 'porcentaje' ? '100%' : donutValorCentralTipo() === 'etiqueta' ? (donutEtiquetaCentral() || 'Total') : '250' }}
+                                </text>
+                              }
+                            </svg>
+                          </div>
+                        }
+
+                        @if (chartTipo() === 'area') {
+                          <div class="mock-area">
+                            <svg viewBox="0 0 200 100" preserveAspectRatio="none">
+                              <defs>
+                                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                  <stop offset="0%" [attr.stop-color]="chartColoresPaleta()[0]" stop-opacity="0.4"/>
+                                  <stop offset="100%" [attr.stop-color]="chartColoresPaleta()[0]" stop-opacity="0.05"/>
+                                </linearGradient>
+                              </defs>
+                              <polygon
+                                [attr.fill]="areaGradiente() ? 'url(#areaGradient)' : chartColoresPaleta()[0]"
+                                [attr.fill-opacity]="areaGradiente() ? 1 : areaOpacidad()"
+                                points="0,100 0,80 40,60 80,70 120,40 160,50 200,30 200,100"
+                              />
+                              @if (areaMostrarLineaSuperior()) {
+                                <polyline
+                                  fill="none"
+                                  [attr.stroke]="chartColoresPaleta()[0]"
+                                  stroke-width="2"
+                                  points="0,80 40,60 80,70 120,40 160,50 200,30"
+                                />
+                              }
+                            </svg>
+                          </div>
+                        }
+                      </div>
+
+                      <!-- Labels de preview -->
+                      <div class="chart-preview-labels">
+                        @for (label of chartPreviewData()!.labels.slice(0, 5); track $index) {
+                          <span class="preview-label">{{ label }}</span>
+                        }
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Preview para KPIs -->
+                  @else if (esKPI()) {
+                    <div class="kpi-preview">
+                      <div class="kpi-preview-card" [style.border-left-color]="kpiColorPrimario()">
+                        <div class="kpi-preview-icon" [style.color]="kpiColorPrimario()">
+                          <i [class]="kpiIcono()"></i>
+                        </div>
+                        <div class="kpi-preview-content">
+                          <div class="kpi-preview-value" [style.color]="kpiColorPrimario()">
+                            {{ kpiPreviewValor() }}{{ kpiUnidad() }}
+                          </div>
+                          <div class="kpi-preview-label">
+                            {{ kpiType() === 'personalizado' ? kpiTituloPersonalizado() || 'KPI Personalizado' : kpiInfoSeleccionado()?.label }}
+                          </div>
+                          @if (kpiMostrarTendencia()) {
+                            <div class="kpi-preview-trend" [class.up]="kpiPreviewTendencia().direccion === 'up'" [class.down]="kpiPreviewTendencia().direccion === 'down'">
+                              <i [class]="kpiPreviewTendencia().direccion === 'up' ? 'pi pi-arrow-up' : kpiPreviewTendencia().direccion === 'down' ? 'pi pi-arrow-down' : 'pi pi-minus'"></i>
+                              {{ kpiPreviewTendencia().valor }}%
+                            </div>
+                          }
+                          @if (kpiMostrarMeta()) {
+                            <div class="kpi-preview-meta">
+                              <span>Meta: {{ kpiMetaValor() }}{{ kpiUnidad() }}</span>
+                              <div class="kpi-meta-bar">
+                                <div class="kpi-meta-progress" [style.width.%]="(kpiPreviewValor() / kpiMetaValor()) * 100" [style.background]="kpiColorPrimario()"></div>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  @else {
+                    <div class="preview-placeholder">
+                      <i class="pi pi-eye-slash"></i>
+                      <span>Selecciona una fuente de datos</span>
+                    </div>
+                  }
+                </div>
+
+                <!-- Info adicional para tablas -->
+                @if (esTabla()) {
+                  @if (filtrosActivos().length > 0) {
+                    <div class="preview-filters">
+                      <i class="pi pi-filter"></i>
+                      <span>{{ filtrosActivos().length }} filtro(s) aplicado(s)</span>
+                    </div>
+                  }
+
+                  @if (ordenamientoCampo()) {
+                    <div class="preview-sort">
+                      <i class="pi pi-sort-alt"></i>
+                      <span>
+                        Ordenado por {{ getColumnaHeader(ordenamientoCampo()) }}
+                        ({{ ordenamientoDireccion() === 'asc' ? 'Asc' : 'Desc' }})
+                      </span>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+
+            <!-- Resumen de configuración para TABLAS -->
+            @if (esTabla()) {
+              <div class="config-summary">
+                <h5>Resumen de Configuración</h5>
+                <ul>
+                  <li>
+                    <i class="pi pi-table"></i>
+                    {{ columnasVisibles().length }} columnas visibles
+                  </li>
+                  <li>
+                    <i class="pi pi-filter"></i>
+                    {{ filtrosActivos().length }} filtros predeterminados
+                  </li>
+                  <li>
+                    <i class="pi pi-sort-alt"></i>
+                    {{ ordenamientoCampo() ? 'Ordenamiento configurado' : 'Sin ordenamiento' }}
+                  </li>
+                  <li>
+                    <i class="pi pi-list"></i>
+                    Mostrando {{ tableLimit() }} filas
+                  </li>
+                </ul>
+              </div>
+            }
+
+            <!-- Resumen de configuración para GRÁFICAS -->
+            @if (esGrafica()) {
+              <div class="config-summary">
+                <h5>Resumen de Configuración</h5>
+                <ul>
+                  <li>
+                    <i class="pi pi-database"></i>
+                    Fuente: {{ resumenChartConfig().dataSource }}
+                  </li>
+                  <li>
+                    <i class="pi pi-calculator"></i>
+                    Métrica: {{ resumenChartConfig().metrica }}
+                  </li>
+                  <li>
+                    <i class="pi pi-sitemap"></i>
+                    Agrupado por: {{ resumenChartConfig().agrupacion }}
+                  </li>
+                  <li>
+                    <i class="pi pi-calendar"></i>
+                    Período: {{ resumenChartConfig().periodo }}
+                  </li>
+                  <li>
+                    <i class="pi pi-palette"></i>
+                    Paleta: {{ resumenChartConfig().paleta }}
+                  </li>
+                </ul>
+              </div>
+            }
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="configurator-footer">
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="cerrar()"
+      />
+      <p-button
+        label="Agregar al Dashboard"
+        icon="pi pi-plus"
+        (onClick)="confirmar()"
+        [disabled]="!titulo()"
+      />
+    </div>
+  </ng-template>
+</p-drawer>

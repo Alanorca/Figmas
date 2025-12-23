@@ -1,0 +1,1147 @@
+<!-- ============================================================================
+     DASHBOARD CUSTOMIZABLE - TEMPLATE
+     Con gráficas interactivas, drilldown y configuración de widgets
+     ============================================================================ -->
+
+<div class="dashboard-customizable">
+  <!-- Toolbar -->
+  <div class="dashboard-toolbar">
+    <div class="toolbar-left">
+      <h2 class="dashboard-title">
+        <i class="pi pi-th-large"></i>
+        {{ configActual()?.nombre || 'Dashboard' }}
+      </h2>
+      @if (hasUnsavedChanges()) {
+        <span class="unsaved-indicator">
+          <i class="pi pi-circle-fill"></i>
+          Sin guardar
+        </span>
+      }
+    </div>
+
+    <div class="toolbar-right">
+      @if (modoEdicion()) {
+        <!-- Acciones modo edición -->
+        <p-button
+          icon="pi pi-plus"
+          label="Agregar Widget"
+          [outlined]="true"
+          size="small"
+          (onClick)="abrirCatalogo()">
+        </p-button>
+
+        <p-button
+          icon="pi pi-cog"
+          label="Layout"
+          [outlined]="true"
+          size="small"
+          (onClick)="abrirLayoutConfig()">
+        </p-button>
+
+        <p-divider layout="vertical"></p-divider>
+
+        @if (hasUnsavedChanges()) {
+          <p-button
+            icon="pi pi-times"
+            label="Descartar"
+            severity="secondary"
+            [text]="true"
+            size="small"
+            (onClick)="descartarCambios()">
+          </p-button>
+        }
+
+        <p-button
+          icon="pi pi-check"
+          label="Guardar"
+          size="small"
+          (onClick)="guardarCambios()">
+        </p-button>
+
+        <p-button
+          icon="pi pi-times"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          pTooltip="Salir de edición"
+          (onClick)="toggleModoEdicion()">
+        </p-button>
+      } @else {
+        <!-- Acciones modo visualización -->
+        <p-button
+          icon="pi pi-pencil"
+          label="Personalizar"
+          [outlined]="true"
+          size="small"
+          (onClick)="toggleModoEdicion()">
+        </p-button>
+      }
+    </div>
+  </div>
+
+  <!-- Grid de Widgets (Gridster) -->
+  <div class="dashboard-grid" [class.editing]="modoEdicion()">
+    <gridster [options]="gridsterOptions()">
+      @for (widget of widgets(); track trackByWidgetId($index, widget)) {
+        <gridster-item [item]="widget" (click)="onWidgetClick(widget)">
+          <app-dashboard-widget
+            [widget]="widget"
+            (onEdit)="editarWidget($event)"
+            (onRemove)="eliminarWidget($event)"
+            (onDuplicate)="duplicarWidget($event)">
+
+            <!-- Contenido del widget según tipo -->
+            @switch (widget.tipo) {
+              @case ('kpi-card') {
+                <div class="widget-kpi-card" [style.border-left-color]="widget.config.kpiConfig?.colorPrimario || '#3B82F6'">
+                  <div class="kpi-icon" [style.color]="widget.config.kpiConfig?.colorPrimario || '#3B82F6'">
+                    <i [class]="widget.config.kpiConfig?.icono || 'pi pi-chart-line'"></i>
+                  </div>
+                  <div class="kpi-content">
+                    <div class="kpi-value" [style.color]="widget.config.kpiConfig?.colorPrimario || '#3B82F6'">
+                      {{ getKPIValue(widget.config.kpiType || 'cumplimiento') }}{{ widget.config.kpiConfig?.unidad || '%' }}
+                    </div>
+                    @if (widget.config.kpiConfig?.mostrarTendencia !== false) {
+                      @let trend = getKPITrend(widget.config.kpiType || 'cumplimiento');
+                      <div class="kpi-trend" [class.positive]="trend.isPositive" [class.negative]="!trend.isPositive">
+                        <i class="pi" [class.pi-arrow-up]="trend.direction === 'up'" [class.pi-arrow-down]="trend.direction === 'down'" [class.pi-minus]="trend.direction === 'neutral'"></i>
+                        {{ trend.value }}
+                      </div>
+                    }
+                    @if (widget.config.kpiConfig?.mostrarMeta === true) {
+                      <div class="kpi-meta">
+                        <span class="meta-label">Meta:</span>
+                        <span class="meta-value">{{ widget.config.kpiConfig?.metaValor || 100 }}{{ widget.config.kpiConfig?.unidad || '%' }}</span>
+                        <div class="meta-progress">
+                          <div class="meta-progress-bar"
+                               [style.width.%]="(getKPINumericValue(widget.config.kpiType || 'cumplimiento') / (widget.config.kpiConfig?.metaValor || 100)) * 100"
+                               [style.background-color]="widget.config.kpiConfig?.colorPrimario || '#3B82F6'"></div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              @case ('kpi-grid') {
+                <div class="widget-kpi-grid">
+                  @for (metric of getKPIGridMetrics(); track metric.label) {
+                    <div class="kpi-mini-card">
+                      <span class="value">{{ metric.value }}</span>
+                      <span class="label">{{ metric.label }}</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              @case ('chart-bar') {
+                <div class="widget-chart">
+                  <apx-chart
+                    [series]="chartBarOptions().series"
+                    [chart]="chartBarOptions().chart"
+                    [plotOptions]="chartBarOptions().plotOptions"
+                    [xaxis]="chartBarOptions().xaxis"
+                    [yaxis]="chartBarOptions().yaxis"
+                    [colors]="chartBarOptions().colors"
+                    [dataLabels]="chartBarOptions().dataLabels"
+                    [legend]="chartBarOptions().legend"
+                    [tooltip]="chartBarOptions().tooltip">
+                  </apx-chart>
+                </div>
+              }
+
+              @case ('chart-line') {
+                <div class="widget-chart">
+                  <apx-chart
+                    [series]="chartLineOptions().series"
+                    [chart]="chartLineOptions().chart"
+                    [stroke]="chartLineOptions().stroke"
+                    [xaxis]="chartLineOptions().xaxis"
+                    [yaxis]="chartLineOptions().yaxis"
+                    [colors]="chartLineOptions().colors"
+                    [dataLabels]="chartLineOptions().dataLabels"
+                    [legend]="chartLineOptions().legend"
+                    [grid]="chartLineOptions().grid"
+                    [tooltip]="chartLineOptions().tooltip">
+                  </apx-chart>
+                </div>
+              }
+
+              @case ('chart-donut') {
+                <div class="widget-chart">
+                  <apx-chart
+                    [series]="chartDonutOptions().series"
+                    [chart]="chartDonutOptions().chart"
+                    [labels]="chartDonutOptions().labels"
+                    [colors]="chartDonutOptions().colors"
+                    [legend]="chartDonutOptions().legend"
+                    [plotOptions]="chartDonutOptions().plotOptions"
+                    [dataLabels]="chartDonutOptions().dataLabels"
+                    [tooltip]="chartDonutOptions().tooltip">
+                  </apx-chart>
+                </div>
+              }
+
+              @case ('chart-area') {
+                <div class="widget-chart">
+                  <apx-chart
+                    [series]="chartAreaOptions().series"
+                    [chart]="chartAreaOptions().chart"
+                    [stroke]="chartAreaOptions().stroke"
+                    [fill]="chartAreaOptions().fill"
+                    [xaxis]="chartAreaOptions().xaxis"
+                    [yaxis]="chartAreaOptions().yaxis"
+                    [colors]="chartAreaOptions().colors"
+                    [dataLabels]="chartAreaOptions().dataLabels"
+                    [grid]="chartAreaOptions().grid">
+                  </apx-chart>
+                </div>
+              }
+
+              @case ('alertas-list') {
+                <div class="widget-alertas-list">
+                  @for (alerta of getAlertasOrdenadas(); track alerta.id) {
+                    <div class="alerta-item clickable" [class.critical]="alerta.severity === 'critical'" [class.warning]="alerta.severity === 'warning'" [class.info]="alerta.severity === 'info'" (click)="abrirAlertaDrilldown(alerta)">
+                      <i class="pi" [class.pi-exclamation-circle]="alerta.severity === 'critical'" [class.pi-exclamation-triangle]="alerta.severity === 'warning'" [class.pi-info-circle]="alerta.severity === 'info'"></i>
+                      <div class="alerta-content">
+                        <span class="alerta-title">{{ alerta.kpiNombre }}</span>
+                        <span class="alerta-subtitle">{{ alerta.procesoNombre }}</span>
+                      </div>
+                      <i class="pi pi-chevron-right alerta-arrow"></i>
+                    </div>
+                  } @empty {
+                    <div class="widget-empty">
+                      <i class="pi pi-check-circle"></i>
+                      <span>Sin alertas activas</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              @case ('table-mini') {
+                <div class="widget-table-mini">
+                  <table class="mini-table">
+                    <thead>
+                      <tr>
+                        <th>Proceso</th>
+                        <th>Estado</th>
+                        <th>Cumplimiento</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (proc of procesosResumen().slice(0, 5); track proc.procesoId) {
+                        <tr class="clickable" (click)="abrirProcesoDrilldown(proc)">
+                          <td class="proceso-nombre">{{ proc.procesoNombre.length > 25 ? proc.procesoNombre.substring(0, 25) + '...' : proc.procesoNombre }}</td>
+                          <td>
+                            <span class="estado-badge" [class.activo]="proc.estado === 'activo'" [class.borrador]="proc.estado === 'borrador'">
+                              {{ proc.estado }}
+                            </span>
+                          </td>
+                          <td class="cumplimiento-cell">
+                            <div class="cumplimiento-mini">
+                              <span class="cumplimiento-valor">{{ proc.cumplimientoPromedio }}%</span>
+                              <div class="cumplimiento-bar-mini">
+                                <div class="fill" [style.width.%]="proc.cumplimientoPromedio"></div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+
+              @case ('tendencia') {
+                @let metric = kpiMetrics()[1];
+                <div class="widget-tendencia clickable" (click)="abrirTendenciaDrilldown(procesosResumen()[0])">
+                  <div class="tendencia-arrow" [class.positive]="metric.tendencia === 'up'" [class.negative]="metric.tendencia === 'down'">
+                    <i class="pi" [class.pi-arrow-up-right]="metric.tendencia === 'up'" [class.pi-arrow-down-right]="metric.tendencia === 'down'" [class.pi-minus]="metric.tendencia === 'neutral'"></i>
+                  </div>
+                  <div class="tendencia-info">
+                    <span class="tendencia-value" [class.positive]="metric.tendencia === 'up'" [class.negative]="metric.tendencia === 'down'">
+                      {{ metric.porcentajeCambio > 0 ? '+' : '' }}{{ metric.porcentajeCambio }}%
+                    </span>
+                    <span class="tendencia-label">vs período anterior</span>
+                  </div>
+                </div>
+              }
+
+              @case ('cumplimiento') {
+                <div class="widget-cumplimiento">
+                  <div class="cumplimiento-bar">
+                    <div class="cumplimiento-fill" [style.width.%]="getCumplimientoGeneral()"></div>
+                  </div>
+                  <div class="cumplimiento-labels">
+                    <span>0%</span>
+                    <span class="current">{{ getCumplimientoGeneral() }}%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+              }
+
+              @case ('progreso-objetivos') {
+                <div class="widget-progreso">
+                  @for (obj of getProgresoObjetivos(); track obj.nombre) {
+                    <div class="progreso-item">
+                      <span class="progreso-label">{{ obj.nombre }}</span>
+                      <div class="progreso-bar">
+                        <div class="progreso-fill" [style.width.%]="obj.valor"></div>
+                      </div>
+                      <span class="progreso-value">{{ obj.valor }}%</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              @case ('actividad-reciente') {
+                <div class="widget-actividad">
+                  @for (actividad of getActividadReciente(); track actividad.texto) {
+                    <div class="actividad-item">
+                      <i [class]="actividad.icono + ' ' + actividad.color"></i>
+                      <span>{{ actividad.texto }}</span>
+                      <small>{{ actividad.tiempo }}</small>
+                    </div>
+                  }
+                </div>
+              }
+
+              @case ('calendario') {
+                <div class="widget-calendario-placeholder">
+                  <i class="pi pi-calendar"></i>
+                  <span>Calendario</span>
+                </div>
+              }
+
+              @case ('mapa-riesgos') {
+                <div class="widget-mapa-placeholder">
+                  <i class="pi pi-th-large"></i>
+                  <span>Mapa de Riesgos</span>
+                </div>
+              }
+
+              @case ('graficas-interactivas') {
+                <div class="widget-graficas-interactivas">
+                  <app-graficas-interactivas
+                    [datos]="graficaInteractivaDatos()"
+                    [campoInicial]="graficaInteractivaCampo()"
+                    [titulo]="widget.titulo || 'Análisis de Procesos'"
+                    [subtitulo]="widget.subtitulo || 'Visualización interactiva'"
+                    [camposDisponibles]="graficaInteractivaCamposDisponibles"
+                    [valoresFiltrado]="graficaInteractivaValoresFiltrado()"
+                    (campoSeleccionado)="onGraficaInteractivaCampoChange($event)"
+                    (dataPointClick)="onGraficaInteractivaDataPointClick($event)"
+                    (legendClick)="onGraficaInteractivaLegendClick($event)"
+                    (filtroAplicado)="onGraficaInteractivaFiltroAplicado($event)">
+                  </app-graficas-interactivas>
+                </div>
+              }
+
+              @default {
+                <div class="widget-placeholder">
+                  <i class="pi pi-box"></i>
+                  <span>Widget: {{ widget.tipo }}</span>
+                </div>
+              }
+            }
+          </app-dashboard-widget>
+        </gridster-item>
+      }
+    </gridster>
+  </div>
+</div>
+
+<!-- ==================== DRAWERS ==================== -->
+
+<!-- Drawer: Catálogo de Widgets -->
+<p-drawer [(visible)]="showCatalogoDrawer" position="right" [style]="{width: '400px'}" header="Agregar Widget">
+  <div class="catalogo-content">
+    <!-- Búsqueda -->
+    <div class="catalogo-search">
+      <span class="p-input-icon-left w-full">
+        <i class="pi pi-search"></i>
+        <input type="text" pInputText placeholder="Buscar widgets..."
+               [ngModel]="catalogoFiltro()"
+               (ngModelChange)="catalogoFiltro.set($event)"
+               class="w-full" />
+      </span>
+    </div>
+
+    <!-- Categorías -->
+    <div class="catalogo-categorias">
+      @for (cat of categorias; track cat.value) {
+        <button class="categoria-btn"
+                [class.active]="categoriaActiva() === cat.value"
+                (click)="categoriaActiva.set(cat.value)">
+          <i [class]="cat.icon"></i>
+          {{ cat.label }}
+        </button>
+      }
+    </div>
+
+    <p-divider></p-divider>
+
+    <!-- Lista de Widgets -->
+    <div class="catalogo-lista">
+      @for (widget of catalogoFiltrado(); track widget.tipo) {
+        <div class="catalogo-item" (click)="agregarWidget(widget)">
+          <div class="catalogo-item-icon">
+            <i [class]="widget.icono"></i>
+          </div>
+          <div class="catalogo-item-info">
+            <span class="catalogo-item-nombre">{{ widget.nombre }}</span>
+            <span class="catalogo-item-desc">{{ widget.descripcion }}</span>
+          </div>
+          <i class="pi pi-plus catalogo-item-add"></i>
+        </div>
+      } @empty {
+        <div class="catalogo-empty">
+          <i class="pi pi-inbox"></i>
+          <span>No se encontraron widgets</span>
+        </div>
+      }
+    </div>
+  </div>
+</p-drawer>
+
+<!-- Drawer: Pre-Configuración de Widget (antes de agregar) -->
+<p-drawer [(visible)]="showPreConfigDrawer" position="right" [style]="{width: '420px'}">
+  <ng-template pTemplate="header">
+    <div class="preconfig-header">
+      <button class="preconfig-back" (click)="cancelarPreConfig()">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <span>Configurar Widget</span>
+    </div>
+  </ng-template>
+
+  @if (widgetPreConfig()) {
+    <div class="preconfig-content">
+      <!-- Info del widget seleccionado -->
+      <div class="preconfig-widget-info">
+        <div class="preconfig-widget-icon">
+          <i [class]="widgetPreConfig()!.icono"></i>
+        </div>
+        <div class="preconfig-widget-details">
+          <span class="preconfig-widget-nombre">{{ widgetPreConfig()!.nombre }}</span>
+          <span class="preconfig-widget-desc">{{ widgetPreConfig()!.descripcion }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Configuración básica -->
+      <div class="preconfig-section">
+        <h4 class="preconfig-section-title">
+          <i class="pi pi-tag"></i>
+          Información
+        </h4>
+
+        <div class="preconfig-field">
+          <label>Título del widget</label>
+          <input type="text" pInputText class="w-full"
+                 [ngModel]="preConfigTitulo()"
+                 (ngModelChange)="preConfigTitulo.set($event)"
+                 placeholder="Ingresa un título..." />
+        </div>
+
+        <div class="preconfig-field">
+          <label>Subtítulo (opcional)</label>
+          <input type="text" pInputText class="w-full"
+                 [ngModel]="preConfigSubtitulo()"
+                 (ngModelChange)="preConfigSubtitulo.set($event)"
+                 placeholder="Descripción breve..." />
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Configuración específica según tipo -->
+      <div class="preconfig-section">
+        <h4 class="preconfig-section-title">
+          <i class="pi pi-cog"></i>
+          Configuración
+        </h4>
+
+        @switch (widgetPreConfig()!.tipo) {
+          <!-- KPI Card -->
+          @case ('kpi-card') {
+            <div class="preconfig-field">
+              <label>Tipo de KPI</label>
+              <p-select
+                [options]="kpiTypeOptions"
+                [ngModel]="preConfigKpiType()"
+                (ngModelChange)="preConfigKpiType.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}"
+                placeholder="Selecciona el tipo de KPI">
+              </p-select>
+              <small class="preconfig-hint">
+                @switch (preConfigKpiType()) {
+                  @case ('cumplimiento') { Muestra el porcentaje de cumplimiento general }
+                  @case ('procesos') { Muestra la cantidad de procesos activos }
+                  @case ('alertas') { Muestra el número de alertas activas }
+                  @case ('objetivos') { Muestra KPIs en riesgo o bajo umbral }
+                }
+              </small>
+            </div>
+          }
+
+          <!-- Gráficas de barras, líneas, área -->
+          @case ('chart-bar') {
+            <div class="preconfig-field">
+              <label>Fuente de datos</label>
+              <p-select
+                [options]="chartDataSourceOptions"
+                [ngModel]="preConfigChartDataSource()"
+                (ngModelChange)="preConfigChartDataSource.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}"
+                placeholder="Selecciona la fuente de datos">
+              </p-select>
+              <small class="preconfig-hint">Gráfica de barras horizontales o verticales</small>
+            </div>
+          }
+
+          @case ('chart-line') {
+            <div class="preconfig-field">
+              <label>Fuente de datos</label>
+              <p-select
+                [options]="chartDataSourceOptions"
+                [ngModel]="preConfigChartDataSource()"
+                (ngModelChange)="preConfigChartDataSource.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}"
+                placeholder="Selecciona la fuente de datos">
+              </p-select>
+              <small class="preconfig-hint">Muestra tendencias a lo largo del tiempo</small>
+            </div>
+          }
+
+          @case ('chart-area') {
+            <div class="preconfig-field">
+              <label>Fuente de datos</label>
+              <p-select
+                [options]="chartDataSourceOptions"
+                [ngModel]="preConfigChartDataSource()"
+                (ngModelChange)="preConfigChartDataSource.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}"
+                placeholder="Selecciona la fuente de datos">
+              </p-select>
+              <small class="preconfig-hint">Gráfica de área con gradiente</small>
+            </div>
+          }
+
+          @case ('chart-donut') {
+            <div class="preconfig-field">
+              <label>Fuente de datos</label>
+              <p-select
+                [options]="chartDataSourceOptions"
+                [ngModel]="preConfigChartDataSource()"
+                (ngModelChange)="preConfigChartDataSource.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}"
+                placeholder="Selecciona la fuente de datos">
+              </p-select>
+              <small class="preconfig-hint">Distribución porcentual en forma de dona</small>
+            </div>
+          }
+
+          <!-- Listas -->
+          @case ('alertas-list') {
+            <div class="preconfig-field">
+              <label>Número de alertas a mostrar</label>
+              <p-select
+                [options]="[
+                  {label: '3 alertas', value: 3},
+                  {label: '5 alertas', value: 5},
+                  {label: '7 alertas', value: 7},
+                  {label: '10 alertas', value: 10}
+                ]"
+                [ngModel]="preConfigListLimit()"
+                (ngModelChange)="preConfigListLimit.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}">
+              </p-select>
+              <small class="preconfig-hint">Ordenadas por severidad (críticas primero)</small>
+            </div>
+          }
+
+          @case ('actividad-reciente') {
+            <div class="preconfig-field">
+              <label>Número de actividades a mostrar</label>
+              <p-select
+                [options]="[
+                  {label: '5 actividades', value: 5},
+                  {label: '10 actividades', value: 10},
+                  {label: '15 actividades', value: 15}
+                ]"
+                [ngModel]="preConfigListLimit()"
+                (ngModelChange)="preConfigListLimit.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}">
+              </p-select>
+              <small class="preconfig-hint">Últimas acciones y cambios en el sistema</small>
+            </div>
+          }
+
+          <!-- Tabla -->
+          @case ('table-mini') {
+            <div class="preconfig-field">
+              <label>Fuente de datos</label>
+              <p-select
+                [options]="tableDataSourceOptions"
+                [ngModel]="preConfigTableDataSource()"
+                (ngModelChange)="preConfigTableDataSource.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}"
+                placeholder="Selecciona qué datos mostrar">
+              </p-select>
+              <small class="preconfig-hint">
+                @switch (preConfigTableDataSource()) {
+                  @case ('procesos') { Lista de procesos con cumplimiento y estado }
+                  @case ('riesgos') { Riesgos identificados y su estado actual }
+                  @case ('results-ml') { Predicciones y resultados de modelos ML }
+                  @case ('activos') { Inventario de activos de información }
+                  @case ('alertas') { Alertas generadas por el sistema }
+                  @case ('incidentes') { Incidentes de seguridad registrados }
+                  @case ('kpis') { Indicadores clave de rendimiento }
+                  @case ('objetivos') { Objetivos y su progreso actual }
+                }
+              </small>
+            </div>
+
+            <div class="preconfig-field">
+              <label>Número de filas a mostrar</label>
+              <p-select
+                [options]="[
+                  {label: '3 filas', value: 3},
+                  {label: '5 filas', value: 5},
+                  {label: '7 filas', value: 7},
+                  {label: '10 filas', value: 10}
+                ]"
+                [ngModel]="preConfigTableLimit()"
+                (ngModelChange)="preConfigTableLimit.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}">
+              </p-select>
+            </div>
+          }
+
+          <!-- Gráficas Interactivas -->
+          @case ('graficas-interactivas') {
+            <div class="preconfig-info-box">
+              <i class="pi pi-sparkles"></i>
+              <div>
+                <strong>Gráficas Interactivas</strong>
+                <p>Este widget incluye su propio panel de configuración con:</p>
+                <ul>
+                  <li>18+ tipos de gráficas</li>
+                  <li>Múltiples paletas de colores</li>
+                  <li>Asistente IA integrado</li>
+                  <li>Configuraciones guardables</li>
+                </ul>
+              </div>
+            </div>
+          }
+
+          <!-- Mapa de Riesgos -->
+          @case ('mapa-riesgos') {
+            <div class="preconfig-field">
+              <label>Tipo de mapa de riesgos</label>
+              <p-select
+                [options]="mapaRiesgosTypeOptions"
+                [ngModel]="preConfigMapaRiesgosType()"
+                (ngModelChange)="preConfigMapaRiesgosType.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}"
+                placeholder="Selecciona el tipo de mapa">
+              </p-select>
+              <small class="preconfig-hint">
+                @switch (preConfigMapaRiesgosType()) {
+                  @case ('probabilidad-impacto') { Matriz clásica de riesgos con probabilidad e impacto }
+                  @case ('activos-amenazas') { Relación entre activos de información y sus amenazas }
+                  @case ('controles-efectividad') { Efectividad de los controles implementados }
+                  @case ('vulnerabilidades') { Mapa de vulnerabilidades detectadas en el sistema }
+                }
+              </small>
+            </div>
+
+            <div class="preconfig-info-box info">
+              <i class="pi pi-info-circle"></i>
+              <div>
+                <strong>Vista de Mapa de Calor</strong>
+                <p>El mapa mostrará una matriz visual con colores según el nivel de riesgo o efectividad.</p>
+              </div>
+            </div>
+          }
+
+          <!-- Widgets sin configuración específica -->
+          @default {
+            <div class="preconfig-info-box info">
+              <i class="pi pi-info-circle"></i>
+              <span>Este widget no requiere configuración adicional.</span>
+            </div>
+          }
+        }
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Opciones adicionales -->
+      <div class="preconfig-section">
+        <h4 class="preconfig-section-title">
+          <i class="pi pi-sliders-h"></i>
+          Opciones
+        </h4>
+
+        <div class="preconfig-toggle">
+          <label>Mostrar encabezado del widget</label>
+          <p-togglebutton
+            [ngModel]="preConfigShowHeader()"
+            (ngModelChange)="preConfigShowHeader.set($event)"
+            onLabel="Sí"
+            offLabel="No"
+            [style]="{width: '80px'}">
+          </p-togglebutton>
+        </div>
+      </div>
+
+      <!-- Vista previa del tamaño -->
+      <div class="preconfig-size-preview">
+        <span class="size-label">Tamaño inicial:</span>
+        <span class="size-value">
+          {{ widgetPreConfig()!.tamanoDefault | titlecase }}
+          ({{ widgetPreConfig()!.minCols }}x{{ widgetPreConfig()!.minRows }} celdas)
+        </span>
+      </div>
+    </div>
+
+    <!-- Footer con botones -->
+    <ng-template pTemplate="footer">
+      <div class="preconfig-footer">
+        <p-button
+          label="Cancelar"
+          icon="pi pi-times"
+          severity="secondary"
+          [text]="true"
+          (onClick)="cancelarPreConfig()">
+        </p-button>
+        <p-button
+          label="Agregar al Dashboard"
+          icon="pi pi-plus"
+          severity="success"
+          (onClick)="confirmarYAgregarWidget()">
+        </p-button>
+      </div>
+    </ng-template>
+  }
+</p-drawer>
+
+<!-- Drawer: Configuración de Widget -->
+<p-drawer [(visible)]="showConfigDrawer" position="right" [style]="{width: '400px'}" header="Configurar Widget">
+  @if (widgetSeleccionado()) {
+    <div class="config-content">
+      <!-- Información básica -->
+      <div class="config-section">
+        <label class="config-label">Título</label>
+        <input type="text" pInputText class="w-full"
+               [ngModel]="widgetSeleccionado()!.titulo"
+               (ngModelChange)="actualizarTituloWidget($event)" />
+      </div>
+
+      <div class="config-section">
+        <label class="config-label">Subtítulo (opcional)</label>
+        <input type="text" pInputText class="w-full"
+               [ngModel]="widgetSeleccionado()!.subtitulo || ''"
+               (ngModelChange)="actualizarSubtituloWidget($event)" />
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Configuración específica por tipo -->
+      @switch (widgetSeleccionado()!.tipo) {
+        @case ('kpi-card') {
+          <div class="config-section">
+            <label class="config-label">Tipo de KPI</label>
+            <p-select
+              [options]="kpiTypeOptions"
+              [ngModel]="widgetSeleccionado()!.config.kpiType || 'cumplimiento'"
+              (ngModelChange)="actualizarKpiType($event)"
+              optionLabel="label"
+              optionValue="value"
+              [style]="{width: '100%'}">
+            </p-select>
+          </div>
+        }
+
+        @case ('chart-bar') {
+          <div class="config-section">
+            <label class="config-label">Fuente de datos</label>
+            <p-select
+              [options]="chartDataSourceOptions"
+              [ngModel]="widgetSeleccionado()!.config.chartDataSource || 'cumplimiento'"
+              (ngModelChange)="actualizarChartDataSource($event)"
+              optionLabel="label"
+              optionValue="value"
+              [style]="{width: '100%'}">
+            </p-select>
+          </div>
+          <div class="config-info-box">
+            <i class="pi pi-info-circle"></i>
+            <span>Haz click en las barras para ver el detalle del proceso</span>
+          </div>
+        }
+
+        @case ('chart-line') {
+          <div class="config-section">
+            <label class="config-label">Fuente de datos</label>
+            <p-select
+              [options]="chartDataSourceOptions"
+              [ngModel]="widgetSeleccionado()!.config.chartDataSource || 'tendencia'"
+              (ngModelChange)="actualizarChartDataSource($event)"
+              optionLabel="label"
+              optionValue="value"
+              [style]="{width: '100%'}">
+            </p-select>
+          </div>
+          <div class="config-info-box">
+            <i class="pi pi-info-circle"></i>
+            <span>Haz click en la leyenda para ver el detalle del proceso</span>
+          </div>
+        }
+
+        @case ('chart-donut') {
+          <div class="config-info-box">
+            <i class="pi pi-info-circle"></i>
+            <span>Haz click en los segmentos para ver alertas por severidad</span>
+          </div>
+        }
+
+        @case ('alertas-list') {
+          <div class="config-section">
+            <label class="config-label">Límite de alertas</label>
+            <input type="number" pInputText class="w-full"
+                   [ngModel]="widgetSeleccionado()!.config.listLimit || 5"
+                   (ngModelChange)="actualizarListLimit($event)"
+                   min="3" max="10" />
+          </div>
+          <div class="config-info-box">
+            <i class="pi pi-info-circle"></i>
+            <span>Haz click en una alerta para ver su detalle completo</span>
+          </div>
+        }
+
+        @case ('table-mini') {
+          <div class="config-section">
+            <label class="config-label">Límite de filas</label>
+            <input type="number" pInputText class="w-full"
+                   [ngModel]="widgetSeleccionado()!.config.tableLimit || 5"
+                   (ngModelChange)="actualizarListLimit($event)"
+                   min="3" max="10" />
+          </div>
+          <div class="config-info-box">
+            <i class="pi pi-info-circle"></i>
+            <span>Haz click en una fila para ver el detalle del proceso</span>
+          </div>
+        }
+
+        @default {
+          <div class="config-section">
+            <label class="config-label">Tipo de Widget</label>
+            <div class="config-value">
+              <i [class]="getWidgetIcon(widgetSeleccionado()!.tipo)"></i>
+              {{ widgetSeleccionado()!.tipo }}
+            </div>
+          </div>
+        }
+      }
+
+      <p-divider></p-divider>
+
+      <!-- Dimensiones -->
+      <div class="config-section">
+        <label class="config-label">Dimensiones actuales</label>
+        <div class="config-dimensions">
+          <span>{{ widgetSeleccionado()!.cols }} columnas x {{ widgetSeleccionado()!.rows }} filas</span>
+        </div>
+        <small class="config-hint">Arrastra los bordes del widget para redimensionar</small>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Drawer: Configuración de Layout -->
+<p-drawer [(visible)]="showLayoutDrawer" position="right" [style]="{width: '380px'}" header="Configuración de Layout">
+  <div class="layout-content">
+    <div class="config-section">
+      <label class="config-label">Columnas</label>
+      <p-select
+        [options]="columnasOptions"
+        [ngModel]="configActual()?.columns"
+        (ngModelChange)="actualizarColumnas($event)"
+        optionLabel="label"
+        optionValue="value"
+        [style]="{width: '100%'}">
+      </p-select>
+    </div>
+
+    <div class="config-section">
+      <label class="config-label">Altura de fila (px)</label>
+      <input type="number" pInputText class="w-full"
+             [ngModel]="configActual()?.rowHeight"
+             (ngModelChange)="actualizarRowHeight($event)"
+             min="80" max="200" step="10" />
+    </div>
+
+    <div class="config-section">
+      <label class="config-label">Espaciado (px)</label>
+      <input type="number" pInputText class="w-full"
+             [ngModel]="configActual()?.gap"
+             (ngModelChange)="actualizarGap($event)"
+             min="8" max="32" step="4" />
+    </div>
+
+    <p-divider></p-divider>
+
+    <div class="config-actions">
+      <p-button
+        label="Restaurar por defecto"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="restaurarDefecto()"
+        [style]="{width: '100%'}">
+      </p-button>
+    </div>
+  </div>
+</p-drawer>
+
+<!-- ==================== DRILLDOWN DRAWERS ==================== -->
+
+<!-- Drawer: Drilldown de Proceso -->
+<p-drawer [(visible)]="showProcesoDrilldown" position="right" [style]="{width: '480px'}" header="Detalle de Proceso">
+  @if (procesoSeleccionado()) {
+    <div class="drilldown-content">
+      <!-- Header del proceso -->
+      <div class="drilldown-header">
+        <div class="drilldown-title-section">
+          <h3 class="drilldown-title">{{ procesoSeleccionado()!.procesoNombre }}</h3>
+          <p-tag [value]="procesoSeleccionado()!.estado" [severity]="procesoSeleccionado()!.estado === 'activo' ? 'success' : 'secondary'"></p-tag>
+        </div>
+        <div class="drilldown-stats">
+          <div class="stat-item">
+            <span class="stat-value">{{ procesoSeleccionado()!.cumplimientoPromedio }}%</span>
+            <span class="stat-label">Cumplimiento</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ procesoSeleccionado()!.totalObjetivos }}</span>
+            <span class="stat-label">Objetivos</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ procesoSeleccionado()!.totalKPIs }}</span>
+            <span class="stat-label">KPIs</span>
+          </div>
+          <div class="stat-item" [class.alert]="procesoSeleccionado()!.alertasActivas > 0">
+            <span class="stat-value">{{ procesoSeleccionado()!.alertasActivas }}</span>
+            <span class="stat-label">Alertas</span>
+          </div>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Selector de vista -->
+      <div class="drilldown-vista">
+        <label class="config-label">Ver desglose por:</label>
+        <p-select
+          [options]="desgloseOptions"
+          [ngModel]="drilldownVistaDesglose()"
+          (ngModelChange)="drilldownVistaDesglose.set($event)"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{width: '100%'}">
+        </p-select>
+      </div>
+
+      <!-- Lista de KPIs/Objetivos -->
+      <div class="drilldown-lista">
+        @for (item of drilldownKPIsData(); track item.id) {
+          <div class="drilldown-item">
+            <div class="drilldown-item-info">
+              <span class="drilldown-item-nombre">{{ item.nombre }}</span>
+              <div class="drilldown-item-bar">
+                <div class="drilldown-item-fill" [style.width.%]="item.valor" [style.background]="item.color"></div>
+              </div>
+            </div>
+            <span class="drilldown-item-valor" [style.color]="item.color">{{ item.valor }}%</span>
+          </div>
+        }
+      </div>
+
+      <!-- Tendencia -->
+      <p-divider></p-divider>
+      <div class="drilldown-tendencia">
+        <div class="tendencia-header">
+          <span class="tendencia-title">Tendencia</span>
+          <div class="tendencia-badge" [class.positive]="procesoSeleccionado()!.tendencia === 'up'" [class.negative]="procesoSeleccionado()!.tendencia === 'down'">
+            <i [class]="getTendenciaIcon(procesoSeleccionado()!.tendencia)"></i>
+            <span>{{ procesoSeleccionado()!.cumplimientoPromedio - procesoSeleccionado()!.cumplimientoAnterior }}%</span>
+          </div>
+        </div>
+        <span class="tendencia-desc">vs período anterior</span>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Drawer: Drilldown de Alerta -->
+<p-drawer [(visible)]="showAlertaDrilldown" position="right" [style]="{width: '440px'}" header="Detalle de Alerta">
+  @if (alertaSeleccionada()) {
+    <div class="drilldown-content">
+      <!-- Severidad -->
+      <div class="alerta-drilldown-header">
+        <p-tag [value]="alertaSeleccionada()!.severity === 'critical' ? 'CRÍTICA' : alertaSeleccionada()!.severity === 'warning' ? 'ADVERTENCIA' : 'INFO'" [severity]="getSeverityColor(alertaSeleccionada()!.severity)"></p-tag>
+        <span class="alerta-fecha">{{ alertaSeleccionada()!.diasAbierto }} días abierta</span>
+      </div>
+
+      <!-- Mensaje -->
+      <div class="alerta-mensaje">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ alertaSeleccionada()!.mensaje }}</span>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Detalles -->
+      <div class="alerta-detalles">
+        <div class="detalle-item">
+          <span class="detalle-label">Proceso</span>
+          <span class="detalle-value">{{ alertaSeleccionada()!.procesoNombre }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">Objetivo</span>
+          <span class="detalle-value">{{ alertaSeleccionada()!.objetivoNombre }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">KPI</span>
+          <span class="detalle-value">{{ alertaSeleccionada()!.kpiNombre }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Valores -->
+      <div class="alerta-valores">
+        <div class="valor-card">
+          <span class="valor-label">Valor Actual</span>
+          <span class="valor-number critical">{{ alertaSeleccionada()!.valorActual }}%</span>
+        </div>
+        <div class="valor-separator">
+          <i class="pi pi-arrow-right"></i>
+        </div>
+        <div class="valor-card">
+          <span class="valor-label">Umbral</span>
+          <span class="valor-number">{{ alertaSeleccionada()!.valorUmbral }}%</span>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="alerta-acciones">
+        <p-button label="Marcar como atendida" icon="pi pi-check" [outlined]="true" [style]="{width: '100%'}"></p-button>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Drawer: Drilldown de Tendencia -->
+<p-drawer [(visible)]="showTendenciaDrilldown" position="right" [style]="{width: '440px'}" header="Análisis de Tendencia">
+  @if (tendenciaProcesoSeleccionado()) {
+    <div class="drilldown-content">
+      <!-- Header -->
+      <div class="tendencia-drilldown-header">
+        <h3>{{ tendenciaProcesoSeleccionado()!.procesoNombre }}</h3>
+        <div class="tendencia-badge large" [class.positive]="tendenciaProcesoSeleccionado()!.tendencia === 'up'" [class.negative]="tendenciaProcesoSeleccionado()!.tendencia === 'down'">
+          <i [class]="getTendenciaIcon(tendenciaProcesoSeleccionado()!.tendencia)"></i>
+          <span>{{ tendenciaProcesoSeleccionado()!.tendencia === 'up' ? 'Mejorando' : tendenciaProcesoSeleccionado()!.tendencia === 'down' ? 'Declinando' : 'Estable' }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Comparación -->
+      <div class="tendencia-comparacion">
+        <div class="periodo-card">
+          <span class="periodo-label">Período Anterior</span>
+          <span class="periodo-valor">{{ tendenciaProcesoSeleccionado()!.cumplimientoAnterior }}%</span>
+        </div>
+        <div class="periodo-arrow">
+          <i class="pi pi-arrow-right"></i>
+        </div>
+        <div class="periodo-card actual">
+          <span class="periodo-label">Actual</span>
+          <span class="periodo-valor">{{ tendenciaProcesoSeleccionado()!.cumplimientoPromedio }}%</span>
+        </div>
+      </div>
+
+      <!-- Variación -->
+      <div class="tendencia-variacion">
+        <span class="variacion-label">Variación</span>
+        <span class="variacion-valor" [class.positive]="tendenciaProcesoSeleccionado()!.tendencia === 'up'" [class.negative]="tendenciaProcesoSeleccionado()!.tendencia === 'down'">
+          {{ tendenciaProcesoSeleccionado()!.tendencia === 'up' ? '+' : '' }}{{ tendenciaProcesoSeleccionado()!.cumplimientoPromedio - tendenciaProcesoSeleccionado()!.cumplimientoAnterior }}%
+        </span>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Métricas adicionales -->
+      <div class="tendencia-metricas">
+        <div class="metrica-item">
+          <i class="pi pi-bullseye"></i>
+          <div class="metrica-info">
+            <span class="metrica-label">Objetivos</span>
+            <span class="metrica-valor">{{ tendenciaProcesoSeleccionado()!.totalObjetivos }}</span>
+          </div>
+        </div>
+        <div class="metrica-item">
+          <i class="pi pi-chart-line"></i>
+          <div class="metrica-info">
+            <span class="metrica-label">KPIs monitoreados</span>
+            <span class="metrica-valor">{{ tendenciaProcesoSeleccionado()!.totalKPIs }}</span>
+          </div>
+        </div>
+        <div class="metrica-item" [class.alert]="tendenciaProcesoSeleccionado()!.alertasActivas > 0">
+          <i class="pi pi-bell"></i>
+          <div class="metrica-info">
+            <span class="metrica-label">Alertas activas</span>
+            <span class="metrica-valor">{{ tendenciaProcesoSeleccionado()!.alertasActivas }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Widget Configurator Avanzado (para tablas) -->
+<app-widget-configurator
+  [visible]="showWidgetConfigurator()"
+  [catalogItem]="configuratorCatalogItem()"
+  (visibleChange)="showWidgetConfigurator.set($event)"
+  (onConfirm)="onWidgetConfigured($event)"
+  (onCancel)="onWidgetConfiguratorCancel()">
+</app-widget-configurator>
+
+<!-- Dialogs -->
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

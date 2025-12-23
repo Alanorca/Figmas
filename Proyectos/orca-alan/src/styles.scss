@@ -18,3 +18,11 @@ html, body {
 * {
   box-sizing: border-box;
 }
+
+/* Widget Configurator Drawer - 50% de pantalla */
+.configurator-drawer.p-drawer,
+.p-drawer.configurator-drawer {
+  width: 50vw !important;
+  min-width: 600px !important;
+  max-width: none !important;
+}
