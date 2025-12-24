@@ -376,14 +376,18 @@
   // TYPOGRAPHY
   // ===========================================================================
   --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 1.875rem;
-  --font-size-4xl: 2.25rem;
+  --font-size-2xs: 0.625rem;   // 10px - badges, micro labels
+  --font-size-xs: 0.75rem;     // 12px
+  --font-size-xs-plus: 0.6875rem; // 11px - special small text
+  --font-size-sm-minus: 0.8125rem; // 13px - compact text
+  --font-size-sm: 0.875rem;    // 14px
+  --font-size-base: 1rem;      // 16px
+  --font-size-lg: 1.125rem;    // 18px
+  --font-size-xl: 1.25rem;     // 20px
+  --font-size-2xl: 1.5rem;     // 24px
+  --font-size-3xl: 1.875rem;   // 30px
+  --font-size-4xl: 2.25rem;    // 36px
+  --font-size-5xl: 2rem;       // 32px - icons grandes
 
   --font-weight-normal: 400;
   --font-weight-medium: 500;
@@ -682,4 +686,173 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+// =============================================================================
+// DARK MODE THEME
+// =============================================================================
+
+:root.dark-mode,
+[data-theme="dark"] {
+  // ===========================================================================
+  // SURFACE COLORS (Dark theme - Zinc/Neutral based - Grises puros)
+  // ===========================================================================
+  --surface-0: #09090b;      // zinc-950 - Negro puro
+  --surface-50: #18181b;     // zinc-900
+  --surface-100: #27272a;    // zinc-800
+  --surface-200: #3f3f46;    // zinc-700
+  --surface-300: #52525b;    // zinc-600
+  --surface-400: #71717a;    // zinc-500
+  --surface-500: #a1a1aa;    // zinc-400
+  --surface-600: #d4d4d8;    // zinc-300
+  --surface-700: #e4e4e7;    // zinc-200
+  --surface-800: #f4f4f5;    // zinc-100
+  --surface-900: #fafafa;    // zinc-50
+  --surface-950: #ffffff;
+
+  --surface-ground: #09090b;    // Fondo principal negro
+  --surface-section: #18181b;   // Secciones
+  --surface-card: #18181b;      // Tarjetas
+  --surface-overlay: #18181b;   // Overlays
+  --surface-border: #27272a;    // Bordes
+  --surface-hover: #27272a;     // Hover
+
+  // ===========================================================================
+  // TEXT COLORS (Dark theme)
+  // ===========================================================================
+  --text-color: #fafafa;           // zinc-50
+  --text-color-secondary: #a1a1aa; // zinc-400
+  --text-hover-color: #ffffff;
+  --text-muted-color: #71717a;     // zinc-500
+
+  // ===========================================================================
+  // HIGHLIGHT COLORS (Dark theme)
+  // ===========================================================================
+  --highlight-background: rgba(16, 185, 129, 0.16);
+  --highlight-color: var(--emerald-400);
+  --highlight-focus-background: rgba(16, 185, 129, 0.24);
+  --highlight-focus-color: var(--emerald-300);
+
+  // ===========================================================================
+  // CONTENT COLORS (Dark theme)
+  // ===========================================================================
+  --content-background: #18181b;
+  --content-border-color: #27272a;
+  --content-hover-background: #27272a;
+
+  // ===========================================================================
+  // FORM FIELD TOKENS (Dark theme)
+  // ===========================================================================
+  --form-field-background: #18181b;
+  --form-field-border-color: #3f3f46;
+  --form-field-hover-border-color: #52525b;
+  --form-field-focus-border-color: var(--primary-color);
+  --form-field-invalid-border-color: var(--red-400);
+  --form-field-placeholder-color: #71717a;
+  --form-field-color: #fafafa;
+  --form-field-disabled-background: #27272a;
+  --form-field-disabled-color: #71717a;
+  --form-field-filled-background: #27272a;
+  --form-field-icon-color: #a1a1aa;
+  --form-field-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+
+  // ===========================================================================
+  // SHADOWS (Dark theme - más pronunciadas para contraste)
+  // ===========================================================================
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+
+  // ===========================================================================
+  // BUTTON SEMANTIC COLORS (Dark theme)
+  // ===========================================================================
+  --button-secondary-background: #27272a;
+  --button-secondary-border-color: #27272a;
+  --button-secondary-color: #fafafa;
+  --button-secondary-hover-background: #3f3f46;
+  --button-secondary-hover-color: #ffffff;
+  --button-secondary-active-background: #52525b;
+  --button-secondary-active-color: #ffffff;
+
+  // Contrast button (inverted in dark mode)
+  --button-contrast-background: #fafafa;
+  --button-contrast-border-color: #fafafa;
+  --button-contrast-color: #09090b;
+  --button-contrast-hover-background: #e4e4e7;
+  --button-contrast-active-background: #d4d4d8;
+
+  // ===========================================================================
+  // TAG SEMANTIC COLORS (Dark theme)
+  // ===========================================================================
+  --tag-secondary-background: #27272a;
+  --tag-secondary-color: #fafafa;
+  --tag-contrast-background: #fafafa;
+  --tag-contrast-color: #09090b;
+
+  // ===========================================================================
+  // MESSAGE SEMANTIC COLORS (Dark theme)
+  // ===========================================================================
+  --message-info-background: rgba(59, 130, 246, 0.16);
+  --message-info-border-color: rgba(59, 130, 246, 0.24);
+  --message-info-color: var(--blue-400);
+
+  --message-success-background: rgba(34, 197, 94, 0.16);
+  --message-success-border-color: rgba(34, 197, 94, 0.24);
+  --message-success-color: var(--green-400);
+
+  --message-warn-background: rgba(234, 179, 8, 0.16);
+  --message-warn-border-color: rgba(234, 179, 8, 0.24);
+  --message-warn-color: var(--yellow-400);
+
+  --message-error-background: rgba(239, 68, 68, 0.16);
+  --message-error-border-color: rgba(239, 68, 68, 0.24);
+  --message-error-color: var(--red-400);
+
+  --message-secondary-background: #27272a;
+  --message-secondary-border-color: #3f3f46;
+  --message-secondary-color: #fafafa;
+
+  --message-contrast-background: #fafafa;
+  --message-contrast-border-color: #e4e4e7;
+  --message-contrast-color: #09090b;
+
+  // ===========================================================================
+  // DATATABLE (Dark theme)
+  // ===========================================================================
+  --datatable-row-striped-background: rgba(39, 39, 42, 0.5);
+
+  // ===========================================================================
+  // TOOLTIP (Dark theme)
+  // ===========================================================================
+  --tooltip-background: #fafafa;
+  --tooltip-color: #09090b;
+
+  // ===========================================================================
+  // CHIP (Dark theme)
+  // ===========================================================================
+  --chip-background: #27272a;
+  --chip-color: #fafafa;
+
+  // ===========================================================================
+  // SKELETON (Dark theme)
+  // ===========================================================================
+  --skeleton-background: #27272a;
+  --skeleton-animation-background: rgba(255, 255, 255, 0.05);
+
+  // ===========================================================================
+  // CAROUSEL (Dark theme)
+  // ===========================================================================
+  --carousel-indicator-background: #3f3f46;
+  --carousel-indicator-hover-background: #52525b;
+
+  // ===========================================================================
+  // MASK (Dark theme)
+  // ===========================================================================
+  --mask-background: rgba(0, 0, 0, 0.7);
+
+  // ===========================================================================
+  // RIPPLE (Dark theme)
+  // ===========================================================================
+  --ripple-background: rgba(255, 255, 255, 0.08);
 }

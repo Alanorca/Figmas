@@ -13,10 +13,19 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Smooth transitions for theme switching */
+html.dark-mode *,
+html.light-mode * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 /* Widget Configurator Drawer - 50% de pantalla */
@@ -25,4 +34,465 @@ html, body {
   width: 50vw !important;
   min-width: 600px !important;
   max-width: none !important;
+}
+
+/* ===========================================
+   DARK MODE - PrimeNG Components Override
+   =========================================== */
+html.dark-mode {
+  /* Drawer */
+  .p-drawer {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-drawer-header {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-drawer-content {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+  }
+
+  /* Panel */
+  .p-panel {
+    background: var(--surface-card);
+    border-color: var(--surface-border);
+
+    .p-panel-header {
+      background: var(--surface-50) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-panel-content {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+  }
+
+  /* Inputs */
+  .p-inputtext,
+  .p-textarea,
+  .p-password input {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    &::placeholder {
+      color: var(--text-color-secondary) !important;
+    }
+  }
+
+  /* Select / Dropdown */
+  .p-select,
+  .p-dropdown {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    .p-select-label,
+    .p-dropdown-label {
+      color: var(--text-color) !important;
+    }
+  }
+
+  .p-select-overlay,
+  .p-dropdown-panel {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-select-option,
+    .p-dropdown-item {
+      color: var(--text-color) !important;
+
+      &:hover {
+        background: var(--surface-hover) !important;
+      }
+
+      &.p-highlight {
+        background: var(--highlight-background) !important;
+        color: var(--highlight-color) !important;
+      }
+    }
+  }
+
+  /* MultiSelect */
+  .p-multiselect {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+  }
+
+  .p-multiselect-panel {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  /* Buttons */
+  .p-button.p-button-secondary {
+    background: var(--surface-200) !important;
+    border-color: var(--surface-200) !important;
+    color: var(--text-color) !important;
+
+    &:hover {
+      background: var(--surface-300) !important;
+    }
+  }
+
+  .p-button.p-button-text {
+    color: var(--text-color) !important;
+
+    &:hover {
+      background: var(--surface-hover) !important;
+    }
+  }
+
+  /* DataTable */
+  .p-datatable {
+    .p-datatable-header {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-datatable-thead > tr > th {
+      background: var(--surface-50) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-datatable-tbody > tr {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+
+      &:hover {
+        background: var(--surface-hover) !important;
+      }
+
+      > td {
+        border-color: var(--surface-border) !important;
+      }
+    }
+
+    .p-datatable-tbody > tr.p-row-odd {
+      background: var(--surface-50) !important;
+    }
+  }
+
+  /* Card */
+  .p-card {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    .p-card-header {
+      color: var(--text-color) !important;
+    }
+
+    .p-card-body {
+      color: var(--text-color) !important;
+    }
+  }
+
+  /* Dialog */
+  .p-dialog {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-dialog-header {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-dialog-content {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-dialog-footer {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+    }
+  }
+
+  /* Menu / Context Menu */
+  .p-menu,
+  .p-contextmenu {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-menuitem-link {
+      color: var(--text-color) !important;
+
+      &:hover {
+        background: var(--surface-hover) !important;
+      }
+    }
+  }
+
+  /* Tooltip */
+  .p-tooltip {
+    .p-tooltip-text {
+      background: var(--surface-700) !important;
+      color: var(--surface-0) !important;
+    }
+  }
+
+  /* Tags */
+  .p-tag {
+    &.p-tag-secondary {
+      background: var(--surface-200) !important;
+      color: var(--text-color) !important;
+    }
+  }
+
+  /* Chips */
+  .p-chip {
+    background: var(--surface-200) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Scrollbar global */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--surface-100);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--surface-300);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--surface-400);
+    }
+  }
+
+  /* Connection lines */
+  .vflow-edge-path,
+  .vflow-connection path,
+  vflow path.edge,
+  vflow g.edges path {
+    stroke: var(--surface-400) !important;
+  }
+
+  /* Editor Toolbar */
+  .editor-toolbar {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  .toolbar-icon-btn {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color-secondary) !important;
+
+    &:hover {
+      background: var(--surface-200) !important;
+      color: var(--text-color) !important;
+    }
+  }
+
+  .toolbar-btn {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Nodos Figma - Global Override */
+  .node-card-figma {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .node-figma-header {
+    background: var(--surface-50) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  .node-figma-title {
+    color: var(--text-color) !important;
+  }
+
+  .node-figma-icon {
+    color: var(--text-color-secondary) !important;
+  }
+
+  .node-figma-action-btn {
+    color: var(--text-color-secondary) !important;
+  }
+
+  .node-figma-body {
+    background: var(--surface-card) !important;
+  }
+
+  .node-figma-description {
+    color: var(--text-color-secondary) !important;
+  }
+
+  /* Inputs, selects, textareas - reset completo sin background-image */
+  .node-figma-input,
+  .node-figma-select,
+  .node-figma-textarea,
+  input.node-figma-input,
+  select.node-figma-select,
+  textarea.node-figma-textarea {
+    background: var(--surface-100) !important;
+    background-color: var(--surface-100) !important;
+    background-image: none !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    &::placeholder {
+      color: var(--text-color-secondary) !important;
+    }
+  }
+
+  .node-figma-field label {
+    color: var(--text-color) !important;
+  }
+
+  /* Botones Choose/Upload/Cancel - Estado normal */
+  .figma-btn {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Botones activos mantienen su color */
+  .figma-btn.choose.active {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+  }
+
+  .figma-btn.upload.active {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: white !important;
+  }
+
+  .figma-btn.cancel.active {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: white !important;
+  }
+
+  .node-figma-dropzone {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+
+    span, i {
+      color: var(--text-color-secondary) !important;
+    }
+  }
+
+  .figma-btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600, #4f46e5) 100%) !important;
+  }
+
+  /* Panel derecho de configuración */
+  .props-panel-header,
+  .config-header {
+    background: var(--surface-50) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  .props-section {
+    .props-label,
+    label {
+      color: var(--text-color) !important;
+    }
+  }
+
+  .props-action-btn {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    &.primary {
+      background: var(--primary-color) !important;
+      color: white !important;
+    }
+  }
+
+  /* Top Header Bar */
+  .top-header-bar {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  /* FAB Button */
+  .fab-open-sidebar {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Minimap */
+  .minimap-container {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  /* PrimeNG Tags */
+  .p-tag {
+    &.p-tag-secondary {
+      background: var(--surface-200) !important;
+      color: var(--text-color) !important;
+    }
+
+    &.p-tag-info {
+      background: rgba(59, 130, 246, 0.2) !important;
+      color: var(--blue-400) !important;
+    }
+
+    &.p-tag-success {
+      background: rgba(34, 197, 94, 0.2) !important;
+      color: var(--green-400) !important;
+    }
+
+    &.p-tag-warning {
+      background: rgba(234, 179, 8, 0.2) !important;
+      color: var(--yellow-400) !important;
+    }
+
+    &.p-tag-danger {
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: var(--red-400) !important;
+    }
+  }
+
+  /* Badges custom */
+  .counter-badge {
+    background: rgba(59, 130, 246, 0.2) !important;
+    color: var(--blue-400) !important;
+
+    &.selected {
+      background: rgba(34, 197, 94, 0.2) !important;
+      color: var(--green-400) !important;
+    }
+  }
+
+  .total-badge {
+    background: var(--surface-200) !important;
+    color: var(--text-color-secondary) !important;
+  }
+
+  .node-figma-badge-dev {
+    background: rgba(234, 179, 8, 0.2) !important;
+    color: var(--yellow-400) !important;
+  }
+
+  .criticidad-badge {
+    background: var(--surface-200) !important;
+  }
 }

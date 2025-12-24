@@ -22,21 +22,20 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { ChipModule } from 'primeng/chip';
+import { AccordionModule } from 'primeng/accordion';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { ProcessService } from '../../services/process.service';
 import { GroqService } from '../../services/groq.service';
 import { MockDataService } from '../../services/mock-data.service';
+import { ThemeService } from '../../services/theme.service';
 import {
   NODE_TYPES_METADATA,
   ProcessNodeType,
   ProcessNode,
-  ACTIVO_PROPIEDADES_BASE,
-  FILTRO_CAMPOS_RIESGOS,
-  FILTRO_CAMPOS_INCIDENTES,
-  FILTRO_CAMPOS_DEFECTOS,
-  FILTRO_OPERADORES,
-  FiltroRelacionados
+  ACTIVO_PROPIEDADES_BASE
 } from '../../models/process-nodes';
-import { Activo, PlantillaActivo, PropiedadCustomDefinicion } from '../../models';
+import { Activo, PlantillaActivo } from '../../models';
 
 // Interfaces para el panel de configuracion
 interface SchemaField {
@@ -83,8 +82,11 @@ interface TestResult {
     CheckboxModule,
     TableModule,
     MultiSelectModule,
-    ChipModule
+    ChipModule,
+    AccordionModule,
+    ConfirmDialogModule
   ],
+  providers: [ConfirmationService],
   templateUrl: './procesos.html',
   styleUrl: './procesos.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -92,9 +94,23 @@ interface TestResult {
 export class ProcesosComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private confirmationService = inject(ConfirmationService);
   processService = inject(ProcessService);
   groqService = inject(GroqService);
   mockDataService = inject(MockDataService);
+  themeService = inject(ThemeService);
+
+  // Background del canvas dinámico según el tema
+  vflowBackground = computed(() => {
+    const isDark = this.themeService.isDarkMode();
+    return {
+      type: 'dots' as const,
+      backgroundColor: isDark ? '#18181b' : '#fafafa',  // Fondo del canvas
+      color: isDark ? '#3f3f46' : '#a1a1aa',            // Color de los puntos (zinc-700 / zinc-400)
+      gap: 16,
+      size: 2
+    };
+  });
 
   // ID del proceso actual (de la ruta)
   procesoId = signal<string | null>(null);
@@ -178,49 +194,53 @@ export class ProcesosComponent implements OnInit {
     value: n.type
   }));
 
-  // Opciones para areas de activos
+  // Opciones de departamentos para filtrar activos
   areaOptions = [
-    { label: 'TI (Tecnologia)', value: 'TI' },
-    { label: 'RRHH (Recursos Humanos)', value: 'RRHH' },
-    { label: 'Finanzas', value: 'FIN' },
-    { label: 'Operaciones', value: 'OPS' },
-    { label: 'Marketing', value: 'MKT' }
+    { label: 'Todos los departamentos', value: '' },
+    { label: 'TI', value: 'TI' },
+    { label: 'Tecnología', value: 'Tecnologia' },
+    { label: 'Infraestructura', value: 'Infraestructura' },
+    { label: 'Operaciones', value: 'Operaciones' },
+    { label: 'Ventas', value: 'Ventas' },
+    { label: 'Dirección', value: 'Direccion' }
   ];
 
-  // Opciones de activos desde MockDataService
+  // Departamento seleccionado actualmente en el nodo
+  areaSeleccionadaActivo = computed<string>(() => {
+    const node = this.processService.selectedNode();
+    if (!node || node.type !== 'activo') return '';
+    return ((node.config as unknown as Record<string, unknown>)['area'] as string) || '';
+  });
+
+  // Opciones de activos filtradas por departamento
   activoOptions = computed(() => {
-    return this.mockDataService.activos().map(a => ({
+    const area = this.areaSeleccionadaActivo();
+    let activos = this.mockDataService.activos();
+
+    if (area) {
+      activos = activos.filter(a => a.departamento === area);
+    }
+
+    return activos.map(a => ({
       label: `${a.nombre} (${a.tipo})`,
       value: a.id
     }));
   });
 
+  // Contadores de selecciones para los labels
+  contadorPropiedadesBase = computed(() => this.propiedadesExpuestasSeleccionadas().length);
+  contadorPropiedadesCustom = computed(() => this.propiedadesCustomExpuestasSeleccionadas().length);
+  contadorRiesgos = computed(() => this.riesgosSeleccionados().length);
+  contadorIncidentes = computed(() => this.incidentesSeleccionados().length);
+  contadorDefectos = computed(() => this.defectosSeleccionados().length);
+
   // ==================== CONFIGURACIÓN NODO ACTIVO ====================
 
-  // Propiedades base disponibles
-  propiedadesBaseOptions = ACTIVO_PROPIEDADES_BASE;
-
-  // Opciones de filtros
-  filtroRiesgosCampos = FILTRO_CAMPOS_RIESGOS.map(c => ({ label: c.nombre, value: c.campo }));
-  filtroIncidentesCampos = FILTRO_CAMPOS_INCIDENTES.map(c => ({ label: c.nombre, value: c.campo }));
-  filtroDefectosCampos = FILTRO_CAMPOS_DEFECTOS.map(c => ({ label: c.nombre, value: c.campo }));
-  filtroOperadores = FILTRO_OPERADORES;
-
-  // Signals para formularios de filtros
-  nuevoFiltroRiesgosCampo = '';
-  nuevoFiltroRiesgosOperador = '';
-  nuevoFiltroRiesgosValor = '';
-  nuevoFiltroIncidentesCampo = '';
-  nuevoFiltroIncidentesOperador = '';
-  nuevoFiltroIncidentesValor = '';
-  nuevoFiltroDefectosCampo = '';
-  nuevoFiltroDefectosOperador = '';
-  nuevoFiltroDefectosValor = '';
-
-  // Filtros activos (signals)
-  filtrosRiesgosActivos = signal<FiltroRelacionados[]>([]);
-  filtrosIncidentesActivos = signal<FiltroRelacionados[]>([]);
-  filtrosDefectosActivos = signal<FiltroRelacionados[]>([]);
+  // Propiedades base para multiselect (formato label/value)
+  propiedadesBaseOptionsForSelect = ACTIVO_PROPIEDADES_BASE.map(p => ({
+    label: p.nombre,
+    value: p.campo
+  }));
 
   // Activo seleccionado en el nodo actual
   activoSeleccionadoParaNodo = computed<Activo | null>(() => {
@@ -241,10 +261,99 @@ export class ProcesosComponent implements OnInit {
     return this.mockDataService.getPlantillaByTipoActivo(activo.tipo) || null;
   });
 
-  // Propiedades custom disponibles para el activo
-  propiedadesCustomDelActivo = computed<PropiedadCustomDefinicion[]>(() => {
+  // Propiedades custom para multiselect (con valor actual)
+  propiedadesCustomOptionsForSelect = computed(() => {
     const plantilla = this.plantillaDelActivo();
-    return plantilla?.propiedades || [];
+    const activo = this.activoSeleccionadoParaNodo();
+    if (!plantilla) return [];
+
+    return plantilla.propiedades.map(p => {
+      let valorActual = '';
+      if (activo?.propiedadesCustom) {
+        const prop = activo.propiedadesCustom.find(pc => pc.campo === p.campo);
+        if (prop) {
+          const v = prop.valor;
+          if (Array.isArray(v)) valorActual = v.join(', ');
+          else if (v instanceof Date) valorActual = v.toLocaleDateString();
+          else if (typeof v === 'boolean') valorActual = v ? 'Sí' : 'No';
+          else valorActual = String(v);
+        }
+      }
+      return {
+        label: valorActual ? `${p.nombre} (${valorActual})` : p.nombre,
+        value: p.campo
+      };
+    });
+  });
+
+  // Propiedades base seleccionadas actualmente
+  propiedadesExpuestasSeleccionadas = computed<string[]>(() => {
+    const node = this.processService.selectedNode();
+    if (!node || node.type !== 'activo') return [];
+    const config = node.config as unknown as Record<string, unknown>;
+    return (config['propiedadesExpuestas'] as string[]) || [];
+  });
+
+  // Propiedades custom seleccionadas actualmente
+  propiedadesCustomExpuestasSeleccionadas = computed<string[]>(() => {
+    const node = this.processService.selectedNode();
+    if (!node || node.type !== 'activo') return [];
+    const config = node.config as unknown as Record<string, unknown>;
+    return (config['propiedadesCustomExpuestas'] as string[]) || [];
+  });
+
+  // Riesgos como opciones para multiselect
+  riesgosOptionsForSelect = computed(() => {
+    const activo = this.activoSeleccionadoParaNodo();
+    if (!activo) return [];
+    return activo.riesgos.map(r => ({
+      label: `${r.descripcion} (P:${r.probabilidad} I:${r.impacto} - ${r.estado})`,
+      value: r.id
+    }));
+  });
+
+  // Incidentes como opciones para multiselect
+  incidentesOptionsForSelect = computed(() => {
+    const activo = this.activoSeleccionadoParaNodo();
+    if (!activo) return [];
+    return activo.incidentes.map(i => ({
+      label: `${i.titulo} (${i.severidad} - ${i.estado})`,
+      value: i.id
+    }));
+  });
+
+  // Defectos como opciones para multiselect
+  defectosOptionsForSelect = computed(() => {
+    const activo = this.activoSeleccionadoParaNodo();
+    if (!activo) return [];
+    return activo.defectos.map(d => ({
+      label: `${d.titulo} (${d.tipo} - ${d.estado})`,
+      value: d.id
+    }));
+  });
+
+  // IDs de riesgos seleccionados
+  riesgosSeleccionados = computed<string[]>(() => {
+    const node = this.processService.selectedNode();
+    if (!node || node.type !== 'activo') return [];
+    const config = node.config as unknown as Record<string, unknown>;
+    return (config['riesgosSeleccionados'] as string[]) || [];
+  });
+
+  // IDs de incidentes seleccionados
+  incidentesSeleccionados = computed<string[]>(() => {
+    const node = this.processService.selectedNode();
+    if (!node || node.type !== 'activo') return [];
+    const config = node.config as unknown as Record<string, unknown>;
+    return (config['incidentesSeleccionados'] as string[]) || [];
+  });
+
+  // IDs de defectos seleccionados
+  defectosSeleccionados = computed<string[]>(() => {
+    const node = this.processService.selectedNode();
+    if (!node || node.type !== 'activo') return [];
+    const config = node.config as unknown as Record<string, unknown>;
+    return (config['defectosSeleccionados'] as string[]) || [];
   });
 
   // Variables de salida generadas
@@ -254,9 +363,9 @@ export class ProcesosComponent implements OnInit {
     const config = node.config as unknown as Record<string, unknown>;
     const propExpuestas = (config['propiedadesExpuestas'] as string[]) || [];
     const propCustomExpuestas = (config['propiedadesCustomExpuestas'] as string[]) || [];
-    const exponerRiesgos = config['exponerRiesgos'] as boolean;
-    const exponerIncidentes = config['exponerIncidentes'] as boolean;
-    const exponerDefectos = config['exponerDefectos'] as boolean;
+    const riesgosIds = (config['riesgosSeleccionados'] as string[]) || [];
+    const incidentesIds = (config['incidentesSeleccionados'] as string[]) || [];
+    const defectosIds = (config['defectosSeleccionados'] as string[]) || [];
 
     const variables: string[] = [];
 
@@ -266,10 +375,20 @@ export class ProcesosComponent implements OnInit {
     // Variables de propiedades custom
     propCustomExpuestas.forEach(p => variables.push(`activo.custom.${p}`));
 
-    // Variables de arrays
-    if (exponerRiesgos) variables.push('activo.riesgos');
-    if (exponerIncidentes) variables.push('activo.incidentes');
-    if (exponerDefectos) variables.push('activo.defectos');
+    // Variables de riesgos seleccionados
+    if (riesgosIds.length > 0) {
+      variables.push(`activo.riesgos[${riesgosIds.length}]`);
+    }
+
+    // Variables de incidentes seleccionados
+    if (incidentesIds.length > 0) {
+      variables.push(`activo.incidentes[${incidentesIds.length}]`);
+    }
+
+    // Variables de defectos seleccionados
+    if (defectosIds.length > 0) {
+      variables.push(`activo.defectos[${defectosIds.length}]`);
+    }
 
     return variables;
   });
@@ -289,59 +408,39 @@ export class ProcesosComponent implements OnInit {
         plantillaId: activo.plantillaId || '',
         propiedadesExpuestas: ['nombre', 'tipo', 'criticidad'],
         propiedadesCustomExpuestas: [],
-        exponerRiesgos: false,
-        exponerIncidentes: false,
-        exponerDefectos: false
+        riesgosSeleccionados: [],
+        incidentesSeleccionados: [],
+        defectosSeleccionados: []
       });
     }
   }
 
-  isPropiedadExpuesta(campo: string): boolean {
-    const node = this.processService.selectedNode();
-    if (!node) return false;
-    const config = node.config as unknown as Record<string, unknown>;
-    const expuestas = (config['propiedadesExpuestas'] as string[]) || [];
-    return expuestas.includes(campo);
+  onPropiedadesExpuestasChange(valores: string[]): void {
+    this.updateNodeConfig({ propiedadesExpuestas: valores });
   }
 
-  togglePropiedadExpuesta(campo: string, checked: boolean): void {
-    const node = this.processService.selectedNode();
-    if (!node) return;
-    const config = node.config as unknown as Record<string, unknown>;
-    const expuestas = [...((config['propiedadesExpuestas'] as string[]) || [])];
-
-    if (checked && !expuestas.includes(campo)) {
-      expuestas.push(campo);
-    } else if (!checked) {
-      const idx = expuestas.indexOf(campo);
-      if (idx > -1) expuestas.splice(idx, 1);
-    }
-
-    this.updateNodeConfig({ propiedadesExpuestas: expuestas });
+  onPropiedadesCustomExpuestasChange(valores: string[]): void {
+    this.updateNodeConfig({ propiedadesCustomExpuestas: valores });
   }
 
-  isPropiedadCustomExpuesta(campo: string): boolean {
-    const node = this.processService.selectedNode();
-    if (!node) return false;
-    const config = node.config as unknown as Record<string, unknown>;
-    const expuestas = (config['propiedadesCustomExpuestas'] as string[]) || [];
-    return expuestas.includes(campo);
+  onRiesgosSeleccionadosChange(valores: string[]): void {
+    this.updateNodeConfig({ riesgosSeleccionados: valores });
   }
 
-  togglePropiedadCustomExpuesta(campo: string, checked: boolean): void {
-    const node = this.processService.selectedNode();
-    if (!node) return;
-    const config = node.config as unknown as Record<string, unknown>;
-    const expuestas = [...((config['propiedadesCustomExpuestas'] as string[]) || [])];
+  onIncidentesSeleccionadosChange(valores: string[]): void {
+    this.updateNodeConfig({ incidentesSeleccionados: valores });
+  }
 
-    if (checked && !expuestas.includes(campo)) {
-      expuestas.push(campo);
-    } else if (!checked) {
-      const idx = expuestas.indexOf(campo);
-      if (idx > -1) expuestas.splice(idx, 1);
-    }
+  onDefectosSeleccionadosChange(valores: string[]): void {
+    this.updateNodeConfig({ defectosSeleccionados: valores });
+  }
 
-    this.updateNodeConfig({ propiedadesCustomExpuestas: expuestas });
+  // Copiar texto al clipboard
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      // Feedback visual opcional - podría agregar un toast
+      console.log('Copiado al portapapeles:', text);
+    });
   }
 
   getValorPropiedadCustom(campo: string): any {
@@ -362,72 +461,6 @@ export class ProcesosComponent implements OnInit {
       return valor ? 'Sí' : 'No';
     }
     return valor;
-  }
-
-  agregarFiltroRiesgos(): void {
-    if (!this.nuevoFiltroRiesgosCampo || !this.nuevoFiltroRiesgosOperador) return;
-    const filtros = [...this.filtrosRiesgosActivos()];
-    filtros.push({
-      campo: this.nuevoFiltroRiesgosCampo,
-      operador: this.nuevoFiltroRiesgosOperador as FiltroRelacionados['operador'],
-      valor: this.nuevoFiltroRiesgosValor
-    });
-    this.filtrosRiesgosActivos.set(filtros);
-    this.updateNodeConfig({ filtrosRiesgos: filtros });
-    this.nuevoFiltroRiesgosCampo = '';
-    this.nuevoFiltroRiesgosOperador = '';
-    this.nuevoFiltroRiesgosValor = '';
-  }
-
-  removerFiltroRiesgos(index: number): void {
-    const filtros = [...this.filtrosRiesgosActivos()];
-    filtros.splice(index, 1);
-    this.filtrosRiesgosActivos.set(filtros);
-    this.updateNodeConfig({ filtrosRiesgos: filtros });
-  }
-
-  agregarFiltroIncidentes(): void {
-    if (!this.nuevoFiltroIncidentesCampo || !this.nuevoFiltroIncidentesOperador) return;
-    const filtros = [...this.filtrosIncidentesActivos()];
-    filtros.push({
-      campo: this.nuevoFiltroIncidentesCampo,
-      operador: this.nuevoFiltroIncidentesOperador as FiltroRelacionados['operador'],
-      valor: this.nuevoFiltroIncidentesValor
-    });
-    this.filtrosIncidentesActivos.set(filtros);
-    this.updateNodeConfig({ filtrosIncidentes: filtros });
-    this.nuevoFiltroIncidentesCampo = '';
-    this.nuevoFiltroIncidentesOperador = '';
-    this.nuevoFiltroIncidentesValor = '';
-  }
-
-  removerFiltroIncidentes(index: number): void {
-    const filtros = [...this.filtrosIncidentesActivos()];
-    filtros.splice(index, 1);
-    this.filtrosIncidentesActivos.set(filtros);
-    this.updateNodeConfig({ filtrosIncidentes: filtros });
-  }
-
-  agregarFiltroDefectos(): void {
-    if (!this.nuevoFiltroDefectosCampo || !this.nuevoFiltroDefectosOperador) return;
-    const filtros = [...this.filtrosDefectosActivos()];
-    filtros.push({
-      campo: this.nuevoFiltroDefectosCampo,
-      operador: this.nuevoFiltroDefectosOperador as FiltroRelacionados['operador'],
-      valor: this.nuevoFiltroDefectosValor
-    });
-    this.filtrosDefectosActivos.set(filtros);
-    this.updateNodeConfig({ filtrosDefectos: filtros });
-    this.nuevoFiltroDefectosCampo = '';
-    this.nuevoFiltroDefectosOperador = '';
-    this.nuevoFiltroDefectosValor = '';
-  }
-
-  removerFiltroDefectos(index: number): void {
-    const filtros = [...this.filtrosDefectosActivos()];
-    filtros.splice(index, 1);
-    this.filtrosDefectosActivos.set(filtros);
-    this.updateNodeConfig({ filtrosDefectos: filtros });
   }
 
   // ==================== FIN CONFIGURACIÓN NODO ACTIVO ====================
@@ -619,12 +652,22 @@ export class ProcesosComponent implements OnInit {
     this.processService.selectNode(null);
   }
 
-  // Eliminar nodo seleccionado
+  // Eliminar nodo seleccionado (con confirmación)
   deleteSelectedNode(): void {
     const selected = this.processService.selectedNode();
     if (selected) {
-      this.processService.deleteNode(selected.id);
-      this.closeConfigSidebar();
+      this.confirmationService.confirm({
+        message: `¿Estás seguro de eliminar el nodo "${selected.label}"?`,
+        header: 'Confirmar eliminación',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, eliminar',
+        rejectLabel: 'Cancelar',
+        acceptButtonStyleClass: 'p-button-danger',
+        accept: () => {
+          this.processService.deleteNode(selected.id);
+          this.closeConfigSidebar();
+        }
+      });
     }
   }
 

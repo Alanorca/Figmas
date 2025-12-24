@@ -93,12 +93,12 @@
             <!-- Contenido del widget según tipo -->
             @switch (widget.tipo) {
               @case ('kpi-card') {
-                <div class="widget-kpi-card" [style.border-left-color]="widget.config.kpiConfig?.colorPrimario || '#3B82F6'">
-                  <div class="kpi-icon" [style.color]="widget.config.kpiConfig?.colorPrimario || '#3B82F6'">
+                <div class="widget-kpi-card" [style.--kpi-color]="widget.config.kpiConfig?.colorPrimario">
+                  <div class="kpi-icon">
                     <i [class]="widget.config.kpiConfig?.icono || 'pi pi-chart-line'"></i>
                   </div>
                   <div class="kpi-content">
-                    <div class="kpi-value" [style.color]="widget.config.kpiConfig?.colorPrimario || '#3B82F6'">
+                    <div class="kpi-value">
                       {{ getKPIValue(widget.config.kpiType || 'cumplimiento') }}{{ widget.config.kpiConfig?.unidad || '%' }}
                     </div>
                     @if (widget.config.kpiConfig?.mostrarTendencia !== false) {
@@ -114,8 +114,7 @@
                         <span class="meta-value">{{ widget.config.kpiConfig?.metaValor || 100 }}{{ widget.config.kpiConfig?.unidad || '%' }}</span>
                         <div class="meta-progress">
                           <div class="meta-progress-bar"
-                               [style.width.%]="(getKPINumericValue(widget.config.kpiType || 'cumplimiento') / (widget.config.kpiConfig?.metaValor || 100)) * 100"
-                               [style.background-color]="widget.config.kpiConfig?.colorPrimario || '#3B82F6'"></div>
+                               [style.width.%]="(getKPINumericValue(widget.config.kpiType || 'cumplimiento') / (widget.config.kpiConfig?.metaValor || 100)) * 100"></div>
                         </div>
                       </div>
                     }

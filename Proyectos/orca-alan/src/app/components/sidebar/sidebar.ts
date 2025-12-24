@@ -3,7 +3,9 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { StyleClassModule } from 'primeng/styleclass';
 import { TooltipModule } from 'primeng/tooltip';
+import { ButtonModule } from 'primeng/button';
 import { NotificationsComponent } from '../notifications/notifications';
+import { ThemeService } from '../../services/theme.service';
 import { filter } from 'rxjs/operators';
 
 interface MenuItem {
@@ -21,7 +23,7 @@ interface BreadcrumbItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, StyleClassModule, TooltipModule, NotificationsComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, StyleClassModule, TooltipModule, ButtonModule, NotificationsComponent],
   template: `
     <div class="app-container">
       <!-- Sidebar -->
@@ -85,6 +87,15 @@ interface BreadcrumbItem {
             }
           </nav>
           <div class="header-actions">
+            <button
+              pButton
+              type="button"
+              [icon]="themeService.isDarkMode() ? 'pi pi-sun' : 'pi pi-moon'"
+              class="p-button-text p-button-rounded theme-toggle"
+              (click)="themeService.toggleTheme()"
+              [pTooltip]="themeService.isDarkMode() ? 'Modo claro' : 'Modo oscuro'"
+              tooltipPosition="bottom"
+            ></button>
             <app-notifications />
           </div>
         </header>
@@ -301,7 +312,19 @@ interface BreadcrumbItem {
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
+    }
+
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      color: var(--text-color-secondary);
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: var(--primary-color);
+        background: var(--surface-100);
+      }
     }
 
     .content-area {
@@ -312,9 +335,11 @@ interface BreadcrumbItem {
 })
 export class SidebarComponent {
   private router = inject(Router);
+  themeService = inject(ThemeService);
 
   menuItems: MenuItem[] = [
     { label: 'Dashboard', icon: 'pi pi-home', routerLink: '/dashboard' },
+    { label: 'Dashboard Custom', icon: 'pi pi-th-large', routerLink: '/dashboard-custom' },
     { label: 'Activos', icon: 'pi pi-box', routerLink: '/activos' },
     { label: 'Organigrama', icon: 'pi pi-sitemap', routerLink: '/organigramas' },
     { label: 'Riesgos', icon: 'pi pi-exclamation-triangle', routerLink: '/riesgos' },
@@ -332,19 +357,24 @@ export class SidebarComponent {
   // Route to label mapping
   private routeLabels: Record<string, string> = {
     'dashboard': 'Dashboard',
+    'dashboard-custom': 'Dashboard Personalizable',
     'activos': 'Activos',
     'organigramas': 'Organigrama',
     'riesgos': 'Riesgos',
     'incidentes': 'Incidentes',
     'defectos': 'Defectos',
     'procesos': 'Procesos',
+    'procesos-lista': 'Lista de Procesos',
+    'proceso-detalle': 'Detalle de Proceso',
+    'proceso-crear': 'Crear Proceso',
     'cuestionarios': 'Cuestionarios',
     'cumplimiento': 'Cumplimiento',
     'tabla-unificada': 'Tabla Unificada',
     'results-ml': 'Results ML',
     'crear': 'Crear',
     'detalle': 'Detalle',
-    'objetivos-kpis': 'Objetivos y KPIs'
+    'objetivos-kpis': 'Objetivos y KPIs',
+    'nuevo': 'Nuevo'
   };
 
   constructor() {
