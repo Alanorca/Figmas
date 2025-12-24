@@ -7,6 +7,44 @@ export type EstadoIncidente = 'abierto' | 'en_proceso' | 'resuelto' | 'cerrado';
 export type TipoDefecto = 'funcional' | 'seguridad' | 'rendimiento' | 'usabilidad';
 export type EstadoDefecto = 'nuevo' | 'confirmado' | 'en_correccion' | 'corregido' | 'verificado';
 
+// Tipos para propiedades custom de activos
+export type TipoPropiedadCustom = 'texto' | 'numero' | 'fecha' | 'booleano' | 'seleccion' | 'multiseleccion' | 'url' | 'email';
+
+// Definición de una propiedad custom en la plantilla
+export interface PropiedadCustomDefinicion {
+  id: string;
+  nombre: string;
+  campo: string; // nombre del campo para acceso
+  tipo: TipoPropiedadCustom;
+  requerido: boolean;
+  descripcion?: string;
+  valorDefecto?: any;
+  opciones?: { label: string; value: string }[]; // Para seleccion/multiseleccion
+  validacion?: {
+    min?: number;
+    max?: number;
+    patron?: string; // regex
+  };
+}
+
+// Plantilla de activo (define las propiedades custom según tipo)
+export interface PlantillaActivo {
+  id: string;
+  nombre: string;
+  tipoActivo: TipoActivo;
+  descripcion: string;
+  icono: string;
+  color: string;
+  propiedades: PropiedadCustomDefinicion[];
+}
+
+// Valor de una propiedad custom en un activo específico
+export interface PropiedadCustomValor {
+  propiedadId: string;
+  campo: string;
+  valor: any;
+}
+
 // Interfaces
 export interface Riesgo {
   id: string;
@@ -54,6 +92,9 @@ export interface Activo {
   riesgos: Riesgo[];
   incidentes: Incidente[];
   defectos: Defecto[];
+  // Propiedades custom basadas en plantilla
+  plantillaId?: string;
+  propiedadesCustom?: PropiedadCustomValor[];
 }
 
 export interface NodoOrganigrama {

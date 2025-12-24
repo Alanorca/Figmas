@@ -35,16 +35,9 @@
 
   <!-- Main Content -->
   <div class="main-editor-content">
-    <!-- Top Header con Breadcrumb -->
+    <!-- Top Header -->
     <header class="top-header-bar">
       <div class="breadcrumb-section">
-        <nav class="breadcrumb-nav">
-          <a routerLink="/dashboard" class="breadcrumb-item"><i class="pi pi-home"></i></a>
-          <span class="breadcrumb-separator"><i class="pi pi-angle-right"></i></span>
-          <a routerLink="/procesos" class="breadcrumb-item">Procesos</a>
-          <span class="breadcrumb-separator"><i class="pi pi-angle-right"></i></span>
-          <span class="breadcrumb-current">Editor</span>
-        </nav>
         <div class="page-title-section">
           <div class="title-with-icon">
             <div class="page-icon">
@@ -56,10 +49,6 @@
             </div>
           </div>
         </div>
-      </div>
-      <div class="header-actions-right">
-        <p-button icon="pi pi-moon" [rounded]="true" [text]="true" severity="secondary" pTooltip="Modo oscuro"></p-button>
-        <p-button icon="pi pi-bell" [rounded]="true" [text]="true" severity="secondary" pTooltip="Notificaciones"></p-button>
       </div>
     </header>
 
@@ -153,7 +142,7 @@
         [edges]="vflowEdges()"
         (onConnect)="onConnect($event)"
         view="auto"
-        [background]="{ type: 'dots' }">
+        [background]="vflowBackground()">
 
         <ng-template nodeHtml let-ctx>
           <div
@@ -514,23 +503,284 @@
               }
 
               @case ('activo') {
-                <div class="props-section">
-                  <label class="props-label">Area del Activo:</label>
-                  <p-select [options]="areaOptions" [ngModel]="getConfigValue(node, 'area')"
-                            (ngModelChange)="updateNodeConfig({ area: $event })"
-                            placeholder="Seleccionar area..." styleClass="w-full"></p-select>
+                <!-- Selección del Activo -->
+                <div class="activo-seleccion-section">
+                  <div class="props-section">
+                    <label class="props-label" for="area-select">
+                      <span class="material-symbols-rounded icon-label">domain</span>
+                      Departamento
+                    </label>
+                    <p-select
+                      id="area-select"
+                      [options]="areaOptions"
+                      [ngModel]="getConfigValue(node, 'area')"
+                      (ngModelChange)="onAreaChange($event)"
+                      placeholder="Filtrar por departamento..."
+                      styleClass="w-full"
+                    ></p-select>
+                  </div>
+
+                  <div class="props-section">
+                    <label class="props-label" for="activo-select">
+                      <span class="material-symbols-rounded icon-label">category</span>
+                      Activo
+                      @if (activoOptions().length === 0 && areaSeleccionadaActivo()) {
+                        <span class="label-hint">(sin activos en esta área)</span>
+                      }
+                    </label>
+                    <p-select
+                      id="activo-select"
+                      [options]="activoOptions()"
+                      [ngModel]="getConfigValue(node, 'activoId')"
+                      (ngModelChange)="onActivoChange($event)"
+                      placeholder="Seleccionar activo..."
+                      styleClass="w-full"
+                      [filter]="true"
+                      filterPlaceholder="Buscar activo..."
+                    ></p-select>
+                  </div>
                 </div>
 
-                <div class="props-section">
-                  <label class="props-label">Activo:</label>
-                  <p-select [options]="activoOptions()" [ngModel]="getConfigValue(node, 'activoId')"
-                            (ngModelChange)="updateNodeConfig({ activoId: $event })"
-                            placeholder="Seleccionar activo..." styleClass="w-full"></p-select>
-                </div>
+                <!-- Info del activo seleccionado -->
+                @if (activoSeleccionadoParaNodo(); as activo) {
+                  <div class="activo-info-card">
+                    <div class="activo-info-header">
+                      <span class="material-symbols-rounded activo-icon">category</span>
+                      <div class="activo-info-text">
+                        <strong>{{ activo.nombre }}</strong>
+                        <small>{{ activo.tipo | titlecase }}</small>
+                      </div>
+                      <p-tag
+                        [value]="activo.criticidad | titlecase"
+                        [severity]="activo.criticidad === 'alta' ? 'danger' : activo.criticidad === 'media' ? 'warn' : 'success'"
+                        styleClass="criticidad-badge"
+                      ></p-tag>
+                    </div>
+                    @if (activo.descripcion) {
+                      <p class="activo-descripcion">{{ activo.descripcion }}</p>
+                    }
+                    @if (plantillaDelActivo(); as plantilla) {
+                      <div class="activo-plantilla">
+                        <span class="material-symbols-rounded">description</span>
+                        {{ plantilla.nombre }}
+                      </div>
+                    }
+                  </div>
 
-                <button class="props-action-btn primary" (click)="vincularActivo()">
-                  Vincular activos
-                </button>
+                  <!-- Panel: Propiedades a Exponer -->
+                  <p-panel
+                    header="Propiedades a Exponer"
+                    [toggleable]="true"
+                    styleClass="activo-panel"
+                  >
+                    <ng-template pTemplate="headericons">
+                      @if (contadorPropiedadesBase() + contadorPropiedadesCustom() > 0) {
+                        <p-tag [value]="(contadorPropiedadesBase() + contadorPropiedadesCustom()).toString()" severity="info" styleClass="panel-counter"></p-tag>
+                      }
+                    </ng-template>
+
+                    <div class="panel-content">
+                      <!-- Propiedades Base -->
+                      <div class="props-subsection">
+                        <label class="props-sublabel">
+                          <span class="material-symbols-rounded icon-small">output</span>
+                          Base
+                          @if (contadorPropiedadesBase() > 0) {
+                            <span class="counter-badge">{{ contadorPropiedadesBase() }}</span>
+                          }
+                        </label>
+                        <p-multiselect
+                          [options]="propiedadesBaseOptionsForSelect"
+                          [ngModel]="propiedadesExpuestasSeleccionadas()"
+                          (ngModelChange)="onPropiedadesExpuestasChange($event)"
+                          optionLabel="label"
+                          optionValue="value"
+                          [filter]="true"
+                          filterPlaceHolder="Buscar..."
+                          placeholder="Seleccionar propiedades base..."
+                          display="chip"
+                          styleClass="w-full"
+                          [showClear]="true"
+                          [showToggleAll]="true"
+                          aria-label="Propiedades base del activo"
+                        ></p-multiselect>
+                      </div>
+
+                      <!-- Propiedades Custom -->
+                      @if (propiedadesCustomOptionsForSelect().length > 0) {
+                        <div class="props-subsection">
+                          <label class="props-sublabel">
+                            <span class="material-symbols-rounded icon-small">tune</span>
+                            Custom
+                            @if (contadorPropiedadesCustom() > 0) {
+                              <span class="counter-badge">{{ contadorPropiedadesCustom() }}</span>
+                            }
+                          </label>
+                          <p-multiselect
+                            [options]="propiedadesCustomOptionsForSelect()"
+                            [ngModel]="propiedadesCustomExpuestasSeleccionadas()"
+                            (ngModelChange)="onPropiedadesCustomExpuestasChange($event)"
+                            optionLabel="label"
+                            optionValue="value"
+                            [filter]="true"
+                            filterPlaceHolder="Buscar..."
+                            placeholder="Seleccionar propiedades custom..."
+                            display="chip"
+                            styleClass="w-full"
+                            [showClear]="true"
+                            [showToggleAll]="true"
+                            aria-label="Propiedades custom del activo"
+                          ></p-multiselect>
+                        </div>
+                      }
+                    </div>
+                  </p-panel>
+
+                  <!-- Panel: Datos Relacionados -->
+                  @if (activo.riesgos.length > 0 || activo.incidentes.length > 0 || activo.defectos.length > 0) {
+                    <p-panel
+                      header="Datos Relacionados"
+                      [toggleable]="true"
+                      [collapsed]="true"
+                      styleClass="activo-panel"
+                    >
+                      <ng-template pTemplate="headericons">
+                        @if (contadorRiesgos() + contadorIncidentes() + contadorDefectos() > 0) {
+                          <p-tag [value]="(contadorRiesgos() + contadorIncidentes() + contadorDefectos()).toString()" severity="info" styleClass="panel-counter"></p-tag>
+                        }
+                      </ng-template>
+
+                      <div class="panel-content">
+                        <!-- Riesgos -->
+                        @if (activo.riesgos.length > 0) {
+                          <div class="props-subsection">
+                            <label class="props-sublabel riesgos-label">
+                              <span class="material-symbols-rounded icon-small">gpp_maybe</span>
+                              Riesgos
+                              <span class="total-badge">{{ activo.riesgos.length }}</span>
+                              @if (contadorRiesgos() > 0) {
+                                <span class="counter-badge selected">{{ contadorRiesgos() }} sel.</span>
+                              }
+                            </label>
+                            <p-multiselect
+                              [options]="riesgosOptionsForSelect()"
+                              [ngModel]="riesgosSeleccionados()"
+                              (ngModelChange)="onRiesgosSeleccionadosChange($event)"
+                              optionLabel="label"
+                              optionValue="value"
+                              [filter]="true"
+                              filterPlaceHolder="Buscar riesgo..."
+                              placeholder="Seleccionar riesgos..."
+                              display="chip"
+                              styleClass="w-full"
+                              [showClear]="true"
+                              [showToggleAll]="true"
+                              aria-label="Riesgos relacionados al activo"
+                            ></p-multiselect>
+                          </div>
+                        }
+
+                        <!-- Incidentes -->
+                        @if (activo.incidentes.length > 0) {
+                          <div class="props-subsection">
+                            <label class="props-sublabel incidentes-label">
+                              <span class="material-symbols-rounded icon-small">report</span>
+                              Incidentes
+                              <span class="total-badge">{{ activo.incidentes.length }}</span>
+                              @if (contadorIncidentes() > 0) {
+                                <span class="counter-badge selected">{{ contadorIncidentes() }} sel.</span>
+                              }
+                            </label>
+                            <p-multiselect
+                              [options]="incidentesOptionsForSelect()"
+                              [ngModel]="incidentesSeleccionados()"
+                              (ngModelChange)="onIncidentesSeleccionadosChange($event)"
+                              optionLabel="label"
+                              optionValue="value"
+                              [filter]="true"
+                              filterPlaceHolder="Buscar incidente..."
+                              placeholder="Seleccionar incidentes..."
+                              display="chip"
+                              styleClass="w-full"
+                              [showClear]="true"
+                              [showToggleAll]="true"
+                              aria-label="Incidentes relacionados al activo"
+                            ></p-multiselect>
+                          </div>
+                        }
+
+                        <!-- Defectos -->
+                        @if (activo.defectos.length > 0) {
+                          <div class="props-subsection">
+                            <label class="props-sublabel defectos-label">
+                              <span class="material-symbols-rounded icon-small">bug_report</span>
+                              Defectos
+                              <span class="total-badge">{{ activo.defectos.length }}</span>
+                              @if (contadorDefectos() > 0) {
+                                <span class="counter-badge selected">{{ contadorDefectos() }} sel.</span>
+                              }
+                            </label>
+                            <p-multiselect
+                              [options]="defectosOptionsForSelect()"
+                              [ngModel]="defectosSeleccionados()"
+                              (ngModelChange)="onDefectosSeleccionadosChange($event)"
+                              optionLabel="label"
+                              optionValue="value"
+                              [filter]="true"
+                              filterPlaceHolder="Buscar defecto..."
+                              placeholder="Seleccionar defectos..."
+                              display="chip"
+                              styleClass="w-full"
+                              [showClear]="true"
+                              [showToggleAll]="true"
+                              aria-label="Defectos relacionados al activo"
+                            ></p-multiselect>
+                          </div>
+                        }
+                      </div>
+                    </p-panel>
+                  }
+
+                  <!-- Panel: Variables de Salida -->
+                  <p-panel
+                    header="Variables de Salida"
+                    [toggleable]="true"
+                    styleClass="activo-panel variables-panel"
+                  >
+                    <ng-template pTemplate="headericons">
+                      @if (variablesSalidaActivo().length > 0) {
+                        <p-tag [value]="variablesSalidaActivo().length.toString()" severity="success" styleClass="panel-counter"></p-tag>
+                      }
+                    </ng-template>
+
+                    <div class="output-vars-container">
+                      @if (variablesSalidaActivo().length > 0) {
+                        <div class="output-vars-grid">
+                          @for (variable of variablesSalidaActivo(); track variable) {
+                            <div class="output-var-item" pTooltip="Click para copiar" tooltipPosition="top">
+                              <code>{{ '{{' }}{{ variable }}{{ '}}' }}</code>
+                              <button class="copy-btn" (click)="copyToClipboard('{{' + variable + '}}')" type="button">
+                                <span class="material-symbols-rounded">content_copy</span>
+                              </button>
+                            </div>
+                          }
+                        </div>
+                      } @else {
+                        <div class="empty-vars-state">
+                          <span class="material-symbols-rounded">code_off</span>
+                          <p>Selecciona propiedades para generar variables de salida</p>
+                        </div>
+                      }
+                    </div>
+                  </p-panel>
+                } @else {
+                  <!-- Estado vacío -->
+                  <div class="props-empty-state">
+                    <span class="material-symbols-rounded">category</span>
+                    <p>Selecciona un activo para configurar sus propiedades</p>
+                    <small>Puedes filtrar por área para encontrar activos más rápido</small>
+                  </div>
+                }
               }
 
               @case ('llm') {
@@ -871,6 +1121,9 @@
     </aside>
   }
 </div>
+
+<!-- Confirm Dialog para eliminación -->
+<p-confirmDialog></p-confirmDialog>
 
 <!-- Dialog API Key Groq -->
 <p-dialog header="Configurar API Key de Groq" [modal]="true" [(visible)]="showApiKeyDialog" [style]="{width: '450px'}">

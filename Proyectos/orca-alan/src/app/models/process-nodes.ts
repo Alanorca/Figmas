@@ -11,12 +11,49 @@ export type ProcessNodeType =
   | 'ml'
   | 'kpi';
 
+// Filtro para arrays de riesgos/incidentes
+export interface FiltroRelacionados {
+  campo: string;
+  operador: 'igual' | 'diferente' | 'contiene' | 'mayor' | 'menor' | 'entre';
+  valor: any;
+  valorHasta?: any; // Para operador 'entre'
+}
+
+// Variable de salida del nodo activo
+export interface ActivoOutputVariable {
+  nombre: string;
+  tipo: 'propiedad' | 'propiedadCustom' | 'riesgos' | 'incidentes' | 'defectos' | 'conteo';
+  campo?: string; // Para propiedades específicas
+  filtros?: FiltroRelacionados[]; // Para arrays filtrados
+  descripcion?: string;
+}
+
 // Configuraciones específicas de cada tipo de nodo
 export interface ActivoNodeConfig {
+  // Identificación básica
   area: string;
   activoId: string;
   activoNombre: string;
   criticidad: 'alta' | 'media' | 'baja';
+
+  // Referencia a plantilla (para saber qué propiedades custom tiene)
+  plantillaId?: string;
+  plantillaNombre?: string;
+
+  // Propiedades del activo a exponer como variables
+  propiedadesExpuestas: string[]; // campos de propiedades base (nombre, tipo, criticidad, etc.)
+  propiedadesCustomExpuestas: string[]; // campos de propiedades custom
+
+  // Configuración de arrays relacionados
+  exponerRiesgos: boolean;
+  filtrosRiesgos?: FiltroRelacionados[];
+  exponerIncidentes: boolean;
+  filtrosIncidentes?: FiltroRelacionados[];
+  exponerDefectos: boolean;
+  filtrosDefectos?: FiltroRelacionados[];
+
+  // Variables de salida generadas
+  variablesSalida: ActivoOutputVariable[];
 }
 
 export interface CsvNodeConfig {
@@ -206,7 +243,7 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
     iconColor: '#2e7d32',
     bgColor: '#e8f5e9',
     title: 'Activo',
-    descripcion: 'Vincula un activo organizacional al proceso',
+    descripcion: 'Expone propiedades, custom props y arrays de riesgos/incidentes filtrados',
     categoria: 'datos'
   },
   {
@@ -359,4 +396,68 @@ export const DEFAULT_KPI_NODE_CONFIG: KpiNodeConfig = {
     direccion: 'menor'
   },
   guardarHistorico: true
+};
+
+// ==================== Configuración de Nodo Activo ====================
+
+// Propiedades base disponibles para exponer
+export const ACTIVO_PROPIEDADES_BASE = [
+  { campo: 'id', nombre: 'ID', tipo: 'texto' },
+  { campo: 'nombre', nombre: 'Nombre', tipo: 'texto' },
+  { campo: 'descripcion', nombre: 'Descripción', tipo: 'texto' },
+  { campo: 'tipo', nombre: 'Tipo de Activo', tipo: 'seleccion' },
+  { campo: 'criticidad', nombre: 'Criticidad', tipo: 'seleccion' },
+  { campo: 'responsable', nombre: 'Responsable', tipo: 'texto' },
+  { campo: 'departamento', nombre: 'Departamento', tipo: 'texto' },
+  { campo: 'fechaRegistro', nombre: 'Fecha de Registro', tipo: 'fecha' },
+];
+
+// Campos disponibles para filtrar riesgos
+export const FILTRO_CAMPOS_RIESGOS = [
+  { campo: 'estado', nombre: 'Estado', tipo: 'seleccion', opciones: ['identificado', 'evaluado', 'mitigado', 'aceptado'] },
+  { campo: 'probabilidad', nombre: 'Probabilidad', tipo: 'numero' },
+  { campo: 'impacto', nombre: 'Impacto', tipo: 'numero' },
+  { campo: 'responsable', nombre: 'Responsable', tipo: 'texto' },
+  { campo: 'fechaIdentificacion', nombre: 'Fecha Identificación', tipo: 'fecha' },
+];
+
+// Campos disponibles para filtrar incidentes
+export const FILTRO_CAMPOS_INCIDENTES = [
+  { campo: 'estado', nombre: 'Estado', tipo: 'seleccion', opciones: ['abierto', 'en_proceso', 'resuelto', 'cerrado'] },
+  { campo: 'severidad', nombre: 'Severidad', tipo: 'seleccion', opciones: ['critica', 'alta', 'media', 'baja'] },
+  { campo: 'reportadoPor', nombre: 'Reportado Por', tipo: 'texto' },
+  { campo: 'fechaReporte', nombre: 'Fecha Reporte', tipo: 'fecha' },
+];
+
+// Campos disponibles para filtrar defectos
+export const FILTRO_CAMPOS_DEFECTOS = [
+  { campo: 'estado', nombre: 'Estado', tipo: 'seleccion', opciones: ['nuevo', 'confirmado', 'en_correccion', 'corregido', 'verificado'] },
+  { campo: 'tipo', nombre: 'Tipo', tipo: 'seleccion', opciones: ['funcional', 'seguridad', 'rendimiento', 'usabilidad'] },
+  { campo: 'prioridad', nombre: 'Prioridad', tipo: 'seleccion', opciones: ['critica', 'alta', 'media', 'baja'] },
+  { campo: 'detectadoPor', nombre: 'Detectado Por', tipo: 'texto' },
+  { campo: 'fechaDeteccion', nombre: 'Fecha Detección', tipo: 'fecha' },
+];
+
+// Operadores disponibles para filtros
+export const FILTRO_OPERADORES = [
+  { value: 'igual', label: 'Igual a' },
+  { value: 'diferente', label: 'Diferente de' },
+  { value: 'contiene', label: 'Contiene' },
+  { value: 'mayor', label: 'Mayor que' },
+  { value: 'menor', label: 'Menor que' },
+  { value: 'entre', label: 'Entre' },
+];
+
+// Configuración por defecto para nuevo nodo Activo
+export const DEFAULT_ACTIVO_NODE_CONFIG: ActivoNodeConfig = {
+  area: '',
+  activoId: '',
+  activoNombre: '',
+  criticidad: 'media',
+  propiedadesExpuestas: ['nombre', 'tipo', 'criticidad'],
+  propiedadesCustomExpuestas: [],
+  exponerRiesgos: false,
+  exponerIncidentes: false,
+  exponerDefectos: false,
+  variablesSalida: []
 };

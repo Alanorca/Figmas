@@ -20,61 +20,25 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TabsModule } from 'primeng/tabs';
-import { ChartModule } from 'primeng/chart';
 import { DatePickerModule } from 'primeng/datepicker';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectModule } from 'primeng/multiselect';
+import { NgApexchartsModule } from 'ng-apexcharts';
 import { ProcessService } from '../../services/process.service';
 import { Proceso } from '../../models/process-nodes';
-import { NgApexchartsModule } from 'ng-apexcharts';
 import {
-  ApexChart,
   ApexAxisChartSeries,
-  ApexNonAxisChartSeries,
+  ApexChart,
   ApexXAxis,
   ApexYAxis,
   ApexDataLabels,
-  ApexPlotOptions,
-  ApexLegend,
-  ApexTooltip,
   ApexStroke,
+  ApexLegend,
   ApexFill,
-  ApexGrid,
+  ApexPlotOptions,
+  ApexNonAxisChartSeries,
   ApexResponsive,
-  ApexTitleSubtitle
+  ApexTooltip,
+  ApexGrid
 } from 'ng-apexcharts';
-
-// Tipos para controles de gráficas
-type ChartPeriodo = 'semana' | 'mes' | 'trimestre' | 'anio' | 'custom';
-type MetricaDisponible = 'cumplimiento' | 'alertas' | 'kpisActivos' | 'objetivosCumplidos';
-interface RangoFechas { desde: Date; hasta: Date; }
-
-// Interfaces para drill-down
-interface DrillDownData {
-  procesoId: string;
-  procesoNombre: string;
-  cumplimientoGeneral: number;
-  objetivos: DrillDownObjetivo[];
-  alertasActivas: number;
-}
-
-interface DrillDownObjetivo {
-  id: string;
-  nombre: string;
-  cumplimiento: number;
-  kpis: DrillDownKPI[];
-}
-
-interface DrillDownKPI {
-  id: string;
-  nombre: string;
-  valorActual: number;
-  valorMeta: number;
-  unidad: string;
-  cumplimiento: number;
-  tendencia: 'up' | 'down' | 'neutral';
-  tieneAlerta: boolean;
-}
 
 // Types for KPI Dashboard
 type PeriodoFiltro = 'semana' | 'mes' | 'trimestre' | 'anio';
@@ -151,10 +115,7 @@ interface KPIMetricGlobal {
     IconFieldModule,
     InputIconModule,
     TabsModule,
-    ChartModule,
     DatePickerModule,
-    AccordionModule,
-    MultiSelectModule,
     NgApexchartsModule
   ],
   providers: [ConfirmationService, MessageService],
@@ -181,12 +142,28 @@ export class ProcesosListaComponent {
   procesoEditando = signal<string | null>(null);
   valoresEdicion = signal<Record<string, any>>({});
 
-  // Menú contextual
-  procesoMenuActual = signal<Proceso | null>(null);
-  menuItems = signal<MenuItem[]>([]);
-
   // Drawer de acciones masivas
   showAccionesMasivasDrawer = signal(false);
+
+  // Drawer de drilldown - Proceso
+  showDrilldownDrawer = signal(false);
+  drilldownProceso = signal<ProcesoKPIResumen | null>(null);
+  drilldownVistaDesglose = signal<'kpis' | 'objetivos'>('kpis');
+  objetivoExpandido = signal<string | null>(null);
+
+  // Drawer de drilldown - Alerta
+  showAlertaDrilldown = signal(false);
+  alertaSeleccionada = signal<AlertaConsolidada | null>(null);
+
+  // Drawer de drilldown - Tendencia
+  showTendenciaDrilldown = signal(false);
+  tendenciaProcesoSeleccionado = signal<ProcesoKPIResumen | null>(null);
+
+  // Opciones para el select de desglose
+  desgloseOptions = [
+    { label: 'Por KPIs', value: 'kpis' },
+    { label: 'Por Objetivos', value: 'objetivos' }
+  ];
 
   // Opciones de estado para filtro
   estadoOptions: { label: string; value: Proceso['estado'] }[] = [
@@ -210,468 +187,6 @@ export class ProcesosListaComponent {
     { label: 'Último trimestre', value: 'trimestre' },
     { label: 'Último año', value: 'anio' }
   ];
-
-  // ==================== AMCHARTS CONFIGURABLES ====================
-  // Controles de tendencia AMCharts
-  periodoTendenciaAMCharts = signal<ChartPeriodo>('mes');
-  metricaTendenciaAMCharts = signal<MetricaDisponible>('cumplimiento');
-  rangoCustomTendencia = signal<RangoFechas | null>(null);
-
-  // Drill-down drawer
-  showDrilldownDrawer = signal(false);
-  drilldownData = signal<DrillDownData | null>(null);
-
-  // Controles para gráfica de cumplimiento
-  periodoCumplimiento = signal<ChartPeriodo>('mes');
-  procesosSeleccionadosChart = signal<string[]>([]); // IDs de procesos a mostrar
-  metricaDrilldown = signal<'objetivos' | 'kpis'>('objetivos');
-
-  // Controles para gráfica de alertas
-  procesoFiltroAlertas = signal<string | null>(null); // Filtrar alertas por proceso
-  showAlertasDrilldown = signal(false);
-  alertaDrilldownSeverity = signal<AlertSeverity | null>(null);
-  vistaAlertasDrilldown = signal<'proceso' | 'dias' | 'timeline'>('proceso');
-
-  // Opciones para selectores AMCharts
-  periodoOptionsAMCharts = [
-    { label: 'Última semana', value: 'semana' as ChartPeriodo },
-    { label: 'Último mes', value: 'mes' as ChartPeriodo },
-    { label: 'Último trimestre', value: 'trimestre' as ChartPeriodo },
-    { label: 'Último año', value: 'anio' as ChartPeriodo },
-    { label: 'Personalizado', value: 'custom' as ChartPeriodo }
-  ];
-
-  metricaOptionsAMCharts = [
-    { label: 'Cumplimiento', value: 'cumplimiento' as MetricaDisponible },
-    { label: 'Alertas', value: 'alertas' as MetricaDisponible },
-    { label: 'KPIs Activos', value: 'kpisActivos' as MetricaDisponible },
-    { label: 'Objetivos Cumplidos', value: 'objetivosCumplidos' as MetricaDisponible }
-  ];
-
-  // Opciones de procesos para selector multi-select
-  procesosOptionsChart = computed(() =>
-    this.procesosKPIResumen().map(p => ({
-      label: p.procesoNombre,
-      value: p.procesoId
-    }))
-  );
-
-  metricaDrilldownOptions = [
-    { label: 'Por Objetivos', value: 'objetivos' as const },
-    { label: 'Por KPIs', value: 'kpis' as const }
-  ];
-
-  vistaAlertasOptions = [
-    { label: 'Por Proceso', value: 'proceso' as const },
-    { label: 'Por Días Abierto', value: 'dias' as const },
-    { label: 'Timeline', value: 'timeline' as const }
-  ];
-
-  // Alertas filtradas por proceso para la dona
-  alertasParaDona = computed(() => {
-    const alertas = this.alertasConsolidadas();
-    const procesoId = this.procesoFiltroAlertas();
-    if (!procesoId) return alertas;
-    return alertas.filter(a => a.procesoId === procesoId);
-  });
-
-  // Alertas filtradas por severidad para drill-down
-  alertasDrilldownFiltradas = computed(() => {
-    const alertas = this.alertasParaDona();
-    const severity = this.alertaDrilldownSeverity();
-    if (!severity) return alertas;
-    return alertas.filter(a => a.severity === severity);
-  });
-
-  // Procesos filtrados para la gráfica de cumplimiento
-  procesosCumplimientoFiltrados = computed(() => {
-    const procesos = this.procesosKPIResumen();
-    const seleccionados = this.procesosSeleccionadosChart();
-    if (seleccionados.length === 0) return procesos;
-    return procesos.filter(p => seleccionados.includes(p.procesoId));
-  });
-
-  // ==================== APEXCHARTS CONFIGURABLES ====================
-  // Paleta de colores para gráficas
-  chartColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f43f5e'];
-
-  // Gráfica de líneas (Tendencia)
-  tendenciaChart = computed<ApexChart>(() => ({
-    type: 'line',
-    height: 320,
-    fontFamily: 'Inter, sans-serif',
-    toolbar: { show: true },
-    zoom: { enabled: true },
-    animations: { enabled: true, speed: 800 }
-  }));
-
-  tendenciaXaxis = computed<ApexXAxis>(() => ({
-    categories: this.generarLabelsTemporales(this.periodoTendenciaAMCharts()),
-    labels: { style: { fontSize: '11px' } }
-  }));
-
-  tendenciaYaxis = computed<ApexYAxis>(() => ({
-    title: { text: this.getMetricaLabel(this.metricaTendenciaAMCharts()) },
-    labels: { style: { fontSize: '11px' } }
-  }));
-
-  tendenciaStroke: ApexStroke = { curve: 'smooth', width: 2 };
-  tendenciaMarkers = { size: 3, hover: { size: 5 } };
-  tendenciaLegend: ApexLegend = { show: true, position: 'bottom' };
-  tendenciaTooltip: ApexTooltip = { shared: true, intersect: false };
-  tendenciaGrid: ApexGrid = { borderColor: '#e5e7eb', strokeDashArray: 3 };
-
-  tendenciaSeries = computed<ApexAxisChartSeries>(() => {
-    const procesos = this.procesosKPIResumen();
-    const metrica = this.metricaTendenciaAMCharts();
-    const periodo = this.periodoTendenciaAMCharts();
-
-    return procesos.slice(0, 5).map(p => ({
-      name: p.procesoNombre.split(' ').slice(0, 3).join(' '),
-      data: this.generarDatosTendencia(p, metrica, periodo)
-    }));
-  });
-
-  // Gráfica de barras (Cumplimiento) - usa procesos filtrados
-  cumplimientoChart = computed<ApexChart>(() => {
-    const procesos = this.procesosCumplimientoFiltrados();
-    return {
-      type: 'bar',
-      height: Math.max(200, procesos.length * 45),
-      fontFamily: 'Inter, sans-serif',
-      toolbar: { show: true, tools: { download: true, selection: false, zoom: false, pan: false, reset: false } },
-      events: {
-        dataPointSelection: (event: any, chartContext: any, config: any) => {
-          const procesoIndex = config.dataPointIndex;
-          if (procesos[procesoIndex]) {
-            this.onBarDrillDown({
-              id: procesos[procesoIndex].procesoId,
-              nombre: procesos[procesoIndex].procesoNombre,
-              valor: procesos[procesoIndex].cumplimientoPromedio
-            });
-          }
-        }
-      }
-    };
-  });
-
-  cumplimientoPlotOptions: ApexPlotOptions = {
-    bar: {
-      horizontal: true,
-      borderRadius: 4,
-      distributed: true,
-      barHeight: '70%'
-    }
-  };
-
-  cumplimientoXaxis = computed<ApexXAxis>(() => ({
-    categories: this.procesosCumplimientoFiltrados().map(p => p.procesoNombre.split(' ').slice(0, 3).join(' ')),
-    max: 100,
-    labels: { style: { fontSize: '11px' } }
-  }));
-
-  cumplimientoColors = computed(() =>
-    this.procesosCumplimientoFiltrados().map(p => this.getCumplimientoColor(p.cumplimientoPromedio))
-  );
-
-  cumplimientoDataLabels: ApexDataLabels = {
-    enabled: true,
-    formatter: (val: number) => val?.toFixed(0) + '%',
-    style: { fontSize: '11px', fontWeight: 600, colors: ['#fff'] }
-  };
-
-  cumplimientoSeries = computed<ApexAxisChartSeries>(() => [{
-    name: 'Cumplimiento',
-    data: this.procesosCumplimientoFiltrados().map(p => p.cumplimientoPromedio)
-  }]);
-
-  // ==================== GRÁFICA DRILL-DOWN (Detalle de proceso) ====================
-  drilldownChart = computed<ApexChart>(() => ({
-    type: 'bar',
-    height: 280,
-    fontFamily: 'Inter, sans-serif',
-    toolbar: { show: true },
-    animations: { enabled: true, speed: 500 }
-  }));
-
-  drilldownPlotOptions: ApexPlotOptions = {
-    bar: {
-      horizontal: true,
-      borderRadius: 4,
-      distributed: true,
-      barHeight: '65%'
-    }
-  };
-
-  drilldownXaxis = computed<ApexXAxis>(() => {
-    const data = this.drilldownData();
-    if (!data) return { categories: [], max: 100 };
-
-    const metrica = this.metricaDrilldown();
-    if (metrica === 'objetivos') {
-      return {
-        categories: data.objetivos.map(o => o.nombre.split(':')[0] || o.nombre),
-        max: 100,
-        labels: { style: { fontSize: '11px' } }
-      };
-    } else {
-      // Mostrar todos los KPIs de todos los objetivos
-      const allKpis = data.objetivos.flatMap(o => o.kpis);
-      return {
-        categories: allKpis.map(k => k.nombre),
-        max: 100,
-        labels: { style: { fontSize: '11px' } }
-      };
-    }
-  });
-
-  drilldownColors = computed(() => {
-    const data = this.drilldownData();
-    if (!data) return [];
-
-    const metrica = this.metricaDrilldown();
-    if (metrica === 'objetivos') {
-      return data.objetivos.map(o => this.getCumplimientoColor(o.cumplimiento));
-    } else {
-      const allKpis = data.objetivos.flatMap(o => o.kpis);
-      return allKpis.map(k => this.getCumplimientoColor(k.cumplimiento));
-    }
-  });
-
-  drilldownDataLabels: ApexDataLabels = {
-    enabled: true,
-    formatter: (val: number) => val?.toFixed(0) + '%',
-    style: { fontSize: '11px', fontWeight: 600, colors: ['#fff'] }
-  };
-
-  drilldownSeries = computed<ApexAxisChartSeries>(() => {
-    const data = this.drilldownData();
-    if (!data) return [{ name: 'Cumplimiento', data: [] }];
-
-    const metrica = this.metricaDrilldown();
-    if (metrica === 'objetivos') {
-      return [{
-        name: 'Cumplimiento',
-        data: data.objetivos.map(o => o.cumplimiento)
-      }];
-    } else {
-      const allKpis = data.objetivos.flatMap(o => o.kpis);
-      return [{
-        name: 'Cumplimiento',
-        data: allKpis.map(k => k.cumplimiento)
-      }];
-    }
-  });
-
-  // Gráfica donut (Alertas) con drill-down
-  alertasChart = computed<ApexChart>(() => ({
-    type: 'donut',
-    height: 220,
-    fontFamily: 'Inter, sans-serif',
-    events: {
-      dataPointSelection: (event: any, chartContext: any, config: any) => {
-        const severities: AlertSeverity[] = ['critical', 'warning', 'info'];
-        const selectedSeverity = severities[config.dataPointIndex];
-        if (selectedSeverity) {
-          this.onAlertaDrillDown(selectedSeverity);
-        }
-      }
-    }
-  }));
-
-  alertasLabels = ['Críticas', 'Advertencias', 'Información'];
-  alertasColors = ['#ef4444', '#f59e0b', '#3b82f6'];
-
-  alertasPlotOptions: ApexPlotOptions = {
-    pie: {
-      donut: {
-        size: '60%',
-        labels: {
-          show: true,
-          total: {
-            show: true,
-            label: 'Total',
-            fontSize: '12px',
-            fontWeight: 600
-          }
-        }
-      }
-    }
-  };
-
-  alertasLegend: ApexLegend = { show: true, position: 'bottom' };
-
-  alertasSeries = computed<ApexNonAxisChartSeries>(() => {
-    const alertas = this.alertasParaDona();
-    return [
-      alertas.filter(a => a.severity === 'critical').length,
-      alertas.filter(a => a.severity === 'warning').length,
-      alertas.filter(a => a.severity === 'info').length
-    ];
-  });
-
-  // ==================== GRÁFICA DRILL-DOWN ALERTAS ====================
-  alertasDrilldownChart = computed<ApexChart>(() => ({
-    type: 'bar',
-    height: 250,
-    fontFamily: 'Inter, sans-serif',
-    toolbar: { show: true },
-    animations: { enabled: true, speed: 500 }
-  }));
-
-  alertasDrilldownPlotOptions = computed<ApexPlotOptions>(() => {
-    const vista = this.vistaAlertasDrilldown();
-    return {
-      bar: {
-        horizontal: vista !== 'timeline',
-        borderRadius: 4,
-        distributed: vista !== 'timeline',
-        barHeight: '65%'
-      }
-    };
-  });
-
-  alertasDrilldownXaxis = computed<ApexXAxis>(() => {
-    const alertas = this.alertasDrilldownFiltradas();
-    const vista = this.vistaAlertasDrilldown();
-
-    if (vista === 'proceso') {
-      // Agrupar por proceso
-      const porProceso = new Map<string, number>();
-      alertas.forEach(a => {
-        const count = porProceso.get(a.procesoNombre) || 0;
-        porProceso.set(a.procesoNombre, count + 1);
-      });
-      return {
-        categories: Array.from(porProceso.keys()).map(n => n.split(' ').slice(0, 3).join(' ')),
-        labels: { style: { fontSize: '11px' } }
-      };
-    } else if (vista === 'dias') {
-      // Agrupar por rangos de días
-      return {
-        categories: ['< 7 días', '7-14 días', '15-30 días', '> 30 días'],
-        labels: { style: { fontSize: '11px' } }
-      };
-    } else {
-      // Timeline - últimos 7 días
-      const labels = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        labels.push(date.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' }));
-      }
-      return {
-        categories: labels,
-        labels: { style: { fontSize: '11px' } }
-      };
-    }
-  });
-
-  alertasDrilldownColors = computed(() => {
-    const severity = this.alertaDrilldownSeverity();
-    const baseColor = severity === 'critical' ? '#ef4444' :
-                      severity === 'warning' ? '#f59e0b' : '#3b82f6';
-    return [baseColor];
-  });
-
-  alertasDrilldownSeries = computed<ApexAxisChartSeries>(() => {
-    const alertas = this.alertasDrilldownFiltradas();
-    const vista = this.vistaAlertasDrilldown();
-
-    if (vista === 'proceso') {
-      const porProceso = new Map<string, number>();
-      alertas.forEach(a => {
-        const count = porProceso.get(a.procesoNombre) || 0;
-        porProceso.set(a.procesoNombre, count + 1);
-      });
-      return [{
-        name: 'Alertas',
-        data: Array.from(porProceso.values())
-      }];
-    } else if (vista === 'dias') {
-      const rangos = [0, 0, 0, 0]; // < 7, 7-14, 15-30, > 30
-      alertas.forEach(a => {
-        if (a.diasAbierto < 7) rangos[0]++;
-        else if (a.diasAbierto <= 14) rangos[1]++;
-        else if (a.diasAbierto <= 30) rangos[2]++;
-        else rangos[3]++;
-      });
-      return [{
-        name: 'Alertas',
-        data: rangos
-      }];
-    } else {
-      // Timeline mock data
-      return [{
-        name: 'Nuevas alertas',
-        data: Array.from({ length: 7 }, () => Math.floor(Math.random() * alertas.length / 2))
-      }];
-    }
-  });
-
-  alertasDrilldownDataLabels: ApexDataLabels = {
-    enabled: true,
-    style: { fontSize: '11px', fontWeight: 600 }
-  };
-
-  // Helpers para generar datos de gráficas
-  private generarLabelsTemporales(periodo: ChartPeriodo): string[] {
-    const labels: string[] = [];
-    const now = new Date();
-    let count = 0;
-
-    switch (periodo) {
-      case 'semana': count = 7; break;
-      case 'mes': count = 4; break;
-      case 'trimestre': count = 12; break;
-      case 'anio': count = 12; break;
-      default: count = 4;
-    }
-
-    for (let i = count - 1; i >= 0; i--) {
-      const date = new Date(now);
-      if (periodo === 'semana') {
-        date.setDate(date.getDate() - i);
-        labels.push(date.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' }));
-      } else if (periodo === 'mes') {
-        date.setDate(date.getDate() - (i * 7));
-        labels.push(`Sem ${count - i}`);
-      } else {
-        date.setMonth(date.getMonth() - i);
-        labels.push(date.toLocaleDateString('es-MX', { month: 'short' }));
-      }
-    }
-    return labels;
-  }
-
-  private generarDatosTendencia(proceso: ProcesoKPIResumen, metrica: MetricaDisponible, periodo: ChartPeriodo): number[] {
-    const count = periodo === 'semana' ? 7 : periodo === 'mes' ? 4 : 12;
-    const base = metrica === 'cumplimiento' ? proceso.cumplimientoPromedio :
-                 metrica === 'alertas' ? proceso.alertasActivas :
-                 metrica === 'kpisActivos' ? proceso.totalKPIs : proceso.totalObjetivos;
-
-    return Array.from({ length: count }, (_, i) => {
-      const variation = (Math.random() - 0.5) * 20;
-      return Math.max(0, Math.min(100, base + variation));
-    });
-  }
-
-  private getMetricaLabel(metrica: MetricaDisponible): string {
-    const labels: Record<MetricaDisponible, string> = {
-      cumplimiento: 'Cumplimiento (%)',
-      alertas: 'Alertas',
-      kpisActivos: 'KPIs Activos',
-      objetivosCumplidos: 'Objetivos'
-    };
-    return labels[metrica];
-  }
-
-  private getCumplimientoColor(valor: number): string {
-    if (valor >= 85) return '#10b981'; // Verde
-    if (valor >= 70) return '#3b82f6'; // Azul
-    if (valor >= 50) return '#f59e0b'; // Amarillo
-    return '#ef4444'; // Rojo
-  }
 
   severidadOptions = [
     { label: 'Todas', value: null },
@@ -737,116 +252,231 @@ export class ProcesosListaComponent {
     ];
   });
 
-  // Resumen de KPIs por proceso (para drill-down)
-  procesosKPIResumen = signal<ProcesoKPIResumen[]>([
+  // ==================== DATOS ESTRUCTURADOS COHERENTES ====================
+
+  // Estructura completa de datos por proceso (fuente única de verdad)
+  procesosCompletos = signal([
     {
-      procesoId: 'proc-demo-001',
-      procesoNombre: 'Gestión de Riesgos Operacionales',
-      estado: 'activo',
-      totalObjetivos: 6,
-      totalKPIs: 9,
-      cumplimientoPromedio: 68,
-      cumplimientoAnterior: 62,
-      tendencia: 'up',
-      alertasActivas: 3,
-      alertasCriticas: 1,
-      ultimaActualizacion: new Date()
+      id: 'proc-demo-001',
+      nombre: 'Gestión de Riesgos Operacionales',
+      estado: 'activo' as const,
+      objetivos: [
+        {
+          id: 'obj-001-1',
+          nombre: 'Reducir incidentes de riesgo operacional',
+          cumplimiento: 72,
+          cumplimientoAnterior: 65,
+          tendencia: 'up' as const,
+          kpis: [
+            { id: 'kpi-001-1-1', nombre: 'Incidentes reportados', valorActual: 12, meta: 8, cumplimiento: 67, tendencia: 'down' as const, umbral: 75, historico: [85, 78, 72, 67] },
+            { id: 'kpi-001-1-2', nombre: 'Tiempo resolución (hrs)', valorActual: 4.2, meta: 4, cumplimiento: 95, tendencia: 'up' as const, umbral: 85, historico: [82, 88, 92, 95] },
+            { id: 'kpi-001-1-3', nombre: 'Controles implementados', valorActual: 28, meta: 35, cumplimiento: 80, tendencia: 'up' as const, umbral: 70, historico: [65, 70, 75, 80] }
+          ]
+        },
+        {
+          id: 'obj-001-2',
+          nombre: 'Mejorar cultura de gestión de riesgos',
+          cumplimiento: 64,
+          cumplimientoAnterior: 58,
+          tendencia: 'up' as const,
+          kpis: [
+            { id: 'kpi-001-2-1', nombre: 'Capacitaciones completadas', valorActual: 156, meta: 200, cumplimiento: 78, tendencia: 'up' as const, umbral: 70, historico: [55, 62, 70, 78] },
+            { id: 'kpi-001-2-2', nombre: 'Evaluación conocimiento', valorActual: 68, meta: 80, cumplimiento: 85, tendencia: 'up' as const, umbral: 75, historico: [72, 78, 82, 85] },
+            { id: 'kpi-001-2-3', nombre: 'Reportes voluntarios', valorActual: 23, meta: 50, cumplimiento: 46, tendencia: 'down' as const, umbral: 60, historico: [52, 50, 48, 46] }
+          ]
+        }
+      ]
     },
     {
-      procesoId: 'proc-demo-002',
-      procesoNombre: 'Control de Accesos y Seguridad',
-      estado: 'activo',
-      totalObjetivos: 4,
-      totalKPIs: 7,
-      cumplimientoPromedio: 82,
-      cumplimientoAnterior: 78,
-      tendencia: 'up',
-      alertasActivas: 1,
-      alertasCriticas: 0,
-      ultimaActualizacion: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+      id: 'proc-demo-002',
+      nombre: 'Control de Accesos y Seguridad',
+      estado: 'activo' as const,
+      objetivos: [
+        {
+          id: 'obj-002-1',
+          nombre: 'Garantizar accesos autorizados',
+          cumplimiento: 88,
+          cumplimientoAnterior: 82,
+          tendencia: 'up' as const,
+          kpis: [
+            { id: 'kpi-002-1-1', nombre: 'Accesos no autorizados', valorActual: 2, meta: 0, cumplimiento: 80, tendencia: 'up' as const, umbral: 90, historico: [65, 72, 76, 80] },
+            { id: 'kpi-002-1-2', nombre: 'Revisiones de permisos', valorActual: 95, meta: 100, cumplimiento: 95, tendencia: 'up' as const, umbral: 85, historico: [78, 85, 90, 95] }
+          ]
+        },
+        {
+          id: 'obj-002-2',
+          nombre: 'Proteger activos de información',
+          cumplimiento: 76,
+          cumplimientoAnterior: 74,
+          tendencia: 'up' as const,
+          kpis: [
+            { id: 'kpi-002-2-1', nombre: 'Activos clasificados', valorActual: 342, meta: 400, cumplimiento: 86, tendencia: 'up' as const, umbral: 80, historico: [70, 75, 80, 86] },
+            { id: 'kpi-002-2-2', nombre: 'Vulnerabilidades críticas', valorActual: 3, meta: 0, cumplimiento: 70, tendencia: 'down' as const, umbral: 85, historico: [88, 82, 76, 70] },
+            { id: 'kpi-002-2-3', nombre: 'Parches aplicados', valorActual: 89, meta: 100, cumplimiento: 89, tendencia: 'up' as const, umbral: 90, historico: [75, 80, 85, 89] }
+          ]
+        }
+      ]
     },
     {
-      procesoId: 'proc-demo-003',
-      procesoNombre: 'Cumplimiento Normativo SOX',
-      estado: 'activo',
-      totalObjetivos: 3,
-      totalKPIs: 5,
-      cumplimientoPromedio: 75,
-      cumplimientoAnterior: 80,
-      tendencia: 'down',
-      alertasActivas: 2,
-      alertasCriticas: 1,
-      ultimaActualizacion: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+      id: 'proc-demo-003',
+      nombre: 'Cumplimiento Normativo SOX',
+      estado: 'activo' as const,
+      objetivos: [
+        {
+          id: 'obj-003-1',
+          nombre: 'Cumplir regulaciones financieras',
+          cumplimiento: 75,
+          cumplimientoAnterior: 80,
+          tendencia: 'down' as const,
+          kpis: [
+            { id: 'kpi-003-1-1', nombre: 'Controles SOX cumplidos', valorActual: 45, meta: 52, cumplimiento: 87, tendencia: 'up' as const, umbral: 95, historico: [80, 82, 85, 87] },
+            { id: 'kpi-003-1-2', nombre: 'Hallazgos de auditoría', valorActual: 8, meta: 3, cumplimiento: 63, tendencia: 'down' as const, umbral: 80, historico: [85, 78, 70, 63] }
+          ]
+        },
+        {
+          id: 'obj-003-2',
+          nombre: 'Documentación y evidencias',
+          cumplimiento: 68,
+          cumplimientoAnterior: 72,
+          tendencia: 'down' as const,
+          kpis: [
+            { id: 'kpi-003-2-1', nombre: 'Documentos actualizados', valorActual: 78, meta: 100, cumplimiento: 78, tendencia: 'down' as const, umbral: 85, historico: [88, 85, 82, 78] },
+            { id: 'kpi-003-2-2', nombre: 'Evidencias completas', valorActual: 156, meta: 200, cumplimiento: 78, tendencia: 'up' as const, umbral: 80, historico: [68, 72, 75, 78] },
+            { id: 'kpi-003-2-3', nombre: 'Revisiones a tiempo', valorActual: 42, meta: 50, cumplimiento: 84, tendencia: 'down' as const, umbral: 90, historico: [92, 90, 87, 84] }
+          ]
+        }
+      ]
     },
     {
-      procesoId: 'proc-demo-004',
-      procesoNombre: 'Gestión de Incidentes',
-      estado: 'activo',
-      totalObjetivos: 2,
-      totalKPIs: 4,
-      cumplimientoPromedio: 91,
-      cumplimientoAnterior: 88,
-      tendencia: 'up',
-      alertasActivas: 0,
-      alertasCriticas: 0,
-      ultimaActualizacion: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+      id: 'proc-demo-004',
+      nombre: 'Gestión de Incidentes',
+      estado: 'activo' as const,
+      objetivos: [
+        {
+          id: 'obj-004-1',
+          nombre: 'Respuesta rápida a incidentes',
+          cumplimiento: 91,
+          cumplimientoAnterior: 88,
+          tendencia: 'up' as const,
+          kpis: [
+            { id: 'kpi-004-1-1', nombre: 'Tiempo primera respuesta', valorActual: 12, meta: 15, cumplimiento: 100, tendencia: 'up' as const, umbral: 85, historico: [82, 88, 94, 100] },
+            { id: 'kpi-004-1-2', nombre: 'Incidentes resueltos 24h', valorActual: 87, meta: 90, cumplimiento: 97, tendencia: 'up' as const, umbral: 80, historico: [78, 85, 92, 97] }
+          ]
+        },
+        {
+          id: 'obj-004-2',
+          nombre: 'Prevención de recurrencia',
+          cumplimiento: 85,
+          cumplimientoAnterior: 80,
+          tendencia: 'up' as const,
+          kpis: [
+            { id: 'kpi-004-2-1', nombre: 'Análisis causa raíz', valorActual: 92, meta: 100, cumplimiento: 92, tendencia: 'up' as const, umbral: 85, historico: [75, 82, 88, 92] },
+            { id: 'kpi-004-2-2', nombre: 'Acciones preventivas', valorActual: 34, meta: 40, cumplimiento: 85, tendencia: 'up' as const, umbral: 80, historico: [70, 75, 80, 85] }
+          ]
+        }
+      ]
     },
     {
-      procesoId: 'proc-demo-005',
-      procesoNombre: 'Auditoría Interna',
-      estado: 'borrador',
-      totalObjetivos: 5,
-      totalKPIs: 8,
-      cumplimientoPromedio: 45,
-      cumplimientoAnterior: 40,
-      tendencia: 'up',
-      alertasActivas: 2,
-      alertasCriticas: 1,
-      ultimaActualizacion: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+      id: 'proc-demo-005',
+      nombre: 'Auditoría Interna',
+      estado: 'borrador' as const,
+      objetivos: [
+        {
+          id: 'obj-005-1',
+          nombre: 'Ejecutar plan de auditoría',
+          cumplimiento: 45,
+          cumplimientoAnterior: 40,
+          tendencia: 'up' as const,
+          kpis: [
+            { id: 'kpi-005-1-1', nombre: 'Auditorías completadas', valorActual: 8, meta: 20, cumplimiento: 40, tendencia: 'up' as const, umbral: 70, historico: [25, 30, 35, 40] },
+            { id: 'kpi-005-1-2', nombre: 'Cobertura de procesos', valorActual: 35, meta: 80, cumplimiento: 44, tendencia: 'up' as const, umbral: 60, historico: [30, 35, 40, 44] }
+          ]
+        },
+        {
+          id: 'obj-005-2',
+          nombre: 'Seguimiento de hallazgos',
+          cumplimiento: 52,
+          cumplimientoAnterior: 48,
+          tendencia: 'up' as const,
+          kpis: [
+            { id: 'kpi-005-2-1', nombre: 'Hallazgos cerrados', valorActual: 18, meta: 35, cumplimiento: 51, tendencia: 'up' as const, umbral: 70, historico: [38, 42, 47, 51] },
+            { id: 'kpi-005-2-2', nombre: 'Tiempo promedio cierre', valorActual: 45, meta: 30, cumplimiento: 67, tendencia: 'down' as const, umbral: 80, historico: [75, 72, 70, 67] }
+          ]
+        }
+      ]
     }
   ]);
 
-  // Alertas consolidadas de todos los procesos
+  // Computed: Resumen de KPIs por proceso (derivado de procesosCompletos)
+  procesosKPIResumen = computed<ProcesoKPIResumen[]>(() => {
+    return this.procesosCompletos().map(p => {
+      const totalKPIs = p.objetivos.reduce((sum, obj) => sum + obj.kpis.length, 0);
+      const cumplimientoPromedio = Math.round(
+        p.objetivos.reduce((sum, obj) => sum + obj.cumplimiento, 0) / p.objetivos.length
+      );
+      const cumplimientoAnterior = Math.round(
+        p.objetivos.reduce((sum, obj) => sum + obj.cumplimientoAnterior, 0) / p.objetivos.length
+      );
+      const alertasActivas = this.alertasConsolidadas().filter(a => a.procesoId === p.id && a.status === 'activa').length;
+      const alertasCriticas = this.alertasConsolidadas().filter(a => a.procesoId === p.id && a.status === 'activa' && a.severity === 'critical').length;
+
+      return {
+        procesoId: p.id,
+        procesoNombre: p.nombre,
+        estado: p.estado,
+        totalObjetivos: p.objetivos.length,
+        totalKPIs,
+        cumplimientoPromedio,
+        cumplimientoAnterior,
+        tendencia: cumplimientoPromedio >= cumplimientoAnterior ? 'up' as const : 'down' as const,
+        alertasActivas,
+        alertasCriticas,
+        ultimaActualizacion: new Date()
+      };
+    });
+  });
+
+  // Alertas consolidadas (referenciando datos reales)
   alertasConsolidadas = signal<AlertaConsolidada[]>([
     {
       id: 'ALERT-001', procesoId: 'proc-demo-001', procesoNombre: 'Gestión de Riesgos Operacionales',
-      objetivoId: '1', objetivoNombre: 'Reducir riesgos Operacionales',
-      kpiId: 'KPI-004', kpiNombre: 'Cumplimiento de Auditorías',
+      objetivoId: 'obj-001-1', objetivoNombre: 'Reducir incidentes de riesgo operacional',
+      kpiId: 'kpi-001-1-1', kpiNombre: 'Incidentes reportados',
       severity: 'critical', status: 'activa',
-      mensaje: 'Cumplimiento de auditorías por debajo del umbral crítico (75% < 80%)',
-      valorActual: 75, valorUmbral: 80, fechaCreacion: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), diasAbierto: 2
+      mensaje: 'Incidentes por encima del umbral permitido (12 vs meta de 8)',
+      valorActual: 67, valorUmbral: 75, fechaCreacion: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), diasAbierto: 2
     },
     {
       id: 'ALERT-002', procesoId: 'proc-demo-001', procesoNombre: 'Gestión de Riesgos Operacionales',
-      objetivoId: '1', objetivoNombre: 'Reducir riesgos Operacionales',
-      kpiId: 'KPI-005', kpiNombre: 'Capacitaciones en Gestión de Riesgos',
+      objetivoId: 'obj-001-2', objetivoNombre: 'Mejorar cultura de gestión de riesgos',
+      kpiId: 'kpi-001-2-3', kpiNombre: 'Reportes voluntarios',
       severity: 'warning', status: 'activa',
-      mensaje: 'Capacitaciones por debajo del objetivo (60% < 70%)',
-      valorActual: 60, valorUmbral: 70, fechaCreacion: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), diasAbierto: 5
+      mensaje: 'Reportes voluntarios por debajo del umbral (46% < 60%)',
+      valorActual: 46, valorUmbral: 60, fechaCreacion: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), diasAbierto: 5
     },
     {
       id: 'ALERT-003', procesoId: 'proc-demo-003', procesoNombre: 'Cumplimiento Normativo SOX',
-      objetivoId: '5', objetivoNombre: 'Garantizar el cumplimiento regulatorio',
-      kpiId: 'KPI-009', kpiNombre: 'Cumplimiento normativo',
+      objetivoId: 'obj-003-1', objetivoNombre: 'Cumplir regulaciones financieras',
+      kpiId: 'kpi-003-1-2', kpiNombre: 'Hallazgos de auditoría',
       severity: 'critical', status: 'activa',
-      mensaje: 'Cumplimiento normativo crítico (85% < 90%)',
-      valorActual: 85, valorUmbral: 90, fechaCreacion: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), diasAbierto: 1
+      mensaje: 'Hallazgos de auditoría críticos (63% < 80%)',
+      valorActual: 63, valorUmbral: 80, fechaCreacion: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), diasAbierto: 1
     },
     {
       id: 'ALERT-004', procesoId: 'proc-demo-002', procesoNombre: 'Control de Accesos y Seguridad',
-      objetivoId: '3', objetivoNombre: 'Mejora experiencia del cliente',
-      kpiId: 'KPI-006', kpiNombre: 'NPS Score',
+      objetivoId: 'obj-002-2', objetivoNombre: 'Proteger activos de información',
+      kpiId: 'kpi-002-2-2', kpiNombre: 'Vulnerabilidades críticas',
       severity: 'warning', status: 'activa',
-      mensaje: 'NPS Score por debajo del umbral (68% < 70%)',
-      valorActual: 68, valorUmbral: 70, fechaCreacion: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), diasAbierto: 3
+      mensaje: 'Vulnerabilidades críticas por debajo del umbral (70% < 85%)',
+      valorActual: 70, valorUmbral: 85, fechaCreacion: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), diasAbierto: 3
     },
     {
-      id: 'ALERT-005', procesoId: 'proc-demo-001', procesoNombre: 'Gestión de Riesgos Operacionales',
-      objetivoId: '1', objetivoNombre: 'Reducir riesgos Operacionales',
-      kpiId: 'KPI-002', kpiNombre: 'Pérdidas por Riesgo Operacional',
-      severity: 'info', status: 'atendida',
-      mensaje: 'Pérdidas controladas pero requiere monitoreo',
-      valorActual: 2, valorUmbral: 3, fechaCreacion: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), diasAbierto: 7
+      id: 'ALERT-005', procesoId: 'proc-demo-005', procesoNombre: 'Auditoría Interna',
+      objetivoId: 'obj-005-1', objetivoNombre: 'Ejecutar plan de auditoría',
+      kpiId: 'kpi-005-1-1', kpiNombre: 'Auditorías completadas',
+      severity: 'warning', status: 'activa',
+      mensaje: 'Auditorías completadas muy por debajo de meta (40% < 70%)',
+      valorActual: 40, valorUmbral: 70, fechaCreacion: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), diasAbierto: 7
     }
   ]);
 
@@ -871,74 +501,529 @@ export class ProcesosListaComponent {
     return procs.sort((a, b) => b.alertasCriticas - a.alertasCriticas || b.alertasActivas - a.alertasActivas);
   });
 
-  // Datos de gráficos - Tendencia por proceso
-  chartTendenciaData = computed(() => ({
-    labels: ['Oct', 'Nov', 'Dic', 'Ene', 'Feb', 'Mar'],
-    datasets: this.procesosKPIResumen().slice(0, 4).map((p, i) => ({
-      label: p.procesoNombre.split(' ').slice(0, 2).join(' '),
-      data: this.generarTendenciaRandom(p.cumplimientoPromedio),
-      borderColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'][i],
-      backgroundColor: 'transparent',
-      tension: 0.4
-    }))
-  }));
+  // ==================== APEXCHARTS CONFIGURATIONS ====================
 
-  // Chart: Cumplimiento por proceso (horizontal bar)
-  chartProcesosCumplimiento = computed(() => ({
-    labels: this.procesosKPIResumen().map(p => p.procesoNombre.split(' ').slice(0, 3).join(' ')),
-    datasets: [{
-      label: 'Cumplimiento %',
-      data: this.procesosKPIResumen().map(p => p.cumplimientoPromedio),
-      backgroundColor: this.procesosKPIResumen().map(p =>
-        p.cumplimientoPromedio >= 80 ? '#10b981' :
-        p.cumplimientoPromedio >= 60 ? '#f59e0b' : '#ef4444'
-      )
-    }]
-  }));
+  // Colores para procesos
+  private processColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444'];
 
-  // Chart: Alertas por severidad
-  chartAlertasSeveridad = computed(() => {
-    const alertas = this.alertasConsolidadas().filter(a => a.status === 'activa');
+  // Chart: Tendencia por Proceso (Line Chart)
+  apexTendenciaSeries = computed<ApexAxisChartSeries>(() => {
+    const procesos = this.procesosKPIResumen();
+    if (!procesos || procesos.length === 0) {
+      return [{ name: 'Sin datos', data: [0, 0, 0, 0] }];
+    }
+    return procesos.slice(0, 5).map((p) => ({
+      name: p.procesoNombre.length > 18 ? p.procesoNombre.substring(0, 18) + '...' : p.procesoNombre,
+      data: this.generarTendenciaRandom(p.cumplimientoPromedio)
+    }));
+  });
+
+  apexTendenciaChart: ApexChart = {
+    type: 'line',
+    height: 260,
+    toolbar: { show: true },
+    zoom: { enabled: false },
+    events: {
+      legendClick: (chartContext: any, seriesIndex: number, config: any) => {
+        this.onTendenciaSeriesClick(seriesIndex);
+      }
+    }
+  };
+
+  // Método para manejar clic en serie de tendencia - abre drawer de tendencia
+  onTendenciaSeriesClick(seriesIndex: number): void {
+    const procesos = this.procesosKPIResumen();
+    if (procesos && procesos[seriesIndex]) {
+      this.abrirTendenciaDrilldown(procesos[seriesIndex]);
+    }
+  }
+
+  apexTendenciaXAxis: ApexXAxis = {
+    categories: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4']
+  };
+
+  apexTendenciaYAxis: ApexYAxis = {
+    min: 20,
+    max: 100,
+    labels: { formatter: (val: number) => val.toFixed(0) + '%' }
+  };
+
+  apexTendenciaStroke: ApexStroke = { curve: 'smooth', width: 2 };
+
+  apexTendenciaColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444'];
+
+  apexTendenciaLegend: ApexLegend = {
+    position: 'bottom',
+    horizontalAlign: 'center'
+  };
+
+  apexTendenciaGrid: ApexGrid = {
+    borderColor: '#e2e8f0',
+    strokeDashArray: 4
+  };
+
+  apexTendenciaTooltip: ApexTooltip = {
+    shared: true,
+    intersect: false,
+    y: { formatter: (val: number) => val.toFixed(1) + '%' }
+  };
+
+  // Chart: Cumplimiento por Proceso (Horizontal Bar)
+  apexCumplimientoSeries = computed<ApexAxisChartSeries>(() => {
+    const procesos = this.procesosKPIResumen();
+    if (!procesos || procesos.length === 0) {
+      return [{ name: 'Cumplimiento', data: [] }];
+    }
+    return [{
+      name: 'Cumplimiento',
+      data: procesos.map(p => p.cumplimientoPromedio)
+    }];
+  });
+
+  apexCumplimientoChart: ApexChart = {
+    type: 'bar',
+    height: 260,
+    toolbar: { show: false },
+    events: {
+      dataPointSelection: (event: any, chartContext: any, config: any) => {
+        this.onCumplimientoBarClick(config.dataPointIndex);
+      }
+    }
+  };
+
+  // Método para manejar clic en barra de cumplimiento
+  onCumplimientoBarClick(index: number): void {
+    const procesos = this.procesosKPIResumen();
+    if (procesos && procesos[index]) {
+      this.abrirDrilldownProceso(procesos[index]);
+    }
+  }
+
+  apexCumplimientoPlotOptions: ApexPlotOptions = {
+    bar: {
+      horizontal: true,
+      borderRadius: 4,
+      distributed: true
+    }
+  };
+
+  apexCumplimientoColors = computed(() => {
+    const procesos = this.procesosKPIResumen();
+    if (!procesos || procesos.length === 0) return ['#10b981'];
+    return procesos.map(p =>
+      p.cumplimientoPromedio >= 80 ? '#10b981' :
+      p.cumplimientoPromedio >= 60 ? '#f59e0b' : '#ef4444'
+    );
+  });
+
+  apexCumplimientoXAxis = computed<ApexXAxis>(() => {
+    const procesos = this.procesosKPIResumen();
+    if (!procesos || procesos.length === 0) return { categories: [] };
     return {
-      labels: ['Crítico', 'Advertencia', 'Info'],
-      datasets: [{
-        data: [
-          alertas.filter(a => a.severity === 'critical').length,
-          alertas.filter(a => a.severity === 'warning').length,
-          alertas.filter(a => a.severity === 'info').length
-        ],
-        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6']
+      categories: procesos.map(p =>
+        p.procesoNombre.length > 22 ? p.procesoNombre.substring(0, 22) + '...' : p.procesoNombre
+      )
+    };
+  });
+
+  apexCumplimientoYAxis: ApexYAxis = {
+    max: 100
+  };
+
+  apexCumplimientoDataLabels: ApexDataLabels = {
+    enabled: true,
+    formatter: (val: number) => val.toFixed(0) + '%',
+    offsetX: 25,
+    style: { fontSize: '11px', colors: ['#334155'] }
+  };
+
+  apexCumplimientoTooltip: ApexTooltip = {
+    y: { formatter: (val: number) => val.toFixed(1) + '%' }
+  };
+
+  // Chart: Alertas (Donut Chart)
+  apexAlertasSeries = computed<ApexNonAxisChartSeries>(() => {
+    const alertas = this.alertasConsolidadas().filter(a => a.status === 'activa');
+    const critical = alertas.filter(a => a.severity === 'critical').length;
+    const warning = alertas.filter(a => a.severity === 'warning').length;
+    const info = alertas.filter(a => a.severity === 'info').length;
+    // Ensure we have at least some value to show
+    if (critical === 0 && warning === 0 && info === 0) {
+      return [0, 0, 1]; // Show at least info
+    }
+    return [critical, warning, info];
+  });
+
+  apexAlertasChart: ApexChart = {
+    type: 'donut',
+    height: 200,
+    events: {
+      dataPointSelection: (event: any, chartContext: any, config: any) => {
+        this.onAlertasDonutClick(config.dataPointIndex);
+      }
+    }
+  };
+
+  // Método para manejar clic en donut de alertas
+  onAlertasDonutClick(index: number): void {
+    // index: 0 = Críticas, 1 = Advertencias, 2 = Información
+    const severidades: AlertSeverity[] = ['critical', 'warning', 'info'];
+    const severidadSeleccionada = severidades[index];
+
+    // Buscar la primera alerta de esa severidad
+    const alertas = this.alertasFiltradas();
+    const alerta = alertas.find(a => a.severity === severidadSeleccionada);
+
+    if (alerta) {
+      this.abrirAlertaDrilldown(alerta);
+    }
+  }
+
+  apexAlertasLabels = ['Críticas', 'Advertencias', 'Información'];
+  // Colores alineados con design tokens: --red-500, --amber-500, --blue-500
+  apexAlertasColors = ['#ef4444', '#f59e0b', '#3b82f6'];
+
+  apexAlertasPlotOptions: ApexPlotOptions = {
+    pie: {
+      donut: {
+        size: '65%',
+        labels: {
+          show: true,
+          name: { show: true },
+          value: { show: true },
+          total: { show: true, label: 'Total' }
+        }
+      }
+    }
+  };
+
+  apexAlertasLegend: ApexLegend = {
+    position: 'bottom',
+    horizontalAlign: 'center'
+  };
+
+  apexAlertasResponsive: ApexResponsive[] = [{
+    breakpoint: 480,
+    options: { chart: { width: 200 }, legend: { position: 'bottom' } }
+  }];
+
+  // ==================== DRILLDOWN APEXCHARTS ====================
+
+  // Colores para KPIs en el drilldown (multicolor como en el diseño)
+  private kpiColors = [
+    '#ef4444', '#f59e0b', '#eab308', '#84cc16', '#22c55e',
+    '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6'
+  ];
+
+  // Datos de KPIs u Objetivos para el drilldown (según selección)
+  drilldownKPIsData = computed(() => {
+    const proceso = this.drilldownProceso();
+    if (!proceso) return [];
+
+    const vista = this.drilldownVistaDesglose();
+    const procesoCompleto = this.procesosCompletos().find(p => p.id === proceso.procesoId);
+
+    if (!procesoCompleto) return [];
+
+    if (vista === 'objetivos') {
+      // Mostrar objetivos
+      return procesoCompleto.objetivos.map((obj, i) => ({
+        id: obj.id,
+        nombre: obj.nombre,
+        valor: obj.cumplimiento,
+        color: this.kpiColors[i % this.kpiColors.length]
+      }));
+    } else {
+      // Mostrar KPIs (todos los KPIs de todos los objetivos)
+      const allKPIs: { id: string; nombre: string; valor: number; color: string }[] = [];
+      procesoCompleto.objetivos.forEach((obj, objIndex) => {
+        obj.kpis.forEach((kpi, kpiIndex) => {
+          allKPIs.push({
+            id: kpi.id,
+            nombre: kpi.nombre,
+            valor: kpi.cumplimiento,
+            color: this.kpiColors[(objIndex * 2 + kpiIndex) % this.kpiColors.length]
+          });
+        });
+      });
+      return allKPIs;
+    }
+  });
+
+  // Drilldown Bar Chart - Series
+  apexDrilldownBarSeries = computed<ApexAxisChartSeries>(() => {
+    const kpis = this.drilldownKPIsData();
+    if (!kpis.length) return [{ name: 'Cumplimiento', data: [] }];
+    return [{ name: 'Cumplimiento', data: kpis.map(k => k.valor) }];
+  });
+
+  // Drilldown Bar Chart - Colors
+  apexDrilldownBarColors = computed(() => {
+    const kpis = this.drilldownKPIsData();
+    return kpis.map(k => k.color);
+  });
+
+  // Drilldown Bar Chart - XAxis
+  apexDrilldownBarXAxis = computed<ApexXAxis>(() => {
+    const kpis = this.drilldownKPIsData();
+    return {
+      categories: kpis.map(k => k.nombre),
+      labels: { style: { fontSize: '11px', colors: '#64748b' } }
+    };
+  });
+
+  // Drilldown Bar Chart Config
+  apexDrilldownBarChart: ApexChart = {
+    type: 'bar',
+    height: 300,
+    toolbar: { show: false }
+  };
+
+  apexDrilldownBarPlotOptions: ApexPlotOptions = {
+    bar: {
+      horizontal: true,
+      borderRadius: 4,
+      distributed: true,
+      barHeight: '70%',
+      dataLabels: { position: 'center' }
+    }
+  };
+
+  apexDrilldownBarYAxis: ApexYAxis = {
+    max: 100,
+    labels: { show: false }
+  };
+
+  apexDrilldownBarDataLabels: ApexDataLabels = {
+    enabled: true,
+    formatter: (val: number) => val.toFixed(0) + '%',
+    style: { fontSize: '11px', colors: ['#ffffff'], fontWeight: 600 },
+    offsetX: 0
+  };
+
+  apexDrilldownBarLegend: ApexLegend = {
+    show: true,
+    position: 'bottom',
+    horizontalAlign: 'center',
+    fontSize: '10px',
+    markers: { shape: 'square' },
+    itemMargin: { horizontal: 8, vertical: 4 }
+  };
+
+  apexDrilldownBarGrid: ApexGrid = {
+    show: true,
+    borderColor: '#e2e8f0',
+    xaxis: { lines: { show: true } },
+    yaxis: { lines: { show: false } }
+  };
+
+  // Objetivos con detalle para el accordion (usa datos reales)
+  drilldownObjetivosDetalle = computed(() => {
+    const proceso = this.drilldownProceso();
+    if (!proceso) return [];
+
+    const procesoCompleto = this.procesosCompletos().find(p => p.id === proceso.procesoId);
+    if (!procesoCompleto) return [];
+
+    return procesoCompleto.objetivos.map(obj => ({
+      id: obj.id,
+      nombre: obj.nombre,
+      cumplimiento: obj.cumplimiento,
+      tendencia: obj.tendencia,
+      kpisList: obj.kpis.map(kpi => ({
+        id: kpi.id,
+        nombre: kpi.nombre,
+        valorActual: kpi.cumplimiento,
+        meta: 100,
+        cumplimiento: kpi.cumplimiento,
+        tendencia: kpi.tendencia
+      }))
+    }));
+  });
+
+  // Obtener detalle de KPI para una alerta
+  getAlertaKPIDetalle = computed(() => {
+    const alerta = this.alertaSeleccionada();
+    if (!alerta) return null;
+
+    const proceso = this.procesosCompletos().find(p => p.id === alerta.procesoId);
+    if (!proceso) return null;
+
+    const objetivo = proceso.objetivos.find(o => o.id === alerta.objetivoId);
+    if (!objetivo) return null;
+
+    const kpi = objetivo.kpis.find(k => k.id === alerta.kpiId);
+    if (!kpi) return null;
+
+    return { proceso, objetivo, kpi };
+  });
+
+  // Tendencia histórica y predicción para el drawer de tendencia
+  tendenciaProcesoData = computed(() => {
+    const proceso = this.tendenciaProcesoSeleccionado();
+    if (!proceso) return null;
+
+    const procesoCompleto = this.procesosCompletos().find(p => p.id === proceso.procesoId);
+    if (!procesoCompleto) return null;
+
+    // Calcular tendencia histórica basada en promedios de objetivos
+    const historicoSemanas = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
+    const historico = [0, 1, 2, 3].map(weekIndex => {
+      const promedioSemana = procesoCompleto.objetivos.reduce((sum, obj) => {
+        const promedioKPIs = obj.kpis.reduce((s, k) => s + (k.historico[weekIndex] || 0), 0) / obj.kpis.length;
+        return sum + promedioKPIs;
+      }, 0) / procesoCompleto.objetivos.length;
+      return Math.round(promedioSemana);
+    });
+
+    // Calcular predicción (regresión lineal simple)
+    const n = historico.length;
+    const sumX = historico.reduce((s, _, i) => s + i, 0);
+    const sumY = historico.reduce((s, v) => s + v, 0);
+    const sumXY = historico.reduce((s, v, i) => s + i * v, 0);
+    const sumX2 = historico.reduce((s, _, i) => s + i * i, 0);
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    const prediccion = [4, 5, 6, 7].map(i => Math.round(Math.max(0, Math.min(100, intercept + slope * i))));
+    const tendenciaGeneral = slope > 0.5 ? 'positiva' : slope < -0.5 ? 'negativa' : 'estable';
+
+    return {
+      proceso: procesoCompleto,
+      historicoSemanas,
+      historico,
+      prediccionSemanas: ['Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'],
+      prediccion,
+      tendenciaGeneral,
+      cambioPrediccion: prediccion[3] - historico[3]
+    };
+  });
+
+  // Método para obtener clase de color según cumplimiento
+  getCumplimientoColorClass(valor: number): string {
+    if (valor >= 80) return 'color-success';
+    if (valor >= 60) return 'color-warning';
+    if (valor >= 40) return 'color-orange';
+    return 'color-danger';
+  }
+
+  // ==================== TENDENCIA DRILLDOWN APEXCHARTS ====================
+
+  // Series para gráfica de tendencia con predicción
+  apexTendenciaDrilldownSeries = computed<ApexAxisChartSeries>(() => {
+    const data = this.tendenciaProcesoData();
+    if (!data) return [];
+
+    return [
+      {
+        name: 'Histórico',
+        data: [...data.historico, null, null, null, null] as (number | null)[]
+      },
+      {
+        name: 'Predicción',
+        data: [null, null, null, data.historico[3], ...data.prediccion] as (number | null)[]
+      }
+    ];
+  });
+
+  apexTendenciaDrilldownChart: ApexChart = {
+    type: 'line',
+    height: 280,
+    toolbar: { show: true },
+    zoom: { enabled: false }
+  };
+
+  apexTendenciaDrilldownXAxis = computed<ApexXAxis>(() => {
+    const data = this.tendenciaProcesoData();
+    if (!data) return { categories: [] };
+    return {
+      categories: [...data.historicoSemanas, ...data.prediccionSemanas]
+    };
+  });
+
+  apexTendenciaDrilldownYAxis: ApexYAxis = {
+    min: 0,
+    max: 100,
+    labels: { formatter: (val: number) => val.toFixed(0) + '%' }
+  };
+
+  apexTendenciaDrilldownColors = ['#10b981', '#6366f1'];
+
+  apexTendenciaDrilldownStroke: ApexStroke = {
+    width: [3, 3],
+    curve: 'smooth',
+    dashArray: [0, 5]
+  };
+
+  apexTendenciaDrilldownMarkers = {
+    size: 6,
+    strokeWidth: 2,
+    hover: { size: 8 }
+  };
+
+  apexTendenciaDrilldownAnnotations = computed(() => {
+    return {
+      xaxis: [{
+        x: 'Sem 4',
+        borderColor: '#94a3b8',
+        strokeDashArray: 4,
+        label: {
+          text: 'Hoy',
+          style: { color: '#64748b', background: '#f1f5f9' }
+        }
       }]
     };
   });
 
-  chartLineOptions = {
-    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } } },
-    responsive: true, maintainAspectRatio: false,
-    scales: { y: { beginAtZero: false, min: 40, max: 100 } }
+  // Gráfica de KPI histórico para drawer de alerta
+  apexAlertaKPIHistoricoSeries = computed<ApexAxisChartSeries>(() => {
+    const detalle = this.getAlertaKPIDetalle();
+    if (!detalle) return [];
+
+    return [{
+      name: detalle.kpi.nombre,
+      data: detalle.kpi.historico
+    }];
+  });
+
+  apexAlertaKPIChart: ApexChart = {
+    type: 'area',
+    height: 180,
+    sparkline: { enabled: false },
+    toolbar: { show: false }
   };
 
-  chartBarOptions = {
-    plugins: { legend: { display: false } },
-    responsive: true, maintainAspectRatio: false,
-    indexAxis: 'y' as const,
-    scales: { x: { beginAtZero: true, max: 100 } }
+  apexAlertaKPIXAxis: ApexXAxis = {
+    categories: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+    labels: { style: { fontSize: '10px' } }
   };
 
-  chartPieOptions = {
-    plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 15 } } },
-    responsive: true, maintainAspectRatio: false
+  apexAlertaKPIYAxis: ApexYAxis = {
+    min: 0,
+    max: 100
   };
 
-  // Helper para generar tendencia mock
+  apexAlertaKPIColors = computed(() => {
+    const detalle = this.getAlertaKPIDetalle();
+    if (!detalle) return ['#94a3b8'];
+    return detalle.kpi.tendencia === 'up' ? ['#10b981'] : ['#ef4444'];
+  });
+
+  apexAlertaKPIFill: ApexFill = {
+    type: 'gradient',
+    gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1 }
+  };
+
+  // Helper para generar tendencia mock (4 semanas)
   private generarTendenciaRandom(valorFinal: number): number[] {
     const result = [];
     let val = valorFinal - 15 + Math.random() * 10;
-    for (let i = 0; i < 6; i++) {
-      result.push(Math.round(val));
-      val += (valorFinal - val) * 0.3 + (Math.random() - 0.5) * 5;
+    for (let i = 0; i < 4; i++) {
+      result.push(Math.round(Math.max(20, Math.min(100, val))));
+      val += (valorFinal - val) * 0.4 + (Math.random() - 0.5) * 8;
     }
-    result[5] = valorFinal;
+    result[3] = Math.round(valorFinal);
     return result;
   }
 
@@ -1082,15 +1167,8 @@ export class ProcesosListaComponent {
     });
   }
 
-  // Abrir menú contextual con items actualizados
-  abrirMenuProceso(proceso: Proceso, menu: any, event: Event): void {
-    this.procesoMenuActual.set(proceso);
-    this.menuItems.set(this.generarMenuItems(proceso));
-    menu.toggle(event);
-  }
-
   // Generar items del menú contextual
-  private generarMenuItems(proceso: Proceso): MenuItem[] {
+  getMenuItems(proceso: Proceso): MenuItem[] {
     const items: MenuItem[] = [
       {
         label: 'Ver detalle',
@@ -1134,11 +1212,6 @@ export class ProcesosListaComponent {
     });
 
     return items;
-  }
-
-  // Mantener compatibilidad con getMenuItems si se usa en otro lugar
-  getMenuItems(proceso: Proceso): MenuItem[] {
-    return this.generarMenuItems(proceso);
   }
 
   // Métodos para el resumen del footer
@@ -1285,6 +1358,180 @@ export class ProcesosListaComponent {
     }
   }
 
+  // ========== DRILLDOWN DRAWERS ==========
+  abrirDrilldownProceso(proceso: ProcesoKPIResumen): void {
+    this.drilldownProceso.set(proceso);
+    this.objetivoExpandido.set(null);
+    this.showDrilldownDrawer.set(true);
+  }
+
+  // Abrir drawer de alerta
+  abrirAlertaDrilldown(alerta: AlertaConsolidada): void {
+    this.alertaSeleccionada.set(alerta);
+    this.showAlertaDrilldown.set(true);
+  }
+
+  // Abrir drawer de tendencia
+  abrirTendenciaDrilldown(proceso: ProcesoKPIResumen): void {
+    this.tendenciaProcesoSeleccionado.set(proceso);
+    this.showTendenciaDrilldown.set(true);
+  }
+
+  // Objetivos del proceso para el drilldown
+  drilldownObjetivos = computed(() => {
+    const proceso = this.drilldownProceso();
+    if (!proceso) return [];
+    // Datos mock de objetivos basados en el proceso
+    const objetivosData = [
+      {
+        id: 'obj1',
+        nombre: 'Reducir tiempo de respuesta',
+        kpis: 3,
+        cumplimiento: 78,
+        cumplimientoAnterior: 72,
+        alertas: 0,
+        kpisList: [
+          { id: 'kpi1-1', nombre: 'Tiempo promedio resolución', valor: 85, tendencia: 'up' as const },
+          { id: 'kpi1-2', nombre: 'SLA cumplido', valor: 72, tendencia: 'down' as const },
+          { id: 'kpi1-3', nombre: 'Tickets cerrados a tiempo', valor: 78, tendencia: 'up' as const }
+        ]
+      },
+      {
+        id: 'obj2',
+        nombre: 'Mejorar satisfacción del cliente',
+        kpis: 2,
+        cumplimiento: 65,
+        cumplimientoAnterior: 68,
+        alertas: 1,
+        kpisList: [
+          { id: 'kpi2-1', nombre: 'NPS Score', valor: 68, tendencia: 'down' as const },
+          { id: 'kpi2-2', nombre: 'Encuestas positivas', valor: 62, tendencia: 'neutral' as const }
+        ]
+      },
+      {
+        id: 'obj3',
+        nombre: 'Optimizar recursos operativos',
+        kpis: 2,
+        cumplimiento: 82,
+        cumplimientoAnterior: 75,
+        alertas: 0,
+        kpisList: [
+          { id: 'kpi3-1', nombre: 'Eficiencia operativa', valor: 88, tendencia: 'up' as const },
+          { id: 'kpi3-2', nombre: 'Costo por transacción', valor: 76, tendencia: 'up' as const }
+        ]
+      },
+      {
+        id: 'obj4',
+        nombre: 'Cumplimiento normativo',
+        kpis: 2,
+        cumplimiento: 55,
+        cumplimientoAnterior: 60,
+        alertas: 2,
+        kpisList: [
+          { id: 'kpi4-1', nombre: 'Auditorías aprobadas', valor: 50, tendencia: 'down' as const },
+          { id: 'kpi4-2', nombre: 'Controles implementados', valor: 60, tendencia: 'neutral' as const }
+        ]
+      }
+    ];
+    return objetivosData.slice(0, proceso.totalObjetivos);
+  });
+
+  // Toggle objetivo expandido
+  toggleObjetivoExpandido(objetivoId: string): void {
+    if (this.objetivoExpandido() === objetivoId) {
+      this.objetivoExpandido.set(null);
+    } else {
+      this.objetivoExpandido.set(objetivoId);
+    }
+  }
+
+  // Navegar al detalle completo del proceso
+  navegarADetalleProceso(): void {
+    const proceso = this.drilldownProceso();
+    if (proceso) {
+      this.showDrilldownDrawer.set(false);
+      this.router.navigate(['/procesos', proceso.procesoId, 'objetivos-kpis']);
+    }
+  }
+
+  // Alertas del proceso para el drilldown
+  drilldownAlertas = computed(() => {
+    const proceso = this.drilldownProceso();
+    if (!proceso) return [];
+    return this.alertasConsolidadas()
+      .filter(a => a.procesoId === proceso.procesoId)
+      .slice(0, 5);
+  });
+
+  // Gráfica de cumplimiento para drilldown (doughnut)
+  drilldownChartCumplimiento = computed(() => {
+    const proceso = this.drilldownProceso();
+    if (!proceso) return { labels: [], datasets: [] };
+    const cumplido = proceso.cumplimientoPromedio;
+    const pendiente = 100 - cumplido;
+    return {
+      labels: ['Cumplido', 'Pendiente'],
+      datasets: [{
+        data: [cumplido, pendiente],
+        backgroundColor: [
+          cumplido >= 70 ? '#22c55e' : cumplido >= 50 ? '#f59e0b' : '#ef4444',
+          '#e5e7eb'
+        ],
+        borderWidth: 0
+      }]
+    };
+  });
+
+  // Gráfica de tendencia para drilldown (line)
+  drilldownChartTendencia = computed(() => {
+    const proceso = this.drilldownProceso();
+    if (!proceso) return { labels: [], datasets: [] };
+    // Generar datos de tendencia basados en el cumplimiento actual
+    const base = proceso.cumplimientoPromedio;
+    const variacion = proceso.tendencia === 'up' ? 5 : proceso.tendencia === 'down' ? -5 : 0;
+    return {
+      labels: ['Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+      datasets: [{
+        label: 'Cumplimiento',
+        data: [
+          Math.max(0, base - 15 + variacion),
+          Math.max(0, base - 10 + variacion),
+          Math.max(0, base - 8),
+          Math.max(0, base - 5),
+          Math.max(0, base - 2),
+          base
+        ],
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: '#3b82f6'
+      }]
+    };
+  });
+
+  // Opciones de gráfica doughnut para drilldown
+  drilldownChartOptions = {
+    cutout: '70%',
+    plugins: {
+      legend: { display: false }
+    },
+    maintainAspectRatio: false
+  };
+
+  // Opciones de gráfica line para drilldown
+  drilldownLineOptions = {
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { min: 0, max: 100, grid: { color: '#f3f4f6' } }
+    },
+    maintainAspectRatio: false
+  };
+
   // Limpiar filtros del dashboard
   limpiarFiltrosDashboard(): void {
     this.periodoFiltro.set('mes');
@@ -1312,148 +1559,4 @@ export class ProcesosListaComponent {
     if (dias < 7) return `Hace ${dias} días`;
     return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
   }
-
-  // ==================== AMCHARTS EVENT HANDLERS ====================
-
-  // Manejar cambio de período en gráfica de tendencia
-  onPeriodoTendenciaChange(periodo: ChartPeriodo): void {
-    this.periodoTendenciaAMCharts.set(periodo);
-    if (periodo !== 'custom') {
-      this.rangoCustomTendencia.set(null);
-    }
-  }
-
-  // Manejar cambio de métrica en gráfica de tendencia
-  onMetricaTendenciaChange(metrica: MetricaDisponible): void {
-    this.metricaTendenciaAMCharts.set(metrica);
-  }
-
-  // Manejar cambio de rango personalizado
-  onRangoCustomChange(rango: RangoFechas | null): void {
-    this.rangoCustomTendencia.set(rango);
-  }
-
-  // Manejar click en barra para drill-down
-  onBarDrillDown(event: { id: string; nombre: string; valor: number } | string): void {
-    const procesoId = typeof event === 'string' ? event : event.id;
-    const drillData = this.generarDrillDownData(procesoId);
-    this.drilldownData.set(drillData);
-    this.showDrilldownDrawer.set(true);
-  }
-
-  // Manejar click en dona de alertas para drill-down
-  onAlertaDrillDown(severity: AlertSeverity): void {
-    this.alertaDrilldownSeverity.set(severity);
-    this.showAlertasDrilldown.set(true);
-  }
-
-  // Cerrar drawer de drill-down de alertas
-  cerrarAlertasDrillDown(): void {
-    this.showAlertasDrilldown.set(false);
-    this.alertaDrilldownSeverity.set(null);
-  }
-
-  // Obtener label de severidad
-  getSeverityLabel(severity: AlertSeverity | null): string {
-    if (!severity) return 'Todas';
-    const labels: Record<AlertSeverity, string> = {
-      critical: 'Críticas',
-      warning: 'Advertencias',
-      info: 'Información'
-    };
-    return labels[severity];
-  }
-
-  // Obtener color de severidad
-  getSeverityColor(severity: AlertSeverity | null): string {
-    if (!severity) return '#6b7280';
-    const colors: Record<AlertSeverity, string> = {
-      critical: '#ef4444',
-      warning: '#f59e0b',
-      info: '#3b82f6'
-    };
-    return colors[severity];
-  }
-
-  // Obtener cantidad de procesos únicos afectados por alertas
-  getUniqueProcesosCount(): number {
-    const alertas = this.alertasDrilldownFiltradas();
-    const uniqueProcesos = new Set(alertas.map(a => a.procesoId));
-    return uniqueProcesos.size;
-  }
-
-  // Generar datos para drill-down
-  private generarDrillDownData(procesoId: string): DrillDownData | null {
-    const procesos = this.procesosKPIResumen();
-    const alertas = this.alertasConsolidadas();
-    const proceso = procesos.find(p => p.procesoId === procesoId);
-    if (!proceso) return null;
-
-    // Generar objetivos mock con KPIs
-    const objetivos: DrillDownObjetivo[] = [];
-    const numObjetivos = proceso.totalObjetivos || 2;
-
-    for (let i = 0; i < numObjetivos; i++) {
-      const kpis: DrillDownKPI[] = [];
-      const numKpis = Math.ceil(proceso.totalKPIs / numObjetivos);
-
-      for (let j = 0; j < numKpis; j++) {
-        const cumplimiento = Math.floor(40 + Math.random() * 60);
-        const alertaKpi = alertas.find(a =>
-          a.procesoId === procesoId && a.status === 'activa'
-        );
-
-        kpis.push({
-          id: `kpi-${i}-${j}`,
-          nombre: `KPI ${i + 1}.${j + 1}`,
-          valorActual: Math.floor(cumplimiento * 0.9),
-          valorMeta: 100,
-          unidad: '%',
-          cumplimiento,
-          tendencia: cumplimiento > 70 ? 'up' : cumplimiento > 50 ? 'neutral' : 'down',
-          tieneAlerta: !!alertaKpi && j === 0
-        });
-      }
-
-      const objetivoCumplimiento = Math.floor(kpis.reduce((sum, k) => sum + k.cumplimiento, 0) / kpis.length);
-      objetivos.push({
-        id: `obj-${i}`,
-        nombre: `Objetivo ${i + 1}: ${['Reducir riesgos', 'Mejorar eficiencia', 'Optimizar costos', 'Aumentar calidad', 'Cumplimiento normativo'][i % 5]}`,
-        cumplimiento: objetivoCumplimiento,
-        kpis
-      });
-    }
-
-    return {
-      procesoId: proceso.procesoId,
-      procesoNombre: proceso.procesoNombre,
-      cumplimientoGeneral: proceso.cumplimientoPromedio,
-      objetivos,
-      alertasActivas: proceso.alertasActivas
-    };
-  }
-
-  // Cerrar drawer de drill-down
-  cerrarDrillDown(): void {
-    this.showDrilldownDrawer.set(false);
-    this.drilldownData.set(null);
-  }
-
-  // Navegar a detalle desde drill-down
-  onNavegueADetalleDrillDown(procesoId: string): void {
-    this.cerrarDrillDown();
-    this.navegarAObjetivosKPIs(procesoId);
-  }
-
-  // Exportar gráfica AMCharts
-  exportarGraficaAMCharts(chartId: string): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Exportando...',
-      detail: `Generando imagen de la gráfica`
-    });
-  }
-
-  // Helper para sumar KPIs en template
-  sumKpis = (acc: number, obj: DrillDownObjetivo) => acc + obj.kpis.length;
 }

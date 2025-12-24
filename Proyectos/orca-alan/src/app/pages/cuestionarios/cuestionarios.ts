@@ -137,7 +137,15 @@ export class CuestionariosComponent {
   editandoDetalle = signal(false);
   marcosSeleccionados: MarcoNormativo[] = [];
   mostrarDialogoMarco = signal(false);
-  nuevoMarco = signal<{ acronimo: string; nombre: string }>({ acronimo: '', nombre: '' });
+  nuevoMarco = signal<{ acronimo: string; nombre: string; version: string; descripcion: string }>({ acronimo: '', nombre: '', version: '1.0', descripcion: '' });
+
+  // Wizard - Marcos Normativos MultiSelect
+  wizardMarcosSeleccionados: MarcoNormativo[] = [];
+  mostrarDialogoMarcoWizard = signal(false);
+
+  // Formulario inline para agregar marco
+  mostrandoFormularioMarco = signal(false);
+  nuevoMarcoInline = signal<{ acronimo: string; nombre: string; version: string }>({ acronimo: '', nombre: '', version: '' });
 
   // =============================================
   // NUEVO CUESTIONARIO
@@ -885,7 +893,7 @@ export class CuestionariosComponent {
   }
 
   mostrarDialogoNuevoMarco() {
-    this.nuevoMarco.set({ acronimo: '', nombre: '' });
+    this.nuevoMarco.set({ acronimo: '', nombre: '', version: '1.0', descripcion: '' });
     this.mostrarDialogoMarco.set(true);
   }
 
@@ -900,8 +908,8 @@ export class CuestionariosComponent {
         id: nuevo.acronimo.toLowerCase().replace(/\s+/g, '-'),
         nombre: nuevo.nombre,
         acronimo: nuevo.acronimo,
-        descripcion: '',
-        version: '1.0',
+        descripcion: nuevo.descripcion || '',
+        version: nuevo.version || '1.0',
         fechaVigencia: new Date(),
         activo: true,
         requisitos: []
@@ -911,6 +919,109 @@ export class CuestionariosComponent {
       // Seleccionarlo automáticamente
       this.marcosSeleccionados = [...this.marcosSeleccionados, nuevoMarcoNormativo];
       this.cerrarDialogoMarco();
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Marco agregado',
+        detail: `${nuevo.acronimo} ha sido agregado exitosamente`
+      });
+    }
+  }
+
+  // =============================================
+  // WIZARD - MARCOS NORMATIVOS MULTISELECT CRUD
+  // =============================================
+  mostrarDialogoNuevoMarcoWizard() {
+    this.nuevoMarco.set({ acronimo: '', nombre: '', version: '1.0', descripcion: '' });
+    this.mostrarDialogoMarcoWizard.set(true);
+  }
+
+  cerrarDialogoMarcoWizard() {
+    this.mostrarDialogoMarcoWizard.set(false);
+  }
+
+  agregarNuevoMarcoWizard() {
+    const nuevo = this.nuevoMarco();
+    if (nuevo.acronimo && nuevo.nombre) {
+      const nuevoMarcoNormativo: MarcoNormativo = {
+        id: nuevo.acronimo.toLowerCase().replace(/\s+/g, '-'),
+        nombre: nuevo.nombre,
+        acronimo: nuevo.acronimo,
+        descripcion: nuevo.descripcion || '',
+        version: nuevo.version || '1.0',
+        fechaVigencia: new Date(),
+        activo: true,
+        requisitos: []
+      };
+      // Agregar a la lista de marcos
+      this.marcosNormativos.update(marcos => [...marcos, nuevoMarcoNormativo]);
+      // Seleccionarlo automáticamente en el wizard
+      this.wizardMarcosSeleccionados = [...this.wizardMarcosSeleccionados, nuevoMarcoNormativo];
+      // Actualizar también el dato en wizardDatosGenerales
+      this.actualizarMarcosSeleccionados(this.wizardMarcosSeleccionados);
+      this.cerrarDialogoMarcoWizard();
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Marco agregado',
+        detail: `${nuevo.acronimo} ha sido agregado y seleccionado`
+      });
+    }
+  }
+
+  actualizarMarcosSeleccionados(marcos: MarcoNormativo[]) {
+    this.wizardMarcosSeleccionados = marcos;
+    // Guardar los IDs de los marcos seleccionados en wizardDatosGenerales
+    const marcosIds = marcos.map(m => m.id).join(',');
+    this.wizardDatosGenerales.update(datos => ({ ...datos, marcoNormativo: marcosIds }));
+  }
+
+  limpiarMarcosSeleccionados() {
+    this.wizardMarcosSeleccionados = [];
+    this.wizardDatosGenerales.update(datos => ({ ...datos, marcoNormativo: '' }));
+  }
+
+  eliminarMarcoSeleccionado(marco: MarcoNormativo) {
+    this.wizardMarcosSeleccionados = this.wizardMarcosSeleccionados.filter(m => m.id !== marco.id);
+    this.actualizarMarcosSeleccionados(this.wizardMarcosSeleccionados);
+  }
+
+  // =============================================
+  // FORMULARIO INLINE PARA AGREGAR MARCO
+  // =============================================
+  mostrarFormularioMarcoInline() {
+    this.nuevoMarcoInline.set({ acronimo: '', nombre: '', version: '' });
+    this.mostrandoFormularioMarco.set(true);
+  }
+
+  cancelarNuevoMarcoInline() {
+    this.mostrandoFormularioMarco.set(false);
+    this.nuevoMarcoInline.set({ acronimo: '', nombre: '', version: '' });
+  }
+
+  agregarMarcoInline() {
+    const nuevo = this.nuevoMarcoInline();
+    if (nuevo.acronimo && nuevo.nombre) {
+      const nuevoMarcoNormativo: MarcoNormativo = {
+        id: nuevo.acronimo.toLowerCase().replace(/\s+/g, '-'),
+        nombre: nuevo.nombre,
+        acronimo: nuevo.acronimo,
+        descripcion: '',
+        version: nuevo.version || '1.0',
+        fechaVigencia: new Date(),
+        activo: true,
+        requisitos: []
+      };
+      // Agregar a la lista de marcos
+      this.marcosNormativos.update(marcos => [...marcos, nuevoMarcoNormativo]);
+      // Seleccionarlo automáticamente en el wizard
+      this.wizardMarcosSeleccionados = [...this.wizardMarcosSeleccionados, nuevoMarcoNormativo];
+      this.actualizarMarcosSeleccionados(this.wizardMarcosSeleccionados);
+      // Limpiar y ocultar formulario
+      this.cancelarNuevoMarcoInline();
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Marco agregado',
+        detail: `${nuevo.acronimo} ha sido agregado y seleccionado`
+      });
     }
   }
 

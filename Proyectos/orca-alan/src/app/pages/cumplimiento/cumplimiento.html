@@ -483,16 +483,18 @@
                 @if (seccionRespuestasExpandida()) {
                   <div class="collapsible-content">
                     @for (persona of getPersonasContestaron(); track persona.id) {
-                      <div class="persona-mini">
+                      <div class="persona-mini persona-con-menu">
                         <p-avatar [label]="persona.nombre.charAt(0)" shape="circle" size="normal"
                                   [style]="{'background-color': persona.completado ? 'var(--green-100)' : 'var(--yellow-100)', 'color': persona.completado ? 'var(--green-600)' : 'var(--yellow-600)'}" />
-                        <div class="persona-mini-info">
+                        <div class="persona-mini-info flex-1">
                           <span class="persona-mini-nombre">{{ persona.nombre }}</span>
                           <div class="persona-mini-progress">
                             <p-progressBar [value]="persona.progreso" [showValue]="false" styleClass="h-0.25rem" />
                             <span class="text-xs">{{ persona.progreso }}%</span>
                           </div>
                         </div>
+                        <p-menu #menuPersonaHan [model]="getMenuPersonaExterna(persona)" [popup]="true" appendTo="body" />
+                        <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small" severity="secondary" (onClick)="menuPersonaHan.toggle($event)" />
                       </div>
                     } @empty {
                       <div class="collapsible-empty">
@@ -536,6 +538,38 @@
                   </div>
                 }
               </div>
+
+              <!-- Sección colapsable: Evaluados Externos (solo para revisiones externas) -->
+              @if (asignacionSeleccionada()?.tipoRevision === 'externa' && asignacionSeleccionada()?.evaluadosExternos?.length) {
+                <div class="collapsible-section">
+                  <div class="collapsible-header" (click)="toggleSeccionEvaluadosExternos()">
+                    <div class="collapsible-title">
+                      <i class="pi pi-globe text-purple-500"></i>
+                      <span>Evaluados Externos</span>
+                      <p-badge [value]="asignacionSeleccionada()!.evaluadosExternos!.length + ''" severity="contrast" styleClass="ml-auto" />
+                    </div>
+                    <i class="pi" [ngClass]="seccionEvaluadosExternosExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                  </div>
+                  @if (seccionEvaluadosExternosExpandida()) {
+                    <div class="collapsible-content">
+                      @for (evaluado of asignacionSeleccionada()!.evaluadosExternos; track evaluado.id) {
+                        <div class="persona-mini persona-con-menu">
+                          <p-avatar [label]="evaluado.nombre.charAt(0)" shape="circle" size="normal"
+                                    [style]="{'background-color': evaluado.invitacionEnviada ? 'var(--green-100)' : 'var(--orange-100)', 'color': evaluado.invitacionEnviada ? 'var(--green-600)' : 'var(--orange-600)'}" />
+                          <div class="persona-mini-info flex-1">
+                            <span class="persona-mini-nombre">{{ evaluado.nombre }}</span>
+                            <span class="persona-mini-email text-xs text-500">{{ evaluado.email }}</span>
+                          </div>
+                          <!-- Menú de tres puntos -->
+                          <p-menu #menuEvaluado [model]="getMenuEvaluadoExterno(evaluado)" [popup]="true" appendTo="body" />
+                          <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small"
+                                    severity="secondary" (onClick)="menuEvaluado.toggle($event)" />
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
             </div>
           </p-tabpanel>
 
@@ -847,16 +881,18 @@
                 @if (seccionRespuestasExpandida()) {
                   <div class="collapsible-content">
                     @for (persona of getPersonasContestaron(); track persona.id) {
-                      <div class="persona-mini">
+                      <div class="persona-mini persona-con-menu">
                         <p-avatar [label]="persona.nombre.charAt(0)" shape="circle" size="normal"
                                   [style]="{'background-color': persona.completado ? 'var(--green-100)' : 'var(--yellow-100)', 'color': persona.completado ? 'var(--green-600)' : 'var(--yellow-600)'}" />
-                        <div class="persona-mini-info">
+                        <div class="persona-mini-info flex-1">
                           <span class="persona-mini-nombre">{{ persona.nombre }}</span>
                           <div class="persona-mini-progress">
                             <p-progressBar [value]="persona.progreso" [showValue]="false" styleClass="h-0.25rem" />
                             <span class="text-xs">{{ persona.progreso }}%</span>
                           </div>
                         </div>
+                        <p-menu #menuPersonaHan [model]="getMenuPersonaExterna(persona)" [popup]="true" appendTo="body" />
+                        <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small" severity="secondary" (onClick)="menuPersonaHan.toggle($event)" />
                       </div>
                     } @empty {
                       <div class="collapsible-empty">
@@ -1838,6 +1874,14 @@
           </button>
         </ng-template>
       </p-step>
+      <p-step [value]="4">
+        <ng-template #content let-activateCallback="activateCallback" let-value="value">
+          <button class="p-step-header" [disabled]="!revisionCreada()">
+            <span class="p-step-number"><i class="pi pi-check"></i></span>
+            <span class="p-step-title">Completado</span>
+          </button>
+        </ng-template>
+      </p-step>
     </p-step-list>
 
     <!-- Contenido de los pasos -->
@@ -2048,23 +2092,6 @@
                               <span class="text-sm font-medium">{{ evaluado.nombre }}</span>
                               <span class="text-xs text-500">{{ evaluado.email }}</span>
                             </div>
-                            <!-- Contraseña generada visible -->
-                            @if (evaluado.password) {
-                              <div class="flex align-items-center gap-2 bg-yellow-50 px-2 py-1 border-round">
-                                <i class="pi pi-key text-yellow-600 text-sm"></i>
-                                <span class="text-xs font-mono text-yellow-700">{{ evaluado.password }}</span>
-                                <p-button icon="pi pi-copy" [rounded]="true" [text]="true" size="small"
-                                          severity="warn" pTooltip="Copiar contraseña"
-                                          (onClick)="copiarPassword(evaluado.password!)" />
-                              </div>
-                            }
-                            @if (evaluado.invitacionEnviada) {
-                              <p-tag value="Invitado" severity="success" styleClass="text-xs" />
-                            } @else {
-                              <p-button icon="pi pi-envelope" [rounded]="true" [text]="true" size="small"
-                                        severity="info" pTooltip="Enviar invitación"
-                                        (onClick)="enviarInvitacionEvaluado(evaluado)" />
-                            }
                             <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small"
                                       severity="danger" (onClick)="eliminarEvaluadoExterno(evaluado.id)" />
                           </div>
@@ -2072,19 +2099,6 @@
                       </div>
                     </div>
                   }
-
-                  <!-- Link de acceso externo -->
-                  <div class="col-12">
-                    <div class="flex align-items-center gap-3 p-3 bg-blue-50 border-round">
-                      <i class="pi pi-link text-blue-500 text-xl"></i>
-                      <div class="flex-1">
-                        <span class="text-sm font-medium text-blue-700">Link de acceso para evaluados externos</span>
-                        <p class="text-xs text-blue-600 m-0 mt-1">Los evaluados externos accederán mediante este link</p>
-                      </div>
-                      <p-button label="Copiar Link" icon="pi pi-copy" size="small" severity="info" [outlined]="true" (onClick)="copiarLinkAcceso()" />
-                      <p-button label="Portal Externo" icon="pi pi-external-link" size="small" severity="secondary" [text]="true" (onClick)="irAPortalExterno()" />
-                    </div>
-                  </div>
                 </div>
               </div>
             }
@@ -2222,7 +2236,84 @@
 
           <div class="flex justify-content-between pt-4 border-top-1 surface-border mt-4">
             <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="activateCallback(2)" />
-            <p-button [label]="modoEdicionAsignacion() ? 'Guardar Cambios' : 'Crear Revisión'" icon="pi pi-check" (onClick)="guardarAsignacion()" />
+            <p-button [label]="modoEdicionAsignacion() ? 'Guardar Cambios' : 'Crear Revisión'" icon="pi pi-check" (onClick)="crearRevisionYMostrarExito(activateCallback)" />
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ==================== PASO 5: ÉXITO ==================== -->
+      <p-step-panel [value]="4">
+        <ng-template #content let-activateCallback="activateCallback">
+          <div class="flex flex-column align-items-center p-4">
+            <!-- Icono de éxito -->
+            <div class="flex align-items-center justify-content-center bg-green-100 border-circle mb-4" style="width: 80px; height: 80px;">
+              <i class="pi pi-check-circle text-green-500 text-5xl"></i>
+            </div>
+
+            <h2 class="text-2xl font-bold text-900 m-0 mb-2">¡Revisión Creada Exitosamente!</h2>
+            <p class="text-500 text-center m-0 mb-4">
+              {{ nuevaAsignacion().tipoRevision === 'externa' ? 'La revisión externa ha sido configurada. Comparte el link con los evaluados.' : 'La revisión ha sido asignada a los usuarios seleccionados.' }}
+            </p>
+
+            <!-- Contenido específico para revisión externa -->
+            @if (nuevaAsignacion().tipoRevision === 'externa') {
+              <!-- Link de acceso -->
+              <div class="w-full surface-100 border-round p-4 mb-4">
+                <div class="flex align-items-center gap-2 mb-3">
+                  <i class="pi pi-link text-primary"></i>
+                  <span class="font-semibold text-900">Link de Acceso Externo</span>
+                </div>
+                <div class="flex align-items-center gap-2 bg-surface-0 border-round p-3 border-1 surface-border">
+                  <code class="flex-1 text-sm text-700 overflow-hidden text-overflow-ellipsis">{{ getLinkAccesoExterno() }}</code>
+                  <p-button icon="pi pi-copy" [rounded]="true" severity="secondary" pTooltip="Copiar link" (onClick)="copiarLinkAccesoExito()" />
+                </div>
+                <div class="flex gap-2 mt-3">
+                  <p-button label="Ir al Portal" icon="pi pi-external-link" severity="info" [outlined]="true" (onClick)="irAPortalExterno()" class="flex-1" />
+                </div>
+              </div>
+
+              <!-- Mensaje de envío de credenciales por correo -->
+              <div class="w-full surface-100 border-round p-4">
+                <div class="flex align-items-center gap-3">
+                  <div class="flex align-items-center justify-content-center bg-blue-100 border-circle" style="width: 48px; height: 48px;">
+                    <i class="pi pi-envelope text-blue-500 text-xl"></i>
+                  </div>
+                  <div class="flex-1">
+                    <span class="font-semibold text-900 block">Credenciales Enviadas</span>
+                    <p class="text-500 text-sm m-0 mt-1">
+                      Se ha enviado un correo electrónico a cada evaluado con sus credenciales de acceso al portal.
+                    </p>
+                  </div>
+                </div>
+                @if (nuevaAsignacion().evaluadosExternos && nuevaAsignacion().evaluadosExternos!.length > 0) {
+                  <div class="mt-3 pt-3 border-top-1 surface-border">
+                    <span class="text-sm text-700 font-medium">Evaluados notificados:</span>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                      @for (evaluado of nuevaAsignacion().evaluadosExternos; track evaluado.id) {
+                        <p-tag [value]="evaluado.nombre" icon="pi pi-user" styleClass="text-xs" />
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Contenido para revisión interna -->
+            @if (nuevaAsignacion().tipoRevision === 'interna') {
+              <div class="w-full surface-100 border-round p-4">
+                <div class="flex align-items-center gap-2 mb-3">
+                  <i class="pi pi-send text-primary"></i>
+                  <span class="font-semibold text-900">Notificaciones Enviadas</span>
+                </div>
+                <p class="text-500 m-0">
+                  Se ha notificado a los usuarios asignados sobre la nueva revisión. Pueden acceder desde su panel de tareas pendientes.
+                </p>
+              </div>
+            }
+          </div>
+
+          <div class="flex justify-content-center pt-4 border-top-1 surface-border mt-4">
+            <p-button label="Cerrar" icon="pi pi-times" severity="secondary" (onClick)="cerrarDialogoAsignacion()" />
           </div>
         </ng-template>
       </p-step-panel>
