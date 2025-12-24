@@ -1,0 +1,493 @@
+.asignacion-roles-container {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 0;
+  height: calc(100vh - 64px);
+  background-color: var(--surface-ground);
+}
+
+// ============================================================
+// Panel Izquierdo - Lista de Roles
+// ============================================================
+.roles-panel {
+  background-color: var(--surface-card);
+  border-right: 1px solid var(--surface-border);
+  display: flex;
+  flex-direction: column;
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid var(--surface-border);
+
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+  }
+}
+
+.roles-list {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rol-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+
+  &:hover {
+    background-color: var(--surface-hover);
+  }
+
+  &.selected {
+    background-color: var(--primary-50);
+    border-color: var(--primary-200);
+
+    .rol-nombre {
+      color: var(--primary-700);
+    }
+  }
+
+  .rol-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      color: #ffffff;
+      font-size: 1.125rem;
+    }
+  }
+
+  .rol-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .rol-nombre {
+      font-weight: 600;
+      color: var(--text-color);
+      font-size: 0.9375rem;
+    }
+
+    .rol-descripcion {
+      font-size: 0.8125rem;
+      color: var(--text-color-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .rol-usuarios-count {
+    flex-shrink: 0;
+  }
+}
+
+// ============================================================
+// Panel Derecho - Detalle del Rol
+// ============================================================
+.detalle-panel {
+  background-color: var(--surface-card);
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.detalle-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+
+  .rol-titulo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .rol-icon-large {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      color: #ffffff;
+      font-size: 1.5rem;
+    }
+  }
+
+  .rol-header-info {
+    h2 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    p {
+      margin: 0;
+      color: var(--text-color-secondary);
+      font-size: 0.9375rem;
+    }
+  }
+
+  .rol-actions {
+    display: flex;
+    gap: 0.25rem;
+  }
+}
+
+// ============================================================
+// Configuración del Rol
+// ============================================================
+.rol-config {
+  .config-row {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .config-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-size: 0.8125rem;
+      color: var(--text-color-secondary);
+      font-weight: 500;
+    }
+
+    .config-value {
+      font-size: 0.9375rem;
+      color: var(--text-color);
+      font-weight: 500;
+    }
+  }
+}
+
+// ============================================================
+// Sección de Permisos
+// ============================================================
+.permisos-section {
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+
+    h3 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .asignacion-select {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      label {
+        font-size: 0.875rem;
+        color: var(--text-color-secondary);
+      }
+    }
+  }
+}
+
+.modulos-permisos-grid {
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  overflow: hidden;
+
+  .grid-header {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    background-color: var(--surface-100);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--surface-border);
+
+    .header-modulo {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-color);
+    }
+
+    .header-permisos {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      text-align: center;
+
+      span {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--text-color);
+      }
+    }
+  }
+
+  .modulo-row {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--surface-border);
+    align-items: center;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+
+    .modulo-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      i {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--surface-100);
+        border-radius: 6px;
+        color: var(--text-color-secondary);
+      }
+
+      span {
+        font-weight: 500;
+        color: var(--text-color);
+      }
+    }
+
+    .modulo-permisos {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      justify-items: center;
+    }
+  }
+}
+
+.loading-permisos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.empty-permisos {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-color-secondary);
+}
+
+// ============================================================
+// Sección de Usuarios
+// ============================================================
+.usuarios-section {
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+
+    h3 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+  }
+}
+
+.usuarios-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.usuario-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: var(--surface-hover);
+  }
+
+  .usuario-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+
+    .usuario-nombre {
+      font-weight: 500;
+      color: var(--text-color);
+      font-size: 0.9375rem;
+    }
+
+    .usuario-email {
+      font-size: 0.8125rem;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .usuario-estado {
+    flex-shrink: 0;
+  }
+}
+
+.empty-usuarios {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  background-color: var(--surface-50);
+  border-radius: 8px;
+  border: 1px dashed var(--surface-border);
+
+  i {
+    font-size: 2.5rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 1rem;
+  }
+
+  p {
+    margin: 0 0 1rem 0;
+    color: var(--text-color-secondary);
+  }
+}
+
+// ============================================================
+// Estados Vacíos
+// ============================================================
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+
+  i {
+    font-size: 3rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 1rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-color-secondary);
+  }
+}
+
+.empty-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: var(--text-color-secondary);
+
+  i {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+  }
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    color: var(--text-color);
+  }
+
+  p {
+    margin: 0;
+    max-width: 300px;
+  }
+}
+
+// ============================================================
+// Responsive
+// ============================================================
+@media (max-width: 1024px) {
+  .asignacion-roles-container {
+    grid-template-columns: 280px 1fr;
+  }
+
+  .modulos-permisos-grid {
+    .grid-header,
+    .modulo-row {
+      grid-template-columns: 1fr 180px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .asignacion-roles-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .roles-panel {
+    border-right: none;
+    border-bottom: 1px solid var(--surface-border);
+    max-height: 300px;
+  }
+
+  .detalle-header {
+    flex-direction: column;
+
+    .rol-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  .modulos-permisos-grid {
+    .grid-header,
+    .modulo-row {
+      grid-template-columns: 1fr 150px;
+    }
+
+    .header-permisos span,
+    .modulo-permisos {
+      font-size: 0.75rem;
+    }
+  }
+}

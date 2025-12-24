@@ -349,7 +349,9 @@ export class SidebarComponent {
     { label: 'Cuestionarios', icon: 'pi pi-list-check', routerLink: '/cuestionarios' },
     { label: 'Cumplimiento', icon: 'pi pi-check-circle', routerLink: '/cumplimiento' },
     { label: 'Tabla Unificada', icon: 'pi pi-table', routerLink: '/tabla-unificada' },
-    { label: 'Results ML', icon: 'pi pi-chart-line', routerLink: '/results-ml' }
+    { label: 'Results ML', icon: 'pi pi-chart-line', routerLink: '/results-ml' },
+    { label: 'Usuarios y Roles', icon: 'pi pi-users', routerLink: '/usuarios-roles' },
+    { label: 'Asignación Roles', icon: 'pi pi-shield', routerLink: '/asignacion-roles' }
   ];
 
   breadcrumbs: BreadcrumbItem[] = [];
@@ -371,6 +373,8 @@ export class SidebarComponent {
     'cumplimiento': 'Cumplimiento',
     'tabla-unificada': 'Tabla Unificada',
     'results-ml': 'Results ML',
+    'usuarios-roles': 'Usuarios y Roles',
+    'asignacion-roles': 'Asignación de Roles',
     'crear': 'Crear',
     'detalle': 'Detalle',
     'objetivos-kpis': 'Objetivos y KPIs',

@@ -1,0 +1,199 @@
+// Prisma Schema para Sistema de Usuarios y Roles ORCA
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// Modelo de Usuario
+// ============================================================
+model Usuario {
+  id                    String   @id @default(cuid())
+  nombre                String
+  apellido              String
+  email                 String   @unique
+  password              String?
+  telefono              String?
+  avatar                String?
+  estado                String   @default("pendiente") // activo, inactivo, pendiente, bloqueado
+  departamento          String?
+  cargo                 String?
+  region                String   @default("MX") // MX, US, EU, LATAM, GLOBAL
+
+  // Seguridad
+  autenticacionDosFactor    Boolean  @default(false)
+  cambioPasswordRequerido   Boolean  @default(true)
+  sesionesActivas           Int      @default(0)
+  maxSesionesPermitidas     Int      @default(3)
+  ultimoCambioPassword      DateTime?
+  intentosFallidos          Int      @default(0)
+
+  // Fechas
+  fechaCreacion         DateTime @default(now())
+  fechaExpiracion       DateTime?
+  ultimoAcceso          DateTime?
+  updatedAt             DateTime @updatedAt
+
+  // Relaciones
+  roles                 UsuarioRol[]
+  activosAcceso         UsuarioActivo[]
+  logsAuditoria         LogAuditoria[]
+
+  @@map("usuarios")
+}
+
+// ============================================================
+// Modelo de Rol
+// ============================================================
+model Rol {
+  id              String       @id @default(cuid())
+  nombre          String       @unique
+  descripcion     String
+  nivelAcceso     String       @default("lectura") // lectura, escritura, admin, super_admin
+  region          String       @default("MX")
+  tipoArbol       String       @default("activos") // activos, procesos, ambos
+  color           String?
+  icono           String?
+  activo          Boolean      @default(true)
+  esRolSistema    Boolean      @default(false)
+
+  // Fechas
+  fechaCreacion       DateTime @default(now())
+  fechaModificacion   DateTime @updatedAt
+
+  // Relaciones
+  usuarios        UsuarioRol[]
+  permisos        RolPermiso[]
+
+  @@map("roles")
+}
+
+// ============================================================
+// Modelo de Permiso
+// ============================================================
+model Permiso {
+  id          String   @id @default(cuid())
+  codigo      String   @unique
+  nombre      String
+  descripcion String
+  modulo      String
+  categoria   String   // gestion_usuarios, gestion_roles, etc.
+  activo      Boolean  @default(true)
+
+  // Relaciones jerárquicas
+  padreId     String?
+  padre       Permiso? @relation("PermisoJerarquia", fields: [padreId], references: [id])
+  hijos       Permiso[] @relation("PermisoJerarquia")
+
+  // Relaciones
+  roles       RolPermiso[]
+
+  @@map("permisos")
+}
+
+// ============================================================
+// Modelo de Modulo (para agrupar permisos)
+// ============================================================
+model Modulo {
+  id          String   @id @default(cuid())
+  nombre      String   @unique
+  descripcion String?
+  icono       String?
+  orden       Int      @default(0)
+  activo      Boolean  @default(true)
+
+  // Permisos específicos del módulo
+  permisoCreacion       Boolean @default(false)
+  permisoEdicion        Boolean @default(false)
+  permisoVisualizacion  Boolean @default(true)
+  permisoEliminacion    Boolean @default(false)
+
+  @@map("modulos")
+}
+
+// ============================================================
+// Modelo de Activo (Árbol de acceso)
+// ============================================================
+model Activo {
+  id          String   @id @default(cuid())
+  nombre      String
+  tipo        String   // carpeta, archivo, configuracion, proceso
+  icono       String?
+  nivelAcceso String?
+  expanded    Boolean  @default(false)
+
+  // Relaciones jerárquicas
+  padreId     String?
+  padre       Activo?  @relation("ActivoJerarquia", fields: [padreId], references: [id])
+  hijos       Activo[] @relation("ActivoJerarquia")
+
+  // Relaciones
+  usuarios    UsuarioActivo[]
+
+  @@map("activos")
+}
+
+// ============================================================
+// Modelo de Log de Auditoría
+// ============================================================
+model LogAuditoria {
+  id              String   @id @default(cuid())
+  accion          String   // crear, modificar, eliminar, etc.
+  entidad         String
+  entidadId       String
+  entidadNombre   String
+  detalles        String?
+  ip              String?
+  userAgent       String?
+  fecha           DateTime @default(now())
+
+  // Relaciones
+  usuarioId       String
+  usuario         Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@map("logs_auditoria")
+}
+
+// ============================================================
+// Tablas de Relación (Many-to-Many)
+// ============================================================
+
+model UsuarioRol {
+  usuarioId   String
+  rolId       String
+  fechaAsignacion DateTime @default(now())
+
+  usuario     Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  rol         Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, rolId])
+  @@map("usuarios_roles")
+}
+
+model RolPermiso {
+  rolId       String
+  permisoId   String
+
+  rol         Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  permiso     Permiso @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+
+  @@id([rolId, permisoId])
+  @@map("roles_permisos")
+}
+
+model UsuarioActivo {
+  usuarioId   String
+  activoId    String
+  nivelAcceso String @default("lectura")
+
+  usuario     Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  activo      Activo  @relation(fields: [activoId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, activoId])
+  @@map("usuarios_activos")
+}
