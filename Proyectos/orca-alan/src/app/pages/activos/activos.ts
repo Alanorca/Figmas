@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { CardModule } from 'primeng/card';
@@ -18,7 +18,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { MenuItem } from 'primeng/api';
-import { MockDataService } from '../../services/mock-data.service';
+import { ApiService } from '../../services/api.service';
 import { Activo, TipoActivo, Criticidad } from '../../models';
 
 @Component({
@@ -33,10 +33,21 @@ import { Activo, TipoActivo, Criticidad } from '../../models';
   templateUrl: './activos.html',
   styleUrl: './activos.scss'
 })
-export class ActivosComponent {
-  private mockData = inject(MockDataService);
+export class ActivosComponent implements OnInit {
+  private api = inject(ApiService);
 
-  activos = this.mockData.activos;
+  activos = signal<Activo[]>([]);
+
+  ngOnInit(): void {
+    this.cargarActivos();
+  }
+
+  cargarActivos(): void {
+    this.api.getActivos().subscribe({
+      next: (data) => this.activos.set(data),
+      error: (err) => console.error('Error cargando activos:', err)
+    });
+  }
   showDialog = signal(false);
   showDetailDialog = signal(false);
   selectedActivo = signal<Activo | null>(null);
@@ -108,8 +119,13 @@ export class ActivosComponent {
   saveActivo(): void {
     const activo = this.nuevoActivo();
     if (activo.nombre && activo.responsable && activo.departamento) {
-      this.mockData.addActivo(activo);
-      this.showDialog.set(false);
+      this.api.createActivo(activo).subscribe({
+        next: () => {
+          this.cargarActivos();
+          this.showDialog.set(false);
+        },
+        error: (err) => console.error('Error creando activo:', err)
+      });
     }
   }
 
@@ -123,7 +139,7 @@ export class ActivosComponent {
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.viewDetail(activo) },
       { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(activo) },
       { separator: true },
-      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', activo.id) }
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.eliminarActivo(activo) }
     ];
   }
 
@@ -185,10 +201,21 @@ export class ActivosComponent {
   guardarEdicion(activo: Activo, event: Event): void {
     event.stopPropagation();
     const valores = this.valoresEdicion();
-    console.log(`Guardando edición del activo ${activo.id}:`, valores);
-    // Aquí iría la lógica para actualizar el activo
-    this.activoEditando.set(null);
-    this.valoresEdicion.set({});
+    this.api.updateActivo(activo.id, valores).subscribe({
+      next: () => {
+        this.cargarActivos();
+        this.activoEditando.set(null);
+        this.valoresEdicion.set({});
+      },
+      error: (err) => console.error('Error actualizando activo:', err)
+    });
+  }
+
+  eliminarActivo(activo: Activo): void {
+    this.api.deleteActivo(activo.id).subscribe({
+      next: () => this.cargarActivos(),
+      error: (err) => console.error('Error eliminando activo:', err)
+    });
   }
 
   cancelarEdicion(event: Event): void {

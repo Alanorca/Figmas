@@ -559,11 +559,8 @@ export class WidgetConfiguratorComponent {
     return item?.tipo === 'graficas-interactivas';
   });
 
-  // Computed: es widget de mapa de riesgos
-  esMapaRiesgos = computed(() => {
-    const item = this.catalogItem();
-    return item?.tipo === 'mapa-riesgos';
-  });
+  // Computed: es widget de mapa de riesgos (obsoleto - siempre falso)
+  esMapaRiesgos = computed(() => false);
 
   // Computed: info del KPI seleccionado
   kpiInfoSeleccionado = computed(() => {

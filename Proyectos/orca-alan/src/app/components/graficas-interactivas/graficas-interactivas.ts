@@ -67,6 +67,8 @@ interface CampoDisponible {
   value: string;
   tipo: 'categoria' | 'numerico' | 'fecha';
   descripcion: string;
+  conteo?: number;
+  valores?: { [k: string]: number };
 }
 
 interface RecomendacionAsistente {

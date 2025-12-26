@@ -59,15 +59,25 @@ import { DashboardService } from '../../services/dashboard.service';
                 pTooltip="Opciones">
               </p-button>
               <p-menu #menu [model]="menuItems()" [popup]="true" appendTo="body"></p-menu>
-            } @else if (widget.config.showActions) {
+            } @else {
               <p-button
-                icon="pi pi-external-link"
+                icon="pi pi-download"
                 [rounded]="true"
                 [text]="true"
                 size="small"
-                (onClick)="onDrilldown.emit(widget)"
-                pTooltip="Ver detalle">
+                (onClick)="onExport.emit(widget)"
+                pTooltip="Descargar">
               </p-button>
+              @if (widget.config.showActions) {
+                <p-button
+                  icon="pi pi-external-link"
+                  [rounded]="true"
+                  [text]="true"
+                  size="small"
+                  (onClick)="onDrilldown.emit(widget)"
+                  pTooltip="Ver detalle">
+                </p-button>
+              }
             }
           </div>
         </div>
@@ -277,6 +287,7 @@ export class DashboardWidgetComponent {
   @Output() onDuplicate = new EventEmitter<DashboardWidget>();
   @Output() onDrilldown = new EventEmitter<DashboardWidget>();
   @Output() onRefresh = new EventEmitter<DashboardWidget>();
+  @Output() onExport = new EventEmitter<DashboardWidget>();
 
   modoEdicion = this.dashboardService.modoEdicion;
 
@@ -295,6 +306,11 @@ export class DashboardWidgetComponent {
       label: 'Duplicar',
       icon: 'pi pi-copy',
       command: () => this.onDuplicate.emit(this.widget)
+    },
+    {
+      label: 'Descargar',
+      icon: 'pi pi-download',
+      command: () => this.onExport.emit(this.widget)
     },
     { separator: true },
     {

@@ -15,16 +15,20 @@ import {
   FiltroResultsML,
   HallazgoBase
 } from '../models/results-ml.models';
-import { MockDataService } from './mock-data.service';
+import { ApiService } from './api.service';
 import { FeedbackMLService } from './feedback-ml.service';
+import { Activo } from '../models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ResultsMLService {
-  private mockDataService = inject(MockDataService);
+  private api = inject(ApiService);
   private feedbackService = inject(FeedbackMLService);
   private router = inject(Router);
+
+  // Data cargada desde API
+  private activosData = signal<Activo[]>([]);
   // Estado del módulo
   private estado = signal<EstadoResultsML>({
     entidadSeleccionada: null,
@@ -46,9 +50,9 @@ export class ResultsMLService {
   // Entidades recientes
   private entidadesRecientes = signal<EntidadML[]>([]);
 
-  // Entidades derivadas de MockDataService (activos reales del sistema)
-  private entidadesFromMock = computed<EntidadML[]>(() => {
-    const activos = this.mockDataService.activos();
+  // Entidades derivadas de API (activos reales del sistema)
+  private entidadesFromApi = computed<EntidadML[]>(() => {
+    const activos = this.activosData();
     return activos.map(activo => ({
       id: activo.id,
       nombre: activo.nombre,
@@ -69,7 +73,7 @@ export class ResultsMLService {
 
   // Combina entidades de activos reales + procesos mock
   private entidadesMock = computed<EntidadML[]>(() => {
-    return [...this.entidadesFromMock(), ...this.entidadesProcesos()];
+    return [...this.entidadesFromApi(), ...this.entidadesProcesos()];
   });
 
   // Helper para contar hallazgos pendientes
@@ -88,7 +92,19 @@ export class ResultsMLService {
   private resultadosMock: Map<string, ResultadoAnalisis> = new Map();
 
   constructor() {
+    this.cargarDatosDesdeApi();
     this.inicializarDatosMock();
+  }
+
+  private cargarDatosDesdeApi(): void {
+    this.api.getActivos().subscribe({
+      next: (data) => {
+        this.activosData.set(data);
+        // Reinicializar datos mock cuando lleguen los activos
+        this.inicializarDatosMock();
+      },
+      error: (err) => console.error('Error cargando activos para Results ML:', err)
+    });
   }
 
   private inicializarDatosMock(): void {
@@ -585,18 +601,21 @@ export class ResultsMLService {
       comentarios: opciones.comentarios
     });
 
-    // Crear riesgo real en MockDataService si se solicitó
+    // Crear riesgo real en API si se solicitó
     if (opciones.crearRiesgo && entidad.tipo === 'activo') {
-      const activo = this.mockDataService.getActivoById(entidad.id);
+      const activo = this.activosData().find(a => a.id === entidad.id);
       if (activo) {
-        this.mockDataService.addRiesgo(entidad.id, {
+        this.api.createRiesgo({
+          activoId: entidad.id,
           descripcion: `[ML] ${hallazgo.titulo}: ${hallazgo.descripcion}`,
           probabilidad: this.calcularProbabilidadDesdeConfianza(hallazgo.confianza),
           impacto: this.calcularImpactoDesdeHallazgo(hallazgo),
           estado: 'identificado',
           responsable: entidad.responsable || 'Sin asignar'
+        }).subscribe({
+          next: () => console.log('Riesgo creado en módulo de Riesgos para activo:', entidad.nombre),
+          error: (err) => console.error('Error creando riesgo:', err)
         });
-        console.log('✅ Riesgo creado en módulo de Riesgos para activo:', entidad.nombre);
       }
     }
 

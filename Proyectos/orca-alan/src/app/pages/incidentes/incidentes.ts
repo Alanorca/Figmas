@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -18,8 +18,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { MenuItem } from 'primeng/api';
-import { MockDataService } from '../../services/mock-data.service';
-import { Incidente, Severidad, EstadoIncidente } from '../../models';
+import { ApiService } from '../../services/api.service';
+import { Incidente, Severidad, EstadoIncidente, Activo } from '../../models';
 
 interface IncidenteConActivo extends Incidente {
   activoNombre: string;
@@ -36,10 +36,11 @@ interface IncidenteConActivo extends Incidente {
   templateUrl: './incidentes.html',
   styleUrl: './incidentes.scss'
 })
-export class IncidentesComponent {
-  private mockData = inject(MockDataService);
+export class IncidentesComponent implements OnInit {
+  private api = inject(ApiService);
 
-  activos = this.mockData.activos;
+  activos = signal<Activo[]>([]);
+  incidentesData = signal<any[]>([]);
   showDialog = signal(false);
 
   // Selección múltiple
@@ -52,13 +53,26 @@ export class IncidentesComponent {
   // Drawer de acciones masivas
   showAccionesMasivasDrawer = signal(false);
 
+  ngOnInit(): void {
+    this.cargarDatos();
+  }
+
+  cargarDatos(): void {
+    this.api.getActivos().subscribe({
+      next: (data) => this.activos.set(data),
+      error: (err) => console.error('Error cargando activos:', err)
+    });
+    this.api.getIncidentes().subscribe({
+      next: (data) => this.incidentesData.set(data),
+      error: (err) => console.error('Error cargando incidentes:', err)
+    });
+  }
+
   incidentes = computed<IncidenteConActivo[]>(() => {
-    return this.activos().flatMap(activo =>
-      activo.incidentes.map(incidente => ({
-        ...incidente,
-        activoNombre: activo.nombre
-      }))
-    );
+    return this.incidentesData().map(incidente => ({
+      ...incidente,
+      activoNombre: incidente.activo?.nombre || 'Sin activo'
+    }));
   });
 
   // Computed properties for KPIs (arrow functions not allowed in templates)
@@ -138,15 +152,28 @@ export class IncidentesComponent {
   saveIncidente(): void {
     const incidente = this.nuevoIncidente();
     if (incidente.activoId && incidente.titulo && incidente.reportadoPor) {
-      this.mockData.addIncidente(incidente.activoId, {
+      this.api.createIncidente({
+        activoId: incidente.activoId,
         titulo: incidente.titulo,
         descripcion: incidente.descripcion,
         severidad: incidente.severidad,
         estado: incidente.estado,
         reportadoPor: incidente.reportadoPor
+      }).subscribe({
+        next: () => {
+          this.cargarDatos();
+          this.showDialog.set(false);
+        },
+        error: (err) => console.error('Error creando incidente:', err)
       });
-      this.showDialog.set(false);
     }
+  }
+
+  eliminarIncidente(incidente: IncidenteConActivo): void {
+    this.api.deleteIncidente(incidente.id).subscribe({
+      next: () => this.cargarDatos(),
+      error: (err) => console.error('Error eliminando incidente:', err)
+    });
   }
 
   getMenuItemsIncidente(incidente: IncidenteConActivo): MenuItem[] {
@@ -154,7 +181,7 @@ export class IncidentesComponent {
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => console.log('Ver', incidente.id) },
       { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(incidente) },
       { separator: true },
-      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', incidente.id) }
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.eliminarIncidente(incidente) }
     ];
   }
 
@@ -201,9 +228,14 @@ export class IncidentesComponent {
   guardarEdicion(incidente: IncidenteConActivo, event: Event): void {
     event.stopPropagation();
     const valores = this.valoresEdicion();
-    console.log(`Guardando edición del incidente ${incidente.id}:`, valores);
-    this.incidenteEditando.set(null);
-    this.valoresEdicion.set({});
+    this.api.updateIncidente(incidente.id, valores).subscribe({
+      next: () => {
+        this.cargarDatos();
+        this.incidenteEditando.set(null);
+        this.valoresEdicion.set({});
+      },
+      error: (err) => console.error('Error actualizando incidente:', err)
+    });
   }
 
   cancelarEdicion(event: Event): void {

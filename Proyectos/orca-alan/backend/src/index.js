@@ -5,13 +5,21 @@ const dotenv = require('dotenv');
 // Cargar variables de entorno
 dotenv.config();
 
-// Importar rutas
+// Importar rutas existentes
 const usuariosRoutes = require('./routes/usuarios.routes');
 const rolesRoutes = require('./routes/roles.routes');
 const permisosRoutes = require('./routes/permisos.routes');
 const modulosRoutes = require('./routes/modulos.routes');
 const activosRoutes = require('./routes/activos.routes');
 const estadisticasRoutes = require('./routes/estadisticas.routes');
+
+// Importar nuevas rutas
+const activosNegocioRoutes = require('./routes/activos-negocio.routes');
+const procesosRoutes = require('./routes/procesos.routes');
+const cuestionariosRoutes = require('./routes/cuestionarios.routes');
+const organigramasRoutes = require('./routes/organigramas.routes');
+const catalogosRoutes = require('./routes/catalogos.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,13 +39,21 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rutas de la API
+// Rutas de la API - Existentes
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/roles', rolesRoutes);
 app.use('/api/permisos', permisosRoutes);
 app.use('/api/modulos', modulosRoutes);
-app.use('/api/activos', activosRoutes);
+app.use('/api/activos-acceso', activosRoutes);
 app.use('/api/estadisticas', estadisticasRoutes);
+
+// Rutas de la API - Nuevas
+app.use('/api/activos', activosNegocioRoutes);
+app.use('/api/procesos', procesosRoutes);
+app.use('/api/cuestionarios', cuestionariosRoutes);
+app.use('/api/organigramas', organigramasRoutes);
+app.use('/api/catalogos', catalogosRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Ruta de health check
 app.get('/api/health', (req, res) => {

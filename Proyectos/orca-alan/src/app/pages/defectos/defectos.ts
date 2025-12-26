@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -17,8 +17,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { MenuItem } from 'primeng/api';
-import { MockDataService } from '../../services/mock-data.service';
-import { Defecto, TipoDefecto, Severidad, EstadoDefecto } from '../../models';
+import { ApiService } from '../../services/api.service';
+import { Defecto, TipoDefecto, Severidad, EstadoDefecto, Activo } from '../../models';
 
 interface DefectoConActivo extends Defecto {
   activoNombre: string;
@@ -35,10 +35,11 @@ interface DefectoConActivo extends Defecto {
   templateUrl: './defectos.html',
   styleUrl: './defectos.scss'
 })
-export class DefectosComponent {
-  private mockData = inject(MockDataService);
+export class DefectosComponent implements OnInit {
+  private api = inject(ApiService);
 
-  activos = this.mockData.activos;
+  activos = signal<Activo[]>([]);
+  defectosData = signal<any[]>([]);
   showDialog = signal(false);
 
   // Selección múltiple
@@ -51,13 +52,26 @@ export class DefectosComponent {
   // Drawer de acciones masivas
   showAccionesMasivasDrawer = signal(false);
 
+  ngOnInit(): void {
+    this.cargarDatos();
+  }
+
+  cargarDatos(): void {
+    this.api.getActivos().subscribe({
+      next: (data) => this.activos.set(data),
+      error: (err) => console.error('Error cargando activos:', err)
+    });
+    this.api.getDefectos().subscribe({
+      next: (data) => this.defectosData.set(data),
+      error: (err) => console.error('Error cargando defectos:', err)
+    });
+  }
+
   defectos = computed<DefectoConActivo[]>(() => {
-    return this.activos().flatMap(activo =>
-      activo.defectos.map(defecto => ({
-        ...defecto,
-        activoNombre: activo.nombre
-      }))
-    );
+    return this.defectosData().map(defecto => ({
+      ...defecto,
+      activoNombre: defecto.activo?.nombre || 'Sin activo'
+    }));
   });
 
   // Computed properties for KPIs (arrow functions not allowed in templates)
@@ -148,16 +162,29 @@ export class DefectosComponent {
   saveDefecto(): void {
     const defecto = this.nuevoDefecto();
     if (defecto.activoId && defecto.titulo && defecto.detectadoPor) {
-      this.mockData.addDefecto(defecto.activoId, {
+      this.api.createDefecto({
+        activoId: defecto.activoId,
         titulo: defecto.titulo,
         descripcion: defecto.descripcion,
         tipo: defecto.tipo,
         prioridad: defecto.prioridad,
         estado: defecto.estado,
         detectadoPor: defecto.detectadoPor
+      }).subscribe({
+        next: () => {
+          this.cargarDatos();
+          this.showDialog.set(false);
+        },
+        error: (err) => console.error('Error creando defecto:', err)
       });
-      this.showDialog.set(false);
     }
+  }
+
+  eliminarDefecto(defecto: DefectoConActivo): void {
+    this.api.deleteDefecto(defecto.id).subscribe({
+      next: () => this.cargarDatos(),
+      error: (err) => console.error('Error eliminando defecto:', err)
+    });
   }
 
   getMenuItemsDefecto(defecto: DefectoConActivo): MenuItem[] {
@@ -165,7 +192,7 @@ export class DefectosComponent {
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => console.log('Ver', defecto.id) },
       { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(defecto) },
       { separator: true },
-      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', defecto.id) }
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.eliminarDefecto(defecto) }
     ];
   }
 
@@ -214,9 +241,14 @@ export class DefectosComponent {
   guardarEdicion(defecto: DefectoConActivo, event: Event): void {
     event.stopPropagation();
     const valores = this.valoresEdicion();
-    console.log(`Guardando edición del defecto ${defecto.id}:`, valores);
-    this.defectoEditando.set(null);
-    this.valoresEdicion.set({});
+    this.api.updateDefecto(defecto.id, valores).subscribe({
+      next: () => {
+        this.cargarDatos();
+        this.defectoEditando.set(null);
+        this.valoresEdicion.set({});
+      },
+      error: (err) => console.error('Error actualizando defecto:', err)
+    });
   }
 
   cancelarEdicion(event: Event): void {
