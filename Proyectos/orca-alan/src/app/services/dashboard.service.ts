@@ -6,6 +6,8 @@
 // ============================================================================
 
 import { Injectable, signal, computed } from '@angular/core';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import {
   DashboardConfig,
   DashboardState,
@@ -21,6 +23,27 @@ import { GridsterConfig, GridsterItem, DisplayGrid, CompactType, GridType } from
 
 const STORAGE_KEY = 'orca_dashboard_config';
 const STORAGE_STATE_KEY = 'orca_dashboard_state';
+
+// Tipos de widget válidos para validación
+const VALID_WIDGET_TYPES: TipoWidget[] = [
+  'kpi-card',
+  'kpi-grid',
+  'graficas-interactivas',
+  'graficas-guardadas',
+  'table-mini',
+  'actividad-reciente',
+  'calendario'
+];
+
+// Migración de tipos de widget antiguos a los nuevos
+const WIDGET_TYPE_MIGRATION: Record<string, TipoWidget> = {
+  'chart-bar': 'graficas-interactivas',
+  'chart-line': 'graficas-interactivas',
+  'chart-pie': 'graficas-interactivas',
+  'chart-donut': 'graficas-interactivas',
+  'alertas-list': 'actividad-reciente',
+  'chart': 'graficas-interactivas'
+};
 
 @Injectable({
   providedIn: 'root'
@@ -38,6 +61,18 @@ export class DashboardService {
     isResizing: false,
     hasUnsavedChanges: false
   });
+
+  // ==================== DEBOUNCE SUBJECTS ====================
+
+  /** Subject para debounce de cambios de posición */
+  private widgetChange$ = new Subject<DashboardWidget>();
+
+  /** Subject para debounce de resize */
+  private widgetResize$ = new Subject<DashboardWidget>();
+
+  /** Signal público para notificar resize a widgets */
+  private _widgetResized = signal<{ id: string; cols: number; rows: number } | null>(null);
+  readonly widgetResized = this._widgetResized.asReadonly();
 
   // ==================== SELECTORES (COMPUTED) ====================
 
@@ -156,6 +191,39 @@ export class DashboardService {
 
   constructor() {
     this.cargarConfiguracion();
+    this.initDebounceSubscriptions();
+  }
+
+  /** Inicializar suscripciones con debounce para optimizar callbacks de Gridster */
+  private initDebounceSubscriptions(): void {
+    // Debounce para cambios de posición (100ms)
+    this.widgetChange$.pipe(
+      debounceTime(100)
+    ).subscribe(widget => {
+      this.actualizarWidget(widget.id, {
+        x: widget.x,
+        y: widget.y,
+        cols: widget.cols,
+        rows: widget.rows
+      });
+    });
+
+    // Debounce para resize (100ms) con notificación a widgets
+    this.widgetResize$.pipe(
+      debounceTime(100)
+    ).subscribe(widget => {
+      this.actualizarWidget(widget.id, {
+        cols: widget.cols,
+        rows: widget.rows
+      });
+
+      // Notificar a widgets que se ha cambiado el tamaño
+      this._widgetResized.set({
+        id: widget.id,
+        cols: widget.cols,
+        rows: widget.rows
+      });
+    });
   }
 
   // ==================== MÉTODOS DE PERSISTENCIA ====================
@@ -169,16 +237,48 @@ export class DashboardService {
 
       if (savedConfigs) {
         configuraciones = JSON.parse(savedConfigs);
-        // Restaurar fechas
+        // Restaurar fechas y filtrar widgets con tipos inválidos
         configuraciones = configuraciones.map(c => ({
           ...c,
           createdAt: new Date(c.createdAt),
           updatedAt: new Date(c.updatedAt),
-          widgets: c.widgets.map(w => ({
-            ...w,
-            createdAt: w.createdAt ? new Date(w.createdAt) : undefined,
-            updatedAt: w.updatedAt ? new Date(w.updatedAt) : undefined
-          }))
+          widgets: c.widgets
+            .map(w => {
+              // Migrar tipos de widget antiguos a los nuevos
+              let tipo: TipoWidget = w.tipo as TipoWidget;
+              const oldTipo = w.tipo as string;
+              let config = { ...w.config };
+
+              if (WIDGET_TYPE_MIGRATION[oldTipo]) {
+                console.info(`Migrando widget tipo "${oldTipo}" a "${WIDGET_TYPE_MIGRATION[oldTipo]}"`);
+                tipo = WIDGET_TYPE_MIGRATION[oldTipo];
+
+                // Agregar config por defecto para gráficas migradas
+                if (tipo === 'graficas-interactivas') {
+                  config = {
+                    ...config,
+                    graficaTipo: oldTipo === 'chart-line' ? 'line' : oldTipo === 'chart-bar' ? 'column' : 'donut',
+                    graficaFuenteDatos: config.graficaFuenteDatos || 'procesos',
+                    graficaAgrupacion: config.graficaAgrupacion || 'estado',
+                    graficaPaleta: config.graficaPaleta || 'vibrant',
+                    graficaTema: config.graficaTema || 'light'
+                  };
+                }
+              }
+              return { ...w, tipo, config } as DashboardWidget;
+            })
+            .filter(w => {
+              const isValid = VALID_WIDGET_TYPES.includes(w.tipo as TipoWidget);
+              if (!isValid) {
+                console.warn(`Widget con tipo inválido filtrado: ${w.tipo}`);
+              }
+              return isValid;
+            })
+            .map(w => ({
+              ...w,
+              createdAt: w.createdAt ? new Date(w.createdAt) : undefined,
+              updatedAt: w.updatedAt ? new Date(w.updatedAt) : undefined
+            }))
         }));
       }
 
@@ -416,22 +516,16 @@ export class DashboardService {
 
   // ==================== CALLBACKS DE GRIDSTER ====================
 
-  /** Callback cuando un widget cambia de posición */
+  /** Callback cuando un widget cambia de posición - usa debounce */
   private onWidgetChange(widget: DashboardWidget): void {
-    this.actualizarWidget(widget.id, {
-      x: widget.x,
-      y: widget.y,
-      cols: widget.cols,
-      rows: widget.rows
-    });
+    // Emitir al Subject con debounce para evitar múltiples actualizaciones
+    this.widgetChange$.next(widget);
   }
 
-  /** Callback cuando un widget se redimensiona */
+  /** Callback cuando un widget se redimensiona - usa debounce */
   private onWidgetResize(widget: DashboardWidget): void {
-    this.actualizarWidget(widget.id, {
-      cols: widget.cols,
-      rows: widget.rows
-    });
+    // Emitir al Subject con debounce para evitar múltiples actualizaciones
+    this.widgetResize$.next(widget);
   }
 
   // ==================== MÉTODOS DE CONFIGURACIÓN ====================
