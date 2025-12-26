@@ -1,7 +1,7 @@
-// Tipos para la tabla unificada de riesgos e incidentes
+// Tipos para la tabla unificada de todas las entidades GRC
 
-export type TipoEntidad = 'riesgo' | 'incidente';
-export type TipoContenedor = 'activo' | 'proceso';
+export type TipoEntidad = 'riesgo' | 'incidente' | 'activo' | 'proceso' | 'defecto' | 'revision' | 'cumplimiento';
+export type TipoContenedor = 'activo' | 'proceso' | 'ninguno';
 
 // Tipo de columna para filtros
 export type TipoColumna = 'texto' | 'numero' | 'fecha' | 'seleccion' | 'contenedor';
@@ -15,15 +15,16 @@ export type OperadorFecha = 'igual' | 'antes' | 'despues' | 'entre';
 export interface RegistroUnificado {
   id: string;
   tipoEntidad: TipoEntidad;
-  contenedorId: string;
-  contenedorNombre: string;
+  contenedorId?: string;
+  contenedorNombre?: string;
   tipoContenedor: TipoContenedor;
 
   // Campos comunes
+  nombre?: string;
   descripcion: string;
   estado: string;
   fecha: Date;
-  responsable: string;
+  responsable?: string;
 
   // Campos específicos de riesgo
   probabilidad?: 1 | 2 | 3 | 4 | 5;
@@ -34,6 +35,19 @@ export interface RegistroUnificado {
   titulo?: string;
   severidad?: string;
   reportadoPor?: string;
+
+  // Campos específicos de activo
+  tipo?: string;
+  criticidad?: string;
+  departamento?: string;
+
+  // Campos específicos de proceso
+  version?: string;
+
+  // Campos específicos de defecto
+  prioridad?: string;
+  detectadoPor?: string;
+  tipoDefecto?: string;
 }
 
 // Configuración de columna

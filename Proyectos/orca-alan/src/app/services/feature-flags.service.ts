@@ -12,8 +12,7 @@ export class FeatureFlagsService {
 
   // Features en desarrollo (no visibles cuando devMode está OFF)
   private readonly devFeatures = new Set<string>([
-    '/controles',
-    '/results-ml'
+    '/controles'
   ]);
 
   constructor() {

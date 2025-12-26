@@ -20,6 +20,10 @@ export class TablaUnificadaService {
   private activosData = signal<Activo[]>([]);
   private riesgosData = signal<any[]>([]);
   private incidentesData = signal<any[]>([]);
+  private procesosData = signal<any[]>([]);
+  private defectosData = signal<any[]>([]);
+  private revisionesData = signal<any[]>([]);
+  private cumplimientoData = signal<any[]>([]);
 
   constructor() {
     this.cargarDatos();
@@ -27,16 +31,53 @@ export class TablaUnificadaService {
 
   private cargarDatos(): void {
     this.api.getActivos().subscribe({
-      next: (data) => this.activosData.set(data),
+      next: (data) => {
+        console.log('Activos cargados:', data.length);
+        this.activosData.set(data);
+      },
       error: (err) => console.error('Error cargando activos:', err)
     });
     this.api.getRiesgos().subscribe({
-      next: (data) => this.riesgosData.set(data),
+      next: (data) => {
+        console.log('Riesgos cargados:', data.length);
+        this.riesgosData.set(data);
+      },
       error: (err) => console.error('Error cargando riesgos:', err)
     });
     this.api.getIncidentes().subscribe({
-      next: (data) => this.incidentesData.set(data),
+      next: (data) => {
+        console.log('Incidentes cargados:', data.length);
+        this.incidentesData.set(data);
+      },
       error: (err) => console.error('Error cargando incidentes:', err)
+    });
+    this.api.getProcesos().subscribe({
+      next: (data) => {
+        console.log('Procesos cargados:', data.length);
+        this.procesosData.set(data);
+      },
+      error: (err) => console.error('Error cargando procesos:', err)
+    });
+    this.api.getDefectos().subscribe({
+      next: (data) => {
+        console.log('Defectos cargados:', data.length);
+        this.defectosData.set(data);
+      },
+      error: (err) => console.error('Error cargando defectos:', err)
+    });
+    this.api.getAsignacionesCuestionario().subscribe({
+      next: (data) => {
+        console.log('Revisiones cargadas:', data.length);
+        this.revisionesData.set(data);
+      },
+      error: (err) => console.error('Error cargando revisiones:', err)
+    });
+    this.api.getMarcosNormativos().subscribe({
+      next: (data) => {
+        console.log('Marcos normativos cargados:', data.length);
+        this.cumplimientoData.set(data);
+      },
+      error: (err) => console.error('Error cargando cumplimiento:', err)
     });
   }
 
@@ -44,8 +85,8 @@ export class TablaUnificadaService {
   private estado = signal<EstadoTabla>({
     entidadesSeleccionadas: ['riesgo'],
     filtrosActivos: [],
-    columnasVisibles: ['tipoEntidad', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable', 'nivelRiesgo', 'severidad'],
-    ordenColumnas: ['tipoEntidad', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable', 'nivelRiesgo', 'severidad'],
+    columnasVisibles: ['tipoEntidad', 'nombre', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable'],
+    ordenColumnas: ['tipoEntidad', 'nombre', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable'],
     ordenamiento: null,
     pagina: 0,
     registrosPorPagina: 10
@@ -56,19 +97,23 @@ export class TablaUnificadaService {
 
   // Configuración de columnas
   columnasConfig = signal<ColumnaConfig[]>([
-    { field: 'tipoEntidad', header: 'Tipo', tipo: 'seleccion', visible: true, sortable: true, filterable: true, orden: 0, width: '100px', opciones: [{ label: 'Riesgo', value: 'riesgo' }, { label: 'Incidente', value: 'incidente' }] },
+    { field: 'tipoEntidad', header: 'Tipo', tipo: 'seleccion', visible: true, sortable: true, filterable: true, orden: 0, width: '100px', opciones: [{ label: 'Riesgo', value: 'riesgo' }, { label: 'Incidente', value: 'incidente' }, { label: 'Activo', value: 'activo' }, { label: 'Proceso', value: 'proceso' }, { label: 'Defecto', value: 'defecto' }, { label: 'Revisión', value: 'revision' }, { label: 'Cumplimiento', value: 'cumplimiento' }] },
     { field: 'id', header: 'ID', tipo: 'texto', visible: false, sortable: true, filterable: true, orden: 1, width: '100px' },
-    { field: 'descripcion', header: 'Descripción', tipo: 'texto', visible: true, sortable: true, filterable: true, orden: 2, width: '250px' },
-    { field: 'titulo', header: 'Título', tipo: 'texto', visible: false, sortable: true, filterable: true, orden: 3, width: '200px' },
+    { field: 'nombre', header: 'Nombre', tipo: 'texto', visible: true, sortable: true, filterable: true, orden: 2, width: '200px' },
+    { field: 'descripcion', header: 'Descripción', tipo: 'texto', visible: true, sortable: true, filterable: true, orden: 3, width: '250px' },
     { field: 'contenedorNombre', header: 'Activo/Proceso', tipo: 'contenedor', visible: true, sortable: true, filterable: true, orden: 4, width: '180px' },
     { field: 'estado', header: 'Estado', tipo: 'seleccion', visible: true, sortable: true, filterable: true, orden: 5, width: '130px', opciones: [] },
     { field: 'fecha', header: 'Fecha', tipo: 'fecha', visible: true, sortable: true, filterable: true, orden: 6, width: '120px' },
     { field: 'responsable', header: 'Responsable', tipo: 'texto', visible: true, sortable: true, filterable: true, orden: 7, width: '150px' },
-    { field: 'nivelRiesgo', header: 'Nivel Riesgo', tipo: 'numero', visible: true, sortable: true, filterable: true, orden: 8, width: '120px' },
+    { field: 'nivelRiesgo', header: 'Nivel Riesgo', tipo: 'numero', visible: false, sortable: true, filterable: true, orden: 8, width: '120px' },
     { field: 'probabilidad', header: 'Probabilidad', tipo: 'numero', visible: false, sortable: true, filterable: true, orden: 9, width: '110px' },
     { field: 'impacto', header: 'Impacto', tipo: 'numero', visible: false, sortable: true, filterable: true, orden: 10, width: '100px' },
-    { field: 'severidad', header: 'Severidad', tipo: 'seleccion', visible: true, sortable: true, filterable: true, orden: 11, width: '120px', opciones: [{ label: 'Crítica', value: 'critica' }, { label: 'Alta', value: 'alta' }, { label: 'Media', value: 'media' }, { label: 'Baja', value: 'baja' }] },
-    { field: 'reportadoPor', header: 'Reportado Por', tipo: 'texto', visible: false, sortable: true, filterable: true, orden: 12, width: '150px' }
+    { field: 'severidad', header: 'Severidad', tipo: 'seleccion', visible: false, sortable: true, filterable: true, orden: 11, width: '120px', opciones: [{ label: 'Crítica', value: 'critica' }, { label: 'Alta', value: 'alta' }, { label: 'Media', value: 'media' }, { label: 'Baja', value: 'baja' }] },
+    { field: 'criticidad', header: 'Criticidad', tipo: 'seleccion', visible: false, sortable: true, filterable: true, orden: 12, width: '120px', opciones: [{ label: 'Crítica', value: 'critica' }, { label: 'Alta', value: 'alta' }, { label: 'Media', value: 'media' }, { label: 'Baja', value: 'baja' }] },
+    { field: 'prioridad', header: 'Prioridad', tipo: 'seleccion', visible: false, sortable: true, filterable: true, orden: 13, width: '120px', opciones: [{ label: 'Crítica', value: 'critica' }, { label: 'Alta', value: 'alta' }, { label: 'Media', value: 'media' }, { label: 'Baja', value: 'baja' }] },
+    { field: 'departamento', header: 'Departamento', tipo: 'texto', visible: false, sortable: true, filterable: true, orden: 14, width: '150px' },
+    { field: 'tipo', header: 'Tipo Activo', tipo: 'texto', visible: false, sortable: true, filterable: true, orden: 15, width: '120px' },
+    { field: 'version', header: 'Versión', tipo: 'texto', visible: false, sortable: true, filterable: true, orden: 16, width: '100px' }
   ]);
 
   // Presets de fecha
@@ -130,6 +175,10 @@ export class TablaUnificadaService {
     const activos = this.activosData();
     const riesgos = this.riesgosData();
     const incidentes = this.incidentesData();
+    const procesos = this.procesosData();
+    const defectos = this.defectosData();
+    const revisiones = this.revisionesData();
+    const cumplimiento = this.cumplimientoData();
     const entidades = this.estado().entidadesSeleccionadas;
     const registros: RegistroUnificado[] = [];
 
@@ -143,6 +192,7 @@ export class TablaUnificadaService {
           contenedorId: riesgo.activoId,
           contenedorNombre: activo?.nombre || 'Sin activo',
           tipoContenedor: 'activo',
+          nombre: riesgo.descripcion?.substring(0, 50) + '...',
           descripcion: riesgo.descripcion,
           estado: riesgo.estado,
           fecha: riesgo.fechaIdentificacion,
@@ -164,6 +214,7 @@ export class TablaUnificadaService {
           contenedorId: incidente.activoId,
           contenedorNombre: activo?.nombre || 'Sin activo',
           tipoContenedor: 'activo',
+          nombre: incidente.titulo,
           descripcion: incidente.descripcion,
           estado: incidente.estado,
           fecha: incidente.fechaReporte,
@@ -171,6 +222,96 @@ export class TablaUnificadaService {
           titulo: incidente.titulo,
           severidad: incidente.severidad,
           reportadoPor: incidente.reportadoPor
+        });
+      });
+    }
+
+    // Agregar activos
+    if (entidades.includes('activo')) {
+      activos.forEach(activo => {
+        registros.push({
+          id: activo.id,
+          tipoEntidad: 'activo',
+          tipoContenedor: 'ninguno',
+          nombre: activo.nombre,
+          descripcion: activo.descripcion || '',
+          estado: activo.criticidad || 'media',
+          fecha: activo.fechaRegistro,
+          responsable: activo.responsable,
+          tipo: activo.tipo,
+          criticidad: activo.criticidad,
+          departamento: activo.departamento
+        });
+      });
+    }
+
+    // Agregar procesos
+    if (entidades.includes('proceso')) {
+      procesos.forEach(proceso => {
+        registros.push({
+          id: proceso.id,
+          tipoEntidad: 'proceso',
+          tipoContenedor: 'ninguno',
+          nombre: proceso.nombre,
+          descripcion: proceso.descripcion || '',
+          estado: proceso.estado || 'activo',
+          fecha: proceso.createdAt,
+          version: proceso.version
+        });
+      });
+    }
+
+    // Agregar defectos
+    if (entidades.includes('defecto')) {
+      defectos.forEach(defecto => {
+        const activo = activos.find(a => a.id === defecto.activoId);
+        registros.push({
+          id: defecto.id,
+          tipoEntidad: 'defecto',
+          contenedorId: defecto.activoId,
+          contenedorNombre: activo?.nombre || 'Sin activo',
+          tipoContenedor: 'activo',
+          nombre: defecto.titulo,
+          descripcion: defecto.descripcion || '',
+          estado: defecto.estado,
+          fecha: defecto.fechaDeteccion || defecto.createdAt,
+          responsable: defecto.detectadoPor,
+          prioridad: defecto.prioridad,
+          tipoDefecto: defecto.tipo,
+          detectadoPor: defecto.detectadoPor
+        });
+      });
+    }
+
+    // Agregar revisiones (asignaciones de cuestionarios)
+    if (entidades.includes('revision')) {
+      revisiones.forEach(revision => {
+        registros.push({
+          id: revision.id,
+          tipoEntidad: 'revision',
+          tipoContenedor: 'ninguno',
+          nombre: revision.titulo || 'Revisión sin título',
+          descripcion: revision.descripcion || revision.cuestionario?.nombre || '',
+          estado: revision.estado,
+          fecha: revision.fechaAsignacion,
+          responsable: revision.responsableNombre,
+          contenedorNombre: revision.areaNombre || 'Sin área'
+        });
+      });
+    }
+
+    // Agregar cumplimiento (marcos normativos)
+    if (entidades.includes('cumplimiento')) {
+      cumplimiento.forEach(marco => {
+        registros.push({
+          id: marco.id,
+          tipoEntidad: 'cumplimiento',
+          tipoContenedor: 'ninguno',
+          nombre: marco.nombre,
+          descripcion: marco.descripcion || '',
+          estado: marco.activo ? 'activo' : 'inactivo',
+          fecha: marco.fechaVigencia || marco.fechaCreacion,
+          version: marco.version
         });
       });
     }
@@ -341,12 +482,12 @@ export class TablaUnificadaService {
     this.columnasConfig.update(cols =>
       cols.map(c => ({
         ...c,
-        visible: ['tipoEntidad', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable', 'nivelRiesgo', 'severidad'].includes(c.field)
+        visible: ['tipoEntidad', 'nombre', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable'].includes(c.field)
       }))
     );
     this.estado.update(s => ({
       ...s,
-      ordenColumnas: ['tipoEntidad', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable', 'nivelRiesgo', 'severidad']
+      ordenColumnas: ['tipoEntidad', 'nombre', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable']
     }));
   }
 

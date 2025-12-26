@@ -411,7 +411,7 @@
 <!-- ==================== DRAWERS ==================== -->
 
 <!-- Drawer: Catálogo de Widgets -->
-<p-drawer [(visible)]="showCatalogoDrawer" position="right" [style]="{width: '400px'}" header="Agregar Widget">
+<p-drawer [(visible)]="showCatalogoDrawer" position="right" [style]="{width: '50vw'}" header="Agregar Widget">
   <div class="catalogo-content">
     <!-- Búsqueda -->
     <div class="catalogo-search">
@@ -462,7 +462,7 @@
 </p-drawer>
 
 <!-- Drawer: Pre-Configuración de Widget (antes de agregar) -->
-<p-drawer [(visible)]="showPreConfigDrawer" position="right" [style]="{width: '420px'}">
+<p-drawer [(visible)]="showPreConfigDrawer" position="right" [style]="{width: '50vw'}">
   <ng-template pTemplate="header">
     <div class="preconfig-header">
       <button class="preconfig-back" (click)="cancelarPreConfig()">
@@ -609,432 +609,12 @@
             </div>
           }
 
-          <!-- Gráficas Interactivas -->
+          <!-- Gráficas Interactivas - Wizard -->
           @case ('graficas-interactivas') {
-            <!-- Tabs de configuración -->
-            <div class="grafica-config-tabs">
-              <button
-                class="grafica-tab"
-                [class.active]="graficaConfigTab() === 'tipo'"
-                (click)="graficaConfigTab.set('tipo')">
-                <i class="pi pi-chart-pie"></i>
-                <span>Tipo</span>
-              </button>
-              <button
-                class="grafica-tab"
-                [class.active]="graficaConfigTab() === 'datos'"
-                (click)="graficaConfigTab.set('datos')">
-                <i class="pi pi-database"></i>
-                <span>Datos</span>
-              </button>
-              <button
-                class="grafica-tab"
-                [class.active]="graficaConfigTab() === 'estilo'"
-                (click)="graficaConfigTab.set('estilo')">
-                <i class="pi pi-palette"></i>
-                <span>Estilo</span>
-              </button>
-              <button
-                class="grafica-tab asistente"
-                [class.active]="graficaConfigTab() === 'ia'"
-                (click)="graficaConfigTab.set('ia')">
-                <i class="pi pi-sparkles"></i>
-                <span>IA</span>
-              </button>
-            </div>
-
-            <!-- Tab: Tipo de Gráfica -->
-            @if (graficaConfigTab() === 'tipo') {
-              <div class="preconfig-field">
-                <label>Tipo de Gráfica</label>
-                <p-select
-                  [options]="tiposGraficaOptions"
-                  [ngModel]="preConfigGraficaTipo()"
-                  (ngModelChange)="preConfigGraficaTipo.set($event)"
-                  optionLabel="label"
-                  optionValue="value"
-                  optionGroupLabel="label"
-                  optionGroupChildren="items"
-                  [group]="true"
-                  [style]="{width: '100%'}"
-                  placeholder="Seleccionar tipo">
-                  <ng-template let-group pTemplate="group">
-                    <div class="grafica-grupo">
-                      <span>{{ group.label }}</span>
-                    </div>
-                  </ng-template>
-                  <ng-template let-item pTemplate="item">
-                    <div class="grafica-tipo-item">
-                      <i [class]="item.icon" class="mr-2"></i>
-                      <span>{{ item.label }}</span>
-                    </div>
-                  </ng-template>
-                </p-select>
-                <small class="preconfig-hint">{{ getGraficaTipoDescripcion(preConfigGraficaTipo()) }}</small>
-              </div>
-
-              <!-- Recomendación IA -->
-              @if (recomendacionTipoGrafica()) {
-                <div class="ia-recomendacion">
-                  <i class="pi pi-sparkles"></i>
-                  <span>{{ recomendacionTipoGrafica() }}</span>
-                </div>
-              }
-            }
-
-            <!-- Tab: Datos -->
-            @if (graficaConfigTab() === 'datos') {
-              <!-- Fuente de datos -->
-              <div class="preconfig-field">
-                <label>Fuente de datos</label>
-                <p-select
-                  [options]="fuentesDatosOptions"
-                  [ngModel]="preConfigGraficaFuenteDatos()"
-                  (ngModelChange)="onFuenteDatosChange($event)"
-                  optionLabel="label"
-                  optionValue="value"
-                  [style]="{width: '100%'}"
-                  placeholder="Seleccionar fuente">
-                  <ng-template let-item pTemplate="item">
-                    <div class="fuente-option">
-                      <i [class]="item.icon"></i>
-                      <div class="fuente-info">
-                        <span class="fuente-label">{{ item.label }}</span>
-                        <span class="fuente-desc">{{ item.descripcion }}</span>
-                      </div>
-                    </div>
-                  </ng-template>
-                </p-select>
-              </div>
-
-              <!-- Filtros opcionales -->
-              <div class="filtros-datos">
-                <label>Filtros (opcional)</label>
-                <div class="filtros-grid">
-                  <p-select
-                    [options]="filtrosNivelOptions"
-                    [ngModel]="preConfigGraficaFiltroNivel()"
-                    (ngModelChange)="preConfigGraficaFiltroNivel.set($event)"
-                    optionLabel="label"
-                    optionValue="value"
-                    [style]="{width: '100%'}"
-                    placeholder="Nivel/Área">
-                  </p-select>
-                  @if (getFiltrosTipoActuales().length > 1) {
-                    <p-select
-                      [options]="getFiltrosTipoActuales()"
-                      [ngModel]="preConfigGraficaFiltroTipo()"
-                      (ngModelChange)="preConfigGraficaFiltroTipo.set($event)"
-                      optionLabel="label"
-                      optionValue="value"
-                      [style]="{width: '100%'}"
-                      placeholder="Tipo">
-                    </p-select>
-                  }
-                </div>
-              </div>
-
-              <p-divider></p-divider>
-
-              <!-- Configuración para gráficas CIRCULARES (pie, donut, radialBar, polarArea, funnel, pyramid, treemap) -->
-              @if (getModoConfiguracion(preConfigGraficaTipo()) === 'circular') {
-                <div class="config-circular">
-                  <div class="config-header-mini">
-                    <i class="pi pi-chart-pie"></i>
-                    <span>Configuración de gráfica circular</span>
-                  </div>
-
-                  <div class="preconfig-field">
-                    <label>Agrupar por (segmentos)</label>
-                    <p-select
-                      [options]="getCamposAgrupacionActuales()"
-                      [ngModel]="preConfigGraficaAgrupacion()"
-                      (ngModelChange)="preConfigGraficaAgrupacion.set($event)"
-                      optionLabel="label"
-                      optionValue="value"
-                      [style]="{width: '100%'}"
-                      placeholder="Campo para segmentos">
-                    </p-select>
-                    <small class="preconfig-hint">Define cómo se dividen los segmentos de la gráfica</small>
-                  </div>
-
-                  <div class="preconfig-field">
-                    <label>Mostrar (valores)</label>
-                    <p-select
-                      [options]="getCamposValorActuales()"
-                      [ngModel]="preConfigGraficaValor()"
-                      (ngModelChange)="preConfigGraficaValor.set($event)"
-                      optionLabel="label"
-                      optionValue="value"
-                      [style]="{width: '100%'}"
-                      placeholder="Valor a mostrar">
-                    </p-select>
-                    <small class="preconfig-hint">El valor que representa cada segmento</small>
-                  </div>
-                </div>
-              }
-
-              <!-- Configuración para gráficas de EJES (bar, column, line, area, etc.) -->
-              @if (getModoConfiguracion(preConfigGraficaTipo()) === 'ejes') {
-                <div class="config-ejes">
-                  <div class="config-header-mini">
-                    <i class="pi pi-chart-bar"></i>
-                    <span>Configuración de ejes</span>
-                  </div>
-
-                  <div class="preconfig-field">
-                    <label>Eje X (categorías)</label>
-                    <p-select
-                      [options]="getCamposEjeXActuales()"
-                      [ngModel]="preConfigGraficaEjeX()"
-                      (ngModelChange)="preConfigGraficaEjeX.set($event)"
-                      optionLabel="label"
-                      optionValue="value"
-                      [style]="{width: '100%'}"
-                      placeholder="Campo para eje X">
-                    </p-select>
-                    <small class="preconfig-hint">Las categorías o elementos a comparar</small>
-                  </div>
-
-                  <div class="preconfig-field">
-                    <label>Eje Y (valores)</label>
-                    <p-select
-                      [options]="getCamposValorActuales()"
-                      [ngModel]="preConfigGraficaEjeY()"
-                      (ngModelChange)="preConfigGraficaEjeY.set($event)"
-                      optionLabel="label"
-                      optionValue="value"
-                      [style]="{width: '100%'}"
-                      placeholder="Campo para eje Y">
-                    </p-select>
-                    <small class="preconfig-hint">El valor numérico a graficar</small>
-                  </div>
-
-                  <!-- Series (para gráficas agrupadas o apiladas) -->
-                  @if (preConfigGraficaTipo() === 'stackedBar' || preConfigGraficaTipo() === 'groupedBar') {
-                    <div class="preconfig-field">
-                      <label>Agrupar series por (opcional)</label>
-                      <p-select
-                        [options]="getCamposAgrupacionActuales()"
-                        [ngModel]="preConfigGraficaSeries()"
-                        (ngModelChange)="preConfigGraficaSeries.set($event)"
-                        optionLabel="label"
-                        optionValue="value"
-                        [style]="{width: '100%'}"
-                        [showClear]="true"
-                        placeholder="Sin agrupación de series">
-                      </p-select>
-                      <small class="preconfig-hint">Crea múltiples barras/series por cada categoría</small>
-                    </div>
-                  }
-                </div>
-              }
-
-              <!-- Configuración para gráficas AVANZADAS (radar, scatter, heatmap) -->
-              @if (getModoConfiguracion(preConfigGraficaTipo()) === 'avanzado') {
-                <div class="config-avanzado">
-                  <div class="config-header-mini">
-                    <i class="pi pi-cog"></i>
-                    <span>Configuración avanzada</span>
-                  </div>
-
-                  @switch (preConfigGraficaTipo()) {
-                    @case ('radar') {
-                      <div class="preconfig-field">
-                        <label>Variables a comparar</label>
-                        <p-select
-                          [options]="getCamposAgrupacionActuales()"
-                          [ngModel]="preConfigGraficaAgrupacion()"
-                          (ngModelChange)="preConfigGraficaAgrupacion.set($event)"
-                          optionLabel="label"
-                          optionValue="value"
-                          [style]="{width: '100%'}">
-                        </p-select>
-                      </div>
-                      <div class="preconfig-field">
-                        <label>Valor de cada eje</label>
-                        <p-select
-                          [options]="getCamposValorActuales()"
-                          [ngModel]="preConfigGraficaValor()"
-                          (ngModelChange)="preConfigGraficaValor.set($event)"
-                          optionLabel="label"
-                          optionValue="value"
-                          [style]="{width: '100%'}">
-                        </p-select>
-                      </div>
-                    }
-                    @case ('scatter') {
-                      <div class="preconfig-field">
-                        <label>Eje X</label>
-                        <p-select
-                          [options]="getCamposValorActuales()"
-                          [ngModel]="preConfigGraficaEjeX()"
-                          (ngModelChange)="preConfigGraficaEjeX.set($event)"
-                          optionLabel="label"
-                          optionValue="value"
-                          [style]="{width: '100%'}">
-                        </p-select>
-                      </div>
-                      <div class="preconfig-field">
-                        <label>Eje Y</label>
-                        <p-select
-                          [options]="getCamposValorActuales()"
-                          [ngModel]="preConfigGraficaEjeY()"
-                          (ngModelChange)="preConfigGraficaEjeY.set($event)"
-                          optionLabel="label"
-                          optionValue="value"
-                          [style]="{width: '100%'}">
-                        </p-select>
-                      </div>
-                    }
-                    @case ('heatmap') {
-                      <div class="preconfig-field">
-                        <label>Filas</label>
-                        <p-select
-                          [options]="getCamposAgrupacionActuales()"
-                          [ngModel]="preConfigGraficaEjeY()"
-                          (ngModelChange)="preConfigGraficaEjeY.set($event)"
-                          optionLabel="label"
-                          optionValue="value"
-                          [style]="{width: '100%'}">
-                        </p-select>
-                      </div>
-                      <div class="preconfig-field">
-                        <label>Columnas</label>
-                        <p-select
-                          [options]="getCamposAgrupacionActuales()"
-                          [ngModel]="preConfigGraficaEjeX()"
-                          (ngModelChange)="preConfigGraficaEjeX.set($event)"
-                          optionLabel="label"
-                          optionValue="value"
-                          [style]="{width: '100%'}">
-                        </p-select>
-                      </div>
-                      <div class="preconfig-field">
-                        <label>Valor (intensidad)</label>
-                        <p-select
-                          [options]="getCamposValorActuales()"
-                          [ngModel]="preConfigGraficaValor()"
-                          (ngModelChange)="preConfigGraficaValor.set($event)"
-                          optionLabel="label"
-                          optionValue="value"
-                          [style]="{width: '100%'}">
-                        </p-select>
-                      </div>
-                    }
-                  }
-                </div>
-              }
-
-              <!-- Resumen de configuración -->
-              <div class="config-resumen">
-                <i class="pi pi-info-circle"></i>
-                <span>
-                  @if (getModoConfiguracion(preConfigGraficaTipo()) === 'circular') {
-                    Gráfica de {{ preConfigGraficaAgrupacion() }} mostrando {{ preConfigGraficaValor() === 'count' ? 'cantidad' : preConfigGraficaValor() }}
-                  } @else {
-                    {{ preConfigGraficaEjeX() }} vs {{ preConfigGraficaEjeY() }}
-                  }
-                </span>
-              </div>
-            }
-
-            <!-- Tab: Estilo -->
-            @if (graficaConfigTab() === 'estilo') {
-              <div class="preconfig-field">
-                <label>Paleta de colores</label>
-                <p-select
-                  [options]="paletasColoresOptions"
-                  [ngModel]="preConfigGraficaPaleta()"
-                  (ngModelChange)="preConfigGraficaPaleta.set($event)"
-                  optionLabel="label"
-                  optionValue="value"
-                  [style]="{width: '100%'}">
-                  <ng-template let-item pTemplate="item">
-                    <div class="paleta-option">
-                      <div class="paleta-preview">
-                        @for (color of getPaletaColores(item.value).slice(0, 5); track $index) {
-                          <span class="color-dot" [style.background]="color"></span>
-                        }
-                      </div>
-                      <span>{{ item.label }}</span>
-                    </div>
-                  </ng-template>
-                  <ng-template let-item pTemplate="selectedItem">
-                    <div class="paleta-option">
-                      <div class="paleta-preview">
-                        @for (color of getPaletaColores(item.value).slice(0, 5); track $index) {
-                          <span class="color-dot" [style.background]="color"></span>
-                        }
-                      </div>
-                      <span>{{ item.label }}</span>
-                    </div>
-                  </ng-template>
-                </p-select>
-              </div>
-
-              <div class="opciones-grafica">
-                <label>Opciones de visualización</label>
-                <div class="opciones-toggles">
-                  <div class="toggle-item" [class.active]="preConfigGraficaAnimaciones()" (click)="toggleGraficaAnimaciones()">
-                    <i class="pi pi-play"></i>
-                    <span>Animaciones</span>
-                  </div>
-                  <div class="toggle-item" [class.active]="preConfigGraficaLeyenda()" (click)="toggleGraficaLeyenda()">
-                    <i class="pi pi-list"></i>
-                    <span>Leyenda</span>
-                  </div>
-                  <div class="toggle-item" [class.active]="preConfigGraficaEtiquetas()" (click)="toggleGraficaEtiquetas()">
-                    <i class="pi pi-tag"></i>
-                    <span>Etiquetas</span>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- Tab: Asistente IA -->
-            @if (graficaConfigTab() === 'ia') {
-              <div class="asistente-preconfig">
-                <div class="asistente-header-mini">
-                  <i class="pi pi-sparkles"></i>
-                  <span>Asistente de Gráficas</span>
-                </div>
-
-                <div class="sugerencias-rapidas">
-                  <p class="sugerencias-label">Configuraciones sugeridas:</p>
-                  @for (sugerencia of sugerenciasGraficaIA; track $index) {
-                    <button class="sugerencia-btn" (click)="aplicarSugerenciaGraficaIA(sugerencia)">
-                      <i [class]="sugerencia.icon"></i>
-                      <span>{{ sugerencia.label }}</span>
-                    </button>
-                  }
-                </div>
-
-                <div class="asistente-input-mini">
-                  <input
-                    pInputText
-                    [ngModel]="inputAsistenteGrafica()"
-                    (ngModelChange)="inputAsistenteGrafica.set($event)"
-                    placeholder="Describe la gráfica que necesitas..."
-                    (keyup.enter)="procesarPeticionAsistenteGrafica()"
-                    class="w-full" />
-                  <p-button
-                    icon="pi pi-send"
-                    [rounded]="true"
-                    severity="success"
-                    size="small"
-                    [disabled]="!inputAsistenteGrafica().trim()"
-                    (onClick)="procesarPeticionAsistenteGrafica()" />
-                </div>
-
-                @if (respuestaAsistenteGrafica()) {
-                  <div class="asistente-respuesta">
-                    <i class="pi pi-sparkles"></i>
-                    <p>{{ respuestaAsistenteGrafica() }}</p>
-                  </div>
-                }
-              </div>
-            }
+            <app-grafica-wizard
+              (onConfirm)="onWizardConfirm($event)"
+              (onCancel)="onWizardCancel()">
+            </app-grafica-wizard>
           }
 
           <!-- Widgets sin configuración específica -->
@@ -1079,9 +659,9 @@
     </div>
   }
 
-  <!-- Footer con botones (fuera del @if para que el template se registre correctamente) -->
+  <!-- Footer con botones (oculto para graficas-interactivas ya que el wizard tiene su propio footer) -->
   <ng-template pTemplate="footer">
-    @if (widgetPreConfig()) {
+    @if (widgetPreConfig() && widgetPreConfig()!.tipo !== 'graficas-interactivas') {
       <div class="preconfig-footer">
         <p-button
           label="Cancelar"
@@ -1102,7 +682,7 @@
 </p-drawer>
 
 <!-- Drawer: Configuración de Widget -->
-<p-drawer [(visible)]="showConfigDrawer" position="right" [style]="{width: '400px'}" header="Configurar Widget">
+<p-drawer [(visible)]="showConfigDrawer" position="right" [style]="{width: '50vw'}" header="Configurar Widget">
   @if (widgetSeleccionado()) {
     <div class="config-content">
       <!-- Información básica -->
@@ -1178,7 +758,7 @@
 </p-drawer>
 
 <!-- Drawer: Configuración de Layout -->
-<p-drawer [(visible)]="showLayoutDrawer" position="right" [style]="{width: '380px'}" header="Configuración de Layout">
+<p-drawer [(visible)]="showLayoutDrawer" position="right" [style]="{width: '50vw'}" header="Configuración de Layout">
   <div class="layout-content">
     <div class="config-section">
       <label class="config-label">Columnas</label>
@@ -1226,7 +806,7 @@
 <!-- ==================== DRILLDOWN DRAWERS ==================== -->
 
 <!-- Drawer: Drilldown de Proceso -->
-<p-drawer [(visible)]="showProcesoDrilldown" position="right" [style]="{width: '480px'}" header="Detalle de Proceso">
+<p-drawer [(visible)]="showProcesoDrilldown" position="right" [style]="{width: '50vw'}" header="Detalle de Proceso">
   @if (procesoSeleccionado()) {
     <div class="drilldown-content">
       <!-- Header del proceso -->
@@ -1302,7 +882,7 @@
 </p-drawer>
 
 <!-- Drawer: Drilldown de Alerta -->
-<p-drawer [(visible)]="showAlertaDrilldown" position="right" [style]="{width: '440px'}" header="Detalle de Alerta">
+<p-drawer [(visible)]="showAlertaDrilldown" position="right" [style]="{width: '50vw'}" header="Detalle de Alerta">
   @if (alertaSeleccionada()) {
     <div class="drilldown-content">
       <!-- Severidad -->
@@ -1361,7 +941,7 @@
 </p-drawer>
 
 <!-- Drawer: Drilldown de Tendencia -->
-<p-drawer [(visible)]="showTendenciaDrilldown" position="right" [style]="{width: '440px'}" header="Análisis de Tendencia">
+<p-drawer [(visible)]="showTendenciaDrilldown" position="right" [style]="{width: '50vw'}" header="Análisis de Tendencia">
   @if (tendenciaProcesoSeleccionado()) {
     <div class="drilldown-content">
       <!-- Header -->
@@ -1497,7 +1077,7 @@
 </p-dialog>
 
 <!-- Drawer: Drilldown de Actividad -->
-<p-drawer [(visible)]="showActividadDrilldown" position="right" [style]="{width: '440px'}" header="Detalle de Actividad">
+<p-drawer [(visible)]="showActividadDrilldown" position="right" [style]="{width: '50vw'}" header="Detalle de Actividad">
   @if (actividadSeleccionada()) {
     <div class="drilldown-content">
       <!-- Header con tipo -->

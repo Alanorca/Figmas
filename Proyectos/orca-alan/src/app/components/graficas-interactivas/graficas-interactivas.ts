@@ -579,8 +579,14 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   chartData = computed(() => {
     const datos = this.datosSignal();
     const tipo = this.tipoGrafica();
-    const paleta = this.paletas[this.paletaSeleccionada()];
+    // Fallback a paleta 'vibrant' si la seleccionada no existe
+    const paleta = this.paletas[this.paletaSeleccionada()] || this.paletas['vibrant'];
     const isDark = this.tema() === 'dark';
+
+    // Validar que hay datos antes de procesar
+    if (!datos || !datos.labels || !datos.series) {
+      return { labels: [], datasets: [] };
+    }
 
     if (this.isNonAxisChart(tipo)) {
       // Para gráficas circulares - minimalistas

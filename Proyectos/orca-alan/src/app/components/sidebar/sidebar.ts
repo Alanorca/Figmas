@@ -616,13 +616,21 @@ export class SidebarComponent implements OnDestroy {
       ]
     },
     {
+      label: 'Results ML',
+      icon: 'pi pi-sparkles',
+      expanded: true,
+      items: [
+        { label: 'Respuestas ML', icon: 'pi pi-sparkles', routerLink: '/results-ml' }
+      ]
+    },
+    {
       label: 'Riesgos',
       icon: 'pi pi-exclamation-triangle',
       expanded: true,
       items: [
         { label: 'Riesgos', icon: 'pi pi-exclamation-circle', routerLink: '/riesgos' },
         { label: 'Incidentes', icon: 'pi pi-bolt', routerLink: '/incidentes' },
-        { label: 'Defectos', icon: 'pi pi-bug', routerLink: '/defectos' },
+        { label: 'Defectos', icon: 'pi pi-wrench', routerLink: '/defectos' },
         { label: 'Controles', icon: 'pi pi-shield', routerLink: '/controles' }
       ]
     },

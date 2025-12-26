@@ -85,6 +85,8 @@ import { WidgetConfiguratorComponent } from '../widget-configurator/widget-confi
 import { esGraficaConfigurable } from '../../models/widget-chart.config';
 import { CalendarioWidgetComponent, CalendarioEvento } from '../calendario-widget/calendario-widget';
 import { GraficasGuardadasWidgetComponent, GraficaGuardada } from '../graficas-guardadas-widget/graficas-guardadas-widget';
+import { GraficaWizardComponent } from '../grafica-wizard/grafica-wizard';
+import { GraficaWizardResult } from '../../models/grafica-wizard.models';
 
 @Component({
   selector: 'app-dashboard-customizable',
@@ -112,7 +114,8 @@ import { GraficasGuardadasWidgetComponent, GraficaGuardada } from '../graficas-g
     GraficasInteractivasComponent,
     WidgetConfiguratorComponent,
     CalendarioWidgetComponent,
-    GraficasGuardadasWidgetComponent
+    GraficasGuardadasWidgetComponent,
+    GraficaWizardComponent
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './dashboard-customizable.html',
@@ -2109,6 +2112,58 @@ export class DashboardCustomizableComponent implements OnInit {
     this.showPreConfigDrawer.set(false);
     this.widgetPreConfig.set(null);
     this.showCatalogoDrawer.set(true);
+  }
+
+  // Handler para cuando el wizard confirma la configuración
+  onWizardConfirm(result: GraficaWizardResult): void {
+    const catalogItem = this.widgetPreConfig();
+    if (!catalogItem) return;
+
+    // Construir configuración desde el resultado del wizard
+    const config: any = {
+      showHeader: true,
+      graficaTipo: result.tipoGrafica,
+      graficaFuenteDatos: result.fuenteDatos,
+      graficaAgrupacion: result.configuracion.campoAgrupacion,
+      graficaValor: result.configuracion.campoValor || 'count',
+      graficaEjeX: result.configuracion.campoEjeX,
+      graficaEjeY: result.configuracion.campoEjeY,
+      graficaSeries: result.configuracion.campoSeries,
+      graficaTipoAgregacion: result.configuracion.tipoAgregacion,
+      graficaCruce: result.configuracion.cruce,
+      graficaPaleta: result.estilo.paleta,
+      graficaAnimaciones: result.estilo.mostrarAnimaciones,
+      graficaMostrarLeyenda: result.estilo.mostrarLeyenda,
+      graficaMostrarDataLabels: result.estilo.mostrarEtiquetas,
+      graficaMostrarGrid: result.estilo.mostrarGrid,
+      // Guardar los datos preprocesados para evitar re-carga
+      graficaDatos: result.datos
+    };
+
+    // Agregar widget con configuración del wizard
+    this.dashboardService.agregarWidgetConConfig(
+      catalogItem,
+      result.estilo.titulo,
+      result.estilo.subtitulo,
+      config
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Widget agregado',
+      detail: `${result.estilo.titulo} agregado al dashboard`
+    });
+
+    // Cerrar drawer y limpiar - usar setTimeout para asegurar cierre correcto
+    this.widgetPreConfig.set(null);
+    setTimeout(() => {
+      this.showPreConfigDrawer.set(false);
+    }, 0);
+  }
+
+  // Handler para cuando el wizard cancela
+  onWizardCancel(): void {
+    this.cancelarPreConfig();
   }
 
   // ==================== ACCIONES DE WIDGETS ====================

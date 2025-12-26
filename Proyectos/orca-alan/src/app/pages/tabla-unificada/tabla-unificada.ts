@@ -170,20 +170,22 @@ export class TablaUnificadaComponent {
   entidadOptions = [
     { label: 'Riesgos', value: 'riesgo', icon: 'pi pi-shield' },
     { label: 'Incidentes', value: 'incidente', icon: 'pi pi-exclamation-triangle' },
-    { label: 'Cumplimiento', value: 'cumplimiento', icon: 'pi pi-check-circle' },
     { label: 'Activos', value: 'activo', icon: 'pi pi-box' },
     { label: 'Procesos', value: 'proceso', icon: 'pi pi-sitemap' },
-    { label: 'Respuestas', value: 'respuesta', icon: 'pi pi-comments' }
+    { label: 'Defectos', value: 'defecto', icon: 'pi pi-bug' },
+    { label: 'Revisiones', value: 'revision', icon: 'pi pi-file-check' },
+    { label: 'Cumplimiento', value: 'cumplimiento', icon: 'pi pi-verified' }
   ];
 
   // Opciones para filtros de columna
   tipoEntidadOptions = [
     { label: 'Riesgo', value: 'riesgo', icon: 'pi pi-shield' },
     { label: 'Incidente', value: 'incidente', icon: 'pi pi-exclamation-triangle' },
-    { label: 'Cumplimiento', value: 'cumplimiento', icon: 'pi pi-check-circle' },
     { label: 'Activo', value: 'activo', icon: 'pi pi-box' },
     { label: 'Proceso', value: 'proceso', icon: 'pi pi-sitemap' },
-    { label: 'Respuesta', value: 'respuesta', icon: 'pi pi-comments' }
+    { label: 'Defecto', value: 'defecto', icon: 'pi pi-bug' },
+    { label: 'Revisión', value: 'revision', icon: 'pi pi-file-check' },
+    { label: 'Cumplimiento', value: 'cumplimiento', icon: 'pi pi-verified' }
   ];
 
   estadoOptions = [
@@ -761,11 +763,29 @@ export class TablaUnificadaComponent {
   }
 
   getTipoEntidadIcon(tipo: TipoEntidad): string {
-    return tipo === 'riesgo' ? 'pi pi-shield' : 'pi pi-exclamation-triangle';
+    const iconos: Record<string, string> = {
+      'riesgo': 'pi pi-shield',
+      'incidente': 'pi pi-exclamation-triangle',
+      'activo': 'pi pi-box',
+      'proceso': 'pi pi-sitemap',
+      'defecto': 'pi pi-bug',
+      'revision': 'pi pi-file-check',
+      'cumplimiento': 'pi pi-verified'
+    };
+    return iconos[tipo] || 'pi pi-file';
   }
 
   getTipoEntidadLabel(tipo: TipoEntidad): string {
-    return tipo === 'riesgo' ? 'Riesgo' : 'Incidente';
+    const labels: Record<string, string> = {
+      'riesgo': 'Riesgo',
+      'incidente': 'Incidente',
+      'activo': 'Activo',
+      'proceso': 'Proceso',
+      'defecto': 'Defecto',
+      'revision': 'Revisión',
+      'cumplimiento': 'Cumplimiento'
+    };
+    return labels[tipo] || tipo;
   }
 
   // Helpers de colores

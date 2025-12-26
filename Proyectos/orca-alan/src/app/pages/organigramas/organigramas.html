@@ -1,7 +1,7 @@
 <div class="organigramas-container">
   <div class="page-header">
     <h1>Organigrama</h1>
-    <p class="page-subtitle">{{ organigrama().nombre }} - {{ organigrama().descripcion }}</p>
+    <p class="page-subtitle">{{ organigrama()?.nombre || 'Cargando...' }} - {{ organigrama()?.descripcion || '' }}</p>
   </div>
 
   <p-toolbar>
