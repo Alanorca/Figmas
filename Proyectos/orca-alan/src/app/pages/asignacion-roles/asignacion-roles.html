@@ -1,0 +1,254 @@
+<div class="asignacion-roles-container">
+  <!-- Panel Izquierdo: Lista de Roles -->
+  <div class="roles-panel">
+    <div class="panel-header">
+      <h2>Roles</h2>
+      <p-button
+        icon="pi pi-plus"
+        [rounded]="true"
+        [text]="true"
+        pTooltip="Crear nuevo rol">
+      </p-button>
+    </div>
+
+    <p-scrollPanel [style]="{ width: '100%', height: 'calc(100vh - 180px)' }">
+      <div class="roles-list">
+        @for (rol of roles(); track rol.id) {
+          <div
+            class="rol-card"
+            [class.selected]="rolSeleccionado()?.id === rol.id"
+            (click)="seleccionarRol(rol)">
+            <div class="rol-icon" [style.background-color]="rol.color || '#3b82f6'">
+              <i class="pi" [ngClass]="rol.icono || 'pi-shield'"></i>
+            </div>
+            <div class="rol-info">
+              <span class="rol-nombre">{{ rol.nombre }}</span>
+              <span class="rol-descripcion">{{ rol.descripcion }}</span>
+            </div>
+            <div class="rol-usuarios-count">
+              <p-badge [value]="rol.usuariosAsignados.length.toString()" severity="secondary"></p-badge>
+            </div>
+          </div>
+        } @empty {
+          <div class="empty-state">
+            <i class="pi pi-shield"></i>
+            <p>No hay roles configurados</p>
+          </div>
+        }
+      </div>
+    </p-scrollPanel>
+  </div>
+
+  <!-- Panel Derecho: Detalle del Rol -->
+  <div class="detalle-panel">
+    @if (rolSeleccionado()) {
+      <div class="detalle-header">
+        <div class="rol-titulo">
+          <div class="rol-icon-large" [style.background-color]="rolSeleccionado()!.color || '#3b82f6'">
+            <i class="pi" [ngClass]="rolSeleccionado()!.icono || 'pi-shield'"></i>
+          </div>
+          <div class="rol-header-info">
+            <h2>{{ rolSeleccionado()!.nombre }}</h2>
+            <p>{{ rolSeleccionado()!.descripcion }}</p>
+          </div>
+        </div>
+        <div class="rol-actions">
+          <p-button
+            icon="pi pi-pencil"
+            [rounded]="true"
+            [text]="true"
+            pTooltip="Editar rol">
+          </p-button>
+          <p-button
+            icon="pi pi-copy"
+            [rounded]="true"
+            [text]="true"
+            pTooltip="Duplicar rol">
+          </p-button>
+          @if (!rolSeleccionado()!.esRolSistema) {
+            <p-button
+              icon="pi pi-trash"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              pTooltip="Eliminar rol">
+            </p-button>
+          }
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Configuración del Rol -->
+      <div class="rol-config">
+        <div class="config-row">
+          <div class="config-item">
+            <label>Nivel de Acceso</label>
+            <p-tag
+              [value]="rolSeleccionado()!.nivelAcceso | titlecase"
+              [severity]="getNivelAccesoSeverity(rolSeleccionado()!.nivelAcceso)">
+            </p-tag>
+          </div>
+          <div class="config-item">
+            <label>Región</label>
+            <span class="config-value">{{ rolSeleccionado()!.region }}</span>
+          </div>
+          <div class="config-item">
+            <label>Estado</label>
+            <p-tag
+              [value]="rolSeleccionado()!.activo ? 'Activo' : 'Inactivo'"
+              [severity]="rolSeleccionado()!.activo ? 'success' : 'secondary'">
+            </p-tag>
+          </div>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Sección de Permisos por Módulo -->
+      <div class="permisos-section">
+        <div class="section-header">
+          <h3>Permisos por Módulo</h3>
+          <div class="asignacion-select">
+            <label>Asignación:</label>
+            <p-select
+              [options]="asignacionOptions"
+              [(ngModel)]="asignacionModulos"
+              optionLabel="label"
+              optionValue="value"
+              [style]="{ width: '150px' }">
+            </p-select>
+          </div>
+        </div>
+
+        @if (isLoading()) {
+          <div class="loading-permisos">
+            @for (i of [1, 2, 3]; track i) {
+              <div class="skeleton-row">
+                <p-skeleton width="100%" height="50px"></p-skeleton>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="modulos-permisos-grid">
+            <!-- Header -->
+            <div class="grid-header">
+              <div class="header-modulo">Módulo</div>
+              <div class="header-permisos">
+                <span>Creación</span>
+                <span>Edición</span>
+                <span>Visualización</span>
+              </div>
+            </div>
+
+            <!-- Filas de módulos -->
+            @for (modulo of modulosPermisos(); track modulo.id) {
+              <div class="modulo-row">
+                <div class="modulo-info">
+                  <i class="pi" [ngClass]="modulo.icono"></i>
+                  <span>{{ modulo.nombre }}</span>
+                </div>
+                <div class="modulo-permisos">
+                  <p-checkbox
+                    [(ngModel)]="modulo.permisos.creacion"
+                    [binary]="true"
+                    (onChange)="togglePermiso(modulo, 'creacion')">
+                  </p-checkbox>
+                  <p-checkbox
+                    [(ngModel)]="modulo.permisos.edicion"
+                    [binary]="true"
+                    (onChange)="togglePermiso(modulo, 'edicion')">
+                  </p-checkbox>
+                  <p-checkbox
+                    [(ngModel)]="modulo.permisos.visualizacion"
+                    [binary]="true"
+                    (onChange)="togglePermiso(modulo, 'visualizacion')">
+                  </p-checkbox>
+                </div>
+              </div>
+            } @empty {
+              <div class="empty-permisos">
+                <p>No hay módulos configurados</p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Sección de Usuarios Asignados -->
+      <div class="usuarios-section">
+        <div class="section-header">
+          <h3>Usuarios Asignados</h3>
+          <p-button
+            label="Agregar Usuario"
+            icon="pi pi-plus"
+            [text]="true"
+            size="small">
+          </p-button>
+        </div>
+
+        <div class="usuarios-list">
+          @for (usuario of usuariosFiltradosDelRol(); track usuario.id; let i = $index) {
+            <div class="usuario-item">
+              @if (usuario.avatar) {
+                <p-avatar
+                  [image]="usuario.avatar"
+                  shape="circle"
+                  size="normal">
+                </p-avatar>
+              } @else {
+                <p-avatar
+                  [label]="getInitials(usuario.nombre, usuario.apellido)"
+                  shape="circle"
+                  size="normal"
+                  [style]="{ 'background-color': getAvatarColor(i), 'color': '#ffffff' }">
+                </p-avatar>
+              }
+              <div class="usuario-info">
+                <span class="usuario-nombre">{{ usuario.nombre }} {{ usuario.apellido }}</span>
+                <span class="usuario-email">{{ usuario.email }}</span>
+              </div>
+              <div class="usuario-estado">
+                <p-tag
+                  [value]="usuario.estado | titlecase"
+                  [severity]="usuario.estado === 'activo' ? 'success' : 'secondary'"
+                  [rounded]="true">
+                </p-tag>
+              </div>
+              <p-button
+                icon="pi pi-times"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                pTooltip="Remover del rol">
+              </p-button>
+            </div>
+          } @empty {
+            <div class="empty-usuarios">
+              <i class="pi pi-users"></i>
+              <p>No hay usuarios asignados a este rol</p>
+              <p-button
+                label="Asignar Usuarios"
+                icon="pi pi-plus"
+                size="small">
+              </p-button>
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <!-- Estado vacío cuando no hay rol seleccionado -->
+      <div class="empty-detail">
+        <i class="pi pi-shield"></i>
+        <h3>Selecciona un Rol</h3>
+        <p>Selecciona un rol de la lista para ver y editar sus permisos</p>
+      </div>
+    }
+  </div>
+</div>
+
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>

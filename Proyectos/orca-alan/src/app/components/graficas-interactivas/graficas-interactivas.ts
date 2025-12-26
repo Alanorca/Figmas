@@ -1,7 +1,7 @@
-import { Component, Input, Output, EventEmitter, signal, computed, effect, ViewChild, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, ElementRef, ViewChild, AfterViewInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgApexchartsModule, ChartComponent } from 'ng-apexcharts';
+import { ChartModule } from 'primeng/chart';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { ToggleButtonModule } from 'primeng/togglebutton';
@@ -13,25 +13,6 @@ import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { AccordionModule } from 'primeng/accordion';
 import { GroqService } from '../../services/groq.service';
-import {
-  ApexChart,
-  ApexAxisChartSeries,
-  ApexNonAxisChartSeries,
-  ApexXAxis,
-  ApexYAxis,
-  ApexDataLabels,
-  ApexPlotOptions,
-  ApexLegend,
-  ApexTooltip,
-  ApexStroke,
-  ApexFill,
-  ApexGrid,
-  ApexResponsive,
-  ApexTheme,
-  ApexTitleSubtitle,
-  ApexAnnotations,
-  ApexMarkers
-} from 'ng-apexcharts';
 
 // Tipos de gráficas disponibles
 export type TipoGraficaAvanzada =
@@ -39,7 +20,8 @@ export type TipoGraficaAvanzada =
   | 'bar' | 'column' | 'stackedBar' | 'groupedBar'  // Barras
   | 'line' | 'area' | 'stepline' | 'spline'  // Líneas
   | 'radar' | 'scatter' | 'heatmap' | 'treemap'  // Avanzadas
-  | 'funnel' | 'pyramid';  // Embudo
+  | 'funnel' | 'pyramid'  // Embudo
+  | 'trendline' | 'forecast' | 'rangeArea';  // IA/Predictivo
 
 export interface DatosGrafica {
   labels: string[];
@@ -85,6 +67,8 @@ interface CampoDisponible {
   value: string;
   tipo: 'categoria' | 'numerico' | 'fecha';
   descripcion: string;
+  conteo?: number;
+  valores?: { [k: string]: number };
 }
 
 interface RecomendacionAsistente {
@@ -143,7 +127,7 @@ export interface MensajeAsistente {
   selector: 'app-graficas-interactivas',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, NgApexchartsModule,
+    CommonModule, FormsModule, ChartModule,
     ButtonModule, SelectModule, ToggleButtonModule, TabsModule,
     DividerModule, InputTextModule, TooltipModule, TagModule, CardModule,
     AccordionModule
@@ -151,21 +135,91 @@ export interface MensajeAsistente {
   templateUrl: './graficas-interactivas.html',
   styleUrl: './graficas-interactivas.scss'
 })
-export class GraficasInteractivasComponent {
-  @ViewChild('chartRef') chartRef!: ChartComponent;
+export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
 
   private groqService = inject(GroqService);
+  private ngZone = inject(NgZone);
+  private cdr = inject(ChangeDetectorRef);
+  private elementRef = inject(ElementRef);
 
+  // ==================== RESIZE OBSERVER ====================
+
+  @ViewChild('chartContainer') chartContainerRef!: ElementRef<HTMLDivElement>;
+
+  private resizeObserver: ResizeObserver | null = null;
+  private resizeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Signal para forzar actualización del chart
+  private chartUpdateTrigger = signal(0);
+
+  // Inputs con guards para evitar actualizaciones innecesarias
+  private _lastDatos: DatosGrafica | null = null;
   @Input() set datos(value: DatosGrafica) {
-    this.datosSignal.set(value);
+    // Solo actualizar si los datos realmente cambiaron
+    if (value && (
+      !this._lastDatos ||
+      JSON.stringify(value.labels) !== JSON.stringify(this._lastDatos.labels) ||
+      JSON.stringify(value.series) !== JSON.stringify(this._lastDatos.series)
+    )) {
+      this._lastDatos = value;
+      this.datosSignal.set(value);
+    }
   }
+
   @Input() set campoInicial(value: string) {
     if (value && value !== this.campoEjeX()) {
       this.campoEjeX.set(value);
     }
   }
+
   @Input() titulo = 'Gráfica';
   @Input() subtitulo = '';
+
+  // Modo widget: solo muestra la gráfica sin panel de configuración
+  @Input() modoWidget = false;
+
+  // Inputs para configuración externa (con guards)
+  private _lastTipo: TipoGraficaAvanzada | undefined;
+  @Input() set tipoGraficaExterno(value: TipoGraficaAvanzada | undefined) {
+    if (value && value !== this._lastTipo) {
+      this._lastTipo = value;
+      this.tipoGrafica.set(value);
+    }
+  }
+
+  private _lastPaleta: string | undefined;
+  @Input() set paletaExterna(value: string | undefined) {
+    if (value && value !== this._lastPaleta) {
+      this._lastPaleta = value;
+      this.paletaSeleccionada.set(value);
+    }
+  }
+
+  @Input() set animacionesExternas(value: boolean | undefined) {
+    if (value !== undefined && value !== this.animaciones()) {
+      this.animaciones.set(value);
+    }
+  }
+
+  @Input() set mostrarLeyendaExterna(value: boolean | undefined) {
+    if (value !== undefined && value !== this.mostrarLeyenda()) {
+      this.mostrarLeyenda.set(value);
+    }
+  }
+
+  @Input() set mostrarDataLabelsExterna(value: boolean | undefined) {
+    if (value !== undefined && value !== this.mostrarDataLabels()) {
+      this.mostrarDataLabels.set(value);
+    }
+  }
+
+  private _lastTema: 'light' | 'dark' | undefined;
+  @Input() set temaExterno(value: 'light' | 'dark' | undefined) {
+    if (value && value !== this._lastTema) {
+      this._lastTema = value;
+      this.tema.set(value);
+    }
+  }
 
   @Output() dataPointClick = new EventEmitter<{ categoria: string; valor: number; serie?: string }>();
   @Output() legendClick = new EventEmitter<{ serie: string; visible: boolean }>();
@@ -259,6 +313,42 @@ export class GraficasInteractivasComponent {
 
   constructor() {
     this.cargarConfiguracionesDesdeStorage();
+  }
+
+  // ==================== LIFECYCLE HOOKS ====================
+
+  ngAfterViewInit(): void {
+    // Inicializar ResizeObserver para detectar cambios de tamaño
+    this.initResizeObserver();
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar ResizeObserver
+    this.destroyResizeObserver();
+  }
+
+  // ==================== RESIZE OBSERVER METHODS ====================
+
+  private initResizeObserver(): void {
+    // Deshabilitado temporalmente - Chart.js ya tiene responsive: true
+    // El ResizeObserver puede causar loops de re-render
+  }
+
+  private destroyResizeObserver(): void {
+    if (this.resizeDebounceTimer) {
+      clearTimeout(this.resizeDebounceTimer);
+      this.resizeDebounceTimer = null;
+    }
+
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+  }
+
+  /** Método público para forzar resize desde componentes padres */
+  forceChartResize(): void {
+    // Chart.js con responsive: true se redimensiona automáticamente
   }
 
   private cargarConfiguracionesDesdeStorage(): void {
@@ -442,6 +532,15 @@ export class GraficasInteractivasComponent {
         { label: 'Embudo', value: 'funnel', icon: 'pi pi-filter', descripcion: 'Visualiza procesos secuenciales con reducción. Ideal para flujos de trabajo.', recomendadoPara: ['estado'] },
         { label: 'Pirámide', value: 'pyramid', icon: 'pi pi-caret-up', descripcion: 'Similar al embudo pero invertido. Muestra jerarquías de importancia.', recomendadoPara: ['severidad', 'nivelRiesgo'] }
       ]
+    },
+    {
+      label: 'IA/Predictivo',
+      value: 'ia-predictivo',
+      items: [
+        { label: 'Tendencias IA', value: 'trendline', icon: 'pi pi-sparkles', descripcion: 'Línea de tendencia con análisis predictivo basado en IA. Muestra proyecciones futuras.', recomendadoPara: ['fecha', 'nivelRiesgo'] },
+        { label: 'Pronóstico', value: 'forecast', icon: 'pi pi-clock', descripcion: 'Gráfica con predicción de valores futuros usando análisis de tendencias históricas.', recomendadoPara: ['fecha'] },
+        { label: 'Rango de Área', value: 'rangeArea', icon: 'pi pi-chart-line', descripcion: 'Muestra un rango de valores con zona de confianza. Ideal para intervalos de predicción.', recomendadoPara: ['fecha', 'probabilidad', 'impacto'] }
+      ]
     }
   ];
 
@@ -462,504 +561,244 @@ export class GraficasInteractivasComponent {
     this.campoSeleccionado.emit({ campo, tipo: 'ejeX' });
   }
 
-  // Computed: Configuración del chart
-  chartOptions = computed(() => {
+  // Tipo de chart para Chart.js (usar tipo literal)
+  chartType = computed<'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'polarArea' | 'radar'>(() => {
+    const tipo = this.tipoGrafica();
+    const typeMapping: Record<string, 'bar' | 'line' | 'scatter' | 'bubble' | 'pie' | 'doughnut' | 'polarArea' | 'radar'> = {
+      'pie': 'pie', 'donut': 'doughnut', 'radialBar': 'doughnut', 'polarArea': 'polarArea',
+      'bar': 'bar', 'column': 'bar', 'stackedBar': 'bar', 'groupedBar': 'bar',
+      'line': 'line', 'area': 'line', 'spline': 'line', 'stepline': 'line',
+      'radar': 'radar', 'scatter': 'scatter',
+      'funnel': 'bar', 'pyramid': 'bar',
+      'trendline': 'line', 'forecast': 'line', 'rangeArea': 'line'
+    };
+    return typeMapping[tipo] || 'bar';
+  });
+
+  // Computed: Datos para Chart.js - Versión minimalista
+  chartData = computed(() => {
     const datos = this.datosSignal();
     const tipo = this.tipoGrafica();
     const paleta = this.paletas[this.paletaSeleccionada()];
-
-    return this.buildChartOptions(tipo, datos, paleta);
-  });
-
-  chartSeries = computed(() => {
-    const datos = this.datosSignal();
-    const tipo = this.tipoGrafica();
+    const isDark = this.tema() === 'dark';
 
     if (this.isNonAxisChart(tipo)) {
-      // Para gráficas circulares, series es un array de números
+      // Para gráficas circulares - minimalistas
+      let values: number[] = [];
       if (Array.isArray(datos.series) && typeof datos.series[0] === 'number') {
-        return datos.series as number[];
+        values = datos.series as number[];
+      } else if (Array.isArray(datos.series) && datos.series.length > 0 && typeof datos.series[0] === 'object') {
+        values = (datos.series as { name: string; data: number[] }[])[0].data;
       }
-      // Si viene como array de objetos, extraer los datos del primero
-      if (Array.isArray(datos.series) && datos.series.length > 0 && typeof datos.series[0] === 'object') {
-        return (datos.series as { name: string; data: number[] }[])[0].data;
-      }
-      return [];
+
+      return {
+        labels: datos.labels,
+        datasets: [{
+          data: values,
+          backgroundColor: paleta.slice(0, values.length).map(c => this.hexToRgba(c, 0.85)),
+          borderColor: isDark ? '#1a1a2e' : '#ffffff',
+          borderWidth: 1,
+          hoverOffset: 4,
+          hoverBorderWidth: 2
+        }]
+      };
     }
 
-    // Para gráficas de ejes
+    // Para gráficas de ejes - minimalistas
+    let datasets: any[] = [];
+    const isLineType = ['line', 'area', 'spline', 'stepline'].includes(tipo);
+
     if (Array.isArray(datos.series) && datos.series.length > 0) {
       if (typeof datos.series[0] === 'number') {
-        return [{ name: this.titulo, data: datos.series as number[] }];
+        datasets = [{
+          label: this.titulo,
+          data: datos.series as number[],
+          backgroundColor: isLineType
+            ? this.hexToRgba(paleta[0], 0.1)
+            : paleta.map(c => this.hexToRgba(c, 0.8)),
+          borderColor: isLineType ? paleta[0] : 'transparent',
+          borderWidth: isLineType ? 2 : 0,
+          fill: tipo === 'area',
+          tension: tipo === 'spline' ? 0.4 : 0.1,
+          stepped: tipo === 'stepline' ? 'before' : false,
+          pointRadius: isLineType ? 0 : 0, // Sin puntos para look limpio
+          pointHoverRadius: isLineType ? 4 : 0,
+          pointBackgroundColor: paleta[0],
+          pointBorderColor: isDark ? '#1a1a2e' : '#fff',
+          pointBorderWidth: 2
+        }];
+      } else {
+        datasets = (datos.series as { name: string; data: number[] }[]).map((serie, index) => ({
+          label: serie.name,
+          data: serie.data,
+          backgroundColor: isLineType
+            ? this.hexToRgba(paleta[index % paleta.length], 0.1)
+            : this.hexToRgba(paleta[index % paleta.length], 0.8),
+          borderColor: isLineType ? paleta[index % paleta.length] : 'transparent',
+          borderWidth: isLineType ? 2 : 0,
+          fill: tipo === 'area',
+          tension: tipo === 'spline' ? 0.4 : 0.1,
+          stepped: tipo === 'stepline' ? 'before' : false,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointBackgroundColor: paleta[index % paleta.length],
+          pointBorderColor: isDark ? '#1a1a2e' : '#fff',
+          pointBorderWidth: 2
+        }));
       }
-      return datos.series as { name: string; data: number[] }[];
     }
-    return [];
+
+    return {
+      labels: datos.labels,
+      datasets
+    };
   });
+
+  // Computed: Opciones para Chart.js - Versión minimalista y responsiva
+  chartOptions = computed(() => {
+    const tipo = this.tipoGrafica();
+    const isDark = this.tema() === 'dark';
+    const isWidget = this.modoWidget;
+
+    const baseOptions: any = {
+      // Responsividad
+      responsive: true,
+      maintainAspectRatio: false,
+      resizeDelay: 100,
+
+      // Layout minimalista
+      layout: {
+        padding: isWidget ? 4 : 8
+      },
+
+      plugins: {
+        // Leyenda minimalista
+        legend: {
+          display: this.mostrarLeyenda() && !isWidget, // Ocultar en widget para más espacio
+          position: 'bottom' as const,
+          labels: {
+            color: isDark ? '#999' : '#666',
+            font: { size: 10, family: 'Inter, sans-serif' },
+            padding: 6,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            boxWidth: 6,
+            boxHeight: 6
+          }
+        },
+
+        // Tooltip simple
+        tooltip: {
+          enabled: true,
+          backgroundColor: isDark ? 'rgba(30,30,40,0.9)' : 'rgba(255,255,255,0.95)',
+          titleColor: isDark ? '#fff' : '#333',
+          bodyColor: isDark ? '#ccc' : '#666',
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          borderWidth: 1,
+          cornerRadius: 4,
+          padding: 8,
+          displayColors: true,
+          boxWidth: 8,
+          boxHeight: 8,
+          titleFont: { size: 11, weight: '600' as const },
+          bodyFont: { size: 10 },
+          callbacks: {
+            label: (context: any) => {
+              const value = context.parsed?.y ?? context.parsed ?? context.raw;
+              return ` ${context.label || ''}: ${value?.toLocaleString('es-MX') || value}`;
+            }
+          }
+        },
+
+        // Sin datalabels para look limpio
+        datalabels: { display: false }
+      },
+
+      // Animación rápida
+      animation: {
+        duration: this.animaciones() ? 400 : 0
+      },
+
+      // Interacción
+      interaction: {
+        intersect: false,
+        mode: 'index' as const
+      }
+    };
+
+    // Configuración específica según el tipo
+    if (this.isNonAxisChart(tipo)) {
+      // Gráficas circulares - minimalistas
+      baseOptions.cutout = tipo === 'donut' ? '65%' : tipo === 'radialBar' ? '75%' : '0%';
+      baseOptions.plugins.legend.display = this.mostrarLeyenda(); // Mostrar leyenda en circulares
+      baseOptions.plugins.legend.position = 'right';
+      baseOptions.plugins.legend.labels.padding = 4;
+    } else {
+      // Gráficas con ejes - minimalistas
+      baseOptions.indexAxis = tipo === 'bar' ? 'y' : 'x';
+      baseOptions.scales = {
+        x: {
+          display: true,
+          border: { display: false },
+          grid: {
+            display: tipo !== 'bar',
+            color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+            drawTicks: false
+          },
+          ticks: {
+            color: isDark ? '#888' : '#999',
+            font: { size: 9 },
+            padding: 4,
+            maxRotation: 45,
+            autoSkip: true,
+            maxTicksLimit: isWidget ? 6 : 10
+          },
+          stacked: tipo === 'stackedBar'
+        },
+        y: {
+          display: true,
+          border: { display: false },
+          grid: {
+            display: tipo === 'bar',
+            color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+            drawTicks: false
+          },
+          ticks: {
+            color: isDark ? '#888' : '#999',
+            font: { size: 9 },
+            padding: 4,
+            maxTicksLimit: isWidget ? 5 : 8,
+            callback: (value: number) => {
+              if (value >= 1000) return (value / 1000).toFixed(0) + 'k';
+              return value;
+            }
+          },
+          stacked: tipo === 'stackedBar',
+          beginAtZero: true
+        }
+      };
+
+      // Barras con bordes redondeados sutiles
+      if (['bar', 'column', 'stackedBar', 'groupedBar'].includes(tipo)) {
+        baseOptions.borderRadius = 3;
+        baseOptions.barPercentage = 0.7;
+        baseOptions.categoryPercentage = 0.85;
+      }
+    }
+
+    return baseOptions;
+  });
+
+  // Helper para convertir hex a rgba
+  private hexToRgba(hex: string, alpha: number): string {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
 
   private isNonAxisChart(tipo: TipoGraficaAvanzada): boolean {
     return ['pie', 'donut', 'radialBar', 'polarArea'].includes(tipo);
-  }
-
-  private buildChartOptions(tipo: TipoGraficaAvanzada, datos: DatosGrafica, paleta: string[]): any {
-    const baseOptions = {
-      chart: this.getChartConfig(tipo),
-      colors: paleta,
-      labels: datos.labels,
-      title: {
-        text: this.titulo,
-        align: 'center' as const,
-        style: {
-          fontSize: '18px',
-          fontWeight: 600,
-          color: this.tema() === 'dark' ? '#fff' : '#333'
-        }
-      },
-      subtitle: {
-        text: this.subtitulo,
-        align: 'center' as const,
-        style: {
-          fontSize: '14px',
-          color: this.tema() === 'dark' ? '#aaa' : '#666'
-        }
-      },
-      legend: this.getLegendConfig(),
-      tooltip: this.getTooltipConfig(),
-      dataLabels: this.getDataLabelsConfig(tipo),
-      theme: {
-        mode: this.tema()
-      },
-      responsive: this.getResponsiveConfig()
-    };
-
-    // Agregar configuraciones específicas según el tipo
-    switch (tipo) {
-      case 'donut':
-        return {
-          ...baseOptions,
-          plotOptions: {
-            pie: {
-              donut: {
-                size: '65%',
-                labels: {
-                  show: true,
-                  name: { show: true, fontSize: '16px', fontWeight: 600 },
-                  value: { show: true, fontSize: '22px', fontWeight: 700 },
-                  total: {
-                    show: true,
-                    label: 'Total',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    formatter: (w: any) => w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)
-                  }
-                }
-              },
-              expandOnClick: true
-            }
-          }
-        };
-
-      case 'pie':
-        return {
-          ...baseOptions,
-          plotOptions: {
-            pie: {
-              expandOnClick: true,
-              offsetX: 0,
-              offsetY: 0,
-              customScale: 1,
-              dataLabels: { offset: -10 }
-            }
-          }
-        };
-
-      case 'radialBar':
-        return {
-          ...baseOptions,
-          plotOptions: {
-            radialBar: {
-              hollow: { size: '40%' },
-              track: { background: '#e7e7e7', strokeWidth: '97%', margin: 5 },
-              dataLabels: {
-                name: { fontSize: '16px' },
-                value: { fontSize: '22px', fontWeight: 700 },
-                total: {
-                  show: true,
-                  label: 'Promedio',
-                  formatter: (w: any) => {
-                    const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
-                    return Math.round(total / w.globals.series.length) + '%';
-                  }
-                }
-              }
-            }
-          }
-        };
-
-      case 'polarArea':
-        return {
-          ...baseOptions,
-          plotOptions: {
-            polarArea: {
-              rings: { strokeWidth: 1 },
-              spokes: { strokeWidth: 1 }
-            }
-          },
-          stroke: { colors: ['#fff'], width: 1 },
-          fill: { opacity: 0.8 }
-        };
-
-      case 'bar':
-      case 'column':
-        return {
-          ...baseOptions,
-          xaxis: this.getXAxisConfig(datos.labels),
-          yaxis: this.getYAxisConfig(),
-          plotOptions: {
-            bar: {
-              horizontal: tipo === 'bar',
-              borderRadius: 6,
-              borderRadiusApplication: 'end' as const,
-              distributed: true,
-              dataLabels: { position: 'top' }
-            }
-          },
-          grid: this.getGridConfig()
-        };
-
-      case 'stackedBar':
-        return {
-          ...baseOptions,
-          chart: { ...this.getChartConfig('bar'), stacked: true },
-          xaxis: this.getXAxisConfig(datos.labels),
-          yaxis: this.getYAxisConfig(),
-          plotOptions: {
-            bar: {
-              horizontal: true,
-              borderRadius: 4,
-              dataLabels: { total: { enabled: true, style: { fontSize: '13px', fontWeight: 900 } } }
-            }
-          },
-          grid: this.getGridConfig()
-        };
-
-      case 'groupedBar':
-        return {
-          ...baseOptions,
-          chart: { ...this.getChartConfig('bar'), stacked: false },
-          xaxis: this.getXAxisConfig(datos.labels),
-          yaxis: this.getYAxisConfig(),
-          plotOptions: {
-            bar: {
-              horizontal: false,
-              borderRadius: 4,
-              columnWidth: '70%'
-            }
-          },
-          grid: this.getGridConfig()
-        };
-
-      case 'line':
-      case 'spline':
-      case 'stepline':
-        return {
-          ...baseOptions,
-          chart: {
-            ...this.getChartConfig('line'),
-            zoom: { enabled: true, type: 'x' as const, autoScaleYaxis: true },
-            toolbar: {
-              autoSelected: 'zoom' as const,
-              tools: { download: true, selection: true, zoom: true, zoomin: true, zoomout: true, pan: true, reset: true }
-            }
-          },
-          xaxis: this.getXAxisConfig(datos.labels),
-          yaxis: this.getYAxisConfig(),
-          stroke: {
-            curve: tipo === 'spline' ? 'smooth' as const : tipo === 'stepline' ? 'stepline' as const : 'straight' as const,
-            width: 3
-          },
-          markers: { size: 5, hover: { size: 8 } },
-          grid: this.getGridConfig()
-        };
-
-      case 'area':
-        return {
-          ...baseOptions,
-          chart: {
-            ...this.getChartConfig('area'),
-            zoom: { enabled: true, type: 'x' as const },
-            toolbar: { autoSelected: 'zoom' as const }
-          },
-          xaxis: this.getXAxisConfig(datos.labels),
-          yaxis: this.getYAxisConfig(),
-          stroke: { curve: 'smooth' as const, width: 2 },
-          fill: {
-            type: 'gradient',
-            gradient: {
-              shadeIntensity: 1,
-              opacityFrom: 0.7,
-              opacityTo: 0.2,
-              stops: [0, 90, 100]
-            }
-          },
-          grid: this.getGridConfig()
-        };
-
-      case 'radar':
-        return {
-          ...baseOptions,
-          xaxis: { categories: datos.labels },
-          plotOptions: {
-            radar: {
-              size: 140,
-              polygons: {
-                strokeColors: '#e9e9e9',
-                fill: { colors: ['#f8f8f8', '#fff'] }
-              }
-            }
-          },
-          markers: { size: 4 }
-        };
-
-      case 'heatmap':
-        return {
-          ...baseOptions,
-          plotOptions: {
-            heatmap: {
-              shadeIntensity: 0.5,
-              colorScale: {
-                ranges: [
-                  { from: 0, to: 25, name: 'Bajo', color: '#00A100' },
-                  { from: 26, to: 50, name: 'Medio', color: '#128FD9' },
-                  { from: 51, to: 75, name: 'Alto', color: '#FFB200' },
-                  { from: 76, to: 100, name: 'Crítico', color: '#FF0000' }
-                ]
-              }
-            }
-          }
-        };
-
-      case 'treemap':
-        return {
-          ...baseOptions,
-          plotOptions: {
-            treemap: {
-              distributed: true,
-              enableShades: true
-            }
-          }
-        };
-
-      case 'funnel':
-        return {
-          ...baseOptions,
-          plotOptions: {
-            bar: {
-              horizontal: true,
-              isFunnel: true,
-              borderRadius: 0
-            }
-          },
-          xaxis: { categories: datos.labels }
-        };
-
-      case 'pyramid':
-        return {
-          ...baseOptions,
-          plotOptions: {
-            bar: {
-              horizontal: true,
-              isFunnel: true,
-              borderRadius: 0,
-              barHeight: '80%'
-            }
-          },
-          xaxis: { categories: datos.labels }
-        };
-
-      default:
-        return baseOptions;
-    }
-  }
-
-  private getChartConfig(tipo: string): ApexChart {
-    let chartType: ApexChart['type'] = 'bar';
-
-    const typeMapping: Record<string, ApexChart['type']> = {
-      'pie': 'pie', 'donut': 'donut', 'radialBar': 'radialBar', 'polarArea': 'polarArea',
-      'bar': 'bar', 'column': 'bar', 'stackedBar': 'bar', 'groupedBar': 'bar',
-      'line': 'line', 'area': 'area', 'spline': 'line', 'stepline': 'line',
-      'radar': 'radar', 'scatter': 'scatter', 'heatmap': 'heatmap', 'treemap': 'treemap',
-      'funnel': 'bar', 'pyramid': 'bar'
-    };
-
-    chartType = typeMapping[tipo] || 'bar';
-
-    return {
-      type: chartType,
-      height: 380,
-      fontFamily: 'Inter, sans-serif',
-      animations: {
-        enabled: this.animaciones(),
-        speed: 800,
-        animateGradually: { enabled: true, delay: 150 },
-        dynamicAnimation: { enabled: true, speed: 350 }
-      },
-      dropShadow: {
-        enabled: true,
-        color: '#000',
-        top: 8,
-        left: 0,
-        blur: 10,
-        opacity: 0.1
-      },
-      toolbar: {
-        show: true,
-        tools: {
-          download: true,
-          selection: true,
-          zoom: true,
-          zoomin: true,
-          zoomout: true,
-          pan: true,
-          reset: true
-        },
-        export: {
-          csv: { filename: 'grafica-datos' },
-          svg: { filename: 'grafica-svg' },
-          png: { filename: 'grafica-png' }
-        }
-      },
-      events: {
-        dataPointSelection: (event: any, chartContext: any, config: any) => {
-          const dataIndex = config.dataPointIndex;
-          const seriesIndex = config.seriesIndex;
-          this.dataPointClick.emit({
-            categoria: this.datosSignal().labels[dataIndex],
-            valor: Array.isArray(this.datosSignal().series[seriesIndex])
-              ? 0
-              : typeof this.datosSignal().series[seriesIndex] === 'number'
-                ? this.datosSignal().series[seriesIndex] as number
-                : 0,
-            serie: typeof this.datosSignal().series[seriesIndex] === 'object'
-              ? (this.datosSignal().series[seriesIndex] as { name: string }).name
-              : undefined
-          });
-        },
-        legendClick: (chartContext: any, seriesIndex: number, config: any) => {
-          this.legendClick.emit({
-            serie: this.datosSignal().labels[seriesIndex],
-            visible: config.globals.collapsedSeriesIndices.indexOf(seriesIndex) === -1
-          });
-        }
-      }
-    };
-  }
-
-  private getLegendConfig(): ApexLegend {
-    return {
-      show: this.mostrarLeyenda(),
-      position: 'bottom',
-      horizontalAlign: 'center',
-      floating: false,
-      fontSize: '13px',
-      fontWeight: 500,
-      markers: { strokeWidth: 0 },
-      itemMargin: { horizontal: 12, vertical: 8 },
-      onItemClick: { toggleDataSeries: true },
-      onItemHover: { highlightDataSeries: true }
-    };
-  }
-
-  private getTooltipConfig(): ApexTooltip {
-    return {
-      enabled: this.mostrarTooltip(),
-      shared: true,
-      intersect: false,
-      followCursor: true,
-      theme: this.tema(),
-      style: { fontSize: '13px' },
-      x: { show: true },
-      y: {
-        formatter: (val: number) => {
-          if (val === undefined || val === null) return '';
-          return val.toLocaleString('es-MX');
-        }
-      },
-      marker: { show: true }
-    };
-  }
-
-  private getDataLabelsConfig(tipo: TipoGraficaAvanzada): ApexDataLabels {
-    const isCircular = this.isNonAxisChart(tipo);
-    return {
-      enabled: this.mostrarDataLabels(),
-      formatter: (val: number, opts: any) => {
-        if (isCircular && typeof val === 'number') {
-          return val.toFixed(1) + '%';
-        }
-        return val?.toLocaleString('es-MX') || '';
-      },
-      style: {
-        fontSize: '12px',
-        fontWeight: 600,
-        colors: isCircular ? ['#fff'] : undefined
-      },
-      dropShadow: { enabled: isCircular, top: 1, left: 1, blur: 2, opacity: 0.5 }
-    };
-  }
-
-  private getXAxisConfig(categories: string[]): ApexXAxis {
-    return {
-      categories,
-      labels: {
-        style: { fontSize: '12px', fontWeight: 500 },
-        rotate: -45,
-        rotateAlways: false
-      },
-      axisBorder: { show: true, color: '#e0e0e0' },
-      axisTicks: { show: true, color: '#e0e0e0' }
-    };
-  }
-
-  private getYAxisConfig(): ApexYAxis {
-    return {
-      labels: {
-        style: { fontSize: '12px' },
-        formatter: (val: number) => val?.toLocaleString('es-MX') || ''
-      },
-      axisBorder: { show: true, color: '#e0e0e0' }
-    };
-  }
-
-  private getGridConfig(): ApexGrid {
-    return {
-      show: true,
-      borderColor: '#f0f0f0',
-      strokeDashArray: 3,
-      position: 'back',
-      xaxis: { lines: { show: false } },
-      yaxis: { lines: { show: true } }
-    };
-  }
-
-  private getResponsiveConfig(): ApexResponsive[] {
-    return [
-      {
-        breakpoint: 768,
-        options: {
-          chart: { height: 300 },
-          legend: { position: 'bottom', offsetY: 0 }
-        }
-      },
-      {
-        breakpoint: 480,
-        options: {
-          chart: { height: 250 },
-          legend: { show: false }
-        }
-      }
-    ];
   }
 
   // Métodos públicos
@@ -988,31 +827,31 @@ export class GraficasInteractivasComponent {
   }
 
   exportarPNG(): void {
-    if (this.chartRef) {
-      this.chartRef.dataURI().then((uri: any) => {
-        const link = document.createElement('a');
-        link.href = uri.imgURI;
-        link.download = `grafica-${this.tipoGrafica()}-${Date.now()}.png`;
-        link.click();
-      });
+    // Chart.js export via canvas
+    const canvas = document.querySelector('.chart-container canvas') as HTMLCanvasElement;
+    if (canvas) {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `grafica-${this.tipoGrafica()}-${Date.now()}.png`;
+      link.click();
     }
   }
 
   exportarSVG(): void {
-    if (this.chartRef) {
-      this.chartRef.dataURI({ scale: 2 }).then((uri: any) => {
-        const link = document.createElement('a');
-        link.href = uri.imgURI;
-        link.download = `grafica-${this.tipoGrafica()}-${Date.now()}.svg`;
-        link.click();
-      });
+    // Chart.js doesn't support SVG directly, export as PNG with higher resolution
+    const canvas = document.querySelector('.chart-container canvas') as HTMLCanvasElement;
+    if (canvas) {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.download = `grafica-${this.tipoGrafica()}-${Date.now()}.png`;
+      link.click();
     }
   }
 
   resetZoom(): void {
-    if (this.chartRef) {
-      this.chartRef.resetSeries();
-    }
+    // Chart.js zoom reset - p-chart handles this internally
+    // Trigger a re-render by updating a signal
+    this.animaciones.update(v => v);
   }
 
   getTipoLabel(tipo: TipoGraficaAvanzada): string {
@@ -1112,14 +951,16 @@ export class GraficasInteractivasComponent {
   }
 
   getTotalSeries(): number {
-    const series = this.chartSeries();
-    if (series.length === 0) return 0;
+    const data = this.chartData();
+    if (!data.datasets || data.datasets.length === 0) return 0;
 
-    if (typeof series[0] === 'number') {
-      return (series as number[]).reduce((acc, val) => acc + val, 0);
+    // Sumar todos los valores del primer dataset
+    const firstDataset = data.datasets[0];
+    if (firstDataset.data && Array.isArray(firstDataset.data)) {
+      return firstDataset.data.reduce((acc: number, val: number) => acc + (val || 0), 0);
     }
 
-    return series.length;
+    return data.datasets.length;
   }
 
   // Métodos del Asistente IA

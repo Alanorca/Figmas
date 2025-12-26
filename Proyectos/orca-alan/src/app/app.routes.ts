@@ -71,6 +71,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/results-ml/results-ml').then(m => m.ResultsMLComponent)
   },
   {
+    path: 'usuarios-roles',
+    loadComponent: () => import('./pages/usuarios-roles/usuarios-roles').then(m => m.UsuariosRolesComponent)
+  },
+  {
+    path: 'asignacion-roles',
+    loadComponent: () => import('./pages/asignacion-roles/asignacion-roles').then(m => m.AsignacionRolesComponent)
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }

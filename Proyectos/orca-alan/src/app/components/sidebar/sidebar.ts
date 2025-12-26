@@ -1,17 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { StyleClassModule } from 'primeng/styleclass';
 import { TooltipModule } from 'primeng/tooltip';
 import { ButtonModule } from 'primeng/button';
 import { NotificationsComponent } from '../notifications/notifications';
 import { ThemeService } from '../../services/theme.service';
+import { FeatureFlagsService } from '../../services/feature-flags.service';
 import { filter } from 'rxjs/operators';
 
-interface MenuItem {
+interface SubMenuItem {
   label: string;
   icon: string;
   routerLink: string;
+}
+
+interface MenuGroup {
+  label: string;
+  icon: string;
+  expanded?: boolean;
+  items: SubMenuItem[];
 }
 
 interface BreadcrumbItem {
@@ -41,18 +49,40 @@ interface BreadcrumbItem {
 
         <!-- Menu -->
         <nav class="menu-nav">
-          @for (item of menuItems; track item.routerLink) {
-            <a
-              [routerLink]="item.routerLink"
-              routerLinkActive="active-menu-item"
-              class="menu-item"
-              [pTooltip]="item.label"
-              tooltipPosition="right"
-              [tooltipOptions]="{showDelay: 300}"
-            >
-              <i [class]="item.icon"></i>
-              <span class="menu-label">{{ item.label }}</span>
-            </a>
+          @for (group of menuGroups(); track group.label) {
+            <div class="menu-group">
+              <!-- Group Header -->
+              <div
+                class="menu-group-header"
+                (click)="toggleGroup(group)"
+                [pTooltip]="group.label"
+                tooltipPosition="right"
+                [tooltipOptions]="{showDelay: 300}"
+              >
+                <i [class]="group.icon"></i>
+                <span class="menu-label">{{ group.label }}</span>
+                <i class="pi menu-chevron" [ngClass]="group.expanded ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+              </div>
+
+              <!-- Subitems -->
+              @if (group.expanded) {
+                <div class="menu-subitems">
+                  @for (item of group.items; track item.routerLink) {
+                    <a
+                      [routerLink]="item.routerLink"
+                      routerLinkActive="active-menu-item"
+                      class="menu-subitem"
+                      [pTooltip]="item.label"
+                      tooltipPosition="right"
+                      [tooltipOptions]="{showDelay: 300}"
+                    >
+                      <i [class]="item.icon"></i>
+                      <span class="menu-label">{{ item.label }}</span>
+                    </a>
+                  }
+                </div>
+              }
+            </div>
           }
         </nav>
 
@@ -68,6 +98,17 @@ interface BreadcrumbItem {
 
       <!-- Main Content -->
       <main class="main-content">
+        <!-- Dev Mode Warning Banner -->
+        @if (featureFlags.isDevMode()) {
+          <div class="dev-mode-banner">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>MODO DESARROLLO - Funcionalidades en prueba visibles</span>
+            <button class="banner-close" (click)="featureFlags.toggleDevMode()">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        }
+
         <!-- Top Header with Breadcrumbs and Notifications -->
         <header class="top-header">
           <nav class="breadcrumb-nav">
@@ -97,6 +138,16 @@ interface BreadcrumbItem {
               tooltipPosition="bottom"
             ></button>
             <app-notifications />
+            <button
+              pButton
+              type="button"
+              [icon]="featureFlags.isDevMode() ? 'pi pi-eye' : 'pi pi-eye-slash'"
+              class="p-button-text p-button-rounded dev-toggle"
+              [class.dev-mode-active]="featureFlags.isDevMode()"
+              (click)="featureFlags.toggleDevMode()"
+              [pTooltip]="featureFlags.isDevMode() ? 'Dev Mode: ON - Mostrando todas las features' : 'Dev Mode: OFF - Solo features estables'"
+              tooltipPosition="bottom"
+            ></button>
           </div>
         </header>
 
@@ -125,7 +176,7 @@ interface BreadcrumbItem {
     }
 
     .sidebar:hover {
-      width: 240px;
+      width: 260px;
     }
 
     .logo-section {
@@ -169,15 +220,68 @@ interface BreadcrumbItem {
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 12px;
+      padding: 8px;
     }
 
-    .menu-item {
+    /* Menu Group */
+    .menu-group {
+      margin-bottom: 4px;
+    }
+
+    .menu-group-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px;
-      margin-bottom: 4px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: var(--surface-600);
+      cursor: pointer;
+      transition: background-color 0.15s;
+      white-space: nowrap;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .menu-group-header:hover {
+      background-color: var(--surface-100);
+    }
+
+    .menu-group-header > i:first-child {
+      font-size: 16px;
+      flex-shrink: 0;
+      width: 24px;
+      text-align: center;
+    }
+
+    .menu-chevron {
+      font-size: 10px !important;
+      margin-left: auto;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .sidebar:hover .menu-chevron {
+      opacity: 1;
+    }
+
+    /* Subitems */
+    .menu-subitems {
+      margin-left: 0;
+      overflow: hidden;
+    }
+
+    .sidebar:hover .menu-subitems {
+      margin-left: 12px;
+    }
+
+    .menu-subitem {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      margin-bottom: 2px;
       border-radius: 8px;
       color: var(--surface-700);
       text-decoration: none;
@@ -186,12 +290,12 @@ interface BreadcrumbItem {
       white-space: nowrap;
     }
 
-    .menu-item:hover {
+    .menu-subitem:hover {
       background-color: var(--surface-100);
     }
 
-    .menu-item i {
-      font-size: 18px;
+    .menu-subitem i {
+      font-size: 16px;
       flex-shrink: 0;
       width: 24px;
       text-align: center;
@@ -201,10 +305,15 @@ interface BreadcrumbItem {
       font-weight: 500;
       opacity: 0;
       transition: opacity 0.2s ease;
+      font-size: 14px;
     }
 
     .sidebar:hover .menu-label {
       opacity: 1;
+    }
+
+    .menu-group-header .menu-label {
+      font-size: 12px;
     }
 
     .active-menu-item {
@@ -262,6 +371,50 @@ interface BreadcrumbItem {
       overflow: hidden;
     }
 
+    /* Dev Mode Warning Banner - Discreto */
+    .dev-mode-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.25rem 1rem;
+      background: linear-gradient(90deg, #ea580c, #dc2626);
+      color: white;
+      font-weight: 500;
+      font-size: 0.7rem;
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+      position: relative;
+
+      i {
+        font-size: 0.7rem;
+      }
+
+      .banner-close {
+        position: absolute;
+        right: 0.5rem;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        padding: 0.15rem;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+
+        &:hover {
+          color: white;
+          background: rgba(255, 255, 255, 0.2);
+        }
+
+        i {
+          font-size: 0.65rem;
+        }
+      }
+    }
+
     // Top Header with Breadcrumbs and Notifications
     .top-header {
       display: flex;
@@ -315,7 +468,8 @@ interface BreadcrumbItem {
       gap: 0.5rem;
     }
 
-    .theme-toggle {
+    .theme-toggle,
+    .dev-toggle {
       width: 36px;
       height: 36px;
       color: var(--text-color-secondary);
@@ -324,6 +478,16 @@ interface BreadcrumbItem {
       &:hover {
         color: var(--primary-color);
         background: var(--surface-100);
+      }
+    }
+
+    .dev-toggle.dev-mode-active {
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+
+      &:hover {
+        color: #d97706;
+        background: rgba(245, 158, 11, 0.2);
       }
     }
 
@@ -336,41 +500,102 @@ interface BreadcrumbItem {
 export class SidebarComponent {
   private router = inject(Router);
   themeService = inject(ThemeService);
+  featureFlags = inject(FeatureFlagsService);
 
-  menuItems: MenuItem[] = [
-    { label: 'Dashboard', icon: 'pi pi-home', routerLink: '/dashboard' },
-    { label: 'Dashboard Custom', icon: 'pi pi-th-large', routerLink: '/dashboard-custom' },
-    { label: 'Activos', icon: 'pi pi-box', routerLink: '/activos' },
-    { label: 'Organigrama', icon: 'pi pi-sitemap', routerLink: '/organigramas' },
-    { label: 'Riesgos', icon: 'pi pi-exclamation-triangle', routerLink: '/riesgos' },
-    { label: 'Incidentes', icon: 'pi pi-bolt', routerLink: '/incidentes' },
-    { label: 'Defectos', icon: 'pi pi-bug', routerLink: '/defectos' },
-    { label: 'Procesos', icon: 'pi pi-cog', routerLink: '/procesos' },
-    { label: 'Cuestionarios', icon: 'pi pi-list-check', routerLink: '/cuestionarios' },
-    { label: 'Cumplimiento', icon: 'pi pi-check-circle', routerLink: '/cumplimiento' },
-    { label: 'Tabla Unificada', icon: 'pi pi-table', routerLink: '/tabla-unificada' },
-    { label: 'Results ML', icon: 'pi pi-chart-line', routerLink: '/results-ml' }
+  // Menú base con todas las opciones
+  private allMenuGroups: MenuGroup[] = [
+    {
+      label: 'Inicio',
+      icon: 'pi pi-home',
+      expanded: true,
+      items: [
+        { label: 'Dashboard General', icon: 'pi pi-chart-bar', routerLink: '/dashboard' },
+        { label: 'Dashboard Custom', icon: 'pi pi-th-large', routerLink: '/dashboard-custom' },
+        { label: 'Tabla Unificada', icon: 'pi pi-table', routerLink: '/tabla-unificada' }
+      ]
+    },
+    {
+      label: 'Activos y Procesos',
+      icon: 'pi pi-box',
+      expanded: true,
+      items: [
+        { label: 'Activos', icon: 'pi pi-database', routerLink: '/activos' },
+        { label: 'Procesos', icon: 'pi pi-cog', routerLink: '/procesos' }
+      ]
+    },
+    {
+      label: 'Cumplimiento',
+      icon: 'pi pi-check-circle',
+      expanded: true,
+      items: [
+        { label: 'Cuestionarios', icon: 'pi pi-list-check', routerLink: '/cuestionarios' },
+        { label: 'Revisiones', icon: 'pi pi-file-check', routerLink: '/cumplimiento' }
+      ]
+    },
+    {
+      label: 'Riesgos',
+      icon: 'pi pi-exclamation-triangle',
+      expanded: true,
+      items: [
+        { label: 'Riesgos', icon: 'pi pi-exclamation-circle', routerLink: '/riesgos' },
+        { label: 'Incidentes', icon: 'pi pi-bolt', routerLink: '/incidentes' },
+        { label: 'Defectos', icon: 'pi pi-bug', routerLink: '/defectos' },
+        { label: 'Controles', icon: 'pi pi-shield', routerLink: '/controles' }
+      ]
+    },
+    {
+      label: 'Configuracion',
+      icon: 'pi pi-cog',
+      expanded: true,
+      items: [
+        { label: 'Usuarios y Roles', icon: 'pi pi-users', routerLink: '/usuarios-roles' },
+        { label: 'Asignacion Roles', icon: 'pi pi-id-card', routerLink: '/asignacion-roles' },
+        { label: 'Organigrama', icon: 'pi pi-sitemap', routerLink: '/organigramas' }
+      ]
+    }
   ];
+
+  // Estado de expansión de grupos
+  private expandedGroups = signal<Record<string, boolean>>({
+    'Inicio': true,
+    'Activos y Procesos': true,
+    'Cumplimiento': true,
+    'Riesgos': true,
+    'Configuracion': true
+  });
+
+  // Menú filtrado según feature flags
+  menuGroups = computed(() => {
+    const expanded = this.expandedGroups();
+    return this.allMenuGroups.map(group => ({
+      ...group,
+      expanded: expanded[group.label] ?? true,
+      items: group.items.filter(item => this.featureFlags.isFeatureEnabled(item.routerLink))
+    })).filter(group => group.items.length > 0);
+  });
 
   breadcrumbs: BreadcrumbItem[] = [];
 
   // Route to label mapping
   private routeLabels: Record<string, string> = {
-    'dashboard': 'Dashboard',
-    'dashboard-custom': 'Dashboard Personalizable',
+    'dashboard': 'Dashboard General',
+    'dashboard-custom': 'Dashboard Custom',
     'activos': 'Activos',
     'organigramas': 'Organigrama',
     'riesgos': 'Riesgos',
     'incidentes': 'Incidentes',
     'defectos': 'Defectos',
+    'controles': 'Controles',
     'procesos': 'Procesos',
     'procesos-lista': 'Lista de Procesos',
     'proceso-detalle': 'Detalle de Proceso',
     'proceso-crear': 'Crear Proceso',
     'cuestionarios': 'Cuestionarios',
-    'cumplimiento': 'Cumplimiento',
+    'cumplimiento': 'Revisiones',
     'tabla-unificada': 'Tabla Unificada',
     'results-ml': 'Results ML',
+    'usuarios-roles': 'Usuarios y Roles',
+    'asignacion-roles': 'Asignacion de Roles',
     'crear': 'Crear',
     'detalle': 'Detalle',
     'objetivos-kpis': 'Objetivos y KPIs',
@@ -387,6 +612,13 @@ export class SidebarComponent {
       .subscribe((event: NavigationEnd) => {
         this.updateBreadcrumbs(event.urlAfterRedirects);
       });
+  }
+
+  toggleGroup(group: MenuGroup): void {
+    this.expandedGroups.update(current => ({
+      ...current,
+      [group.label]: !current[group.label]
+    }));
   }
 
   private updateBreadcrumbs(url: string): void {

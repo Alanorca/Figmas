@@ -1,0 +1,1127 @@
+<!-- Container Principal -->
+<div class="usuarios-roles-container">
+
+  <!-- Toolbar Principal -->
+  <p-toolbar styleClass="mb-4 toolbar-principal">
+    <ng-template #start>
+      <div class="flex align-items-center gap-3">
+        <i class="pi pi-shield text-2xl text-primary"></i>
+        <div>
+          <h2 class="m-0 text-xl font-bold">Usuarios y Roles</h2>
+          <span class="text-sm text-color-secondary">Gestión de accesos y permisos</span>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template #center>
+      <p-selectButton
+        [options]="tabOptions"
+        [ngModel]="vistaActual()"
+        (ngModelChange)="onTabChange($event)"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="tabs-selector">
+        <ng-template let-item pTemplate="item">
+          <div class="flex align-items-center gap-2">
+            <i [class]="item.icon"></i>
+            <span>{{ item.label }}</span>
+          </div>
+        </ng-template>
+      </p-selectButton>
+    </ng-template>
+
+    <ng-template #end>
+      @if (vistaActual() === 'usuarios') {
+        <p-button
+          label="Nuevo Usuario"
+          icon="pi pi-plus"
+          severity="primary"
+          (onClick)="abrirWizardNuevoUsuario()">
+        </p-button>
+      } @else {
+        <p-button
+          label="Nuevo Rol"
+          icon="pi pi-plus"
+          severity="primary"
+          (onClick)="abrirWizardNuevoRol()">
+        </p-button>
+      }
+    </ng-template>
+  </p-toolbar>
+
+  <!-- Stats Cards -->
+  <div class="grid mb-4">
+    @if (vistaActual() === 'usuarios') {
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="stat-card stat-card-primary">
+          <div class="stat-icon">
+            <i class="pi pi-users"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ estadisticasUsuarios().total }}</span>
+            <span class="stat-label">Total Usuarios</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="stat-card stat-card-success">
+          <div class="stat-icon">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ estadisticasUsuarios().activos }}</span>
+            <span class="stat-label">Activos</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="stat-card stat-card-warning">
+          <div class="stat-icon">
+            <i class="pi pi-clock"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ estadisticasUsuarios().pendientes }}</span>
+            <span class="stat-label">Pendientes</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="stat-card stat-card-info">
+          <div class="stat-icon">
+            <i class="pi pi-lock"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ estadisticasUsuarios().conDosFactor }}</span>
+            <span class="stat-label">Con 2FA</span>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="stat-card stat-card-primary">
+          <div class="stat-icon">
+            <i class="pi pi-shield"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ estadisticasRoles().total }}</span>
+            <span class="stat-label">Total Roles</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="stat-card stat-card-success">
+          <div class="stat-icon">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ estadisticasRoles().activos }}</span>
+            <span class="stat-label">Activos</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="stat-card stat-card-warning">
+          <div class="stat-icon">
+            <i class="pi pi-cog"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ estadisticasRoles().rolesSistema }}</span>
+            <span class="stat-label">Roles Sistema</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-6 lg:col-3">
+        <div class="stat-card stat-card-info">
+          <div class="stat-icon">
+            <i class="pi pi-user"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ estadisticasRoles().promedioUsuariosPorRol }}</span>
+            <span class="stat-label">Usuarios/Rol (Prom)</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Contenido según vista activa -->
+  @if (vistaActual() === 'usuarios') {
+    <!-- ========== VISTA USUARIOS ========== -->
+    <div class="card">
+      <!-- Toolbar de filtros -->
+      <div class="flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div class="flex flex-wrap gap-2">
+          <p-iconfield>
+            <p-inputicon styleClass="pi pi-search"></p-inputicon>
+            <input
+              pInputText
+              type="text"
+              placeholder="Buscar usuarios..."
+              [ngModel]="busquedaUsuarios()"
+              (ngModelChange)="busquedaUsuarios.set($event)"
+              class="w-20rem" />
+          </p-iconfield>
+
+          <p-select
+            [options]="estadosOptions"
+            [ngModel]="filtroEstado()"
+            (ngModelChange)="filtroEstado.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Estado"
+            [showClear]="true"
+            styleClass="w-10rem">
+          </p-select>
+
+          <p-select
+            [options]="rolesParaSelector()"
+            [ngModel]="filtroRol()"
+            (ngModelChange)="filtroRol.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Rol"
+            [showClear]="true"
+            styleClass="w-12rem">
+          </p-select>
+        </div>
+
+        <div class="flex gap-2">
+          <p-button
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [text]="true"
+            pTooltip="Limpiar filtros"
+            (onClick)="limpiarFiltrosUsuarios()">
+          </p-button>
+          <p-button
+            icon="pi pi-download"
+            severity="secondary"
+            [outlined]="true"
+            pTooltip="Exportar"
+            (onClick)="exportarUsuarios()">
+          </p-button>
+        </div>
+      </div>
+
+      <!-- Tabla de Usuarios -->
+      <p-table
+        #usuariosTable
+        [value]="usuariosFiltrados()"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios"
+        [(selection)]="usuariosSeleccionados"
+        dataKey="id"
+        [tableStyle]="{ 'min-width': '70rem' }"
+        styleClass="p-datatable-sm p-datatable-gridlines">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 3rem">
+              <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+            </th>
+            <th pSortableColumn="nombre" style="min-width: 14rem">
+              Usuario
+              <p-sortIcon field="nombre"></p-sortIcon>
+            </th>
+            <th pSortableColumn="email" style="min-width: 12rem">
+              Email
+              <p-sortIcon field="email"></p-sortIcon>
+            </th>
+            <th pSortableColumn="departamento" style="min-width: 10rem">
+              Departamento
+              <p-sortIcon field="departamento"></p-sortIcon>
+            </th>
+            <th style="min-width: 10rem">Roles</th>
+            <th pSortableColumn="estado" style="min-width: 8rem">
+              Estado
+              <p-sortIcon field="estado"></p-sortIcon>
+            </th>
+            <th pSortableColumn="ultimoAcceso" style="min-width: 10rem">
+              Último Acceso
+              <p-sortIcon field="ultimoAcceso"></p-sortIcon>
+            </th>
+            <th style="width: 5rem">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-usuario>
+          <tr>
+            <td>
+              <p-tableCheckbox [value]="usuario"></p-tableCheckbox>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-3">
+                <p-avatar
+                  [label]="getInitials(usuario.nombre, usuario.apellido)"
+                  shape="circle"
+                  size="normal"
+                  [style]="{ 'background-color': '#3b82f6', 'color': '#fff' }">
+                </p-avatar>
+                <div>
+                  <div class="font-medium">{{ usuario.nombre }} {{ usuario.apellido }}</div>
+                  <div class="text-sm text-color-secondary">{{ usuario.cargo || '-' }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="text-color-secondary">{{ usuario.email }}</span>
+            </td>
+            <td>{{ usuario.departamento || '-' }}</td>
+            <td>
+              <div class="flex flex-wrap gap-1">
+                @for (rol of getRolesDeUsuario(usuario).slice(0, 2); track rol.id) {
+                  <p-tag
+                    [value]="rol.nombre"
+                    [severity]="getNivelAccesoSeverity(rol.nivelAcceso)"
+                    [rounded]="true">
+                  </p-tag>
+                }
+                @if (getRolesDeUsuario(usuario).length > 2) {
+                  <p-tag
+                    [value]="'+' + (getRolesDeUsuario(usuario).length - 2)"
+                    severity="secondary"
+                    [rounded]="true">
+                  </p-tag>
+                }
+                @if (getRolesDeUsuario(usuario).length === 0) {
+                  <span class="text-color-secondary text-sm">Sin roles</span>
+                }
+              </div>
+            </td>
+            <td>
+              <p-tag
+                [value]="getEstadoLabel(usuario.estado)"
+                [severity]="getEstadoSeverity(usuario.estado)"
+                [rounded]="true">
+              </p-tag>
+            </td>
+            <td>
+              <span class="text-color-secondary text-sm">
+                {{ formatDateTime(usuario.ultimoAcceso) }}
+              </span>
+            </td>
+            <td>
+              <p-button
+                icon="pi pi-ellipsis-v"
+                [text]="true"
+                [rounded]="true"
+                severity="secondary"
+                (onClick)="menu.toggle($event)">
+              </p-button>
+              <p-menu #menu [popup]="true" [model]="getMenuItemsUsuario(usuario)"></p-menu>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8" class="text-center py-5">
+              <i class="pi pi-users text-4xl text-color-secondary mb-3"></i>
+              <p class="text-color-secondary">No se encontraron usuarios</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  } @else {
+    <!-- ========== VISTA ROLES ========== -->
+    <div class="card">
+      <!-- Toolbar de filtros -->
+      <div class="flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div class="flex flex-wrap gap-2">
+          <p-iconfield>
+            <p-inputicon styleClass="pi pi-search"></p-inputicon>
+            <input
+              pInputText
+              type="text"
+              placeholder="Buscar roles..."
+              [ngModel]="busquedaRoles()"
+              (ngModelChange)="busquedaRoles.set($event)"
+              class="w-20rem" />
+          </p-iconfield>
+
+          <p-select
+            [options]="nivelesAccesoOptions"
+            [ngModel]="filtroNivelAcceso()"
+            (ngModelChange)="filtroNivelAcceso.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Nivel de Acceso"
+            [showClear]="true"
+            styleClass="w-12rem">
+          </p-select>
+        </div>
+
+        <div class="flex gap-2">
+          <p-button
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [text]="true"
+            pTooltip="Limpiar filtros"
+            (onClick)="limpiarFiltrosRoles()">
+          </p-button>
+          <p-button
+            icon="pi pi-download"
+            severity="secondary"
+            [outlined]="true"
+            pTooltip="Exportar"
+            (onClick)="exportarRoles()">
+          </p-button>
+        </div>
+      </div>
+
+      <!-- Grid de Roles -->
+      <div class="grid">
+        @for (rol of rolesFiltrados(); track rol.id) {
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="rol-card" [class.rol-inactivo]="!rol.activo" (click)="verDetalleRol(rol)">
+              <!-- Header del rol -->
+              <div class="rol-card-header">
+                <div class="flex align-items-center gap-3">
+                  <div class="rol-icon" [style.backgroundColor]="rol.color || '#3b82f6'">
+                    <i [class]="'pi ' + (rol.icono || 'pi-shield')"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex align-items-center gap-2">
+                      <span class="font-bold text-lg">{{ rol.nombre }}</span>
+                      @if (rol.esRolSistema) {
+                        <i class="pi pi-lock text-sm text-color-secondary" pTooltip="Rol del sistema"></i>
+                      }
+                    </div>
+                    <p-tag
+                      [value]="getNivelAccesoLabel(rol.nivelAcceso)"
+                      [severity]="getNivelAccesoSeverity(rol.nivelAcceso)"
+                      [rounded]="true"
+                      styleClass="mt-1">
+                    </p-tag>
+                  </div>
+                </div>
+                <p-button
+                  icon="pi pi-ellipsis-v"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="secondary"
+                  (onClick)="$event.stopPropagation(); menuRol.toggle($event)">
+                </p-button>
+                <p-menu #menuRol [popup]="true" [model]="getMenuItemsRol(rol)"></p-menu>
+              </div>
+
+              <!-- Descripción -->
+              <p class="rol-descripcion text-color-secondary text-sm mb-3">
+                {{ rol.descripcion }}
+              </p>
+
+              <!-- Info adicional -->
+              <div class="flex align-items-center justify-content-between mb-3">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-globe text-color-secondary"></i>
+                  <span class="text-sm">{{ rol.region }}</span>
+                </div>
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-key text-color-secondary"></i>
+                  <span class="text-sm">{{ rol.permisos.length }} permisos</span>
+                </div>
+              </div>
+
+              <!-- Usuarios asignados -->
+              <div class="rol-usuarios">
+                <div class="flex align-items-center justify-content-between">
+                  <span class="text-sm text-color-secondary">Usuarios asignados</span>
+                  <p-badge [value]="rol.usuariosAsignados.length.toString()" severity="secondary"></p-badge>
+                </div>
+                @if (getUsuariosDeRol(rol).length > 0) {
+                  <p-avatarGroup styleClass="mt-2">
+                    @for (usuario of getUsuariosDeRol(rol).slice(0, 5); track usuario.id) {
+                      <p-avatar
+                        [label]="getInitials(usuario.nombre, usuario.apellido)"
+                        shape="circle"
+                        size="normal"
+                        [pTooltip]="usuario.nombre + ' ' + usuario.apellido"
+                        [style]="{ 'background-color': '#6366f1', 'color': '#fff' }">
+                      </p-avatar>
+                    }
+                    @if (getUsuariosDeRol(rol).length > 5) {
+                      <p-avatar
+                        [label]="'+' + (getUsuariosDeRol(rol).length - 5)"
+                        shape="circle"
+                        size="normal"
+                        [style]="{ 'background-color': '#94a3b8', 'color': '#fff' }">
+                      </p-avatar>
+                    }
+                  </p-avatarGroup>
+                } @else {
+                  <p class="text-sm text-color-secondary mt-2 mb-0">Sin usuarios asignados</p>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (rolesFiltrados().length === 0) {
+        <div class="text-center py-6">
+          <i class="pi pi-shield text-4xl text-color-secondary mb-3"></i>
+          <p class="text-color-secondary">No se encontraron roles</p>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- ========== DRAWER DETALLE USUARIO ========== -->
+<p-drawer
+  [(visible)]="showDrawerUsuario"
+  position="right"
+  [style]="{ width: '450px' }"
+  header="Detalle de Usuario">
+
+  @if (usuarioSeleccionado()) {
+    <div class="usuario-detalle">
+      <!-- Header con avatar -->
+      <div class="flex align-items-center gap-4 mb-4 pb-4 border-bottom-1 surface-border">
+        <p-avatar
+          [label]="getInitials(usuarioSeleccionado()!.nombre, usuarioSeleccionado()!.apellido)"
+          shape="circle"
+          size="xlarge"
+          [style]="{ 'background-color': '#3b82f6', 'color': '#fff', 'font-size': '1.5rem' }">
+        </p-avatar>
+        <div>
+          <h3 class="m-0 mb-1">{{ usuarioSeleccionado()!.nombre }} {{ usuarioSeleccionado()!.apellido }}</h3>
+          <p class="m-0 text-color-secondary">{{ usuarioSeleccionado()!.cargo || 'Sin cargo' }}</p>
+          <p-tag
+            [value]="getEstadoLabel(usuarioSeleccionado()!.estado)"
+            [severity]="getEstadoSeverity(usuarioSeleccionado()!.estado)"
+            [rounded]="true"
+            styleClass="mt-2">
+          </p-tag>
+        </div>
+      </div>
+
+      <!-- Información de contacto -->
+      <div class="mb-4">
+        <h4 class="text-sm font-semibold text-color-secondary mb-3">INFORMACIÓN DE CONTACTO</h4>
+        <div class="flex flex-column gap-3">
+          <div class="flex align-items-center gap-3">
+            <i class="pi pi-envelope text-color-secondary"></i>
+            <span>{{ usuarioSeleccionado()!.email }}</span>
+          </div>
+          <div class="flex align-items-center gap-3">
+            <i class="pi pi-phone text-color-secondary"></i>
+            <span>{{ usuarioSeleccionado()!.telefono || '-' }}</span>
+          </div>
+          <div class="flex align-items-center gap-3">
+            <i class="pi pi-building text-color-secondary"></i>
+            <span>{{ usuarioSeleccionado()!.departamento || '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Roles asignados -->
+      <div class="mb-4">
+        <h4 class="text-sm font-semibold text-color-secondary mb-3">ROLES ASIGNADOS</h4>
+        <div class="flex flex-wrap gap-2">
+          @for (rol of getRolesDeUsuario(usuarioSeleccionado()!); track rol.id) {
+            <p-chip [label]="rol.nombre" [removable]="false">
+              <ng-template pTemplate="content">
+                <div class="flex align-items-center gap-2">
+                  <i [class]="'pi ' + (rol.icono || 'pi-shield')" [style.color]="rol.color"></i>
+                  <span>{{ rol.nombre }}</span>
+                </div>
+              </ng-template>
+            </p-chip>
+          }
+          @if (getRolesDeUsuario(usuarioSeleccionado()!).length === 0) {
+            <span class="text-color-secondary">Sin roles asignados</span>
+          }
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Seguridad -->
+      <div class="mb-4">
+        <h4 class="text-sm font-semibold text-color-secondary mb-3">SEGURIDAD</h4>
+        <div class="flex flex-column gap-3">
+          <div class="flex align-items-center justify-content-between">
+            <span>Autenticación 2FA</span>
+            <p-tag
+              [value]="usuarioSeleccionado()!.configuracionSeguridad.autenticacionDosFactor ? 'Activa' : 'Inactiva'"
+              [severity]="usuarioSeleccionado()!.configuracionSeguridad.autenticacionDosFactor ? 'success' : 'secondary'"
+              [rounded]="true">
+            </p-tag>
+          </div>
+          <div class="flex align-items-center justify-content-between">
+            <span>Sesiones activas</span>
+            <span class="font-medium">{{ usuarioSeleccionado()!.configuracionSeguridad.sesionesActivas }} / {{ usuarioSeleccionado()!.configuracionSeguridad.maxSesionesPermitidas }}</span>
+          </div>
+          <div class="flex align-items-center justify-content-between">
+            <span>Último cambio de contraseña</span>
+            <span class="text-sm text-color-secondary">{{ formatDate(usuarioSeleccionado()!.configuracionSeguridad.ultimoCambioPassword) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Fechas -->
+      <div class="mb-4">
+        <h4 class="text-sm font-semibold text-color-secondary mb-3">ACTIVIDAD</h4>
+        <div class="flex flex-column gap-3">
+          <div class="flex align-items-center justify-content-between">
+            <span>Fecha de creación</span>
+            <span class="text-sm text-color-secondary">{{ formatDate(usuarioSeleccionado()!.fechaCreacion) }}</span>
+          </div>
+          <div class="flex align-items-center justify-content-between">
+            <span>Último acceso</span>
+            <span class="text-sm text-color-secondary">{{ formatDateTime(usuarioSeleccionado()!.ultimoAcceso) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="flex gap-2 mt-4">
+        <p-button
+          label="Editar"
+          icon="pi pi-pencil"
+          severity="primary"
+          [outlined]="true"
+          (onClick)="editarUsuario(usuarioSeleccionado()!); showDrawerUsuario.set(false)"
+          class="flex-1">
+        </p-button>
+        <p-button
+          label="Eliminar"
+          icon="pi pi-trash"
+          severity="danger"
+          [outlined]="true"
+          (onClick)="eliminarUsuario(usuarioSeleccionado()!)">
+        </p-button>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- ========== DRAWER DETALLE ROL ========== -->
+<p-drawer
+  [(visible)]="showDrawerRol"
+  position="right"
+  [style]="{ width: '500px' }"
+  header="Detalle de Rol">
+
+  @if (rolSeleccionado()) {
+    <div class="rol-detalle">
+      <!-- Banner/Cover -->
+      <div class="rol-detalle-banner" [style.backgroundColor]="rolSeleccionado()!.color || '#3b82f6'">
+        <div class="banner-pattern"></div>
+        <div class="banner-content">
+          <div class="flex align-items-center gap-3">
+            <div class="rol-icon-large">
+              <i [class]="'pi ' + (rolSeleccionado()!.icono || 'pi-shield')"></i>
+            </div>
+            <div>
+              <div class="flex align-items-center gap-2 mb-1">
+                <span class="text-sm opacity-80">ID: {{ rolSeleccionado()!.id }}</span>
+                @if (rolSeleccionado()!.esRolSistema) {
+                  <p-tag value="Sistema" severity="contrast" [rounded]="true"></p-tag>
+                }
+              </div>
+              <h2 class="m-0 text-white">{{ rolSeleccionado()!.nombre }}</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="p-4">
+        <p class="text-color-secondary mb-4">{{ rolSeleccionado()!.descripcion }}</p>
+
+        <!-- Metadata -->
+        <div class="flex flex-wrap gap-4 mb-4">
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-globe text-color-secondary"></i>
+            <span>Región: <strong>{{ rolSeleccionado()!.region }}</strong></span>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-sitemap text-color-secondary"></i>
+            <span>Árbol: <strong>{{ rolSeleccionado()!.tipoArbol }}</strong></span>
+          </div>
+        </div>
+
+        <!-- Nivel de acceso -->
+        <div class="mb-4">
+          <h4 class="text-sm font-semibold text-color-secondary mb-2">NIVEL DE ACCESO</h4>
+          <p-tag
+            [value]="getNivelAccesoLabel(rolSeleccionado()!.nivelAcceso)"
+            [severity]="getNivelAccesoSeverity(rolSeleccionado()!.nivelAcceso)"
+            styleClass="text-base">
+          </p-tag>
+        </div>
+
+        <p-divider></p-divider>
+
+        <!-- Permisos -->
+        <div class="mb-4">
+          <h4 class="text-sm font-semibold text-color-secondary mb-3">
+            PERMISOS ASIGNADOS
+            <p-badge [value]="getPermisosDeRol(rolSeleccionado()!).length.toString()" severity="secondary" styleClass="ml-2"></p-badge>
+          </h4>
+          <div class="permisos-tree">
+            @for (permiso of getPermisosDeRol(rolSeleccionado()!); track permiso.id) {
+              <div class="permiso-item flex align-items-center gap-2 py-2">
+                <i class="pi pi-check-circle text-green-500"></i>
+                <div>
+                  <span class="font-medium">{{ permiso.nombre }}</span>
+                  <p class="text-sm text-color-secondary m-0">{{ permiso.descripcion }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <p-divider></p-divider>
+
+        <!-- Usuarios con este rol -->
+        <div class="mb-4">
+          <div class="flex align-items-center justify-content-between mb-3">
+            <h4 class="text-sm font-semibold text-color-secondary m-0">
+              USUARIOS CON ESTE ROL
+            </h4>
+            <p-badge [value]="rolSeleccionado()!.usuariosAsignados.length.toString()" severity="info"></p-badge>
+          </div>
+
+          @if (getUsuariosDeRol(rolSeleccionado()!).length > 0) {
+            <div class="usuarios-list">
+              @for (usuario of getUsuariosDeRol(rolSeleccionado()!); track usuario.id) {
+                <div class="usuario-item flex align-items-center gap-3 py-2 px-3 border-round hover:surface-hover cursor-pointer" (click)="verDetalleUsuario(usuario); showDrawerRol.set(false)">
+                  <p-avatar
+                    [label]="getInitials(usuario.nombre, usuario.apellido)"
+                    shape="circle"
+                    size="normal"
+                    [style]="{ 'background-color': '#6366f1', 'color': '#fff' }">
+                  </p-avatar>
+                  <div class="flex-1">
+                    <div class="font-medium">{{ usuario.nombre }} {{ usuario.apellido }}</div>
+                    <div class="text-sm text-color-secondary">{{ usuario.email }}</div>
+                  </div>
+                  <p-tag
+                    [value]="getEstadoLabel(usuario.estado)"
+                    [severity]="getEstadoSeverity(usuario.estado)"
+                    [rounded]="true">
+                  </p-tag>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-color-secondary text-center py-3">No hay usuarios con este rol</p>
+          }
+
+          <p-button
+            label="Agregar Usuario"
+            icon="pi pi-user-plus"
+            severity="secondary"
+            [text]="true"
+            styleClass="w-full mt-2">
+          </p-button>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex gap-2 mt-4">
+          <p-button
+            label="Editar"
+            icon="pi pi-pencil"
+            severity="primary"
+            [outlined]="true"
+            [disabled]="rolSeleccionado()!.esRolSistema"
+            (onClick)="editarRol(rolSeleccionado()!); showDrawerRol.set(false)"
+            class="flex-1">
+          </p-button>
+          <p-button
+            label="Duplicar"
+            icon="pi pi-copy"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="duplicarRol(rolSeleccionado()!)">
+          </p-button>
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [outlined]="true"
+            [disabled]="rolSeleccionado()!.esRolSistema"
+            (onClick)="eliminarRol(rolSeleccionado()!)"
+            pTooltip="Eliminar">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- ========== WIZARD NUEVO USUARIO ========== -->
+<p-drawer
+  [(visible)]="showWizardUsuario"
+  position="right"
+  [style]="{ width: '600px' }"
+  header="Nuevo Usuario"
+  [modal]="true">
+
+  <p-stepper [(value)]="wizardActiveStep" [linear]="false">
+    <!-- Headers de los pasos -->
+    <p-step-list>
+      <p-step [value]="0">
+        <ng-template #content let-activateCallback="activateCallback" let-value="value">
+          <button class="p-step-header" (click)="activateCallback()">
+            <span class="p-step-number">1</span>
+            <span class="p-step-title">Información Básica</span>
+          </button>
+        </ng-template>
+      </p-step>
+      <p-step [value]="1">
+        <ng-template #content let-activateCallback="activateCallback" let-value="value">
+          <button class="p-step-header" (click)="activateCallback()">
+            <span class="p-step-number">2</span>
+            <span class="p-step-title">Estado de Cuenta</span>
+          </button>
+        </ng-template>
+      </p-step>
+      <p-step [value]="2">
+        <ng-template #content let-activateCallback="activateCallback" let-value="value">
+          <button class="p-step-header" (click)="activateCallback()">
+            <span class="p-step-number">3</span>
+            <span class="p-step-title">Acceso de Activos</span>
+          </button>
+        </ng-template>
+      </p-step>
+      <p-step [value]="3">
+        <ng-template #content let-activateCallback="activateCallback" let-value="value">
+          <button class="p-step-header" (click)="activateCallback()">
+            <span class="p-step-number">4</span>
+            <span class="p-step-title">Seguridad</span>
+          </button>
+        </ng-template>
+      </p-step>
+    </p-step-list>
+
+    <!-- Contenido de los pasos -->
+    <p-step-panels>
+      <!-- Paso 1: Información Básica -->
+      <p-step-panel [value]="0">
+        <ng-template #content let-activateCallback="activateCallback">
+          <div class="p-4">
+            <div class="grid">
+              <div class="col-6">
+                <p-floatlabel class="w-full mb-4">
+                  <input
+                    pInputText
+                    id="nombre"
+                    [ngModel]="usuarioForm().nombre"
+                    (ngModelChange)="updateUsuarioForm('nombre', $event)"
+                    class="w-full" />
+                  <label for="nombre">Nombre</label>
+                </p-floatlabel>
+              </div>
+              <div class="col-6">
+                <p-floatlabel class="w-full mb-4">
+                  <input
+                    pInputText
+                    id="apellido"
+                    [ngModel]="usuarioForm().apellido"
+                    (ngModelChange)="updateUsuarioForm('apellido', $event)"
+                    class="w-full" />
+                  <label for="apellido">Apellido</label>
+                </p-floatlabel>
+              </div>
+              <div class="col-12">
+                <p-floatlabel class="w-full mb-4">
+                  <input
+                    pInputText
+                    id="email"
+                    type="email"
+                    [ngModel]="usuarioForm().email"
+                    (ngModelChange)="updateUsuarioForm('email', $event)"
+                    class="w-full" />
+                  <label for="email">Email</label>
+                </p-floatlabel>
+              </div>
+              <div class="col-12">
+                <p-floatlabel class="w-full mb-4">
+                  <input
+                    pInputText
+                    id="telefono"
+                    [ngModel]="usuarioForm().telefono"
+                    (ngModelChange)="updateUsuarioForm('telefono', $event)"
+                    class="w-full" />
+                  <label for="telefono">Teléfono</label>
+                </p-floatlabel>
+              </div>
+              <div class="col-6">
+                <p-floatlabel class="w-full mb-4">
+                  <input
+                    pInputText
+                    id="departamento"
+                    [ngModel]="usuarioForm().departamento"
+                    (ngModelChange)="updateUsuarioForm('departamento', $event)"
+                    class="w-full" />
+                  <label for="departamento">Departamento</label>
+                </p-floatlabel>
+              </div>
+              <div class="col-6">
+                <p-floatlabel class="w-full mb-4">
+                  <input
+                    pInputText
+                    id="cargo"
+                    [ngModel]="usuarioForm().cargo"
+                    (ngModelChange)="updateUsuarioForm('cargo', $event)"
+                    class="w-full" />
+                  <label for="cargo">Cargo</label>
+                </p-floatlabel>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-content-end gap-2 p-4 border-top-1 surface-border">
+            <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(1)"></p-button>
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- Paso 2: Estado de la Cuenta -->
+      <p-step-panel [value]="1">
+        <ng-template #content let-activateCallback="activateCallback">
+          <div class="p-4">
+            <div class="mb-4">
+              <label class="block mb-2 font-medium">Estado de la cuenta</label>
+              <p-selectButton
+                [options]="estadoSelectOptions"
+                [ngModel]="usuarioForm().estado"
+                (ngModelChange)="updateUsuarioForm('estado', $event)"
+                optionLabel="label"
+                optionValue="value">
+              </p-selectButton>
+            </div>
+
+            <div class="mb-4">
+              <label class="block mb-2 font-medium">Fecha de expiración (opcional)</label>
+              <p-datepicker
+                [ngModel]="usuarioForm().fechaExpiracion"
+                (ngModelChange)="updateUsuarioForm('fechaExpiracion', $event)"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                placeholder="Seleccionar fecha"
+                styleClass="w-full">
+              </p-datepicker>
+              <small class="text-color-secondary">Si no se especifica, la cuenta no expirará</small>
+            </div>
+          </div>
+          <div class="flex justify-content-between gap-2 p-4 border-top-1 surface-border">
+            <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" (onClick)="activateCallback(0)"></p-button>
+            <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(2)"></p-button>
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- Paso 3: Acceso de Activos -->
+      <p-step-panel [value]="2">
+        <ng-template #content let-activateCallback="activateCallback">
+          <div class="p-4">
+            <label class="block mb-3 font-medium">Selecciona los activos a los que tendrá acceso</label>
+            <div class="activos-tree-container border-1 surface-border border-round p-3" style="max-height: 350px; overflow-y: auto;">
+              <p-tree
+                [value]="activosTree()"
+                selectionMode="checkbox"
+                [(selection)]="activosSeleccionados"
+                [propagateSelectionUp]="true"
+                [propagateSelectionDown]="true">
+              </p-tree>
+            </div>
+            <small class="text-color-secondary mt-2 block">
+              Seleccionados: {{ activosSeleccionados().length }} activos
+            </small>
+          </div>
+          <div class="flex justify-content-between gap-2 p-4 border-top-1 surface-border">
+            <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" (onClick)="activateCallback(1)"></p-button>
+            <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(3)"></p-button>
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- Paso 4: Configuración de Seguridad -->
+      <p-step-panel [value]="3">
+        <ng-template #content let-activateCallback="activateCallback">
+          <div class="p-4">
+            <!-- Roles -->
+            <div class="mb-4">
+              <label class="block mb-2 font-medium">Roles asignados</label>
+              <p-multiselect
+                [options]="rolesParaSelector()"
+                [ngModel]="usuarioForm().rolesAsignados"
+                (ngModelChange)="updateUsuarioForm('rolesAsignados', $event)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccionar roles"
+                [showClear]="true"
+                styleClass="w-full">
+              </p-multiselect>
+            </div>
+
+            <!-- Opciones de seguridad -->
+            <div class="mb-4">
+              <label class="block mb-3 font-medium">Opciones de seguridad</label>
+
+              <div class="flex align-items-center gap-3 mb-3">
+                <p-checkbox
+                  [ngModel]="usuarioForm().autenticacionDosFactor"
+                  (ngModelChange)="updateUsuarioForm('autenticacionDosFactor', $event)"
+                  [binary]="true"
+                  inputId="2fa">
+                </p-checkbox>
+                <label for="2fa" class="cursor-pointer">
+                  <span class="font-medium">Autenticación de dos factores</span>
+                  <p class="text-sm text-color-secondary m-0">Requiere verificación adicional al iniciar sesión</p>
+                </label>
+              </div>
+
+              <div class="flex align-items-center gap-3">
+                <p-checkbox
+                  [ngModel]="usuarioForm().cambioPasswordRequerido"
+                  (ngModelChange)="updateUsuarioForm('cambioPasswordRequerido', $event)"
+                  [binary]="true"
+                  inputId="cambio-pass">
+                </p-checkbox>
+                <label for="cambio-pass" class="cursor-pointer">
+                  <span class="font-medium">Requerir cambio de contraseña</span>
+                  <p class="text-sm text-color-secondary m-0">El usuario deberá cambiar su contraseña en el primer acceso</p>
+                </label>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-content-between gap-2 p-4 border-top-1 surface-border">
+          <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" (onClick)="activateCallback(2)"></p-button>
+          <p-button label="Guardar Usuario" icon="pi pi-check" severity="primary" (onClick)="guardarUsuario()"></p-button>
+        </div>
+      </ng-template>
+    </p-step-panel>
+    </p-step-panels>
+  </p-stepper>
+</p-drawer>
+
+<!-- ========== WIZARD NUEVO ROL ========== -->
+<p-drawer
+  [(visible)]="showWizardRol"
+  position="right"
+  [style]="{ width: '550px' }"
+  header="Nuevo Rol"
+  [modal]="true">
+
+  <div class="p-4">
+    <!-- Información básica -->
+    <div class="mb-4">
+      <p-floatlabel class="w-full mb-4">
+        <input
+          pInputText
+          id="rol-nombre"
+          [ngModel]="rolForm().nombre"
+          (ngModelChange)="updateRolForm('nombre', $event)"
+          class="w-full" />
+        <label for="rol-nombre">Nombre del rol</label>
+      </p-floatlabel>
+    </div>
+
+    <div class="mb-4">
+      <p-floatlabel class="w-full">
+        <textarea
+          pTextarea
+          id="rol-descripcion"
+          [ngModel]="rolForm().descripcion"
+          (ngModelChange)="updateRolForm('descripcion', $event)"
+          rows="3"
+          class="w-full">
+        </textarea>
+        <label for="rol-descripcion">Descripción</label>
+      </p-floatlabel>
+    </div>
+
+    <!-- Configuración -->
+    <div class="grid mb-4">
+      <div class="col-6">
+        <label class="block mb-2 font-medium">Nivel de acceso</label>
+        <p-select
+          [options]="nivelesAccesoOptions"
+          [ngModel]="rolForm().nivelAcceso"
+          (ngModelChange)="updateRolForm('nivelAcceso', $event)"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full">
+        </p-select>
+      </div>
+      <div class="col-6">
+        <label class="block mb-2 font-medium">Región</label>
+        <p-select
+          [options]="regionesOptions"
+          [ngModel]="rolForm().region"
+          (ngModelChange)="updateRolForm('region', $event)"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full">
+        </p-select>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="block mb-2 font-medium">Tipo de árbol de acceso</label>
+      <p-selectButton
+        [options]="tipoArbolOptions"
+        [ngModel]="rolForm().tipoArbol"
+        (ngModelChange)="updateRolForm('tipoArbol', $event)"
+        optionLabel="label"
+        optionValue="value">
+      </p-selectButton>
+    </div>
+
+    <!-- Permisos -->
+    <div class="mb-4">
+      <label class="block mb-2 font-medium">Permisos</label>
+      <p-multiselect
+        [options]="permisosDisponibles()"
+        [ngModel]="rolForm().permisosSeleccionados"
+        (ngModelChange)="updateRolForm('permisosSeleccionados', $event)"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar permisos"
+        [showClear]="true"
+        [filter]="true"
+        filterPlaceholder="Buscar permiso..."
+        styleClass="w-full">
+        <ng-template let-permiso pTemplate="item">
+          <div>
+            <div class="font-medium">{{ permiso.label }}</div>
+            <div class="text-sm text-color-secondary">{{ permiso.description }}</div>
+          </div>
+        </ng-template>
+      </p-multiselect>
+    </div>
+
+    <!-- Estado -->
+    <div class="flex align-items-center gap-3 mb-4">
+      <p-checkbox
+        [ngModel]="rolForm().activo"
+        (ngModelChange)="updateRolForm('activo', $event)"
+        [binary]="true"
+        inputId="rol-activo">
+      </p-checkbox>
+      <label for="rol-activo" class="cursor-pointer font-medium">Rol activo</label>
+    </div>
+  </div>
+
+  <!-- Acciones -->
+  <div class="flex justify-content-end gap-2 p-4 border-top-1 surface-border">
+    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="cerrarWizardRol()"></p-button>
+    <p-button label="Guardar Rol" icon="pi pi-check" severity="primary" (onClick)="guardarRol()"></p-button>
+  </div>
+</p-drawer>
+
+<!-- Dialogs -->
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

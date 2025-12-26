@@ -1,5 +1,6 @@
-<div class="graficas-interactivas-container" [class.dark-mode]="tema() === 'dark'">
-  <!-- Panel de Configuración -->
+<div class="graficas-interactivas-container" [class.dark-mode]="tema() === 'dark'" [class.modo-widget]="modoWidget">
+  <!-- Panel de Configuración (solo si no está en modo widget) -->
+  @if (!modoWidget) {
   <div class="config-panel">
     <div class="config-header">
       <h3><i class="pi pi-cog mr-2"></i>Configuración de Gráfica</h3>
@@ -519,6 +520,7 @@
     </div>
     }
   </div>
+  }
 
   <!-- Área de la Gráfica -->
   <div class="chart-area">
@@ -566,27 +568,19 @@
       </div>
     </div>
 
-    <div class="chart-container">
-      <apx-chart
-        #chartRef
-        [series]="chartSeries()"
-        [chart]="chartOptions().chart"
-        [colors]="chartOptions().colors"
-        [labels]="chartOptions().labels"
-        [title]="chartOptions().title"
-        [subtitle]="chartOptions().subtitle"
-        [legend]="chartOptions().legend"
-        [tooltip]="chartOptions().tooltip"
-        [dataLabels]="chartOptions().dataLabels"
-        [plotOptions]="chartOptions().plotOptions"
-        [xaxis]="chartOptions().xaxis"
-        [yaxis]="chartOptions().yaxis"
-        [stroke]="chartOptions().stroke"
-        [fill]="chartOptions().fill"
-        [grid]="chartOptions().grid"
-        [markers]="chartOptions().markers"
-        [responsive]="chartOptions().responsive"
-        [theme]="chartOptions().theme" />
+    <div class="chart-container" #chartContainer>
+      @if (datosSignal().labels.length > 0) {
+        <p-chart
+          [type]="chartType()"
+          [data]="chartData()"
+          [options]="chartOptions()"
+          [style]="{ width: '100%', height: '100%' }" />
+      } @else {
+        <div class="no-data-message">
+          <i class="pi pi-chart-bar"></i>
+          <span>Sin datos para mostrar</span>
+        </div>
+      }
     </div>
 
     <!-- Stats rápidos -->

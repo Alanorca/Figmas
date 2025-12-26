@@ -137,23 +137,15 @@ export interface ChartConfigCompleta {
 }
 
 // Tipos de widget disponibles
+// Tipos de widget según historias de usuario (W1-W6)
 export type TipoWidget =
-  | 'kpi-card'              // Tarjeta de KPI individual
-  | 'kpi-grid'              // Grid de KPIs (4 cards)
-  | 'chart-bar'             // Gráfica de barras
-  | 'chart-line'            // Gráfica de líneas
-  | 'chart-donut'           // Gráfica de dona
-  | 'chart-area'            // Gráfica de área
-  | 'graficas-interactivas' // Componente completo de gráficas interactivas
-  | 'table-mini'            // Tabla compacta
-  | 'alertas-list'          // Lista de alertas
-  | 'tendencia'             // Tendencia de procesos
-  | 'cumplimiento'          // Barra de cumplimiento
-  | 'actividad-reciente'    // Actividad reciente
-  | 'calendario'            // Mini calendario
-  | 'mapa-riesgos'          // Mapa de calor de riesgos
-  | 'progreso-objetivos'    // Progreso de objetivos
-  | 'custom';               // Widget personalizado
+  | 'kpi-card'              // W5: Tarjeta de KPI individual
+  | 'kpi-grid'              // W5: Grid de KPIs (múltiples cards)
+  | 'graficas-interactivas' // W1: Gráficas interactivas (todos los tipos)
+  | 'graficas-guardadas'    // W2: Lista de gráficas guardadas
+  | 'table-mini'            // W3: Tabla de datos
+  | 'actividad-reciente'    // W4: Últimas actividades con filtros
+  | 'calendario';           // W6: Calendario de eventos
 
 // Tamaños predefinidos para widgets
 export type TamanoWidget = 'small' | 'medium' | 'large' | 'wide' | 'tall' | 'full';
@@ -216,6 +208,22 @@ export interface WidgetConfig {
   // Para listas
   listFilter?: Record<string, any>;
   listLimit?: number;
+
+  // Configuración de gráficas interactivas (modo widget)
+  graficaTipo?: string;
+  graficaFuenteDatos?: string;
+  graficaAgrupacion?: string;       // Para gráficas circulares
+  graficaValor?: string;            // Para gráficas circulares
+  graficaEjeX?: string;             // Para gráficas de ejes
+  graficaEjeY?: string;             // Para gráficas de ejes
+  graficaSeries?: string;           // Para múltiples series
+  graficaFiltroNivel?: string;      // Filtro por nivel/área
+  graficaFiltroTipo?: string;       // Filtro por tipo específico
+  graficaPaleta?: string;
+  graficaAnimaciones?: boolean;
+  graficaMostrarLeyenda?: boolean;
+  graficaMostrarDataLabels?: boolean;
+  graficaTema?: 'light' | 'dark';
 
   // Configuración general
   refreshInterval?: number; // en segundos, 0 = sin refresh
@@ -288,7 +296,7 @@ export interface WidgetCatalogItem {
   nombre: string;
   descripcion: string;
   icono: string;
-  categoria: 'kpis' | 'graficas' | 'tablas' | 'listas' | 'otros';
+  categoria: 'kpis' | 'graficas' | 'tablas' | 'listas' | 'otros' | 'indicadores' | 'datos' | 'actividad' | 'planificacion';
   tamanoDefault: TamanoWidget;
   minCols: number;
   minRows: number;
@@ -297,165 +305,87 @@ export interface WidgetCatalogItem {
   configDefault: WidgetConfig;
 }
 
-// Catálogo completo de widgets disponibles
+// Catálogo de widgets según historias de usuario (W1-W6)
 export const WIDGET_CATALOG: WidgetCatalogItem[] = [
-  // KPIs
+  // W5: Tarjetas KPI
   {
     tipo: 'kpi-card',
     nombre: 'Tarjeta KPI',
-    descripcion: 'Muestra un KPI individual con tendencia',
+    descripcion: 'Indicador individual con valor, tendencia y drilldown',
     icono: 'pi pi-chart-line',
-    categoria: 'kpis',
+    categoria: 'indicadores',
     tamanoDefault: 'small',
     minCols: 1, minRows: 1, maxCols: 2, maxRows: 2,
-    configDefault: { showHeader: true, showActions: false }
+    configDefault: { showHeader: true, showActions: true }
   },
   {
     tipo: 'kpi-grid',
     nombre: 'Grid de KPIs',
-    descripcion: 'Muestra múltiples KPIs en grid',
+    descripcion: 'Múltiples indicadores en formato grid',
     icono: 'pi pi-th-large',
-    categoria: 'kpis',
+    categoria: 'indicadores',
     tamanoDefault: 'wide',
     minCols: 2, minRows: 1, maxCols: 4, maxRows: 2,
     configDefault: { showHeader: true }
   },
-  {
-    tipo: 'progreso-objetivos',
-    nombre: 'Progreso Objetivos',
-    descripcion: 'Barra de progreso de objetivos',
-    icono: 'pi pi-check-circle',
-    categoria: 'kpis',
-    tamanoDefault: 'medium',
-    minCols: 2, minRows: 1, maxCols: 4, maxRows: 2,
-    configDefault: { showHeader: true }
-  },
 
-  // Gráficas
-  {
-    tipo: 'chart-bar',
-    nombre: 'Gráfica de Barras',
-    descripcion: 'Gráfica de barras horizontal o vertical',
-    icono: 'pi pi-chart-bar',
-    categoria: 'graficas',
-    tamanoDefault: 'medium',
-    minCols: 2, minRows: 2, maxCols: 4, maxRows: 3,
-    configDefault: { chartType: 'bar', showHeader: true }
-  },
-  {
-    tipo: 'chart-line',
-    nombre: 'Gráfica de Líneas',
-    descripcion: 'Tendencias y evolución temporal',
-    icono: 'pi pi-chart-line',
-    categoria: 'graficas',
-    tamanoDefault: 'large',
-    minCols: 2, minRows: 2, maxCols: 4, maxRows: 3,
-    configDefault: { chartType: 'line', showHeader: true }
-  },
-  {
-    tipo: 'chart-donut',
-    nombre: 'Gráfica de Dona',
-    descripcion: 'Distribución porcentual',
-    icono: 'pi pi-chart-pie',
-    categoria: 'graficas',
-    tamanoDefault: 'small',
-    minCols: 1, minRows: 2, maxCols: 2, maxRows: 3,
-    configDefault: { chartType: 'donut', showHeader: true }
-  },
-  {
-    tipo: 'chart-area',
-    nombre: 'Gráfica de Área',
-    descripcion: 'Área con gradiente',
-    icono: 'pi pi-chart-line',
-    categoria: 'graficas',
-    tamanoDefault: 'large',
-    minCols: 2, minRows: 2, maxCols: 4, maxRows: 3,
-    configDefault: { chartType: 'area', showHeader: true }
-  },
+  // W1: Gráficas Interactivas
   {
     tipo: 'graficas-interactivas',
     nombre: 'Gráficas Interactivas',
-    descripcion: 'Panel completo con múltiples tipos de gráficas, configuración, IA y guardado',
-    icono: 'pi pi-sparkles',
+    descripcion: 'Panel completo: barras, líneas, dona, área. Configuración, IA y guardado',
+    icono: 'pi pi-chart-bar',
     categoria: 'graficas',
-    tamanoDefault: 'full',
-    minCols: 3, minRows: 3, maxCols: 4, maxRows: 4,
-    configDefault: { showHeader: false }
-  },
-  {
-    tipo: 'mapa-riesgos',
-    nombre: 'Mapa de Riesgos',
-    descripcion: 'Matriz de probabilidad/impacto',
-    icono: 'pi pi-th-large',
-    categoria: 'graficas',
-    tamanoDefault: 'medium',
-    minCols: 2, minRows: 2, maxCols: 3, maxRows: 3,
-    configDefault: { showHeader: true }
-  },
-
-  // Tablas
-  {
-    tipo: 'table-mini',
-    nombre: 'Tabla Compacta',
-    descripcion: 'Tabla resumida de datos',
-    icono: 'pi pi-table',
-    categoria: 'tablas',
     tamanoDefault: 'large',
     minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
-    configDefault: { tableLimit: 5, showHeader: true }
+    configDefault: { showHeader: false }
   },
 
-  // Listas
+  // W2: Gráficas Guardadas
   {
-    tipo: 'alertas-list',
-    nombre: 'Lista de Alertas',
-    descripcion: 'Alertas activas ordenadas por severidad',
-    icono: 'pi pi-exclamation-triangle',
-    categoria: 'listas',
+    tipo: 'graficas-guardadas',
+    nombre: 'Gráficas Guardadas',
+    descripcion: 'Lista de configuraciones de gráficas guardadas',
+    icono: 'pi pi-bookmark',
+    categoria: 'graficas',
     tamanoDefault: 'medium',
-    minCols: 1, minRows: 2, maxCols: 2, maxRows: 4,
-    configDefault: { listLimit: 5, showHeader: true }
+    minCols: 2, minRows: 2, maxCols: 3, maxRows: 4,
+    configDefault: { showHeader: true, listLimit: 10 }
   },
+
+  // W3: Tablas
+  {
+    tipo: 'table-mini',
+    nombre: 'Tabla de Datos',
+    descripcion: 'Tabla con datos, ordenamiento y exportación CSV/Excel',
+    icono: 'pi pi-table',
+    categoria: 'datos',
+    tamanoDefault: 'large',
+    minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
+    configDefault: { tableLimit: 10, showHeader: true }
+  },
+
+  // W4: Últimas Actividades
   {
     tipo: 'actividad-reciente',
-    nombre: 'Actividad Reciente',
-    descripcion: 'Últimas acciones y cambios',
+    nombre: 'Últimas Actividades',
+    descripcion: 'Actividad reciente con filtros por tipo y período',
     icono: 'pi pi-clock',
-    categoria: 'listas',
+    categoria: 'actividad',
     tamanoDefault: 'medium',
-    minCols: 1, minRows: 2, maxCols: 2, maxRows: 4,
+    minCols: 2, minRows: 2, maxCols: 3, maxRows: 4,
     configDefault: { listLimit: 10, showHeader: true }
   },
 
-  // Otros
-  {
-    tipo: 'tendencia',
-    nombre: 'Tendencia',
-    descripcion: 'Indicador de tendencia con predicción',
-    icono: 'pi pi-arrow-up-right',
-    categoria: 'otros',
-    tamanoDefault: 'medium',
-    minCols: 2, minRows: 2, maxCols: 3, maxRows: 3,
-    configDefault: { showHeader: true }
-  },
-  {
-    tipo: 'cumplimiento',
-    nombre: 'Cumplimiento General',
-    descripcion: 'Barra de cumplimiento global',
-    icono: 'pi pi-percentage',
-    categoria: 'otros',
-    tamanoDefault: 'wide',
-    minCols: 2, minRows: 1, maxCols: 4, maxRows: 2,
-    configDefault: { showHeader: true }
-  },
+  // W6: Calendario
   {
     tipo: 'calendario',
     nombre: 'Calendario',
-    descripcion: 'Mini calendario con eventos',
+    descripcion: 'Calendario con eventos, revisiones y fechas importantes',
     icono: 'pi pi-calendar',
-    categoria: 'otros',
+    categoria: 'planificacion',
     tamanoDefault: 'medium',
-    minCols: 2, minRows: 2, maxCols: 3, maxRows: 3,
+    minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
     configDefault: { showHeader: true }
   }
 ];
@@ -471,14 +401,14 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
   rowHeight: 120,
   gap: 16,
   widgets: [
-    // Fila 1: KPIs
+    // Fila 1: KPIs (W5)
     {
       id: 'widget-kpi-1',
       tipo: 'kpi-card',
       titulo: 'Cumplimiento General',
       icono: 'pi pi-percentage',
       x: 0, y: 0, cols: 1, rows: 1,
-      config: { kpiType: 'cumplimiento', showHeader: true }
+      config: { kpiType: 'cumplimiento', showHeader: true, showActions: true }
     },
     {
       id: 'widget-kpi-2',
@@ -486,7 +416,7 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       titulo: 'Procesos Activos',
       icono: 'pi pi-cog',
       x: 1, y: 0, cols: 1, rows: 1,
-      config: { kpiType: 'procesos', showHeader: true }
+      config: { kpiType: 'procesos', showHeader: true, showActions: true }
     },
     {
       id: 'widget-kpi-3',
@@ -494,7 +424,7 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       titulo: 'Alertas Activas',
       icono: 'pi pi-exclamation-triangle',
       x: 2, y: 0, cols: 1, rows: 1,
-      config: { kpiType: 'alertas', showHeader: true }
+      config: { kpiType: 'alertas', showHeader: true, showActions: true }
     },
     {
       id: 'widget-kpi-4',
@@ -502,43 +432,43 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       titulo: 'Objetivos Cumplidos',
       icono: 'pi pi-check-circle',
       x: 3, y: 0, cols: 1, rows: 1,
-      config: { kpiType: 'objetivos', showHeader: true }
+      config: { kpiType: 'objetivos', showHeader: true, showActions: true }
     },
 
-    // Fila 2: Gráficas principales
+    // Fila 2: Gráficas Interactivas (W1) y Tabla (W3)
     {
-      id: 'widget-chart-cumplimiento',
-      tipo: 'chart-bar',
-      titulo: 'Cumplimiento por Proceso',
+      id: 'widget-graficas',
+      tipo: 'graficas-interactivas',
+      titulo: 'Gráficas Interactivas',
       icono: 'pi pi-chart-bar',
       x: 0, y: 1, cols: 2, rows: 2,
-      config: { chartDataSource: 'cumplimiento', showHeader: true }
+      config: { showHeader: false }
     },
     {
-      id: 'widget-chart-tendencia',
-      tipo: 'chart-line',
-      titulo: 'Tendencia de Procesos',
-      icono: 'pi pi-chart-line',
-      x: 2, y: 1, cols: 2, rows: 2,
-      config: { chartDataSource: 'tendencia', showHeader: true }
-    },
-
-    // Fila 3: Alertas y tabla
-    {
-      id: 'widget-alertas',
-      tipo: 'alertas-list',
-      titulo: 'Alertas Recientes',
-      icono: 'pi pi-bell',
-      x: 0, y: 3, cols: 1, rows: 2,
-      config: { listLimit: 5, showHeader: true }
-    },
-    {
-      id: 'widget-tabla-procesos',
+      id: 'widget-tabla',
       tipo: 'table-mini',
       titulo: 'Procesos',
       icono: 'pi pi-table',
-      x: 1, y: 3, cols: 3, rows: 2,
+      x: 2, y: 1, cols: 2, rows: 2,
       config: { tableDataSource: 'procesos', tableLimit: 5, showHeader: true }
+    },
+
+    // Fila 3: Actividades (W4), Calendario (W6), Gráficas Guardadas (W2)
+    {
+      id: 'widget-actividades',
+      tipo: 'actividad-reciente',
+      titulo: 'Últimas Actividades',
+      icono: 'pi pi-clock',
+      x: 0, y: 3, cols: 2, rows: 2,
+      config: { listLimit: 10, showHeader: true }
+    },
+    {
+      id: 'widget-calendario',
+      tipo: 'calendario',
+      titulo: 'Calendario',
+      icono: 'pi pi-calendar',
+      x: 2, y: 3, cols: 2, rows: 2,
+      config: { showHeader: true }
     }
   ],
   createdAt: new Date(),

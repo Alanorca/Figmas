@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -18,8 +18,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { MenuItem } from 'primeng/api';
-import { MockDataService } from '../../services/mock-data.service';
-import { Riesgo, EstadoRiesgo } from '../../models';
+import { ApiService } from '../../services/api.service';
+import { Riesgo, EstadoRiesgo, Activo } from '../../models';
 
 interface RiesgoConActivo extends Riesgo {
   activoNombre: string;
@@ -36,10 +36,11 @@ interface RiesgoConActivo extends Riesgo {
   templateUrl: './riesgos.html',
   styleUrl: './riesgos.scss'
 })
-export class RiesgosComponent {
-  private mockData = inject(MockDataService);
+export class RiesgosComponent implements OnInit {
+  private api = inject(ApiService);
 
-  activos = this.mockData.activos;
+  activos = signal<Activo[]>([]);
+  riesgosData = signal<any[]>([]);
   showDialog = signal(false);
 
   // Selección múltiple
@@ -52,13 +53,26 @@ export class RiesgosComponent {
   // Drawer de acciones masivas
   showAccionesMasivasDrawer = signal(false);
 
+  ngOnInit(): void {
+    this.cargarDatos();
+  }
+
+  cargarDatos(): void {
+    this.api.getActivos().subscribe({
+      next: (data) => this.activos.set(data),
+      error: (err) => console.error('Error cargando activos:', err)
+    });
+    this.api.getRiesgos().subscribe({
+      next: (data) => this.riesgosData.set(data),
+      error: (err) => console.error('Error cargando riesgos:', err)
+    });
+  }
+
   riesgos = computed<RiesgoConActivo[]>(() => {
-    return this.activos().flatMap(activo =>
-      activo.riesgos.map(riesgo => ({
-        ...riesgo,
-        activoNombre: activo.nombre
-      }))
-    );
+    return this.riesgosData().map(riesgo => ({
+      ...riesgo,
+      activoNombre: riesgo.activo?.nombre || 'Sin activo'
+    }));
   });
 
   // Computed properties for KPIs (arrow functions not allowed in templates)
@@ -132,14 +146,20 @@ export class RiesgosComponent {
   saveRiesgo(): void {
     const riesgo = this.nuevoRiesgo();
     if (riesgo.activoId && riesgo.descripcion && riesgo.responsable) {
-      this.mockData.addRiesgo(riesgo.activoId, {
+      this.api.createRiesgo({
+        activoId: riesgo.activoId,
         descripcion: riesgo.descripcion,
         probabilidad: riesgo.probabilidad,
         impacto: riesgo.impacto,
         estado: riesgo.estado,
         responsable: riesgo.responsable
+      }).subscribe({
+        next: () => {
+          this.cargarDatos();
+          this.showDialog.set(false);
+        },
+        error: (err) => console.error('Error creando riesgo:', err)
       });
-      this.showDialog.set(false);
     }
   }
 
@@ -148,8 +168,15 @@ export class RiesgosComponent {
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => console.log('Ver', riesgo.id) },
       { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(riesgo) },
       { separator: true },
-      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', riesgo.id) }
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.eliminarRiesgo(riesgo) }
     ];
+  }
+
+  eliminarRiesgo(riesgo: RiesgoConActivo): void {
+    this.api.deleteRiesgo(riesgo.id).subscribe({
+      next: () => this.cargarDatos(),
+      error: (err) => console.error('Error eliminando riesgo:', err)
+    });
   }
 
   iniciarEdicionDesdeMenu(riesgo: RiesgoConActivo): void {
@@ -198,9 +225,14 @@ export class RiesgosComponent {
   guardarEdicion(riesgo: RiesgoConActivo, event: Event): void {
     event.stopPropagation();
     const valores = this.valoresEdicion();
-    console.log(`Guardando edición del riesgo ${riesgo.id}:`, valores);
-    this.riesgoEditando.set(null);
-    this.valoresEdicion.set({});
+    this.api.updateRiesgo(riesgo.id, valores).subscribe({
+      next: () => {
+        this.cargarDatos();
+        this.riesgoEditando.set(null);
+        this.valoresEdicion.set({});
+      },
+      error: (err) => console.error('Error actualizando riesgo:', err)
+    });
   }
 
   cancelarEdicion(event: Event): void {

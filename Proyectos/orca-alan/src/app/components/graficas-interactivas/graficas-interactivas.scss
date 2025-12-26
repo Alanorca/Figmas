@@ -1,3 +1,13 @@
+// El host del componente debe ocupar todo el espacio disponible
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+}
+
 .graficas-interactivas-container {
   display: grid;
   grid-template-columns: 320px 1fr;
@@ -8,6 +18,102 @@
   background: var(--surface-card);
   border-radius: 12px;
   transition: all 0.3s ease;
+  flex: 1;
+
+  // Modo widget: solo la gráfica sin panel de configuración
+  &.modo-widget {
+    grid-template-columns: 1fr;
+    min-height: 0; // Crítico: permite flexbox controlar altura
+    height: 100%;
+    max-height: 100%;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+
+    .chart-area {
+      border-radius: 0;
+      box-shadow: none;
+      background: transparent;
+      flex: 1;
+      min-height: 0; // Crítico para flexbox
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chart-header {
+      padding: 0.5rem 0.75rem;
+      flex-shrink: 0;
+
+      .chart-info {
+        .chart-title {
+          font-size: 0.875rem;
+        }
+      }
+
+      .chart-actions {
+        .p-button {
+          width: 28px;
+          height: 28px;
+        }
+      }
+    }
+
+    .chart-container {
+      padding: 0;
+      flex: 1;
+      min-height: 0; // Crítico: permite que el contenedor se encoja
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+      overflow: hidden;
+
+      p-chart {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+
+        ::ng-deep > div {
+          flex: 1;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      canvas {
+        max-width: 100%;
+        max-height: 100%;
+      }
+    }
+
+    .chart-stats {
+      padding: 0.5rem;
+      gap: 0.75rem;
+      flex-shrink: 0;
+
+      .stat-item {
+        .stat-value {
+          font-size: 1rem;
+        }
+        .stat-label {
+          font-size: 0.625rem;
+        }
+      }
+    }
+
+    .interactivity-tips {
+      display: none;
+    }
+  }
 
   &.dark-mode {
     background: #1a1a2e;
@@ -491,10 +597,13 @@
 .chart-area {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0; // Crítico para flexbox
   background: var(--surface-card);
   border-radius: 12px;
   padding: 1.25rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
 }
 
 .chart-header {
@@ -535,40 +644,55 @@
 
 .chart-container {
   flex: 1;
-  min-height: 350px;
+  min-height: 0; // Crítico: permite que flexbox controle la altura
   position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  overflow: hidden;
 
-  :host ::ng-deep {
-    .apexcharts-canvas {
-      margin: 0 auto;
+  // PrimeNG Chart wrapper - responsive con flexbox
+  p-chart {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+
+    // Deep select the chart.js wrapper
+    ::ng-deep > div {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  // Canvas responsive sin forzar dimensiones
+  canvas {
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .no-data-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 100px;
+    color: var(--text-color-secondary);
+    gap: 0.75rem;
+    opacity: 0.6;
+
+    i {
+      font-size: 2rem;
     }
 
-    .apexcharts-tooltip {
-      border-radius: 8px !important;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
-    }
-
-    .apexcharts-tooltip-title {
-      font-weight: 600 !important;
-      background: var(--primary-color) !important;
-      color: #fff !important;
-    }
-
-    .apexcharts-legend {
-      padding: 0.75rem !important;
-    }
-
-    .apexcharts-legend-marker {
-      border-radius: 4px !important;
-    }
-
-    .apexcharts-menu {
-      border-radius: 8px !important;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
-    }
-
-    .apexcharts-menu-item:hover {
-      background: var(--primary-50) !important;
+    span {
+      font-size: 0.85rem;
     }
   }
 }

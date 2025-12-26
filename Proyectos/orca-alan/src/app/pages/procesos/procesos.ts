@@ -27,7 +27,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { ProcessService } from '../../services/process.service';
 import { GroqService } from '../../services/groq.service';
-import { MockDataService } from '../../services/mock-data.service';
+import { ApiService } from '../../services/api.service';
 import { ThemeService } from '../../services/theme.service';
 import {
   NODE_TYPES_METADATA,
@@ -95,10 +95,14 @@ export class ProcesosComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private confirmationService = inject(ConfirmationService);
+  private api = inject(ApiService);
   processService = inject(ProcessService);
   groqService = inject(GroqService);
-  mockDataService = inject(MockDataService);
   themeService = inject(ThemeService);
+
+  // Data local cargada desde API
+  activosData = signal<Activo[]>([]);
+  plantillasData = signal<PlantillaActivo[]>([]);
 
   // Background del canvas dinámico según el tema
   vflowBackground = computed(() => {
@@ -215,7 +219,7 @@ export class ProcesosComponent implements OnInit {
   // Opciones de activos filtradas por departamento
   activoOptions = computed(() => {
     const area = this.areaSeleccionadaActivo();
-    let activos = this.mockDataService.activos();
+    let activos = this.activosData();
 
     if (area) {
       activos = activos.filter(a => a.departamento === area);
@@ -248,7 +252,7 @@ export class ProcesosComponent implements OnInit {
     if (!node || node.type !== 'activo') return null;
     const activoId = (node.config as unknown as Record<string, unknown>)['activoId'] as string;
     if (!activoId) return null;
-    return this.mockDataService.getActivoById(activoId) || null;
+    return this.activosData().find(a => a.id === activoId) || null;
   });
 
   // Plantilla del activo seleccionado
@@ -256,9 +260,9 @@ export class ProcesosComponent implements OnInit {
     const activo = this.activoSeleccionadoParaNodo();
     if (!activo) return null;
     if (activo.plantillaId) {
-      return this.mockDataService.getPlantillaById(activo.plantillaId) || null;
+      return this.plantillasData().find(p => p.id === activo.plantillaId) || null;
     }
-    return this.mockDataService.getPlantillaByTipoActivo(activo.tipo) || null;
+    return this.plantillasData().find(p => p.tipoActivo === activo.tipo) || null;
   });
 
   // Propiedades custom para multiselect (con valor actual)
@@ -399,7 +403,7 @@ export class ProcesosComponent implements OnInit {
   }
 
   onActivoChange(activoId: string): void {
-    const activo = this.mockDataService.getActivoById(activoId);
+    const activo = this.activosData().find(a => a.id === activoId);
     if (activo) {
       this.updateNodeConfig({
         activoId,
@@ -592,6 +596,9 @@ export class ProcesosComponent implements OnInit {
   // =============== LIFECYCLE ===============
 
   ngOnInit(): void {
+    // Cargar datos desde API
+    this.cargarDatosIniciales();
+
     // Obtener ID de la ruta
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -602,6 +609,17 @@ export class ProcesosComponent implements OnInit {
         this.router.navigate(['/procesos']);
       }
     }
+  }
+
+  cargarDatosIniciales(): void {
+    this.api.getActivos().subscribe({
+      next: (data) => this.activosData.set(data),
+      error: (err) => console.error('Error cargando activos:', err)
+    });
+    this.api.getPlantillasActivo().subscribe({
+      next: (data) => this.plantillasData.set(data),
+      error: (err) => console.error('Error cargando plantillas:', err)
+    });
   }
 
   // Volver al listado

@@ -1,5 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { MockDataService } from './mock-data.service';
+import { ApiService } from './api.service';
+import { Activo } from '../models';
 import {
   RegistroUnificado,
   TipoEntidad,
@@ -13,7 +14,31 @@ import {
   providedIn: 'root'
 })
 export class TablaUnificadaService {
-  private mockData = inject(MockDataService);
+  private api = inject(ApiService);
+
+  // Data cargada desde API
+  private activosData = signal<Activo[]>([]);
+  private riesgosData = signal<any[]>([]);
+  private incidentesData = signal<any[]>([]);
+
+  constructor() {
+    this.cargarDatos();
+  }
+
+  private cargarDatos(): void {
+    this.api.getActivos().subscribe({
+      next: (data) => this.activosData.set(data),
+      error: (err) => console.error('Error cargando activos:', err)
+    });
+    this.api.getRiesgos().subscribe({
+      next: (data) => this.riesgosData.set(data),
+      error: (err) => console.error('Error cargando riesgos:', err)
+    });
+    this.api.getIncidentes().subscribe({
+      next: (data) => this.incidentesData.set(data),
+      error: (err) => console.error('Error cargando incidentes:', err)
+    });
+  }
 
   // Estado de la tabla
   private estado = signal<EstadoTabla>({
@@ -102,51 +127,53 @@ export class TablaUnificadaService {
 
   // Computed: Datos unificados sin filtrar
   datosUnificados = computed<RegistroUnificado[]>(() => {
-    const activos = this.mockData.activos();
+    const activos = this.activosData();
+    const riesgos = this.riesgosData();
+    const incidentes = this.incidentesData();
     const entidades = this.estado().entidadesSeleccionadas;
     const registros: RegistroUnificado[] = [];
 
-    activos.forEach(activo => {
-      // Agregar riesgos
-      if (entidades.includes('riesgo')) {
-        activo.riesgos.forEach(riesgo => {
-          registros.push({
-            id: riesgo.id,
-            tipoEntidad: 'riesgo',
-            contenedorId: activo.id,
-            contenedorNombre: activo.nombre,
-            tipoContenedor: 'activo',
-            descripcion: riesgo.descripcion,
-            estado: riesgo.estado,
-            fecha: riesgo.fechaIdentificacion,
-            responsable: riesgo.responsable,
-            probabilidad: riesgo.probabilidad,
-            impacto: riesgo.impacto,
-            nivelRiesgo: riesgo.probabilidad * riesgo.impacto
-          });
+    // Agregar riesgos
+    if (entidades.includes('riesgo')) {
+      riesgos.forEach(riesgo => {
+        const activo = activos.find(a => a.id === riesgo.activoId);
+        registros.push({
+          id: riesgo.id,
+          tipoEntidad: 'riesgo',
+          contenedorId: riesgo.activoId,
+          contenedorNombre: activo?.nombre || 'Sin activo',
+          tipoContenedor: 'activo',
+          descripcion: riesgo.descripcion,
+          estado: riesgo.estado,
+          fecha: riesgo.fechaIdentificacion,
+          responsable: riesgo.responsable,
+          probabilidad: riesgo.probabilidad,
+          impacto: riesgo.impacto,
+          nivelRiesgo: riesgo.probabilidad * riesgo.impacto
         });
-      }
+      });
+    }
 
-      // Agregar incidentes
-      if (entidades.includes('incidente')) {
-        activo.incidentes.forEach(incidente => {
-          registros.push({
-            id: incidente.id,
-            tipoEntidad: 'incidente',
-            contenedorId: activo.id,
-            contenedorNombre: activo.nombre,
-            tipoContenedor: 'activo',
-            descripcion: incidente.descripcion,
-            estado: incidente.estado,
-            fecha: incidente.fechaReporte,
-            responsable: incidente.reportadoPor,
-            titulo: incidente.titulo,
-            severidad: incidente.severidad,
-            reportadoPor: incidente.reportadoPor
-          });
+    // Agregar incidentes
+    if (entidades.includes('incidente')) {
+      incidentes.forEach(incidente => {
+        const activo = activos.find(a => a.id === incidente.activoId);
+        registros.push({
+          id: incidente.id,
+          tipoEntidad: 'incidente',
+          contenedorId: incidente.activoId,
+          contenedorNombre: activo?.nombre || 'Sin activo',
+          tipoContenedor: 'activo',
+          descripcion: incidente.descripcion,
+          estado: incidente.estado,
+          fecha: incidente.fechaReporte,
+          responsable: incidente.reportadoPor,
+          titulo: incidente.titulo,
+          severidad: incidente.severidad,
+          reportadoPor: incidente.reportadoPor
         });
-      }
-    });
+      });
+    }
 
     return registros;
   });
