@@ -328,32 +328,8 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   // ==================== RESIZE OBSERVER METHODS ====================
 
   private initResizeObserver(): void {
-    // Usar el elemento raíz del componente
-    const element = this.elementRef.nativeElement;
-
-    if (!element || typeof ResizeObserver === 'undefined') {
-      return;
-    }
-
-    // Ejecutar fuera de la zona Angular para mejor rendimiento
-    this.ngZone.runOutsideAngular(() => {
-      this.resizeObserver = new ResizeObserver((entries) => {
-        // Debounce para evitar múltiples actualizaciones
-        if (this.resizeDebounceTimer) {
-          clearTimeout(this.resizeDebounceTimer);
-        }
-
-        this.resizeDebounceTimer = setTimeout(() => {
-          this.ngZone.run(() => {
-            // Forzar actualización del chart
-            this.chartUpdateTrigger.update(v => v + 1);
-            this.cdr.detectChanges();
-          });
-        }, 150); // 150ms de debounce
-      });
-
-      this.resizeObserver.observe(element);
-    });
+    // Deshabilitado temporalmente - Chart.js ya tiene responsive: true
+    // El ResizeObserver puede causar loops de re-render
   }
 
   private destroyResizeObserver(): void {
@@ -370,8 +346,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
 
   /** Método público para forzar resize desde componentes padres */
   forceChartResize(): void {
-    this.chartUpdateTrigger.update(v => v + 1);
-    this.cdr.detectChanges();
+    // Chart.js con responsive: true se redimensiona automáticamente
   }
 
   private cargarConfiguracionesDesdeStorage(): void {
