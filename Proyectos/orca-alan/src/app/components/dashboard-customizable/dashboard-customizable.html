@@ -108,18 +108,24 @@
             @switch (widget.tipo) {
               @case ('kpi-card') {
                 <div class="widget-kpi-card" [ngClass]="getKPIColorClass(widget.config.kpiType || 'cumplimiento')">
-                  <!-- Header: Icono + Tendencia -->
+                  <!-- Header: Icono + Tendencia + Menú -->
                   <div class="kpi-header">
                     <div class="kpi-icon">
                       <i [class]="widget.config.kpiConfig?.icono || 'pi pi-chart-line'"></i>
                     </div>
-                    @if (widget.config.kpiConfig?.mostrarTendencia !== false) {
-                      @let trend = getKPITrend(widget.config.kpiType || 'cumplimiento');
-                      <div class="kpi-trend" [class.positive]="trend.isPositive" [class.negative]="!trend.isPositive">
-                        <i class="pi" [class.pi-arrow-up]="trend.direction === 'up'" [class.pi-arrow-down]="trend.direction === 'down'" [class.pi-minus]="trend.direction === 'neutral'"></i>
-                        {{ trend.value }}
-                      </div>
-                    }
+                    <div class="kpi-header-right">
+                      @if (widget.config.kpiConfig?.mostrarTendencia !== false) {
+                        @let trend = getKPITrend(widget.config.kpiType || 'cumplimiento');
+                        <div class="kpi-trend" [class.positive]="trend.isPositive" [class.negative]="!trend.isPositive">
+                          <i class="pi" [class.pi-arrow-up]="trend.direction === 'up'" [class.pi-arrow-down]="trend.direction === 'down'" [class.pi-minus]="trend.direction === 'neutral'"></i>
+                          {{ trend.value }}
+                        </div>
+                      }
+                      <button class="kpi-menu-btn" (click)="toggleKpiMenu($event, widget); $event.stopPropagation()">
+                        <i class="pi pi-ellipsis-v"></i>
+                      </button>
+                      <p-menu #kpiMenu [model]="getKpiMenuItems(widget)" [popup]="true" appendTo="body"></p-menu>
+                    </div>
                   </div>
 
                   <!-- Footer: Título + Valor -->
@@ -133,13 +139,22 @@
               }
 
               @case ('kpi-grid') {
-                <div class="widget-kpi-grid">
-                  @for (metric of getKPIGridMetrics(); track metric.label) {
-                    <div class="kpi-mini-card">
-                      <span class="value">{{ metric.value }}</span>
-                      <span class="label">{{ metric.label }}</span>
-                    </div>
-                  }
+                <div class="widget-kpi-grid-container">
+                  <div class="kpi-grid-header">
+                    <span class="kpi-grid-title">{{ widget.titulo }}</span>
+                    <button class="kpi-menu-btn" (click)="toggleKpiMenu($event, widget); $event.stopPropagation()">
+                      <i class="pi pi-ellipsis-v"></i>
+                    </button>
+                    <p-menu #kpiGridMenu [model]="getKpiMenuItems(widget)" [popup]="true" appendTo="body"></p-menu>
+                  </div>
+                  <div class="widget-kpi-grid">
+                    @for (metric of getKPIGridMetrics(); track metric.label) {
+                      <div class="kpi-mini-card">
+                        <span class="value">{{ metric.value }}</span>
+                        <span class="label">{{ metric.label }}</span>
+                      </div>
+                    }
+                  </div>
                 </div>
               }
 
@@ -413,31 +428,6 @@
 <!-- Drawer: Catálogo de Widgets -->
 <p-drawer [(visible)]="showCatalogoDrawer" position="right" [style]="{width: '50vw'}" header="Agregar Widget">
   <div class="catalogo-content">
-    <!-- Búsqueda -->
-    <div class="catalogo-search">
-      <span class="p-input-icon-left w-full">
-        <i class="pi pi-search"></i>
-        <input type="text" pInputText placeholder="Buscar widgets..."
-               [ngModel]="catalogoFiltro()"
-               (ngModelChange)="catalogoFiltro.set($event)"
-               class="w-full" />
-      </span>
-    </div>
-
-    <!-- Categorías -->
-    <div class="catalogo-categorias">
-      @for (cat of categorias; track cat.value) {
-        <button class="categoria-btn"
-                [class.active]="categoriaActiva() === cat.value"
-                (click)="categoriaActiva.set(cat.value)">
-          <i [class]="cat.icon"></i>
-          {{ cat.label }}
-        </button>
-      }
-    </div>
-
-    <p-divider></p-divider>
-
     <!-- Lista de Widgets -->
     <div class="catalogo-lista">
       @for (widget of catalogoFiltrado(); track widget.tipo) {

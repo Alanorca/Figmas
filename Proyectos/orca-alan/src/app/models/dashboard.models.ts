@@ -307,10 +307,22 @@ export interface WidgetCatalogItem {
 
 // Catálogo de widgets según historias de usuario (W1-W6)
 export const WIDGET_CATALOG: WidgetCatalogItem[] = [
-  // W5: Tarjetas KPI
+  // W1: Gráficas Interactivas (primero en el catálogo)
+  {
+    tipo: 'graficas-interactivas',
+    nombre: 'Gráficas interactivas y asistidas por IA',
+    descripcion: 'Panel completo: barras, líneas, dona, área. Configuración, IA y guardado',
+    icono: 'pi pi-chart-bar',
+    categoria: 'graficas',
+    tamanoDefault: 'large',
+    minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
+    configDefault: { showHeader: false }
+  },
+
+  // W5: Tarjetas
   {
     tipo: 'kpi-card',
-    nombre: 'Tarjeta KPI',
+    nombre: 'Tarjetas',
     descripcion: 'Indicador individual con valor, tendencia y drilldown',
     icono: 'pi pi-chart-line',
     categoria: 'indicadores',
@@ -320,25 +332,13 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
   },
   {
     tipo: 'kpi-grid',
-    nombre: 'Grid de KPIs',
+    nombre: 'Grid de datos',
     descripcion: 'Múltiples indicadores en formato grid',
     icono: 'pi pi-th-large',
     categoria: 'indicadores',
     tamanoDefault: 'wide',
     minCols: 2, minRows: 1, maxCols: 4, maxRows: 2,
     configDefault: { showHeader: true }
-  },
-
-  // W1: Gráficas Interactivas
-  {
-    tipo: 'graficas-interactivas',
-    nombre: 'Gráficas Interactivas',
-    descripcion: 'Panel completo: barras, líneas, dona, área. Configuración, IA y guardado',
-    icono: 'pi pi-chart-bar',
-    categoria: 'graficas',
-    tamanoDefault: 'large',
-    minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
-    configDefault: { showHeader: false }
   },
 
   // W2: Gráficas Guardadas

@@ -6,7 +6,7 @@
 // Integrado con datos reales, ApexCharts interactivos y configuración de widgets
 // ============================================================================
 
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GridsterModule } from 'angular-gridster2';
@@ -1167,6 +1167,43 @@ export class DashboardCustomizableComponent implements OnInit {
       label: m.nombre,
       value: m.unidad ? `${m.valor}${m.unidad}` : `${m.valor}`
     }));
+  }
+
+  /** Toggle menú de acciones para KPI cards */
+  @ViewChild('kpiMenu') kpiMenu: any;
+  @ViewChild('kpiGridMenu') kpiGridMenu: any;
+
+  toggleKpiMenu(event: Event, widget: DashboardWidget): void {
+    if (this.kpiMenu) {
+      this.kpiMenu.toggle(event);
+    } else if (this.kpiGridMenu) {
+      this.kpiGridMenu.toggle(event);
+    }
+  }
+
+  /** Obtiene items del menú para KPI cards */
+  getKpiMenuItems(widget: DashboardWidget): any[] {
+    return [
+      {
+        label: 'Editar',
+        icon: 'pi pi-pencil',
+        command: () => this.editarWidget(widget)
+      },
+      {
+        label: 'Descargar',
+        icon: 'pi pi-download',
+        command: () => this.abrirExportModal(widget)
+      },
+      {
+        separator: true
+      },
+      {
+        label: 'Eliminar',
+        icon: 'pi pi-trash',
+        styleClass: 'menu-item-danger',
+        command: () => this.eliminarWidget(widget)
+      }
+    ];
   }
 
   /** Obtiene las alertas ordenadas por severidad */

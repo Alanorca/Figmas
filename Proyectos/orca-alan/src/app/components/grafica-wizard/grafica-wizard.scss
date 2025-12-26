@@ -746,3 +746,322 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+// ============================================
+// DARK MODE - Mejoras de contraste usando tokens
+// ============================================
+:host-context(html.dark-mode) {
+  .grafica-wizard {
+    // Títulos de sección con mejor contraste
+    .section-title,
+    .panel-title,
+    .section-subtitle {
+      color: var(--text-color) !important;
+    }
+
+    .config-label {
+      color: var(--text-color) !important;
+      font-weight: 500;
+    }
+
+    // Cards de categoría de gráfica
+    .categoria-card {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+
+      &:hover {
+        border-color: var(--primary-400) !important;
+        background: var(--surface-hover) !important;
+      }
+
+      &.selected {
+        border-color: var(--primary-color) !important;
+        background: rgba(var(--primary-500-rgb), 0.15) !important;
+      }
+
+      .categoria-icon {
+        background: var(--surface-100) !important;
+
+        i {
+          color: var(--text-color) !important;
+        }
+      }
+
+      .categoria-nombre {
+        color: var(--text-color) !important;
+      }
+
+      .categoria-desc {
+        color: var(--text-color-secondary) !important;
+      }
+    }
+
+    // Cards de tipo de gráfica
+    .tipo-card {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+
+      &:hover {
+        border-color: var(--primary-400) !important;
+        background: var(--surface-hover) !important;
+      }
+
+      &.selected {
+        border-color: var(--primary-color) !important;
+        background: rgba(var(--primary-500-rgb), 0.15) !important;
+
+        i {
+          color: var(--primary-color) !important;
+        }
+      }
+
+      i {
+        color: var(--text-color) !important;
+      }
+
+      .tipo-nombre {
+        color: var(--text-color) !important;
+      }
+
+      .tipo-desc {
+        color: var(--text-color-secondary) !important;
+      }
+    }
+
+    // Cards de fuentes de datos
+    .fuente-card {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+
+      &:hover {
+        border-color: var(--primary-400) !important;
+        background: var(--surface-hover) !important;
+      }
+
+      &.selected {
+        border-color: var(--primary-color) !important;
+        background: rgba(var(--primary-500-rgb), 0.15) !important;
+
+        .fuente-icon {
+          background: var(--primary-color) !important;
+
+          i {
+            color: var(--surface-0) !important;
+          }
+        }
+      }
+
+      .fuente-icon {
+        background: var(--surface-100) !important;
+
+        i {
+          color: var(--text-color) !important;
+        }
+      }
+
+      .fuente-info {
+        .fuente-nombre {
+          color: var(--text-color) !important;
+        }
+
+        .fuente-desc {
+          color: var(--text-color-secondary) !important;
+        }
+      }
+
+      .fuente-count {
+        .count-badge {
+          background: var(--primary-color) !important;
+          color: var(--surface-0) !important;
+        }
+      }
+    }
+
+    // Selects con mejor contraste
+    ::ng-deep .p-select {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+
+      .p-select-label {
+        color: var(--text-color) !important;
+      }
+
+      .p-select-trigger {
+        color: var(--text-color) !important;
+      }
+
+      &:hover {
+        border-color: var(--primary-400) !important;
+      }
+    }
+
+    // Input fields
+    ::ng-deep .p-inputtext {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+
+      &::placeholder {
+        color: var(--text-color-secondary) !important;
+      }
+
+      &:hover {
+        border-color: var(--primary-400) !important;
+      }
+    }
+
+    // Opciones del config
+    .config-option {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+
+      &:hover {
+        border-color: var(--primary-400) !important;
+      }
+
+      &.selected {
+        border-color: var(--primary-color) !important;
+        background: rgba(var(--primary-500-rgb), 0.15) !important;
+      }
+    }
+
+    // Preview mini
+    .preview-mini {
+      background: var(--surface-100) !important;
+      border: 1px solid var(--surface-border) !important;
+
+      span {
+        color: var(--text-color-secondary) !important;
+      }
+    }
+
+    // Cruces
+    .cruce-option {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+
+      &:hover {
+        border-color: var(--primary-400) !important;
+      }
+
+      &.selected {
+        border-color: var(--primary-color) !important;
+        background: rgba(var(--primary-500-rgb), 0.15) !important;
+      }
+
+      i {
+        color: var(--text-color) !important;
+      }
+
+      span {
+        color: var(--text-color) !important;
+      }
+    }
+
+    // Paletas de colores
+    .paleta-option {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+
+      &:hover {
+        border-color: var(--primary-400) !important;
+        background: var(--surface-hover) !important;
+      }
+
+      &.selected {
+        border-color: var(--primary-color) !important;
+        background: rgba(var(--primary-500-rgb), 0.15) !important;
+      }
+
+      .paleta-nombre {
+        color: var(--text-color) !important;
+      }
+    }
+
+    // Opciones de visualización
+    .opcion-toggle {
+      background: var(--surface-card) !important;
+
+      span {
+        color: var(--text-color) !important;
+      }
+    }
+
+    // Resumen de configuración
+    .config-resumen {
+      background: var(--surface-100) !important;
+
+      h4 {
+        color: var(--text-color) !important;
+      }
+
+      .resumen-item {
+        .label {
+          color: var(--text-color-secondary) !important;
+        }
+
+        .value {
+          color: var(--text-color) !important;
+        }
+      }
+    }
+
+    // Toggle buttons
+    .toggle-option {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+
+      &:hover {
+        border-color: var(--primary-400) !important;
+      }
+
+      &.selected {
+        background: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        color: var(--surface-0) !important;
+      }
+    }
+
+    // Chips de categoría
+    .categoria-chip {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+
+      &.selected {
+        background: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        color: var(--surface-0) !important;
+      }
+    }
+
+    // Datos resumen (mensaje de éxito)
+    .datos-resumen {
+      background: rgba(var(--green-500-rgb), 0.15) !important;
+
+      i {
+        color: var(--green-500) !important;
+      }
+
+      span {
+        color: var(--text-color) !important;
+      }
+    }
+
+    // Loading state
+    .loading-state {
+      color: var(--text-color-secondary) !important;
+    }
+
+    // Hint messages
+    .config-hint {
+      color: var(--text-color-secondary) !important;
+
+      &.warning {
+        color: var(--orange-500) !important;
+      }
+    }
+  }
+}

@@ -189,7 +189,9 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
 
   private _lastPaleta: string | undefined;
   @Input() set paletaExterna(value: string | undefined) {
-    if (value && value !== this._lastPaleta) {
+    // Siempre actualizar si hay un valor válido
+    // Esto asegura que la paleta externa siempre tenga prioridad
+    if (value && this.paletas[value]) {
       this._lastPaleta = value;
       this.paletaSeleccionada.set(value);
     }

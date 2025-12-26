@@ -250,11 +250,15 @@ export const CRUCES_DISPONIBLES: CruceDatosConfig[] = [
 ];
 
 export const PALETAS_COLORES = [
-  { id: 'default', nombre: 'Predeterminada', colores: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'] },
-  { id: 'semantica', nombre: 'Semántica', colores: ['#22C55E', '#EAB308', '#EF4444', '#3B82F6', '#8B5CF6', '#F97316'] },
-  { id: 'ocean', nombre: 'Océano', colores: ['#0EA5E9', '#06B6D4', '#14B8A6', '#10B981', '#22C55E', '#84CC16'] },
-  { id: 'sunset', nombre: 'Atardecer', colores: ['#F97316', '#FB923C', '#FBBF24', '#EF4444', '#EC4899', '#A855F7'] },
-  { id: 'monochrome', nombre: 'Monocromática', colores: ['#1E293B', '#334155', '#475569', '#64748B', '#94A3B8', '#CBD5E1'] }
+  { id: 'vibrant', nombre: 'Vibrante', colores: ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#3F51B5'] },
+  { id: 'pastel', nombre: 'Pastel', colores: ['#80DEEA', '#CE93D8', '#FFAB91', '#A5D6A7', '#90CAF9', '#FFF59D'] },
+  { id: 'neon', nombre: 'Neón', colores: ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00', '#FF0080', '#8000FF'] },
+  { id: 'corporate', nombre: 'Corporativo', colores: ['#2E5BFF', '#8C54FF', '#00C1D4', '#FAD02C', '#F7C137', '#33D9B2'] },
+  { id: 'earth', nombre: 'Tierra', colores: ['#8D6E63', '#A1887F', '#BCAAA4', '#795548', '#6D4C41', '#5D4037'] },
+  { id: 'ocean', nombre: 'Océano', colores: ['#0277BD', '#0288D1', '#039BE5', '#03A9F4', '#29B6F6', '#4FC3F7'] },
+  { id: 'sunset', nombre: 'Atardecer', colores: ['#FF6B6B', '#FF8E72', '#FFA07A', '#FFB347', '#FFCC5C', '#FFE66D'] },
+  { id: 'semaforo', nombre: 'Semáforo', colores: ['#22C55E', '#EAB308', '#F97316', '#EF4444', '#DC2626'] },
+  { id: 'monoazul', nombre: 'Mono Azul', colores: ['#1E3A5F', '#2E5984', '#3E78A9', '#4E97CE', '#6EB5E8', '#8ED3F2'] }
 ];
 
 // Estado inicial del wizard
@@ -276,7 +280,7 @@ export const INITIAL_WIZARD_STATE: GraficaWizardState = {
   cruceSeleccionado: null,
   titulo: '',
   subtitulo: '',
-  paleta: 'default',
+  paleta: 'vibrant',
   mostrarLeyenda: true,
   mostrarEtiquetas: true,
   mostrarAnimaciones: true,

@@ -206,12 +206,45 @@
     box-shadow: var(--shadow-md);
   }
 
-  // Header de la KPI card: icono + tendencia
+  // Header de la KPI card: icono + tendencia + menú
   .kpi-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     width: 100%;
+  }
+
+  .kpi-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .kpi-menu-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: var(--border-radius);
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    i {
+      font-size: 0.875rem;
+    }
+  }
+
+  &:hover .kpi-menu-btn {
+    opacity: 1;
   }
 
   .kpi-icon {
@@ -397,11 +430,58 @@
   }
 }
 
+.widget-kpi-grid-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .kpi-grid-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-2) var(--spacing-3);
+    margin-bottom: var(--spacing-2);
+
+    .kpi-grid-title {
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+      color: var(--text-color-secondary);
+    }
+
+    .kpi-menu-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: var(--border-radius);
+      color: var(--text-color-secondary);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+
+      &:hover {
+        background: var(--surface-200);
+        color: var(--text-color);
+      }
+
+      i {
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  &:hover .kpi-menu-btn {
+    opacity: 1;
+  }
+}
+
 .widget-kpi-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-3);
-  height: 100%;
+  flex: 1;
 
   .kpi-mini-card {
     display: flex;
