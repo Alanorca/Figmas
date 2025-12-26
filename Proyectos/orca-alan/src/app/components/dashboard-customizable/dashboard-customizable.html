@@ -96,7 +96,7 @@
   <div class="dashboard-grid" [class.editing]="modoEdicion()">
     <gridster [options]="gridsterOptions()">
       @for (widget of widgets(); track trackByWidgetId($index, widget)) {
-        <gridster-item [item]="widget" (click)="onWidgetClick(widget)" [attr.data-widget-id]="widget.id">
+        <gridster-item [item]="widget" (click)="onWidgetClick(widget)" [attr.data-widget-id]="widget.id" [attr.data-widget-type]="widget.tipo">
           <app-dashboard-widget
             [widget]="widget"
             (onEdit)="editarWidget($event)"
@@ -107,13 +107,11 @@
             <!-- Contenido del widget según tipo -->
             @switch (widget.tipo) {
               @case ('kpi-card') {
-                <div class="widget-kpi-card" [style.--kpi-color]="widget.config.kpiConfig?.colorPrimario">
-                  <div class="kpi-icon">
-                    <i [class]="widget.config.kpiConfig?.icono || 'pi pi-chart-line'"></i>
-                  </div>
-                  <div class="kpi-content">
-                    <div class="kpi-value">
-                      {{ getKPIValue(widget.config.kpiType || 'cumplimiento') }}{{ widget.config.kpiConfig?.unidad || '%' }}
+                <div class="widget-kpi-card" [ngClass]="getKPIColorClass(widget.config.kpiType || 'cumplimiento')">
+                  <!-- Header: Icono + Tendencia -->
+                  <div class="kpi-header">
+                    <div class="kpi-icon">
+                      <i [class]="widget.config.kpiConfig?.icono || 'pi pi-chart-line'"></i>
                     </div>
                     @if (widget.config.kpiConfig?.mostrarTendencia !== false) {
                       @let trend = getKPITrend(widget.config.kpiType || 'cumplimiento');
@@ -122,16 +120,14 @@
                         {{ trend.value }}
                       </div>
                     }
-                    @if (widget.config.kpiConfig?.mostrarMeta === true) {
-                      <div class="kpi-meta">
-                        <span class="meta-label">Meta:</span>
-                        <span class="meta-value">{{ widget.config.kpiConfig?.metaValor || 100 }}{{ widget.config.kpiConfig?.unidad || '%' }}</span>
-                        <div class="meta-progress">
-                          <div class="meta-progress-bar"
-                               [style.width.%]="(getKPINumericValue(widget.config.kpiType || 'cumplimiento') / (widget.config.kpiConfig?.metaValor || 100)) * 100"></div>
-                        </div>
-                      </div>
-                    }
+                  </div>
+
+                  <!-- Footer: Título + Valor -->
+                  <div class="kpi-footer">
+                    <div class="kpi-title">{{ widget.titulo }}</div>
+                    <div class="kpi-value">
+                      {{ getKPIValue(widget.config.kpiType || 'cumplimiento') }}{{ widget.config.kpiConfig?.unidad || '%' }}
+                    </div>
                   </div>
                 </div>
               }

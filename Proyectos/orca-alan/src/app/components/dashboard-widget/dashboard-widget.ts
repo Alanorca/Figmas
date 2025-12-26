@@ -106,6 +106,12 @@ import { DashboardService } from '../../services/dashboard.service';
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      height: 100%;
+      background: transparent;
+    }
+
     .widget-container {
       display: flex;
       flex-direction: column;
@@ -117,8 +123,20 @@ import { DashboardService } from '../../services/dashboard.service';
       transition: all var(--transition-duration) var(--transition-timing);
     }
 
+    // Dark mode - asegurar que no haya bordes claros visibles
+    :host-context(:root.dark-mode) .widget-container,
+    :host-context([data-theme="dark"]) .widget-container {
+      border-color: var(--surface-700);
+      background: var(--surface-800);
+    }
+
     .widget-container:hover {
-      border-color: var(--surface-300);
+      border-color: var(--surface-400);
+    }
+
+    :host-context(:root.dark-mode) .widget-container:hover,
+    :host-context([data-theme="dark"]) .widget-container:hover {
+      border-color: var(--surface-600);
     }
 
     .widget-container.widget-selected {
@@ -126,25 +144,30 @@ import { DashboardService } from '../../services/dashboard.service';
       box-shadow: 0 0 0 2px var(--primary-100);
     }
 
+    :host-context(:root.dark-mode) .widget-container.widget-selected,
+    :host-context([data-theme="dark"]) .widget-container.widget-selected {
+      box-shadow: 0 0 0 2px rgba(var(--primary-500-rgb), 0.2);
+    }
+
     .widget-container.widget-editing {
       cursor: move;
     }
 
-    // Header
+    // Header - sin fondo, minimalista
     .widget-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--surface-100);
-      background: var(--surface-50);
-      min-height: 48px;
+      padding: var(--spacing-3) var(--spacing-4);
+      border-bottom: 1px solid var(--surface-border);
+      background: transparent;
+      min-height: 44px;
     }
 
     .widget-header-left {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: var(--spacing-2);
       flex: 1;
       min-width: 0;
     }
@@ -153,14 +176,14 @@ import { DashboardService } from '../../services/dashboard.service';
       display: flex;
       gap: 1px;
       cursor: grab;
-      padding: 0.25rem;
-      color: var(--surface-400);
+      padding: var(--spacing-1);
+      color: var(--text-color-secondary);
       opacity: 0.5;
-      transition: opacity 0.15s;
+      transition: opacity var(--transition-duration) var(--transition-timing);
 
       &:hover {
         opacity: 1;
-        color: var(--surface-600);
+        color: var(--text-color);
       }
 
       &:active {
@@ -168,13 +191,13 @@ import { DashboardService } from '../../services/dashboard.service';
       }
 
       i {
-        font-size: 0.625rem;
+        font-size: var(--font-size-2xs);
       }
     }
 
     .widget-icon {
-      font-size: 1rem;
-      color: var(--primary-color);
+      font-size: var(--font-size-base);
+      color: var(--text-color-secondary);
     }
 
     .widget-titles {
@@ -184,29 +207,40 @@ import { DashboardService } from '../../services/dashboard.service';
     }
 
     .widget-title {
-      font-size: 0.875rem;
-      font-weight: 600;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
       color: var(--text-color);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.2;
     }
 
     .widget-subtitle {
-      font-size: 0.75rem;
+      font-size: var(--font-size-xs);
       color: var(--text-color-secondary);
     }
 
     .widget-header-right {
       display: flex;
       align-items: center;
-      gap: 0.25rem;
+      gap: var(--spacing-1);
+
+      // Iconos de acción en gris - tokenizado
+      :host ::ng-deep .p-button {
+        color: var(--text-color-secondary);
+
+        &:hover {
+          color: var(--text-color);
+          background: var(--surface-100);
+        }
+      }
     }
 
     // Content
     .widget-content {
       flex: 1;
-      padding: 1rem;
+      padding: var(--spacing-4);
       overflow: hidden;
       position: relative;
       display: flex;
@@ -214,7 +248,7 @@ import { DashboardService } from '../../services/dashboard.service';
       min-height: 0;
 
       &.no-header {
-        padding-top: 1rem;
+        padding-top: var(--spacing-4);
       }
 
       // Para contenido que necesita scroll (listas, tablas)
@@ -229,12 +263,12 @@ import { DashboardService } from '../../services/dashboard.service';
       align-items: center;
       justify-content: center;
       height: 100%;
-      gap: 0.75rem;
+      gap: var(--spacing-3);
       color: var(--text-color-secondary);
       text-align: center;
 
       i {
-        font-size: 2rem;
+        font-size: var(--font-size-4xl);
         color: var(--red-400);
       }
     }

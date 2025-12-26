@@ -1,0 +1,132 @@
+<p-drawer
+  [visible]="visible()"
+  (visibleChange)="onHide()"
+  [position]="'right'"
+  [style]="{ width: '480px' }"
+  [header]="'Detalle de Cumplimiento'">
+
+  @if (data(); as drillData) {
+    <div class="drilldown-content">
+      <!-- Header con nombre y cumplimiento general -->
+      <div class="drilldown-header">
+        <div class="proceso-info">
+          <h3 class="proceso-nombre">{{ drillData.procesoNombre }}</h3>
+          <span class="proceso-id">ID: {{ drillData.procesoId }}</span>
+        </div>
+        <div class="cumplimiento-general">
+          <div class="cumplimiento-valor" [style.color]="getCumplimientoColor(cumplimientoGeneral())">
+            {{ cumplimientoGeneral() }}%
+          </div>
+          <span class="cumplimiento-label">Cumplimiento</span>
+        </div>
+      </div>
+
+      <!-- Resumen de alertas -->
+      @if (alertasCount().total > 0) {
+        <div class="alertas-resumen">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>
+            {{ alertasCount().total }} alerta(s) activa(s)
+            @if (alertasCount().critical > 0) {
+              <p-tag [value]="alertasCount().critical + ' critica(s)'" severity="danger" styleClass="ml-2"></p-tag>
+            }
+            @if (alertasCount().warning > 0) {
+              <p-tag [value]="alertasCount().warning + ' advertencia(s)'" severity="warn" styleClass="ml-2"></p-tag>
+            }
+          </span>
+        </div>
+      }
+
+      <p-divider></p-divider>
+
+      <!-- Lista de objetivos -->
+      <div class="objetivos-lista">
+        <h4 class="section-title">
+          <i class="pi pi-flag"></i>
+          Objetivos ({{ drillData.desglose.length }})
+        </h4>
+
+        @for (objetivo of drillData.desglose; track objetivo.objetivoId) {
+          <div class="objetivo-card">
+            <div class="objetivo-header" (click)="toggleObjetivo(objetivo.objetivoId)">
+              <div class="objetivo-info">
+                <span class="objetivo-nombre">{{ objetivo.objetivoNombre }}</span>
+                <span class="objetivo-kpis">{{ objetivo.kpis.length }} KPIs</span>
+              </div>
+              <div class="objetivo-stats">
+                <div class="cumplimiento-mini">
+                  <div class="cumplimiento-bar">
+                    <div
+                      class="cumplimiento-fill"
+                      [class]="getCumplimientoClass(objetivo.cumplimientoPromedio)"
+                      [style.width.%]="objetivo.cumplimientoPromedio">
+                    </div>
+                  </div>
+                  <span class="cumplimiento-text">{{ objetivo.cumplimientoPromedio }}%</span>
+                </div>
+                <i [class]="isObjetivoExpandido(objetivo.objetivoId) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                   class="expand-icon"></i>
+              </div>
+            </div>
+
+            @if (isObjetivoExpandido(objetivo.objetivoId)) {
+              <div class="objetivo-kpis-lista">
+                @for (kpi of objetivo.kpis; track kpi.id) {
+                  <div class="kpi-item" [class.kpi-alerta]="kpi.alertaActiva">
+                    <div class="kpi-info">
+                      <span class="kpi-nombre">{{ kpi.nombre }}</span>
+                      <div class="kpi-valores">
+                        <span class="valor-actual">{{ kpi.valorActual | number:'1.0-1' }}</span>
+                        <span class="valor-separador">/</span>
+                        <span class="valor-meta">{{ kpi.valorMeta }}</span>
+                      </div>
+                    </div>
+                    <div class="kpi-status">
+                      <div class="kpi-progress">
+                        <div class="progress-bar">
+                          <div
+                            class="progress-fill"
+                            [class]="getCumplimientoClass(kpi.cumplimiento)"
+                            [style.width.%]="minVal(kpi.cumplimiento, 100)">
+                          </div>
+                        </div>
+                        <span class="progress-text">{{ kpi.cumplimiento }}%</span>
+                      </div>
+                      <i [class]="getTendenciaIcon(kpi.tendencia)"
+                         [ngClass]="getTendenciaClass(kpi.tendencia)"
+                         class="tendencia-icon"></i>
+                      @if (kpi.alertaActiva && kpi.severidadAlerta) {
+                        <p-tag
+                          [severity]="getAlertaSeverity(kpi.severidadAlerta)"
+                          styleClass="alerta-tag">
+                          <i class="pi pi-exclamation-circle"></i>
+                        </p-tag>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Boton para ver detalle completo -->
+      <div class="drilldown-actions">
+        <p-button
+          label="Ver detalle completo"
+          icon="pi pi-external-link"
+          (onClick)="navegarAlProceso()"
+          styleClass="w-full">
+        </p-button>
+      </div>
+    </div>
+  } @else {
+    <div class="drilldown-empty">
+      <i class="pi pi-info-circle"></i>
+      <p>Selecciona un proceso para ver el detalle</p>
+    </div>
+  }
+</p-drawer>

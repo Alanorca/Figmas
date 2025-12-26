@@ -1,0 +1,35 @@
+.amcharts-line-container {
+  width: 100%;
+}
+
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+
+  .periodo-option,
+  .metrica-option {
+    display: flex;
+    align-items: center;
+
+    i {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.amchart-container {
+  width: 100%;
+  min-height: 200px;
+}
+
+:host ::ng-deep {
+  .p-select {
+    .p-select-label {
+      display: flex;
+      align-items: center;
+    }
+  }
+}

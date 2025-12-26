@@ -1144,6 +1144,19 @@ export class DashboardCustomizableComponent implements OnInit {
     };
   }
 
+  /** Obtiene la clase de color para el KPI card - estilo minimalist PrimeBlocks */
+  getKPIColorClass(kpiType: string): string {
+    const colorMap: Record<string, string> = {
+      'cumplimiento': 'kpi-cyan',
+      'procesos': 'kpi-purple',
+      'alertas': 'kpi-amber',
+      'objetivos': 'kpi-emerald',
+      'riesgos': 'kpi-rose',
+      'incidentes': 'kpi-orange'
+    };
+    return colorMap[kpiType] || 'kpi-cyan';
+  }
+
   /** Obtiene métricas para el grid de KPIs */
   getKPIGridMetrics(): { label: string; value: string }[] {
     const metrics = this.kpiMetrics();
