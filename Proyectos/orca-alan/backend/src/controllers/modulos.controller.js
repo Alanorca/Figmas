@@ -37,16 +37,10 @@ const getModuloById = async (req, res) => {
   }
 };
 
-// Obtener permisos de un rol por módulo (estructura para la vista de Figma)
+// Obtener permisos de un rol por módulo (estructura para la vista de matriz)
 const getPermisosRolPorModulo = async (req, res) => {
   try {
     const { rolId } = req.params;
-
-    // Obtener todos los módulos
-    const modulos = await prisma.modulo.findMany({
-      where: { activo: true },
-      orderBy: { orden: 'asc' }
-    });
 
     // Obtener permisos del rol
     const rolPermisos = await prisma.rolPermiso.findMany({
@@ -57,30 +51,101 @@ const getPermisosRolPorModulo = async (req, res) => {
     // Crear set de códigos de permisos del rol
     const permisosDelRol = new Set(rolPermisos.map(rp => rp.permiso.codigo));
 
-    // Mapear módulos con sus permisos
-    const modulosConPermisos = modulos.map(modulo => {
-      const nombreModulo = modulo.nombre.toLowerCase();
+    // Mapeo de módulos a códigos de permisos
+    const modulosConfig = [
+      {
+        id: 'dashboard',
+        nombre: 'Dashboard',
+        icono: 'pi-chart-bar',
+        permisoView: ['RPT_VIEW'],
+        permisoCreate: [],
+        permisoEdit: []
+      },
+      {
+        id: 'activos',
+        nombre: 'Activos y Procesos',
+        icono: 'pi-box',
+        permisoView: ['ACT_VIEW', 'ORG_VIEW'],
+        permisoCreate: ['ORG_CREATE', 'ACT_MANAGE'],
+        permisoEdit: ['ORG_EDIT', 'ACT_MANAGE']
+      },
+      {
+        id: 'procesos',
+        nombre: 'Procesos',
+        icono: 'pi-sitemap',
+        permisoView: ['PRC_VIEW'],
+        permisoCreate: ['PRC_MANAGE'],
+        permisoEdit: ['PRC_MANAGE']
+      },
+      {
+        id: 'riesgos',
+        nombre: 'Riesgos',
+        icono: 'pi-exclamation-triangle',
+        permisoView: ['RSK_VIEW'],
+        permisoCreate: ['RSK_EDIT'],
+        permisoEdit: ['RSK_EDIT']
+      },
+      {
+        id: 'incidentes',
+        nombre: 'Incidentes',
+        icono: 'pi-bolt',
+        permisoView: ['INC_VIEW'],
+        permisoCreate: ['INC_MANAGE'],
+        permisoEdit: ['INC_MANAGE']
+      },
+      {
+        id: 'cumplimiento',
+        nombre: 'Cumplimiento',
+        icono: 'pi-check-circle',
+        permisoView: ['CMP_VIEW'],
+        permisoCreate: ['CMP_MANAGE'],
+        permisoEdit: ['CMP_MANAGE']
+      },
+      {
+        id: 'reportes',
+        nombre: 'Reportes',
+        icono: 'pi-chart-line',
+        permisoView: ['RPT_VIEW'],
+        permisoCreate: [],
+        permisoEdit: ['RPT_EXPORT']
+      },
+      {
+        id: 'auditoria',
+        nombre: 'Auditoría',
+        icono: 'pi-history',
+        permisoView: ['AUD_VIEW'],
+        permisoCreate: [],
+        permisoEdit: ['AUD_EXPORT']
+      },
+      {
+        id: 'usuarios',
+        nombre: 'Usuarios',
+        icono: 'pi-users',
+        permisoView: ['USR_VIEW'],
+        permisoCreate: ['USR_CREATE'],
+        permisoEdit: ['USR_EDIT']
+      },
+      {
+        id: 'configuracion',
+        nombre: 'Configuración',
+        icono: 'pi-cog',
+        permisoView: ['ROL_VIEW', 'USR_VIEW'],
+        permisoCreate: ['ROL_CREATE'],
+        permisoEdit: ['ROL_EDIT']
+      }
+    ];
 
-      return {
-        id: modulo.id,
-        nombre: modulo.nombre,
-        icono: modulo.icono,
-        permisos: {
-          creacion: permisosDelRol.has(`${nombreModulo.toUpperCase().substring(0, 3)}_CREATE`) ||
-                    permisosDelRol.has(`USR_CREATE`) && nombreModulo === 'usuarios' ||
-                    permisosDelRol.has(`ROL_CREATE`) && nombreModulo === 'roles' ||
-                    permisosDelRol.has(`ORG_CREATE`) && nombreModulo === 'organizaciones',
-          edicion: permisosDelRol.has(`${nombreModulo.toUpperCase().substring(0, 3)}_EDIT`) ||
-                   permisosDelRol.has(`USR_EDIT`) && nombreModulo === 'usuarios' ||
-                   permisosDelRol.has(`ROL_EDIT`) && nombreModulo === 'roles' ||
-                   permisosDelRol.has(`ORG_EDIT`) && nombreModulo === 'organizaciones',
-          visualizacion: permisosDelRol.has(`${nombreModulo.toUpperCase().substring(0, 3)}_VIEW`) ||
-                         permisosDelRol.has(`USR_VIEW`) && nombreModulo === 'usuarios' ||
-                         permisosDelRol.has(`ROL_VIEW`) && nombreModulo === 'roles' ||
-                         permisosDelRol.has(`ORG_VIEW`) && nombreModulo === 'organizaciones'
-        }
-      };
-    });
+    // Generar matriz de permisos por módulo
+    const modulosConPermisos = modulosConfig.map(modulo => ({
+      id: modulo.id,
+      nombre: modulo.nombre,
+      icono: modulo.icono,
+      permisos: {
+        creacion: modulo.permisoCreate.some(p => permisosDelRol.has(p)),
+        edicion: modulo.permisoEdit.some(p => permisosDelRol.has(p)),
+        visualizacion: modulo.permisoView.some(p => permisosDelRol.has(p))
+      }
+    }));
 
     res.json(modulosConPermisos);
   } catch (error) {

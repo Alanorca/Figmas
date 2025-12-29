@@ -33,6 +33,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TextareaModule } from 'primeng/textarea';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { CardModule } from 'primeng/card';
 import { TreeNode } from 'primeng/api';
 
 // Services
@@ -88,7 +89,8 @@ type VistaActual = 'usuarios' | 'roles';
     DatePickerModule,
     SelectButtonModule,
     TextareaModule,
-    ProgressBarModule
+    ProgressBarModule,
+    CardModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './usuarios-roles.html',
@@ -384,6 +386,16 @@ export class UsuariosRolesComponent {
           this.showDrawerUsuario.set(false);
         }
       }
+    });
+  }
+
+  // Acciones masivas
+  abrirAccionesMasivas(): void {
+    // TODO: Implementar drawer de acciones masivas similar a tabla unificada
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Acciones masivas',
+      detail: `${this.usuariosSeleccionados.length} usuarios seleccionados`
     });
   }
 

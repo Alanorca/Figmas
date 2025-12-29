@@ -140,19 +140,26 @@ export class AsignacionRolesComponent implements OnInit {
     const permisos = this.usuariosRolesService.getPermisosDeRol(rol.id);
     const modulosMap: Record<string, ModuloPermiso> = {};
 
-    // Módulos predefinidos
+    // Módulos según matriz de permisos del sistema
     const modulosPredefinidos = [
+      { id: 'dashboard', nombre: 'Dashboard', icono: 'pi-chart-bar' },
+      { id: 'activos', nombre: 'Activos y Procesos', icono: 'pi-box' },
+      { id: 'procesos', nombre: 'Procesos', icono: 'pi-sitemap' },
+      { id: 'riesgos', nombre: 'Riesgos', icono: 'pi-exclamation-triangle' },
+      { id: 'incidentes', nombre: 'Incidentes', icono: 'pi-bolt' },
+      { id: 'cumplimiento', nombre: 'Cumplimiento', icono: 'pi-check-circle' },
+      { id: 'reportes', nombre: 'Reportes', icono: 'pi-chart-line' },
+      { id: 'auditoria', nombre: 'Auditoría', icono: 'pi-history' },
       { id: 'usuarios', nombre: 'Usuarios', icono: 'pi-users' },
-      { id: 'roles', nombre: 'Roles', icono: 'pi-shield' },
-      { id: 'organizaciones', nombre: 'Organizaciones', icono: 'pi-building' }
+      { id: 'configuracion', nombre: 'Configuración', icono: 'pi-cog' }
     ];
 
     modulosPredefinidos.forEach(mod => {
       modulosMap[mod.id] = {
         ...mod,
         permisos: {
-          creacion: permisos.some(p => p.modulo === mod.id && p.codigo.includes('CREATE')),
-          edicion: permisos.some(p => p.modulo === mod.id && p.codigo.includes('EDIT')),
+          creacion: permisos.some(p => p.modulo === mod.id && (p.codigo.includes('CREATE') || p.codigo.includes('MANAGE'))),
+          edicion: permisos.some(p => p.modulo === mod.id && (p.codigo.includes('EDIT') || p.codigo.includes('MANAGE'))),
           visualizacion: permisos.some(p => p.modulo === mod.id && p.codigo.includes('VIEW'))
         }
       };

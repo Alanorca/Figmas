@@ -3,12 +3,7 @@
   <div class="roles-panel">
     <div class="panel-header">
       <h2>Roles</h2>
-      <p-button
-        icon="pi pi-plus"
-        [rounded]="true"
-        [text]="true"
-        pTooltip="Crear nuevo rol">
-      </p-button>
+      <i class="pi pi-lock text-color-secondary" pTooltip="Roles definidos por el sistema"></i>
     </div>
 
     <p-scrollPanel [style]="{ width: '100%', height: 'calc(100vh - 180px)' }">
@@ -53,27 +48,14 @@
           </div>
         </div>
         <div class="rol-actions">
-          <p-button
-            icon="pi pi-pencil"
-            [rounded]="true"
-            [text]="true"
-            pTooltip="Editar rol">
-          </p-button>
-          <p-button
-            icon="pi pi-copy"
-            [rounded]="true"
-            [text]="true"
-            pTooltip="Duplicar rol">
-          </p-button>
-          @if (!rolSeleccionado()!.esRolSistema) {
-            <p-button
-              icon="pi pi-trash"
-              [rounded]="true"
-              [text]="true"
-              severity="danger"
-              pTooltip="Eliminar rol">
-            </p-button>
-          }
+          <p-tag value="Solo lectura" severity="secondary" [rounded]="true">
+            <ng-template pTemplate="content">
+              <div class="flex align-items-center gap-1">
+                <i class="pi pi-lock text-xs"></i>
+                <span>Solo lectura</span>
+              </div>
+            </ng-template>
+          </p-tag>
         </div>
       </div>
 
@@ -105,20 +87,19 @@
 
       <p-divider></p-divider>
 
+      <!-- Aviso de permisos del sistema -->
+      <div class="system-notice flex align-items-center gap-3 p-3 mb-3 border-round surface-ground">
+        <i class="pi pi-info-circle text-primary"></i>
+        <div>
+          <span class="font-medium">Los permisos son definidos por el sistema</span>
+          <p class="text-sm text-color-secondary m-0">La matriz de permisos está definida en el documento de roles y no puede ser modificada desde esta interfaz.</p>
+        </div>
+      </div>
+
       <!-- Sección de Permisos por Módulo -->
       <div class="permisos-section">
         <div class="section-header">
           <h3>Permisos por Módulo</h3>
-          <div class="asignacion-select">
-            <label>Asignación:</label>
-            <p-select
-              [options]="asignacionOptions"
-              [(ngModel)]="asignacionModulos"
-              optionLabel="label"
-              optionValue="value"
-              [style]="{ width: '150px' }">
-            </p-select>
-          </div>
         </div>
 
         @if (isLoading()) {
@@ -152,17 +133,17 @@
                   <p-checkbox
                     [(ngModel)]="modulo.permisos.creacion"
                     [binary]="true"
-                    (onChange)="togglePermiso(modulo, 'creacion')">
+                    [disabled]="true">
                   </p-checkbox>
                   <p-checkbox
                     [(ngModel)]="modulo.permisos.edicion"
                     [binary]="true"
-                    (onChange)="togglePermiso(modulo, 'edicion')">
+                    [disabled]="true">
                   </p-checkbox>
                   <p-checkbox
                     [(ngModel)]="modulo.permisos.visualizacion"
                     [binary]="true"
-                    (onChange)="togglePermiso(modulo, 'visualizacion')">
+                    [disabled]="true">
                   </p-checkbox>
                 </div>
               </div>
@@ -181,12 +162,10 @@
       <div class="usuarios-section">
         <div class="section-header">
           <h3>Usuarios Asignados</h3>
-          <p-button
-            label="Agregar Usuario"
-            icon="pi pi-plus"
-            [text]="true"
-            size="small">
-          </p-button>
+          <span class="text-sm text-color-secondary">
+            <i class="pi pi-info-circle mr-1"></i>
+            Gestionar desde Usuarios y Roles
+          </span>
         </div>
 
         <div class="usuarios-list">
@@ -217,24 +196,12 @@
                   [rounded]="true">
                 </p-tag>
               </div>
-              <p-button
-                icon="pi pi-times"
-                [rounded]="true"
-                [text]="true"
-                severity="secondary"
-                size="small"
-                pTooltip="Remover del rol">
-              </p-button>
             </div>
           } @empty {
             <div class="empty-usuarios">
               <i class="pi pi-users"></i>
               <p>No hay usuarios asignados a este rol</p>
-              <p-button
-                label="Asignar Usuarios"
-                icon="pi pi-plus"
-                size="small">
-              </p-button>
+              <p class="text-sm text-color-secondary">Asigna usuarios desde el módulo Usuarios y Roles</p>
             </div>
           }
         </div>
@@ -244,7 +211,7 @@
       <div class="empty-detail">
         <i class="pi pi-shield"></i>
         <h3>Selecciona un Rol</h3>
-        <p>Selecciona un rol de la lista para ver y editar sus permisos</p>
+        <p>Selecciona un rol de la lista para ver sus permisos asignados</p>
       </div>
     }
   </div>

@@ -1,11 +1,33 @@
 // ============================================================
 // Estilos para el módulo de Usuarios y Roles
+// Alineado con el sistema de diseño y tokens
 // ============================================================
 
 .usuarios-roles-container {
-  padding: 1.5rem;
+  padding: var(--spacing-6);
   min-height: calc(100vh - 60px);
   background-color: var(--surface-ground);
+}
+
+// ============================================================
+// Page Header - Patrón tabla unificada
+// ============================================================
+
+.page-header {
+  margin-bottom: var(--spacing-6);
+
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-color);
+  }
+
+  .page-subtitle {
+    margin: var(--spacing-1) 0 0 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-color-secondary);
+  }
 }
 
 // ============================================================
@@ -14,7 +36,7 @@
 
 .toolbar-principal {
   background: var(--surface-card);
-  border-radius: 12px;
+  border-radius: var(--border-radius-lg);
   border: 1px solid var(--surface-border);
 
   .tabs-selector {
@@ -32,91 +54,57 @@
 }
 
 // ============================================================
-// Stats Cards
-// ============================================================
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
-  background: var(--surface-card);
-  border-radius: 12px;
-  border: 1px solid var(--surface-border);
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  .stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    i {
-      font-size: 1.5rem;
-      color: #fff;
-    }
-  }
-
-  .stat-content {
-    display: flex;
-    flex-direction: column;
-
-    .stat-value {
-      font-size: 1.75rem;
-      font-weight: 700;
-      line-height: 1;
-      color: var(--text-color);
-    }
-
-    .stat-label {
-      font-size: 0.875rem;
-      color: var(--text-color-secondary);
-      margin-top: 0.25rem;
-    }
-  }
-
-  &.stat-card-primary .stat-icon {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-  }
-
-  &.stat-card-success .stat-icon {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-  }
-
-  &.stat-card-warning .stat-icon {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-  }
-
-  &.stat-card-danger .stat-icon {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-  }
-
-  &.stat-card-info .stat-icon {
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-  }
-}
-
-// ============================================================
 // Card Container
 // ============================================================
 
 .card {
   background: var(--surface-card);
-  border-radius: 12px;
+  border-radius: var(--border-radius-lg);
   border: 1px solid var(--surface-border);
-  padding: 1.5rem;
+  padding: var(--spacing-6);
+}
+
+// Table Card - Alineado con tabla unificada
+:host ::ng-deep .table-card {
+  .p-card-body {
+    padding: 0;
+  }
+
+  .p-card-content {
+    padding: 0;
+  }
+}
+
+// Quitar separación entre toolbar y tabla (patrón tabla unificada)
+:host ::ng-deep .p-toolbar {
+  margin-bottom: 0 !important;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  padding: var(--spacing-4);
+}
+
+:host ::ng-deep .table-card {
+  .p-card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: none;
+  }
 }
 
 // ============================================================
-// Tabla de Usuarios
+// Tabla de Usuarios - Alineado con tabla unificada
 // ============================================================
+
+// Quitar líneas verticales de la tabla (patrón tabla unificada)
+:host ::ng-deep .p-datatable {
+  .p-datatable-thead > tr > th,
+  .p-datatable-tbody > tr > td {
+    border-left: none;
+    border-right: none;
+  }
+}
 
 :host ::ng-deep {
   .p-datatable {
@@ -128,66 +116,221 @@
 
     .p-datatable-thead > tr > th {
       background: var(--surface-50);
-      font-weight: 600;
-      font-size: 0.75rem;
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-xs);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-color-secondary);
       border-color: var(--surface-border);
+      padding: var(--spacing-3) var(--spacing-4);
     }
 
     .p-datatable-tbody > tr {
       transition: background-color 0.2s;
+      cursor: pointer;
 
       &:hover {
-        background: var(--surface-hover);
+        background: var(--surface-hover) !important;
       }
 
       > td {
         border-color: var(--surface-border);
-        padding: 1rem;
+        padding: var(--spacing-3) var(--spacing-4);
       }
+    }
+
+    // Estilos para inputs y selects en filtros de columna
+    .p-datatable-thead .p-inputtext {
+      padding: var(--spacing-2) var(--spacing-3);
+      font-size: var(--font-size-sm);
+      width: 100%;
+    }
+
+    .p-datatable-thead .p-select,
+    .p-datatable-thead .p-multiselect {
+      width: 100% !important;
+      min-width: unset !important;
+
+      .p-select-label,
+      .p-multiselect-label {
+        padding: var(--spacing-2) var(--spacing-3);
+        font-size: var(--font-size-sm);
+      }
+    }
+
+    // Empty state
+    .p-datatable-emptymessage {
+      td {
+        padding: var(--spacing-8) !important;
+      }
+    }
+
+    // Footer
+    .p-datatable-footer {
+      background: var(--surface-50);
+      border-color: var(--surface-border);
+      padding: var(--spacing-3) var(--spacing-4);
     }
   }
 }
 
+// Row clickable (patrón tabla unificada)
+.row-clickable {
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--surface-hover) !important;
+  }
+}
+
+// Empty state
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-8);
+
+  i {
+    font-size: 2.5rem;
+    color: var(--text-color-secondary);
+    margin-bottom: var(--spacing-3);
+  }
+
+  p {
+    color: var(--text-color-secondary);
+    margin: 0;
+  }
+}
+
 // ============================================================
-// Rol Cards (Grid View)
+// Celdas de Tabla - Patrones de tabla unificada
+// ============================================================
+
+// Usuario cell con avatar
+.usuario-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.usuario-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--border-radius-md);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.usuario-info-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.usuario-nombre-cell {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.usuario-email-cell {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Badge de nivel (patrón tabla unificada)
+.nivel-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-100);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-color);
+}
+
+// Actions cell
+.actions-cell {
+  white-space: nowrap;
+  width: 100px;
+}
+
+// Rol badges
+.rol-badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-1);
+}
+
+// Text utilities
+.text-secondary {
+  color: var(--text-color-secondary);
+}
+
+.text-center {
+  text-align: center;
+}
+
+// ============================================================
+// Rol Cards (Grid View) - Patrón del wizard de gráficas
 // ============================================================
 
 .rol-card {
-  background: var(--surface-card);
-  border-radius: 12px;
-  border: 1px solid var(--surface-border);
-  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  background: var(--surface-ground);
+  border: 2px solid var(--surface-border);
+  border-radius: var(--border-radius-lg);
   cursor: pointer;
   transition: all 0.2s ease;
   height: 100%;
 
   &:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
+    border-color: var(--primary-200);
+    background: var(--surface-50);
   }
 
   &.rol-inactivo {
-    opacity: 0.6;
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  // Rol de solo lectura (roles del sistema)
+  &.rol-readonly {
+    cursor: default;
+
+    &:hover {
+      border-color: var(--surface-border);
+      background: var(--surface-ground);
+    }
   }
 
   .rol-card-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 0.75rem;
   }
 
   .rol-icon {
     width: 40px;
     height: 40px;
-    border-radius: 10px;
+    border-radius: var(--border-radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
 
     i {
       font-size: 1.25rem;
@@ -201,10 +344,12 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     min-height: 2.5rem;
+    font-size: var(--font-size-sm);
   }
 
   .rol-usuarios {
-    padding-top: 0.75rem;
+    padding-top: var(--spacing-3);
+    margin-top: auto;
     border-top: 1px solid var(--surface-border);
   }
 }
@@ -216,9 +361,10 @@
 .usuario-detalle {
   h4 {
     color: var(--text-color-secondary);
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
     letter-spacing: 0.05em;
     text-transform: uppercase;
+    font-weight: var(--font-weight-semibold);
   }
 }
 
@@ -229,7 +375,7 @@
 .rol-detalle {
   .rol-detalle-banner {
     position: relative;
-    padding: 2rem;
+    padding: var(--spacing-6);
     color: #fff;
     margin: -1.25rem -1.25rem 0;
     border-radius: 0;
@@ -253,7 +399,7 @@
     .rol-icon-large {
       width: 56px;
       height: 56px;
-      border-radius: 14px;
+      border-radius: var(--border-radius-lg);
       background: rgba(255, 255, 255, 0.2);
       display: flex;
       align-items: center;
@@ -268,7 +414,7 @@
 
   .permisos-tree {
     .permiso-item {
-      padding: 0.5rem 0;
+      padding: var(--spacing-2) 0;
       border-bottom: 1px solid var(--surface-border);
 
       &:last-child {
@@ -283,6 +429,7 @@
 
     .usuario-item {
       transition: background-color 0.2s;
+      border-radius: var(--border-radius-md);
 
       &:hover {
         background: var(--surface-hover);
@@ -301,12 +448,12 @@
       .p-stepper-number {
         width: 2rem;
         height: 2rem;
-        font-size: 0.875rem;
+        font-size: var(--font-size-sm);
       }
 
       .p-stepper-title {
-        font-size: 0.875rem;
-        font-weight: 500;
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
       }
     }
   }
@@ -314,6 +461,7 @@
 
 .activos-tree-container {
   background: var(--surface-ground);
+  border-radius: var(--border-radius-md);
 
   :host ::ng-deep {
     .p-tree {
@@ -322,8 +470,8 @@
       padding: 0;
 
       .p-tree-node-content {
-        padding: 0.5rem;
-        border-radius: 6px;
+        padding: var(--spacing-2);
+        border-radius: var(--border-radius-md);
 
         &:hover {
           background: var(--surface-hover);
@@ -339,50 +487,74 @@
 
 @media screen and (max-width: 768px) {
   .usuarios-roles-container {
-    padding: 1rem;
-  }
-
-  .stat-card {
-    padding: 1rem;
-
-    .stat-icon {
-      width: 40px;
-      height: 40px;
-
-      i {
-        font-size: 1.25rem;
-      }
-    }
-
-    .stat-content {
-      .stat-value {
-        font-size: 1.5rem;
-      }
-    }
+    padding: var(--spacing-4);
   }
 
   .toolbar-principal {
     .tabs-selector {
       width: 100%;
-      margin-top: 1rem;
+      margin-top: var(--spacing-4);
     }
   }
 }
 
 // ============================================================
-// Dark Mode Adjustments
+// Dark Mode - Usando tokens del sistema
 // ============================================================
 
-:root[data-theme="dark"] {
-  .stat-card {
+:host-context(html.dark-mode) {
+  .rol-card {
+    background: var(--surface-card);
+    border-color: var(--surface-border);
+
     &:hover {
+      border-color: var(--primary-400);
+      background: var(--surface-hover);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .rol-descripcion {
+      color: var(--text-color-secondary);
     }
   }
 
+  .card {
+    background: var(--surface-card);
+    border-color: var(--surface-border);
+  }
+
+  .toolbar-principal {
+    background: var(--surface-card);
+    border-color: var(--surface-border);
+  }
+
+  .activos-tree-container {
+    background: var(--surface-card);
+    border-color: var(--surface-border);
+  }
+}
+
+:root[data-theme="dark"] {
   .rol-card {
+    background: var(--surface-card);
+    border-color: var(--surface-border);
+
     &:hover {
+      border-color: var(--primary-400);
+      background: var(--surface-hover);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
+  }
+}
+
+// ============================================================
+// Aviso de roles del sistema
+// ============================================================
+
+.roles-system-notice {
+  border: 1px solid var(--surface-border);
+
+  i {
+    color: var(--primary-color);
   }
 }

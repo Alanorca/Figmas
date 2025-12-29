@@ -62,93 +62,141 @@ async function main() {
   console.log(`✓ Creados ${modulos.length} módulos`);
 
   // ============================================================
-  // Crear Roles Bancarios
+  // Crear Roles Fijos del Sistema (Según matriz de permisos)
   // ============================================================
+  // Referencia de permisos disponibles:
+  // USR_VIEW, USR_CREATE, USR_EDIT, USR_DELETE - Usuarios
+  // ROL_VIEW, ROL_CREATE, ROL_EDIT, ROL_DELETE - Roles
+  // ORG_VIEW, ORG_CREATE, ORG_EDIT - Organigrama
+  // ACT_VIEW, ACT_MANAGE - Activos
+  // PRC_VIEW, PRC_MANAGE - Procesos
+  // RSK_VIEW, RSK_EDIT - Riesgos
+  // INC_VIEW, INC_MANAGE - Incidentes
+  // CMP_VIEW, CMP_MANAGE - Cumplimiento
+  // AUD_VIEW, AUD_EXPORT - Auditoría
+  // RPT_VIEW, RPT_EXPORT - Reportes/Dashboard
+
   const adminPermisos = permisos.map(p => ({ permisoId: p.id }));
 
+  // ROL-003: Gestor Áreas - Gestión de áreas, activos y procesos
+  // Matriz: Dashboard ✅, Results ML ✅, Activos C/E/V ✅, Procesos C/E/V ✅, Riesgos C/E/V ✅,
+  //         Incidentes C/E/V ✅, Defectos C/E/V ✅, Controles C/E/V ✅, Cumplimiento V ✅ (responder, aprobar),
+  //         Config: Ver usuarios ✅, Ver roles ✅, Ver/Edit org ✅
+  const gestorAreasPermisos = ['USR_VIEW', 'ROL_VIEW', 'ORG_VIEW', 'ORG_CREATE', 'ORG_EDIT',
+    'ACT_VIEW', 'ACT_MANAGE', 'PRC_VIEW', 'PRC_MANAGE', 'RSK_VIEW', 'RSK_EDIT',
+    'INC_VIEW', 'INC_MANAGE', 'CMP_VIEW', 'CMP_MANAGE', 'AUD_VIEW', 'RPT_VIEW', 'RPT_EXPORT'];
+
+  // ROL-004: Director - Visión estratégica, aprobaciones y reportes
+  // Matriz: Dashboard V ✅, Results ML V/Aprobar ✅, Activos V ✅, Procesos V ✅, Riesgos V ✅,
+  //         Incidentes V/Cerrar ✅, Defectos V/Cerrar ✅, Controles V/Evaluar ✅,
+  //         Cumplimiento V/Aprobar ✅, Config: Ver usuarios ✅, Ver roles ✅, Ver org ✅
+  const directorPermisos = ['USR_VIEW', 'ROL_VIEW', 'ORG_VIEW',
+    'ACT_VIEW', 'PRC_VIEW', 'RSK_VIEW', 'INC_VIEW',
+    'CMP_VIEW', 'CMP_MANAGE', 'AUD_VIEW', 'AUD_EXPORT', 'RPT_VIEW', 'RPT_EXPORT'];
+
+  // ROL-005: Coordinador - Coordinación de equipos y gestión operativa
+  // Matriz: Dashboard C/E/V ✅, Results ML V/Aprobar ✅, Activos C/E/V ✅, Procesos C/E/V ✅,
+  //         Riesgos C/E/V ✅, Incidentes C/E/V ✅, Defectos C/E/V ✅, Controles C/E/V ✅,
+  //         Cumplimiento C/E/V ✅, Config: Ver org ✅
+  const coordinadorPermisos = ['ORG_VIEW',
+    'ACT_VIEW', 'ACT_MANAGE', 'PRC_VIEW', 'PRC_MANAGE', 'RSK_VIEW', 'RSK_EDIT',
+    'INC_VIEW', 'INC_MANAGE', 'CMP_VIEW', 'CMP_MANAGE', 'RPT_VIEW', 'RPT_EXPORT'];
+
+  // ROL-006: Gerente - Gestión de área con procesos y riesgos
+  // Matriz: Dashboard V/E ✅, Results ML V ✅, Activos V ✅, Procesos C/E/V ✅, Riesgos C/E/V ✅,
+  //         Incidentes C/E/V ✅, Defectos C/E/V ✅, Controles C/E/V ✅,
+  //         Cumplimiento V/Responder ✅, Config: Ver org ✅
+  const gerentePermisos = ['ORG_VIEW',
+    'ACT_VIEW', 'PRC_VIEW', 'PRC_MANAGE', 'RSK_VIEW', 'RSK_EDIT',
+    'INC_VIEW', 'INC_MANAGE', 'CMP_VIEW', 'RPT_VIEW', 'RPT_EXPORT'];
+
+  // ROL-007: Analista - Análisis de información y ejecución de tareas
+  // Matriz: Dashboard V ✅, Results ML V ✅, Activos V ✅, Procesos V ✅,
+  //         Riesgos V/Evaluar ✅ (propios), Incidentes C/V ✅, Defectos C/V ✅,
+  //         Controles V/Evaluar ✅, Cumplimiento V/Responder ✅, Config: Ver org ✅
+  const analistaPermisos = ['ORG_VIEW',
+    'ACT_VIEW', 'PRC_VIEW', 'RSK_VIEW', 'RSK_EDIT',
+    'INC_VIEW', 'INC_MANAGE', 'CMP_VIEW', 'RPT_VIEW'];
+
+  // ROL-008: Invitado - Solo puede responder cuestionarios asignados
+  // Matriz: Cumplimiento - Ver cuestionarios asignados ✅, Responder revisión ✅
+  const invitadoPermisos = ['CMP_VIEW'];
+
   const roles = await Promise.all([
+    // ROL-001: Admin Backoffice - Acceso total al sistema
+    prisma.rol.create({
+      data: {
+        nombre: 'Admin Backoffice',
+        descripcion: 'Administrador técnico con acceso total al sistema y configuraciones.',
+        nivelAcceso: 'super_admin', region: 'GLOBAL', tipoArbol: 'ambos', color: '#7c3aed', icono: 'pi-server', esRolSistema: true,
+        permisos: { create: adminPermisos }
+      }
+    }),
+    // ROL-002: Administrador - Gestión completa de la organización
     prisma.rol.create({
       data: {
         nombre: 'Administrador',
-        descripcion: 'Administrador del sistema con acceso completo a todas las funcionalidades del GRC bancario.',
+        descripcion: 'Administrador de la organización con gestión de usuarios, roles y configuración.',
         nivelAcceso: 'super_admin', region: 'GLOBAL', tipoArbol: 'ambos', color: '#ef4444', icono: 'pi-shield', esRolSistema: true,
         permisos: { create: adminPermisos }
       }
     }),
+    // ROL-003: Gestor Áreas
     prisma.rol.create({
       data: {
-        nombre: 'Director de Riesgos (CRO)',
-        descripcion: 'Chief Risk Officer - Responsable de la estrategia integral de gestión de riesgos del banco.',
-        nivelAcceso: 'admin', region: 'GLOBAL', tipoArbol: 'ambos', color: '#dc2626', icono: 'pi-chart-line',
-        permisos: { create: permisos.filter(p => ['RSK_VIEW', 'RSK_EDIT', 'CMP_VIEW', 'CMP_MANAGE', 'RPT_VIEW', 'RPT_EXPORT', 'AUD_VIEW', 'PRC_VIEW'].includes(p.codigo)).map(p => ({ permisoId: p.id })) }
+        nombre: 'Gestor Áreas',
+        descripcion: 'Responsable de la gestión de áreas, activos y procesos de su departamento.',
+        nivelAcceso: 'admin', region: 'GLOBAL', tipoArbol: 'ambos', color: '#3b82f6', icono: 'pi-th-large', esRolSistema: true,
+        permisos: { create: permisos.filter(p => gestorAreasPermisos.includes(p.codigo)).map(p => ({ permisoId: p.id })) }
       }
     }),
+    // ROL-004: Director
     prisma.rol.create({
       data: {
-        nombre: 'Oficial de Cumplimiento (CCO)',
-        descripcion: 'Chief Compliance Officer - Responsable del cumplimiento normativo y regulatorio del banco.',
-        nivelAcceso: 'admin', region: 'GLOBAL', tipoArbol: 'ambos', color: '#3b82f6', icono: 'pi-verified',
-        permisos: { create: permisos.filter(p => ['CMP_VIEW', 'CMP_MANAGE', 'RSK_VIEW', 'AUD_VIEW', 'AUD_EXPORT', 'RPT_VIEW', 'RPT_EXPORT'].includes(p.codigo)).map(p => ({ permisoId: p.id })) }
+        nombre: 'Director',
+        descripcion: 'Nivel directivo con visión estratégica, aprobaciones y acceso a reportes ejecutivos.',
+        nivelAcceso: 'admin', region: 'GLOBAL', tipoArbol: 'ambos', color: '#dc2626', icono: 'pi-briefcase', esRolSistema: true,
+        permisos: { create: permisos.filter(p => directorPermisos.includes(p.codigo)).map(p => ({ permisoId: p.id })) }
       }
     }),
+    // ROL-005: Coordinador
     prisma.rol.create({
       data: {
-        nombre: 'Oficial de Seguridad (CISO)',
-        descripcion: 'Chief Information Security Officer - Responsable de la seguridad de información y ciberseguridad.',
-        nivelAcceso: 'admin', region: 'GLOBAL', tipoArbol: 'activos', color: '#7c3aed', icono: 'pi-lock',
-        permisos: { create: permisos.filter(p => ['ACT_VIEW', 'ACT_MANAGE', 'RSK_VIEW', 'RSK_EDIT', 'INC_VIEW', 'INC_MANAGE', 'AUD_VIEW'].includes(p.codigo)).map(p => ({ permisoId: p.id })) }
+        nombre: 'Coordinador',
+        descripcion: 'Coordinación de equipos, seguimiento de tareas y gestión operativa.',
+        nivelAcceso: 'escritura', region: 'MX', tipoArbol: 'ambos', color: '#f59e0b', icono: 'pi-users', esRolSistema: true,
+        permisos: { create: permisos.filter(p => coordinadorPermisos.includes(p.codigo)).map(p => ({ permisoId: p.id })) }
       }
     }),
+    // ROL-006: Gerente
     prisma.rol.create({
       data: {
-        nombre: 'Analista de Riesgos',
-        descripcion: 'Especialista en identificación, evaluación y monitoreo de riesgos operativos y financieros.',
-        nivelAcceso: 'escritura', region: 'MX', tipoArbol: 'activos', color: '#f59e0b', icono: 'pi-search',
-        permisos: { create: permisos.filter(p => ['RSK_VIEW', 'RSK_EDIT', 'ACT_VIEW', 'INC_VIEW', 'RPT_VIEW'].includes(p.codigo)).map(p => ({ permisoId: p.id })) }
+        nombre: 'Gerente',
+        descripcion: 'Gestión de área específica con responsabilidad sobre procesos y riesgos.',
+        nivelAcceso: 'escritura', region: 'MX', tipoArbol: 'ambos', color: '#22c55e', icono: 'pi-id-card', esRolSistema: true,
+        permisos: { create: permisos.filter(p => gerentePermisos.includes(p.codigo)).map(p => ({ permisoId: p.id })) }
       }
     }),
+    // ROL-007: Analista
     prisma.rol.create({
       data: {
-        nombre: 'Analista de Cumplimiento',
-        descripcion: 'Especialista en evaluación de cumplimiento normativo y gestión de cuestionarios regulatorios.',
-        nivelAcceso: 'escritura', region: 'MX', tipoArbol: 'procesos', color: '#22c55e', icono: 'pi-clipboard',
-        permisos: { create: permisos.filter(p => ['CMP_VIEW', 'CMP_MANAGE', 'RSK_VIEW', 'RPT_VIEW'].includes(p.codigo)).map(p => ({ permisoId: p.id })) }
+        nombre: 'Analista',
+        descripcion: 'Análisis de información, ejecución de tareas y registro de datos.',
+        nivelAcceso: 'escritura', region: 'MX', tipoArbol: 'activos', color: '#0891b2', icono: 'pi-search', esRolSistema: true,
+        permisos: { create: permisos.filter(p => analistaPermisos.includes(p.codigo)).map(p => ({ permisoId: p.id })) }
       }
     }),
+    // ROL-008: Invitado
     prisma.rol.create({
       data: {
-        nombre: 'Auditor Interno',
-        descripcion: 'Responsable de auditorías internas y revisión de controles del banco.',
-        nivelAcceso: 'lectura', region: 'MX', tipoArbol: 'ambos', color: '#6366f1', icono: 'pi-eye',
-        permisos: { create: permisos.filter(p => ['AUD_VIEW', 'AUD_EXPORT', 'RSK_VIEW', 'CMP_VIEW', 'ACT_VIEW', 'RPT_VIEW', 'RPT_EXPORT'].includes(p.codigo)).map(p => ({ permisoId: p.id })) }
-      }
-    }),
-    prisma.rol.create({
-      data: {
-        nombre: 'Gerente de Sucursal',
-        descripcion: 'Responsable de la operación y cumplimiento en sucursal bancaria.',
-        nivelAcceso: 'escritura', region: 'MX', tipoArbol: 'activos', color: '#0891b2', icono: 'pi-building',
-        permisos: { create: permisos.filter(p => ['USR_VIEW', 'ORG_VIEW', 'RSK_VIEW', 'INC_VIEW', 'CMP_VIEW'].includes(p.codigo)).map(p => ({ permisoId: p.id })) }
-      }
-    }),
-    prisma.rol.create({
-      data: {
-        nombre: 'Oficial PLD/AML',
-        descripcion: 'Oficial de Prevención de Lavado de Dinero - Especialista en cumplimiento antilavado.',
-        nivelAcceso: 'escritura', region: 'MX', tipoArbol: 'procesos', color: '#be185d', icono: 'pi-flag',
-        permisos: { create: permisos.filter(p => ['CMP_VIEW', 'CMP_MANAGE', 'RSK_VIEW', 'INC_VIEW', 'INC_MANAGE', 'AUD_VIEW'].includes(p.codigo)).map(p => ({ permisoId: p.id })) }
-      }
-    }),
-    prisma.rol.create({
-      data: {
-        nombre: 'Usuario Operativo',
-        descripcion: 'Usuario con acceso de consulta a los módulos básicos del sistema.',
-        nivelAcceso: 'lectura', region: 'MX', tipoArbol: 'activos', color: '#64748b', icono: 'pi-user',
-        permisos: { create: permisos.filter(p => ['USR_VIEW', 'ROL_VIEW', 'ORG_VIEW', 'RPT_VIEW'].includes(p.codigo)).map(p => ({ permisoId: p.id })) }
+        nombre: 'Invitado',
+        descripcion: 'Usuario externo que solo puede responder cuestionarios asignados.',
+        nivelAcceso: 'lectura', region: 'MX', tipoArbol: 'activos', color: '#64748b', icono: 'pi-user', esRolSistema: true,
+        permisos: { create: permisos.filter(p => invitadoPermisos.includes(p.codigo)).map(p => ({ permisoId: p.id })) }
       }
     })
   ]);
-  console.log(`✓ Creados ${roles.length} roles bancarios`);
+  console.log(`✓ Creados ${roles.length} roles fijos del sistema`);
 
   // ============================================================
   // Crear Usuarios Bancarios
@@ -175,20 +223,22 @@ async function main() {
   console.log(`✓ Creados ${usuarios.length} usuarios bancarios`);
 
   // Asignar Roles a Usuarios
+  // [0] Admin Backoffice, [1] Administrador, [2] Gestor Áreas
+  // [3] Director, [4] Coordinador, [5] Gerente, [6] Analista, [7] Invitado
   const asignaciones = [
-    { usuario: usuarios[0], roles: [roles[0]] },              // CEO - Admin
-    { usuario: usuarios[1], roles: [roles[1]] },              // CRO
-    { usuario: usuarios[2], roles: [roles[2]] },              // CCO
-    { usuario: usuarios[3], roles: [roles[3], roles[0]] },    // CISO + Admin
-    { usuario: usuarios[4], roles: [roles[4]] },              // Analista Riesgos
-    { usuario: usuarios[5], roles: [roles[5]] },              // Analista Cumplimiento
-    { usuario: usuarios[6], roles: [roles[6]] },              // Auditor
-    { usuario: usuarios[7], roles: [roles[7]] },              // Gerente Sucursal
-    { usuario: usuarios[8], roles: [roles[8]] },              // Oficial PLD
-    { usuario: usuarios[9], roles: [roles[4]] },              // Analista Riesgos Jr
-    { usuario: usuarios[10], roles: [roles[9]] },             // Usuario Operativo
-    { usuario: usuarios[12], roles: [roles[5]] },             // Coordinadora Cumplimiento
-    { usuario: usuarios[14], roles: [roles[7]] },             // Gerente Sucursal Norte
+    { usuario: usuarios[0], roles: [roles[1]] },              // CEO - Administrador
+    { usuario: usuarios[1], roles: [roles[3]] },              // CRO - Director
+    { usuario: usuarios[2], roles: [roles[3]] },              // CCO - Director
+    { usuario: usuarios[3], roles: [roles[0], roles[2]] },    // CISO - Admin Backoffice + Gestor Áreas
+    { usuario: usuarios[4], roles: [roles[6]] },              // Analista Senior - Analista
+    { usuario: usuarios[5], roles: [roles[6]] },              // Analista Cumplimiento - Analista
+    { usuario: usuarios[6], roles: [roles[4]] },              // Auditora - Coordinador
+    { usuario: usuarios[7], roles: [roles[5]] },              // Gerente Sucursal - Gerente
+    { usuario: usuarios[8], roles: [roles[4]] },              // Oficial PLD - Coordinador
+    { usuario: usuarios[9], roles: [roles[6]] },              // Analista Riesgos Jr - Analista
+    { usuario: usuarios[10], roles: [roles[7]] },             // Cajera - Invitado
+    { usuario: usuarios[12], roles: [roles[4]] },             // Coordinadora Cumplimiento - Coordinador
+    { usuario: usuarios[14], roles: [roles[5]] },             // Gerente Sucursal Norte - Gerente
   ];
   for (const asig of asignaciones) {
     for (const rol of asig.roles) {
@@ -907,7 +957,7 @@ async function main() {
   console.log('📊 Resumen de datos creados:');
   console.log('   - 25 permisos');
   console.log('   - 8 módulos');
-  console.log('   - 10 roles bancarios');
+  console.log('   - 8 roles fijos del sistema');
   console.log('   - 15 usuarios');
   console.log('   - 41 catálogos');
   console.log('   - 15 activos bancarios');

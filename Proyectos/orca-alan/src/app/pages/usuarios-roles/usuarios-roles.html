@@ -1,19 +1,13 @@
 <!-- Container Principal -->
 <div class="usuarios-roles-container">
 
-  <!-- Toolbar Principal -->
-  <p-toolbar styleClass="mb-4 toolbar-principal">
-    <ng-template #start>
-      <div class="flex align-items-center gap-3">
-        <i class="pi pi-shield text-2xl text-primary"></i>
-        <div>
-          <h2 class="m-0 text-xl font-bold">Usuarios y Roles</h2>
-          <span class="text-sm text-color-secondary">Gestión de accesos y permisos</span>
-        </div>
+  <!-- Header con tabs -->
+  <div class="page-header">
+    <div class="flex align-items-center justify-content-between">
+      <div>
+        <h1>Usuarios y Roles</h1>
+        <p class="page-subtitle">Gestión de accesos y permisos</p>
       </div>
-    </ng-template>
-
-    <ng-template #center>
       <p-selectButton
         [options]="tabOptions"
         [ngModel]="vistaActual()"
@@ -28,140 +22,31 @@
           </div>
         </ng-template>
       </p-selectButton>
-    </ng-template>
-
-    <ng-template #end>
-      @if (vistaActual() === 'usuarios') {
-        <p-button
-          label="Nuevo Usuario"
-          icon="pi pi-plus"
-          severity="primary"
-          (onClick)="abrirWizardNuevoUsuario()">
-        </p-button>
-      } @else {
-        <p-button
-          label="Nuevo Rol"
-          icon="pi pi-plus"
-          severity="primary"
-          (onClick)="abrirWizardNuevoRol()">
-        </p-button>
-      }
-    </ng-template>
-  </p-toolbar>
-
-  <!-- Stats Cards -->
-  <div class="grid mb-4">
-    @if (vistaActual() === 'usuarios') {
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="stat-card stat-card-primary">
-          <div class="stat-icon">
-            <i class="pi pi-users"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ estadisticasUsuarios().total }}</span>
-            <span class="stat-label">Total Usuarios</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="stat-card stat-card-success">
-          <div class="stat-icon">
-            <i class="pi pi-check-circle"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ estadisticasUsuarios().activos }}</span>
-            <span class="stat-label">Activos</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="stat-card stat-card-warning">
-          <div class="stat-icon">
-            <i class="pi pi-clock"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ estadisticasUsuarios().pendientes }}</span>
-            <span class="stat-label">Pendientes</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="stat-card stat-card-info">
-          <div class="stat-icon">
-            <i class="pi pi-lock"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ estadisticasUsuarios().conDosFactor }}</span>
-            <span class="stat-label">Con 2FA</span>
-          </div>
-        </div>
-      </div>
-    } @else {
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="stat-card stat-card-primary">
-          <div class="stat-icon">
-            <i class="pi pi-shield"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ estadisticasRoles().total }}</span>
-            <span class="stat-label">Total Roles</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="stat-card stat-card-success">
-          <div class="stat-icon">
-            <i class="pi pi-check-circle"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ estadisticasRoles().activos }}</span>
-            <span class="stat-label">Activos</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="stat-card stat-card-warning">
-          <div class="stat-icon">
-            <i class="pi pi-cog"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ estadisticasRoles().rolesSistema }}</span>
-            <span class="stat-label">Roles Sistema</span>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 md:col-6 lg:col-3">
-        <div class="stat-card stat-card-info">
-          <div class="stat-icon">
-            <i class="pi pi-user"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ estadisticasRoles().promedioUsuariosPorRol }}</span>
-            <span class="stat-label">Usuarios/Rol (Prom)</span>
-          </div>
-        </div>
-      </div>
-    }
+    </div>
   </div>
 
-  <!-- Contenido según vista activa -->
-  @if (vistaActual() === 'usuarios') {
-    <!-- ========== VISTA USUARIOS ========== -->
-    <div class="card">
-      <!-- Toolbar de filtros -->
-      <div class="flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <div class="flex flex-wrap gap-2">
-          <p-iconfield>
-            <p-inputicon styleClass="pi pi-search"></p-inputicon>
-            <input
-              pInputText
-              type="text"
-              placeholder="Buscar usuarios..."
-              [ngModel]="busquedaUsuarios()"
-              (ngModelChange)="busquedaUsuarios.set($event)"
-              class="w-20rem" />
-          </p-iconfield>
+  <!-- Toolbar Principal - Patrón tabla unificada -->
+  <p-toolbar styleClass="toolbar-principal">
+    <ng-template #start>
+      <div class="flex align-items-center gap-3">
+        <!-- Botón de acciones masivas cuando hay selección -->
+        @if (vistaActual() === 'usuarios' && usuariosSeleccionados.length > 0) {
+          <p-button
+            label="Acciones masivas"
+            icon="pi pi-check-square"
+            [badge]="usuariosSeleccionados.length.toString()"
+            badgeSeverity="contrast"
+            severity="success"
+            [outlined]="true"
+            styleClass="btn-acciones-masivas"
+            (onClick)="abrirAccionesMasivas()"
+            pTooltip="Editar usuarios seleccionados"
+            tooltipPosition="bottom">
+          </p-button>
+        }
 
+        <!-- Filtros adicionales -->
+        @if (vistaActual() === 'usuarios') {
           <p-select
             [options]="estadosOptions"
             [ngModel]="filtroEstado()"
@@ -170,6 +55,7 @@
             optionValue="value"
             placeholder="Estado"
             [showClear]="true"
+            appendTo="body"
             styleClass="w-10rem">
           </p-select>
 
@@ -181,27 +67,76 @@
             optionValue="value"
             placeholder="Rol"
             [showClear]="true"
+            appendTo="body"
             styleClass="w-12rem">
           </p-select>
-        </div>
-
-        <div class="flex gap-2">
-          <p-button
-            icon="pi pi-filter-slash"
-            severity="secondary"
-            [text]="true"
-            pTooltip="Limpiar filtros"
-            (onClick)="limpiarFiltrosUsuarios()">
-          </p-button>
-          <p-button
-            icon="pi pi-download"
-            severity="secondary"
-            [outlined]="true"
-            pTooltip="Exportar"
-            (onClick)="exportarUsuarios()">
-          </p-button>
-        </div>
+        } @else {
+          <p-select
+            [options]="nivelesAccesoOptions"
+            [ngModel]="filtroNivelAcceso()"
+            (ngModelChange)="filtroNivelAcceso.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Nivel de Acceso"
+            [showClear]="true"
+            appendTo="body"
+            styleClass="w-12rem">
+          </p-select>
+        }
       </div>
+    </ng-template>
+
+    <ng-template #center>
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search"></p-inputicon>
+        <input
+          pInputText
+          type="text"
+          [placeholder]="vistaActual() === 'usuarios' ? 'Buscar usuarios...' : 'Buscar roles...'"
+          [ngModel]="vistaActual() === 'usuarios' ? busquedaUsuarios() : busquedaRoles()"
+          (ngModelChange)="vistaActual() === 'usuarios' ? busquedaUsuarios.set($event) : busquedaRoles.set($event)"
+          style="width: 280px" />
+      </p-iconfield>
+    </ng-template>
+
+    <ng-template #end>
+      <div class="flex gap-2 align-items-center">
+        <p-button
+          icon="pi pi-filter-slash"
+          severity="secondary"
+          [rounded]="true"
+          [text]="true"
+          pTooltip="Limpiar filtros"
+          tooltipPosition="bottom"
+          (onClick)="vistaActual() === 'usuarios' ? limpiarFiltrosUsuarios() : limpiarFiltrosRoles()">
+        </p-button>
+        <p-button
+          icon="pi pi-download"
+          severity="secondary"
+          [rounded]="true"
+          [text]="true"
+          pTooltip="Exportar"
+          tooltipPosition="bottom"
+          (onClick)="vistaActual() === 'usuarios' ? exportarUsuarios() : exportarRoles()">
+        </p-button>
+
+        <!-- Botón Nuevo Usuario (Nuevo Rol deshabilitado - roles definidos por sistema) -->
+        @if (vistaActual() === 'usuarios') {
+          <p-button
+            label="Nuevo Usuario"
+            icon="pi pi-plus"
+            severity="primary"
+            (onClick)="abrirWizardNuevoUsuario()">
+          </p-button>
+        }
+      </div>
+    </ng-template>
+  </p-toolbar>
+
+  <!-- Contenido según vista activa -->
+  @if (vistaActual() === 'usuarios') {
+    <!-- ========== VISTA USUARIOS ========== -->
+    <p-card styleClass="table-card">
 
       <!-- Tabla de Usuarios -->
       <p-table
@@ -303,81 +238,53 @@
                 {{ formatDateTime(usuario.ultimoAcceso) }}
               </span>
             </td>
-            <td>
+            <td class="actions-cell">
               <p-button
                 icon="pi pi-ellipsis-v"
                 [text]="true"
                 [rounded]="true"
                 severity="secondary"
+                size="small"
                 (onClick)="menu.toggle($event)">
               </p-button>
-              <p-menu #menu [popup]="true" [model]="getMenuItemsUsuario(usuario)"></p-menu>
+              <p-menu #menu [popup]="true" [model]="getMenuItemsUsuario(usuario)" appendTo="body"></p-menu>
             </td>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="8" class="text-center py-5">
-              <i class="pi pi-users text-4xl text-color-secondary mb-3"></i>
-              <p class="text-color-secondary">No se encontraron usuarios</p>
+            <td colspan="8" class="text-center py-6">
+              <div class="empty-state">
+                <i class="pi pi-users"></i>
+                <p>No se encontraron usuarios</p>
+                <p-button
+                  label="Limpiar filtros"
+                  [text]="true"
+                  (onClick)="limpiarFiltrosUsuarios()" />
+              </div>
             </td>
           </tr>
         </ng-template>
       </p-table>
-    </div>
+    </p-card>
   } @else {
     <!-- ========== VISTA ROLES ========== -->
-    <div class="card">
-      <!-- Toolbar de filtros -->
-      <div class="flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-        <div class="flex flex-wrap gap-2">
-          <p-iconfield>
-            <p-inputicon styleClass="pi pi-search"></p-inputicon>
-            <input
-              pInputText
-              type="text"
-              placeholder="Buscar roles..."
-              [ngModel]="busquedaRoles()"
-              (ngModelChange)="busquedaRoles.set($event)"
-              class="w-20rem" />
-          </p-iconfield>
-
-          <p-select
-            [options]="nivelesAccesoOptions"
-            [ngModel]="filtroNivelAcceso()"
-            (ngModelChange)="filtroNivelAcceso.set($event)"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Nivel de Acceso"
-            [showClear]="true"
-            styleClass="w-12rem">
-          </p-select>
-        </div>
-
-        <div class="flex gap-2">
-          <p-button
-            icon="pi pi-filter-slash"
-            severity="secondary"
-            [text]="true"
-            pTooltip="Limpiar filtros"
-            (onClick)="limpiarFiltrosRoles()">
-          </p-button>
-          <p-button
-            icon="pi pi-download"
-            severity="secondary"
-            [outlined]="true"
-            pTooltip="Exportar"
-            (onClick)="exportarRoles()">
-          </p-button>
+    <p-card styleClass="table-card">
+      <!-- Aviso de roles del sistema -->
+      <div class="roles-system-notice flex align-items-center gap-3 p-3 mb-4 border-round surface-ground">
+        <i class="pi pi-info-circle text-primary text-xl"></i>
+        <div>
+          <span class="font-medium">Los roles son definidos por el sistema</span>
+          <p class="text-sm text-color-secondary m-0 mt-1">La creación, edición y eliminación de roles está deshabilitada. Los permisos están definidos en la matriz de permisos del sistema.</p>
         </div>
       </div>
 
-      <!-- Grid de Roles -->
+      <!-- Grid de Roles (Solo lectura) -->
       <div class="grid">
         @for (rol of rolesFiltrados(); track rol.id) {
           <div class="col-12 md:col-6 lg:col-4">
-            <div class="rol-card" [class.rol-inactivo]="!rol.activo" (click)="verDetalleRol(rol)">
+            <div class="rol-card rol-readonly" [class.rol-inactivo]="!rol.activo">
               <!-- Header del rol -->
               <div class="rol-card-header">
                 <div class="flex align-items-center gap-3">
@@ -387,9 +294,7 @@
                   <div class="flex-1">
                     <div class="flex align-items-center gap-2">
                       <span class="font-bold text-lg">{{ rol.nombre }}</span>
-                      @if (rol.esRolSistema) {
-                        <i class="pi pi-lock text-sm text-color-secondary" pTooltip="Rol del sistema"></i>
-                      }
+                      <i class="pi pi-lock text-sm text-color-secondary" pTooltip="Rol del sistema (solo lectura)"></i>
                     </div>
                     <p-tag
                       [value]="getNivelAccesoLabel(rol.nivelAcceso)"
@@ -399,14 +304,7 @@
                     </p-tag>
                   </div>
                 </div>
-                <p-button
-                  icon="pi pi-ellipsis-v"
-                  [text]="true"
-                  [rounded]="true"
-                  severity="secondary"
-                  (onClick)="$event.stopPropagation(); menuRol.toggle($event)">
-                </p-button>
-                <p-menu #menuRol [popup]="true" [model]="getMenuItemsRol(rol)"></p-menu>
+                <!-- Menú de acciones removido - solo lectura -->
               </div>
 
               <!-- Descripción -->
@@ -462,12 +360,16 @@
       </div>
 
       @if (rolesFiltrados().length === 0) {
-        <div class="text-center py-6">
-          <i class="pi pi-shield text-4xl text-color-secondary mb-3"></i>
-          <p class="text-color-secondary">No se encontraron roles</p>
+        <div class="empty-state">
+          <i class="pi pi-shield"></i>
+          <p>No se encontraron roles</p>
+          <p-button
+            label="Limpiar filtros"
+            [text]="true"
+            (onClick)="limpiarFiltrosRoles()" />
         </div>
       }
-    </div>
+    </p-card>
   }
 </div>
 
@@ -728,32 +630,10 @@
           </p-button>
         </div>
 
-        <!-- Acciones -->
-        <div class="flex gap-2 mt-4">
-          <p-button
-            label="Editar"
-            icon="pi pi-pencil"
-            severity="primary"
-            [outlined]="true"
-            [disabled]="rolSeleccionado()!.esRolSistema"
-            (onClick)="editarRol(rolSeleccionado()!); showDrawerRol.set(false)"
-            class="flex-1">
-          </p-button>
-          <p-button
-            label="Duplicar"
-            icon="pi pi-copy"
-            severity="secondary"
-            [outlined]="true"
-            (onClick)="duplicarRol(rolSeleccionado()!)">
-          </p-button>
-          <p-button
-            icon="pi pi-trash"
-            severity="danger"
-            [outlined]="true"
-            [disabled]="rolSeleccionado()!.esRolSistema"
-            (onClick)="eliminarRol(rolSeleccionado()!)"
-            pTooltip="Eliminar">
-          </p-button>
+        <!-- Aviso de solo lectura -->
+        <div class="flex align-items-center gap-2 p-3 border-round surface-ground mt-4">
+          <i class="pi pi-lock text-color-secondary"></i>
+          <span class="text-sm text-color-secondary">Los roles del sistema no pueden ser modificados</span>
         </div>
       </div>
     </div>
@@ -1007,120 +887,7 @@
   </p-stepper>
 </p-drawer>
 
-<!-- ========== WIZARD NUEVO ROL ========== -->
-<p-drawer
-  [(visible)]="showWizardRol"
-  position="right"
-  [style]="{ width: '550px' }"
-  header="Nuevo Rol"
-  [modal]="true">
-
-  <div class="p-4">
-    <!-- Información básica -->
-    <div class="mb-4">
-      <p-floatlabel class="w-full mb-4">
-        <input
-          pInputText
-          id="rol-nombre"
-          [ngModel]="rolForm().nombre"
-          (ngModelChange)="updateRolForm('nombre', $event)"
-          class="w-full" />
-        <label for="rol-nombre">Nombre del rol</label>
-      </p-floatlabel>
-    </div>
-
-    <div class="mb-4">
-      <p-floatlabel class="w-full">
-        <textarea
-          pTextarea
-          id="rol-descripcion"
-          [ngModel]="rolForm().descripcion"
-          (ngModelChange)="updateRolForm('descripcion', $event)"
-          rows="3"
-          class="w-full">
-        </textarea>
-        <label for="rol-descripcion">Descripción</label>
-      </p-floatlabel>
-    </div>
-
-    <!-- Configuración -->
-    <div class="grid mb-4">
-      <div class="col-6">
-        <label class="block mb-2 font-medium">Nivel de acceso</label>
-        <p-select
-          [options]="nivelesAccesoOptions"
-          [ngModel]="rolForm().nivelAcceso"
-          (ngModelChange)="updateRolForm('nivelAcceso', $event)"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full">
-        </p-select>
-      </div>
-      <div class="col-6">
-        <label class="block mb-2 font-medium">Región</label>
-        <p-select
-          [options]="regionesOptions"
-          [ngModel]="rolForm().region"
-          (ngModelChange)="updateRolForm('region', $event)"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full">
-        </p-select>
-      </div>
-    </div>
-
-    <div class="mb-4">
-      <label class="block mb-2 font-medium">Tipo de árbol de acceso</label>
-      <p-selectButton
-        [options]="tipoArbolOptions"
-        [ngModel]="rolForm().tipoArbol"
-        (ngModelChange)="updateRolForm('tipoArbol', $event)"
-        optionLabel="label"
-        optionValue="value">
-      </p-selectButton>
-    </div>
-
-    <!-- Permisos -->
-    <div class="mb-4">
-      <label class="block mb-2 font-medium">Permisos</label>
-      <p-multiselect
-        [options]="permisosDisponibles()"
-        [ngModel]="rolForm().permisosSeleccionados"
-        (ngModelChange)="updateRolForm('permisosSeleccionados', $event)"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Seleccionar permisos"
-        [showClear]="true"
-        [filter]="true"
-        filterPlaceholder="Buscar permiso..."
-        styleClass="w-full">
-        <ng-template let-permiso pTemplate="item">
-          <div>
-            <div class="font-medium">{{ permiso.label }}</div>
-            <div class="text-sm text-color-secondary">{{ permiso.description }}</div>
-          </div>
-        </ng-template>
-      </p-multiselect>
-    </div>
-
-    <!-- Estado -->
-    <div class="flex align-items-center gap-3 mb-4">
-      <p-checkbox
-        [ngModel]="rolForm().activo"
-        (ngModelChange)="updateRolForm('activo', $event)"
-        [binary]="true"
-        inputId="rol-activo">
-      </p-checkbox>
-      <label for="rol-activo" class="cursor-pointer font-medium">Rol activo</label>
-    </div>
-  </div>
-
-  <!-- Acciones -->
-  <div class="flex justify-content-end gap-2 p-4 border-top-1 surface-border">
-    <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="cerrarWizardRol()"></p-button>
-    <p-button label="Guardar Rol" icon="pi pi-check" severity="primary" (onClick)="guardarRol()"></p-button>
-  </div>
-</p-drawer>
+<!-- Wizard de Nuevo Rol removido - Los roles son definidos por el sistema -->
 
 <!-- Dialogs -->
 <p-confirmDialog></p-confirmDialog>
