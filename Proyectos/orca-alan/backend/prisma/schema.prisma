@@ -717,3 +717,197 @@ model Catalogo {
   @@unique([tipo, codigo])
   @@map("catalogos")
 }
+
+// ============================================================
+// MÓDULO: NOTIFICACIONES Y ALERTAS
+// ============================================================
+
+// Reglas de notificación por eventos (CREATE, UPDATE, DELETE, APPROVAL, REJECTION)
+model NotificationRule {
+  id                    String   @id @default(cuid())
+  nombre                String
+  descripcion           String?
+  entidadTipo           String   // ASSET, RISK, INCIDENT, DEFECT, PROCESS, QUESTIONNAIRE, COMPLIANCE_REVIEW, ML_RESULT, ORG_CONTAINER
+  eventoTipo            String   // CREATE, UPDATE, DELETE, APPROVAL, REJECTION
+  activo                Boolean  @default(true)
+
+  // Destinatarios
+  notificarCreador      Boolean  @default(false)
+  notificarResponsable  Boolean  @default(true)
+  notificarAprobadores  Boolean  @default(false)
+  rolesDestino          String?  // JSON array de role IDs
+  usuariosDestino       String?  // JSON array de user IDs
+
+  // Canales
+  enviarInApp           Boolean  @default(true)
+  enviarEmail           Boolean  @default(false)
+
+  // Mensaje
+  plantillaMensaje      String?  // Template con placeholders {{entidad.nombre}}
+  severidad             String   @default("info") // info, warning, critical
+
+  fechaCreacion         DateTime @default(now())
+  fechaModificacion     DateTime @updatedAt
+
+  @@map("notification_rules")
+}
+
+// Alertas por umbral (métricas y KPIs)
+model AlertRule {
+  id                String   @id @default(cuid())
+  nombre            String
+  descripcion       String?
+  entidadTipo       String   // KPI, RISK_COUNT, INCIDENT_COUNT, COMPLIANCE_SCORE
+  entidadId         String?  // ID específico del KPI o null para agregados
+  metricaNombre     String   // Nombre del campo a monitorear
+
+  // Condición
+  operador          String   // GT, LT, GTE, LTE, EQ, NE
+  valorUmbral       Float
+  tipoAgregacion    String   @default("CURRENT") // CURRENT, COUNT, AVERAGE, SUM, MIN, MAX
+  periodoEvaluacion String?  // JSON {cantidad: 7, unidad: 'dias'}
+
+  activo            Boolean  @default(true)
+
+  // Destinatarios
+  rolesDestino      String?  // JSON array
+  usuariosDestino   String?  // JSON array
+
+  // Canales
+  enviarInApp       Boolean  @default(true)
+  enviarEmail       Boolean  @default(false)
+
+  severidad         String   @default("warning") // info, warning, critical
+  cooldownMinutos   Int      @default(60) // Evitar spam de alertas
+  ultimaEjecucion   DateTime?
+
+  fechaCreacion     DateTime @default(now())
+  fechaModificacion DateTime @updatedAt
+
+  @@map("alert_rules")
+}
+
+// Reglas de vencimiento (recordatorios anticipados)
+model ExpirationRule {
+  id                   String   @id @default(cuid())
+  nombre               String
+  descripcion          String?
+  entidadTipo          String   // QUESTIONNAIRE_ASSIGNMENT, EVIDENCE, RISK, INCIDENT
+
+  // Configuración de anticipación
+  diasAnticipacion     String   // JSON array [30, 15, 7, 1]
+  diasDespuesVencido   String?  // JSON array [1, 7, 15]
+
+  activo               Boolean  @default(true)
+
+  // Destinatarios
+  notificarResponsable Boolean  @default(true)
+  notificarSupervisor  Boolean  @default(false)
+  rolesDestino         String?  // JSON array
+
+  // Canales
+  enviarInApp          Boolean  @default(true)
+  enviarEmail          Boolean  @default(false)
+
+  fechaCreacion        DateTime @default(now())
+  fechaModificacion    DateTime @updatedAt
+
+  @@map("expiration_rules")
+}
+
+// Notificaciones del usuario (bandeja de entrada)
+model Notification {
+  id                  String    @id @default(cuid())
+  usuarioId           String
+
+  // Contenido
+  tipo                String    // NOTIFICATION, ALERT, EXPIRATION_REMINDER, OVERDUE, APPROVAL_REQUEST
+  titulo              String
+  mensaje             String
+  severidad           String    @default("info") // info, warning, critical
+
+  // Referencia a entidad relacionada
+  entidadTipo         String?
+  entidadId           String?
+  entidadNombre       String?
+
+  // Estado
+  leida               Boolean   @default(false)
+  archivada           Boolean   @default(false)
+  enSeguimiento       Boolean   @default(false)
+
+  // Acciones disponibles
+  acciones            String?   // JSON [{label, type, action, url}]
+
+  // Attachment
+  attachmentTipo      String?   // image, document, link
+  attachmentUrl       String?
+  attachmentTitulo    String?
+  attachmentSubtitulo String?
+
+  // Metadata adicional
+  metadata            String?   // JSON para datos adicionales
+
+  // Referencia a regla que la generó
+  reglaId             String?
+  reglaTipo           String?   // NOTIFICATION_RULE, ALERT_RULE, EXPIRATION_RULE
+
+  fechaCreacion       DateTime  @default(now())
+  fechaLeida          DateTime?
+
+  @@index([usuarioId, leida, archivada])
+  @@index([usuarioId, fechaCreacion])
+  @@map("notifications")
+}
+
+// Preferencias de notificación por usuario
+model UserNotificationPreferences {
+  id                     String   @id @default(cuid())
+  usuarioId              String   @unique
+
+  // Preferencias globales
+  habilitado             Boolean  @default(true)
+  emailHabilitado        Boolean  @default(true)
+  inAppHabilitado        Boolean  @default(true)
+
+  // Preferencias por tipo de entidad (JSON)
+  preferenciasPorEntidad String?  // {"ASSET": {"inApp": true, "email": false}, ...}
+
+  // Preferencias por severidad
+  notificarInfo          Boolean  @default(true)
+  notificarWarning       Boolean  @default(true)
+  notificarCritical      Boolean  @default(true)
+
+  // Frecuencia de emails
+  frecuenciaEmail        String   @default("inmediato") // inmediato, resumen_diario, resumen_semanal
+  horaResumen            String   @default("09:00")
+
+  fechaCreacion          DateTime @default(now())
+  fechaModificacion      DateTime @updatedAt
+
+  @@map("user_notification_preferences")
+}
+
+// Log de notificaciones enviadas
+model NotificationLog {
+  id             String   @id @default(cuid())
+  notificationId String?
+  usuarioId      String
+
+  // Detalles del envío
+  canal          String   // IN_APP, EMAIL
+  estado         String   // SENT, DELIVERED, FAILED, PENDING
+  errorMensaje   String?
+
+  // Referencia
+  reglaId        String?
+  reglaTipo      String?
+
+  metadata       String?  // JSON con datos adicionales
+
+  fechaEnvio     DateTime @default(now())
+
+  @@index([usuarioId, fechaEnvio])
+  @@index([estado])
+  @@map("notification_logs")
+}

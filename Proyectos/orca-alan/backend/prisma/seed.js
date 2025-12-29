@@ -953,6 +953,290 @@ async function main() {
   await prisma.alertaCumplimiento.createMany({ data: alertasData });
   console.log(`✓ Creadas ${alertasData.length} alertas de cumplimiento`);
 
+  // ============================================================
+  // Crear Reglas de Notificación por Defecto
+  // ============================================================
+  const notificationRulesData = [
+    // Riesgos
+    {
+      nombre: 'Nuevo riesgo crítico creado',
+      descripcion: 'Notifica cuando se crea un riesgo con nivel crítico',
+      entidadTipo: 'RISK',
+      eventoTipo: 'CREATE',
+      activo: true,
+      notificarCreador: false,
+      notificarResponsable: true,
+      notificarAprobadores: false,
+      rolesDestino: JSON.stringify(['Director', 'Gestor Áreas']),
+      enviarInApp: true,
+      enviarEmail: false,
+      plantillaMensaje: 'Se ha identificado un nuevo riesgo crítico: {nombre}',
+      severidad: 'critical'
+    },
+    {
+      nombre: 'Riesgo actualizado',
+      descripcion: 'Notifica cuando se actualiza un riesgo',
+      entidadTipo: 'RISK',
+      eventoTipo: 'UPDATE',
+      activo: true,
+      notificarResponsable: true,
+      enviarInApp: true,
+      severidad: 'info'
+    },
+    // Incidentes
+    {
+      nombre: 'Incidente de seguridad reportado',
+      descripcion: 'Notifica cuando se reporta un nuevo incidente',
+      entidadTipo: 'INCIDENT',
+      eventoTipo: 'CREATE',
+      activo: true,
+      notificarResponsable: true,
+      rolesDestino: JSON.stringify(['Director', 'Coordinador', 'Gestor Áreas']),
+      enviarInApp: true,
+      enviarEmail: false,
+      plantillaMensaje: 'Se ha reportado un incidente de seguridad: {titulo}',
+      severidad: 'warning'
+    },
+    {
+      nombre: 'Incidente cerrado',
+      descripcion: 'Notifica cuando se cierra un incidente',
+      entidadTipo: 'INCIDENT',
+      eventoTipo: 'UPDATE',
+      activo: true,
+      notificarCreador: true,
+      notificarResponsable: true,
+      enviarInApp: true,
+      severidad: 'info'
+    },
+    // Cuestionarios
+    {
+      nombre: 'Cuestionario asignado',
+      descripcion: 'Notifica cuando se asigna un cuestionario para revisión',
+      entidadTipo: 'QUESTIONNAIRE',
+      eventoTipo: 'CREATE',
+      activo: true,
+      notificarResponsable: true,
+      enviarInApp: true,
+      enviarEmail: false,
+      plantillaMensaje: 'Se te ha asignado el cuestionario: {nombre}',
+      severidad: 'info'
+    },
+    {
+      nombre: 'Respuesta de cuestionario aprobada',
+      descripcion: 'Notifica cuando una respuesta es aprobada',
+      entidadTipo: 'QUESTIONNAIRE',
+      eventoTipo: 'APPROVAL',
+      activo: true,
+      notificarCreador: true,
+      notificarResponsable: true,
+      enviarInApp: true,
+      severidad: 'info'
+    },
+    {
+      nombre: 'Respuesta de cuestionario rechazada',
+      descripcion: 'Notifica cuando una respuesta es rechazada',
+      entidadTipo: 'QUESTIONNAIRE',
+      eventoTipo: 'REJECTION',
+      activo: true,
+      notificarCreador: true,
+      notificarResponsable: true,
+      enviarInApp: true,
+      plantillaMensaje: 'Tu respuesta al cuestionario {nombre} ha sido rechazada. Por favor revisa los comentarios.',
+      severidad: 'warning'
+    },
+    // Activos
+    {
+      nombre: 'Nuevo activo crítico creado',
+      descripcion: 'Notifica cuando se crea un activo con criticidad crítica',
+      entidadTipo: 'ASSET',
+      eventoTipo: 'CREATE',
+      activo: true,
+      notificarResponsable: true,
+      rolesDestino: JSON.stringify(['Gestor Áreas']),
+      enviarInApp: true,
+      severidad: 'info'
+    },
+    // Defectos
+    {
+      nombre: 'Defecto crítico reportado',
+      descripcion: 'Notifica cuando se reporta un defecto con prioridad crítica',
+      entidadTipo: 'DEFECT',
+      eventoTipo: 'CREATE',
+      activo: true,
+      notificarResponsable: true,
+      rolesDestino: JSON.stringify(['Coordinador', 'Gestor Áreas']),
+      enviarInApp: true,
+      severidad: 'critical'
+    }
+  ];
+  await prisma.notificationRule.createMany({ data: notificationRulesData });
+  console.log(`✓ Creadas ${notificationRulesData.length} reglas de notificación`);
+
+  // ============================================================
+  // Crear Reglas de Alertas por Umbral
+  // ============================================================
+  const alertRulesData = [
+    {
+      nombre: 'Riesgos críticos exceden umbral',
+      descripcion: 'Alerta cuando hay más de 5 riesgos en estado crítico',
+      entidadTipo: 'RISK',
+      metricaNombre: 'count_critical',
+      operador: 'GT',
+      valorUmbral: 5,
+      tipoAgregacion: 'COUNT',
+      activo: true,
+      rolesDestino: JSON.stringify(['Director', 'Gestor Áreas']),
+      enviarInApp: true,
+      severidad: 'critical',
+      cooldownMinutos: 1440 // 24 horas
+    },
+    {
+      nombre: 'Incidentes sin resolver',
+      descripcion: 'Alerta cuando hay más de 3 incidentes sin resolver en 48h',
+      entidadTipo: 'INCIDENT',
+      metricaNombre: 'unresolved_48h',
+      operador: 'GT',
+      valorUmbral: 3,
+      tipoAgregacion: 'COUNT',
+      activo: true,
+      rolesDestino: JSON.stringify(['Coordinador']),
+      enviarInApp: true,
+      severidad: 'warning',
+      cooldownMinutos: 720 // 12 horas
+    },
+    {
+      nombre: 'Cumplimiento bajo umbral',
+      descripcion: 'Alerta cuando el cumplimiento general baja del 80%',
+      entidadTipo: 'COMPLIANCE_REVIEW',
+      metricaNombre: 'compliance_percentage',
+      operador: 'LT',
+      valorUmbral: 80,
+      tipoAgregacion: 'AVG',
+      activo: true,
+      rolesDestino: JSON.stringify(['Director']),
+      enviarInApp: true,
+      enviarEmail: false,
+      severidad: 'warning',
+      cooldownMinutos: 2880 // 48 horas
+    }
+  ];
+  await prisma.alertRule.createMany({ data: alertRulesData });
+  console.log(`✓ Creadas ${alertRulesData.length} reglas de alertas por umbral`);
+
+  // ============================================================
+  // Crear Reglas de Vencimiento
+  // ============================================================
+  const expirationRulesData = [
+    {
+      nombre: 'Vencimiento de cuestionarios',
+      descripcion: 'Recordatorios para cuestionarios próximos a vencer',
+      entidadTipo: 'QUESTIONNAIRE',
+      diasAnticipacion: JSON.stringify([30, 15, 7, 3, 1]),
+      diasDespuesVencido: JSON.stringify([1, 7]),
+      activo: true,
+      notificarResponsable: true,
+      notificarSupervisor: true,
+      enviarInApp: true,
+      enviarEmail: false
+    },
+    {
+      nombre: 'Vencimiento de revisiones de cumplimiento',
+      descripcion: 'Recordatorios para revisiones de cumplimiento',
+      entidadTipo: 'COMPLIANCE_REVIEW',
+      diasAnticipacion: JSON.stringify([15, 7, 1]),
+      diasDespuesVencido: JSON.stringify([1, 3]),
+      activo: true,
+      notificarResponsable: true,
+      notificarSupervisor: false,
+      enviarInApp: true
+    },
+    {
+      nombre: 'Vencimiento de controles',
+      descripcion: 'Recordatorios para controles que requieren revisión',
+      entidadTipo: 'ASSET',
+      diasAnticipacion: JSON.stringify([30, 7]),
+      activo: true,
+      notificarResponsable: true,
+      enviarInApp: true
+    }
+  ];
+  await prisma.expirationRule.createMany({ data: expirationRulesData });
+  console.log(`✓ Creadas ${expirationRulesData.length} reglas de vencimiento`);
+
+  // ============================================================
+  // Crear algunas notificaciones de ejemplo en inbox
+  // ============================================================
+  const notificationsData = [
+    {
+      usuarioId: usuarios[3].id, // CISO
+      tipo: 'NOTIFICATION',
+      titulo: 'Nuevo riesgo crítico identificado',
+      mensaje: 'Se ha identificado un nuevo riesgo crítico en el Core Banking System: Acceso no autorizado a funciones administrativas.',
+      severidad: 'critical',
+      entidadTipo: 'RISK',
+      entidadId: 'risk-001',
+      entidadNombre: 'Acceso no autorizado a CBS',
+      leida: false,
+      acciones: JSON.stringify([
+        { tipo: 'primary', label: 'Ver riesgo', url: '/riesgos/risk-001' },
+        { tipo: 'secondary', label: 'Marcar como revisado' }
+      ])
+    },
+    {
+      usuarioId: usuarios[3].id,
+      tipo: 'ALERT',
+      titulo: 'Incidentes sin resolver exceden umbral',
+      mensaje: 'Hay 5 incidentes que llevan más de 48 horas sin resolver. Se requiere atención inmediata.',
+      severidad: 'warning',
+      entidadTipo: 'INCIDENT',
+      leida: false,
+      acciones: JSON.stringify([
+        { tipo: 'primary', label: 'Ver incidentes', url: '/incidentes?estado=abierto' }
+      ])
+    },
+    {
+      usuarioId: usuarios[8].id, // Oficial PLD
+      tipo: 'EXPIRATION_REMINDER',
+      titulo: 'Cuestionario AML próximo a vencer',
+      mensaje: 'El cuestionario "Auditoría AML/PLD Semestral 2024-H2" vence en 7 días.',
+      severidad: 'warning',
+      entidadTipo: 'QUESTIONNAIRE',
+      entidadNombre: 'Auditoría AML/PLD Semestral',
+      leida: false,
+      acciones: JSON.stringify([
+        { tipo: 'primary', label: 'Completar cuestionario', url: '/cumplimiento/cuestionarios/aml-2024-h2' }
+      ])
+    },
+    {
+      usuarioId: usuarios[2].id, // CCO
+      tipo: 'APPROVAL_REQUEST',
+      titulo: 'Respuesta pendiente de aprobación',
+      mensaje: 'Patricia Reyes Solís ha completado el cuestionario AML y requiere tu aprobación.',
+      severidad: 'info',
+      entidadTipo: 'QUESTIONNAIRE',
+      entidadNombre: 'Evaluación KYC Reforzado',
+      leida: false,
+      acciones: JSON.stringify([
+        { tipo: 'primary', label: 'Aprobar', action: 'approve' },
+        { tipo: 'danger', label: 'Rechazar', action: 'reject' },
+        { tipo: 'secondary', label: 'Ver detalles', url: '/cumplimiento/revisiones/kyc-reforzado' }
+      ])
+    },
+    {
+      usuarioId: usuarios[3].id,
+      tipo: 'NOTIFICATION',
+      titulo: 'Incidente de seguridad resuelto',
+      mensaje: 'El incidente "Ataque de phishing masivo a clientes" ha sido resuelto exitosamente.',
+      severidad: 'info',
+      entidadTipo: 'INCIDENT',
+      entidadNombre: 'Ataque de phishing masivo',
+      leida: true,
+      fechaLeida: new Date(Date.now() - 3600000) // hace 1 hora
+    }
+  ];
+  await prisma.notification.createMany({ data: notificationsData });
+  console.log(`✓ Creadas ${notificationsData.length} notificaciones de ejemplo`);
+
   console.log('\n🎉 ¡Seed completado exitosamente!');
   console.log('📊 Resumen de datos creados:');
   console.log('   - 25 permisos');
@@ -968,7 +1252,11 @@ async function main() {
   console.log('   - 5 marcos normativos (cumplimiento)');
   console.log('   - 3 cuestionarios');
   console.log('   - 5 revisiones (asignaciones de cuestionarios)');
-  console.log('   - 4 alertas de cumplimiento\n');
+  console.log('   - 4 alertas de cumplimiento');
+  console.log('   - 9 reglas de notificación');
+  console.log('   - 3 reglas de alertas por umbral');
+  console.log('   - 3 reglas de vencimiento');
+  console.log('   - 5 notificaciones de ejemplo\n');
 }
 
 main()

@@ -43,11 +43,22 @@ interface BreadcrumbItem {
       >
         <!-- Icon Bar (Primary) -->
         <div class="icon-bar">
-          <!-- Logo -->
-          <div class="logo-container">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M6.84219 2.87829C5.69766 3.67858 4.6627 4.62478 3.76426 5.68992C7.4357 5.34906 12.1001 5.90564 17.5155 8.61335C23.2984 11.5047 27.955 11.6025 31.1958 10.9773C30.9017 10.087 30.5315 9.23135 30.093 8.41791C26.3832 8.80919 21.6272 8.29127 16.0845 5.51998C12.5648 3.76014 9.46221 3.03521 6.84219 2.87829ZM27.9259 5.33332C24.9962 2.06 20.7387 0 16 0C14.6084 0 13.2581 0.177686 11.9709 0.511584C13.7143 0.987269 15.5663 1.68319 17.5155 2.65781C21.5736 4.68682 25.0771 5.34013 27.9259 5.33332ZM31.8887 14.1025C27.9735 14.8756 22.567 14.7168 16.0845 11.4755C10.024 8.44527 5.20035 8.48343 1.94712 9.20639C1.7792 9.24367 1.61523 9.28287 1.45522 9.32367C1.0293 10.25 0.689308 11.2241 0.445362 12.2356C0.705909 12.166 0.975145 12.0998 1.25293 12.0381C5.19966 11.161 10.7761 11.1991 17.5155 14.5689C23.5761 17.5991 28.3997 17.561 31.6529 16.838C31.7644 16.8133 31.8742 16.7877 31.9822 16.7613C31.9941 16.509 32 16.2552 32 16C32 15.358 31.9622 14.7248 31.8887 14.1025ZM31.4598 20.1378C27.5826 20.8157 22.3336 20.5555 16.0845 17.431C10.024 14.4008 5.20035 14.439 1.94712 15.1619C1.225 15.3223 0.575392 15.5178 0.002344 15.7241C0.000781601 15.8158 0 15.9078 0 16C0 24.8366 7.16344 32 16 32C23.4057 32 29.6362 26.9687 31.4598 20.1378Z" class="fill-primary-contrast"/>
-            </svg>
+          <!-- Top Section - User Profile -->
+          <div class="icon-bar-header">
+            <button
+              class="user-avatar-btn"
+              [class.active]="isUserMenuActive()"
+              (click)="onUserAvatarClick()"
+              [pTooltip]="!isExpanded() ? 'Mi Perfil' : ''"
+              tooltipPosition="right"
+            >
+              <img
+                [src]="userProfile().avatar"
+                class="user-avatar-small"
+                [alt]="userProfile().name"
+              />
+            </button>
+            <div class="icon-divider"></div>
           </div>
 
           <!-- Menu Icons -->
@@ -69,35 +80,84 @@ interface BreadcrumbItem {
             </ul>
           </nav>
 
-          <!-- Bottom Section -->
+          <!-- Bottom Section - Logo -->
           <div class="icon-bar-footer">
             <div class="icon-divider"></div>
-            <div class="avatar-container">
-              <img src="https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/avatar-amyels.png" class="user-avatar-small" />
+            <div class="logo-container">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.84219 2.87829C5.69766 3.67858 4.6627 4.62478 3.76426 5.68992C7.4357 5.34906 12.1001 5.90564 17.5155 8.61335C23.2984 11.5047 27.955 11.6025 31.1958 10.9773C30.9017 10.087 30.5315 9.23135 30.093 8.41791C26.3832 8.80919 21.6272 8.29127 16.0845 5.51998C12.5648 3.76014 9.46221 3.03521 6.84219 2.87829ZM27.9259 5.33332C24.9962 2.06 20.7387 0 16 0C14.6084 0 13.2581 0.177686 11.9709 0.511584C13.7143 0.987269 15.5663 1.68319 17.5155 2.65781C21.5736 4.68682 25.0771 5.34013 27.9259 5.33332ZM31.8887 14.1025C27.9735 14.8756 22.567 14.7168 16.0845 11.4755C10.024 8.44527 5.20035 8.48343 1.94712 9.20639C1.7792 9.24367 1.61523 9.28287 1.45522 9.32367C1.0293 10.25 0.689308 11.2241 0.445362 12.2356C0.705909 12.166 0.975145 12.0998 1.25293 12.0381C5.19966 11.161 10.7761 11.1991 17.5155 14.5689C23.5761 17.5991 28.3997 17.561 31.6529 16.838C31.7644 16.8133 31.8742 16.7877 31.9822 16.7613C31.9941 16.509 32 16.2552 32 16C32 15.358 31.9622 14.7248 31.8887 14.1025ZM31.4598 20.1378C27.5826 20.8157 22.3336 20.5555 16.0845 17.431C10.024 14.4008 5.20035 14.439 1.94712 15.1619C1.225 15.3223 0.575392 15.5178 0.002344 15.7241C0.000781601 15.8158 0 15.9078 0 16C0 24.8366 7.16344 32 16 32C23.4057 32 29.6362 26.9687 31.4598 20.1378Z" class="fill-primary-contrast"/>
+              </svg>
             </div>
           </div>
         </div>
 
         <!-- Submenu Panel (Secondary) - Collapsible -->
         <div class="submenu-panel" [class.collapsed]="!isExpanded()">
-          <!-- Panel Header -->
-          <div class="panel-header">
-            <span class="panel-title">{{ activeGroup()?.label }}</span>
-          </div>
+          @if (isUserMenuActive()) {
+            <!-- User Menu Panel -->
+            <div class="panel-header user-panel-header">
+              <div class="user-header-info">
+                <span class="panel-title">{{ userProfile().name }}</span>
+                <span class="user-role">{{ userProfile().role }}</span>
+              </div>
+            </div>
 
-          <!-- Submenu Items -->
-          <nav class="submenu-nav">
-            @for (item of activeGroup()?.items; track item.routerLink) {
+            <!-- User Info Section (Read Only) -->
+            <div class="user-info-section">
+              <i class="pi pi-envelope"></i>
+              <span>{{ userProfile().email }}</span>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- User Menu Items -->
+            <nav class="submenu-nav">
               <a
-                [routerLink]="item.routerLink"
+                routerLink="/perfil"
                 routerLinkActive="submenu-active"
                 class="submenu-item"
               >
-                <i [class]="item.icon"></i>
-                <span class="submenu-label">{{ item.label }}</span>
+                <i class="pi pi-user"></i>
+                <span class="submenu-label">Perfil</span>
               </a>
-            }
-          </nav>
+              <a
+                routerLink="/notificaciones-config"
+                routerLinkActive="submenu-active"
+                class="submenu-item"
+              >
+                <i class="pi pi-bell"></i>
+                <span class="submenu-label">Notificaciones</span>
+              </a>
+            </nav>
+
+            <!-- Logout Section -->
+            <div class="logout-section">
+              <div class="section-divider"></div>
+              <button class="logout-btn" (click)="onLogout()">
+                <i class="pi pi-sign-out"></i>
+                <span>Cerrar Sesión</span>
+              </button>
+            </div>
+          } @else {
+            <!-- Regular Menu Panel -->
+            <div class="panel-header">
+              <span class="panel-title">{{ activeGroup()?.label }}</span>
+            </div>
+
+            <!-- Submenu Items -->
+            <nav class="submenu-nav">
+              @for (item of activeGroup()?.items; track item.routerLink) {
+                <a
+                  [routerLink]="item.routerLink"
+                  routerLinkActive="submenu-active"
+                  class="submenu-item"
+                >
+                  <i [class]="item.icon"></i>
+                  <span class="submenu-label">{{ item.label }}</span>
+                </a>
+              }
+            </nav>
+          }
         </div>
       </div>
 
@@ -199,15 +259,29 @@ interface BreadcrumbItem {
       border-right-color: var(--surface-border);
     }
 
+    /* Cuadrado 40x40 con esquinas redondeadas 8px */
     .logo-container {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: var(--spacing-4);
+      width: 40px;
+      height: 40px;
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
       flex-shrink: 0;
+      transition: all var(--transition-duration) var(--transition-timing);
     }
 
-    /* Light mode: Logo verde */
+    .logo-container:hover {
+      opacity: 0.8;
+    }
+
+    .logo-container svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    /* Logo verde */
     .logo-container svg path {
       fill: var(--primary-color);
     }
@@ -240,13 +314,15 @@ interface BreadcrumbItem {
     }
 
     /* Light mode: Iconos grises oscuros */
+    /* Cuadrado 40x40 con esquinas redondeadas 8px */
     .icon-link {
       display: flex;
       align-items: center;
       justify-content: center;
       width: 40px;
       height: 40px;
-      border-radius: var(--border-radius-lg);
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
       color: var(--surface-600);
       cursor: pointer;
       transition: all var(--transition-duration) var(--transition-timing);
@@ -285,10 +361,20 @@ interface BreadcrumbItem {
       line-height: var(--line-height-tight) !important;
     }
 
+    .icon-bar-header {
+      padding: var(--spacing-4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-2);
+      flex-shrink: 0;
+    }
+
     .icon-bar-footer {
       padding: var(--spacing-4);
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: var(--spacing-2);
     }
 
@@ -305,17 +391,170 @@ interface BreadcrumbItem {
       background: var(--surface-200);
     }
 
-    .avatar-container {
+    /* Cuadrado 40x40 con esquinas redondeadas 8px */
+    .user-avatar-btn {
       display: flex;
+      align-items: center;
       justify-content: center;
-      padding: var(--spacing-2);
+      width: 40px;
+      height: 40px;
+      aspect-ratio: 1 / 1;
+      padding: 0;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      cursor: pointer;
+      transition: all var(--transition-duration) var(--transition-timing);
+    }
+
+    .user-avatar-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .user-avatar-btn.active {
+      box-shadow: 0 0 0 2px var(--primary-color);
     }
 
     .user-avatar-small {
-      width: 32px;
-      height: 32px;
-      border-radius: var(--border-radius-full);
+      width: 40px;
+      height: 40px;
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    /* ===== User Menu Panel Styles ===== */
+    .user-panel-header {
+      margin-bottom: var(--spacing-4);
+    }
+
+    .user-header-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .user-role {
+      font-size: var(--font-size-xs);
+      color: var(--text-color-secondary);
+    }
+
+    .user-info-section {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-2) 0;
+      font-size: var(--font-size-sm);
+      color: var(--text-color-secondary);
+
+      i {
+        font-size: var(--font-size-sm);
+        color: var(--text-color-secondary);
+      }
+    }
+
+    .section-divider {
+      width: 100%;
+      height: 1px;
+      background: var(--surface-200);
+      margin: var(--spacing-3) 0;
+    }
+
+    :host-context(.dark-mode) .section-divider,
+    :host-context([data-theme="dark"]) .section-divider {
+      background: var(--surface-300);
+    }
+
+    .submenu-item.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+      position: relative;
+    }
+
+    .coming-soon-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: var(--surface-200);
+      color: var(--text-color-secondary);
+      border-radius: 4px;
+      margin-left: auto;
+    }
+
+    :host-context(.dark-mode) .coming-soon-badge,
+    :host-context([data-theme="dark"]) .coming-soon-badge {
+      background: var(--surface-300);
+    }
+
+    .logout-section {
+      margin-top: auto;
+    }
+
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      width: 100%;
+      padding: var(--spacing-3);
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--red-500);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
       cursor: pointer;
+      transition: all var(--transition-duration) var(--transition-timing);
+
+      i {
+        font-size: var(--font-size-base);
+      }
+
+      &:hover {
+        background: var(--red-50);
+        color: var(--red-600);
+      }
+    }
+
+    :host-context(.dark-mode) .logout-btn:hover,
+    :host-context([data-theme="dark"]) .logout-btn:hover {
+      background: rgba(239, 68, 68, 0.16);
+      color: var(--red-400);
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .user-name {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-email {
+      font-size: var(--font-size-xs);
+      color: var(--text-color-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    :host-context(.dark-mode) .user-name,
+    :host-context([data-theme="dark"]) .user-name {
+      color: var(--text-color);
+    }
+
+    :host-context(.dark-mode) .user-email,
+    :host-context([data-theme="dark"]) .user-email {
+      color: var(--text-color-secondary);
     }
 
     /* ===== Submenu Panel (Panel de submenús) ===== */
@@ -569,6 +808,41 @@ interface BreadcrumbItem {
       flex: 1;
       overflow-y: auto;
     }
+
+    /* ===== Tooltips Dark Mode ===== */
+    :host ::ng-deep .p-tooltip {
+      .p-tooltip-text {
+        background: var(--surface-900);
+        color: var(--surface-0);
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-2) var(--spacing-3);
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      }
+
+      .p-tooltip-arrow {
+        border-top-color: var(--surface-900);
+        border-bottom-color: var(--surface-900);
+        border-left-color: var(--surface-900);
+        border-right-color: var(--surface-900);
+      }
+
+      &.p-tooltip-right .p-tooltip-arrow {
+        border-right-color: var(--surface-900);
+      }
+
+      &.p-tooltip-left .p-tooltip-arrow {
+        border-left-color: var(--surface-900);
+      }
+
+      &.p-tooltip-top .p-tooltip-arrow {
+        border-top-color: var(--surface-900);
+      }
+
+      &.p-tooltip-bottom .p-tooltip-arrow {
+        border-bottom-color: var(--surface-900);
+      }
+    }
   `]
 })
 export class SidebarComponent implements OnDestroy {
@@ -579,6 +853,17 @@ export class SidebarComponent implements OnDestroy {
   // Estado de expansión del menú (colapsado por defecto)
   isExpanded = signal<boolean>(false);
 
+  // Estado del menú de usuario (activo cuando se hace clic en el avatar)
+  isUserMenuActive = signal<boolean>(false);
+
+  // Perfil del usuario actual (mock data - en producción vendría de un servicio)
+  userProfile = signal({
+    name: 'Ana García',
+    email: 'ana.garcia@banco.com',
+    avatar: 'https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/avatar-amyels.png',
+    role: 'Analista de Riesgos'
+  });
+
   // Timer para el delay del colapso
   private collapseTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -586,6 +871,7 @@ export class SidebarComponent implements OnDestroy {
   private readonly COLLAPSE_DELAY = 150;
 
   // Menú base con todas las opciones
+  // Orden: 1. Inicio, 2. Results ML, 3. Activos y Procesos, 4. Riesgos, 5. Cumplimiento, 6. Configuración
   private allMenuGroups: MenuGroup[] = [
     {
       label: 'Inicio',
@@ -598,29 +884,20 @@ export class SidebarComponent implements OnDestroy {
       ]
     },
     {
+      label: 'Results ML',
+      icon: 'pi pi-sparkles',
+      expanded: true,
+      items: [
+        { label: 'Respuestas ML', icon: 'pi pi-sparkles', routerLink: '/results-ml' }
+      ]
+    },
+    {
       label: 'Activos y Procesos',
       icon: 'pi pi-box',
       expanded: true,
       items: [
         { label: 'Activos', icon: 'pi pi-database', routerLink: '/activos' },
         { label: 'Procesos', icon: 'pi pi-cog', routerLink: '/procesos' }
-      ]
-    },
-    {
-      label: 'Cumplimiento',
-      icon: 'pi pi-check-circle',
-      expanded: true,
-      items: [
-        { label: 'Cuestionarios', icon: 'pi pi-list-check', routerLink: '/cuestionarios' },
-        { label: 'Revisiones', icon: 'pi pi-file-check', routerLink: '/cumplimiento' }
-      ]
-    },
-    {
-      label: 'Results ML',
-      icon: 'pi pi-sparkles',
-      expanded: true,
-      items: [
-        { label: 'Respuestas ML', icon: 'pi pi-sparkles', routerLink: '/results-ml' }
       ]
     },
     {
@@ -635,7 +912,16 @@ export class SidebarComponent implements OnDestroy {
       ]
     },
     {
-      label: 'Configuracion',
+      label: 'Cumplimiento',
+      icon: 'pi pi-check-circle',
+      expanded: true,
+      items: [
+        { label: 'Cuestionarios', icon: 'pi pi-list-check', routerLink: '/cuestionarios' },
+        { label: 'Revisiones', icon: 'pi pi-file-check', routerLink: '/cumplimiento' }
+      ]
+    },
+    {
+      label: 'Configuración',
       icon: 'pi pi-cog',
       expanded: true,
       items: [
@@ -685,6 +971,7 @@ export class SidebarComponent implements OnDestroy {
     'results-ml': 'Results ML',
     'usuarios-roles': 'Usuarios y Roles',
     'asignacion-roles': 'Asignacion de Roles',
+    'perfil': 'Mi Perfil',
     'crear': 'Crear',
     'detalle': 'Detalle',
     'objetivos-kpis': 'Objetivos y KPIs',
@@ -726,11 +1013,39 @@ export class SidebarComponent implements OnDestroy {
     // Cancelar cualquier timeout de colapso pendiente
     this.cancelCollapseTimeout();
 
+    // Desactivar el menú de usuario
+    this.isUserMenuActive.set(false);
+
     // Seleccionar el tab
     this.activeTab.set(index);
 
     // Expandir el menú
     this.isExpanded.set(true);
+  }
+
+  /**
+   * Al hacer click en el avatar del usuario: activa el menú de usuario
+   */
+  onUserAvatarClick(): void {
+    // Cancelar cualquier timeout de colapso pendiente
+    this.cancelCollapseTimeout();
+
+    // Activar el menú de usuario
+    this.isUserMenuActive.set(true);
+
+    // Expandir el menú
+    this.isExpanded.set(true);
+  }
+
+  /**
+   * Cerrar sesión y redirigir al login
+   */
+  onLogout(): void {
+    // TODO: Implementar lógica de logout (limpiar tokens, estado, etc.)
+    console.log('Cerrando sesión...');
+
+    // Redirigir al login
+    this.router.navigate(['/login']);
   }
 
   /**
@@ -747,6 +1062,8 @@ export class SidebarComponent implements OnDestroy {
     // Iniciar el timeout para colapsar
     this.collapseTimeout = setTimeout(() => {
       this.isExpanded.set(false);
+      // Desactivar el menú de usuario al colapsar
+      this.isUserMenuActive.set(false);
     }, this.COLLAPSE_DELAY);
   }
 

@@ -535,4 +535,140 @@ export class ApiService {
   getDashboard(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/estadisticas/dashboard`);
   }
+
+  // ============================================================
+  // Notificaciones - Reglas de Notificación
+  // ============================================================
+
+  getNotificationRules(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/notifications/rules`);
+  }
+
+  getNotificationRuleById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/notifications/rules/${id}`);
+  }
+
+  createNotificationRule(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/notifications/rules`, data);
+  }
+
+  updateNotificationRule(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/notifications/rules/${id}`, data);
+  }
+
+  deleteNotificationRule(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/notifications/rules/${id}`);
+  }
+
+  // ============================================================
+  // Notificaciones - Reglas de Alertas por Umbral
+  // ============================================================
+
+  getAlertRules(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/notifications/alerts`);
+  }
+
+  createAlertRule(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/notifications/alerts`, data);
+  }
+
+  updateAlertRule(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/notifications/alerts/${id}`, data);
+  }
+
+  deleteAlertRule(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/notifications/alerts/${id}`);
+  }
+
+  // ============================================================
+  // Notificaciones - Reglas de Vencimiento
+  // ============================================================
+
+  getExpirationRules(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/notifications/expiration-rules`);
+  }
+
+  createExpirationRule(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/notifications/expiration-rules`, data);
+  }
+
+  updateExpirationRule(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/notifications/expiration-rules/${id}`, data);
+  }
+
+  deleteExpirationRule(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/notifications/expiration-rules/${id}`);
+  }
+
+  // ============================================================
+  // Notificaciones - Bandeja de Entrada (Inbox)
+  // ============================================================
+
+  getNotificationsInbox(params?: {
+    leida?: boolean;
+    archivada?: boolean;
+    tipo?: string;
+    severidad?: string;
+    page?: number;
+    limit?: number;
+  }): Observable<any> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        const value = (params as any)[key];
+        if (value !== undefined && value !== null) {
+          httpParams = httpParams.set(key, String(value));
+        }
+      });
+    }
+    return this.http.get<any>(`${this.baseUrl}/notifications/inbox`, { params: httpParams });
+  }
+
+  getNotificationById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/notifications/inbox/${id}`);
+  }
+
+  markNotificationAsRead(id: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/notifications/inbox/${id}/read`, {});
+  }
+
+  toggleNotificationArchive(id: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/notifications/inbox/${id}/archive`, {});
+  }
+
+  toggleNotificationFollow(id: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/notifications/inbox/${id}/follow`, {});
+  }
+
+  deleteNotification(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/notifications/inbox/${id}`);
+  }
+
+  markAllNotificationsAsRead(): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/notifications/inbox/mark-all-read`, {});
+  }
+
+  createNotification(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/notifications/inbox`, data);
+  }
+
+  // ============================================================
+  // Notificaciones - Preferencias de Usuario
+  // ============================================================
+
+  getNotificationPreferences(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/notifications/preferences`);
+  }
+
+  updateNotificationPreferences(data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/notifications/preferences`, data);
+  }
+
+  // ============================================================
+  // Notificaciones - Estadísticas
+  // ============================================================
+
+  getNotificationStats(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/notifications/stats`);
+  }
 }
