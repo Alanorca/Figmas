@@ -20,6 +20,7 @@ const cuestionariosRoutes = require('./routes/cuestionarios.routes');
 const organigramasRoutes = require('./routes/organigramas.routes');
 const catalogosRoutes = require('./routes/catalogos.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const notificationsRoutes = require('./routes/notifications.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,7 +29,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({
   origin: ['http://localhost:4200', 'http://localhost:4201'],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -54,6 +55,7 @@ app.use('/api/cuestionarios', cuestionariosRoutes);
 app.use('/api/organigramas', organigramasRoutes);
 app.use('/api/catalogos', catalogosRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Ruta de health check
 app.get('/api/health', (req, res) => {

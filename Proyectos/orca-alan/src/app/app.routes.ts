@@ -79,6 +79,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/asignacion-roles/asignacion-roles').then(m => m.AsignacionRolesComponent)
   },
   {
+    path: 'perfil',
+    loadComponent: () => import('./pages/perfil/perfil').then(m => m.PerfilComponent)
+  },
+  {
+    path: 'notificaciones-config',
+    loadComponent: () => import('./pages/notificaciones-config/notificaciones-config').then(m => m.NotificacionesConfigComponent)
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }
