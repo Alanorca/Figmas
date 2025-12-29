@@ -1,7 +1,6 @@
 # CLAUDE.md - Project Guide
 
 ## Project Overview
-> this is an example
 
 **Figmas** is a UI prototyping repository for an **Intelligent Risk Management System (GRC - Governance, Risk, Compliance)**. The main component is a **Node-based Process Editor** that allows users to visually map operational flows, analyze risks, and automate decisions using interactive nodes.
 
