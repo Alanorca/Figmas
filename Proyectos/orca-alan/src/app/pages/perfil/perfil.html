@@ -1,0 +1,230 @@
+<p-toast />
+
+<div class="perfil-container">
+  <div class="perfil-layout">
+    <!-- Columna izquierda: Datos generales + Idioma unificados -->
+    <div class="columna-izquierda">
+      <div class="card-unificada">
+        <!-- Avatar y datos basicos -->
+        <div class="datos-generales">
+          <div class="avatar-wrapper">
+            @if (usuario().avatar) {
+              <p-avatar
+                [image]="usuario().avatar!"
+                size="xlarge"
+                shape="circle"
+                class="perfil-avatar" />
+            } @else {
+              <p-avatar
+                [label]="iniciales()"
+                size="xlarge"
+                shape="circle"
+                class="perfil-avatar" />
+            }
+
+            <p-fileUpload
+              mode="basic"
+              name="avatar"
+              accept="image/*"
+              [maxFileSize]="1000000"
+              chooseLabel=""
+              chooseIcon="pi pi-camera"
+              class="avatar-upload-btn"
+              (onSelect)="onAvatarUpload($event)" />
+          </div>
+
+          <div class="user-info">
+            <h2 class="user-name">{{ nombreCompleto() }}</h2>
+            <p class="user-detail">
+              <span class="detail-label">E-mail:</span> {{ usuario().email }}
+            </p>
+            <p class="user-detail">
+              <span class="detail-label">Perfil:</span> {{ usuario().rol }}
+            </p>
+          </div>
+        </div>
+
+        <p-divider />
+
+        <!-- Selector de idioma -->
+        <div class="seccion-idioma">
+          <span class="seccion-label">Idioma</span>
+          <div class="idioma-selector">
+            @for (option of idiomaOptions; track option.value) {
+              <div
+                class="idioma-option"
+                [class.active]="usuario().idioma === option.value"
+                (click)="cambiarIdioma($any(option.value))">
+                <span class="flag-icon flag-{{ option.flag }}"></span>
+                <p-radioButton
+                  [name]="'idioma'"
+                  [value]="option.value"
+                  [(ngModel)]="usuario().idioma" />
+                <span class="idioma-label">{{ option.label }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna derecha: Contenido con Tabs -->
+    <div class="columna-derecha">
+      <p-tabs [value]="activeTab()" (valueChange)="activeTab.set($any($event))">
+        <p-tablist>
+          <p-tab [value]="0">
+            <i class="pi pi-user tab-icon"></i>
+            Información Personal
+          </p-tab>
+          <p-tab [value]="1">
+            <i class="pi pi-lock tab-icon"></i>
+            Cambiar Contraseña
+          </p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+          <!-- Tab: Información Personal -->
+          <p-tabpanel [value]="0">
+            <div class="tab-content">
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="field-label">Mote</label>
+                  <input
+                    pInputText
+                    [ngModel]="usuarioEditando()?.mote ?? usuario().mote"
+                    (ngModelChange)="updateEditForm('mote', $event)"
+                    placeholder="Alan" />
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Nombre</label>
+                  <input
+                    pInputText
+                    [ngModel]="usuarioEditando()?.nombre ?? usuario().nombre"
+                    (ngModelChange)="updateEditForm('nombre', $event)"
+                    placeholder="Alan" />
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Apellido Paterno</label>
+                  <input
+                    pInputText
+                    [ngModel]="usuarioEditando()?.apellidoPaterno ?? usuario().apellidoPaterno"
+                    (ngModelChange)="updateEditForm('apellidoPaterno', $event)"
+                    placeholder="Franco" />
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Apellido Materno</label>
+                  <input
+                    pInputText
+                    [ngModel]="usuarioEditando()?.apellidoMaterno ?? usuario().apellidoMaterno"
+                    (ngModelChange)="updateEditForm('apellidoMaterno', $event)"
+                    placeholder="" />
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Teléfono</label>
+                  <input
+                    pInputText
+                    [ngModel]="usuarioEditando()?.telefono ?? usuario().telefono"
+                    (ngModelChange)="updateEditForm('telefono', $event)"
+                    placeholder="+52 55 1234 5678" />
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Email</label>
+                  <input
+                    pInputText
+                    type="email"
+                    [ngModel]="usuarioEditando()?.email ?? usuario().email"
+                    (ngModelChange)="updateEditForm('email', $event)"
+                    placeholder="usuario@orcagrc.com" />
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <p-button
+                  label="Cancelar"
+                  severity="secondary"
+                  [outlined]="true"
+                  (onClick)="cancelarEdicion()" />
+                <p-button
+                  label="Guardar Cambios"
+                  icon="pi pi-check"
+                  [loading]="guardando()"
+                  (onClick)="guardarPerfil()" />
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab: Cambiar Contraseña -->
+          <p-tabpanel [value]="1">
+            <div class="tab-content">
+              <div class="password-info">
+                <i class="pi pi-info-circle"></i>
+                <span>La contraseña debe tener al menos 8 caracteres</span>
+              </div>
+
+              <div class="password-fields">
+                <div class="form-field">
+                  <label class="field-label">Contraseña actual</label>
+                  <p-password
+                    [ngModel]="cambioPassword().actual"
+                    (ngModelChange)="updatePasswordForm('actual', $event)"
+                    [feedback]="false"
+                    [toggleMask]="true"
+                    placeholder="Ingresa tu contraseña actual"
+                    styleClass="w-full" />
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Nueva contraseña</label>
+                  <p-password
+                    [ngModel]="cambioPassword().nueva"
+                    (ngModelChange)="updatePasswordForm('nueva', $event)"
+                    [toggleMask]="true"
+                    placeholder="Ingresa tu nueva contraseña"
+                    promptLabel="Ingresa tu nueva contraseña"
+                    weakLabel="Débil"
+                    mediumLabel="Media"
+                    strongLabel="Fuerte"
+                    styleClass="w-full" />
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Confirmar nueva contraseña</label>
+                  <p-password
+                    [ngModel]="cambioPassword().confirmar"
+                    (ngModelChange)="updatePasswordForm('confirmar', $event)"
+                    [feedback]="false"
+                    [toggleMask]="true"
+                    placeholder="Confirma tu nueva contraseña"
+                    styleClass="w-full"
+                    [class.ng-invalid]="!passwordsCoinciden()" />
+                  @if (!passwordsCoinciden()) {
+                    <small class="p-error">Las contraseñas no coinciden</small>
+                  }
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <p-button
+                  label="Cancelar"
+                  severity="secondary"
+                  [outlined]="true"
+                  (onClick)="cancelarPassword()" />
+                <p-button
+                  label="Cambiar Contraseña"
+                  icon="pi pi-lock"
+                  [loading]="guardando()"
+                  [disabled]="!passwordValida()"
+                  (onClick)="guardarPassword()" />
+              </div>
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+  </div>
+</div>

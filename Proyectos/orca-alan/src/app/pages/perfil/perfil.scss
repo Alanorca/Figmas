@@ -1,0 +1,388 @@
+// ============================================================
+// Perfil Component Styles - Layout Integrado con Tabs
+// ============================================================
+
+$card-radius: 16px;
+
+.perfil-container {
+  min-height: 100vh;
+  background: var(--surface-ground);
+  padding: 2rem;
+}
+
+// ============================================================
+// Layout Principal - Dos columnas
+// ============================================================
+
+.perfil-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: start;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ============================================================
+// Columna Izquierda - Card Unificada
+// ============================================================
+
+.columna-izquierda {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-unificada {
+  background: var(--surface-card);
+  border-radius: $card-radius;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+
+  ::ng-deep .p-divider {
+    margin: 0;
+
+    &::before {
+      border-color: var(--surface-border);
+    }
+  }
+}
+
+.datos-generales {
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.avatar-wrapper {
+  position: relative;
+  margin-bottom: 1.25rem;
+
+  .perfil-avatar {
+    width: 90px !important;
+    height: 90px !important;
+    font-size: 1.75rem !important;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-600)) !important;
+    color: var(--primary-color-text) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .avatar-upload-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+
+    ::ng-deep .p-button {
+      width: 30px !important;
+      height: 30px !important;
+      padding: 0 !important;
+      border-radius: 50% !important;
+      background: var(--surface-card) !important;
+      border: 2px solid var(--surface-border) !important;
+      color: var(--text-color) !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      &:hover {
+        background: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        color: var(--primary-color-text) !important;
+      }
+
+      .p-button-icon {
+        font-size: 0.8rem;
+      }
+
+      .p-button-label {
+        display: none;
+      }
+    }
+  }
+}
+
+.user-info {
+  .user-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0 0 0.5rem 0;
+  }
+
+  .user-detail {
+    color: var(--text-color-secondary);
+    margin: 0 0 0.25rem 0;
+    font-size: 0.8125rem;
+
+    .detail-label {
+      font-weight: 600;
+      color: var(--text-color);
+    }
+  }
+}
+
+// ============================================================
+// Seccion Idioma (dentro de card unificada)
+// ============================================================
+
+.seccion-idioma {
+  padding: 1.25rem 1.5rem;
+
+  .seccion-label {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+  }
+}
+
+.idioma-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.idioma-option {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+
+  &.active {
+    background: rgba(var(--primary-color-rgb), 0.1);
+  }
+
+  .flag-icon {
+    width: 22px;
+    height: 15px;
+    border-radius: 3px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+
+    &.flag-mx {
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><rect fill="%23006847" width="8" height="16"/><rect fill="%23fff" x="8" width="8" height="16"/><rect fill="%23ce1126" x="16" width="8" height="16"/></svg>');
+    }
+
+    &.flag-gb {
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 16"><rect fill="%23012169" width="24" height="16"/><path fill="%23fff" d="M0,0 L24,16 M24,0 L0,16" stroke="%23fff" stroke-width="2.5"/><path fill="%23C8102E" d="M0,0 L24,16 M24,0 L0,16" stroke="%23C8102E" stroke-width="1.5"/><path fill="%23fff" d="M12,0 V16 M0,8 H24" stroke="%23fff" stroke-width="4"/><path fill="%23C8102E" d="M12,0 V16 M0,8 H24" stroke="%23C8102E" stroke-width="2.5"/></svg>');
+    }
+  }
+
+  .idioma-label {
+    font-size: 0.8125rem;
+    color: var(--text-color);
+    font-weight: 500;
+  }
+
+  ::ng-deep .p-radiobutton {
+    .p-radiobutton-box {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// ============================================================
+// Columna Derecha - Tabs
+// ============================================================
+
+.columna-derecha {
+  background: var(--surface-card);
+  border-radius: $card-radius;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+
+  ::ng-deep {
+    .p-tabs {
+      .p-tablist {
+        background: var(--surface-section);
+        border-bottom: 1px solid var(--surface-border);
+        padding: 0 1.5rem;
+
+        .p-tablist-content {
+          gap: 0;
+        }
+
+        .p-tab {
+          padding: 1rem 1.25rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--text-color-secondary);
+          border: none;
+          background: transparent;
+          margin: 0;
+          border-radius: 0;
+          position: relative;
+
+          .tab-icon {
+            margin-right: 0.5rem;
+          }
+
+          &:hover {
+            color: var(--text-color);
+            background: transparent;
+          }
+
+          &[data-p-active="true"],
+          &.p-tab-active {
+            color: var(--primary-color);
+            background: transparent;
+
+            &::after {
+              content: '';
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              height: 2px;
+              background: var(--primary-color);
+            }
+          }
+        }
+      }
+
+      .p-tabpanels {
+        padding: 0;
+        background: transparent;
+
+        .p-tabpanel {
+          padding: 0;
+        }
+      }
+    }
+  }
+}
+
+.tab-content {
+  padding: 1.5rem;
+}
+
+// ============================================================
+// Form Row - Campos verticales
+// ============================================================
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 400px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  .field-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-color-secondary);
+  }
+
+  input {
+    width: 100%;
+  }
+
+  ::ng-deep {
+    .p-password {
+      width: 100%;
+
+      input {
+        width: 100%;
+      }
+    }
+
+    .p-inputtext {
+      padding: 0.625rem 0.875rem;
+      font-size: 0.875rem;
+      border-radius: 8px;
+
+      &:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.15);
+      }
+    }
+  }
+
+  .p-error {
+    font-size: 0.6875rem;
+    margin-top: 0.25rem;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--surface-border);
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+
+    ::ng-deep .p-button {
+      width: 100%;
+    }
+  }
+
+  ::ng-deep .p-button {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 8px;
+  }
+}
+
+// ============================================================
+// Password Section
+// ============================================================
+
+.password-info {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  background: rgba(var(--primary-color-rgb), 0.08);
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+
+  i {
+    color: var(--primary-color);
+    font-size: 1rem;
+  }
+
+  span {
+    font-size: 0.8125rem;
+    color: var(--text-color);
+  }
+}
+
+.password-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .form-field {
+    max-width: 100%;
+
+    @media (min-width: 768px) {
+      max-width: 400px;
+    }
+  }
+}
