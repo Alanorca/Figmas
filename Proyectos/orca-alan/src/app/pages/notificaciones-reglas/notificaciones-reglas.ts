@@ -1,6 +1,7 @@
 import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 // PrimeNG
 import { TableModule } from 'primeng/table';
@@ -1090,7 +1091,8 @@ export class NotificacionesReglasComponent implements OnInit {
 
   constructor(
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -1266,15 +1268,13 @@ export class NotificacionesReglasComponent implements OnInit {
 
   // Dialog handlers - Reglas
   abrirDialogNuevaRegla(): void {
-    this.reglaEditando = null;
-    this.reglaForm = this.getReglaFormDefault();
-    this.dialogReglaVisible = true;
+    // Navegar a página de nueva regla
+    this.router.navigate(['/notificaciones-reglas/nueva']);
   }
 
   editarRegla(regla: NotificationRule): void {
-    this.reglaEditando = regla;
-    this.reglaForm = { ...regla };
-    this.dialogReglaVisible = true;
+    // Navegar a página de edición
+    this.router.navigate(['/notificaciones-reglas/editar', regla.id]);
   }
 
   guardarRegla(): void {

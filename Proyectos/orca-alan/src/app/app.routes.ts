@@ -91,6 +91,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/notificaciones-reglas/notificaciones-reglas').then(m => m.NotificacionesReglasComponent)
   },
   {
+    path: 'notificaciones-reglas/nueva',
+    loadComponent: () => import('./pages/notificacion-regla-nueva/notificacion-regla-nueva').then(m => m.NotificacionReglaNuevaComponent)
+  },
+  {
+    path: 'notificaciones-reglas/editar/:id',
+    loadComponent: () => import('./pages/notificacion-regla-nueva/notificacion-regla-nueva').then(m => m.NotificacionReglaNuevaComponent)
+  },
+  {
     path: 'notificaciones-logs',
     loadComponent: () => import('./pages/notificaciones-logs/notificaciones-logs').then(m => m.NotificacionesLogsComponent)
   },
