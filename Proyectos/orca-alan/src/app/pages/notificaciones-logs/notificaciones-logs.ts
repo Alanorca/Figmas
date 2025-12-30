@@ -66,7 +66,7 @@ interface LogStats {
   ],
   template: `
     <!-- Toolbar -->
-    <p-toolbar styleClass="mb-4">
+    <p-toolbar styleClass="toolbar-attached">
       <ng-template pTemplate="start">
         <div class="flex align-items-center gap-3">
           <!-- Stats Chips -->
@@ -198,15 +198,23 @@ interface LogStats {
               </p-columnFilter>
             </th>
             <th>
-              <p-columnFilter type="text" field="usuarioNombre" [showMenu]="false">
+              <p-columnFilter field="usuarioNombre" matchMode="in" [showMenu]="false">
                 <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                  <input
-                    pInputText
-                    type="text"
+                  <p-multiSelect
                     [ngModel]="value"
                     (ngModelChange)="filter($event)"
-                    placeholder="Buscar..."
-                    class="p-column-filter" />
+                    [options]="opcionesUsuarios()"
+                    placeholder="Todos"
+                    appendTo="body"
+                    [filter]="true"
+                    filterPlaceholder="Buscar usuario...">
+                    <ng-template let-option pTemplate="item">
+                      <div class="flex align-items-center gap-2">
+                        <i class="pi pi-user"></i>
+                        <span>{{ option.label }}</span>
+                      </div>
+                    </ng-template>
+                  </p-multiSelect>
                 </ng-template>
               </p-columnFilter>
             </th>
@@ -364,16 +372,8 @@ interface LogStats {
         <!-- Footer con totales -->
         <ng-template pTemplate="footer">
           <tr class="font-semibold surface-100">
-            <td colspan="3">
+            <td colspan="7">
               <span class="text-900">Total: {{ stats().total }} registros</span>
-            </td>
-            <td colspan="4">
-              <div class="flex gap-2">
-                <p-tag [value]="stats().sent + ' enviadas'" severity="success" styleClass="text-xs" />
-                <p-tag [value]="stats().failed + ' fallidas'" severity="danger" styleClass="text-xs" />
-                <p-tag [value]="stats().pending + ' pendientes'" severity="warn" styleClass="text-xs" />
-                <p-tag [value]="stats().skipped + ' omitidas'" severity="secondary" styleClass="text-xs" />
-              </div>
             </td>
           </tr>
         </ng-template>
@@ -446,6 +446,20 @@ interface LogStats {
     </p-dialog>
   `,
   styles: [`
+    // ============================================================================
+    // TOOLBAR ATTACHED - Sin espacio entre toolbar y card
+    // ============================================================================
+    :host ::ng-deep .toolbar-attached {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      margin-bottom: 0;
+    }
+
+    :host ::ng-deep .table-card {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+
     // ============================================================================
     // STAT CHIPS - Siguiendo patrón de COMPONENTES-REUTILIZABLES.md
     // ============================================================================
@@ -660,6 +674,19 @@ export class NotificacionesLogsComponent implements OnInit {
     { label: 'Alerta por Umbral', value: 'ALERT_RULE' },
     { label: 'Regla de Vencimiento', value: 'EXPIRATION_RULE' },
   ];
+
+  // Computed: usuarios únicos de los logs
+  opcionesUsuarios = computed(() => {
+    const usuarios = this.logs();
+    const uniqueUsers = new Map<string, string>();
+    usuarios.forEach(log => {
+      const nombre = log.usuarioNombre || log.usuarioId;
+      if (!uniqueUsers.has(nombre)) {
+        uniqueUsers.set(nombre, nombre);
+      }
+    });
+    return Array.from(uniqueUsers.entries()).map(([value, label]) => ({ label, value }));
+  });
 
   // Export menu
   exportMenuItems: MenuItem[] = [
