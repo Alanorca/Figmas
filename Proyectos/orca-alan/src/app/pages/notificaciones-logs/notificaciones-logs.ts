@@ -65,37 +65,17 @@ interface LogStats {
     MenuModule,
   ],
   template: `
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1><i class="pi pi-history"></i> Log de Notificaciones</h1>
+        <p>Historial de todas las notificaciones enviadas, fallidas y omitidas</p>
+      </div>
+    </div>
+
     <!-- Toolbar -->
     <p-toolbar styleClass="toolbar-attached">
       <ng-template pTemplate="start">
-        <div class="flex align-items-center gap-3">
-          <!-- Stats Chips -->
-          <div class="resumen-panel-compact">
-            <div class="stat-chip stat-chip-green">
-              <i class="pi pi-check-circle"></i>
-              <span class="stat-label">Enviadas</span>
-              <span class="stat-value">{{ stats().sent }}</span>
-            </div>
-            <div class="stat-chip stat-chip-red">
-              <i class="pi pi-times-circle"></i>
-              <span class="stat-label">Fallidas</span>
-              <span class="stat-value">{{ stats().failed }}</span>
-            </div>
-            <div class="stat-chip stat-chip-orange">
-              <i class="pi pi-clock"></i>
-              <span class="stat-label">Pendientes</span>
-              <span class="stat-value">{{ stats().pending }}</span>
-            </div>
-            <div class="stat-chip stat-chip-gray">
-              <i class="pi pi-forward"></i>
-              <span class="stat-label">Omitidas</span>
-              <span class="stat-value">{{ stats().skipped }}</span>
-            </div>
-          </div>
-        </div>
-      </ng-template>
-
-      <ng-template pTemplate="center">
         <p-iconfield>
           <p-inputicon styleClass="pi pi-search" />
           <input
@@ -372,8 +352,16 @@ interface LogStats {
         <!-- Footer con totales -->
         <ng-template pTemplate="footer">
           <tr class="font-semibold surface-100">
-            <td colspan="7">
+            <td colspan="3">
               <span class="text-900">Total: {{ stats().total }} registros</span>
+            </td>
+            <td colspan="4">
+              <div class="flex gap-2">
+                <p-tag [value]="stats().sent + ' enviadas'" severity="success" styleClass="text-xs" />
+                <p-tag [value]="stats().failed + ' fallidas'" severity="danger" styleClass="text-xs" />
+                <p-tag [value]="stats().pending + ' pendientes'" severity="warn" styleClass="text-xs" />
+                <p-tag [value]="stats().skipped + ' omitidas'" severity="secondary" styleClass="text-xs" />
+              </div>
             </td>
           </tr>
         </ng-template>
@@ -461,61 +449,23 @@ interface LogStats {
     }
 
     // ============================================================================
-    // STAT CHIPS - Siguiendo patrón de COMPONENTES-REUTILIZABLES.md
+    // PAGE HEADER
     // ============================================================================
-    .resumen-panel-compact {
+    .page-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.75rem;
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .stat-chip {
-      display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.75rem;
-      border-radius: 8px;
-      font-size: 0.8125rem;
-      background: var(--surface-card);
-      border: 1px solid var(--surface-border);
-      transition: all 0.2s;
-
-      .stat-label {
-        color: var(--text-color-secondary);
-      }
-
-      .stat-value {
-        font-weight: 600;
-        color: var(--text-color);
-      }
+      gap: 0.75rem;
     }
 
-    .stat-chip-green {
-      background: rgba(34, 197, 94, 0.08);
-      border-color: rgba(34, 197, 94, 0.2);
-      i { color: #22c55e; }
-      .stat-value { color: #16a34a; }
-    }
-
-    .stat-chip-red {
-      background: rgba(239, 68, 68, 0.08);
-      border-color: rgba(239, 68, 68, 0.2);
-      i { color: #ef4444; }
-      .stat-value { color: #dc2626; }
-    }
-
-    .stat-chip-orange {
-      background: rgba(249, 115, 22, 0.08);
-      border-color: rgba(249, 115, 22, 0.2);
-      i { color: #f97316; }
-      .stat-value { color: #ea580c; }
-    }
-
-    .stat-chip-gray {
-      background: rgba(148, 163, 184, 0.08);
-      border-color: rgba(148, 163, 184, 0.2);
-      i { color: #94a3b8; }
-      .stat-value { color: #64748b; }
+    .page-header p {
+      margin: 0;
+      color: var(--text-color-secondary);
     }
 
     // ============================================================================
