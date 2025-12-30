@@ -1,17 +1,23 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, computed, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 // PrimeNG
-import { TableModule } from 'primeng/table';
+import { TableModule, Table } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { DatePickerModule } from 'primeng/datepicker';
 import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
+import { ToolbarModule } from 'primeng/toolbar';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 
 // Interfaces
 interface NotificationLog {
@@ -47,167 +53,235 @@ interface LogStats {
     ButtonModule,
     InputTextModule,
     SelectModule,
+    MultiSelectModule,
     TagModule,
     TooltipModule,
     DatePickerModule,
     CardModule,
     DialogModule,
+    ToolbarModule,
+    IconFieldModule,
+    InputIconModule,
+    MenuModule,
   ],
   template: `
-    <div class="page-container">
-      <div class="page-header">
-        <div class="header-content">
-          <h1><i class="pi pi-history"></i> Logs de Notificaciones</h1>
-          <p>Historial de todas las notificaciones enviadas, fallidas y omitidas</p>
+    <!-- Toolbar -->
+    <p-toolbar styleClass="mb-4">
+      <ng-template pTemplate="start">
+        <div class="flex align-items-center gap-3">
+          <!-- Stats Chips -->
+          <div class="resumen-panel-compact">
+            <div class="stat-chip stat-chip-green">
+              <i class="pi pi-check-circle"></i>
+              <span class="stat-label">Enviadas</span>
+              <span class="stat-value">{{ stats().sent }}</span>
+            </div>
+            <div class="stat-chip stat-chip-red">
+              <i class="pi pi-times-circle"></i>
+              <span class="stat-label">Fallidas</span>
+              <span class="stat-value">{{ stats().failed }}</span>
+            </div>
+            <div class="stat-chip stat-chip-orange">
+              <i class="pi pi-clock"></i>
+              <span class="stat-label">Pendientes</span>
+              <span class="stat-value">{{ stats().pending }}</span>
+            </div>
+            <div class="stat-chip stat-chip-gray">
+              <i class="pi pi-forward"></i>
+              <span class="stat-label">Omitidas</span>
+              <span class="stat-value">{{ stats().skipped }}</span>
+            </div>
+          </div>
         </div>
-        <div class="header-actions">
+      </ng-template>
+
+      <ng-template pTemplate="center">
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input
+            type="text"
+            pInputText
+            placeholder="Buscar en todos los campos..."
+            (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+            style="width: 280px" />
+        </p-iconfield>
+      </ng-template>
+
+      <ng-template pTemplate="end">
+        <div class="flex gap-2 align-items-center">
+          <p-menu #exportMenu [model]="exportMenuItems" [popup]="true" appendTo="body"></p-menu>
           <p-button
-            label="Exportar"
             icon="pi pi-download"
             severity="secondary"
-            (onClick)="exportarLogs()"
-          />
-          <p-button
-            label="Actualizar"
-            icon="pi pi-refresh"
-            (onClick)="cargarLogs()"
-          />
-        </div>
-      </div>
-
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <div class="stat-card sent">
-          <div class="stat-icon">
-            <i class="pi pi-check-circle"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ stats().sent }}</span>
-            <span class="stat-label">Enviadas</span>
-          </div>
-        </div>
-        <div class="stat-card failed">
-          <div class="stat-icon">
-            <i class="pi pi-times-circle"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ stats().failed }}</span>
-            <span class="stat-label">Fallidas</span>
-          </div>
-        </div>
-        <div class="stat-card pending">
-          <div class="stat-icon">
-            <i class="pi pi-clock"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ stats().pending }}</span>
-            <span class="stat-label">Pendientes</span>
-          </div>
-        </div>
-        <div class="stat-card skipped">
-          <div class="stat-icon">
-            <i class="pi pi-forward"></i>
-          </div>
-          <div class="stat-content">
-            <span class="stat-value">{{ stats().skipped }}</span>
-            <span class="stat-label">Omitidas</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="filters-section">
-        <div class="filter-group">
-          <label>Canal</label>
-          <p-select
-            [(ngModel)]="filtroCanal"
-            [options]="opcionesCanal"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Todos los canales"
-            [showClear]="true"
-            (onChange)="aplicarFiltros()"
-          />
-        </div>
-        <div class="filter-group">
-          <label>Estado</label>
-          <p-select
-            [(ngModel)]="filtroEstado"
-            [options]="opcionesEstado"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Todos los estados"
-            [showClear]="true"
-            (onChange)="aplicarFiltros()"
-          />
-        </div>
-        <div class="filter-group">
-          <label>Tipo de Regla</label>
-          <p-select
-            [(ngModel)]="filtroReglaTipo"
-            [options]="opcionesReglaTipo"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Todos los tipos"
-            [showClear]="true"
-            (onChange)="aplicarFiltros()"
-          />
-        </div>
-        <div class="filter-group">
-          <label>Desde</label>
-          <p-datepicker
-            [(ngModel)]="filtroDesde"
-            [showIcon]="true"
-            dateFormat="dd/mm/yy"
-            placeholder="Fecha inicio"
-            (onSelect)="aplicarFiltros()"
-          />
-        </div>
-        <div class="filter-group">
-          <label>Hasta</label>
-          <p-datepicker
-            [(ngModel)]="filtroHasta"
-            [showIcon]="true"
-            dateFormat="dd/mm/yy"
-            placeholder="Fecha fin"
-            (onSelect)="aplicarFiltros()"
-          />
-        </div>
-        <div class="filter-group">
-          <label>&nbsp;</label>
-          <p-button
-            label="Limpiar filtros"
-            icon="pi pi-filter-slash"
-            severity="secondary"
+            [rounded]="true"
             [text]="true"
-            (onClick)="limpiarFiltros()"
-          />
+            (onClick)="exportMenu.toggle($event)"
+            pTooltip="Exportar"
+            tooltipPosition="bottom" />
+          <p-button
+            icon="pi pi-refresh"
+            severity="secondary"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="cargarLogs()"
+            pTooltip="Actualizar"
+            tooltipPosition="bottom"
+            [loading]="cargando()" />
         </div>
-      </div>
+      </ng-template>
+    </p-toolbar>
 
-      <!-- Table -->
+    <!-- Tabla Principal -->
+    <p-card styleClass="table-card">
       <p-table
-        [value]="logsFiltrados()"
+        #dt
+        [value]="logs()"
         [paginator]="true"
         [rows]="20"
         [rowsPerPageOptions]="[10, 20, 50, 100]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+        [globalFilterFields]="['usuarioNombre', 'usuarioId', 'canal', 'estado', 'reglaNombre', 'reglaTipo', 'errorMensaje']"
+        [filterDelay]="300"
         [rowHover]="true"
-        styleClass="p-datatable-sm p-datatable-striped"
+        styleClass="p-datatable-sm"
         [loading]="cargando()"
+        (onFilter)="onTableFilter($event)"
       >
+        <!-- Header con filtros -->
         <ng-template pTemplate="header">
+          <!-- Fila de títulos -->
           <tr>
-            <th style="width: 160px">Fecha</th>
-            <th>Usuario</th>
-            <th style="width: 100px">Canal</th>
-            <th style="width: 100px">Estado</th>
+            <th pSortableColumn="fechaEnvio" style="width: 160px">
+              <div class="flex align-items-center">
+                <span>Fecha</span>
+                <p-sortIcon field="fechaEnvio" />
+              </div>
+            </th>
+            <th pSortableColumn="usuarioNombre">
+              <div class="flex align-items-center">
+                <span>Usuario</span>
+                <p-sortIcon field="usuarioNombre" />
+              </div>
+            </th>
+            <th style="width: 120px">Canal</th>
+            <th style="width: 120px">Estado</th>
             <th>Regla</th>
             <th>Mensaje/Error</th>
-            <th style="width: 80px">Acciones</th>
+            <th style="width: 80px">
+              <div class="flex align-items-center justify-content-between">
+                <span>Acciones</span>
+                <p-button
+                  icon="pi pi-filter-slash"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  size="small"
+                  (onClick)="dt.clear()"
+                  pTooltip="Limpiar filtros"
+                  tooltipPosition="left" />
+              </div>
+            </th>
+          </tr>
+          <!-- Fila de filtros -->
+          <tr>
+            <th>
+              <p-columnFilter type="date" field="fechaEnvio" display="menu" [showMenu]="true">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-datePicker
+                    [ngModel]="value"
+                    (ngModelChange)="filter($event)"
+                    dateFormat="dd/mm/yy"
+                    placeholder="Filtrar fecha"
+                    [showIcon]="true" />
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter type="text" field="usuarioNombre" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <input
+                    pInputText
+                    type="text"
+                    [ngModel]="value"
+                    (ngModelChange)="filter($event)"
+                    placeholder="Buscar..."
+                    class="p-column-filter" />
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter field="canal" matchMode="in" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-multiSelect
+                    [ngModel]="value"
+                    (ngModelChange)="filter($event)"
+                    [options]="opcionesCanal"
+                    placeholder="Todos"
+                    appendTo="body"
+                    [showHeader]="false">
+                    <ng-template let-option pTemplate="item">
+                      <div class="flex align-items-center gap-2">
+                        <i [class]="getCanalIcon(option.value)"></i>
+                        <span>{{ option.label }}</span>
+                      </div>
+                    </ng-template>
+                  </p-multiSelect>
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter field="estado" matchMode="in" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-multiSelect
+                    [ngModel]="value"
+                    (ngModelChange)="filter($event)"
+                    [options]="opcionesEstado"
+                    placeholder="Todos"
+                    appendTo="body"
+                    [showHeader]="false">
+                    <ng-template let-option pTemplate="item">
+                      <p-tag [value]="option.label" [severity]="getEstadoSeverity(option.value)" />
+                    </ng-template>
+                  </p-multiSelect>
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter field="reglaTipo" matchMode="in" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-multiSelect
+                    [ngModel]="value"
+                    (ngModelChange)="filter($event)"
+                    [options]="opcionesReglaTipo"
+                    placeholder="Todas"
+                    appendTo="body"
+                    [showHeader]="false">
+                    <ng-template let-option pTemplate="item">
+                      <span>{{ option.label }}</span>
+                    </ng-template>
+                  </p-multiSelect>
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter type="text" field="errorMensaje" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <input
+                    pInputText
+                    type="text"
+                    [ngModel]="value"
+                    (ngModelChange)="filter($event)"
+                    placeholder="Buscar..."
+                    class="p-column-filter" />
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th></th>
           </tr>
         </ng-template>
+
+        <!-- Body -->
         <ng-template pTemplate="body" let-log>
           <tr>
             <td>
@@ -259,7 +333,7 @@ interface LogStats {
                 <span class="text-muted">-</span>
               }
             </td>
-            <td>
+            <td class="text-center">
               <p-button
                 icon="pi pi-eye"
                 [rounded]="true"
@@ -270,199 +344,169 @@ interface LogStats {
             </td>
           </tr>
         </ng-template>
+
+        <!-- Empty -->
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="7" class="empty-message">
-              <i class="pi pi-inbox"></i>
-              <p>No se encontraron registros con los filtros aplicados</p>
+            <td colspan="7" class="text-center py-6">
+              <div class="empty-state">
+                <i class="pi pi-inbox text-4xl text-secondary mb-3"></i>
+                <p class="text-secondary">No se encontraron registros</p>
+                <p-button
+                  label="Limpiar filtros"
+                  [text]="true"
+                  (onClick)="dt.clear()" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <!-- Footer con totales -->
+        <ng-template pTemplate="footer">
+          <tr class="font-semibold surface-100">
+            <td colspan="3">
+              <span class="text-900">Total: {{ stats().total }} registros</span>
+            </td>
+            <td colspan="4">
+              <div class="flex gap-2">
+                <p-tag [value]="stats().sent + ' enviadas'" severity="success" styleClass="text-xs" />
+                <p-tag [value]="stats().failed + ' fallidas'" severity="danger" styleClass="text-xs" />
+                <p-tag [value]="stats().pending + ' pendientes'" severity="warn" styleClass="text-xs" />
+                <p-tag [value]="stats().skipped + ' omitidas'" severity="secondary" styleClass="text-xs" />
+              </div>
             </td>
           </tr>
         </ng-template>
       </p-table>
+    </p-card>
 
-      <!-- Dialog: Detalles -->
-      <p-dialog
-        [(visible)]="dialogDetallesVisible"
-        header="Detalles del Log"
-        [modal]="true"
-        [style]="{ width: '600px' }"
-        [draggable]="false"
-      >
-        @if (logSeleccionado) {
-          <div class="detalle-content">
-            <div class="detalle-row">
-              <span class="detalle-label">ID:</span>
-              <span class="detalle-value">{{ logSeleccionado.id }}</span>
-            </div>
-            <div class="detalle-row">
-              <span class="detalle-label">Fecha:</span>
-              <span class="detalle-value">{{ logSeleccionado.fechaEnvio | date:'dd/MM/yyyy HH:mm:ss' }}</span>
-            </div>
-            <div class="detalle-row">
-              <span class="detalle-label">Usuario:</span>
-              <span class="detalle-value">{{ logSeleccionado.usuarioNombre || logSeleccionado.usuarioId }}</span>
-            </div>
-            <div class="detalle-row">
-              <span class="detalle-label">Canal:</span>
-              <span class="detalle-value">
-                <p-tag [value]="getCanalLabel(logSeleccionado.canal)" [severity]="getCanalSeverity(logSeleccionado.canal)" />
-              </span>
-            </div>
-            <div class="detalle-row">
-              <span class="detalle-label">Estado:</span>
-              <span class="detalle-value">
-                <p-tag [value]="getEstadoLabel(logSeleccionado.estado)" [severity]="getEstadoSeverity(logSeleccionado.estado)" />
-              </span>
-            </div>
-            @if (logSeleccionado.notificationId) {
-              <div class="detalle-row">
-                <span class="detalle-label">ID Notificación:</span>
-                <span class="detalle-value">{{ logSeleccionado.notificationId }}</span>
-              </div>
-            }
-            @if (logSeleccionado.reglaId) {
-              <div class="detalle-row">
-                <span class="detalle-label">Regla:</span>
-                <span class="detalle-value">
-                  {{ logSeleccionado.reglaNombre || logSeleccionado.reglaId }}
-                  <small class="text-muted">({{ getReglaTipoLabel(logSeleccionado.reglaTipo) }})</small>
-                </span>
-              </div>
-            }
-            @if (logSeleccionado.errorMensaje) {
-              <div class="detalle-row error">
-                <span class="detalle-label">Error:</span>
-                <span class="detalle-value">{{ logSeleccionado.errorMensaje }}</span>
-              </div>
-            }
-            @if (logSeleccionado.metadata) {
-              <div class="detalle-row">
-                <span class="detalle-label">Metadata:</span>
-                <pre class="detalle-json">{{ logSeleccionado.metadata | json }}</pre>
-              </div>
-            }
+    <!-- Dialog: Detalles -->
+    <p-dialog
+      [(visible)]="dialogDetallesVisible"
+      header="Detalles del Log"
+      [modal]="true"
+      [style]="{ width: '600px' }"
+      [draggable]="false"
+    >
+      @if (logSeleccionado) {
+        <div class="detalle-content">
+          <div class="detalle-row">
+            <span class="detalle-label">ID:</span>
+            <span class="detalle-value">{{ logSeleccionado.id }}</span>
           </div>
-        }
-      </p-dialog>
-    </div>
+          <div class="detalle-row">
+            <span class="detalle-label">Fecha:</span>
+            <span class="detalle-value">{{ logSeleccionado.fechaEnvio | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+          </div>
+          <div class="detalle-row">
+            <span class="detalle-label">Usuario:</span>
+            <span class="detalle-value">{{ logSeleccionado.usuarioNombre || logSeleccionado.usuarioId }}</span>
+          </div>
+          <div class="detalle-row">
+            <span class="detalle-label">Canal:</span>
+            <span class="detalle-value">
+              <p-tag [value]="getCanalLabel(logSeleccionado.canal)" [severity]="getCanalSeverity(logSeleccionado.canal)" />
+            </span>
+          </div>
+          <div class="detalle-row">
+            <span class="detalle-label">Estado:</span>
+            <span class="detalle-value">
+              <p-tag [value]="getEstadoLabel(logSeleccionado.estado)" [severity]="getEstadoSeverity(logSeleccionado.estado)" />
+            </span>
+          </div>
+          @if (logSeleccionado.notificationId) {
+            <div class="detalle-row">
+              <span class="detalle-label">ID Notificación:</span>
+              <span class="detalle-value">{{ logSeleccionado.notificationId }}</span>
+            </div>
+          }
+          @if (logSeleccionado.reglaId) {
+            <div class="detalle-row">
+              <span class="detalle-label">Regla:</span>
+              <span class="detalle-value">
+                {{ logSeleccionado.reglaNombre || logSeleccionado.reglaId }}
+                <small class="text-muted">({{ getReglaTipoLabel(logSeleccionado.reglaTipo) }})</small>
+              </span>
+            </div>
+          }
+          @if (logSeleccionado.errorMensaje) {
+            <div class="detalle-row error">
+              <span class="detalle-label">Error:</span>
+              <span class="detalle-value">{{ logSeleccionado.errorMensaje }}</span>
+            </div>
+          }
+          @if (logSeleccionado.metadata) {
+            <div class="detalle-row">
+              <span class="detalle-label">Metadata:</span>
+              <pre class="detalle-json">{{ logSeleccionado.metadata | json }}</pre>
+            </div>
+          }
+        </div>
+      }
+    </p-dialog>
   `,
   styles: [`
-    .page-container {
-      padding: 1.5rem;
-    }
-
-    .page-header {
+    // ============================================================================
+    // STAT CHIPS - Siguiendo patrón de COMPONENTES-REUTILIZABLES.md
+    // ============================================================================
+    .resumen-panel-compact {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1.5rem;
-    }
-
-    .page-header h1 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.75rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .page-header p {
-      margin: 0;
-      color: var(--text-color-secondary);
-    }
-
-    .header-actions {
-      display: flex;
+      flex-wrap: wrap;
       gap: 0.5rem;
     }
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .stat-card {
-      display: flex;
+    .stat-chip {
+      display: inline-flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem 1.25rem;
-      border-radius: 0.5rem;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.8125rem;
       background: var(--surface-card);
       border: 1px solid var(--surface-border);
+      transition: all 0.2s;
+
+      .stat-label {
+        color: var(--text-color-secondary);
+      }
+
+      .stat-value {
+        font-weight: 600;
+        color: var(--text-color);
+      }
     }
 
-    .stat-card .stat-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .stat-chip-green {
+      background: rgba(34, 197, 94, 0.08);
+      border-color: rgba(34, 197, 94, 0.2);
+      i { color: #22c55e; }
+      .stat-value { color: #16a34a; }
     }
 
-    .stat-card .stat-icon i {
-      font-size: 1.5rem;
+    .stat-chip-red {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
+      i { color: #ef4444; }
+      .stat-value { color: #dc2626; }
     }
 
-    .stat-card.sent .stat-icon {
-      background: rgba(34, 197, 94, 0.1);
-      color: #22c55e;
+    .stat-chip-orange {
+      background: rgba(249, 115, 22, 0.08);
+      border-color: rgba(249, 115, 22, 0.2);
+      i { color: #f97316; }
+      .stat-value { color: #ea580c; }
     }
 
-    .stat-card.failed .stat-icon {
-      background: rgba(239, 68, 68, 0.1);
-      color: #ef4444;
+    .stat-chip-gray {
+      background: rgba(148, 163, 184, 0.08);
+      border-color: rgba(148, 163, 184, 0.2);
+      i { color: #94a3b8; }
+      .stat-value { color: #64748b; }
     }
 
-    .stat-card.pending .stat-icon {
-      background: rgba(234, 179, 8, 0.1);
-      color: #eab308;
-    }
-
-    .stat-card.skipped .stat-icon {
-      background: rgba(148, 163, 184, 0.1);
-      color: #94a3b8;
-    }
-
-    .stat-content {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-
-    .stat-label {
-      font-size: 0.875rem;
-      color: var(--text-color-secondary);
-    }
-
-    .filters-section {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1rem;
-      padding: 1rem;
-      background: var(--surface-ground);
-      border-radius: 0.5rem;
-    }
-
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-
-    .filter-group label {
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--text-color-secondary);
-    }
-
+    // ============================================================================
+    // TABLE STYLES
+    // ============================================================================
     .fecha-log {
       font-family: monospace;
       font-size: 0.85rem;
@@ -506,22 +550,42 @@ interface LogStats {
       gap: 0.25rem;
     }
 
-    .empty-message {
-      text-align: center;
-      padding: 3rem 1rem;
-      color: var(--text-color-secondary);
-    }
-
-    .empty-message i {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      display: block;
-    }
-
     .text-muted {
       color: var(--text-color-secondary);
     }
 
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    // ============================================================================
+    // COLUMN FILTER STYLES
+    // ============================================================================
+    .p-column-filter {
+      width: 100%;
+    }
+
+    :host ::ng-deep {
+      .p-multiselect {
+        width: 100%;
+      }
+
+      .p-datatable .p-datatable-thead > tr > th {
+        padding: 0.75rem;
+      }
+
+      .p-datatable .p-datatable-tbody > tr > td {
+        padding: 0.75rem;
+      }
+    }
+
+    // ============================================================================
+    // DIALOG STYLES
+    // ============================================================================
     .detalle-content {
       display: flex;
       flex-direction: column;
@@ -564,33 +628,21 @@ interface LogStats {
       overflow-x: auto;
       margin: 0;
     }
-
-    @media (max-width: 768px) {
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
   `],
 })
 export class NotificacionesLogsComponent implements OnInit {
+  @ViewChild('dt') dt!: Table;
+
   // Data
   logs = signal<NotificationLog[]>([]);
-  logsFiltrados = signal<NotificationLog[]>([]);
   stats = signal<LogStats>({ sent: 0, failed: 0, pending: 0, skipped: 0, total: 0 });
   cargando = signal(false);
-
-  // Filters
-  filtroCanal: string | null = null;
-  filtroEstado: string | null = null;
-  filtroReglaTipo: string | null = null;
-  filtroDesde: Date | null = null;
-  filtroHasta: Date | null = null;
 
   // Dialog
   dialogDetallesVisible = false;
   logSeleccionado: NotificationLog | null = null;
 
-  // Options
+  // Options for filters
   opcionesCanal = [
     { label: 'In-App', value: 'IN_APP' },
     { label: 'Email', value: 'EMAIL' },
@@ -607,6 +659,13 @@ export class NotificacionesLogsComponent implements OnInit {
     { label: 'Regla de Evento', value: 'NOTIFICATION_RULE' },
     { label: 'Alerta por Umbral', value: 'ALERT_RULE' },
     { label: 'Regla de Vencimiento', value: 'EXPIRATION_RULE' },
+  ];
+
+  // Export menu
+  exportMenuItems: MenuItem[] = [
+    { label: 'Excel (.xlsx)', icon: 'pi pi-file-excel', command: () => this.exportarLogs('excel') },
+    { label: 'PDF', icon: 'pi pi-file-pdf', command: () => this.exportarLogs('pdf') },
+    { label: 'CSV', icon: 'pi pi-file', command: () => this.exportarLogs('csv') },
   ];
 
   ngOnInit(): void {
@@ -694,7 +753,6 @@ export class NotificacionesLogsComponent implements OnInit {
       ];
 
       this.logs.set(mockLogs);
-      this.logsFiltrados.set(mockLogs);
       this.actualizarStats(mockLogs);
       this.cargando.set(false);
     }, 500);
@@ -711,49 +769,16 @@ export class NotificacionesLogsComponent implements OnInit {
     this.stats.set(stats);
   }
 
-  aplicarFiltros(): void {
-    let resultado = this.logs();
-
-    if (this.filtroCanal) {
-      resultado = resultado.filter((l) => l.canal === this.filtroCanal);
+  onTableFilter(event: any): void {
+    // Actualizar stats basados en los registros filtrados
+    if (event.filteredValue) {
+      this.actualizarStats(event.filteredValue);
     }
-
-    if (this.filtroEstado) {
-      resultado = resultado.filter((l) => l.estado === this.filtroEstado);
-    }
-
-    if (this.filtroReglaTipo) {
-      resultado = resultado.filter((l) => l.reglaTipo === this.filtroReglaTipo);
-    }
-
-    if (this.filtroDesde) {
-      resultado = resultado.filter((l) => new Date(l.fechaEnvio) >= this.filtroDesde!);
-    }
-
-    if (this.filtroHasta) {
-      const hastaFin = new Date(this.filtroHasta);
-      hastaFin.setHours(23, 59, 59, 999);
-      resultado = resultado.filter((l) => new Date(l.fechaEnvio) <= hastaFin);
-    }
-
-    this.logsFiltrados.set(resultado);
-    this.actualizarStats(resultado);
   }
 
-  limpiarFiltros(): void {
-    this.filtroCanal = null;
-    this.filtroEstado = null;
-    this.filtroReglaTipo = null;
-    this.filtroDesde = null;
-    this.filtroHasta = null;
-    this.logsFiltrados.set(this.logs());
-    this.actualizarStats(this.logs());
-  }
-
-  exportarLogs(): void {
-    // En producción, esto generaría un CSV o Excel
-    console.log('Exportando logs:', this.logsFiltrados());
-    alert('Funcionalidad de exportación en desarrollo');
+  exportarLogs(formato: string): void {
+    console.log('Exportando logs en formato:', formato);
+    // En producción, esto generaría el archivo correspondiente
   }
 
   verDetalles(log: NotificationLog): void {
