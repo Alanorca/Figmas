@@ -425,21 +425,31 @@ interface ExpirationRule {
       <!-- Dialog: Regla de Evento -->
       <p-dialog
         [(visible)]="dialogReglaVisible"
-        [header]="reglaEditando ? 'Editar Regla de Evento' : 'Nueva Regla de Evento'"
         [modal]="true"
         [style]="{ width: '650px' }"
         [draggable]="false"
       >
+        <ng-template pTemplate="header">
+          <div class="dialog-header-custom">
+            <span class="dialog-title">{{ reglaEditando ? 'Editar Regla de Evento' : 'Nueva Regla de Evento' }}</span>
+            <div class="dialog-header-toggle">
+              <span class="toggle-label">Estado</span>
+              <p-tag [value]="reglaForm.activo ? 'Activa' : 'Inactiva'" [severity]="reglaForm.activo ? 'success' : 'secondary'" />
+              <p-checkbox [(ngModel)]="reglaForm.activo" [binary]="true" />
+            </div>
+          </div>
+        </ng-template>
+
         <div class="dialog-content">
           <div class="form-grid">
             <div class="form-field full-width">
               <label for="regla-nombre">Nombre *</label>
-              <input pInputText id="regla-nombre" [(ngModel)]="reglaForm.nombre" placeholder="Nombre de la regla" />
+              <input pInputText id="regla-nombre" [(ngModel)]="reglaForm.nombre" placeholder="Nombre de la regla" class="input-contrast" />
             </div>
 
             <div class="form-field full-width">
               <label for="regla-descripcion">Descripción</label>
-              <textarea pTextarea id="regla-descripcion" [(ngModel)]="reglaForm.descripcion" rows="2" placeholder="Descripción opcional"></textarea>
+              <textarea pTextarea id="regla-descripcion" [(ngModel)]="reglaForm.descripcion" rows="2" placeholder="Descripción opcional" class="input-contrast"></textarea>
             </div>
 
             <div class="form-field">
@@ -451,7 +461,7 @@ interface ExpirationRule {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar entidad"
-                [style]="{ width: '100%' }"
+                styleClass="select-contrast"
               />
             </div>
 
@@ -464,11 +474,11 @@ interface ExpirationRule {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar evento"
-                [style]="{ width: '100%' }"
+                styleClass="select-contrast"
               />
             </div>
 
-            <div class="form-field">
+            <div class="form-field full-width">
               <label for="regla-severidad">Severidad *</label>
               <p-select
                 id="regla-severidad"
@@ -477,29 +487,39 @@ interface ExpirationRule {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar severidad"
-                [style]="{ width: '100%' }"
+                styleClass="select-contrast"
               />
-            </div>
-
-            <div class="form-field">
-              <label>Estado</label>
-              <p-checkbox [(ngModel)]="reglaForm.activo" [binary]="true" label="Regla activa" />
             </div>
 
             <div class="form-section full-width">
               <h4>Destinatarios</h4>
-              <div class="checkbox-group">
-                <p-checkbox [(ngModel)]="reglaForm.notificarCreador" [binary]="true" label="Notificar al creador" />
-                <p-checkbox [(ngModel)]="reglaForm.notificarResponsable" [binary]="true" label="Notificar al responsable" />
-                <p-checkbox [(ngModel)]="reglaForm.notificarAprobadores" [binary]="true" label="Notificar a aprobadores" />
+              <div class="checkbox-tags-group">
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="reglaForm.notificarCreador" [binary]="true" />
+                  <p-tag value="Creador" severity="info" icon="pi pi-user" />
+                </div>
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="reglaForm.notificarResponsable" [binary]="true" />
+                  <p-tag value="Responsable" severity="warn" icon="pi pi-user-edit" />
+                </div>
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="reglaForm.notificarAprobadores" [binary]="true" />
+                  <p-tag value="Aprobadores" severity="success" icon="pi pi-users" />
+                </div>
               </div>
             </div>
 
             <div class="form-section full-width">
               <h4>Canales de Notificación</h4>
-              <div class="checkbox-group">
-                <p-checkbox [(ngModel)]="reglaForm.enviarInApp" [binary]="true" label="Notificación In-App" />
-                <p-checkbox [(ngModel)]="reglaForm.enviarEmail" [binary]="true" label="Correo electrónico" />
+              <div class="checkbox-tags-group">
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="reglaForm.enviarInApp" [binary]="true" />
+                  <p-tag value="In-App" severity="info" icon="pi pi-desktop" />
+                </div>
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="reglaForm.enviarEmail" [binary]="true" />
+                  <p-tag value="Email" severity="warn" icon="pi pi-envelope" />
+                </div>
               </div>
             </div>
 
@@ -526,21 +546,31 @@ interface ExpirationRule {
       <!-- Dialog: Alerta por Umbral -->
       <p-dialog
         [(visible)]="dialogAlertaVisible"
-        [header]="alertaEditando ? 'Editar Alerta' : 'Nueva Alerta por Umbral'"
         [modal]="true"
         [style]="{ width: '650px' }"
         [draggable]="false"
       >
+        <ng-template pTemplate="header">
+          <div class="dialog-header-custom">
+            <span class="dialog-title">{{ alertaEditando ? 'Editar Alerta' : 'Nueva Alerta por Umbral' }}</span>
+            <div class="dialog-header-toggle">
+              <span class="toggle-label">Estado</span>
+              <p-tag [value]="alertaForm.activo ? 'Activa' : 'Inactiva'" [severity]="alertaForm.activo ? 'success' : 'secondary'" />
+              <p-checkbox [(ngModel)]="alertaForm.activo" [binary]="true" />
+            </div>
+          </div>
+        </ng-template>
+
         <div class="dialog-content">
           <div class="form-grid">
             <div class="form-field full-width">
               <label for="alerta-nombre">Nombre *</label>
-              <input pInputText id="alerta-nombre" [(ngModel)]="alertaForm.nombre" placeholder="Nombre de la alerta" />
+              <input pInputText id="alerta-nombre" [(ngModel)]="alertaForm.nombre" placeholder="Nombre de la alerta" class="input-contrast" />
             </div>
 
             <div class="form-field full-width">
               <label for="alerta-descripcion">Descripción</label>
-              <textarea pTextarea id="alerta-descripcion" [(ngModel)]="alertaForm.descripcion" rows="2" placeholder="Descripción opcional"></textarea>
+              <textarea pTextarea id="alerta-descripcion" [(ngModel)]="alertaForm.descripcion" rows="2" placeholder="Descripción opcional" class="input-contrast"></textarea>
             </div>
 
             <div class="form-field">
@@ -552,13 +582,13 @@ interface ExpirationRule {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar métrica"
-                [style]="{ width: '100%' }"
+                styleClass="select-contrast"
               />
             </div>
 
             <div class="form-field">
               <label for="alerta-metrica">Nombre de la Métrica</label>
-              <input pInputText id="alerta-metrica" [(ngModel)]="alertaForm.metricaNombre" placeholder="ej: valorActual" />
+              <input pInputText id="alerta-metrica" [(ngModel)]="alertaForm.metricaNombre" placeholder="ej: valorActual" class="input-contrast" />
             </div>
 
             <div class="form-field">
@@ -570,13 +600,13 @@ interface ExpirationRule {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar"
-                [style]="{ width: '100%' }"
+                styleClass="select-contrast"
               />
             </div>
 
             <div class="form-field">
               <label for="alerta-umbral">Valor Umbral *</label>
-              <p-inputNumber id="alerta-umbral" [(ngModel)]="alertaForm.valorUmbral" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" />
+              <p-inputNumber id="alerta-umbral" [(ngModel)]="alertaForm.valorUmbral" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="2" styleClass="input-contrast" />
             </div>
 
             <div class="form-field">
@@ -588,26 +618,27 @@ interface ExpirationRule {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar"
-                [style]="{ width: '100%' }"
+                styleClass="select-contrast"
               />
             </div>
 
             <div class="form-field">
               <label for="alerta-cooldown">Cooldown (minutos)</label>
-              <p-inputNumber id="alerta-cooldown" [(ngModel)]="alertaForm.cooldownMinutos" [min]="1" [max]="1440" />
+              <p-inputNumber id="alerta-cooldown" [(ngModel)]="alertaForm.cooldownMinutos" [min]="1" [max]="1440" styleClass="input-contrast" />
             </div>
 
             <div class="form-section full-width">
               <h4>Canales de Notificación</h4>
-              <div class="checkbox-group">
-                <p-checkbox [(ngModel)]="alertaForm.enviarInApp" [binary]="true" label="Notificación In-App" />
-                <p-checkbox [(ngModel)]="alertaForm.enviarEmail" [binary]="true" label="Correo electrónico" />
+              <div class="checkbox-tags-group">
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="alertaForm.enviarInApp" [binary]="true" />
+                  <p-tag value="In-App" severity="info" icon="pi pi-desktop" />
+                </div>
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="alertaForm.enviarEmail" [binary]="true" />
+                  <p-tag value="Email" severity="warn" icon="pi pi-envelope" />
+                </div>
               </div>
-            </div>
-
-            <div class="form-field full-width">
-              <label>Estado</label>
-              <p-checkbox [(ngModel)]="alertaForm.activo" [binary]="true" label="Alerta activa" />
             </div>
           </div>
         </div>
@@ -621,21 +652,31 @@ interface ExpirationRule {
       <!-- Dialog: Regla de Vencimiento -->
       <p-dialog
         [(visible)]="dialogVencimientoVisible"
-        [header]="vencimientoEditando ? 'Editar Regla de Vencimiento' : 'Nueva Regla de Vencimiento'"
         [modal]="true"
         [style]="{ width: '650px' }"
         [draggable]="false"
       >
+        <ng-template pTemplate="header">
+          <div class="dialog-header-custom">
+            <span class="dialog-title">{{ vencimientoEditando ? 'Editar Regla de Vencimiento' : 'Nueva Regla de Vencimiento' }}</span>
+            <div class="dialog-header-toggle">
+              <span class="toggle-label">Estado</span>
+              <p-tag [value]="vencimientoForm.activo ? 'Activa' : 'Inactiva'" [severity]="vencimientoForm.activo ? 'success' : 'secondary'" />
+              <p-checkbox [(ngModel)]="vencimientoForm.activo" [binary]="true" />
+            </div>
+          </div>
+        </ng-template>
+
         <div class="dialog-content">
           <div class="form-grid">
             <div class="form-field full-width">
               <label for="venc-nombre">Nombre *</label>
-              <input pInputText id="venc-nombre" [(ngModel)]="vencimientoForm.nombre" placeholder="Nombre de la regla" />
+              <input pInputText id="venc-nombre" [(ngModel)]="vencimientoForm.nombre" placeholder="Nombre de la regla" class="input-contrast" />
             </div>
 
             <div class="form-field full-width">
               <label for="venc-descripcion">Descripción</label>
-              <textarea pTextarea id="venc-descripcion" [(ngModel)]="vencimientoForm.descripcion" rows="2" placeholder="Descripción opcional"></textarea>
+              <textarea pTextarea id="venc-descripcion" [(ngModel)]="vencimientoForm.descripcion" rows="2" placeholder="Descripción opcional" class="input-contrast"></textarea>
             </div>
 
             <div class="form-field full-width">
@@ -647,7 +688,7 @@ interface ExpirationRule {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar entidad"
-                [style]="{ width: '100%' }"
+                styleClass="select-contrast"
               />
             </div>
 
@@ -659,7 +700,7 @@ interface ExpirationRule {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar días"
-                [style]="{ width: '100%' }"
+                styleClass="select-contrast"
               />
               <small class="hint">Cuántos días antes del vencimiento enviar recordatorio</small>
             </div>
@@ -672,30 +713,37 @@ interface ExpirationRule {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar días"
-                [style]="{ width: '100%' }"
+                styleClass="select-contrast"
               />
               <small class="hint">Cuántos días después del vencimiento seguir notificando</small>
             </div>
 
             <div class="form-section full-width">
               <h4>Destinatarios</h4>
-              <div class="checkbox-group">
-                <p-checkbox [(ngModel)]="vencimientoForm.notificarResponsable" [binary]="true" label="Notificar al responsable" />
-                <p-checkbox [(ngModel)]="vencimientoForm.notificarSupervisor" [binary]="true" label="Notificar al supervisor" />
+              <div class="checkbox-tags-group">
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="vencimientoForm.notificarResponsable" [binary]="true" />
+                  <p-tag value="Responsable" severity="warn" icon="pi pi-user-edit" />
+                </div>
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="vencimientoForm.notificarSupervisor" [binary]="true" />
+                  <p-tag value="Supervisor" severity="info" icon="pi pi-user" />
+                </div>
               </div>
             </div>
 
             <div class="form-section full-width">
               <h4>Canales de Notificación</h4>
-              <div class="checkbox-group">
-                <p-checkbox [(ngModel)]="vencimientoForm.enviarInApp" [binary]="true" label="Notificación In-App" />
-                <p-checkbox [(ngModel)]="vencimientoForm.enviarEmail" [binary]="true" label="Correo electrónico" />
+              <div class="checkbox-tags-group">
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="vencimientoForm.enviarInApp" [binary]="true" />
+                  <p-tag value="In-App" severity="info" icon="pi pi-desktop" />
+                </div>
+                <div class="checkbox-tag-item">
+                  <p-checkbox [(ngModel)]="vencimientoForm.enviarEmail" [binary]="true" />
+                  <p-tag value="Email" severity="warn" icon="pi pi-envelope" />
+                </div>
               </div>
-            </div>
-
-            <div class="form-field full-width">
-              <label>Estado</label>
-              <p-checkbox [(ngModel)]="vencimientoForm.activo" [binary]="true" label="Regla activa" />
             </div>
           </div>
         </div>
@@ -839,6 +887,116 @@ interface ExpirationRule {
 
     .mr-1 {
       margin-right: 0.25rem;
+    }
+
+    // ============================================================================
+    // DIALOG HEADER CUSTOM - Toggle a la altura del título
+    // ============================================================================
+    .dialog-header-custom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: 1rem;
+    }
+
+    .dialog-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .dialog-header-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toggle-label {
+      font-size: 0.875rem;
+      color: var(--text-color-secondary);
+    }
+
+    // ============================================================================
+    // CHECKBOX WITH TAGS - Destinatarios y Canales
+    // ============================================================================
+    .checkbox-tags-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .checkbox-tag-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--surface-ground);
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: var(--surface-hover);
+        border-color: var(--primary-color);
+      }
+    }
+
+    // ============================================================================
+    // CONTRAST STYLES - Dark/Light Mode
+    // ============================================================================
+    :host ::ng-deep {
+      .select-contrast,
+      .input-contrast {
+        width: 100%;
+      }
+
+      .select-contrast .p-select,
+      .select-contrast.p-select {
+        background: var(--surface-ground);
+        border-color: var(--surface-border);
+
+        .p-select-label {
+          color: var(--text-color);
+        }
+      }
+
+      .p-multiselect.select-contrast,
+      .select-contrast .p-multiselect {
+        background: var(--surface-ground);
+        border-color: var(--surface-border);
+        width: 100%;
+
+        .p-multiselect-label {
+          color: var(--text-color);
+        }
+      }
+
+      .p-dialog-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--surface-border);
+      }
+
+      .p-dialog-content {
+        padding: 1.5rem;
+      }
+
+      .p-dialog-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--surface-border);
+      }
+    }
+
+    .form-field label {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-color);
+    }
+
+    .form-section h4 {
+      font-weight: 600;
+      color: var(--text-color);
     }
   `],
 })
