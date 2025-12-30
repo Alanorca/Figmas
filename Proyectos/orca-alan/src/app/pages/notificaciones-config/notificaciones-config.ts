@@ -793,15 +793,16 @@ interface PreferenciasNotificacion {
                               [(ngModel)]="reglaSeleccionada()!.activo"
                               (ngModelChange)="marcarCambios()"
                             />
+                            <span class="action-divider"></span>
+                            <p-button
+                              icon="pi pi-trash"
+                              severity="danger"
+                              [text]="true"
+                              [rounded]="true"
+                              pTooltip="Eliminar regla"
+                              (onClick)="eliminarReglaSeleccionada()"
+                            />
                           </div>
-                          <p-button
-                            icon="pi pi-trash"
-                            severity="danger"
-                            [text]="true"
-                            [rounded]="true"
-                            pTooltip="Eliminar regla"
-                            (onClick)="eliminarReglaSeleccionada()"
-                          />
                         </div>
                       </div>
 
@@ -3139,6 +3140,13 @@ interface PreferenciasNotificacion {
       font-size: var(--font-size-sm);
       color: var(--text-color-secondary);
       font-weight: var(--font-weight-medium);
+    }
+
+    .action-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--surface-border);
+      margin: 0 var(--spacing-2);
     }
 
     // ============================================================================
