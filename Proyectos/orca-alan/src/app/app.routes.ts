@@ -87,6 +87,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/notificaciones-config/notificaciones-config').then(m => m.NotificacionesConfigComponent)
   },
   {
+    path: 'notificaciones-reglas',
+    loadComponent: () => import('./pages/notificaciones-reglas/notificaciones-reglas').then(m => m.NotificacionesReglasComponent)
+  },
+  {
+    path: 'notificaciones-logs',
+    loadComponent: () => import('./pages/notificaciones-logs/notificaciones-logs').then(m => m.NotificacionesLogsComponent)
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }

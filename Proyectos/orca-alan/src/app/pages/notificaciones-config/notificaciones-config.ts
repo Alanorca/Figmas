@@ -22,6 +22,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ChipModule } from 'primeng/chip';
 import { ApiService } from '../../services/api.service';
+import { NotificacionesLogsComponent } from '../notificaciones-logs/notificaciones-logs';
 
 // Interfaces para Reglas de Notificación
 interface NotificationRule {
@@ -178,7 +179,8 @@ interface PreferenciasNotificacion {
     TextareaModule,
     ConfirmDialogModule,
     InputNumberModule,
-    ChipModule
+    ChipModule,
+    NotificacionesLogsComponent
   ],
   providers: [MessageService, ConfirmationService],
   template: `
@@ -197,22 +199,26 @@ interface PreferenciasNotificacion {
         <p-tabs [(value)]="tabActivo">
           <p-tablist>
             <p-tab [value]="0">
-              <i class="pi pi-cog mr-2"></i>
-              Configuración por Módulo
-            </p-tab>
-            <p-tab [value]="1">
               <i class="pi pi-user mr-2"></i>
               Preferencias Personales
             </p-tab>
+            <p-tab [value]="1">
+              <i class="pi pi-th-large mr-2"></i>
+              Configuración por Módulo
+            </p-tab>
             <p-tab [value]="2">
-              <i class="pi pi-cog mr-2"></i>
+              <i class="pi pi-sliders-h mr-2"></i>
               Gestión de Reglas
+            </p-tab>
+            <p-tab [value]="3">
+              <i class="pi pi-history mr-2"></i>
+              Log de Notificaciones
             </p-tab>
           </p-tablist>
 
           <p-tabpanels>
             <!-- Tab 1: Configuración por Módulo -->
-            <p-tabpanel [value]="0">
+            <p-tabpanel [value]="1">
               <div class="notificaciones-layout">
                 <!-- Panel Izquierdo: Lista de Módulos -->
                 <div class="modulos-panel">
@@ -511,8 +517,8 @@ interface PreferenciasNotificacion {
               </div>
             </p-tabpanel>
 
-            <!-- Tab 2: Preferencias Personales -->
-            <p-tabpanel [value]="1">
+            <!-- Tab 0: Preferencias Personales -->
+            <p-tabpanel [value]="0">
               <div class="preferencias-container">
                 <!-- Sección: Horario No Molestar -->
                 <div class="horario-no-molestar-card">
@@ -1045,6 +1051,11 @@ interface PreferenciasNotificacion {
                   </div>
                 </div>
               </div>
+            </p-tabpanel>
+
+            <!-- Tab 3: Log de Notificaciones -->
+            <p-tabpanel [value]="3">
+              <app-notificaciones-logs />
             </p-tabpanel>
           </p-tabpanels>
         </p-tabs>

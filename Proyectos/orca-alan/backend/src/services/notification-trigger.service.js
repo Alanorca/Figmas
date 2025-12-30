@@ -117,53 +117,211 @@ class NotificationTriggerService {
   }
 
   /**
+   * Verifica si se debe enviar notificación basándose en preferencias del usuario
+   * @returns {Object} { enviarInApp: boolean, enviarEmail: boolean, razon?: string }
+   */
+  async verificarPreferenciasUsuario(usuarioId, severidad, entidadTipo, canal) {
+    try {
+      const preferencias = await prisma.userNotificationPreferences.findUnique({
+        where: { usuarioId }
+      });
+
+      // Si no hay preferencias, usar defaults (todo habilitado)
+      if (!preferencias) {
+        return { enviarInApp: true, enviarEmail: true };
+      }
+
+      // Verificar si las notificaciones están habilitadas globalmente
+      if (!preferencias.habilitado) {
+        return { enviarInApp: false, enviarEmail: false, razon: 'Notificaciones deshabilitadas globalmente' };
+      }
+
+      // Verificar Horario No Molestar
+      if (preferencias.horarioNoMolestarHabilitado) {
+        const enHorarioNoMolestar = this.verificarHorarioNoMolestar(
+          preferencias.horarioNoMolestarInicio,
+          preferencias.horarioNoMolestarFin,
+          preferencias.horarioNoMolestarDias
+        );
+
+        if (enHorarioNoMolestar) {
+          // En horario no molestar, solo enviar críticas
+          if (severidad !== 'critical') {
+            return {
+              enviarInApp: false,
+              enviarEmail: false,
+              razon: 'Horario No Molestar activo (solo se envían notificaciones críticas)'
+            };
+          }
+        }
+      }
+
+      // Verificar preferencias por severidad
+      const severidadPermitida = this.verificarSeveridadPermitida(preferencias, severidad);
+      if (!severidadPermitida) {
+        return {
+          enviarInApp: false,
+          enviarEmail: false,
+          razon: `Severidad ${severidad} deshabilitada por preferencias del usuario`
+        };
+      }
+
+      // Verificar preferencias por entidad
+      let inAppPermitido = preferencias.inAppHabilitado;
+      let emailPermitido = preferencias.emailHabilitado;
+
+      if (preferencias.preferenciasPorEntidad && entidadTipo) {
+        const prefEntidad = JSON.parse(preferencias.preferenciasPorEntidad);
+        if (prefEntidad[entidadTipo]) {
+          if (prefEntidad[entidadTipo].inApp !== undefined) {
+            inAppPermitido = inAppPermitido && prefEntidad[entidadTipo].inApp;
+          }
+          if (prefEntidad[entidadTipo].email !== undefined) {
+            emailPermitido = emailPermitido && prefEntidad[entidadTipo].email;
+          }
+        }
+      }
+
+      return { enviarInApp: inAppPermitido, enviarEmail: emailPermitido };
+
+    } catch (error) {
+      console.error('Error al verificar preferencias:', error);
+      // En caso de error, permitir envío por defecto
+      return { enviarInApp: true, enviarEmail: true };
+    }
+  }
+
+  /**
+   * Verifica si estamos en horario no molestar
+   */
+  verificarHorarioNoMolestar(horaInicio, horaFin, diasStr) {
+    if (!horaInicio || !horaFin) return false;
+
+    const ahora = new Date();
+    const diaActual = ahora.getDay(); // 0 = Domingo
+    const horaActual = ahora.getHours() * 60 + ahora.getMinutes(); // Minutos desde medianoche
+
+    // Verificar si hoy es un día de horario no molestar
+    if (diasStr) {
+      const dias = JSON.parse(diasStr);
+      if (!dias.includes(diaActual)) {
+        return false; // Hoy no aplica el horario no molestar
+      }
+    }
+
+    // Convertir horas a minutos
+    const [inicioH, inicioM] = horaInicio.split(':').map(Number);
+    const [finH, finM] = horaFin.split(':').map(Number);
+    const inicioMinutos = inicioH * 60 + inicioM;
+    const finMinutos = finH * 60 + finM;
+
+    // Verificar si la hora actual está en el rango
+    if (inicioMinutos <= finMinutos) {
+      // Rango normal (ej: 09:00 - 18:00)
+      return horaActual >= inicioMinutos && horaActual <= finMinutos;
+    } else {
+      // Rango que cruza medianoche (ej: 22:00 - 08:00)
+      return horaActual >= inicioMinutos || horaActual <= finMinutos;
+    }
+  }
+
+  /**
+   * Verifica si la severidad está permitida por las preferencias
+   */
+  verificarSeveridadPermitida(preferencias, severidad) {
+    switch (severidad) {
+      case 'info':
+        return preferencias.notificarInfo;
+      case 'warning':
+        return preferencias.notificarWarning;
+      case 'critical':
+        return preferencias.notificarCritical;
+      default:
+        return true;
+    }
+  }
+
+  /**
    * Crea una notificación para un usuario
    */
   async crearNotificacion(regla, entidadTipo, entidadId, entidadData, usuarioId) {
     try {
+      // Verificar preferencias del usuario antes de enviar
+      const preferencias = await this.verificarPreferenciasUsuario(
+        usuarioId,
+        regla.severidad,
+        entidadTipo,
+        'IN_APP'
+      );
+
+      // Si ningún canal está permitido, no crear la notificación
+      if (!preferencias.enviarInApp && !preferencias.enviarEmail) {
+        console.log(`   ⏭️  Notificación omitida para ${usuarioId}: ${preferencias.razon}`);
+
+        // Registrar en log
+        await prisma.notificationLog.create({
+          data: {
+            usuarioId,
+            canal: 'IN_APP',
+            estado: 'SKIPPED',
+            errorMensaje: preferencias.razon,
+            reglaId: regla.id,
+            reglaTipo: 'NOTIFICATION_RULE',
+            metadata: JSON.stringify({ razon: preferencias.razon })
+          }
+        });
+
+        return null;
+      }
+
       // Construir mensaje usando plantilla si existe
       const mensaje = this.construirMensaje(regla, entidadData);
 
-      const notification = await prisma.notification.create({
-        data: {
-          usuarioId,
-          tipo: 'NOTIFICATION',
-          titulo: regla.nombre,
-          mensaje,
-          severidad: regla.severidad,
-          entidadTipo,
-          entidadId,
-          entidadNombre: entidadData.nombre || entidadData.titulo || null,
-          reglaId: regla.id,
-          reglaTipo: 'NOTIFICATION_RULE'
-        }
-      });
+      let notification = null;
 
-      // Log del envío
-      await prisma.notificationLog.create({
-        data: {
-          notificationId: notification.id,
-          usuarioId,
-          canal: 'IN_APP',
-          estado: 'SENT',
-          reglaId: regla.id,
-          reglaTipo: 'NOTIFICATION_RULE'
-        }
-      });
+      // Crear notificación in-app si está permitido
+      if (preferencias.enviarInApp) {
+        notification = await prisma.notification.create({
+          data: {
+            usuarioId,
+            tipo: 'NOTIFICATION',
+            titulo: regla.nombre,
+            mensaje,
+            severidad: regla.severidad,
+            entidadTipo,
+            entidadId,
+            entidadNombre: entidadData.nombre || entidadData.titulo || null,
+            reglaId: regla.id,
+            reglaTipo: 'NOTIFICATION_RULE'
+          }
+        });
 
-      // Enviar email si está configurado
-      if (regla.enviarEmail) {
+        // Log del envío
+        await prisma.notificationLog.create({
+          data: {
+            notificationId: notification.id,
+            usuarioId,
+            canal: 'IN_APP',
+            estado: 'SENT',
+            reglaId: regla.id,
+            reglaTipo: 'NOTIFICATION_RULE'
+          }
+        });
+      }
+
+      // Enviar email si está configurado en la regla Y permitido por preferencias
+      if (regla.enviarEmail && preferencias.enviarEmail) {
         const usuario = await prisma.usuario.findUnique({
           where: { id: usuarioId },
           select: { email: true }
         });
 
         if (usuario?.email) {
-          await emailService.sendNotificationEmail(usuario.email, notification);
+          await emailService.sendNotificationEmail(usuario.email, notification || { titulo: regla.nombre, mensaje });
 
           await prisma.notificationLog.create({
             data: {
-              notificationId: notification.id,
+              notificationId: notification?.id,
               usuarioId,
               canal: 'EMAIL',
               estado: 'SENT',
@@ -334,34 +492,62 @@ class NotificationTriggerService {
     const destinatarios = await this.obtenerDestinatariosAlerta(alerta);
 
     for (const usuarioId of destinatarios) {
-      const notification = await prisma.notification.create({
-        data: {
-          usuarioId,
-          tipo: 'ALERT',
-          titulo: `Alerta: ${alerta.nombre}`,
-          mensaje: `${alerta.descripcion || alerta.nombre}. Valor actual: ${valorActual}. Umbral: ${alerta.operador} ${alerta.valorUmbral}.`,
-          severidad: alerta.severidad,
-          entidadTipo: alerta.entidadTipo,
-          entidadId: alerta.entidadId,
-          reglaId: alerta.id,
-          reglaTipo: 'ALERT_RULE',
-          metadata: JSON.stringify({ valorActual, valorUmbral: alerta.valorUmbral, operador: alerta.operador })
-        }
-      });
+      // Verificar preferencias del usuario
+      const preferencias = await this.verificarPreferenciasUsuario(
+        usuarioId,
+        alerta.severidad,
+        alerta.entidadTipo,
+        'IN_APP'
+      );
 
-      await prisma.notificationLog.create({
-        data: {
-          notificationId: notification.id,
-          usuarioId,
-          canal: 'IN_APP',
-          estado: 'SENT',
-          reglaId: alerta.id,
-          reglaTipo: 'ALERT_RULE'
-        }
-      });
+      if (!preferencias.enviarInApp && !preferencias.enviarEmail) {
+        console.log(`   ⏭️  Alerta omitida para ${usuarioId}: ${preferencias.razon}`);
+        await prisma.notificationLog.create({
+          data: {
+            usuarioId,
+            canal: 'IN_APP',
+            estado: 'SKIPPED',
+            errorMensaje: preferencias.razon,
+            reglaId: alerta.id,
+            reglaTipo: 'ALERT_RULE',
+            metadata: JSON.stringify({ razon: preferencias.razon })
+          }
+        });
+        continue;
+      }
 
-      // Enviar email si está configurado
-      if (alerta.enviarEmail) {
+      let notification = null;
+
+      if (preferencias.enviarInApp) {
+        notification = await prisma.notification.create({
+          data: {
+            usuarioId,
+            tipo: 'ALERT',
+            titulo: `Alerta: ${alerta.nombre}`,
+            mensaje: `${alerta.descripcion || alerta.nombre}. Valor actual: ${valorActual}. Umbral: ${alerta.operador} ${alerta.valorUmbral}.`,
+            severidad: alerta.severidad,
+            entidadTipo: alerta.entidadTipo,
+            entidadId: alerta.entidadId,
+            reglaId: alerta.id,
+            reglaTipo: 'ALERT_RULE',
+            metadata: JSON.stringify({ valorActual, valorUmbral: alerta.valorUmbral, operador: alerta.operador })
+          }
+        });
+
+        await prisma.notificationLog.create({
+          data: {
+            notificationId: notification.id,
+            usuarioId,
+            canal: 'IN_APP',
+            estado: 'SENT',
+            reglaId: alerta.id,
+            reglaTipo: 'ALERT_RULE'
+          }
+        });
+      }
+
+      // Enviar email si está configurado en la regla Y permitido por preferencias
+      if (alerta.enviarEmail && preferencias.enviarEmail) {
         const usuario = await prisma.usuario.findUnique({
           where: { id: usuarioId },
           select: { email: true }
@@ -369,6 +555,17 @@ class NotificationTriggerService {
 
         if (usuario?.email) {
           await emailService.sendAlertEmail(usuario.email, alerta, valorActual);
+
+          await prisma.notificationLog.create({
+            data: {
+              notificationId: notification?.id,
+              usuarioId,
+              canal: 'EMAIL',
+              estado: 'SENT',
+              reglaId: alerta.id,
+              reglaTipo: 'ALERT_RULE'
+            }
+          });
         }
       }
     }
@@ -494,25 +691,65 @@ class NotificationTriggerService {
     }
 
     const urgencia = diasRestantes <= 1 ? 'ÚLTIMO DÍA' : diasRestantes <= 3 ? 'URGENTE' : '';
+    const severidad = diasRestantes <= 1 ? 'critical' : diasRestantes <= 3 ? 'warning' : 'info';
 
     for (const usuarioId of [...new Set(destinatarios)]) {
-      await prisma.notification.create({
-        data: {
-          usuarioId,
-          tipo: diasRestantes > 0 ? 'EXPIRATION_REMINDER' : 'OVERDUE',
-          titulo: `${urgencia ? urgencia + ': ' : ''}Vencimiento en ${diasRestantes} día(s)`,
-          mensaje: `"${entidad.titulo || entidad.nombre}" vence en ${diasRestantes} día(s).`,
-          severidad: diasRestantes <= 1 ? 'critical' : diasRestantes <= 3 ? 'warning' : 'info',
-          entidadTipo: regla.entidadTipo,
-          entidadId: entidad.id,
-          entidadNombre: entidad.titulo || entidad.nombre,
-          reglaId: regla.id,
-          reglaTipo: 'EXPIRATION_RULE'
-        }
-      });
+      // Verificar preferencias del usuario
+      const preferencias = await this.verificarPreferenciasUsuario(
+        usuarioId,
+        severidad,
+        regla.entidadTipo,
+        'IN_APP'
+      );
 
-      // Enviar email si está configurado
-      if (regla.enviarEmail) {
+      if (!preferencias.enviarInApp && !preferencias.enviarEmail) {
+        console.log(`   ⏭️  Recordatorio omitido para ${usuarioId}: ${preferencias.razon}`);
+        await prisma.notificationLog.create({
+          data: {
+            usuarioId,
+            canal: 'IN_APP',
+            estado: 'SKIPPED',
+            errorMensaje: preferencias.razon,
+            reglaId: regla.id,
+            reglaTipo: 'EXPIRATION_RULE',
+            metadata: JSON.stringify({ razon: preferencias.razon, diasRestantes })
+          }
+        });
+        continue;
+      }
+
+      let notification = null;
+
+      if (preferencias.enviarInApp) {
+        notification = await prisma.notification.create({
+          data: {
+            usuarioId,
+            tipo: diasRestantes > 0 ? 'EXPIRATION_REMINDER' : 'OVERDUE',
+            titulo: `${urgencia ? urgencia + ': ' : ''}Vencimiento en ${diasRestantes} día(s)`,
+            mensaje: `"${entidad.titulo || entidad.nombre}" vence en ${diasRestantes} día(s).`,
+            severidad,
+            entidadTipo: regla.entidadTipo,
+            entidadId: entidad.id,
+            entidadNombre: entidad.titulo || entidad.nombre,
+            reglaId: regla.id,
+            reglaTipo: 'EXPIRATION_RULE'
+          }
+        });
+
+        await prisma.notificationLog.create({
+          data: {
+            notificationId: notification.id,
+            usuarioId,
+            canal: 'IN_APP',
+            estado: 'SENT',
+            reglaId: regla.id,
+            reglaTipo: 'EXPIRATION_RULE'
+          }
+        });
+      }
+
+      // Enviar email si está configurado en la regla Y permitido por preferencias
+      if (regla.enviarEmail && preferencias.enviarEmail) {
         const usuario = await prisma.usuario.findUnique({
           where: { id: usuarioId },
           select: { email: true }
@@ -520,6 +757,17 @@ class NotificationTriggerService {
 
         if (usuario?.email) {
           await emailService.sendExpirationReminder(usuario.email, entidad, diasRestantes);
+
+          await prisma.notificationLog.create({
+            data: {
+              notificationId: notification?.id,
+              usuarioId,
+              canal: 'EMAIL',
+              estado: 'SENT',
+              reglaId: regla.id,
+              reglaTipo: 'EXPIRATION_RULE'
+            }
+          });
         }
       }
     }

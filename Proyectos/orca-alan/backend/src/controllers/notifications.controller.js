@@ -785,6 +785,316 @@ const createNotification = async (req, res) => {
   }
 };
 
+// ============================================================
+// ALERT RULE BY ID
+// ============================================================
+
+const getAlertRuleById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const alert = await prisma.alertRule.findUnique({
+      where: { id }
+    });
+
+    if (!alert) {
+      return res.status(404).json({ error: true, message: 'Alerta no encontrada' });
+    }
+
+    res.json({
+      ...alert,
+      rolesDestino: alert.rolesDestino ? JSON.parse(alert.rolesDestino) : [],
+      usuariosDestino: alert.usuariosDestino ? JSON.parse(alert.usuariosDestino) : [],
+      periodoEvaluacion: alert.periodoEvaluacion ? JSON.parse(alert.periodoEvaluacion) : null
+    });
+  } catch (error) {
+    console.error('Error al obtener alerta:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+// ============================================================
+// EXPIRATION RULE BY ID
+// ============================================================
+
+const getExpirationRuleById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const rule = await prisma.expirationRule.findUnique({
+      where: { id }
+    });
+
+    if (!rule) {
+      return res.status(404).json({ error: true, message: 'Regla de vencimiento no encontrada' });
+    }
+
+    res.json({
+      ...rule,
+      diasAnticipacion: rule.diasAnticipacion ? JSON.parse(rule.diasAnticipacion) : [],
+      diasDespuesVencido: rule.diasDespuesVencido ? JSON.parse(rule.diasDespuesVencido) : [],
+      rolesDestino: rule.rolesDestino ? JSON.parse(rule.rolesDestino) : []
+    });
+  } catch (error) {
+    console.error('Error al obtener regla de vencimiento:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+// ============================================================
+// NOTIFICATION PROFILES - Perfiles de notificación
+// ============================================================
+
+const getNotificationProfiles = async (req, res) => {
+  try {
+    const { estado } = req.query;
+
+    const where = {};
+    if (estado) where.estado = estado;
+
+    const profiles = await prisma.notificationProfile.findMany({
+      where,
+      orderBy: { fechaCreacion: 'desc' }
+    });
+
+    const parsedProfiles = profiles.map(profile => ({
+      ...profile,
+      eventos: profile.eventos ? JSON.parse(profile.eventos) : {},
+      seleccionEntidades: profile.seleccionEntidades ? JSON.parse(profile.seleccionEntidades) : [],
+      filtrosEntidad: profile.filtrosEntidad ? JSON.parse(profile.filtrosEntidad) : [],
+      destinatarios: profile.destinatarios ? JSON.parse(profile.destinatarios) : {},
+      canales: profile.canales ? JSON.parse(profile.canales) : [],
+      horarioNoMolestar: profile.horarioNoMolestar ? JSON.parse(profile.horarioNoMolestar) : null
+    }));
+
+    res.json(parsedProfiles);
+  } catch (error) {
+    console.error('Error al obtener perfiles de notificación:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+const getNotificationProfileById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const profile = await prisma.notificationProfile.findUnique({
+      where: { id }
+    });
+
+    if (!profile) {
+      return res.status(404).json({ error: true, message: 'Perfil no encontrado' });
+    }
+
+    res.json({
+      ...profile,
+      eventos: profile.eventos ? JSON.parse(profile.eventos) : {},
+      seleccionEntidades: profile.seleccionEntidades ? JSON.parse(profile.seleccionEntidades) : [],
+      filtrosEntidad: profile.filtrosEntidad ? JSON.parse(profile.filtrosEntidad) : [],
+      destinatarios: profile.destinatarios ? JSON.parse(profile.destinatarios) : {},
+      canales: profile.canales ? JSON.parse(profile.canales) : [],
+      horarioNoMolestar: profile.horarioNoMolestar ? JSON.parse(profile.horarioNoMolestar) : null
+    });
+  } catch (error) {
+    console.error('Error al obtener perfil:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+const createNotificationProfile = async (req, res) => {
+  try {
+    const {
+      nombre,
+      descripcion,
+      eventos = { onCreate: false, onUpdate: false, onDelete: false, onExpiration: false },
+      seleccionEntidades = [],
+      filtrosEntidad = [],
+      destinatarios = {},
+      canales = ['IN_APP'],
+      plantillaTitulo,
+      plantillaMensaje,
+      severidad = 'info',
+      estado = 'active',
+      horarioNoMolestar,
+      creadoPorId
+    } = req.body;
+
+    const profile = await prisma.notificationProfile.create({
+      data: {
+        nombre,
+        descripcion,
+        eventos: JSON.stringify(eventos),
+        seleccionEntidades: JSON.stringify(seleccionEntidades),
+        filtrosEntidad: JSON.stringify(filtrosEntidad),
+        destinatarios: JSON.stringify(destinatarios),
+        canales: JSON.stringify(canales),
+        plantillaTitulo,
+        plantillaMensaje,
+        severidad,
+        estado,
+        horarioNoMolestar: horarioNoMolestar ? JSON.stringify(horarioNoMolestar) : null,
+        creadoPorId
+      }
+    });
+
+    res.status(201).json({
+      ...profile,
+      eventos,
+      seleccionEntidades,
+      filtrosEntidad,
+      destinatarios,
+      canales,
+      horarioNoMolestar
+    });
+  } catch (error) {
+    console.error('Error al crear perfil:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+const updateNotificationProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = { ...req.body };
+
+    // Stringify JSON fields if present
+    if (data.eventos) data.eventos = JSON.stringify(data.eventos);
+    if (data.seleccionEntidades) data.seleccionEntidades = JSON.stringify(data.seleccionEntidades);
+    if (data.filtrosEntidad) data.filtrosEntidad = JSON.stringify(data.filtrosEntidad);
+    if (data.destinatarios) data.destinatarios = JSON.stringify(data.destinatarios);
+    if (data.canales) data.canales = JSON.stringify(data.canales);
+    if (data.horarioNoMolestar) data.horarioNoMolestar = JSON.stringify(data.horarioNoMolestar);
+
+    const profile = await prisma.notificationProfile.update({
+      where: { id },
+      data
+    });
+
+    res.json({
+      ...profile,
+      eventos: profile.eventos ? JSON.parse(profile.eventos) : {},
+      seleccionEntidades: profile.seleccionEntidades ? JSON.parse(profile.seleccionEntidades) : [],
+      filtrosEntidad: profile.filtrosEntidad ? JSON.parse(profile.filtrosEntidad) : [],
+      destinatarios: profile.destinatarios ? JSON.parse(profile.destinatarios) : {},
+      canales: profile.canales ? JSON.parse(profile.canales) : [],
+      horarioNoMolestar: profile.horarioNoMolestar ? JSON.parse(profile.horarioNoMolestar) : null
+    });
+  } catch (error) {
+    console.error('Error al actualizar perfil:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+const deleteNotificationProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.notificationProfile.delete({
+      where: { id }
+    });
+
+    res.json({ message: 'Perfil eliminado correctamente' });
+  } catch (error) {
+    console.error('Error al eliminar perfil:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+// ============================================================
+// NOTIFICATION LOGS - Logs de notificaciones
+// ============================================================
+
+const getNotificationLogs = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 50,
+      usuarioId,
+      canal,
+      estado,
+      reglaTipo,
+      desde,
+      hasta
+    } = req.query;
+
+    const where = {};
+    if (usuarioId) where.usuarioId = usuarioId;
+    if (canal) where.canal = canal;
+    if (estado) where.estado = estado;
+    if (reglaTipo) where.reglaTipo = reglaTipo;
+    if (desde || hasta) {
+      where.fechaEnvio = {};
+      if (desde) where.fechaEnvio.gte = new Date(desde);
+      if (hasta) where.fechaEnvio.lte = new Date(hasta);
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [logs, total] = await Promise.all([
+      prisma.notificationLog.findMany({
+        where,
+        orderBy: { fechaEnvio: 'desc' },
+        skip,
+        take: parseInt(limit)
+      }),
+      prisma.notificationLog.count({ where })
+    ]);
+
+    const parsedLogs = logs.map(log => ({
+      ...log,
+      metadata: log.metadata ? JSON.parse(log.metadata) : null
+    }));
+
+    // Stats
+    const [totalSent, totalFailed, totalPending] = await Promise.all([
+      prisma.notificationLog.count({ where: { ...where, estado: 'SENT' } }),
+      prisma.notificationLog.count({ where: { ...where, estado: 'FAILED' } }),
+      prisma.notificationLog.count({ where: { ...where, estado: 'PENDING' } })
+    ]);
+
+    res.json({
+      data: parsedLogs,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / parseInt(limit))
+      },
+      stats: {
+        sent: totalSent,
+        failed: totalFailed,
+        pending: totalPending,
+        total
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener logs:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+const getNotificationLogById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const log = await prisma.notificationLog.findUnique({
+      where: { id }
+    });
+
+    if (!log) {
+      return res.status(404).json({ error: true, message: 'Log no encontrado' });
+    }
+
+    res.json({
+      ...log,
+      metadata: log.metadata ? JSON.parse(log.metadata) : null
+    });
+  } catch (error) {
+    console.error('Error al obtener log:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
 module.exports = {
   // Notification Rules
   getNotificationRules,
@@ -794,14 +1104,25 @@ module.exports = {
   deleteNotificationRule,
   // Alert Rules
   getAlertRules,
+  getAlertRuleById,
   createAlertRule,
   updateAlertRule,
   deleteAlertRule,
   // Expiration Rules
   getExpirationRules,
+  getExpirationRuleById,
   createExpirationRule,
   updateExpirationRule,
   deleteExpirationRule,
+  // Notification Profiles
+  getNotificationProfiles,
+  getNotificationProfileById,
+  createNotificationProfile,
+  updateNotificationProfile,
+  deleteNotificationProfile,
+  // Notification Logs
+  getNotificationLogs,
+  getNotificationLogById,
   // Inbox
   getInbox,
   getNotificationById,

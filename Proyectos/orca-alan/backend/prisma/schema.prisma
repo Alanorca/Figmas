@@ -882,6 +882,15 @@ model UserNotificationPreferences {
   frecuenciaEmail        String   @default("inmediato") // inmediato, resumen_diario, resumen_semanal
   horaResumen            String   @default("09:00")
 
+  // Horario No Molestar
+  horarioNoMolestarHabilitado Boolean @default(false)
+  horarioNoMolestarInicio     String?  // "22:00"
+  horarioNoMolestarFin        String?  // "08:00"
+  horarioNoMolestarDias       String?  // JSON array de días [0,1,2,3,4,5,6] donde 0=Domingo
+
+  // Preferencias por módulo (JSON)
+  preferenciasPorModulo  String?  // {"cuestionarios": {"inApp": true, "email": true}, ...}
+
   fechaCreacion          DateTime @default(now())
   fechaModificacion      DateTime @updatedAt
 
@@ -910,4 +919,42 @@ model NotificationLog {
   @@index([usuarioId, fechaEnvio])
   @@index([estado])
   @@map("notification_logs")
+}
+
+// Perfiles de notificación (configuraciones reutilizables)
+model NotificationProfile {
+  id                String   @id @default(cuid())
+  nombre            String
+  descripcion       String?
+
+  // Eventos que disparan la notificación
+  eventos           String   // JSON: {onCreate: true, onUpdate: false, onDelete: false, onExpiration: false}
+
+  // Selección de entidades
+  seleccionEntidades String  // JSON: EntitySelection[] - qué entidades aplican
+  filtrosEntidad    String?  // JSON: Condition[] - filtros adicionales
+
+  // Destinatarios
+  destinatarios     String   // JSON: RecipientConfig - quiénes reciben
+
+  // Canales de notificación
+  canales           String   // JSON: string[] - ["IN_APP", "EMAIL"]
+
+  // Plantilla del mensaje
+  plantillaTitulo   String?
+  plantillaMensaje  String?
+  severidad         String   @default("info") // info, warning, critical
+
+  // Estado
+  estado            String   @default("active") // active, inactive, draft
+
+  // Horario No Molestar específico del perfil
+  horarioNoMolestar String?  // JSON: {habilitado: boolean, horaInicio: string, horaFin: string, diasSemana: number[]}
+
+  // Metadata
+  fechaCreacion     DateTime @default(now())
+  fechaModificacion DateTime @updatedAt
+  creadoPorId       String?
+
+  @@map("notification_profiles")
 }
