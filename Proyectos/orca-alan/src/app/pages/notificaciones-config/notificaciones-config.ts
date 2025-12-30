@@ -781,12 +781,19 @@ interface PreferenciasNotificacion {
                       <div class="detail-header">
                         <div class="detail-header-info">
                           <h3>{{ reglaSeleccionada()!.nombre }}</h3>
-                          <p-tag
-                            [value]="reglaSeleccionada()!.activo ? 'Activa' : 'Inactiva'"
-                            [severity]="reglaSeleccionada()!.activo ? 'success' : 'secondary'"
-                          />
                         </div>
                         <div class="detail-header-actions">
+                          <div class="status-toggle-group">
+                            <span class="status-label">Estado</span>
+                            <p-tag
+                              [value]="reglaSeleccionada()!.activo ? 'Activa' : 'Inactiva'"
+                              [severity]="reglaSeleccionada()!.activo ? 'success' : 'secondary'"
+                            />
+                            <p-toggleSwitch
+                              [(ngModel)]="reglaSeleccionada()!.activo"
+                              (ngModelChange)="marcarCambios()"
+                            />
+                          </div>
                           <p-button
                             icon="pi pi-trash"
                             severity="danger"
@@ -821,25 +828,16 @@ interface PreferenciasNotificacion {
                                 rows="2"
                               ></textarea>
                             </div>
-                            <div class="detail-field-row">
-                              <div class="detail-field">
-                                <label>Estado</label>
-                                <p-toggleSwitch
-                                  [(ngModel)]="reglaSeleccionada()!.activo"
-                                  (ngModelChange)="marcarCambios()"
-                                />
-                              </div>
-                              <div class="detail-field">
-                                <label>Severidad</label>
-                                <p-select
-                                  [(ngModel)]="reglaSeleccionada()!.severidad"
-                                  [options]="opcionesSeveridad"
-                                  optionLabel="label"
-                                  optionValue="value"
-                                  (ngModelChange)="marcarCambios()"
-                                  [style]="{ width: '100%' }"
-                                />
-                              </div>
+                            <div class="detail-field">
+                              <label>Severidad</label>
+                              <p-select
+                                [(ngModel)]="reglaSeleccionada()!.severidad"
+                                [options]="opcionesSeveridad"
+                                optionLabel="label"
+                                optionValue="value"
+                                (ngModelChange)="marcarCambios()"
+                                styleClass="select-dark-mode"
+                              />
                             </div>
                           </div>
                         </div>
@@ -847,24 +845,22 @@ interface PreferenciasNotificacion {
                         <!-- Canales de Notificación -->
                         <div class="detail-section">
                           <h4>Canales de Notificación</h4>
-                          <div class="channels-grid">
-                            <div class="channel-option">
+                          <div class="checkbox-tags-grid">
+                            <div class="checkbox-tag-option" [class.active]="reglaSeleccionada()!.enviarInApp">
                               <p-checkbox
                                 [(ngModel)]="reglaSeleccionada()!.enviarInApp"
                                 [binary]="true"
                                 (ngModelChange)="marcarCambios()"
                               />
-                              <i class="pi pi-desktop"></i>
-                              <span>Notificación In-App</span>
+                              <p-tag value="In-App" severity="info" icon="pi pi-desktop" />
                             </div>
-                            <div class="channel-option">
+                            <div class="checkbox-tag-option" [class.active]="reglaSeleccionada()!.enviarEmail">
                               <p-checkbox
                                 [(ngModel)]="reglaSeleccionada()!.enviarEmail"
                                 [binary]="true"
                                 (ngModelChange)="marcarCambios()"
                               />
-                              <i class="pi pi-envelope"></i>
-                              <span>Correo Electrónico</span>
+                              <p-tag value="Email" severity="warn" icon="pi pi-envelope" />
                             </div>
                           </div>
                         </div>
@@ -914,7 +910,7 @@ interface PreferenciasNotificacion {
                                   optionLabel="label"
                                   optionValue="value"
                                   (ngModelChange)="marcarCambios()"
-                                  [style]="{ width: '100%' }"
+                                  styleClass="select-dark-mode"
                                 />
                               </div>
                               <div class="detail-field">
@@ -925,16 +921,25 @@ interface PreferenciasNotificacion {
                                   optionLabel="label"
                                   optionValue="value"
                                   (ngModelChange)="marcarCambios()"
-                                  [style]="{ width: '100%' }"
+                                  styleClass="select-dark-mode"
                                 />
                               </div>
                             </div>
                             <div class="detail-field">
                               <label>Destinatarios</label>
-                              <div class="checkbox-group-vertical">
-                                <p-checkbox [(ngModel)]="reglaSeleccionada()!.notificarCreador" [binary]="true" label="Notificar al creador" (ngModelChange)="marcarCambios()" />
-                                <p-checkbox [(ngModel)]="reglaSeleccionada()!.notificarResponsable" [binary]="true" label="Notificar al responsable" (ngModelChange)="marcarCambios()" />
-                                <p-checkbox [(ngModel)]="reglaSeleccionada()!.notificarAprobadores" [binary]="true" label="Notificar a aprobadores" (ngModelChange)="marcarCambios()" />
+                              <div class="checkbox-tags-grid">
+                                <div class="checkbox-tag-option" [class.active]="reglaSeleccionada()!.notificarCreador">
+                                  <p-checkbox [(ngModel)]="reglaSeleccionada()!.notificarCreador" [binary]="true" (ngModelChange)="marcarCambios()" />
+                                  <p-tag value="Creador" severity="info" icon="pi pi-user" />
+                                </div>
+                                <div class="checkbox-tag-option" [class.active]="reglaSeleccionada()!.notificarResponsable">
+                                  <p-checkbox [(ngModel)]="reglaSeleccionada()!.notificarResponsable" [binary]="true" (ngModelChange)="marcarCambios()" />
+                                  <p-tag value="Responsable" severity="warn" icon="pi pi-user-edit" />
+                                </div>
+                                <div class="checkbox-tag-option" [class.active]="reglaSeleccionada()!.notificarAprobadores">
+                                  <p-checkbox [(ngModel)]="reglaSeleccionada()!.notificarAprobadores" [binary]="true" (ngModelChange)="marcarCambios()" />
+                                  <p-tag value="Aprobadores" severity="success" icon="pi pi-users" />
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -952,7 +957,7 @@ interface PreferenciasNotificacion {
                                   optionLabel="label"
                                   optionValue="value"
                                   (ngModelChange)="marcarCambios()"
-                                  [style]="{ width: '100%' }"
+                                  styleClass="select-dark-mode"
                                 />
                               </div>
                               <div class="detail-field">
@@ -969,7 +974,7 @@ interface PreferenciasNotificacion {
                                   optionLabel="label"
                                   optionValue="value"
                                   (ngModelChange)="marcarCambios()"
-                                  [style]="{ width: '100%' }"
+                                  styleClass="select-dark-mode"
                                 />
                               </div>
                               <div class="detail-field">
@@ -995,7 +1000,7 @@ interface PreferenciasNotificacion {
                                 optionLabel="label"
                                 optionValue="value"
                                 (ngModelChange)="marcarCambios()"
-                                [style]="{ width: '100%' }"
+                                styleClass="select-dark-mode"
                               />
                             </div>
                             <div class="detail-field-row">
@@ -1007,7 +1012,7 @@ interface PreferenciasNotificacion {
                                   optionLabel="label"
                                   optionValue="value"
                                   (ngModelChange)="marcarCambios()"
-                                  [style]="{ width: '100%' }"
+                                  styleClass="select-dark-mode"
                                 />
                               </div>
                               <div class="detail-field">
@@ -1018,7 +1023,7 @@ interface PreferenciasNotificacion {
                                   optionLabel="label"
                                   optionValue="value"
                                   (ngModelChange)="marcarCambios()"
-                                  [style]="{ width: '100%' }"
+                                  styleClass="select-dark-mode"
                                 />
                               </div>
                             </div>
@@ -1090,7 +1095,7 @@ interface PreferenciasNotificacion {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar entidad"
-                [style]="{ width: '100%' }"
+                styleClass="select-dark-mode"
               />
             </div>
 
@@ -1103,7 +1108,7 @@ interface PreferenciasNotificacion {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar evento"
-                [style]="{ width: '100%' }"
+                styleClass="select-dark-mode"
               />
             </div>
 
@@ -1116,7 +1121,7 @@ interface PreferenciasNotificacion {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar severidad"
-                [style]="{ width: '100%' }"
+                styleClass="select-dark-mode"
               />
             </div>
 
@@ -1191,7 +1196,7 @@ interface PreferenciasNotificacion {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar métrica"
-                [style]="{ width: '100%' }"
+                styleClass="select-dark-mode"
               />
             </div>
 
@@ -1209,7 +1214,7 @@ interface PreferenciasNotificacion {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar"
-                [style]="{ width: '100%' }"
+                styleClass="select-dark-mode"
               />
             </div>
 
@@ -1227,7 +1232,7 @@ interface PreferenciasNotificacion {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar"
-                [style]="{ width: '100%' }"
+                styleClass="select-dark-mode"
               />
             </div>
 
@@ -1286,7 +1291,7 @@ interface PreferenciasNotificacion {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar entidad"
-                [style]="{ width: '100%' }"
+                styleClass="select-dark-mode"
               />
             </div>
 
@@ -1298,7 +1303,7 @@ interface PreferenciasNotificacion {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar días"
-                [style]="{ width: '100%' }"
+                styleClass="select-dark-mode"
               />
               <small class="hint">Cuántos días antes del vencimiento enviar recordatorio</small>
             </div>
@@ -1311,7 +1316,7 @@ interface PreferenciasNotificacion {
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccionar días"
-                [style]="{ width: '100%' }"
+                styleClass="select-dark-mode"
               />
               <small class="hint">Cuántos días después del vencimiento seguir notificando</small>
             </div>
@@ -1457,7 +1462,7 @@ interface PreferenciasNotificacion {
                               optionValue="value"
                               placeholder="Seleccionar"
                               (ngModelChange)="actualizarBloque(block)"
-                              [style]="{ width: '100%' }"
+                              styleClass="select-dark-mode"
                             />
                           </div>
                         }
@@ -2856,15 +2861,21 @@ interface PreferenciasNotificacion {
       padding: var(--spacing-3) var(--spacing-4);
       border-bottom: 1px solid var(--surface-border);
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: all 0.2s;
+      background: var(--surface-card);
 
       &:hover {
-        background: var(--surface-50);
+        background: var(--surface-hover);
       }
 
       &.selected {
-        background: var(--primary-50);
+        background: rgba(16, 185, 129, 0.12);
         border-left: 3px solid var(--primary-color);
+
+        .rule-list-item-title {
+          color: var(--primary-color);
+          font-weight: var(--font-weight-semibold);
+        }
       }
 
       &:last-child {
@@ -2878,9 +2889,10 @@ interface PreferenciasNotificacion {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--surface-100);
+      background: var(--surface-ground);
       border-radius: var(--border-radius-md);
       flex-shrink: 0;
+      border: 1px solid var(--surface-border);
 
       i {
         color: var(--text-color-secondary);
@@ -2889,7 +2901,8 @@ interface PreferenciasNotificacion {
     }
 
     .rule-list-item.selected .rule-list-item-icon {
-      background: var(--primary-100);
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--primary-color);
 
       i {
         color: var(--primary-color);
@@ -3058,7 +3071,7 @@ interface PreferenciasNotificacion {
       align-items: center;
       gap: var(--spacing-2);
       padding: var(--spacing-2) var(--spacing-3);
-      background: var(--surface-50);
+      background: var(--surface-ground);
       border-radius: var(--border-radius-md);
       border: 1px solid var(--surface-border);
 
@@ -3068,6 +3081,7 @@ interface PreferenciasNotificacion {
 
       span {
         font-size: var(--font-size-sm);
+        color: var(--text-color);
       }
     }
 
@@ -3075,6 +3089,78 @@ interface PreferenciasNotificacion {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-2);
+    }
+
+    // ============================================================================
+    // CHECKBOX TAGS GRID - Checkboxes con Tags
+    // ============================================================================
+    .checkbox-tags-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-2);
+    }
+
+    .checkbox-tag-option {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-2) var(--spacing-3);
+      background: var(--surface-ground);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius-md);
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: var(--surface-hover);
+        border-color: var(--primary-color);
+      }
+
+      &.active {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: var(--primary-color);
+      }
+    }
+
+    // ============================================================================
+    // STATUS TOGGLE GROUP - Toggle en header
+    // ============================================================================
+    .status-toggle-group {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-2) var(--spacing-3);
+      background: var(--surface-ground);
+      border-radius: var(--border-radius-md);
+      border: 1px solid var(--surface-border);
+    }
+
+    .status-label {
+      font-size: var(--font-size-sm);
+      color: var(--text-color-secondary);
+      font-weight: var(--font-weight-medium);
+    }
+
+    // ============================================================================
+    // SELECT DARK MODE - Mejor contraste para selects
+    // ============================================================================
+    :host ::ng-deep {
+      .select-dark-mode {
+        width: 100%;
+
+        .p-select {
+          background: var(--surface-ground);
+          border-color: var(--surface-border);
+
+          .p-select-label {
+            color: var(--text-color);
+          }
+
+          &:hover {
+            border-color: var(--primary-color);
+          }
+        }
+      }
     }
 
     /* Editor de Plantilla de Notificación */
