@@ -1351,6 +1351,440 @@ interface PreferenciasNotificacion {
         </ng-template>
       </p-dialog>
 
+      <!-- Wizard Nueva Regla -->
+      @if (wizardReglaVisible) {
+        <div class="wizard-overlay visible" (click)="cerrarWizardRegla()"></div>
+        <div class="wizard-drawer open">
+          <!-- Header del wizard -->
+          <div class="wizard-drawer-header">
+            <div class="wizard-title">
+              <i class="pi pi-plus-circle"></i>
+              <span>Nueva Regla de Notificación</span>
+            </div>
+            <button type="button" class="wizard-close-btn" (click)="cerrarWizardRegla()">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+
+          <!-- Stepper -->
+          <div class="wizard-stepper-container">
+            <div class="wizard-stepper">
+              @for (paso of pasosWizardRegla; track $index; let i = $index) {
+                <div
+                  class="step-item"
+                  [class.active]="i === pasoWizardRegla()"
+                  [class.completed]="i < pasoWizardRegla()"
+                  [class.clickable]="i < pasoWizardRegla()"
+                  (click)="irAPasoWizard(i)">
+                  <div class="step-indicator">
+                    <div class="step-icon">
+                      @if (i < pasoWizardRegla()) {
+                        <i class="pi pi-check"></i>
+                      } @else {
+                        <i [class]="paso.icon"></i>
+                      }
+                    </div>
+                    @if (i < pasosWizardRegla.length - 1) {
+                      <div class="step-line" [class.completed]="i < pasoWizardRegla()"></div>
+                    }
+                  </div>
+                  <div class="step-content">
+                    <span class="step-label">{{ paso.label }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Contenido del wizard -->
+          <div class="wizard-content">
+            <!-- PASO 0: Datos Generales -->
+            @if (pasoWizardRegla() === 0) {
+              <div class="wizard-step-panel">
+                <h3 class="wizard-panel-title">
+                  <i class="pi pi-file-edit"></i>
+                  Datos Generales
+                </h3>
+
+                <div class="wizard-form-grid">
+                  <div class="wizard-field full-width">
+                    <label class="wizard-label required">Nombre de la regla</label>
+                    <input
+                      pInputText
+                      [(ngModel)]="wizardReglaForm.nombre"
+                      placeholder="Ej: Notificación de nuevos riesgos"
+                      class="w-full"
+                    />
+                  </div>
+
+                  <div class="wizard-field full-width">
+                    <label class="wizard-label">Descripción</label>
+                    <textarea
+                      pTextarea
+                      [(ngModel)]="wizardReglaForm.descripcion"
+                      rows="2"
+                      placeholder="Descripción opcional de la regla"
+                      class="w-full"
+                    ></textarea>
+                  </div>
+
+                  <div class="wizard-field">
+                    <label class="wizard-label required">Tipo de Entidad</label>
+                    <p-select
+                      [(ngModel)]="wizardReglaForm.entidadTipo"
+                      [options]="opcionesEntidad"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seleccionar entidad"
+                      styleClass="w-full select-dark-mode"
+                    />
+                  </div>
+
+                  <div class="wizard-field">
+                    <label class="wizard-label required">Tipo de Evento</label>
+                    <p-select
+                      [(ngModel)]="wizardReglaForm.eventoTipo"
+                      [options]="opcionesEvento"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seleccionar evento"
+                      styleClass="w-full select-dark-mode"
+                    />
+                  </div>
+
+                  <div class="wizard-field">
+                    <label class="wizard-label">Severidad</label>
+                    <p-select
+                      [(ngModel)]="wizardReglaForm.severidad"
+                      [options]="opcionesSeveridad"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Seleccionar severidad"
+                      styleClass="w-full select-dark-mode"
+                    />
+                  </div>
+
+                  <div class="wizard-field">
+                    <label class="wizard-label">Estado inicial</label>
+                    <div class="wizard-switch-field">
+                      <p-toggleSwitch [(ngModel)]="wizardReglaForm.activo" />
+                      <span>{{ wizardReglaForm.activo ? 'Activa' : 'Inactiva' }}</span>
+                    </div>
+                  </div>
+
+                  <div class="wizard-section full-width">
+                    <h4 class="wizard-section-title">
+                      <i class="pi pi-users"></i>
+                      Destinatarios
+                    </h4>
+                    <div class="wizard-checkbox-grid">
+                      <div class="wizard-checkbox-item" [class.active]="wizardReglaForm.notificarCreador">
+                        <p-checkbox [(ngModel)]="wizardReglaForm.notificarCreador" [binary]="true" />
+                        <p-tag value="Creador" severity="info" icon="pi pi-user" />
+                      </div>
+                      <div class="wizard-checkbox-item" [class.active]="wizardReglaForm.notificarResponsable">
+                        <p-checkbox [(ngModel)]="wizardReglaForm.notificarResponsable" [binary]="true" />
+                        <p-tag value="Responsable" severity="success" icon="pi pi-user-edit" />
+                      </div>
+                      <div class="wizard-checkbox-item" [class.active]="wizardReglaForm.notificarAprobadores">
+                        <p-checkbox [(ngModel)]="wizardReglaForm.notificarAprobadores" [binary]="true" />
+                        <p-tag value="Aprobadores" severity="warn" icon="pi pi-users" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="wizard-section full-width">
+                    <h4 class="wizard-section-title">
+                      <i class="pi pi-send"></i>
+                      Canales de Notificación
+                    </h4>
+                    <div class="wizard-checkbox-grid">
+                      <div class="wizard-checkbox-item" [class.active]="wizardReglaForm.enviarInApp">
+                        <p-checkbox [(ngModel)]="wizardReglaForm.enviarInApp" [binary]="true" />
+                        <p-tag value="In-App" severity="info" icon="pi pi-desktop" />
+                      </div>
+                      <div class="wizard-checkbox-item" [class.active]="wizardReglaForm.enviarEmail">
+                        <p-checkbox [(ngModel)]="wizardReglaForm.enviarEmail" [binary]="true" />
+                        <p-tag value="Email" severity="warn" icon="pi pi-envelope" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Errores de validación -->
+                @if (getErroresPasoWizard().length > 0) {
+                  <div class="wizard-validation-errors">
+                    @for (error of getErroresPasoWizard(); track error) {
+                      <span class="error-item">
+                        <i class="pi pi-exclamation-circle"></i>
+                        {{ error }}
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- PASO 1: Diseño de Notificación -->
+            @if (pasoWizardRegla() === 1) {
+              <div class="wizard-step-panel">
+                <h3 class="wizard-panel-title">
+                  <i class="pi pi-palette"></i>
+                  Diseño de Notificación
+                </h3>
+
+                @if (!wizardReglaForm.enviarEmail) {
+                  <div class="wizard-info-message">
+                    <i class="pi pi-info-circle"></i>
+                    <span>El canal de email no está habilitado. Puedes habilitarlo en el paso anterior para diseñar la plantilla.</span>
+                  </div>
+                } @else {
+                  <!-- Asunto del correo -->
+                  <div class="wizard-field full-width mb-4">
+                    <label class="wizard-label">Asunto del correo</label>
+                    <input
+                      pInputText
+                      [(ngModel)]="wizardReglaForm.plantillaMensaje"
+                      placeholder="Ej: Nueva notificación - [nombre]"
+                      class="w-full"
+                    />
+                  </div>
+
+                  <!-- Barra de herramientas -->
+                  <div class="wizard-toolbar">
+                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('header')" pTooltip="Título">
+                      <i class="pi pi-heading"></i>
+                      <span>Título</span>
+                    </button>
+                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('paragraph')" pTooltip="Párrafo">
+                      <i class="pi pi-align-left"></i>
+                      <span>Párrafo</span>
+                    </button>
+                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('variable')" pTooltip="Variable">
+                      <i class="pi pi-code"></i>
+                      <span>Variable</span>
+                    </button>
+                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('button')" pTooltip="Botón">
+                      <i class="pi pi-external-link"></i>
+                      <span>Botón</span>
+                    </button>
+                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('divider')" pTooltip="Separador">
+                      <i class="pi pi-minus"></i>
+                      <span>Línea</span>
+                    </button>
+                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('alert')" pTooltip="Alerta">
+                      <i class="pi pi-exclamation-triangle"></i>
+                      <span>Alerta</span>
+                    </button>
+                  </div>
+
+                  <!-- Canvas del editor -->
+                  <div class="wizard-email-canvas">
+                    @if (wizardReglaBlocks().length === 0) {
+                      <div class="wizard-empty-state">
+                        <i class="pi pi-file-edit"></i>
+                        <p>Agrega bloques usando los botones de arriba</p>
+                      </div>
+                    }
+                    @for (block of wizardReglaBlocks(); track block.id; let i = $index) {
+                      <div class="wizard-block">
+                        <div class="wizard-block-content">
+                          @switch (block.type) {
+                            @case ('header') {
+                              <input
+                                type="text"
+                                [(ngModel)]="block.content"
+                                placeholder="Título"
+                                class="wizard-block-input header-input"
+                              />
+                            }
+                            @case ('paragraph') {
+                              <textarea
+                                [(ngModel)]="block.content"
+                                placeholder="Escribe tu texto..."
+                                rows="2"
+                                class="wizard-block-input"
+                              ></textarea>
+                            }
+                            @case ('variable') {
+                              <p-select
+                                [(ngModel)]="block.content"
+                                [options]="opcionesVariables"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Seleccionar variable"
+                                styleClass="w-full select-dark-mode"
+                              />
+                            }
+                            @case ('button') {
+                              <input
+                                type="text"
+                                [(ngModel)]="block.content"
+                                placeholder="Texto del botón"
+                                class="wizard-block-input"
+                              />
+                            }
+                            @case ('divider') {
+                              <hr class="wizard-block-divider" />
+                            }
+                            @case ('alert') {
+                              <input
+                                type="text"
+                                [(ngModel)]="block.content"
+                                placeholder="Mensaje de alerta"
+                                class="wizard-block-input alert-input"
+                              />
+                            }
+                          }
+                        </div>
+                        <div class="wizard-block-actions">
+                          <button type="button" (click)="moverBloqueWizard(i, -1)" [disabled]="i === 0" pTooltip="Subir">
+                            <i class="pi pi-arrow-up"></i>
+                          </button>
+                          <button type="button" (click)="moverBloqueWizard(i, 1)" [disabled]="i === wizardReglaBlocks().length - 1" pTooltip="Bajar">
+                            <i class="pi pi-arrow-down"></i>
+                          </button>
+                          <button type="button" class="delete-btn" (click)="eliminarBloqueWizard(block.id)" pTooltip="Eliminar">
+                            <i class="pi pi-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- PASO 2: Resumen -->
+            @if (pasoWizardRegla() === 2) {
+              <div class="wizard-step-panel">
+                <h3 class="wizard-panel-title">
+                  <i class="pi pi-check-circle"></i>
+                  Resumen de la Configuración
+                </h3>
+
+                <div class="wizard-summary">
+                  <div class="wizard-summary-section">
+                    <h4>Información General</h4>
+                    <div class="wizard-summary-grid">
+                      <div class="wizard-summary-item">
+                        <span class="summary-label">Nombre:</span>
+                        <span class="summary-value">{{ wizardReglaForm.nombre || '-' }}</span>
+                      </div>
+                      <div class="wizard-summary-item">
+                        <span class="summary-label">Descripción:</span>
+                        <span class="summary-value">{{ wizardReglaForm.descripcion || 'Sin descripción' }}</span>
+                      </div>
+                      <div class="wizard-summary-item">
+                        <span class="summary-label">Entidad:</span>
+                        <span class="summary-value">{{ wizardReglaForm.entidadTipo || '-' }}</span>
+                      </div>
+                      <div class="wizard-summary-item">
+                        <span class="summary-label">Evento:</span>
+                        <span class="summary-value">{{ wizardReglaForm.eventoTipo || '-' }}</span>
+                      </div>
+                      <div class="wizard-summary-item">
+                        <span class="summary-label">Severidad:</span>
+                        <p-tag [value]="wizardReglaForm.severidad || 'info'" [severity]="wizardReglaForm.severidad === 'critical' ? 'danger' : wizardReglaForm.severidad === 'warning' ? 'warn' : 'info'" />
+                      </div>
+                      <div class="wizard-summary-item">
+                        <span class="summary-label">Estado:</span>
+                        <p-tag [value]="wizardReglaForm.activo ? 'Activa' : 'Inactiva'" [severity]="wizardReglaForm.activo ? 'success' : 'secondary'" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="wizard-summary-section">
+                    <h4>Destinatarios</h4>
+                    <div class="wizard-summary-tags">
+                      @if (wizardReglaForm.notificarCreador) {
+                        <p-tag value="Creador" severity="info" icon="pi pi-user" />
+                      }
+                      @if (wizardReglaForm.notificarResponsable) {
+                        <p-tag value="Responsable" severity="success" icon="pi pi-user-edit" />
+                      }
+                      @if (wizardReglaForm.notificarAprobadores) {
+                        <p-tag value="Aprobadores" severity="warn" icon="pi pi-users" />
+                      }
+                      @if (!wizardReglaForm.notificarCreador && !wizardReglaForm.notificarResponsable && !wizardReglaForm.notificarAprobadores) {
+                        <span class="no-selection">Ningún destinatario seleccionado</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="wizard-summary-section">
+                    <h4>Canales de Notificación</h4>
+                    <div class="wizard-summary-tags">
+                      @if (wizardReglaForm.enviarInApp) {
+                        <p-tag value="In-App" severity="info" icon="pi pi-desktop" />
+                      }
+                      @if (wizardReglaForm.enviarEmail) {
+                        <p-tag value="Email" severity="warn" icon="pi pi-envelope" />
+                      }
+                      @if (!wizardReglaForm.enviarInApp && !wizardReglaForm.enviarEmail) {
+                        <span class="no-selection">Ningún canal seleccionado</span>
+                      }
+                    </div>
+                  </div>
+
+                  @if (wizardReglaForm.enviarEmail) {
+                    <div class="wizard-summary-section">
+                      <h4>Plantilla de Email</h4>
+                      <div class="wizard-summary-email">
+                        <span class="email-blocks-count">
+                          <i class="pi pi-th-large"></i>
+                          {{ wizardReglaBlocks().length }} bloques configurados
+                        </span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Footer del wizard -->
+          <div class="wizard-footer">
+            <div class="wizard-footer-left">
+              @if (pasoWizardRegla() > 0) {
+                <p-button
+                  label="Anterior"
+                  icon="pi pi-arrow-left"
+                  [outlined]="true"
+                  (onClick)="anteriorPasoWizard()"
+                />
+              }
+            </div>
+
+            <div class="wizard-footer-right">
+              <p-button
+                label="Cancelar"
+                [text]="true"
+                severity="secondary"
+                (onClick)="cerrarWizardRegla()"
+              />
+
+              @if (pasoWizardRegla() < pasosWizardRegla.length - 1) {
+                <p-button
+                  label="Siguiente"
+                  icon="pi pi-arrow-right"
+                  iconPos="right"
+                  [disabled]="!validarPasoWizard()"
+                  (onClick)="siguientePasoWizard()"
+                />
+              } @else {
+                <p-button
+                  label="Crear Regla"
+                  icon="pi pi-check"
+                  [disabled]="!validarPasoWizard()"
+                  (onClick)="confirmarWizardRegla()"
+                />
+              }
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- Drawer del Editor de Email -->
       @if (emailDrawerVisible && reglaSeleccionada()) {
         <div class="email-drawer-overlay visible" (click)="cerrarEditorEmail()"></div>
@@ -5578,6 +6012,602 @@ interface PreferenciasNotificacion {
       }
     }
 
+    /* ===================================
+       WIZARD NUEVA REGLA - ESTILOS
+       =================================== */
+
+    .wizard-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+
+      &.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+    }
+
+    .wizard-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 700px;
+      max-width: 90vw;
+      height: 100vh;
+      background: var(--surface-card);
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+
+      &.open {
+        transform: translateX(0);
+      }
+    }
+
+    .wizard-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-4);
+      border-bottom: 1px solid var(--surface-border);
+      background: var(--surface-ground);
+    }
+
+    .wizard-title {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-color);
+
+      i {
+        color: var(--primary-color);
+      }
+    }
+
+    .wizard-close-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: var(--text-color-secondary);
+      border-radius: var(--border-radius-full);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--surface-hover);
+        color: var(--text-color);
+      }
+    }
+
+    .wizard-stepper-container {
+      padding: var(--spacing-4);
+      border-bottom: 1px solid var(--surface-border);
+      background: var(--surface-50);
+    }
+
+    .wizard-stepper {
+      display: flex;
+      gap: 0;
+
+      .step-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-1);
+        cursor: default;
+        opacity: 0.5;
+        transition: all 0.2s ease;
+
+        &.active {
+          opacity: 1;
+
+          .step-icon {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+
+            i {
+              color: white;
+            }
+          }
+
+          .step-label {
+            color: var(--primary-color);
+            font-weight: var(--font-weight-semibold);
+          }
+        }
+
+        &.completed {
+          opacity: 1;
+          cursor: pointer;
+
+          .step-icon {
+            background: var(--green-500);
+            border-color: var(--green-500);
+
+            i {
+              color: white;
+            }
+          }
+
+          .step-line {
+            background: var(--green-500);
+          }
+        }
+
+        &.clickable:hover {
+          .step-icon {
+            transform: scale(1.05);
+          }
+        }
+      }
+
+      .step-indicator {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .step-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--border-radius-full);
+        background: var(--surface-ground);
+        border: 2px solid var(--surface-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+
+        i {
+          font-size: 0.85rem;
+          color: var(--text-color-secondary);
+        }
+      }
+
+      .step-line {
+        flex: 1;
+        height: 2px;
+        background: var(--surface-border);
+        margin: 0 var(--spacing-2);
+        max-width: 50px;
+        transition: background 0.2s ease;
+      }
+
+      .step-content {
+        text-align: center;
+      }
+
+      .step-label {
+        font-size: 0.75rem;
+        color: var(--text-color-secondary);
+        white-space: nowrap;
+      }
+    }
+
+    .wizard-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-4);
+    }
+
+    .wizard-step-panel {
+      animation: wizardFadeIn 0.2s ease;
+    }
+
+    @keyframes wizardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .wizard-panel-title {
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-color);
+      margin: 0 0 var(--spacing-4) 0;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+
+      i {
+        color: var(--primary-color);
+      }
+    }
+
+    .wizard-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-4);
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .wizard-field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+    }
+
+    .wizard-label {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-color);
+
+      &.required::after {
+        content: ' *';
+        color: var(--red-500);
+      }
+    }
+
+    .wizard-switch-field {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-2) 0;
+
+      span {
+        font-size: var(--font-size-sm);
+        color: var(--text-color);
+      }
+    }
+
+    .wizard-section {
+      padding-top: var(--spacing-3);
+    }
+
+    .wizard-section-title {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-color);
+      margin: 0 0 var(--spacing-3) 0;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+
+      i {
+        color: var(--primary-color);
+        font-size: 0.9rem;
+      }
+    }
+
+    .wizard-checkbox-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-2);
+    }
+
+    .wizard-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-2) var(--spacing-3);
+      background: var(--surface-ground);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius-lg);
+      transition: all 0.2s ease;
+
+      &.active {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: var(--primary-color);
+      }
+
+      &:hover {
+        border-color: var(--primary-200);
+      }
+    }
+
+    .wizard-validation-errors {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-1);
+      margin-top: var(--spacing-4);
+      padding: var(--spacing-3);
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--red-300);
+      border-radius: var(--border-radius-md);
+
+      .error-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        font-size: var(--font-size-sm);
+        color: var(--red-500);
+
+        i {
+          font-size: 0.85rem;
+        }
+      }
+    }
+
+    .wizard-info-message {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-4);
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--primary-200);
+      border-radius: var(--border-radius-lg);
+
+      i {
+        font-size: 1.25rem;
+        color: var(--primary-color);
+      }
+
+      span {
+        font-size: var(--font-size-sm);
+        color: var(--text-color);
+      }
+    }
+
+    .wizard-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-2);
+      padding: var(--spacing-3);
+      background: var(--surface-ground);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius-lg);
+      margin-bottom: var(--spacing-3);
+    }
+
+    .wizard-toolbar-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-1);
+      padding: var(--spacing-2) var(--spacing-3);
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius-md);
+      font-size: var(--font-size-xs);
+      color: var(--text-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      i {
+        font-size: 0.85rem;
+        color: var(--text-color-secondary);
+      }
+
+      &:hover {
+        border-color: var(--primary-color);
+        background: var(--primary-50);
+
+        i {
+          color: var(--primary-color);
+        }
+      }
+    }
+
+    .wizard-email-canvas {
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: var(--spacing-3);
+      background: var(--surface-ground);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius-lg);
+    }
+
+    .wizard-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-6);
+      color: var(--text-color-secondary);
+
+      i {
+        font-size: 2rem;
+        opacity: 0.5;
+      }
+
+      p {
+        font-size: var(--font-size-sm);
+        margin: 0;
+      }
+    }
+
+    .wizard-block {
+      display: flex;
+      gap: var(--spacing-2);
+      padding: var(--spacing-3);
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius-md);
+      margin-bottom: var(--spacing-2);
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .wizard-block-content {
+      flex: 1;
+
+      .wizard-block-input {
+        width: 100%;
+        padding: var(--spacing-2);
+        background: var(--surface-ground);
+        border: 1px solid var(--surface-border);
+        border-radius: var(--border-radius-sm);
+        color: var(--text-color);
+        font-size: var(--font-size-sm);
+        resize: none;
+
+        &:focus {
+          outline: none;
+          border-color: var(--primary-color);
+        }
+
+        &.header-input {
+          font-size: var(--font-size-lg);
+          font-weight: var(--font-weight-semibold);
+        }
+
+        &.alert-input {
+          border-left: 3px solid var(--orange-400);
+        }
+      }
+
+      .wizard-block-divider {
+        border: none;
+        border-top: 1px solid var(--surface-border);
+        margin: var(--spacing-2) 0;
+      }
+    }
+
+    .wizard-block-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-1);
+
+      button {
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: var(--surface-ground);
+        color: var(--text-color-secondary);
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+
+        &:hover:not(:disabled) {
+          background: var(--surface-hover);
+          color: var(--text-color);
+        }
+
+        &:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+
+        &.delete-btn:hover:not(:disabled) {
+          background: var(--red-100);
+          color: var(--red-500);
+        }
+
+        i {
+          font-size: 0.75rem;
+        }
+      }
+    }
+
+    .wizard-summary {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
+    }
+
+    .wizard-summary-section {
+      padding: var(--spacing-4);
+      background: var(--surface-ground);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius-lg);
+
+      h4 {
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-color);
+        margin: 0 0 var(--spacing-3) 0;
+        padding-bottom: var(--spacing-2);
+        border-bottom: 1px solid var(--surface-border);
+      }
+    }
+
+    .wizard-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-3);
+    }
+
+    .wizard-summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-1);
+
+      .summary-label {
+        font-size: var(--font-size-xs);
+        color: var(--text-color-secondary);
+      }
+
+      .summary-value {
+        font-size: var(--font-size-sm);
+        color: var(--text-color);
+        font-weight: var(--font-weight-medium);
+      }
+    }
+
+    .wizard-summary-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-2);
+
+      .no-selection {
+        font-size: var(--font-size-sm);
+        color: var(--text-color-secondary);
+        font-style: italic;
+      }
+    }
+
+    .wizard-summary-email {
+      .email-blocks-count {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        font-size: var(--font-size-sm);
+        color: var(--text-color);
+
+        i {
+          color: var(--primary-color);
+        }
+      }
+    }
+
+    .wizard-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-4);
+      border-top: 1px solid var(--surface-border);
+      background: var(--surface-50);
+    }
+
+    .wizard-footer-left,
+    .wizard-footer-right {
+      display: flex;
+      gap: var(--spacing-2);
+    }
+
     /* Drawer overlay */
     .email-drawer-overlay {
       position: fixed;
@@ -6135,6 +7165,34 @@ export class NotificacionesConfigComponent implements OnInit {
   previewDarkMode = false;
   previewType: 'email' | 'inapp' = 'email';
   emailDrawerVisible = false;
+
+  // === WIZARD NUEVA REGLA ===
+  wizardReglaVisible = false;
+  pasoWizardRegla = signal(0);
+  wizardReglaBlocks = signal<EmailBlock[]>([]);
+
+  pasosWizardRegla = [
+    { label: 'Datos Generales', icon: 'pi pi-file-edit', descripcion: 'Configura la información básica de la regla' },
+    { label: 'Diseño', icon: 'pi pi-palette', descripcion: 'Diseña la plantilla de notificación' },
+    { label: 'Resumen', icon: 'pi pi-check-circle', descripcion: 'Revisa y confirma la configuración' }
+  ];
+
+  wizardReglaForm: Partial<NotificationRule> & { emailBlocks?: EmailBlock[] } = {
+    nombre: '',
+    descripcion: '',
+    entidadTipo: '',
+    eventoTipo: '',
+    severidad: 'info',
+    activo: true,
+    notificarCreador: false,
+    notificarResponsable: true,
+    notificarAprobadores: false,
+    rolesDestino: [],
+    usuariosDestino: [],
+    enviarInApp: true,
+    enviarEmail: false,
+    plantillaMensaje: ''
+  };
 
   // Datos de ejemplo para la vista previa
   previewData = {
@@ -6936,7 +7994,7 @@ export class NotificacionesConfigComponent implements OnInit {
     switch (this.tipoReglaSeleccionado) {
       case 'todos':
       case 'eventos':
-        this.abrirDialogNuevaRegla();
+        this.abrirWizardNuevaRegla();
         break;
       case 'alertas':
         this.abrirDialogNuevaAlerta();
@@ -6945,6 +8003,178 @@ export class NotificacionesConfigComponent implements OnInit {
         this.abrirDialogNuevoVencimiento();
         break;
     }
+  }
+
+  // === WIZARD NUEVA REGLA - MÉTODOS ===
+
+  abrirWizardNuevaRegla(): void {
+    // Reset form
+    this.wizardReglaForm = {
+      nombre: '',
+      descripcion: '',
+      entidadTipo: '',
+      eventoTipo: '',
+      severidad: 'info',
+      activo: true,
+      notificarCreador: false,
+      notificarResponsable: true,
+      notificarAprobadores: false,
+      rolesDestino: [],
+      usuariosDestino: [],
+      enviarInApp: true,
+      enviarEmail: false,
+      plantillaMensaje: ''
+    };
+    // Reset bloques de email
+    this.wizardReglaBlocks.set([
+      {
+        id: 'block-default-1',
+        type: 'header',
+        content: 'Nueva Notificación',
+        styles: { alignment: 'center', fontSize: 'large', bold: true }
+      },
+      {
+        id: 'block-default-2',
+        type: 'paragraph',
+        content: 'Se ha generado una nueva notificación en el sistema.',
+        styles: { alignment: 'left' }
+      }
+    ]);
+    this.pasoWizardRegla.set(0);
+    this.wizardReglaVisible = true;
+  }
+
+  cerrarWizardRegla(): void {
+    this.wizardReglaVisible = false;
+    this.pasoWizardRegla.set(0);
+  }
+
+  irAPasoWizard(paso: number): void {
+    if (paso < this.pasoWizardRegla()) {
+      this.pasoWizardRegla.set(paso);
+    }
+  }
+
+  anteriorPasoWizard(): void {
+    if (this.pasoWizardRegla() > 0) {
+      this.pasoWizardRegla.update(p => p - 1);
+    }
+  }
+
+  siguientePasoWizard(): void {
+    if (this.validarPasoWizard() && this.pasoWizardRegla() < this.pasosWizardRegla.length - 1) {
+      this.pasoWizardRegla.update(p => p + 1);
+    }
+  }
+
+  validarPasoWizard(): boolean {
+    const paso = this.pasoWizardRegla();
+    switch (paso) {
+      case 0: // Datos Generales
+        return !!(this.wizardReglaForm.nombre && this.wizardReglaForm.entidadTipo && this.wizardReglaForm.eventoTipo);
+      case 1: // Diseño
+        return true; // El diseño es opcional
+      case 2: // Resumen
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  getErroresPasoWizard(): string[] {
+    const errores: string[] = [];
+    const paso = this.pasoWizardRegla();
+
+    if (paso === 0) {
+      if (!this.wizardReglaForm.nombre) errores.push('El nombre es requerido');
+      if (!this.wizardReglaForm.entidadTipo) errores.push('Selecciona un tipo de entidad');
+      if (!this.wizardReglaForm.eventoTipo) errores.push('Selecciona un tipo de evento');
+    }
+
+    return errores;
+  }
+
+  confirmarWizardRegla(): void {
+    if (!this.validarPasoWizard()) return;
+
+    const nuevaRegla: NotificationRule = {
+      id: Date.now().toString(),
+      nombre: this.wizardReglaForm.nombre || '',
+      descripcion: this.wizardReglaForm.descripcion,
+      entidadTipo: this.wizardReglaForm.entidadTipo || '',
+      eventoTipo: this.wizardReglaForm.eventoTipo || '',
+      severidad: this.wizardReglaForm.severidad || 'info',
+      activo: this.wizardReglaForm.activo ?? true,
+      notificarCreador: this.wizardReglaForm.notificarCreador ?? false,
+      notificarResponsable: this.wizardReglaForm.notificarResponsable ?? true,
+      notificarAprobadores: this.wizardReglaForm.notificarAprobadores ?? false,
+      rolesDestino: this.wizardReglaForm.rolesDestino || [],
+      usuariosDestino: this.wizardReglaForm.usuariosDestino || [],
+      enviarInApp: this.wizardReglaForm.enviarInApp ?? true,
+      enviarEmail: this.wizardReglaForm.enviarEmail ?? false,
+      plantillaMensaje: this.wizardReglaForm.plantillaMensaje,
+      fechaCreacion: new Date()
+    };
+
+    // Guardar bloques de email si email está habilitado
+    if (this.wizardReglaForm.enviarEmail) {
+      (nuevaRegla as any).emailBlocks = [...this.wizardReglaBlocks()];
+    }
+
+    this.notificationRules.update(reglas => [...reglas, nuevaRegla]);
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Regla Creada',
+      detail: `La regla "${nuevaRegla.nombre}" ha sido creada correctamente`
+    });
+
+    this.cerrarWizardRegla();
+  }
+
+  // Métodos para editor de email en wizard
+  agregarBloqueWizard(tipo: EmailBlockType): void {
+    const nuevoBloque: EmailBlock = {
+      id: `block-${Date.now()}`,
+      type: tipo,
+      content: this.getDefaultContentWizard(tipo),
+      styles: {
+        alignment: 'left',
+        fontSize: 'medium'
+      }
+    };
+
+    this.wizardReglaBlocks.update(blocks => [...blocks, nuevoBloque]);
+  }
+
+  getDefaultContentWizard(tipo: EmailBlockType): string {
+    switch (tipo) {
+      case 'header': return 'Título';
+      case 'paragraph': return 'Escribe tu texto aquí...';
+      case 'button': return 'Ver Detalle';
+      case 'divider': return '';
+      case 'variable': return 'nombre';
+      case 'list': return 'Elemento 1\nElemento 2\nElemento 3';
+      case 'alert': return 'Mensaje de alerta';
+      default: return '';
+    }
+  }
+
+  eliminarBloqueWizard(id: string): void {
+    this.wizardReglaBlocks.update(blocks => blocks.filter(b => b.id !== id));
+  }
+
+  moverBloqueWizard(index: number, direccion: number): void {
+    const blocks = [...this.wizardReglaBlocks()];
+    const nuevoIndex = index + direccion;
+
+    if (nuevoIndex < 0 || nuevoIndex >= blocks.length) return;
+
+    const temp = blocks[index];
+    blocks[index] = blocks[nuevoIndex];
+    blocks[nuevoIndex] = temp;
+
+    this.wizardReglaBlocks.set(blocks);
   }
 
   // === MÉTODOS PARA LISTA-DETALLE ===
