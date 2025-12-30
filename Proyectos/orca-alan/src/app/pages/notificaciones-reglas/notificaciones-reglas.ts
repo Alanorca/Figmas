@@ -1,7 +1,7 @@
 import { Component, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 // PrimeNG
 import { TableModule } from 'primeng/table';
@@ -83,6 +83,7 @@ interface ExpirationRule {
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     TableModule,
     ButtonModule,
     DialogModule,
@@ -135,11 +136,12 @@ interface ExpirationRule {
           <p-tabpanel [value]="0">
             <div class="tab-header">
               <h3>Reglas de Notificación por Eventos</h3>
-              <p-button
-                label="Nueva Regla"
-                icon="pi pi-plus"
-                (onClick)="abrirDialogNuevaRegla()"
-              />
+              <a routerLink="/notificaciones-reglas/nueva">
+                <p-button
+                  label="Nueva Regla"
+                  icon="pi pi-plus"
+                />
+              </a>
             </div>
 
             <p-table
@@ -222,7 +224,9 @@ interface ExpirationRule {
                   <td colspan="7" class="empty-message">
                     <i class="pi pi-inbox"></i>
                     <p>No hay reglas de eventos configuradas</p>
-                    <p-button label="Crear primera regla" icon="pi pi-plus" (onClick)="abrirDialogNuevaRegla()" />
+                    <a routerLink="/notificaciones-reglas/nueva">
+                      <p-button label="Crear primera regla" icon="pi pi-plus" />
+                    </a>
                   </td>
                 </tr>
               </ng-template>

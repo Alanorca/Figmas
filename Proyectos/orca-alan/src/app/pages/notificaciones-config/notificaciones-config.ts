@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
@@ -1862,42 +1863,94 @@ interface PreferenciasNotificacion {
                 }
                 @for (block of emailBlocks(); track block.id; let i = $index) {
                   <div class="drawer-block" [class.selected]="bloqueSeleccionado === block.id" (click)="seleccionarBloque(block.id)">
-                    <div class="drawer-block-drag">
-                      <i class="pi pi-bars"></i>
+                    <!-- Primera fila: Tipo de bloque + Acciones -->
+                    <div class="drawer-block-header-row">
+                      <div class="drawer-block-type">
+                        <i class="pi pi-bars drawer-drag-icon"></i>
+                        @switch (block.type) {
+                          @case ('header') { <span class="block-type-label">Título</span> }
+                          @case ('paragraph') { <span class="block-type-label">Párrafo</span> }
+                          @case ('variable') { <span class="block-type-label">Variable</span> }
+                          @case ('button') { <span class="block-type-label">Botón</span> }
+                          @case ('divider') { <span class="block-type-label">Divisor</span> }
+                          @case ('list') { <span class="block-type-label">Lista</span> }
+                          @case ('alert') { <span class="block-type-label">Alerta</span> }
+                        }
+                      </div>
+                      <div class="drawer-block-actions">
+                        @if (block.type !== 'divider' && block.type !== 'variable') {
+                          <button type="button" (click)="setBlockAlignment(block, 'left'); $event.stopPropagation()" [class.active]="block.styles?.alignment === 'left' || !block.styles?.alignment" pTooltip="Izquierda">
+                            <i class="pi pi-align-left"></i>
+                          </button>
+                          <button type="button" (click)="setBlockAlignment(block, 'center'); $event.stopPropagation()" [class.active]="block.styles?.alignment === 'center'" pTooltip="Centro">
+                            <i class="pi pi-align-center"></i>
+                          </button>
+                          <button type="button" (click)="setBlockAlignment(block, 'right'); $event.stopPropagation()" [class.active]="block.styles?.alignment === 'right'" pTooltip="Derecha">
+                            <i class="pi pi-align-right"></i>
+                          </button>
+                          <span class="actions-divider"></span>
+                        }
+                        @if (block.type === 'alert') {
+                          <div class="alert-types">
+                            <button type="button" [class.active]="block.styles?.color === 'info' || !block.styles?.color" (click)="setAlertType(block, 'info'); $event.stopPropagation()">
+                              <i class="pi pi-info-circle"></i>
+                            </button>
+                            <button type="button" [class.active]="block.styles?.color === 'warning'" (click)="setAlertType(block, 'warning'); $event.stopPropagation()">
+                              <i class="pi pi-exclamation-triangle"></i>
+                            </button>
+                            <button type="button" [class.active]="block.styles?.color === 'danger'" (click)="setAlertType(block, 'danger'); $event.stopPropagation()">
+                              <i class="pi pi-times-circle"></i>
+                            </button>
+                          </div>
+                          <span class="actions-divider"></span>
+                        }
+                        <button type="button" (click)="moverBloque(i, -1); $event.stopPropagation()" [disabled]="i === 0" pTooltip="Subir">
+                          <i class="pi pi-arrow-up"></i>
+                        </button>
+                        <button type="button" (click)="moverBloque(i, 1); $event.stopPropagation()" [disabled]="i === emailBlocks().length - 1" pTooltip="Bajar">
+                          <i class="pi pi-arrow-down"></i>
+                        </button>
+                        <button type="button" class="delete-btn" (click)="eliminarBloque(block.id); $event.stopPropagation()" pTooltip="Eliminar">
+                          <i class="pi pi-trash"></i>
+                        </button>
+                      </div>
                     </div>
+                    <!-- Segunda fila: Contenido editable (ancho completo) -->
                     <div class="drawer-block-content">
                       @switch (block.type) {
                         @case ('header') {
                           <input
                             type="text"
                             class="drawer-block-input drawer-block-header"
-                            [(ngModel)]="block.content"
-                            (ngModelChange)="actualizarBloque(block)"
+                            [ngModel]="block.content"
+                            (ngModelChange)="actualizarContenidoBloque(block.id, $event)"
                             placeholder="Escribe un título..."
                             [style.text-align]="block.styles?.alignment || 'left'"
+                            (click)="$event.stopPropagation()"
                           />
                         }
                         @case ('paragraph') {
                           <textarea
                             class="drawer-block-input drawer-block-paragraph"
-                            [(ngModel)]="block.content"
-                            (ngModelChange)="actualizarBloque(block)"
+                            [ngModel]="block.content"
+                            (ngModelChange)="actualizarContenidoBloque(block.id, $event)"
                             placeholder="Escribe un párrafo..."
                             rows="3"
                             [style.text-align]="block.styles?.alignment || 'left'"
+                            (click)="$event.stopPropagation()"
                           ></textarea>
                         }
                         @case ('variable') {
                           <div class="drawer-block-variable">
-                            <span class="variable-label">Variable:</span>
                             <p-select
-                              [(ngModel)]="block.content"
+                              [ngModel]="block.content"
                               [options]="opcionesVariables"
                               optionLabel="label"
                               optionValue="value"
-                              placeholder="Seleccionar"
-                              (ngModelChange)="actualizarBloque(block)"
-                              styleClass="select-dark-mode"
+                              placeholder="Seleccionar variable"
+                              (ngModelChange)="actualizarContenidoBloque(block.id, $event)"
+                              styleClass="select-dark-mode variable-select-full"
+                              (click)="$event.stopPropagation()"
                             />
                           </div>
                         }
@@ -1906,11 +1959,12 @@ interface PreferenciasNotificacion {
                             <input
                               type="text"
                               class="drawer-block-input"
-                              [(ngModel)]="block.content"
-                              (ngModelChange)="actualizarBloque(block)"
+                              [ngModel]="block.content"
+                              (ngModelChange)="actualizarContenidoBloque(block.id, $event)"
                               placeholder="Texto del botón..."
+                              (click)="$event.stopPropagation()"
                             />
-                            <div class="button-preview-small">
+                            <div class="button-preview-small" [style.text-align]="block.styles?.alignment || 'center'">
                               <span>{{ block.content || 'Botón' }}</span>
                             </div>
                           </div>
@@ -1923,58 +1977,24 @@ interface PreferenciasNotificacion {
                         @case ('list') {
                           <textarea
                             class="drawer-block-input drawer-block-list"
-                            [(ngModel)]="block.content"
-                            (ngModelChange)="actualizarBloque(block)"
+                            [ngModel]="block.content"
+                            (ngModelChange)="actualizarContenidoBloque(block.id, $event)"
                             placeholder="Elementos separados por líneas..."
                             rows="3"
+                            (click)="$event.stopPropagation()"
                           ></textarea>
                         }
                         @case ('alert') {
-                          <div class="drawer-block-alert">
-                            <div class="alert-types">
-                              <button type="button" [class.active]="block.styles?.color === 'info' || !block.styles?.color" (click)="setAlertType(block, 'info')">
-                                <i class="pi pi-info-circle"></i>
-                              </button>
-                              <button type="button" [class.active]="block.styles?.color === 'warning'" (click)="setAlertType(block, 'warning')">
-                                <i class="pi pi-exclamation-triangle"></i>
-                              </button>
-                              <button type="button" [class.active]="block.styles?.color === 'danger'" (click)="setAlertType(block, 'danger')">
-                                <i class="pi pi-times-circle"></i>
-                              </button>
-                            </div>
-                            <textarea
-                              class="drawer-block-input"
-                              [(ngModel)]="block.content"
-                              (ngModelChange)="actualizarBloque(block)"
-                              placeholder="Mensaje de alerta..."
-                              rows="2"
-                            ></textarea>
-                          </div>
+                          <textarea
+                            class="drawer-block-input"
+                            [ngModel]="block.content"
+                            (ngModelChange)="actualizarContenidoBloque(block.id, $event)"
+                            placeholder="Mensaje de alerta..."
+                            rows="2"
+                            (click)="$event.stopPropagation()"
+                          ></textarea>
                         }
                       }
-                    </div>
-                    <div class="drawer-block-actions">
-                      @if (block.type !== 'divider' && block.type !== 'variable') {
-                        <button type="button" (click)="setBlockAlignment(block, 'left')" [class.active]="block.styles?.alignment === 'left' || !block.styles?.alignment" pTooltip="Izquierda">
-                          <i class="pi pi-align-left"></i>
-                        </button>
-                        <button type="button" (click)="setBlockAlignment(block, 'center')" [class.active]="block.styles?.alignment === 'center'" pTooltip="Centro">
-                          <i class="pi pi-align-center"></i>
-                        </button>
-                        <button type="button" (click)="setBlockAlignment(block, 'right')" [class.active]="block.styles?.alignment === 'right'" pTooltip="Derecha">
-                          <i class="pi pi-align-right"></i>
-                        </button>
-                        <span class="actions-divider"></span>
-                      }
-                      <button type="button" (click)="moverBloque(i, -1)" [disabled]="i === 0" pTooltip="Subir">
-                        <i class="pi pi-arrow-up"></i>
-                      </button>
-                      <button type="button" (click)="moverBloque(i, 1)" [disabled]="i === emailBlocks().length - 1" pTooltip="Bajar">
-                        <i class="pi pi-arrow-down"></i>
-                      </button>
-                      <button type="button" class="delete-btn" (click)="eliminarBloque(block.id)" pTooltip="Eliminar">
-                        <i class="pi pi-trash"></i>
-                      </button>
                     </div>
                   </div>
                 }
@@ -2258,106 +2278,105 @@ interface PreferenciasNotificacion {
                         </div>
                       </div>
                       <div class="inapp-body">
-                        <!-- Mensaje principal -->
-                        <p class="inapp-message">
-                          @if (emailBlocks().length > 0) {
-                            @for (block of emailBlocks(); track block.id) {
-                              @if (block.type === 'paragraph') {
-                                {{ block.content }}
-                              }
-                              @if (block.type === 'variable' && block.content === 'nombre') {
-                                <strong>{{ previewData.nombre }}</strong>
-                              }
-                            }
-                          } @else {
+                        @if (emailBlocks().length === 0) {
+                          <p class="inapp-message">
                             Se ha detectado un evento en <strong>{{ previewData.nombre }}</strong> que requiere su atención.
+                          </p>
+                        }
+                        <!-- Renderizar bloques dinámicamente -->
+                        @for (block of emailBlocks(); track block.id) {
+                          @switch (block.type) {
+                            @case ('header') {
+                              <h3 class="inapp-block-header" [style.text-align]="block.styles?.alignment || 'left'">{{ block.content || 'Título' }}</h3>
+                            }
+                            @case ('paragraph') {
+                              <p class="inapp-block-paragraph" [style.text-align]="block.styles?.alignment || 'left'">{{ block.content || 'Contenido...' }}</p>
+                            }
+                            @case ('variable') {
+                              <div class="inapp-var-row">
+                                @switch (block.content) {
+                                  @case ('nombre') {
+                                    <span class="inapp-var-label"><i class="pi pi-tag"></i> Nombre</span>
+                                    <div class="inapp-var-value">
+                                      <span class="inapp-entity-badge"><i class="pi pi-building"></i> {{ previewData.nombre }}</span>
+                                    </div>
+                                  }
+                                  @case ('descripcion') {
+                                    <span class="inapp-var-label"><i class="pi pi-align-left"></i> Descripción</span>
+                                    <div class="inapp-var-value"><span class="inapp-desc-text">{{ previewData.descripcion }}</span></div>
+                                  }
+                                  @case ('fecha') {
+                                    <span class="inapp-var-label"><i class="pi pi-calendar"></i> Fecha</span>
+                                    <div class="inapp-var-value"><span class="inapp-date">{{ previewData.fecha }}</span></div>
+                                  }
+                                  @case ('responsable') {
+                                    <span class="inapp-var-label"><i class="pi pi-user"></i> Responsable</span>
+                                    <div class="inapp-var-value">
+                                      <span class="inapp-user-chip"><span class="inapp-avatar">{{ previewData.responsable.iniciales }}</span> {{ previewData.responsable.nombre }}</span>
+                                    </div>
+                                  }
+                                  @case ('entidad') {
+                                    <span class="inapp-var-label"><i class="pi pi-box"></i> Entidad</span>
+                                    <div class="inapp-var-value">
+                                      <span class="inapp-entity-badge"><i [class]="previewData.entidad.icono"></i> {{ previewData.entidad.tipo }}</span>
+                                    </div>
+                                  }
+                                  @case ('severidad') {
+                                    <span class="inapp-var-label"><i class="pi pi-exclamation-triangle"></i> Severidad</span>
+                                    <div class="inapp-var-value">
+                                      <p-tag [value]="previewData.severidad.label" [severity]="previewData.severidad.severity" [rounded]="true" />
+                                    </div>
+                                  }
+                                  @case ('estado') {
+                                    <span class="inapp-var-label"><i class="pi pi-info-circle"></i> Estado</span>
+                                    <div class="inapp-var-value">
+                                      <span class="inapp-status-badge" [class]="'status-' + previewData.estado.color"><i class="pi pi-circle-fill"></i> {{ previewData.estado.label }}</span>
+                                    </div>
+                                  }
+                                  @case ('creador') {
+                                    <span class="inapp-var-label"><i class="pi pi-user-plus"></i> Creado por</span>
+                                    <div class="inapp-var-value">
+                                      <span class="inapp-user-chip"><span class="inapp-avatar">{{ previewData.creador.iniciales }}</span> {{ previewData.creador.nombre }}</span>
+                                    </div>
+                                  }
+                                  @case ('enlace') {
+                                    <span class="inapp-var-label"><i class="pi pi-link"></i> Enlace</span>
+                                    <div class="inapp-var-value"><a class="inapp-link" href="#">Ver en ORCA <i class="pi pi-external-link"></i></a></div>
+                                  }
+                                  @default {
+                                    <span class="inapp-var-label"><i class="pi pi-code"></i> {{ block.content }}</span>
+                                    <div class="inapp-var-value"><span>—</span></div>
+                                  }
+                                }
+                              </div>
+                            }
+                            @case ('button') {
+                              <div class="inapp-block-button-container" [style.text-align]="block.styles?.alignment || 'center'">
+                                <button class="inapp-block-button">{{ block.content || 'Ver más' }}</button>
+                              </div>
+                            }
+                            @case ('divider') {
+                              <hr class="inapp-block-divider" />
+                            }
+                            @case ('list') {
+                              <ul class="inapp-block-list">
+                                @for (item of (block.content || '').split('\n'); track item) {
+                                  @if (item.trim()) {
+                                    <li><i class="pi pi-check"></i> {{ item }}</li>
+                                  }
+                                }
+                              </ul>
+                            }
+                            @case ('alert') {
+                              <div class="inapp-block-alert" [class]="'alert-' + (block.styles?.color || 'info')">
+                                <i class="pi" [class.pi-info-circle]="block.styles?.color === 'info' || !block.styles?.color"
+                                   [class.pi-exclamation-triangle]="block.styles?.color === 'warning'"
+                                   [class.pi-times-circle]="block.styles?.color === 'danger'"></i>
+                                <span>{{ block.content || 'Mensaje de alerta' }}</span>
+                              </div>
+                            }
                           }
-                        </p>
-
-                        <!-- Variables en cards compactas -->
-                        <div class="inapp-variables">
-                          <!-- Nombre/Entidad -->
-                          <div class="inapp-var-row">
-                            <span class="inapp-var-label">
-                              <i class="pi pi-tag"></i>
-                              Entidad
-                            </span>
-                            <div class="inapp-var-value">
-                              <span class="inapp-entity-badge">
-                                <i [class]="previewData.entidad.icono"></i>
-                                {{ previewData.nombre }}
-                              </span>
-                            </div>
-                          </div>
-
-                          <!-- Severidad -->
-                          <div class="inapp-var-row">
-                            <span class="inapp-var-label">
-                              <i class="pi pi-exclamation-triangle"></i>
-                              Severidad
-                            </span>
-                            <div class="inapp-var-value">
-                              <p-tag
-                                [value]="previewData.severidad.label"
-                                [severity]="previewData.severidad.severity"
-                                [rounded]="true"
-                              />
-                            </div>
-                          </div>
-
-                          <!-- Estado -->
-                          <div class="inapp-var-row">
-                            <span class="inapp-var-label">
-                              <i class="pi pi-info-circle"></i>
-                              Estado
-                            </span>
-                            <div class="inapp-var-value">
-                              <span class="inapp-status-badge" [class]="'status-' + previewData.estado.color">
-                                <i class="pi pi-circle-fill"></i>
-                                {{ previewData.estado.label }}
-                              </span>
-                            </div>
-                          </div>
-
-                          <!-- Fecha -->
-                          <div class="inapp-var-row">
-                            <span class="inapp-var-label">
-                              <i class="pi pi-calendar"></i>
-                              Fecha
-                            </span>
-                            <div class="inapp-var-value">
-                              <span class="inapp-date">{{ previewData.fecha }}</span>
-                            </div>
-                          </div>
-
-                          <!-- Responsable -->
-                          <div class="inapp-var-row">
-                            <span class="inapp-var-label">
-                              <i class="pi pi-user"></i>
-                              Responsable
-                            </span>
-                            <div class="inapp-var-value">
-                              <span class="inapp-user-chip">
-                                <span class="inapp-avatar">{{ previewData.responsable.iniciales }}</span>
-                                {{ previewData.responsable.nombre }}
-                              </span>
-                            </div>
-                          </div>
-
-                          <!-- Creador -->
-                          <div class="inapp-var-row">
-                            <span class="inapp-var-label">
-                              <i class="pi pi-user-plus"></i>
-                              Creado por
-                            </span>
-                            <div class="inapp-var-value">
-                              <span class="inapp-user-chip">
-                                <span class="inapp-avatar">{{ previewData.creador.iniciales }}</span>
-                                {{ previewData.creador.nombre }}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                        }
                       </div>
                       <div class="inapp-footer">
                         <button class="inapp-action secondary">
@@ -2382,7 +2401,7 @@ interface PreferenciasNotificacion {
                       </div>
                       <div class="toast-content">
                         <span class="toast-title">{{ reglaSeleccionada()?.nombre || 'Nueva Notificación' }}</span>
-                        <span class="toast-message">{{ previewData.nombre }}</span>
+                        <span class="toast-message">{{ getFirstParagraphContent() || previewData.nombre }}</span>
                       </div>
                       <button class="toast-close">
                         <i class="pi pi-times"></i>
@@ -6847,67 +6866,86 @@ interface PreferenciasNotificacion {
       }
     }
 
-    /* Drawer blocks */
+    /* Drawer blocks - Layout de 2 filas */
     .drawer-block {
       position: relative;
       display: flex;
-      align-items: flex-start;
+      flex-direction: column;
       gap: var(--spacing-2);
       padding: var(--spacing-3);
       margin-bottom: var(--spacing-2);
-      background: var(--surface-ground);
-      border: 2px solid transparent;
+      background: var(--surface-card);
+      border: 2px solid var(--surface-border);
       border-radius: var(--border-radius-md);
       transition: all 0.2s;
       cursor: pointer;
 
       &:hover {
-        border-color: var(--surface-border);
+        border-color: var(--primary-200);
       }
 
       &.selected {
         border-color: var(--primary-color);
-        background: var(--primary-50);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
       }
     }
 
-    .drawer-block-drag {
+    /* Primera fila: Tipo + Acciones */
+    .drawer-block-header-row {
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: var(--spacing-1);
-      cursor: grab;
+      justify-content: space-between;
+      gap: var(--spacing-2);
+    }
+
+    .drawer-block-type {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+
+    .drawer-drag-icon {
+      font-size: 0.75rem;
       color: var(--text-color-secondary);
-      opacity: 0;
+      cursor: grab;
+      opacity: 0.5;
       transition: opacity 0.2s;
 
-      i {
-        font-size: 0.8rem;
+      &:hover {
+        opacity: 1;
       }
     }
 
-    .drawer-block:hover .drawer-block-drag,
-    .drawer-block.selected .drawer-block-drag {
-      opacity: 1;
+    .drawer-block:hover .drawer-drag-icon {
+      opacity: 0.8;
     }
 
+    .block-type-label {
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-color-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* Segunda fila: Contenido editable (ancho completo) */
     .drawer-block-content {
-      flex: 1;
-      min-width: 0;
+      width: 100%;
     }
 
     .drawer-block-input {
       width: 100%;
-      border: 1px solid transparent;
-      background: transparent;
+      border: 1px solid var(--surface-border);
+      background: var(--surface-ground);
       padding: var(--spacing-2);
       border-radius: var(--border-radius-sm);
       font-family: inherit;
       transition: all 0.2s;
       color: var(--text-color);
+      resize: none;
 
       &:hover {
-        background: var(--surface-card);
+        border-color: var(--surface-400);
       }
 
       &:focus {
@@ -6934,15 +6972,14 @@ interface PreferenciasNotificacion {
     }
 
     .drawer-block-variable {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-2);
-      padding: var(--spacing-2);
+      width: 100%;
 
-      .variable-label {
-        font-size: var(--font-size-xs);
-        color: var(--text-color-secondary);
-        white-space: nowrap;
+      :host ::ng-deep .variable-select-full {
+        width: 100%;
+
+        .p-select {
+          width: 100%;
+        }
       }
     }
 
@@ -6950,11 +6987,10 @@ interface PreferenciasNotificacion {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-2);
+      width: 100%;
     }
 
     .button-preview-small {
-      text-align: center;
-
       span {
         display: inline-block;
         padding: var(--spacing-1) var(--spacing-3);
@@ -6976,66 +7012,61 @@ interface PreferenciasNotificacion {
       }
     }
 
-    .drawer-block-alert {
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-2);
-    }
-
+    /* Alert types ahora en la primera fila con las acciones */
     .alert-types {
       display: flex;
-      gap: var(--spacing-1);
+      gap: 2px;
 
       button {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 28px;
-        height: 28px;
-        border: 1px solid var(--surface-border);
+        width: 26px;
+        height: 26px;
+        border: none;
         border-radius: var(--border-radius-sm);
-        background: var(--surface-card);
+        background: var(--surface-ground);
+        color: var(--text-color-secondary);
         cursor: pointer;
         transition: all 0.2s;
 
         &:hover {
-          background: var(--surface-50);
+          background: var(--surface-hover);
+          color: var(--text-color);
         }
 
         &.active {
           background: var(--primary-color);
-          color: white;
-          border-color: var(--primary-color);
+          color: var(--primary-contrast-color, white);
         }
 
         i {
-          font-size: 0.85rem;
+          font-size: 0.75rem;
         }
       }
     }
 
-    /* Drawer block actions */
+    /* Drawer block actions - Siempre visible en la primera fila */
     .drawer-block-actions {
       display: flex;
+      align-items: center;
       gap: 2px;
-      opacity: 0;
-      transition: opacity 0.2s;
 
       button {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
         border: none;
         border-radius: var(--border-radius-sm);
-        background: transparent;
+        background: var(--surface-ground);
         cursor: pointer;
         color: var(--text-color-secondary);
         transition: all 0.2s;
 
         &:hover:not(:disabled) {
-          background: var(--surface-200);
+          background: var(--surface-hover);
           color: var(--primary-color);
         }
 
@@ -7045,12 +7076,12 @@ interface PreferenciasNotificacion {
         }
 
         &.active {
-          background: var(--primary-100);
+          background: color-mix(in srgb, var(--primary-color) 15%, transparent);
           color: var(--primary-color);
         }
 
         &.delete-btn:hover {
-          background: var(--red-50);
+          background: color-mix(in srgb, var(--red-500) 15%, transparent);
           color: var(--red-500);
         }
 
@@ -7058,11 +7089,6 @@ interface PreferenciasNotificacion {
           font-size: 0.75rem;
         }
       }
-    }
-
-    .drawer-block:hover .drawer-block-actions,
-    .drawer-block.selected .drawer-block-actions {
-      opacity: 1;
     }
 
     .actions-divider {
@@ -7127,6 +7153,93 @@ interface PreferenciasNotificacion {
       padding: var(--spacing-4);
       border-top: 1px solid var(--surface-border);
       background: var(--surface-50);
+    }
+
+    /* In-App Preview Block Styles */
+    .inapp-block-header {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #18181b;
+      margin: 0 0 8px 0;
+    }
+
+    .inapp-block-paragraph {
+      font-size: 0.8rem;
+      color: #52525b;
+      line-height: 1.5;
+      margin: 0 0 8px 0;
+    }
+
+    .inapp-block-variable {
+      background: #ecfdf5;
+      color: #059669;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-family: monospace;
+    }
+
+    .inapp-block-button {
+      display: inline-block;
+      background: #10b981;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-decoration: none;
+      margin: 4px 0;
+    }
+
+    .inapp-block-divider {
+      height: 1px;
+      background: #e4e4e7;
+      margin: 8px 0;
+    }
+
+    .inapp-block-list {
+      font-size: 0.8rem;
+      color: #52525b;
+      margin: 0 0 8px 0;
+      padding-left: 16px;
+
+      li {
+        margin-bottom: 4px;
+      }
+    }
+
+    .inapp-block-alert {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      &.alert-success {
+        background: #f0fdf4;
+        color: #15803d;
+        border-left: 3px solid #22c55e;
+      }
+
+      &.alert-warning {
+        background: #fffbeb;
+        color: #a16207;
+        border-left: 3px solid #f59e0b;
+      }
+
+      &.alert-danger, &.alert-error {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-left: 3px solid #ef4444;
+      }
+
+      &.alert-info {
+        background: #ecfdf5;
+        color: #047857;
+        border-left: 3px solid #10b981;
+      }
     }
   `]
 })
@@ -7509,7 +7622,8 @@ export class NotificacionesConfigComponent implements OnInit {
 
   constructor(
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -8008,6 +8122,12 @@ export class NotificacionesConfigComponent implements OnInit {
   // === WIZARD NUEVA REGLA - MÉTODOS ===
 
   abrirWizardNuevaRegla(): void {
+    // Navegar a la página de nueva regla
+    this.router.navigate(['/notificaciones-reglas/nueva']);
+  }
+
+  // Método original para reset del wizard (mantenido por si se necesita)
+  _resetWizardForm(): void {
     // Reset form
     this.wizardReglaForm = {
       nombre: '',
@@ -8344,6 +8464,13 @@ export class NotificacionesConfigComponent implements OnInit {
     this.bloqueSeleccionado = id;
   }
 
+  actualizarContenidoBloque(id: string, contenido: string): void {
+    this.emailBlocks.update(blocks =>
+      blocks.map(b => b.id === id ? { ...b, content: contenido } : b)
+    );
+    this.marcarCambios();
+  }
+
   actualizarBloque(block: EmailBlock): void {
     this.emailBlocks.update(blocks =>
       blocks.map(b => b.id === block.id ? { ...block } : b)
@@ -8352,13 +8479,23 @@ export class NotificacionesConfigComponent implements OnInit {
   }
 
   setBlockAlignment(block: EmailBlock, alignment: 'left' | 'center' | 'right'): void {
-    block.styles = { ...block.styles, alignment };
-    this.actualizarBloque(block);
+    this.emailBlocks.update(blocks =>
+      blocks.map(b => b.id === block.id ? {
+        ...b,
+        styles: { ...b.styles, alignment }
+      } : b)
+    );
+    this.marcarCambios();
   }
 
   setAlertType(block: EmailBlock, tipo: string): void {
-    block.styles = { ...block.styles, color: tipo };
-    this.actualizarBloque(block);
+    this.emailBlocks.update(blocks =>
+      blocks.map(b => b.id === block.id ? {
+        ...b,
+        styles: { ...b.styles, color: tipo }
+      } : b)
+    );
+    this.marcarCambios();
   }
 
   togglePreviewEmail(): void {
@@ -8774,5 +8911,11 @@ export class NotificacionesConfigComponent implements OnInit {
         this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Regla eliminada correctamente' });
       },
     });
+  }
+
+  // Obtener contenido del primer bloque de párrafo para el preview In-App
+  getFirstParagraphContent(): string {
+    const paragraph = this.emailBlocks().find(b => b.type === 'paragraph' && b.content);
+    return paragraph?.content || '';
   }
 }
