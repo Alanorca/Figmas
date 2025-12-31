@@ -185,7 +185,7 @@
 
   &:hover {
     border-color: var(--primary-200);
-    background: var(--surface-50);
+    background: var(--surface-hover);
   }
 
   &.selected {
@@ -265,7 +265,7 @@
 
   &:hover {
     border-color: var(--primary-200);
-    background: var(--surface-50);
+    background: var(--surface-hover);
   }
 
   &.selected {
@@ -316,7 +316,7 @@
 
   &:hover {
     border-color: var(--primary-200);
-    background: var(--surface-50);
+    background: var(--surface-hover);
   }
 
   &.selected {
@@ -494,7 +494,7 @@
 
   &:hover {
     border-color: var(--primary-200);
-    background: var(--surface-50);
+    background: var(--surface-hover);
   }
 
   &.selected {
@@ -553,6 +553,7 @@
 
   &:hover {
     border-color: var(--primary-200);
+    background: var(--surface-hover);
   }
 
   &.selected {
@@ -610,6 +611,7 @@
 
   &:hover {
     border-color: var(--primary-200);
+    background: var(--surface-hover);
   }
 
   &.selected {
@@ -750,7 +752,7 @@
 // ============================================
 // DARK MODE - Mejoras de contraste usando tokens
 // ============================================
-:host-context(html.dark-mode) {
+:host-context(.dark) {
   .grafica-wizard {
     // Títulos de sección con mejor contraste
     .section-title,
@@ -776,7 +778,17 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: rgba(var(--primary-500-rgb), 0.15) !important;
+        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
+
+        // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
+        .categoria-nombre {
+          color: #FFFFFF !important;
+          font-weight: 600;
+        }
+
+        .categoria-desc {
+          color: rgba(255, 255, 255, 0.85) !important;
+        }
       }
 
       .categoria-icon {
@@ -808,10 +820,20 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: rgba(var(--primary-500-rgb), 0.15) !important;
+        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
 
         i {
           color: var(--primary-color) !important;
+        }
+
+        // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
+        .tipo-nombre {
+          color: #FFFFFF !important;
+          font-weight: 600;
+        }
+
+        .tipo-desc {
+          color: rgba(255, 255, 255, 0.85) !important;
         }
       }
 
@@ -840,13 +862,25 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: rgba(var(--primary-500-rgb), 0.15) !important;
+        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
 
         .fuente-icon {
           background: var(--primary-color) !important;
 
           i {
             color: var(--surface-0) !important;
+          }
+        }
+
+        // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
+        .fuente-info {
+          .fuente-nombre {
+            color: #FFFFFF !important;
+            font-weight: 600;
+          }
+
+          .fuente-desc {
+            color: rgba(255, 255, 255, 0.85) !important;
           }
         }
       }
@@ -922,7 +956,7 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: rgba(var(--primary-500-rgb), 0.15) !important;
+        background: color-mix(in srgb, var(--primary-color) 20%, var(--surface-900)) !important;
       }
     }
 
@@ -947,7 +981,13 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: rgba(var(--primary-500-rgb), 0.15) !important;
+        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
+
+        // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
+        span {
+          color: #FFFFFF !important;
+          font-weight: 600;
+        }
       }
 
       i {
@@ -971,7 +1011,13 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: rgba(var(--primary-500-rgb), 0.15) !important;
+        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
+
+        // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
+        .paleta-nombre {
+          color: #FFFFFF !important;
+          font-weight: 600;
+        }
       }
 
       .paleta-nombre {

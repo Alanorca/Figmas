@@ -1050,6 +1050,7 @@ interface EmailBlock {
       flex-direction: column;
       flex: 1;
       overflow: hidden;
+      padding-bottom: 70px;
     }
 
     .steps-container {
@@ -2692,6 +2693,12 @@ interface EmailBlock {
       padding: 1rem 1.5rem;
       border-top: 1px solid var(--surface-border);
       background: var(--surface-ground);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
     }
 
     .footer-left,

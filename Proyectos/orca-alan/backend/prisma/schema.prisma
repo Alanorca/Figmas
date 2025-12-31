@@ -888,6 +888,10 @@ model UserNotificationPreferences {
   horarioNoMolestarFin        String?  // "08:00"
   horarioNoMolestarDias       String?  // JSON array de días [0,1,2,3,4,5,6] donde 0=Domingo
 
+  // Rate Limiting Global (máximo notificaciones por hora)
+  rateLimitHabilitado    Boolean @default(true)
+  rateLimitMaxPorHora    Int     @default(100)  // Máximo 100 notificaciones/hora por usuario
+
   // Preferencias por módulo (JSON)
   preferenciasPorModulo  String?  // {"cuestionarios": {"inApp": true, "email": true}, ...}
 

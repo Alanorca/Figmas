@@ -499,55 +499,6 @@
 }
 
 // ============================================================
-// Dark Mode - Usando tokens del sistema
-// ============================================================
-
-:host-context(html.dark-mode) {
-  .rol-card {
-    background: var(--surface-card);
-    border-color: var(--surface-border);
-
-    &:hover {
-      border-color: var(--primary-400);
-      background: var(--surface-hover);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .rol-descripcion {
-      color: var(--text-color-secondary);
-    }
-  }
-
-  .card {
-    background: var(--surface-card);
-    border-color: var(--surface-border);
-  }
-
-  .toolbar-principal {
-    background: var(--surface-card);
-    border-color: var(--surface-border);
-  }
-
-  .activos-tree-container {
-    background: var(--surface-card);
-    border-color: var(--surface-border);
-  }
-}
-
-:root[data-theme="dark"] {
-  .rol-card {
-    background: var(--surface-card);
-    border-color: var(--surface-border);
-
-    &:hover {
-      border-color: var(--primary-400);
-      background: var(--surface-hover);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-  }
-}
-
-// ============================================================
 // Aviso de roles del sistema
 // ============================================================
 
@@ -556,5 +507,134 @@
 
   i {
     color: var(--primary-color);
+  }
+}
+
+// ============================================================
+// DARK MODE OVERRIDES
+// ============================================================
+
+:host-context(.dark) {
+  .usuarios-roles-container {
+    background-color: var(--surface-950);
+  }
+
+  .page-header {
+    h1 {
+      color: var(--surface-0);
+    }
+
+    .page-subtitle {
+      color: var(--surface-400);
+    }
+  }
+
+  .toolbar-principal {
+    background: var(--surface-900);
+    border-color: var(--surface-700);
+  }
+
+  .card {
+    background: var(--surface-900);
+    border-color: var(--surface-700);
+  }
+
+  // Table dark mode
+  :host ::ng-deep .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: var(--surface-800);
+      color: var(--surface-0);
+      border-color: var(--surface-700);
+    }
+
+    .p-datatable-tbody > tr {
+      &:hover {
+        background: var(--surface-800) !important;
+      }
+
+      > td {
+        border-color: var(--surface-700);
+      }
+    }
+
+    .p-datatable-footer {
+      background: var(--surface-800);
+      border-color: var(--surface-700);
+    }
+  }
+
+  .usuario-nombre-cell {
+    color: var(--surface-0);
+  }
+
+  .usuario-email-cell {
+    color: var(--surface-400);
+  }
+
+  .nivel-badge {
+    background: var(--surface-700);
+    color: var(--surface-0);
+  }
+
+  .rol-card {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+
+    &:hover {
+      border-color: var(--primary-400);
+      background: var(--surface-700);
+    }
+
+    &.rol-readonly:hover {
+      background: var(--surface-800);
+      border-color: var(--surface-700);
+    }
+
+    .rol-descripcion {
+      color: var(--surface-400);
+    }
+
+    .rol-usuarios {
+      border-color: var(--surface-600);
+    }
+  }
+
+  .empty-state {
+    i {
+      color: var(--surface-500);
+    }
+
+    p {
+      color: var(--surface-400);
+    }
+  }
+
+  .usuario-detalle {
+    h4 {
+      color: var(--surface-400);
+    }
+  }
+
+  .rol-detalle {
+    .permisos-tree .permiso-item {
+      border-color: var(--surface-700);
+    }
+
+    .usuarios-list .usuario-item:hover {
+      background: var(--surface-800);
+    }
+  }
+
+  .activos-tree-container {
+    background: var(--surface-800);
+
+    :host ::ng-deep .p-tree .p-tree-node-content:hover {
+      background: var(--surface-700);
+    }
+  }
+
+  .roles-system-notice {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
   }
 }

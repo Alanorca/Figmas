@@ -172,6 +172,72 @@ Sistema ORCA
 
     return this.sendEmail(usuarioEmail, subject, body);
   }
+
+  /**
+   * Envía email de notificación de entidad vencida (OVERDUE)
+   */
+  async sendOverdueNotification(usuarioEmail, entidad, diasVencido) {
+    const urgencia = diasVencido >= 7 ? 'CRÍTICO' : 'VENCIDO';
+    const subject = `[ORCA] ${urgencia}: Entidad vencida hace ${diasVencido} día(s)`;
+
+    const body = `
+ATENCIÓN: Entidad Vencida
+
+La siguiente entidad está vencida desde hace ${diasVencido} día(s) y requiere atención inmediata:
+
+Nombre: ${entidad.nombre || entidad.titulo}
+Tipo: ${entidad.tipo || 'No especificado'}
+Días de atraso: ${diasVencido}
+
+Por favor tome las acciones correctivas de manera urgente.
+
+---
+Sistema ORCA
+    `.trim();
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Entidad Vencida</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: ${diasVencido >= 7 ? '#fef2f2' : '#fffbeb'}; border: 1px solid ${diasVencido >= 7 ? '#ef4444' : '#f59e0b'}; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+            <h2 style="margin: 0 0 10px 0; color: ${diasVencido >= 7 ? '#dc2626' : '#d97706'};">
+              ${urgencia}: Entidad vencida hace ${diasVencido} día(s)
+            </h2>
+            <p style="margin: 0; color: #666;">Esta entidad requiere atención inmediata.</p>
+          </div>
+
+          <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="margin: 0 0 8px 0;"><strong>Nombre:</strong> ${entidad.nombre || entidad.titulo}</p>
+            <p style="margin: 0 0 8px 0;"><strong>Tipo:</strong> ${entidad.tipo || 'No especificado'}</p>
+            <p style="margin: 0; color: ${diasVencido >= 7 ? '#dc2626' : '#d97706'}; font-weight: bold;">
+              <strong>Días de atraso:</strong> ${diasVencido}
+            </p>
+          </div>
+
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="#" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Ver en ORCA
+            </a>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+
+          <p style="font-size: 12px; color: #999;">
+            Este mensaje fue generado automáticamente por el Sistema ORCA.<br>
+            No responda a este correo.
+          </p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail(usuarioEmail, subject, body, { html });
+  }
 }
 
 module.exports = new EmailService();

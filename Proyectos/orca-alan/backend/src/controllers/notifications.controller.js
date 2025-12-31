@@ -621,7 +621,9 @@ const getPreferences = async (req, res) => {
           notificarWarning: true,
           notificarCritical: true,
           frecuenciaEmail: 'inmediato',
-          horaResumen: '09:00'
+          horaResumen: '09:00',
+          rateLimitHabilitado: true,
+          rateLimitMaxPorHora: 100
         }
       });
     }
@@ -1095,6 +1097,373 @@ const getNotificationLogById = async (req, res) => {
   }
 };
 
+// ============================================================
+// TOGGLE RULES - Activar/Desactivar reglas
+// ============================================================
+
+const toggleNotificationRule = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const rule = await prisma.notificationRule.findUnique({ where: { id } });
+    if (!rule) {
+      return res.status(404).json({ error: true, message: 'Regla no encontrada' });
+    }
+
+    const updated = await prisma.notificationRule.update({
+      where: { id },
+      data: { activo: !rule.activo }
+    });
+
+    res.json({
+      success: true,
+      activo: updated.activo,
+      message: `Regla ${updated.activo ? 'activada' : 'desactivada'} correctamente`
+    });
+  } catch (error) {
+    console.error('Error al toggle regla:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+const toggleAlertRule = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const alert = await prisma.alertRule.findUnique({ where: { id } });
+    if (!alert) {
+      return res.status(404).json({ error: true, message: 'Alerta no encontrada' });
+    }
+
+    const updated = await prisma.alertRule.update({
+      where: { id },
+      data: { activo: !alert.activo }
+    });
+
+    res.json({
+      success: true,
+      activo: updated.activo,
+      message: `Alerta ${updated.activo ? 'activada' : 'desactivada'} correctamente`
+    });
+  } catch (error) {
+    console.error('Error al toggle alerta:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+const toggleExpirationRule = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const rule = await prisma.expirationRule.findUnique({ where: { id } });
+    if (!rule) {
+      return res.status(404).json({ error: true, message: 'Regla de vencimiento no encontrada' });
+    }
+
+    const updated = await prisma.expirationRule.update({
+      where: { id },
+      data: { activo: !rule.activo }
+    });
+
+    res.json({
+      success: true,
+      activo: updated.activo,
+      message: `Regla de vencimiento ${updated.activo ? 'activada' : 'desactivada'} correctamente`
+    });
+  } catch (error) {
+    console.error('Error al toggle regla de vencimiento:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+const toggleNotificationProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const profile = await prisma.notificationProfile.findUnique({ where: { id } });
+    if (!profile) {
+      return res.status(404).json({ error: true, message: 'Perfil no encontrado' });
+    }
+
+    const nuevoEstado = profile.estado === 'active' ? 'inactive' : 'active';
+    const updated = await prisma.notificationProfile.update({
+      where: { id },
+      data: { estado: nuevoEstado }
+    });
+
+    res.json({
+      success: true,
+      estado: updated.estado,
+      message: `Perfil ${nuevoEstado === 'active' ? 'activado' : 'desactivado'} correctamente`
+    });
+  } catch (error) {
+    console.error('Error al toggle perfil:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+// ============================================================
+// ENTITY TREE - Árbol de entidades para configuración
+// ============================================================
+
+const getEntityTree = async (req, res) => {
+  try {
+    // Helper para hacer queries seguras (devuelve [] si el modelo no existe o hay error)
+    const safeQuery = async (modelName, select) => {
+      try {
+        if (!prisma[modelName]) return [];
+        return await prisma[modelName].findMany({ select });
+      } catch (err) {
+        console.warn(`Query fallida para ${modelName}:`, err.message);
+        return [];
+      }
+    };
+
+    // Obtener todas las entidades disponibles organizadas por tipo
+    // Usando los campos correctos según el schema de Prisma
+    const [
+      riesgos,
+      defectos,
+      incidentes,
+      procesos,
+      cuestionarios,
+      activos,
+      kpis
+    ] = await Promise.all([
+      safeQuery('riesgo', { id: true, descripcion: true, estado: true }),
+      safeQuery('defecto', { id: true, titulo: true, tipo: true }),
+      safeQuery('incidente', { id: true, titulo: true, severidad: true }),
+      safeQuery('proceso', { id: true, nombre: true, estado: true }),
+      safeQuery('cuestionario', { id: true, nombre: true, tipo: true }),
+      safeQuery('activo', { id: true, nombre: true, tipo: true }),
+      safeQuery('kpiProceso', { id: true, nombre: true, unidad: true })
+    ]);
+
+    // Construir árbol jerárquico
+    const tree = [
+      {
+        key: 'RISK',
+        label: 'Riesgos',
+        icon: 'pi pi-exclamation-triangle',
+        selectable: true,
+        children: riesgos.map(r => ({
+          key: `RISK:${r.id}`,
+          label: r.descripcion?.substring(0, 50) || `Riesgo ${r.id.substring(0, 8)}`,
+          data: { tipo: 'RISK', id: r.id, estado: r.estado }
+        }))
+      },
+      {
+        key: 'DEFECT',
+        label: 'Defectos/Controles',
+        icon: 'pi pi-shield',
+        selectable: true,
+        children: defectos.map(d => ({
+          key: `DEFECT:${d.id}`,
+          label: d.titulo,
+          data: { tipo: 'DEFECT', id: d.id, tipoDefecto: d.tipo }
+        }))
+      },
+      {
+        key: 'INCIDENT',
+        label: 'Incidentes',
+        icon: 'pi pi-bolt',
+        selectable: true,
+        children: incidentes.map(i => ({
+          key: `INCIDENT:${i.id}`,
+          label: i.titulo,
+          data: { tipo: 'INCIDENT', id: i.id, severidad: i.severidad }
+        }))
+      },
+      {
+        key: 'PROCESS',
+        label: 'Procesos',
+        icon: 'pi pi-sitemap',
+        selectable: true,
+        children: procesos.map(p => ({
+          key: `PROCESS:${p.id}`,
+          label: p.nombre,
+          data: { tipo: 'PROCESS', id: p.id, estado: p.estado }
+        }))
+      },
+      {
+        key: 'QUESTIONNAIRE',
+        label: 'Cuestionarios',
+        icon: 'pi pi-file-edit',
+        selectable: true,
+        children: cuestionarios.map(q => ({
+          key: `QUESTIONNAIRE:${q.id}`,
+          label: q.nombre,
+          data: { tipo: 'QUESTIONNAIRE', id: q.id, tipoCuestionario: q.tipo }
+        }))
+      },
+      {
+        key: 'ASSET',
+        label: 'Activos',
+        icon: 'pi pi-box',
+        selectable: true,
+        children: activos.map(a => ({
+          key: `ASSET:${a.id}`,
+          label: a.nombre,
+          data: { tipo: 'ASSET', id: a.id, tipoActivo: a.tipo }
+        }))
+      },
+      {
+        key: 'KPI',
+        label: 'KPIs',
+        icon: 'pi pi-chart-line',
+        selectable: true,
+        children: kpis.map(k => ({
+          key: `KPI:${k.id}`,
+          label: k.nombre,
+          data: { tipo: 'KPI', id: k.id, unidad: k.unidad }
+        }))
+      }
+    ];
+
+    res.json(tree);
+  } catch (error) {
+    console.error('Error al obtener árbol de entidades:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+// ============================================================
+// SCHEDULER - Ejecutar jobs manualmente
+// ============================================================
+
+const runSchedulerJob = async (req, res) => {
+  try {
+    const { jobName } = req.params;
+    const scheduler = require('../services/scheduler.service');
+
+    const resultado = await scheduler.runNow(jobName);
+    res.json({ success: true, resultado });
+  } catch (error) {
+    console.error('Error al ejecutar job:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+const getSchedulerStatus = async (req, res) => {
+  try {
+    const scheduler = require('../services/scheduler.service');
+    const status = scheduler.getStatus();
+    res.json(status);
+  } catch (error) {
+    console.error('Error al obtener status:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+// ============================================================
+// APPROVAL WORKFLOW - Notificaciones de aprobación/rechazo
+// ============================================================
+
+const triggerApprovalNotification = async (req, res) => {
+  try {
+    const { tipo, cuestionarioId, respuestaId, mensaje } = req.body;
+    const aprobadorId = req.headers['x-user-id'] || req.body.aprobadorId;
+
+    if (!tipo || !cuestionarioId) {
+      return res.status(400).json({
+        error: true,
+        message: 'Se requiere tipo (APPROVAL/REJECTION) y cuestionarioId'
+      });
+    }
+
+    const notificationTrigger = require('../services/notification-trigger.service');
+    const resultado = await notificationTrigger.triggerApprovalNotification(
+      tipo,
+      cuestionarioId,
+      respuestaId,
+      aprobadorId,
+      mensaje
+    );
+
+    res.json({ success: true, resultado });
+  } catch (error) {
+    console.error('Error al disparar notificación de aprobación:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+// ============================================================
+// TRIGGER EVENT - Disparar notificación por evento
+// ============================================================
+
+const triggerEventNotification = async (req, res) => {
+  try {
+    const { eventoTipo, entidadTipo, entidadId, entidadData } = req.body;
+    const usuarioAccionId = req.headers['x-user-id'] || req.body.usuarioAccionId;
+
+    if (!eventoTipo || !entidadTipo || !entidadId) {
+      return res.status(400).json({
+        error: true,
+        message: 'Se requiere eventoTipo, entidadTipo y entidadId'
+      });
+    }
+
+    const notificationTrigger = require('../services/notification-trigger.service');
+    const resultado = await notificationTrigger.triggerEvent(
+      eventoTipo,
+      entidadTipo,
+      entidadId,
+      entidadData || {},
+      usuarioAccionId
+    );
+
+    res.json({ success: true, resultado });
+  } catch (error) {
+    console.error('Error al disparar evento:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
+// ============================================================
+// TEST NOTIFICATION - Enviar notificación de prueba
+// ============================================================
+
+const sendTestNotification = async (req, res) => {
+  try {
+    const usuarioId = req.headers['x-user-id'] || req.body.usuarioId;
+    const { tipo = 'NOTIFICATION', severidad = 'info' } = req.body;
+
+    if (!usuarioId) {
+      return res.status(400).json({
+        error: true,
+        message: 'Se requiere X-User-Id header o usuarioId en body'
+      });
+    }
+
+    const notification = await prisma.notification.create({
+      data: {
+        usuarioId,
+        tipo,
+        titulo: 'Notificación de prueba',
+        mensaje: `Esta es una notificación de prueba (${severidad}) enviada el ${new Date().toLocaleString('es-MX')}.`,
+        severidad,
+        metadata: JSON.stringify({ test: true, timestamp: Date.now() })
+      }
+    });
+
+    // Log
+    await prisma.notificationLog.create({
+      data: {
+        notificationId: notification.id,
+        usuarioId,
+        canal: 'IN_APP',
+        estado: 'SENT',
+        reglaTipo: 'TEST'
+      }
+    });
+
+    res.json({ success: true, notification });
+  } catch (error) {
+    console.error('Error al enviar notificación de prueba:', error);
+    res.status(500).json({ error: true, message: error.message });
+  }
+};
+
 module.exports = {
   // Notification Rules
   getNotificationRules,
@@ -1102,24 +1471,28 @@ module.exports = {
   createNotificationRule,
   updateNotificationRule,
   deleteNotificationRule,
+  toggleNotificationRule,
   // Alert Rules
   getAlertRules,
   getAlertRuleById,
   createAlertRule,
   updateAlertRule,
   deleteAlertRule,
+  toggleAlertRule,
   // Expiration Rules
   getExpirationRules,
   getExpirationRuleById,
   createExpirationRule,
   updateExpirationRule,
   deleteExpirationRule,
+  toggleExpirationRule,
   // Notification Profiles
   getNotificationProfiles,
   getNotificationProfileById,
   createNotificationProfile,
   updateNotificationProfile,
   deleteNotificationProfile,
+  toggleNotificationProfile,
   // Notification Logs
   getNotificationLogs,
   getNotificationLogById,
@@ -1136,5 +1509,14 @@ module.exports = {
   getPreferences,
   updatePreferences,
   // Stats
-  getStats
+  getStats,
+  // Entity Tree
+  getEntityTree,
+  // Scheduler
+  runSchedulerJob,
+  getSchedulerStatus,
+  // Triggers
+  triggerApprovalNotification,
+  triggerEventNotification,
+  sendTestNotification
 };

@@ -23,6 +23,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ChipModule } from 'primeng/chip';
 import { ApiService } from '../../services/api.service';
+import { NotificacionesService } from '../../services/notificaciones.service';
 import { NotificacionesLogsComponent } from '../notificaciones-logs/notificaciones-logs';
 
 // Interfaces para Reglas de Notificación
@@ -145,6 +146,7 @@ interface HorarioNoMolestar {
   habilitado: boolean;
   horaInicio: string;
   horaFin: string;
+  diasSemana: number[]; // 0=Domingo, 1=Lunes, 2=Martes, etc.
 }
 
 interface PreferenciasNotificacion {
@@ -154,6 +156,14 @@ interface PreferenciasNotificacion {
     medium: { email: boolean; inApp: boolean };
     low: { email: boolean; inApp: boolean };
   };
+  frecuenciaEmail: 'inmediato' | 'resumen_diario' | 'resumen_semanal';
+  horaResumen: string;
+}
+
+interface DiaSemana {
+  valor: number;
+  label: string;
+  labelCorto: string;
 }
 
 @Component({
@@ -317,98 +327,71 @@ interface PreferenciasNotificacion {
                     Aplica a
                   </h4>
                   <p class="section-desc">
-                    @if (moduloSeleccionado()!.tipoSelector === 'tree') {
-                      Selecciona los activos o contenedores específicos para los que aplicará esta configuración
-                    } @else {
-                      Selecciona las entidades específicas para las que aplicará esta configuración
-                    }
+                    Selecciona las entidades específicas para las que aplicará esta configuración
                   </p>
 
-                  @if (moduloSeleccionado()!.tipoSelector === 'tree') {
-                    <!-- TreeSelect para Activos y Procesos -->
-                    <div class="aplica-a-field">
+                  <!-- Layout 50/50 para Árbol de Activos y MultiSelect de Procesos -->
+                  <div class="aplica-a-grid">
+                    <!-- Columna Izquierda: TreeSelect para Activos -->
+                    <div class="aplica-a-column">
+                      <label class="aplica-a-label">
+                        <i class="pi pi-box"></i>
+                        Activos
+                      </label>
                       <p-treeSelect
-                        [(ngModel)]="moduloSeleccionado()!.nodosSeleccionados"
+                        [ngModel]="moduloSeleccionado()?.nodosSeleccionados"
+                        (ngModelChange)="onNodosSeleccionadosChange($event)"
                         [options]="arbolEntidades()"
                         [metaKeySelection]="false"
                         selectionMode="checkbox"
-                        placeholder="Buscar y seleccionar activos o procesos..."
+                        placeholder="Seleccionar activos..."
                         [filter]="true"
-                        filterPlaceholder="Buscar en el árbol..."
+                        filterPlaceholder="Buscar activos..."
                         [showClear]="true"
-                        styleClass="aplica-a-tree-select w-full"
+                        class="aplica-a-selector"
                         [propagateSelectionUp]="true"
                         [propagateSelectionDown]="true"
-                        scrollHeight="350px"
+                        scrollHeight="250px"
+                        appendTo="body"
                       >
                         <ng-template pTemplate="value" let-nodes>
                           @if (!nodes || nodes.length === 0) {
-                            <span class="placeholder-text">Buscar y seleccionar activos o procesos...</span>
-                          } @else if (nodes.length <= 2) {
-                            <div class="selected-chips">
-                              @for (node of nodes; track node.key) {
-                                <span class="selected-chip">
-                                  <i [class]="node.icon" class="chip-icon"></i>
-                                  {{ node.label }}
-                                </span>
-                              }
-                            </div>
+                            <span class="selector-placeholder">Seleccionar activos...</span>
                           } @else {
-                            <span class="selected-count">
-                              <i class="pi pi-check-circle"></i>
-                              {{ nodes.length }} elementos seleccionados
-                            </span>
+                            <span class="selector-value">{{ nodes.length }} activo(s) seleccionado(s)</span>
                           }
                         </ng-template>
                       </p-treeSelect>
                     </div>
-                  } @else {
-                    <!-- MultiSelect para otras entidades -->
-                    <div class="aplica-a-field">
+
+                    <!-- Columna Derecha: MultiSelect para Procesos -->
+                    <div class="aplica-a-column">
+                      <label class="aplica-a-label">
+                        <i class="pi pi-sitemap"></i>
+                        Procesos
+                      </label>
                       <p-multiSelect
-                        [(ngModel)]="moduloSeleccionado()!.entidadesAsociadas"
+                        [ngModel]="moduloSeleccionado()?.entidadesAsociadas"
+                        (ngModelChange)="onEntidadesAsociadasChange($event)"
                         [options]="entidadesDisponibles()"
                         optionLabel="nombre"
-                        placeholder="Buscar y seleccionar..."
+                        placeholder="Seleccionar procesos..."
                         [filter]="true"
-                        filterPlaceHolder="Buscar entidades..."
+                        filterPlaceholder="Buscar procesos..."
                         [showClear]="true"
-                        display="chip"
-                        styleClass="aplica-a-multiselect w-full"
-                        scrollHeight="300px"
-                      >
-                        <ng-template let-item pTemplate="item">
-                          <div class="entidad-option">
-                            <i [class]="getEntidadIcon(item)"></i>
-                            <span>{{ item.nombre }}</span>
-                            @if (item.tipo) {
-                              <p-tag [value]="item.tipo" severity="secondary" styleClass="ml-2" />
-                            }
-                          </div>
-                        </ng-template>
-                      </p-multiSelect>
+                        class="aplica-a-selector"
+                        scrollHeight="250px"
+                        appendTo="body"
+                        [maxSelectedLabels]="0"
+                        selectedItemsLabel="{0} proceso(s) seleccionado(s)"
+                      />
                     </div>
-                  }
+                  </div>
 
-                  <!-- Indicador de selección -->
+                  <!-- Indicador general de selección -->
                   <div class="aplica-a-info">
-                    @if (moduloSeleccionado()!.tipoSelector === 'tree') {
-                      @if (moduloSeleccionado()!.nodosSeleccionados && moduloSeleccionado()!.nodosSeleccionados!.length > 0) {
-                        <i class="pi pi-check-circle"></i>
-                        <span>{{ moduloSeleccionado()!.nodosSeleccionados!.length }} elemento(s) seleccionado(s)</span>
-                      } @else {
-                        <i class="pi pi-info-circle"></i>
-                        <span>Si no seleccionas ninguno, la configuración aplicará a <strong>todos</strong> los elementos</span>
-                      }
-                    } @else {
-                      @if (moduloSeleccionado()!.entidadesAsociadas && moduloSeleccionado()!.entidadesAsociadas.length > 0) {
-                        <i class="pi pi-check-circle"></i>
-                        <span>{{ moduloSeleccionado()!.entidadesAsociadas.length }} entidad(es) seleccionada(s)</span>
-                      } @else {
-                        <i class="pi pi-info-circle"></i>
-                        <span>Si no seleccionas ninguna, la configuración aplicará a <strong>todas</strong> las entidades</span>
-                      }
-                    }
+                    <i class="pi pi-info-circle"></i>
+                    <span>Si no seleccionas ningún elemento, la configuración aplicará a <strong>todos</strong></span>
                   </div>
                 </div>
 
@@ -521,6 +504,14 @@ interface PreferenciasNotificacion {
             <!-- Tab 0: Preferencias Personales -->
             <p-tabpanel [value]="0">
               <div class="preferencias-container">
+                <!-- Indicador de carga/guardado -->
+                @if (guardandoPreferencias) {
+                  <div class="preferencias-loading">
+                    <i class="pi pi-spin pi-spinner"></i>
+                    <span>Guardando preferencias...</span>
+                  </div>
+                }
+
                 <!-- Sección: Horario No Molestar -->
                 <div class="horario-no-molestar-card">
                   <div class="horario-header">
@@ -528,32 +519,60 @@ interface PreferenciasNotificacion {
                       <i class="pi pi-moon"></i>
                       <h4>Horario No Molestar</h4>
                     </div>
-                    <p-toggleswitch [(ngModel)]="horarioNoMolestar.habilitado" />
+                    <p-toggleswitch [(ngModel)]="horarioNoMolestar.habilitado" (onChange)="onPreferenceChange()" />
                   </div>
                   <p class="horario-desc">Durante este horario no recibirás notificaciones, excepto las de prioridad crítica.</p>
 
                   <div class="horario-inputs" [class.disabled]="!horarioNoMolestar.habilitado">
-                    <div class="horario-field">
-                      <label>Desde</label>
-                      <p-select
-                        [(ngModel)]="horarioNoMolestar.horaInicio"
-                        [options]="horasDisponibles"
-                        optionLabel="label"
-                        optionValue="value"
-                        [disabled]="!horarioNoMolestar.habilitado"
-                        styleClass="hora-select"
-                      />
+                    <!-- Días de la semana -->
+                    <div class="horario-dias">
+                      <label>Días activos</label>
+                      <div class="dias-semana-grid">
+                        @for (dia of diasSemana; track dia.valor) {
+                          <button
+                            type="button"
+                            class="dia-btn"
+                            [class.active]="isDiaSeleccionado(dia.valor)"
+                            [class.disabled]="!horarioNoMolestar.habilitado"
+                            (click)="toggleDia(dia.valor)"
+                            [pTooltip]="dia.label"
+                            tooltipPosition="top"
+                          >
+                            {{ dia.labelCorto }}
+                          </button>
+                        }
+                      </div>
                     </div>
-                    <div class="horario-field">
-                      <label>Hasta</label>
-                      <p-select
-                        [(ngModel)]="horarioNoMolestar.horaFin"
-                        [options]="horasDisponibles"
-                        optionLabel="label"
-                        optionValue="value"
-                        [disabled]="!horarioNoMolestar.habilitado"
-                        styleClass="hora-select"
-                      />
+
+                    <!-- Horas -->
+                    <div class="horario-horas">
+                      <div class="horario-field">
+                        <label>Desde</label>
+                        <p-select
+                          [(ngModel)]="horarioNoMolestar.horaInicio"
+                          [options]="horasDisponibles"
+                          optionLabel="label"
+                          optionValue="value"
+                          [disabled]="!horarioNoMolestar.habilitado"
+                          styleClass="hora-select"
+                          (onChange)="onPreferenceChange()"
+                        />
+                      </div>
+                      <div class="horario-separator">
+                        <i class="pi pi-arrow-right"></i>
+                      </div>
+                      <div class="horario-field">
+                        <label>Hasta</label>
+                        <p-select
+                          [(ngModel)]="horarioNoMolestar.horaFin"
+                          [options]="horasDisponibles"
+                          optionLabel="label"
+                          optionValue="value"
+                          [disabled]="!horarioNoMolestar.habilitado"
+                          styleClass="hora-select"
+                          (onChange)="onPreferenceChange()"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -561,6 +580,133 @@ interface PreferenciasNotificacion {
                     <i class="pi pi-exclamation-triangle"></i>
                     <span>Las alertas con prioridad <strong>Crítica</strong> ignoran este horario</span>
                   </div>
+                </div>
+
+                <!-- Sección: Rate Limiting Global -->
+                <div class="rate-limit-card">
+                  <div class="rate-limit-header">
+                    <div class="rate-limit-title">
+                      <i class="pi pi-gauge"></i>
+                      <h4>Límite de Notificaciones</h4>
+                    </div>
+                    <p-toggleswitch [(ngModel)]="rateLimit.habilitado" (onChange)="onPreferenceChange()" />
+                  </div>
+                  <p class="rate-limit-desc">Limita el número máximo de notificaciones que puedes recibir por hora para evitar saturación.</p>
+
+                  <div class="rate-limit-inputs" [class.disabled]="!rateLimit.habilitado">
+                    <div class="rate-limit-field">
+                      <label>Máximo por hora</label>
+                      <div class="rate-limit-input-group">
+                        <p-inputNumber
+                          [(ngModel)]="rateLimit.maxPorHora"
+                          [min]="10"
+                          [max]="1000"
+                          [step]="10"
+                          [showButtons]="true"
+                          buttonLayout="horizontal"
+                          incrementButtonIcon="pi pi-plus"
+                          decrementButtonIcon="pi pi-minus"
+                          [disabled]="!rateLimit.habilitado"
+                          (onInput)="onPreferenceChange()"
+                          styleClass="rate-limit-input"
+                        />
+                        <span class="rate-limit-unit">notificaciones/hora</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="rate-limit-info">
+                    <i class="pi pi-info-circle"></i>
+                    <span>Cuando se alcanza el límite, las notificaciones adicionales se omiten temporalmente</span>
+                  </div>
+                </div>
+
+                <!-- Sección: Frecuencia de Emails -->
+                <div class="frecuencia-card">
+                  <div class="frecuencia-header">
+                    <div class="frecuencia-title">
+                      <i class="pi pi-envelope"></i>
+                      <h4>Frecuencia de Emails</h4>
+                    </div>
+                  </div>
+                  <p class="frecuencia-desc">¿Cómo prefieres recibir las notificaciones por email?</p>
+
+                  <div class="frecuencia-options">
+                    <div
+                      class="frecuencia-option"
+                      [class.selected]="preferenciasNotificacion.frecuenciaEmail === 'inmediato'"
+                      (click)="setFrecuenciaEmail('inmediato')"
+                    >
+                      <div class="frecuencia-option-icon">
+                        <i class="pi pi-bolt"></i>
+                      </div>
+                      <div class="frecuencia-option-content">
+                        <span class="frecuencia-option-title">Inmediato</span>
+                        <span class="frecuencia-option-desc">Recibe cada notificación al momento</span>
+                      </div>
+                      <div class="frecuencia-option-check">
+                        @if (preferenciasNotificacion.frecuenciaEmail === 'inmediato') {
+                          <i class="pi pi-check-circle"></i>
+                        }
+                      </div>
+                    </div>
+
+                    <div
+                      class="frecuencia-option"
+                      [class.selected]="preferenciasNotificacion.frecuenciaEmail === 'resumen_diario'"
+                      (click)="setFrecuenciaEmail('resumen_diario')"
+                    >
+                      <div class="frecuencia-option-icon">
+                        <i class="pi pi-calendar"></i>
+                      </div>
+                      <div class="frecuencia-option-content">
+                        <span class="frecuencia-option-title">Resumen Diario</span>
+                        <span class="frecuencia-option-desc">Un email con todas las notificaciones del día</span>
+                      </div>
+                      <div class="frecuencia-option-check">
+                        @if (preferenciasNotificacion.frecuenciaEmail === 'resumen_diario') {
+                          <i class="pi pi-check-circle"></i>
+                        }
+                      </div>
+                    </div>
+
+                    <div
+                      class="frecuencia-option"
+                      [class.selected]="preferenciasNotificacion.frecuenciaEmail === 'resumen_semanal'"
+                      (click)="setFrecuenciaEmail('resumen_semanal')"
+                    >
+                      <div class="frecuencia-option-icon">
+                        <i class="pi pi-calendar-plus"></i>
+                      </div>
+                      <div class="frecuencia-option-content">
+                        <span class="frecuencia-option-title">Resumen Semanal</span>
+                        <span class="frecuencia-option-desc">Un email semanal con el resumen de notificaciones</span>
+                      </div>
+                      <div class="frecuencia-option-check">
+                        @if (preferenciasNotificacion.frecuenciaEmail === 'resumen_semanal') {
+                          <i class="pi pi-check-circle"></i>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hora del resumen (solo si es diario o semanal) -->
+                  @if (preferenciasNotificacion.frecuenciaEmail !== 'inmediato') {
+                    <div class="hora-resumen">
+                      <label>
+                        <i class="pi pi-clock"></i>
+                        Hora de envío del resumen
+                      </label>
+                      <p-select
+                        [(ngModel)]="preferenciasNotificacion.horaResumen"
+                        [options]="horasDisponibles"
+                        optionLabel="label"
+                        optionValue="value"
+                        styleClass="hora-select"
+                        (onChange)="onPreferenceChange()"
+                      />
+                    </div>
+                  }
                 </div>
 
                 <!-- Sección: Preferencias por Prioridad -->
@@ -581,37 +727,42 @@ interface PreferenciasNotificacion {
                       <span class="prioridad-label">
                         <p-tag value="Crítica" severity="danger" />
                       </span>
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.critical.inApp" [binary]="true" />
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.critical.email" [binary]="true" />
+                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.critical.inApp" [binary]="true" (onChange)="onPreferenceChange()" />
+                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.critical.email" [binary]="true" (onChange)="onPreferenceChange()" />
                     </div>
                     <div class="prioridad-row">
                       <span class="prioridad-label">
                         <p-tag value="Alta" severity="warn" />
                       </span>
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.high.inApp" [binary]="true" />
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.high.email" [binary]="true" />
+                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.high.inApp" [binary]="true" (onChange)="onPreferenceChange()" />
+                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.high.email" [binary]="true" (onChange)="onPreferenceChange()" />
                     </div>
                     <div class="prioridad-row">
                       <span class="prioridad-label">
                         <p-tag value="Media" severity="info" />
                       </span>
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.medium.inApp" [binary]="true" />
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.medium.email" [binary]="true" />
+                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.medium.inApp" [binary]="true" (onChange)="onPreferenceChange()" />
+                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.medium.email" [binary]="true" (onChange)="onPreferenceChange()" />
                     </div>
                     <div class="prioridad-row">
                       <span class="prioridad-label">
                         <p-tag value="Baja" severity="secondary" />
                       </span>
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.low.inApp" [binary]="true" />
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.low.email" [binary]="true" />
+                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.low.inApp" [binary]="true" (onChange)="onPreferenceChange()" />
+                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.low.email" [binary]="true" (onChange)="onPreferenceChange()" />
                     </div>
                   </div>
 
                   <div class="prioridades-footer">
+                    <span class="auto-save-hint" [class.visible]="preferenciasCambiadas">
+                      <i class="pi pi-info-circle"></i>
+                      Los cambios se guardan automáticamente
+                    </span>
                     <button
                       pButton
                       label="Guardar preferencias"
                       icon="pi pi-check"
+                      [loading]="guardandoPreferencias"
                       (click)="guardarPreferencias()"
                     ></button>
                   </div>
@@ -2851,66 +3002,52 @@ interface PreferenciasNotificacion {
       margin-bottom: var(--spacing-3);
     }
 
-    :host ::ng-deep {
-      .aplica-a-tree-select,
-      .aplica-a-multiselect {
-        width: 100%;
+    /* Grid 50/50 para Activos y Procesos */
+    .aplica-a-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-5);
+      margin-bottom: var(--spacing-4);
+      align-items: start;
 
-        .p-treeselect-label,
-        .p-multiselect-label {
-          padding: var(--spacing-3);
-        }
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
 
-        .p-treeselect-panel,
-        .p-multiselect-panel {
-          max-height: 350px;
-        }
+    .aplica-a-column {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+    }
 
-        .p-treeselect-items-wrapper,
-        .p-multiselect-items-wrapper {
-          max-height: 300px;
-          overflow-y: auto;
-        }
+    .aplica-a-label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-color);
 
-        .p-treeselect-filter-container,
-        .p-multiselect-filter-container {
-          padding: var(--spacing-2);
-        }
+      i {
+        color: var(--primary-color);
+        font-size: 1rem;
+      }
+    }
 
-        .p-chip {
-          background: var(--primary-100);
-          color: var(--primary-700);
-          font-size: var(--font-size-xs);
-          padding: 2px 8px;
-          margin: 2px;
+    /* Selectores - estilos mínimos, el resto en styles.scss global */
+    .aplica-a-selector {
+      width: 100%;
 
-          .p-chip-remove-icon {
-            font-size: 0.7rem;
-          }
-        }
+      .selector-placeholder {
+        color: var(--text-color-secondary);
+        font-size: var(--font-size-sm);
       }
 
-      .aplica-a-tree-select {
-        .p-treeselect-trigger {
-          width: 2.5rem;
-        }
-
-        .p-tree-toggler {
-          margin-right: var(--spacing-2);
-        }
-
-        .p-tree-node-icon {
-          margin-right: var(--spacing-2);
-          color: var(--text-color-secondary);
-        }
-
-        .p-tree-node-label {
-          font-size: var(--font-size-sm);
-        }
-
-        .p-checkbox {
-          margin-right: var(--spacing-2);
-        }
+      .selector-value {
+        color: var(--text-color);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
       }
     }
 
@@ -3023,15 +3160,24 @@ interface PreferenciasNotificacion {
 
     /* Horario No Molestar Card */
     .horario-no-molestar-card,
-    .prioridades-card {
+    .prioridades-card,
+    .rate-limit-card {
       background: var(--surface-card);
       border-radius: var(--border-radius-xl);
       border: 1px solid var(--surface-border);
       padding: var(--spacing-6);
     }
 
+    :host-context(.dark) .horario-no-molestar-card,
+    :host-context(.dark) .prioridades-card,
+    :host-context(.dark) .rate-limit-card {
+      background: var(--surface-900);
+      border-color: var(--surface-700);
+    }
+
     .horario-header,
-    .prioridades-header {
+    .prioridades-header,
+    .rate-limit-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -3039,7 +3185,8 @@ interface PreferenciasNotificacion {
     }
 
     .horario-title,
-    .prioridades-header {
+    .prioridades-header,
+    .rate-limit-title {
       display: flex;
       align-items: center;
       gap: var(--spacing-2);
@@ -3057,14 +3204,28 @@ interface PreferenciasNotificacion {
       }
     }
 
+    :host-context(.dark) .horario-title h4,
+    :host-context(.dark) .prioridades-header h4,
+    :host-context(.dark) .rate-limit-title h4 {
+      color: var(--surface-0);
+    }
+
     .horario-desc,
-    .prioridades-desc {
+    .prioridades-desc,
+    .rate-limit-desc {
       font-size: var(--font-size-sm);
       color: var(--text-color-secondary);
       margin: 0 0 var(--spacing-4) 0;
     }
 
-    .horario-inputs {
+    :host-context(.dark) .horario-desc,
+    :host-context(.dark) .prioridades-desc,
+    :host-context(.dark) .rate-limit-desc {
+      color: var(--surface-400);
+    }
+
+    .horario-inputs,
+    .rate-limit-inputs {
       display: flex;
       gap: var(--spacing-4);
       margin-bottom: var(--spacing-4);
@@ -3075,7 +3236,8 @@ interface PreferenciasNotificacion {
       }
     }
 
-    .horario-field {
+    .horario-field,
+    .rate-limit-field {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-2);
@@ -3085,6 +3247,30 @@ interface PreferenciasNotificacion {
         font-weight: var(--font-weight-medium);
         color: var(--text-color);
       }
+    }
+
+    :host-context(.dark) .horario-field label,
+    :host-context(.dark) .rate-limit-field label {
+      color: var(--surface-0);
+    }
+
+    .rate-limit-input-group {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+
+    .rate-limit-unit {
+      font-size: var(--font-size-sm);
+      color: var(--text-color-secondary);
+    }
+
+    :host-context(.dark) .rate-limit-unit {
+      color: var(--surface-400);
+    }
+
+    :host ::ng-deep .rate-limit-input {
+      width: 140px;
     }
 
     :host ::ng-deep .hora-select {
@@ -3104,6 +3290,379 @@ interface PreferenciasNotificacion {
       i {
         color: var(--orange-500);
       }
+    }
+
+    :host-context(.dark) .horario-warning {
+      background: color-mix(in srgb, var(--orange-500) 15%, var(--surface-800));
+      color: var(--orange-300);
+
+      i {
+        color: var(--orange-400);
+      }
+    }
+
+    .rate-limit-info {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-3);
+      background: var(--blue-50);
+      border-radius: var(--border-radius-md);
+      font-size: var(--font-size-sm);
+      color: var(--blue-700);
+
+      i {
+        color: var(--blue-500);
+      }
+    }
+
+    :host-context(.dark) .rate-limit-info {
+      background: color-mix(in srgb, var(--blue-500) 15%, var(--surface-800));
+      color: var(--blue-300);
+
+      i {
+        color: var(--blue-400);
+      }
+    }
+
+    /* Días de la semana */
+    .horario-dias {
+      width: 100%;
+      margin-bottom: var(--spacing-4);
+
+      label {
+        display: block;
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+        color: var(--text-color);
+        margin-bottom: var(--spacing-2);
+      }
+    }
+
+    :host-context(.dark) .horario-dias label {
+      color: var(--surface-0);
+    }
+
+    .dias-semana-grid {
+      display: flex;
+      gap: var(--spacing-2);
+    }
+
+    .dia-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--surface-border);
+      background: var(--surface-ground);
+      color: var(--text-color-secondary);
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover:not(.disabled) {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+      }
+
+      &.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+      }
+
+      &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    :host-context(.dark) .dia-btn {
+      background: var(--surface-800);
+      border-color: var(--surface-600);
+      color: var(--surface-300);
+
+      &:hover:not(.disabled) {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        background: var(--surface-700);
+      }
+
+      &.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+      }
+    }
+
+    .horario-horas {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--spacing-3);
+    }
+
+    .horario-separator {
+      padding-bottom: 10px;
+      color: var(--text-color-secondary);
+    }
+
+    :host-context(.dark) .horario-separator {
+      color: var(--surface-400);
+    }
+
+    /* Frecuencia de Emails Card */
+    .frecuencia-card {
+      background: var(--surface-card);
+      border-radius: var(--border-radius-xl);
+      border: 1px solid var(--surface-border);
+      padding: var(--spacing-6);
+    }
+
+    :host-context(.dark) .frecuencia-card {
+      background: var(--surface-900);
+      border-color: var(--surface-700);
+    }
+
+    .frecuencia-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-2);
+    }
+
+    .frecuencia-title {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+
+      i {
+        color: var(--primary-color);
+        font-size: 1.25rem;
+      }
+
+      h4 {
+        margin: 0;
+        font-size: var(--font-size-base);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-color);
+      }
+    }
+
+    :host-context(.dark) .frecuencia-title h4 {
+      color: var(--surface-0);
+    }
+
+    .frecuencia-desc {
+      font-size: var(--font-size-sm);
+      color: var(--text-color-secondary);
+      margin: 0 0 var(--spacing-4) 0;
+    }
+
+    :host-context(.dark) .frecuencia-desc {
+      color: var(--surface-400);
+    }
+
+    .frecuencia-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-4);
+    }
+
+    .frecuencia-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-5);
+      border: 2px solid var(--surface-border);
+      border-radius: var(--border-radius-lg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--surface-ground);
+      position: relative;
+
+      &:hover {
+        border-color: var(--primary-400);
+        background: var(--surface-100);
+      }
+
+      &.selected {
+        border-color: var(--primary-color);
+        background: color-mix(in srgb, var(--primary-color) 12%, var(--surface-ground));
+      }
+    }
+
+    :host-context(.dark) .frecuencia-option {
+      background: var(--surface-800);
+
+      &:hover {
+        background: var(--surface-700);
+        border-color: var(--primary-400);
+      }
+
+      &.selected {
+        background: color-mix(in srgb, var(--primary-color) 20%, var(--surface-800));
+        border-color: var(--primary-color);
+      }
+    }
+
+    .frecuencia-option-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--surface-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      i {
+        font-size: 1.5rem;
+        color: var(--text-color-secondary);
+      }
+
+      .selected & {
+        background: var(--primary-color);
+
+        i {
+          color: white;
+        }
+      }
+    }
+
+    :host-context(.dark) .frecuencia-option-icon {
+      background: var(--surface-600);
+
+      i {
+        color: var(--surface-300);
+      }
+    }
+
+    :host-context(.dark) .frecuencia-option.selected .frecuencia-option-icon {
+      background: var(--primary-color);
+
+      i {
+        color: white;
+      }
+    }
+
+    .frecuencia-option-content {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-1);
+    }
+
+    .frecuencia-option-title {
+      font-weight: var(--font-weight-semibold);
+      font-size: var(--font-size-base);
+      color: var(--text-color);
+    }
+
+    .frecuencia-option-desc {
+      font-size: var(--font-size-xs);
+      color: var(--text-color-secondary);
+      line-height: 1.4;
+    }
+
+    :host-context(.dark) .frecuencia-option-title {
+      color: var(--surface-0);
+    }
+
+    :host-context(.dark) .frecuencia-option-desc {
+      color: var(--surface-400);
+    }
+
+    .frecuencia-option-check {
+      position: absolute;
+      top: var(--spacing-2);
+      right: var(--spacing-2);
+
+      i {
+        font-size: 1.25rem;
+        color: var(--primary-color);
+      }
+    }
+
+    .hora-resumen {
+      margin-top: var(--spacing-4);
+      padding: var(--spacing-4);
+      background: var(--surface-100);
+      border-radius: var(--border-radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      label {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+        color: var(--text-color);
+
+        i {
+          color: var(--text-color-secondary);
+        }
+      }
+    }
+
+    :host-context(.dark) .hora-resumen {
+      background: var(--surface-700);
+
+      label {
+        color: var(--surface-0);
+
+        i {
+          color: var(--surface-400);
+        }
+      }
+    }
+
+    /* Preferencias Loading */
+    .preferencias-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-4);
+      background: var(--blue-50);
+      border-radius: var(--border-radius-md);
+      margin-bottom: var(--spacing-4);
+      color: var(--blue-700);
+      font-size: var(--font-size-sm);
+
+      i {
+        font-size: 1rem;
+      }
+    }
+
+    /* Auto-save hint */
+    .auto-save-hint {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      font-size: var(--font-size-sm);
+      color: var(--text-color-secondary);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+
+      &.visible {
+        opacity: 1;
+      }
+
+      i {
+        color: var(--blue-500);
+      }
+    }
+
+    .prioridades-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--spacing-4);
+      padding-top: var(--spacing-4);
+      border-top: 1px solid var(--surface-border);
     }
 
     /* Prioridades Grid */
@@ -7602,13 +8161,36 @@ export class NotificacionesConfigComponent implements OnInit {
   horarioNoMolestar: HorarioNoMolestar = {
     habilitado: true,
     horaInicio: '22:00',
-    horaFin: '07:00'
+    horaFin: '07:00',
+    diasSemana: [1, 2, 3, 4, 5] // Lunes a Viernes por defecto
   };
+
+  // Rate Limiting Global
+  rateLimit = {
+    habilitado: true,
+    maxPorHora: 100
+  };
+
+  // Días de la semana
+  diasSemana: DiaSemana[] = [
+    { valor: 0, label: 'Domingo', labelCorto: 'D' },
+    { valor: 1, label: 'Lunes', labelCorto: 'L' },
+    { valor: 2, label: 'Martes', labelCorto: 'M' },
+    { valor: 3, label: 'Miércoles', labelCorto: 'X' },
+    { valor: 4, label: 'Jueves', labelCorto: 'J' },
+    { valor: 5, label: 'Viernes', labelCorto: 'V' },
+    { valor: 6, label: 'Sábado', labelCorto: 'S' }
+  ];
 
   horasDisponibles = Array.from({ length: 24 }, (_, i) => ({
     label: `${i.toString().padStart(2, '0')}:00`,
     value: `${i.toString().padStart(2, '0')}:00`
   }));
+
+  // Estado de guardado
+  guardandoPreferencias = false;
+  preferenciasCambiadas = false;
+  private autoSaveTimeout: any = null;
 
   // Preferencias por prioridad
   preferenciasNotificacion: PreferenciasNotificacion = {
@@ -7617,8 +8199,13 @@ export class NotificacionesConfigComponent implements OnInit {
       high: { email: true, inApp: true },
       medium: { email: false, inApp: true },
       low: { email: false, inApp: true }
-    }
+    },
+    frecuenciaEmail: 'inmediato',
+    horaResumen: '09:00'
   };
+
+  // Servicio de notificaciones
+  private notificacionesService = inject(NotificacionesService);
 
   constructor(
     private messageService: MessageService,
@@ -7629,6 +8216,8 @@ export class NotificacionesConfigComponent implements OnInit {
   ngOnInit(): void {
     this.cargarArbolActivos();
     this.cargarDatosReglas();
+    this.cargarPreferenciasUsuario();
+    this.cargarReglasDesdeBackend();
   }
 
   // === MÉTODOS PARA CARGAR ENTIDADES ===
@@ -7950,6 +8539,22 @@ export class NotificacionesConfigComponent implements OnInit {
     }
   }
 
+  onNodosSeleccionadosChange(nodos: any[]): void {
+    const modulo = this.moduloSeleccionado();
+    if (modulo) {
+      modulo.nodosSeleccionados = nodos;
+      this.moduloSeleccionado.set({ ...modulo });
+    }
+  }
+
+  onEntidadesAsociadasChange(entidades: any[]): void {
+    const modulo = this.moduloSeleccionado();
+    if (modulo) {
+      modulo.entidadesAsociadas = entidades;
+      this.moduloSeleccionado.set({ ...modulo });
+    }
+  }
+
   onModuloToggle(): void {
     const modulos = this.modulos();
     const index = modulos.findIndex(m => m.id === this.moduloSeleccionado()?.id);
@@ -8064,11 +8669,206 @@ export class NotificacionesConfigComponent implements OnInit {
     });
   }
 
+  // === MÉTODOS PARA PREFERENCIAS PERSONALES ===
+
+  isDiaSeleccionado(dia: number): boolean {
+    return this.horarioNoMolestar.diasSemana.includes(dia);
+  }
+
+  toggleDia(dia: number): void {
+    if (!this.horarioNoMolestar.habilitado) return;
+
+    const index = this.horarioNoMolestar.diasSemana.indexOf(dia);
+    if (index > -1) {
+      this.horarioNoMolestar.diasSemana.splice(index, 1);
+    } else {
+      this.horarioNoMolestar.diasSemana.push(dia);
+      this.horarioNoMolestar.diasSemana.sort((a, b) => a - b);
+    }
+    this.onPreferenceChange();
+  }
+
+  setFrecuenciaEmail(frecuencia: 'inmediato' | 'resumen_diario' | 'resumen_semanal'): void {
+    this.preferenciasNotificacion.frecuenciaEmail = frecuencia;
+    this.onPreferenceChange();
+  }
+
+  onPreferenceChange(): void {
+    this.preferenciasCambiadas = true;
+
+    // Auto-save con debounce de 2 segundos
+    if (this.autoSaveTimeout) {
+      clearTimeout(this.autoSaveTimeout);
+    }
+    this.autoSaveTimeout = setTimeout(() => {
+      this.guardarPreferencias();
+    }, 2000);
+  }
+
   guardarPreferencias(): void {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Preferencias guardadas',
-      detail: 'Tus preferencias de notificación han sido actualizadas'
+    this.guardandoPreferencias = true;
+
+    // Mapear las preferencias al formato del backend
+    const prefsBackend = {
+      habilitado: true,
+      emailHabilitado: true,
+      inAppHabilitado: true,
+      notificarInfo: this.preferenciasNotificacion.prioridades.low.inApp || this.preferenciasNotificacion.prioridades.low.email,
+      notificarWarning: this.preferenciasNotificacion.prioridades.medium.inApp || this.preferenciasNotificacion.prioridades.medium.email,
+      notificarCritical: this.preferenciasNotificacion.prioridades.critical.inApp || this.preferenciasNotificacion.prioridades.critical.email,
+      frecuenciaEmail: this.preferenciasNotificacion.frecuenciaEmail,
+      horaResumen: this.preferenciasNotificacion.horaResumen,
+      horarioNoMolestarHabilitado: this.horarioNoMolestar.habilitado,
+      horarioNoMolestarInicio: this.horarioNoMolestar.horaInicio,
+      horarioNoMolestarFin: this.horarioNoMolestar.horaFin,
+      horarioNoMolestarDias: this.horarioNoMolestar.diasSemana,
+      rateLimitHabilitado: this.rateLimit.habilitado,
+      rateLimitMaxPorHora: this.rateLimit.maxPorHora
+    };
+
+    this.notificacionesService.updatePreferences(prefsBackend as any, 'user-ciso').subscribe({
+      next: () => {
+        this.guardandoPreferencias = false;
+        this.preferenciasCambiadas = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Preferencias guardadas',
+          detail: 'Tus preferencias de notificación han sido actualizadas'
+        });
+      },
+      error: (err) => {
+        this.guardandoPreferencias = false;
+        console.error('Error guardando preferencias:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron guardar las preferencias. Inténtalo de nuevo.'
+        });
+      }
+    });
+  }
+
+  cargarPreferenciasUsuario(): void {
+    this.notificacionesService.getPreferences('user-ciso').subscribe({
+      next: (prefs) => {
+        // Mapear al formato del frontend
+        this.horarioNoMolestar = {
+          habilitado: prefs.horarioNoMolestarHabilitado ?? false,
+          horaInicio: prefs.horarioNoMolestarInicio ?? '22:00',
+          horaFin: prefs.horarioNoMolestarFin ?? '07:00',
+          diasSemana: prefs.horarioNoMolestarDias ?? [1, 2, 3, 4, 5]
+        };
+
+        // Mapear Rate Limiting
+        this.rateLimit = {
+          habilitado: prefs.rateLimitHabilitado ?? true,
+          maxPorHora: prefs.rateLimitMaxPorHora ?? 100
+        };
+
+        this.preferenciasNotificacion.frecuenciaEmail = prefs.frecuenciaEmail ?? 'inmediato';
+        this.preferenciasNotificacion.horaResumen = prefs.horaResumen ?? '09:00';
+
+        // Mapear prioridades desde backend
+        this.preferenciasNotificacion.prioridades.critical = {
+          inApp: prefs.notificarCritical ?? true,
+          email: prefs.notificarCritical ?? true
+        };
+        this.preferenciasNotificacion.prioridades.high = {
+          inApp: prefs.notificarWarning ?? true,
+          email: prefs.notificarWarning ?? true
+        };
+        this.preferenciasNotificacion.prioridades.medium = {
+          inApp: prefs.notificarInfo ?? true,
+          email: false
+        };
+        this.preferenciasNotificacion.prioridades.low = {
+          inApp: prefs.notificarInfo ?? true,
+          email: false
+        };
+      },
+      error: (err) => {
+        console.error('Error cargando preferencias:', err);
+      }
+    });
+  }
+
+  cargarReglasDesdeBackend(): void {
+    // Cargar reglas de notificación
+    this.notificacionesService.getNotificationRules().subscribe({
+      next: (rules) => {
+        if (rules.length > 0) {
+          this.notificationRules.set(rules.map(r => ({
+            ...r,
+            rolesDestino: r.rolesDestino ? JSON.parse(r.rolesDestino as any) : [],
+            usuariosDestino: r.usuariosDestino ? JSON.parse(r.usuariosDestino as any) : []
+          })) as any);
+        }
+      },
+      error: (err) => console.error('Error cargando reglas:', err)
+    });
+
+    // Cargar alertas por umbral
+    this.notificacionesService.getAlertRules().subscribe({
+      next: (alerts) => {
+        if (alerts.length > 0) {
+          this.alertRules.set(alerts.map(a => ({
+            ...a,
+            rolesDestino: a.rolesDestino ? JSON.parse(a.rolesDestino as any) : [],
+            usuariosDestino: a.usuariosDestino ? JSON.parse(a.usuariosDestino as any) : []
+          })) as any);
+        }
+      },
+      error: (err) => console.error('Error cargando alertas:', err)
+    });
+
+    // Cargar reglas de vencimiento
+    this.notificacionesService.getExpirationRules().subscribe({
+      next: (expirations) => {
+        if (expirations.length > 0) {
+          this.expirationRules.set(expirations.map(e => ({
+            ...e,
+            diasAnticipacion: e.diasAnticipacion ? JSON.parse(e.diasAnticipacion as any) : [],
+            diasDespuesVencido: e.diasDespuesVencido ? JSON.parse(e.diasDespuesVencido as any) : [],
+            rolesDestino: e.rolesDestino ? JSON.parse(e.rolesDestino as any) : []
+          })) as any);
+        }
+      },
+      error: (err) => console.error('Error cargando reglas de vencimiento:', err)
+    });
+  }
+
+  toggleReglaBackend(regla: any, tipo: 'evento' | 'alerta' | 'vencimiento'): void {
+    let observable;
+
+    switch (tipo) {
+      case 'evento':
+        observable = this.notificacionesService.toggleNotificationRule(regla.id);
+        break;
+      case 'alerta':
+        observable = this.notificacionesService.toggleAlertRule(regla.id);
+        break;
+      case 'vencimiento':
+        observable = this.notificacionesService.toggleExpirationRule(regla.id);
+        break;
+    }
+
+    observable.subscribe({
+      next: (result) => {
+        regla.activo = result.activo;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Estado actualizado',
+          detail: `Regla ${result.activo ? 'activada' : 'desactivada'} correctamente`
+        });
+      },
+      error: (err) => {
+        console.error('Error al toggle regla:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo actualizar el estado de la regla'
+        });
+      }
     });
   }
 

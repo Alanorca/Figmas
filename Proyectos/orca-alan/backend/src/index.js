@@ -22,6 +22,9 @@ const catalogosRoutes = require('./routes/catalogos.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const notificationsRoutes = require('./routes/notifications.routes');
 
+// Importar servicios
+const schedulerService = require('./services/scheduler.service');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -96,6 +99,9 @@ app.listen(PORT, () => {
   ║                                                   ║
   ╚═══════════════════════════════════════════════════╝
   `);
+
+  // Iniciar scheduler de notificaciones
+  schedulerService.start();
 });
 
 module.exports = app;
