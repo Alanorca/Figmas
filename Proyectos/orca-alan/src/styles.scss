@@ -161,6 +161,14 @@ html.dark-mode {
           background: var(--surface-ground) !important;
           border-color: var(--surface-border) !important;
         }
+
+        // Estado checked
+        &.p-checkbox-checked .p-checkbox-box,
+        &[data-p-checked="true"] .p-checkbox-box,
+        .p-checkbox-box.p-highlight {
+          background: var(--primary-color) !important;
+          border-color: var(--primary-color) !important;
+        }
       }
 
       .p-treeselect-filter,
@@ -235,11 +243,14 @@ html.dark-mode {
           .p-checkbox-box {
             background: var(--surface-ground) !important;
             border-color: var(--surface-border) !important;
+          }
 
-            &.p-highlight {
-              background: var(--primary-color) !important;
-              border-color: var(--primary-color) !important;
-            }
+          // Estado checked - PrimeNG v19+
+          &.p-checkbox-checked .p-checkbox-box,
+          &[data-p-checked="true"] .p-checkbox-box,
+          .p-checkbox-box.p-highlight {
+            background: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
           }
         }
       }
@@ -273,6 +284,14 @@ html.dark-mode {
           .p-checkbox-box {
             background: var(--surface-ground) !important;
             border-color: var(--surface-border) !important;
+          }
+
+          // Estado checked - PrimeNG v19+
+          &.p-checkbox-checked .p-checkbox-box,
+          &[data-p-checked="true"] .p-checkbox-box,
+          .p-checkbox-box.p-highlight {
+            background: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
           }
         }
       }
@@ -550,14 +569,30 @@ html.dark-mode {
     }
   }
 
-  // Fix checkboxes en tablas
-  .p-datatable .p-checkbox .p-checkbox-box {
-    background: #27272a !important;
-    border-color: #3f3f46 !important;
+  // Fix checkboxes en tablas - PrimeNG v19+
+  .p-datatable .p-checkbox,
+  .p-datatable-thead .p-checkbox,
+  .p-datatable-tbody .p-checkbox {
+    // Estado no checked
+    .p-checkbox-box {
+      background: #27272a;
+      border-color: #3f3f46;
+    }
 
-    &.p-highlight {
-      background: var(--primary-500) !important;
-      border-color: var(--primary-500) !important;
+    // Estado checked - PrimeNG v19 usa múltiples selectores
+    // 1. Clase en el contenedor p-checkbox
+    &.p-checkbox-checked .p-checkbox-box,
+    // 2. Atributo data-p-checked en el contenedor
+    &[data-p-checked="true"] .p-checkbox-box,
+    // 3. Clase p-highlight en el box (versiones anteriores)
+    .p-checkbox-box.p-highlight {
+      background: var(--p-primary-color, var(--primary-color)) !important;
+      border-color: var(--p-primary-color, var(--primary-color)) !important;
+
+      // Asegurar que el ícono check sea visible
+      .p-checkbox-icon {
+        color: white !important;
+      }
     }
   }
 
