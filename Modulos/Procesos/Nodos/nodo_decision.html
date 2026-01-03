@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nodo Decisión - Lógica Condicional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .node-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 550px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .node-header {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            padding: 25px;
+            color: white;
+            text-align: center;
+        }
+
+        .node-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .node-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .node-subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .node-body {
+            padding: 30px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95em;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .description {
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .case-item {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #4299e1;
+        }
+
+        .case-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .case-label {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95em;
+        }
+
+        .case-remove {
+            background: #fed7d7;
+            color: #c53030;
+            border: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .case-remove:hover {
+            background: #fc8181;
+        }
+
+        .case-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .case-controls select {
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .case-controls input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 20px 0;
+        }
+
+        .config-section {
+            display: none;
+        }
+
+        .config-section.show {
+            display: block;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0fff4;
+            border-radius: 8px;
+            border-left: 4px solid #48bb78;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #22543d;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1em;
+        }
+
+        .result-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .info-value {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .case-default {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #a0aec0;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="node-container">
+        <div class="node-header">
+            <div class="node-icon">🔀</div>
+            <div class="node-title">Nodo Decisión</div>
+            <div class="node-subtitle">Lógica Condicional</div>
+        </div>
+
+        <div class="node-body">
+            <div class="description">
+                Implementa estructuras condicionales (IF/CASE) para controlar el flujo del proceso.
+            </div>
+
+            <div class="form-group">
+                <label>Tipo de Decisión</label>
+                <select id="decisionType">
+                    <option value="case">CASE (múltiples condiciones)</option>
+                    <option value="if">IF (condición simple)</option>
+                </select>
+            </div>
+
+            <!-- Configuración CASE -->
+            <div id="caseConfig" class="config-section show">
+                <div class="form-group">
+                    <label>Variable</label>
+                    <select id="caseVariable">
+                        <option value="precio">Precio</option>
+                        <option value="estado">Estado</option>
+                        <option value="prioridad">Prioridad</option>
+                        <option value="riesgo">Riesgo</option>
+                        <option value="cantidad">Cantidad</option>
+                    </select>
+                </div>
+
+                <div class="divider"></div>
+
+                <div id="casesContainer"></div>
+
+                <div class="case-default">
+                    <div class="case-label">▫️ Case default</div>
+                </div>
+
+                <button class="btn btn-secondary" id="addCaseBtn">
+                    ➕ Agregar Case
+                </button>
+            </div>
+
+            <!-- Configuración IF -->
+            <div id="ifConfig" class="config-section">
+                <div class="form-group">
+                    <label>Variable</label>
+                    <select id="ifVariable">
+                        <option value="precio">Precio</option>
+                        <option value="estado">Estado</option>
+                        <option value="prioridad">Prioridad</option>
+                        <option value="riesgo">Riesgo</option>
+                        <option value="cantidad">Cantidad</option>
+                    </select>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="case-item">
+                    <div class="case-header">
+                        <span class="case-label">▪️ Case (1)</span>
+                    </div>
+                    <div class="case-controls">
+                        <select id="ifOperator">
+                            <option value=">">></option>
+                            <option value="<"><</option>
+                            <option value="==">=</option>
+                            <option value="!=">≠</option>
+                            <option value=">=">≥</option>
+                            <option value="<=">≤</option>
+                        </select>
+                        <input type="text" id="ifValue" placeholder="1000">
+                    </div>
+                </div>
+
+                <div class="case-default">
+                    <div class="case-label">▫️ Case default</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="evaluateBtn">
+                ✓ Evaluar Condición
+            </button>
+
+            <div class="result-container" id="resultContainer">
+                <div class="result-title">
+                    <span>✅</span>
+                    <span id="resultText">Evaluación completada</span>
+                </div>
+
+                <div class="result-info">
+                    <div class="info-row">
+                        <span class="info-label">Tipo de decisión:</span>
+                        <span class="info-value" id="resultType">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Variable evaluada:</span>
+                        <span class="info-value" id="resultVariable">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Rama ejecutada:</span>
+                        <span class="info-value" id="resultBranch">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Registros coincidentes:</span>
+                        <span class="info-value" id="resultRecords">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let caseCount = 0;
+        const cases = [];
+
+        const decisionType = document.getElementById('decisionType');
+        const caseConfig = document.getElementById('caseConfig');
+        const ifConfig = document.getElementById('ifConfig');
+        const casesContainer = document.getElementById('casesContainer');
+        const addCaseBtn = document.getElementById('addCaseBtn');
+        const evaluateBtn = document.getElementById('evaluateBtn');
+        const resultContainer = document.getElementById('resultContainer');
+
+        // Cambiar tipo de decisión
+        decisionType.addEventListener('change', (e) => {
+            if (e.target.value === 'case') {
+                caseConfig.classList.add('show');
+                ifConfig.classList.remove('show');
+            } else {
+                caseConfig.classList.remove('show');
+                ifConfig.classList.add('show');
+            }
+            resultContainer.classList.remove('show');
+        });
+
+        // Agregar case
+        addCaseBtn.addEventListener('click', () => {
+            caseCount++;
+            const caseId = `case-${caseCount}`;
+            
+            const caseElement = document.createElement('div');
+            caseElement.className = 'case-item';
+            caseElement.id = caseId;
+            caseElement.innerHTML = `
+                <div class="case-header">
+                    <span class="case-label">▪️ Case (${caseCount})</span>
+                    <button class="case-remove" onclick="removeCase('${caseId}')">×</button>
+                </div>
+                <div class="case-controls">
+                    <select id="${caseId}-op">
+                        <option value=">">></option>
+                        <option value="<"><</option>
+                        <option value="==">=</option>
+                        <option value="!=">≠</option>
+                        <option value=">=">≥</option>
+                        <option value="<=">≤</option>
+                    </select>
+                    <input type="text" id="${caseId}-val" placeholder="1000">
+                </div>
+            `;
+
+            casesContainer.appendChild(caseElement);
+            cases.push(caseId);
+        });
+
+        // Remover case
+        window.removeCase = function(caseId) {
+            const element = document.getElementById(caseId);
+            if (element) {
+                element.remove();
+                const index = cases.indexOf(caseId);
+                if (index > -1) {
+                    cases.splice(index, 1);
+                }
+            }
+        };
+
+        // Evaluar
+        evaluateBtn.addEventListener('click', () => {
+            const type = decisionType.value;
+            
+            if (type === 'case') {
+                const variable = document.getElementById('caseVariable').value;
+                const numCases = cases.length;
+                
+                // Simular evaluación
+                const matchedCase = Math.floor(Math.random() * (numCases + 1));
+                const totalRecords = Math.floor(Math.random() * 2000) + 500;
+                const matchedRecords = Math.floor(totalRecords * (0.1 + Math.random() * 0.4));
+                
+                document.getElementById('resultType').textContent = 'CASE';
+                document.getElementById('resultVariable').textContent = variable;
+                
+                if (matchedCase === numCases) {
+                    document.getElementById('resultBranch').textContent = 'Case default';
+                } else {
+                    document.getElementById('resultBranch').textContent = `Case (${matchedCase + 1})`;
+                }
+                
+                document.getElementById('resultRecords').textContent = `${matchedRecords.toLocaleString()} de ${totalRecords.toLocaleString()}`;
+                document.getElementById('resultText').textContent = `CASE evaluado: Variable "${variable}"`;
+                
+            } else {
+                const variable = document.getElementById('ifVariable').value;
+                const operator = document.getElementById('ifOperator').value;
+                const value = document.getElementById('ifValue').value;
+                
+                if (!value) {
+                    alert('Por favor ingresa un valor');
+                    return;
+                }
+                
+                const resultado = Math.random() > 0.5;
+                const totalRecords = Math.floor(Math.random() * 2000) + 500;
+                const matchedRecords = Math.floor(totalRecords * (resultado ? 0.6 : 0.4));
+                
+                document.getElementById('resultType').textContent = 'IF';
+                document.getElementById('resultVariable').textContent = `${variable} ${operator} ${value}`;
+                document.getElementById('resultBranch').textContent = resultado ? 'Case (1)' : 'Case default';
+                document.getElementById('resultRecords').textContent = `${matchedRecords.toLocaleString()} de ${totalRecords.toLocaleString()}`;
+                document.getElementById('resultText').textContent = `IF evaluado: ${resultado ? '✅ Verdadero' : '❌ Falso'}`;
+            }
+            
+            resultContainer.classList.add('show');
+        });
+
+        // Agregar un case inicial
+        addCaseBtn.click();
+    </script>
+</body>
+</html>

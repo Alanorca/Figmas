@@ -47,17 +47,25 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid transparent;
+  border-left: 4px solid transparent;
 
   &:hover {
     background-color: var(--surface-hover);
+    border-color: var(--surface-300);
   }
 
   &.selected {
-    background-color: var(--primary-50);
-    border-color: var(--primary-200);
+    background-color: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card));
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
 
-    .rol-nombre {
-      color: var(--primary-700);
+    .rol-info .rol-nombre {
+      color: var(--text-color);
+      font-weight: 600;
+    }
+
+    .rol-info .rol-descripcion {
+      color: var(--text-color-secondary);
     }
   }
 
@@ -499,6 +507,198 @@
     .header-permisos span,
     .modulo-permisos {
       font-size: 0.75rem;
+    }
+  }
+}
+
+// ============================================================
+// DARK MODE OVERRIDES
+// ============================================================
+:host-context(.dark) {
+  .asignacion-roles-container {
+    background-color: var(--surface-950);
+  }
+
+  .roles-panel {
+    background-color: var(--surface-900);
+    border-color: var(--surface-700);
+
+    .panel-header {
+      border-color: var(--surface-700);
+
+      h2 {
+        color: var(--surface-0);
+      }
+    }
+  }
+
+  .rol-card {
+    background-color: var(--surface-800);
+    border-color: var(--surface-700);
+
+    &:hover {
+      background-color: var(--surface-700);
+    }
+
+    .rol-info {
+      .rol-nombre {
+        color: var(--surface-0);
+      }
+
+      .rol-descripcion {
+        color: var(--surface-400);
+      }
+    }
+
+    &.selected {
+      // Fondo con tinte del color primario (como en el ejemplo)
+      background-color: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
+      border: 2px solid var(--primary-color) !important;
+      border-radius: 8px;
+
+      // WCAG 2.1 AA: Texto BLANCO para contraste 4.5:1+
+      .rol-info .rol-nombre {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+
+      .rol-info .rol-descripcion {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+
+      .rol-icon {
+        // Mantener el color original del icono
+      }
+    }
+  }
+
+  .detalle-panel {
+    background-color: var(--surface-900);
+  }
+
+  .detalle-header {
+    .rol-header-info {
+      h2 {
+        color: var(--surface-0);
+      }
+
+      p {
+        color: var(--surface-400);
+      }
+    }
+  }
+
+  .rol-config {
+    .config-item {
+      label {
+        color: var(--surface-400);
+      }
+
+      .config-value {
+        color: var(--surface-0);
+      }
+    }
+  }
+
+  .system-notice {
+    background-color: var(--surface-800);
+    border-color: var(--surface-700);
+
+    span.font-medium {
+      color: var(--surface-0);
+    }
+  }
+
+  .permisos-section,
+  .usuarios-section {
+    .section-header h3 {
+      color: var(--surface-0);
+    }
+  }
+
+  .modulos-permisos-grid {
+    border-color: var(--surface-700);
+
+    .grid-header {
+      background-color: var(--surface-800);
+      border-color: var(--surface-700);
+
+      .header-modulo,
+      .header-permisos span {
+        color: var(--surface-0);
+      }
+    }
+
+    .modulo-row {
+      border-color: var(--surface-700);
+
+      &:hover {
+        background-color: var(--surface-800);
+      }
+
+      .modulo-info {
+        i {
+          background-color: var(--surface-700);
+          color: var(--surface-300);
+        }
+
+        span {
+          color: var(--surface-0);
+        }
+      }
+    }
+  }
+
+  .usuario-item {
+    border-color: var(--surface-700);
+
+    &:hover {
+      background-color: var(--surface-800);
+    }
+
+    .usuario-info {
+      .usuario-nombre {
+        color: var(--surface-0);
+      }
+
+      .usuario-email {
+        color: var(--surface-400);
+      }
+    }
+  }
+
+  .empty-usuarios {
+    background-color: var(--surface-800);
+    border-color: var(--surface-600);
+
+    i {
+      color: var(--surface-500);
+    }
+
+    p {
+      color: var(--surface-400);
+    }
+  }
+
+  .empty-state {
+    i {
+      color: var(--surface-500);
+    }
+
+    p {
+      color: var(--surface-400);
+    }
+  }
+
+  .empty-detail {
+    color: var(--surface-400);
+
+    i {
+      color: var(--surface-600);
+    }
+
+    h3 {
+      color: var(--surface-0);
     }
   }
 }

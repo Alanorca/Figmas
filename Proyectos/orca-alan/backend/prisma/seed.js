@@ -1237,6 +1237,174 @@ async function main() {
   await prisma.notification.createMany({ data: notificationsData });
   console.log(`✓ Creadas ${notificationsData.length} notificaciones de ejemplo`);
 
+  // ============================================================
+  // Crear Proyectos de ejemplo
+  // ============================================================
+  const proyectosData = [
+    {
+      name: 'Implementación ISO 27001',
+      description: 'Proyecto de certificación del Sistema de Gestión de Seguridad de la Información bajo la norma ISO 27001:2022',
+      startDate: new Date('2024-01-15'),
+      endDate: new Date('2025-06-30'),
+      responsibleUserId: usuarios[3].id, // CISO
+      priority: 'critical',
+      status: 'in_progress',
+      progress: 45,
+      reminderDays: JSON.stringify([30, 15, 7, 1]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Migración Core Banking a Nube',
+      description: 'Migración del sistema Core Banking a infraestructura cloud con alta disponibilidad y cumplimiento regulatorio',
+      startDate: new Date('2024-03-01'),
+      endDate: new Date('2025-03-31'),
+      responsibleUserId: usuarios[4].id, // Director TI
+      priority: 'high',
+      status: 'in_progress',
+      progress: 30,
+      reminderDays: JSON.stringify([15, 7, 3]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Actualización Política AML/PLD',
+      description: 'Revisión y actualización de políticas de Prevención de Lavado de Dinero conforme a nueva regulación CNBV',
+      startDate: new Date('2024-06-01'),
+      endDate: new Date('2024-12-31'),
+      responsibleUserId: usuarios[8].id, // Oficial PLD
+      priority: 'high',
+      status: 'in_progress',
+      progress: 65,
+      reminderDays: JSON.stringify([15, 7, 1]),
+      createdBy: usuarios[2].id
+    },
+    {
+      name: 'Plan de Continuidad de Negocio 2025',
+      description: 'Desarrollo e implementación del Plan de Continuidad de Negocio y Recuperación ante Desastres',
+      startDate: new Date('2024-09-01'),
+      endDate: new Date('2025-02-28'),
+      responsibleUserId: usuarios[3].id,
+      priority: 'medium',
+      status: 'planning',
+      progress: 15,
+      reminderDays: JSON.stringify([7, 3, 1]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Automatización Reportes Regulatorios',
+      description: 'Automatización de la generación de reportes regulatorios para CNBV, Banxico y SAT',
+      startDate: new Date('2024-04-15'),
+      endDate: new Date('2024-10-30'),
+      responsibleUserId: usuarios[2].id, // CCO
+      priority: 'medium',
+      status: 'completed',
+      progress: 100,
+      reminderDays: JSON.stringify([7, 3]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Implementación SOC 2 Type II',
+      description: 'Preparación y certificación SOC 2 Type II para servicios de banca digital',
+      startDate: new Date('2024-07-01'),
+      endDate: new Date('2025-07-31'),
+      responsibleUserId: usuarios[3].id,
+      priority: 'high',
+      status: 'in_progress',
+      progress: 25,
+      reminderDays: JSON.stringify([30, 15, 7]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Evaluación Proveedores Críticos',
+      description: 'Evaluación de riesgos de terceros y proveedores críticos del banco',
+      startDate: new Date('2024-08-01'),
+      endDate: new Date('2024-11-30'),
+      responsibleUserId: usuarios[5].id, // Gestor de Riesgos
+      priority: 'medium',
+      status: 'in_progress',
+      progress: 70,
+      reminderDays: JSON.stringify([7, 3]),
+      createdBy: usuarios[3].id
+    },
+    {
+      name: 'Programa Concientización Seguridad',
+      description: 'Programa anual de concientización y capacitación en seguridad de la información para empleados',
+      startDate: new Date('2024-02-01'),
+      endDate: new Date('2024-12-15'),
+      responsibleUserId: usuarios[6].id, // Analista Seguridad
+      priority: 'low',
+      status: 'paused',
+      progress: 55,
+      reminderDays: JSON.stringify([7, 1]),
+      createdBy: usuarios[3].id
+    }
+  ];
+
+  const proyectos = [];
+  for (const proyectoData of proyectosData) {
+    const proyecto = await prisma.project.create({ data: proyectoData });
+    proyectos.push(proyecto);
+  }
+  console.log(`✓ Creados ${proyectos.length} proyectos`);
+
+  // Crear fases para los primeros 3 proyectos
+  const fasesData = [
+    // Fases para ISO 27001
+    { projectId: proyectos[0].id, name: 'Análisis de Brechas', description: 'Evaluación inicial del estado actual vs requisitos ISO 27001', orderNum: 1, startDate: new Date('2024-01-15'), endDate: new Date('2024-03-31'), status: 'completed', weight: 20, progress: 100 },
+    { projectId: proyectos[0].id, name: 'Diseño del SGSI', description: 'Diseño del Sistema de Gestión de Seguridad de la Información', orderNum: 2, startDate: new Date('2024-04-01'), endDate: new Date('2024-07-31'), status: 'completed', weight: 25, progress: 100 },
+    { projectId: proyectos[0].id, name: 'Implementación de Controles', description: 'Implementación de controles del Anexo A', orderNum: 3, startDate: new Date('2024-08-01'), endDate: new Date('2025-02-28'), status: 'in_progress', weight: 35, progress: 40 },
+    { projectId: proyectos[0].id, name: 'Auditoría Interna', description: 'Auditoría interna pre-certificación', orderNum: 4, startDate: new Date('2025-03-01'), endDate: new Date('2025-04-30'), status: 'pending', weight: 10, progress: 0 },
+    { projectId: proyectos[0].id, name: 'Certificación', description: 'Auditoría de certificación por organismo acreditado', orderNum: 5, startDate: new Date('2025-05-01'), endDate: new Date('2025-06-30'), status: 'pending', weight: 10, progress: 0 },
+
+    // Fases para Migración Cloud
+    { projectId: proyectos[1].id, name: 'Evaluación y Planeación', description: 'Assessment de infraestructura actual y plan de migración', orderNum: 1, startDate: new Date('2024-03-01'), endDate: new Date('2024-05-31'), status: 'completed', weight: 15, progress: 100 },
+    { projectId: proyectos[1].id, name: 'Arquitectura Cloud', description: 'Diseño de arquitectura cloud segura y escalable', orderNum: 2, startDate: new Date('2024-06-01'), endDate: new Date('2024-08-31'), status: 'completed', weight: 20, progress: 100 },
+    { projectId: proyectos[1].id, name: 'Migración Ambiente Dev/QA', description: 'Migración de ambientes de desarrollo y pruebas', orderNum: 3, startDate: new Date('2024-09-01'), endDate: new Date('2024-12-31'), status: 'in_progress', weight: 25, progress: 45 },
+    { projectId: proyectos[1].id, name: 'Migración Producción', description: 'Migración del ambiente productivo', orderNum: 4, startDate: new Date('2025-01-01'), endDate: new Date('2025-02-28'), status: 'pending', weight: 30, progress: 0 },
+    { projectId: proyectos[1].id, name: 'Estabilización', description: 'Período de estabilización y optimización', orderNum: 5, startDate: new Date('2025-03-01'), endDate: new Date('2025-03-31'), status: 'pending', weight: 10, progress: 0 },
+
+    // Fases para AML/PLD
+    { projectId: proyectos[2].id, name: 'Análisis Regulatorio', description: 'Revisión de nueva regulación y análisis de impacto', orderNum: 1, startDate: new Date('2024-06-01'), endDate: new Date('2024-07-15'), status: 'completed', weight: 20, progress: 100 },
+    { projectId: proyectos[2].id, name: 'Actualización de Políticas', description: 'Redacción de nuevas políticas y procedimientos', orderNum: 2, startDate: new Date('2024-07-16'), endDate: new Date('2024-09-30'), status: 'completed', weight: 30, progress: 100 },
+    { projectId: proyectos[2].id, name: 'Capacitación', description: 'Capacitación al personal en nuevas políticas', orderNum: 3, startDate: new Date('2024-10-01'), endDate: new Date('2024-11-15'), status: 'in_progress', weight: 25, progress: 60 },
+    { projectId: proyectos[2].id, name: 'Implementación Sistemas', description: 'Actualización de sistemas de monitoreo AML', orderNum: 4, startDate: new Date('2024-11-16'), endDate: new Date('2024-12-31'), status: 'pending', weight: 25, progress: 0 }
+  ];
+
+  const fases = [];
+  for (const faseData of fasesData) {
+    const fase = await prisma.projectPhase.create({ data: faseData });
+    fases.push(fase);
+  }
+  console.log(`✓ Creadas ${fases.length} fases de proyecto`);
+
+  // Crear tareas para las fases
+  const tareasData = [
+    // Tareas para ISO 27001 - Fase Implementación de Controles
+    { projectId: proyectos[0].id, phaseId: fases[2].id, title: 'Implementar control de acceso basado en roles', description: 'Configurar RBAC en todos los sistemas críticos', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-08-01'), dueDate: new Date('2024-09-30'), progress: 100, status: 'completed', priority: 'high', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[0].id, phaseId: fases[2].id, title: 'Documentar procedimientos de gestión de incidentes', description: 'Crear y documentar procedimientos según ISO 27001', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-09-01'), dueDate: new Date('2024-10-31'), progress: 80, status: 'in_progress', priority: 'medium', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[0].id, phaseId: fases[2].id, title: 'Implementar cifrado de datos en reposo', description: 'Cifrar bases de datos y almacenamiento sensible', assignedTo: usuarios[4].id, assignedBy: usuarios[3].id, startDate: new Date('2024-10-01'), dueDate: new Date('2024-12-15'), progress: 45, status: 'in_progress', priority: 'critical', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[0].id, phaseId: fases[2].id, title: 'Configurar monitoreo de seguridad 24/7', description: 'Implementar SIEM y configurar alertas', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-11-01'), dueDate: new Date('2025-01-31'), progress: 20, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[0].id, phaseId: fases[2].id, title: 'Revisar y actualizar política de contraseñas', description: 'Alinear política con requisitos ISO 27001', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-12-01'), dueDate: new Date('2025-01-15'), progress: 0, status: 'pending', priority: 'medium', taskType: 'manual', createdBy: usuarios[3].id },
+
+    // Tareas para Migración Cloud - Fase Migración Dev/QA
+    { projectId: proyectos[1].id, phaseId: fases[7].id, title: 'Migrar base de datos de desarrollo', description: 'Migrar BD del ambiente de desarrollo a RDS', assignedTo: usuarios[4].id, assignedBy: usuarios[0].id, startDate: new Date('2024-09-01'), dueDate: new Date('2024-09-30'), progress: 100, status: 'completed', priority: 'high', taskType: 'manual', createdBy: usuarios[0].id },
+    { projectId: proyectos[1].id, phaseId: fases[7].id, title: 'Configurar pipelines CI/CD en cloud', description: 'Implementar Jenkins/GitLab CI en infraestructura cloud', assignedTo: usuarios[4].id, assignedBy: usuarios[0].id, startDate: new Date('2024-10-01'), dueDate: new Date('2024-10-31'), progress: 70, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[0].id },
+    { projectId: proyectos[1].id, phaseId: fases[7].id, title: 'Pruebas de rendimiento en cloud', description: 'Ejecutar pruebas de stress y rendimiento', assignedTo: usuarios[7].id, assignedBy: usuarios[4].id, startDate: new Date('2024-11-01'), dueDate: new Date('2024-11-30'), progress: 30, status: 'in_progress', priority: 'medium', taskType: 'manual', createdBy: usuarios[4].id },
+    { projectId: proyectos[1].id, phaseId: fases[7].id, title: 'Documentar arquitectura cloud', description: 'Documentar arquitectura y diagramas de red', assignedTo: usuarios[4].id, assignedBy: usuarios[0].id, startDate: new Date('2024-11-15'), dueDate: new Date('2024-12-15'), progress: 10, status: 'in_progress', priority: 'low', taskType: 'manual', createdBy: usuarios[0].id },
+
+    // Tareas para AML/PLD - Fase Capacitación
+    { projectId: proyectos[2].id, phaseId: fases[12].id, title: 'Desarrollar material de capacitación', description: 'Crear presentaciones y manuales para el personal', assignedTo: usuarios[8].id, assignedBy: usuarios[2].id, startDate: new Date('2024-10-01'), dueDate: new Date('2024-10-15'), progress: 100, status: 'completed', priority: 'high', taskType: 'manual', createdBy: usuarios[2].id },
+    { projectId: proyectos[2].id, phaseId: fases[12].id, title: 'Capacitar a oficiales de cumplimiento', description: 'Sesiones de capacitación intensiva', assignedTo: usuarios[8].id, assignedBy: usuarios[2].id, startDate: new Date('2024-10-16'), dueDate: new Date('2024-10-31'), progress: 100, status: 'completed', priority: 'critical', taskType: 'manual', createdBy: usuarios[2].id },
+    { projectId: proyectos[2].id, phaseId: fases[12].id, title: 'Capacitar a personal de sucursales', description: 'Capacitación masiva al personal de front', assignedTo: usuarios[9].id, assignedBy: usuarios[8].id, startDate: new Date('2024-11-01'), dueDate: new Date('2024-11-10'), progress: 60, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[8].id },
+    { projectId: proyectos[2].id, phaseId: fases[12].id, title: 'Evaluar conocimiento adquirido', description: 'Aplicar evaluaciones post-capacitación', assignedTo: usuarios[8].id, assignedBy: usuarios[2].id, startDate: new Date('2024-11-11'), dueDate: new Date('2024-11-15'), progress: 0, status: 'pending', priority: 'medium', taskType: 'manual', createdBy: usuarios[2].id }
+  ];
+
+  const tareas = [];
+  for (const tareaData of tareasData) {
+    const tarea = await prisma.task.create({ data: tareaData });
+    tareas.push(tarea);
+  }
+  console.log(`✓ Creadas ${tareas.length} tareas de proyecto`);
+
   console.log('\n🎉 ¡Seed completado exitosamente!');
   console.log('📊 Resumen de datos creados:');
   console.log('   - 25 permisos');
@@ -1256,7 +1424,10 @@ async function main() {
   console.log('   - 9 reglas de notificación');
   console.log('   - 3 reglas de alertas por umbral');
   console.log('   - 3 reglas de vencimiento');
-  console.log('   - 5 notificaciones de ejemplo\n');
+  console.log('   - 5 notificaciones de ejemplo');
+  console.log('   - 8 proyectos');
+  console.log('   - 14 fases de proyecto');
+  console.log('   - 13 tareas de proyecto\n');
 }
 
 main()

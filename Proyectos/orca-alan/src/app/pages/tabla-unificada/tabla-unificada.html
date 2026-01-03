@@ -490,7 +490,7 @@
                     }
                   }
                   @default {
-                    {{ registro[col.field] ?? '-' }}
+                    <span [innerHTML]="highlightText(registro[col.field]?.toString()) || '-'"></span>
                   }
                 }
               }
@@ -788,13 +788,49 @@
 
         @case ('contenedor') {
           <div class="field">
+            <label>Tipo de contenedor</label>
+            <div class="flex gap-2 mb-3">
+              <p-button
+                [outlined]="filtroTipoContenedor() !== 'todos'"
+                label="Todos"
+                size="small"
+                (onClick)="setFiltroTipoContenedor('todos')" />
+              <p-button
+                [outlined]="filtroTipoContenedor() !== 'activo'"
+                label="Activos"
+                icon="pi pi-box"
+                size="small"
+                (onClick)="setFiltroTipoContenedor('activo')" />
+              <p-button
+                [outlined]="filtroTipoContenedor() !== 'proceso'"
+                label="Procesos"
+                icon="pi pi-sitemap"
+                size="small"
+                (onClick)="setFiltroTipoContenedor('proceso')" />
+            </div>
+          </div>
+          <div class="field">
             <label>Buscar activo o proceso</label>
-            <input
-              type="text"
-              pInputText
+            <p-autoComplete
               [(ngModel)]="filtroTemp().valor"
-              placeholder="Nombre del activo o proceso..."
-              class="w-full" />
+              [suggestions]="contenedoresFiltrados()"
+              (completeMethod)="buscarContenedores($event)"
+              (onSelect)="onContenedorSeleccionado($event)"
+              field="nombre"
+              [dropdown]="true"
+              [forceSelection]="false"
+              placeholder="Escriba para buscar..."
+              styleClass="w-full">
+              <ng-template let-item pTemplate="item">
+                <div class="flex align-items-center gap-2">
+                  <p-tag
+                    [value]="item.tipo === 'activo' ? 'Activo' : 'Proceso'"
+                    [severity]="item.tipo === 'activo' ? 'info' : 'success'"
+                    styleClass="text-xs" />
+                  <span>{{ item.nombre }}</span>
+                </div>
+              </ng-template>
+            </p-autoComplete>
           </div>
         }
       }
@@ -955,10 +991,24 @@
     <ng-template pTemplate="footer">
       <div class="detalle-acciones">
         <p-button
-          label="Ir al Activo"
+          label="Editar"
+          icon="pi pi-pencil"
+          [outlined]="true"
+          severity="info"
+          (onClick)="editarDesdeDetalle()"
+          pTooltip="Editar este registro" />
+        <p-button
+          label="Historial"
+          icon="pi pi-history"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="verHistorial()"
+          pTooltip="Ver historial de cambios" />
+        <p-button
+          [label]="registroSeleccionado()?.tipoContenedor === 'activo' ? 'Ir al Activo' : 'Ir al Proceso'"
           icon="pi pi-external-link"
           [outlined]="true"
-          routerLink="/activos" />
+          (onClick)="navegarAlContenedor()" />
         <p-button
           label="Cerrar"
           (onClick)="showDetalleDrawer.set(false)" />
@@ -1000,8 +1050,8 @@
                 [ngModel]="isColumnaAccionActiva(col.field)"
                 [binary]="true"
                 (click)="$event.stopPropagation()" />
-              <span class="font-medium">{{ col.header }}</span>
-              <span class="text-secondary text-xs">({{ col.tipo }})</span>
+              <span class="campo-nombre">{{ col.header }}</span>
+              <span class="campo-tipo">{{ col.tipo }}</span>
             </div>
             <i class="pi" [class.pi-chevron-down]="isColumnaAccionActiva(col.field)" [class.pi-chevron-right]="!isColumnaAccionActiva(col.field)"></i>
           </div>
@@ -1009,6 +1059,7 @@
           <!-- Control del campo (se muestra solo si está activo) -->
           @if (isColumnaAccionActiva(col.field)) {
             <div class="accion-masiva-control">
+              <label class="control-label">Nuevo valor para {{ col.header }}</label>
               @switch (col.field) {
                 @case ('estado') {
                   <p-select
@@ -1201,5 +1252,55 @@
       icon="pi pi-check"
       (onClick)="confirmarCambiarEstado()"
       [disabled]="!nuevoEstadoMasivo()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: Historial del Registro -->
+<p-dialog
+  header="Historial de Cambios"
+  [(visible)]="showHistorialDialog"
+  [modal]="true"
+  [style]="{ width: '550px' }"
+  [draggable]="false"
+  [resizable]="false">
+  @if (registroSeleccionado(); as registro) {
+    <div class="historial-header mb-4">
+      <p-tag
+        [value]="getTipoEntidadLabel(registro.tipoEntidad)"
+        [icon]="getTipoEntidadIcon(registro.tipoEntidad)"
+        [severity]="registro.tipoEntidad === 'riesgo' ? 'warn' : 'danger'" />
+      <span class="ml-2 font-semibold">{{ registro.titulo || registro.descripcion | slice:0:50 }}</span>
+    </div>
+
+    <p-timeline [value]="historialRegistro()" styleClass="historial-timeline">
+      <ng-template pTemplate="marker" let-evento>
+        <span
+          class="historial-marker"
+          [style.background-color]="getHistorialColor(evento.accion)">
+          <i [class]="getHistorialIcon(evento.accion)"></i>
+        </span>
+      </ng-template>
+      <ng-template pTemplate="content" let-evento>
+        <div class="historial-evento">
+          <div class="historial-evento-header">
+            <span class="historial-accion font-semibold">{{ evento.accion }}</span>
+            <span class="historial-fecha text-secondary text-sm">
+              {{ evento.fecha | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+          </div>
+          <div class="historial-usuario text-sm">
+            <i class="pi pi-user mr-1"></i>{{ evento.usuario }}
+          </div>
+          <div class="historial-detalles text-secondary text-sm mt-1">
+            {{ evento.detalles }}
+          </div>
+        </div>
+      </ng-template>
+    </p-timeline>
+  }
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar"
+      (onClick)="showHistorialDialog.set(false)" />
   </ng-template>
 </p-dialog>

@@ -671,4 +671,189 @@ export class ApiService {
   getNotificationStats(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/notifications/stats`);
   }
+
+  // ============================================================
+  // Proyectos
+  // ============================================================
+
+  getProjects(params?: Record<string, string>): Observable<any[]> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key]) {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+    return this.http.get<any[]>(`${this.baseUrl}/projects`, { params: httpParams });
+  }
+
+  getProjectById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/projects/${id}`);
+  }
+
+  createProject(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/projects`, data);
+  }
+
+  updateProject(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/projects/${id}`, data);
+  }
+
+  deleteProject(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/projects/${id}`);
+  }
+
+  updateProjectStatus(id: string, status: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/projects/${id}/status`, { status });
+  }
+
+  // Objetivos SMART
+  getProjectObjectives(projectId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/projects/${projectId}/objectives`);
+  }
+
+  createProjectObjective(projectId: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/projects/${projectId}/objectives`, data);
+  }
+
+  updateProjectObjective(projectId: string, objectiveId: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/projects/${projectId}/objectives/${objectiveId}`, data);
+  }
+
+  deleteProjectObjective(projectId: string, objectiveId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/projects/${projectId}/objectives/${objectiveId}`);
+  }
+
+  // KPIs de proyecto
+  getProjectKPIs(projectId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/projects/${projectId}/kpis`);
+  }
+
+  createProjectKPI(projectId: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/projects/${projectId}/kpis`, data);
+  }
+
+  updateProjectKPI(projectId: string, kpiId: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/projects/${projectId}/kpis/${kpiId}`, data);
+  }
+
+  deleteProjectKPI(projectId: string, kpiId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/projects/${projectId}/kpis/${kpiId}`);
+  }
+
+  // Fases de proyecto
+  getProjectPhases(projectId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/projects/${projectId}/phases`);
+  }
+
+  createProjectPhase(projectId: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/projects/${projectId}/phases`, data);
+  }
+
+  updateProjectPhase(projectId: string, phaseId: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/projects/${projectId}/phases/${phaseId}`, data);
+  }
+
+  deleteProjectPhase(projectId: string, phaseId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/projects/${projectId}/phases/${phaseId}`);
+  }
+
+  updatePhaseStatus(projectId: string, phaseId: string, status: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/projects/${projectId}/phases/${phaseId}/status`, { status });
+  }
+
+  reorderProjectPhases(projectId: string, phases: { id: string; orderNum: number }[]): Observable<any[]> {
+    return this.http.post<any[]>(`${this.baseUrl}/projects/${projectId}/phases/reorder`, { phases });
+  }
+
+  // Vistas de proyecto
+  getProjectDashboard(projectId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/projects/${projectId}/dashboard`);
+  }
+
+  getProjectGantt(projectId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/projects/${projectId}/gantt`);
+  }
+
+  getProjectCalendar(projectId: string, params?: { start?: string; end?: string }): Observable<any[]> {
+    let httpParams = new HttpParams();
+    if (params) {
+      if (params.start) httpParams = httpParams.set('start', params.start);
+      if (params.end) httpParams = httpParams.set('end', params.end);
+    }
+    return this.http.get<any[]>(`${this.baseUrl}/projects/${projectId}/calendar`, { params: httpParams });
+  }
+
+  // ============================================================
+  // Tareas
+  // ============================================================
+
+  getTasks(params?: Record<string, string>): Observable<any[]> {
+    let httpParams = new HttpParams();
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key]) {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+    return this.http.get<any[]>(`${this.baseUrl}/tasks`, { params: httpParams });
+  }
+
+  getTaskById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/tasks/${id}`);
+  }
+
+  createTask(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/tasks`, data);
+  }
+
+  updateTask(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/tasks/${id}`, data);
+  }
+
+  deleteTask(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/tasks/${id}`);
+  }
+
+  updateTaskStatus(id: string, status: string, userId?: string, comment?: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/tasks/${id}/status`, { status, userId, comment });
+  }
+
+  updateTaskProgress(id: string, progress: number, actualHours?: number, userId?: string, comment?: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/tasks/${id}/progress`, { progress, actualHours, userId, comment });
+  }
+
+  assignTask(id: string, assignedTo: string, assignedBy?: string, reason?: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/tasks/${id}/assign`, { assignedTo, assignedBy, reason });
+  }
+
+  // Evidencias de tarea
+  getTaskEvidences(taskId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/tasks/${taskId}/evidences`);
+  }
+
+  createTaskEvidence(taskId: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/tasks/${taskId}/evidences`, data);
+  }
+
+  deleteTaskEvidence(taskId: string, evidenceId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/tasks/${taskId}/evidences/${evidenceId}`);
+  }
+
+  // Calendario personal
+  getMyTasks(userId: string, params?: { start?: string; end?: string }): Observable<any[]> {
+    let httpParams = new HttpParams().set('userId', userId);
+    if (params) {
+      if (params.start) httpParams = httpParams.set('start', params.start);
+      if (params.end) httpParams = httpParams.set('end', params.end);
+    }
+    return this.http.get<any[]>(`${this.baseUrl}/tasks/calendar/my-tasks`, { params: httpParams });
+  }
+
+  // Crear tarea desde entidad vinculada
+  createTaskFromEntity(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/tasks/link-entity`, data);
+  }
 }

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nodo Transformación - Procesamiento de Datos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ed64a6 0%, #d53f8c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .node-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 550px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .node-header {
+            background: linear-gradient(135deg, #ed64a6, #d53f8c);
+            padding: 25px;
+            color: white;
+            text-align: center;
+        }
+
+        .node-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .node-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .node-subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .node-body {
+            padding: 30px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ed64a6;
+            box-shadow: 0 0 0 3px rgba(237, 100, 166, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #718096;
+            font-size: 0.85em;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .description {
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0fff4;
+            border-radius: 8px;
+            border-left: 4px solid #48bb78;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #22543d;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1em;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .operation-examples {
+            background: #edf2f7;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #4a5568;
+        }
+
+        .operation-examples strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #2d3748;
+        }
+
+        .mapping-container {
+            display: none;
+        }
+
+        .mapping-container.show {
+            display: block;
+        }
+
+        .mapping-row {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .mapping-row input {
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+        }
+
+        .mapping-arrow {
+            color: #ed64a6;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="node-container">
+        <div class="node-header">
+            <div class="node-icon">🔄</div>
+            <div class="node-title">Nodo Transformación</div>
+            <div class="node-subtitle">Procesamiento de Datos</div>
+        </div>
+
+        <div class="node-body">
+            <div class="description">
+                Modifica, filtra o enriquece datos mediante operaciones ETL.
+            </div>
+
+            <div class="form-group">
+                <label>Operación</label>
+                <select id="operationSelect">
+                    <option value="filter">Filtrar registros</option>
+                    <option value="map">Mapear campos</option>
+                    <option value="enrich">Enriquecer datos</option>
+                    <option value="aggregate">Agregar valores</option>
+                    <option value="sort">Ordenar</option>
+                    <option value="deduplicate">Eliminar duplicados</option>
+                </select>
+            </div>
+
+            <div id="filterConfig">
+                <div class="form-group">
+                    <label>Regla de filtrado</label>
+                    <input type="text" id="filterRule" placeholder="prioridad = 'Alta'">
+                    <small>Usa sintaxis SQL o expresiones lógicas</small>
+                </div>
+            </div>
+
+            <div id="mapConfig" class="mapping-container">
+                <div class="form-group">
+                    <label>Mapeo de campos</label>
+                    <div class="mapping-row">
+                        <input type="text" placeholder="Campo origen" value="name">
+                        <span class="mapping-arrow">→</span>
+                        <input type="text" placeholder="Campo destino" value="nombre">
+                    </div>
+                    <div class="mapping-row">
+                        <input type="text" placeholder="Campo origen" value="date">
+                        <span class="mapping-arrow">→</span>
+                        <input type="text" placeholder="Campo destino" value="fecha">
+                    </div>
+                    <div class="mapping-row">
+                        <input type="text" placeholder="Campo origen" value="amount">
+                        <span class="mapping-arrow">→</span>
+                        <input type="text" placeholder="Campo destino" value="monto">
+                    </div>
+                </div>
+            </div>
+
+            <div id="enrichConfig" class="mapping-container">
+                <div class="form-group">
+                    <label>Nueva columna</label>
+                    <input type="text" id="newColumn" placeholder="total">
+                </div>
+                <div class="form-group">
+                    <label>Fórmula</label>
+                    <input type="text" id="enrichFormula" placeholder="precio * cantidad">
+                </div>
+            </div>
+
+            <div id="aggregateConfig" class="mapping-container">
+                <div class="form-group">
+                    <label>Función</label>
+                    <select id="aggFunction">
+                        <option value="sum">SUM</option>
+                        <option value="avg">AVG</option>
+                        <option value="count">COUNT</option>
+                        <option value="min">MIN</option>
+                        <option value="max">MAX</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Campo</label>
+                    <input type="text" id="aggField" placeholder="ventas">
+                </div>
+                <div class="form-group">
+                    <label>Agrupar por</label>
+                    <input type="text" id="groupBy" placeholder="mes">
+                </div>
+            </div>
+
+            <div id="sortConfig" class="mapping-container">
+                <div class="form-group">
+                    <label>Campo de ordenamiento</label>
+                    <input type="text" id="sortField" placeholder="fecha">
+                </div>
+                <div class="form-group">
+                    <label>Orden</label>
+                    <select id="sortOrder">
+                        <option value="asc">Ascendente</option>
+                        <option value="desc">Descendente</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Campos afectados</label>
+                <input type="text" id="affectedFields" placeholder="fecha, estado, responsable">
+                <small>Separados por comas</small>
+            </div>
+
+            <button class="btn btn-primary" id="transformBtn">
+                ⚡ Aplicar Transformación
+            </button>
+
+            <div class="result-container" id="resultContainer">
+                <div class="result-title">
+                    <span>✅</span>
+                    <span>Transformación aplicada</span>
+                </div>
+
+                <div class="stats-row">
+                    <span class="stat-label">Registros de entrada:</span>
+                    <span class="stat-value" id="inputRecords">0</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stat-label">Registros de salida:</span>
+                    <span class="stat-value" id="outputRecords">0</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stat-label">Tiempo de ejecución:</span>
+                    <span class="stat-value" id="execTime">0s</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stat-label">Operación aplicada:</span>
+                    <span class="stat-value" id="appliedOp">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const operationSelect = document.getElementById('operationSelect');
+        const transformBtn = document.getElementById('transformBtn');
+        const resultContainer = document.getElementById('resultContainer');
+
+        const configs = {
+            filter: document.getElementById('filterConfig'),
+            map: document.getElementById('mapConfig'),
+            enrich: document.getElementById('enrichConfig'),
+            aggregate: document.getElementById('aggregateConfig'),
+            sort: document.getElementById('sortConfig')
+        };
+
+        operationSelect.addEventListener('change', (e) => {
+            // Ocultar todas las configuraciones
+            Object.values(configs).forEach(config => {
+                if (config) config.classList.remove('show');
+            });
+
+            // Mostrar la configuración correspondiente
+            const selected = e.target.value;
+            if (configs[selected]) {
+                configs[selected].classList.add('show');
+            }
+
+            resultContainer.classList.remove('show');
+        });
+
+        transformBtn.addEventListener('click', () => {
+            const operation = operationSelect.value;
+            const operationNames = {
+                filter: 'Filtrar',
+                map: 'Mapear campos',
+                enrich: 'Enriquecer',
+                aggregate: 'Agregar',
+                sort: 'Ordenar',
+                deduplicate: 'Eliminar duplicados'
+            };
+
+            // Simular transformación
+            const inputCount = Math.floor(Math.random() * 10000) + 5000;
+            let outputCount;
+
+            switch (operation) {
+                case 'filter':
+                    outputCount = Math.floor(inputCount * (0.2 + Math.random() * 0.3));
+                    break;
+                case 'map':
+                    outputCount = inputCount;
+                    break;
+                case 'enrich':
+                    outputCount = inputCount;
+                    break;
+                case 'aggregate':
+                    outputCount = Math.floor(Math.random() * 20) + 5;
+                    break;
+                case 'sort':
+                    outputCount = inputCount;
+                    break;
+                case 'deduplicate':
+                    outputCount = Math.floor(inputCount * (0.7 + Math.random() * 0.25));
+                    break;
+                default:
+                    outputCount = inputCount;
+            }
+
+            const execTime = (Math.random() * 3 + 0.5).toFixed(2);
+
+            document.getElementById('inputRecords').textContent = inputCount.toLocaleString();
+            document.getElementById('outputRecords').textContent = outputCount.toLocaleString();
+            document.getElementById('execTime').textContent = execTime + 's';
+            document.getElementById('appliedOp').textContent = operationNames[operation];
+
+            resultContainer.classList.add('show');
+        });
+
+        // Inicializar vista
+        operationSelect.dispatchEvent(new Event('change'));
+    </script>
+</body>
+</html>

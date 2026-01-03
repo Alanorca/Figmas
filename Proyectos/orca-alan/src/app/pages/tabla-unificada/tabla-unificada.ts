@@ -34,6 +34,8 @@ import { MessageModule } from 'primeng/message';
 import { ToolbarModule } from 'primeng/toolbar';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import { TimelineModule } from 'primeng/timeline';
 
 // Componentes personalizados
 import { GraficasInteractivasComponent, DatosGrafica, FiltroGrafica } from '../../components/graficas-interactivas/graficas-interactivas';
@@ -67,7 +69,7 @@ interface TipoGraficaOpcion {
     DatePickerModule, PaginatorModule, DragDropModule, ToggleButtonModule,
     SelectButtonModule, PanelModule, DividerModule, BadgeModule,
     InputNumberModule, SkeletonModule, DrawerModule, TabsModule,
-    MessageModule, ToolbarModule, IconFieldModule, InputIconModule, GraficasInteractivasComponent
+    MessageModule, ToolbarModule, IconFieldModule, InputIconModule, AutoCompleteModule, TimelineModule, GraficasInteractivasComponent
   ],
   templateUrl: './tabla-unificada.html',
   styleUrl: './tabla-unificada.scss',
@@ -122,6 +124,35 @@ export class TablaUnificadaComponent {
   showCambiarEstadoDialog = signal(false);
   nuevoResponsable = signal('');
   nuevoEstadoMasivo = signal('');
+
+  // Autocompletado para filtro de contenedor (Activo/Proceso)
+  contenedoresFiltrados = signal<{ nombre: string; tipo: 'activo' | 'proceso'; id: string }[]>([]);
+  filtroTipoContenedor = signal<'todos' | 'activo' | 'proceso'>('todos');
+
+  // Lista completa de contenedores disponibles
+  contenedoresDisponibles = computed(() => {
+    const datos = this.service.getDatosUnificados();
+    const contenedoresMap = new Map<string, { nombre: string; tipo: 'activo' | 'proceso'; id: string }>();
+
+    datos.forEach(d => {
+      if (d.contenedorNombre && d.contenedorId) {
+        const key = `${d.tipoContenedor}-${d.contenedorId}`;
+        if (!contenedoresMap.has(key)) {
+          contenedoresMap.set(key, {
+            nombre: d.contenedorNombre,
+            tipo: d.tipoContenedor as 'activo' | 'proceso',
+            id: d.contenedorId
+          });
+        }
+      }
+    });
+
+    return Array.from(contenedoresMap.values()).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  });
+
+  // Dialog de historial
+  showHistorialDialog = signal(false);
+  historialRegistro = signal<{ fecha: Date; usuario: string; accion: string; detalles: string }[]>([]);
 
   // Columnas ordenadas según el estado actual (para el drawer)
   columnasOrdenadas = computed(() => {
@@ -1025,5 +1056,121 @@ export class TablaUnificadaComponent {
     console.log(`Eliminando ${seleccionados.length} registros`);
     // Aquí mostrarías un dialog de confirmación
     this.deseleccionarTodos();
+  }
+
+  // === AUTOCOMPLETADO DE CONTENEDORES ===
+  buscarContenedores(event: AutoCompleteCompleteEvent): void {
+    const query = event.query.toLowerCase();
+    const tipoFiltro = this.filtroTipoContenedor();
+
+    let resultados = this.contenedoresDisponibles().filter(c =>
+      c.nombre.toLowerCase().includes(query)
+    );
+
+    if (tipoFiltro !== 'todos') {
+      resultados = resultados.filter(c => c.tipo === tipoFiltro);
+    }
+
+    this.contenedoresFiltrados.set(resultados);
+  }
+
+  onContenedorSeleccionado(event: any): void {
+    if (event && event.nombre) {
+      this.filtroTemp.update(f => ({ ...f, valor: event.nombre }));
+    }
+  }
+
+  setFiltroTipoContenedor(tipo: 'todos' | 'activo' | 'proceso'): void {
+    this.filtroTipoContenedor.set(tipo);
+  }
+
+  // === HIGHLIGHT DE BÚSQUEDA ===
+  highlightText(texto: string | undefined | null): string {
+    if (!texto) return '';
+    const busqueda = this.busquedaGlobal().trim();
+    if (!busqueda) return texto;
+
+    const regex = new RegExp(`(${this.escapeRegex(busqueda)})`, 'gi');
+    return texto.replace(regex, '<mark class="search-highlight">$1</mark>');
+  }
+
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // === ACCIONES DEL DRAWER DE DETALLE ===
+  editarDesdeDetalle(): void {
+    const registro = this.registroSeleccionado();
+    if (registro) {
+      this.showDetalleDrawer.set(false);
+      this.iniciarEdicion(registro, new Event('click'));
+    }
+  }
+
+  verHistorial(): void {
+    const registro = this.registroSeleccionado();
+    if (!registro) return;
+
+    // Simular historial (en producción vendría del backend)
+    const historialSimulado = [
+      {
+        fecha: new Date(),
+        usuario: 'Sistema',
+        accion: 'Visualizado',
+        detalles: 'Registro consultado'
+      },
+      {
+        fecha: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        usuario: registro.responsable || 'Usuario',
+        accion: 'Modificado',
+        detalles: `Estado cambiado a "${registro.estado}"`
+      },
+      {
+        fecha: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        usuario: 'Admin',
+        accion: 'Asignado',
+        detalles: `Responsable asignado: ${registro.responsable || 'Sin asignar'}`
+      },
+      {
+        fecha: registro.fecha,
+        usuario: registro.tipoEntidad === 'incidente' ? (registro.reportadoPor || 'Sistema') : 'Sistema',
+        accion: 'Creado',
+        detalles: `${registro.tipoEntidad === 'riesgo' ? 'Riesgo' : 'Incidente'} registrado en el sistema`
+      }
+    ];
+
+    this.historialRegistro.set(historialSimulado);
+    this.showHistorialDialog.set(true);
+  }
+
+  navegarAlContenedor(): void {
+    const registro = this.registroSeleccionado();
+    if (!registro || !registro.contenedorId) return;
+
+    const ruta = registro.tipoContenedor === 'activo' ? '/activos' : '/procesos';
+    // En producción usarías el Router para navegar
+    console.log(`Navegando a ${ruta}/${registro.contenedorId}`);
+  }
+
+  getHistorialIcon(accion: string): string {
+    switch (accion.toLowerCase()) {
+      case 'creado': return 'pi pi-plus-circle';
+      case 'modificado': return 'pi pi-pencil';
+      case 'asignado': return 'pi pi-user';
+      case 'visualizado': return 'pi pi-eye';
+      case 'eliminado': return 'pi pi-trash';
+      default: return 'pi pi-circle';
+    }
+  }
+
+  getHistorialColor(accion: string): string {
+    switch (accion.toLowerCase()) {
+      case 'creado': return 'var(--green-500)';
+      case 'modificado': return 'var(--blue-500)';
+      case 'asignado': return 'var(--purple-500)';
+      case 'visualizado': return 'var(--gray-500)';
+      case 'eliminado': return 'var(--red-500)';
+      default: return 'var(--primary-color)';
+    }
   }
 }

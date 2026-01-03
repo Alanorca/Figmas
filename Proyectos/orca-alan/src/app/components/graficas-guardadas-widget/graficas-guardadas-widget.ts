@@ -16,6 +16,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { NgApexchartsModule } from 'ng-apexcharts';
+import { SelectModule } from 'primeng/select';
 
 export interface GraficaGuardada {
   id: string;
@@ -50,33 +51,67 @@ export interface GraficaGuardada {
     DialogModule,
     ConfirmDialogModule,
     ToastModule,
-    NgApexchartsModule
+    NgApexchartsModule,
+    SelectModule
   ],
   providers: [ConfirmationService, MessageService],
   template: `
     <div class="graficas-guardadas-widget" [class.compact]="modo === 'compact'">
-      <!-- Header con búsqueda -->
-      <div class="widget-header-actions">
-        <div class="search-box" *ngIf="modo !== 'compact'">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            placeholder="Buscar gráficas..."
-            [ngModel]="filtro()"
-            (ngModelChange)="filtro.set($event)"
-            class="search-input" />
-        </div>
-        <div class="header-right">
-          <p-button
-            icon="pi pi-refresh"
-            [rounded]="true"
-            [text]="true"
-            size="small"
-            (onClick)="cargarGraficas()"
-            pTooltip="Actualizar">
-          </p-button>
-        </div>
+      <!-- Select de gráficas guardadas -->
+      <div class="grafica-select-container">
+        <p-select
+          [options]="graficasOptions()"
+          [(ngModel)]="graficaSeleccionadaId"
+          (ngModelChange)="onSelectGrafica($event)"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar gráfica guardada..."
+          [showClear]="true"
+          [filter]="graficas().length > 5"
+          filterPlaceholder="Buscar..."
+          styleClass="grafica-select">
+          <ng-template pTemplate="selectedItem" let-selected>
+            @if (selected) {
+              <div class="select-item-content">
+                <i [class]="getIconoTipo(getGraficaById(selected.value)?.tipo || 'bar')"></i>
+                <span>{{ selected.label }}</span>
+              </div>
+            }
+          </ng-template>
+          <ng-template pTemplate="item" let-option>
+            <div class="select-item-content">
+              <i [class]="getIconoTipo(getGraficaById(option.value)?.tipo || 'bar')"></i>
+              <span>{{ option.label }}</span>
+              @if (getGraficaById(option.value)?.favorito) {
+                <i class="pi pi-star-fill star-icon"></i>
+              }
+            </div>
+          </ng-template>
+        </p-select>
+        <p-button
+          icon="pi pi-refresh"
+          [rounded]="true"
+          [text]="true"
+          size="small"
+          (onClick)="cargarGraficas()"
+          pTooltip="Actualizar">
+        </p-button>
       </div>
+
+      <!-- Header con búsqueda (solo en modo full) -->
+      @if (modo !== 'compact') {
+        <div class="widget-header-actions">
+          <div class="search-box">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              placeholder="Buscar gráficas..."
+              [ngModel]="filtro()"
+              (ngModelChange)="filtro.set($event)"
+              class="search-input" />
+          </div>
+        </div>
+      }
 
       <!-- Filtros rápidos -->
       @if (modo !== 'compact') {
@@ -309,6 +344,48 @@ export interface GraficaGuardada {
       flex-direction: column;
       height: 100%;
       gap: var(--spacing-3);
+    }
+
+    .grafica-select-container {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+
+      .grafica-select {
+        flex: 1;
+        width: 100%;
+      }
+
+      ::ng-deep .p-select {
+        width: 100%;
+
+        .p-select-label {
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-2);
+        }
+      }
+    }
+
+    .select-item-content {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+
+      i {
+        color: var(--primary-color);
+        font-size: var(--font-size-sm);
+
+        &.star-icon {
+          color: var(--amber-400);
+          font-size: var(--font-size-xs);
+          margin-left: auto;
+        }
+      }
+
+      span {
+        font-size: var(--font-size-sm);
+      }
     }
 
     .widget-header-actions {
@@ -652,6 +729,15 @@ export class GraficasGuardadasWidgetComponent implements OnInit {
   categoriaActiva = signal<'todas' | 'favoritas' | 'recientes'>('todas');
   showPreviewDialog = false;
   graficaSeleccionada = signal<GraficaGuardada | null>(null);
+  graficaSeleccionadaId: string | null = null;
+
+  // Computed para opciones del select
+  graficasOptions = computed(() => {
+    return this.graficas().map(g => ({
+      label: g.nombre,
+      value: g.id
+    }));
+  });
 
   graficasFiltradas = computed(() => {
     let resultado = this.graficas();
@@ -683,6 +769,28 @@ export class GraficasGuardadasWidgetComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarGraficas();
+  }
+
+  // Obtener gráfica por ID
+  getGraficaById(id: string): GraficaGuardada | undefined {
+    return this.graficas().find(g => g.id === id);
+  }
+
+  // Handler cuando se selecciona del dropdown
+  onSelectGrafica(id: string | null): void {
+    if (id) {
+      const grafica = this.getGraficaById(id);
+      if (grafica) {
+        this.graficaSeleccionada.set(grafica);
+        this.graficaSeleccionadaEvt.emit(grafica);
+        this.cargarGraficaEvt.emit(grafica);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Gráfica seleccionada',
+          detail: grafica.nombre
+        });
+      }
+    }
   }
 
   cargarGraficas(): void {

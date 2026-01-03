@@ -1,0 +1,750 @@
+<div class="proyecto-detalle-container">
+  @if (loading()) {
+    <div class="loading-container">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+      <p>Cargando proyecto...</p>
+    </div>
+  } @else if (project(); as proyecto) {
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="volver()"
+          pTooltip="Volver a proyectos"
+        />
+        <div class="header-info">
+          <h1>{{ proyecto.name }}</h1>
+          <div class="header-tags">
+            <p-tag
+              [value]="getStatusLabel(proyecto.status)"
+              [severity]="getStatusSeverity(proyecto.status)"
+            />
+            <p-tag
+              [value]="getPriorityLabel(proyecto.priority)"
+              [severity]="getPrioritySeverity(proyecto.priority)"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <p-button
+          label="Editar"
+          icon="pi pi-pencil"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="editarProyecto()"
+        />
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon progress">
+          <i class="pi pi-chart-line"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ proyecto.progress }}%</span>
+          <span class="stat-label">Progreso</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon duration">
+          <i class="pi pi-calendar"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ projectDuration }}</span>
+          <span class="stat-label">Días totales</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon tasks">
+          <i class="pi pi-check-square"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ completedTasks }}/{{ totalTasks }}</span>
+          <span class="stat-label">Tareas completadas</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon remaining">
+          <i class="pi pi-clock"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value" [class.warning]="getDaysRemaining(proyecto.endDate) <= 7" [class.overdue]="getDaysRemaining(proyecto.endDate) < 0">
+            {{ getDaysRemaining(proyecto.endDate) }}
+          </span>
+          <span class="stat-label">Días restantes</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)">
+      <p-tablist>
+        <p-tab [value]="0">
+          <i class="pi pi-th-large"></i>
+          Dashboard
+        </p-tab>
+        <p-tab [value]="1">
+          <i class="pi pi-align-left"></i>
+          Gantt
+        </p-tab>
+        <p-tab [value]="2">
+          <i class="pi pi-history"></i>
+          Timeline
+        </p-tab>
+        <p-tab [value]="3">
+          <i class="pi pi-list"></i>
+          Tareas
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Dashboard Tab -->
+        <p-tabpanel [value]="0">
+          <div class="dashboard-content">
+            <!-- Info del proyecto -->
+            <div class="info-section">
+              <p-card header="Información del Proyecto">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="label">Descripción</span>
+                    <span class="value">{{ proyecto.description || 'Sin descripción' }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="label">Fecha de inicio</span>
+                    <span class="value">{{ formatDate(proyecto.startDate) }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="label">Fecha de fin</span>
+                    <span class="value">{{ formatDate(proyecto.endDate) }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="label">Responsable</span>
+                    <span class="value">{{ proyecto.responsibleUserId }}</span>
+                  </div>
+                </div>
+              </p-card>
+            </div>
+
+            <!-- Progreso general -->
+            <div class="progress-section">
+              <p-card header="Progreso General">
+                <div class="progress-container">
+                  <p-progressBar
+                    [value]="proyecto.progress"
+                    [showValue]="true"
+                    [style]="{ height: '24px' }"
+                  />
+                </div>
+                <div class="progress-stats">
+                  <div class="progress-stat">
+                    <span class="num">{{ completedTasks }}</span>
+                    <span class="label">Completadas</span>
+                  </div>
+                  <div class="progress-stat">
+                    <span class="num">{{ pendingTasks }}</span>
+                    <span class="label">Pendientes</span>
+                  </div>
+                  <div class="progress-stat">
+                    <span class="num">{{ blockedTasks }}</span>
+                    <span class="label">Bloqueadas</span>
+                  </div>
+                </div>
+              </p-card>
+            </div>
+
+            <!-- Fases -->
+            @if (proyecto.phases && proyecto.phases.length > 0) {
+              <div class="phases-section">
+                <p-card header="Fases del Proyecto">
+                  <div class="phases-grid">
+                    @for (fase of proyecto.phases; track fase.id) {
+                      <div class="phase-card">
+                        <div class="phase-header">
+                          <span class="phase-name">{{ fase.name }}</span>
+                          <p-tag
+                            [value]="fase.status"
+                            [severity]="getPhaseStatusSeverity(fase.status)"
+                            [style]="{ fontSize: '0.7rem' }"
+                          />
+                        </div>
+                        <p class="phase-description">{{ fase.description || 'Sin descripción' }}</p>
+                        <div class="phase-progress">
+                          <p-progressBar
+                            [value]="fase.progress"
+                            [showValue]="false"
+                            [style]="{ height: '8px' }"
+                          />
+                          <span class="progress-text">{{ fase.progress }}%</span>
+                        </div>
+                        <div class="phase-dates">
+                          <span><i class="pi pi-calendar"></i> {{ formatDate(fase.startDate) }} - {{ formatDate(fase.endDate) }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </p-card>
+              </div>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- Gantt Tab -->
+        <p-tabpanel [value]="1">
+          <div class="gantt-container">
+            <p-card header="Vista Gantt">
+              @if (ganttItems().length > 0) {
+                <div class="gantt-chart">
+                  <!-- Header con fechas -->
+                  <div class="gantt-header">
+                    <div class="gantt-labels-header">Elemento</div>
+                    <div class="gantt-timeline-header">
+                      <span class="date-start">{{ formatDate(proyecto.startDate) }}</span>
+                      <span class="date-end">{{ formatDate(proyecto.endDate) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Filas del Gantt -->
+                  <div class="gantt-body">
+                    @for (item of ganttItems(); track item.id) {
+                      <div class="gantt-row" [class.phase-row]="item.type === 'phase'" [class.task-row]="item.type === 'task'">
+                        <div class="gantt-label">
+                          <i [class]="item.type === 'phase' ? 'pi pi-folder' : 'pi pi-check-square'"></i>
+                          <span>{{ item.name }}</span>
+                        </div>
+                        <div class="gantt-timeline">
+                          <div
+                            class="gantt-bar"
+                            [style.left]="getItemOffset(item)"
+                            [style.width]="getItemWidth(item)"
+                            [style.background-color]="item.color"
+                          >
+                            <div class="gantt-progress" [style.width.%]="item.progress"></div>
+                            <span class="gantt-bar-label">{{ item.progress }}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="empty-state">
+                  <i class="pi pi-chart-bar"></i>
+                  <p>No hay elementos para mostrar en el Gantt</p>
+                </div>
+              }
+            </p-card>
+          </div>
+        </p-tabpanel>
+
+        <!-- Timeline Tab -->
+        <p-tabpanel [value]="2">
+          <div class="timeline-container">
+            <p-card header="Timeline del Proyecto">
+              @if (timelineEvents().length > 0) {
+                <p-timeline [value]="timelineEvents()" align="alternate">
+                  <ng-template pTemplate="content" let-event>
+                    <div class="timeline-event">
+                      <h4>{{ event.title }}</h4>
+                      <p class="event-date">{{ event.date }}</p>
+                      @if (event.description) {
+                        <p class="event-description">{{ event.description }}</p>
+                      }
+                    </div>
+                  </ng-template>
+                  <ng-template pTemplate="opposite" let-event>
+                    <span class="event-type">{{ event.type }}</span>
+                  </ng-template>
+                  <ng-template pTemplate="marker" let-event>
+                    <span class="timeline-marker" [style.background-color]="event.color">
+                      <i [class]="event.icon"></i>
+                    </span>
+                  </ng-template>
+                </p-timeline>
+              } @else {
+                <div class="empty-state">
+                  <i class="pi pi-history"></i>
+                  <p>No hay eventos en el timeline</p>
+                </div>
+              }
+            </p-card>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tareas Tab -->
+        <p-tabpanel [value]="3">
+          <div class="tasks-container">
+            <!-- Toolbar de tareas -->
+            <p-toolbar styleClass="mb-3">
+              <ng-template pTemplate="start">
+                <div class="flex align-items-center gap-3">
+                  <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input
+                      type="text"
+                      pInputText
+                      placeholder="Buscar tareas..."
+                      [ngModel]="taskSearchFilter()"
+                      (ngModelChange)="taskSearchFilter.set($event)"
+                      style="width: 220px" />
+                  </p-iconfield>
+                  <p-select
+                    [options]="taskStatusOptions"
+                    [ngModel]="taskStatusFilter()"
+                    (ngModelChange)="taskStatusFilter.set($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Todos los estados"
+                    [showClear]="true"
+                    [style]="{ width: '180px' }" />
+                </div>
+              </ng-template>
+              <ng-template pTemplate="end">
+                <p-button
+                  label="Nueva Tarea"
+                  icon="pi pi-plus"
+                  (onClick)="abrirFormularioNuevaTarea()" />
+              </ng-template>
+            </p-toolbar>
+
+            <!-- Tabla de tareas -->
+            <p-card styleClass="table-card">
+              <p-table
+                [value]="filteredTasks()"
+                [paginator]="true"
+                [rows]="10"
+                [rowsPerPageOptions]="[10, 25, 50]"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} tareas"
+                styleClass="p-datatable-sm"
+                [rowHover]="true"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th style="width: 30%">Tarea</th>
+                    <th style="width: 12%">Tipo</th>
+                    <th style="width: 12%">Estado</th>
+                    <th style="width: 10%">Prioridad</th>
+                    <th style="width: 12%">Progreso</th>
+                    <th style="width: 14%">Vencimiento</th>
+                    <th style="width: 10%">Acciones</th>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-task>
+                  <tr class="task-row" [class.overdue]="isTaskOverdue(task)" (click)="abrirTask(task)">
+                    <td>
+                      <div class="task-info">
+                        <span class="task-title">{{ task.title }}</span>
+                        @if (task.description) {
+                          <span class="task-description">{{ task.description }}</span>
+                        }
+                      </div>
+                    </td>
+                    <td>
+                      <span class="task-type">
+                        <i [class]="'pi ' + getTaskTypeIcon(task.taskType)"></i>
+                        {{ getTaskTypeLabel(task.taskType) }}
+                      </span>
+                    </td>
+                    <td>
+                      <p-tag
+                        [value]="getTaskStatusLabel(task.status)"
+                        [severity]="getTaskStatusSeverity(task.status)" />
+                    </td>
+                    <td>
+                      <p-tag
+                        [value]="getPriorityLabel(task.priority)"
+                        [severity]="getPrioritySeverity(task.priority)" />
+                    </td>
+                    <td>
+                      <div class="progress-cell">
+                        <p-progressBar
+                          [value]="task.progress"
+                          [showValue]="false"
+                          [style]="{ height: '8px' }" />
+                        <span>{{ task.progress }}%</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="dates-cell" [class.overdue]="isTaskOverdue(task)">
+                        <span class="due-date">{{ formatDate(task.dueDate) }}</span>
+                        @if (isTaskOverdue(task)) {
+                          <span class="overdue-badge">Vencida</span>
+                        }
+                      </div>
+                    </td>
+                    <td (click)="$event.stopPropagation()">
+                      <div class="actions-cell">
+                        <p-button
+                          icon="pi pi-eye"
+                          [rounded]="true"
+                          [text]="true"
+                          severity="info"
+                          size="small"
+                          pTooltip="Ver detalle"
+                          (onClick)="abrirTask(task)" />
+                        <p-button
+                          icon="pi pi-pencil"
+                          [rounded]="true"
+                          [text]="true"
+                          severity="secondary"
+                          size="small"
+                          pTooltip="Editar"
+                          (onClick)="abrirFormularioEditarTarea(task)" />
+                      </div>
+                    </td>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="7">
+                      <div class="empty-state">
+                        <i class="pi pi-inbox"></i>
+                        <h3>No hay tareas</h3>
+                        <p>Este proyecto aún no tiene tareas asignadas</p>
+                        <p-button
+                          label="Crear primera tarea"
+                          icon="pi pi-plus"
+                          (onClick)="abrirFormularioNuevaTarea()" />
+                      </div>
+                    </td>
+                  </tr>
+                </ng-template>
+
+                <!-- Pie de tabla -->
+                <ng-template pTemplate="footer">
+                  <tr class="font-semibold surface-100">
+                    <td colspan="2">
+                      <span class="text-900">Totales</span>
+                    </td>
+                    <td>
+                      <div class="flex gap-1 flex-wrap">
+                        <p-tag [value]="proyectosService.taskStats().inProgress.toString()" severity="info" styleClass="text-xs" pTooltip="En progreso" />
+                        <p-tag [value]="proyectosService.taskStats().completed.toString()" severity="success" styleClass="text-xs" pTooltip="Completadas" />
+                      </div>
+                    </td>
+                    <td colspan="2">
+                      @if (overdueTasks > 0) {
+                        <p-tag [value]="overdueTasks + ' vencidas'" severity="danger" styleClass="text-xs" />
+                      }
+                    </td>
+                    <td colspan="2">
+                      <span class="text-600">{{ filteredTasks().length }} tareas</span>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </p-card>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  } @else {
+    <div class="error-state">
+      <i class="pi pi-exclamation-triangle"></i>
+      <h3>Proyecto no encontrado</h3>
+      <p>El proyecto que buscas no existe o ha sido eliminado.</p>
+      <p-button label="Volver a proyectos" icon="pi pi-arrow-left" (onClick)="volver()" />
+    </div>
+  }
+</div>
+
+<!-- Task Detail Drawer -->
+<p-drawer
+  [(visible)]="showTaskDrawer"
+  [position]="'right'"
+  [style]="{ width: '500px' }"
+  [modal]="true"
+  (onHide)="cerrarTaskDrawer()"
+>
+  <ng-template pTemplate="header">
+    <div class="drawer-header">
+      <h3>Detalle de Tarea</h3>
+    </div>
+  </ng-template>
+
+  @if (selectedTask(); as task) {
+    <div class="drawer-content">
+      <!-- Info básica -->
+      <div class="drawer-section">
+        <div class="flex justify-content-between align-items-start mb-2">
+          <h4 class="m-0">{{ task.title }}</h4>
+          <p-button
+            icon="pi pi-pencil"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            pTooltip="Editar tarea"
+            (onClick)="abrirFormularioEditarTarea(task)" />
+        </div>
+        @if (task.description) {
+          <p class="description">{{ task.description }}</p>
+        }
+        <div class="tags-row mt-3">
+          <p-tag
+            [value]="getTaskStatusLabel(task.status)"
+            [severity]="getTaskStatusSeverity(task.status)" />
+          <p-tag
+            [value]="getPriorityLabel(task.priority)"
+            [severity]="getPrioritySeverity(task.priority)" />
+          <p-tag
+            [value]="getTaskTypeLabel(task.taskType)"
+            severity="secondary" />
+        </div>
+      </div>
+
+      <p-divider />
+
+      <!-- Progreso -->
+      <div class="drawer-section">
+        <h5>Progreso</h5>
+        <div class="progress-big">
+          <p-progressBar [value]="task.progress" [showValue]="true" />
+        </div>
+        <div class="progress-slider mt-3">
+          <span class="text-sm text-500">Actualizar progreso:</span>
+          <p-slider
+            [ngModel]="task.progress"
+            (ngModelChange)="actualizarProgresoTarea(task, $event)"
+            [step]="5"
+            [style]="{ width: '100%' }" />
+        </div>
+      </div>
+
+      <p-divider />
+
+      <!-- Información -->
+      <div class="drawer-section">
+        <h5>Información</h5>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Fase</span>
+            <span class="value">{{ task.phase?.name || 'Sin fase' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Responsable</span>
+            <span class="value">{{ task.assignedTo }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Fecha inicio</span>
+            <span class="value">{{ formatDate(task.startDate) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Vencimiento</span>
+            <span class="value" [class.overdue]="isTaskOverdue(task)">
+              {{ formatDate(task.dueDate) }}
+              @if (isTaskOverdue(task)) {
+                <i class="pi pi-exclamation-triangle text-red-500 ml-1"></i>
+              }
+            </span>
+          </div>
+          @if (task.estimatedHours) {
+            <div class="info-item">
+              <span class="label">Horas estimadas</span>
+              <span class="value">{{ task.estimatedHours }}h</span>
+            </div>
+          }
+          @if (task.actualHours) {
+            <div class="info-item">
+              <span class="label">Horas reales</span>
+              <span class="value">{{ task.actualHours }}h</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <p-divider />
+
+      <!-- Cambiar Estado -->
+      <div class="drawer-section">
+        <h5>Cambiar Estado</h5>
+        <div class="status-buttons">
+          @for (status of taskStatusOptions; track status.value) {
+            <p-button
+              [label]="status.label"
+              [severity]="task.status === status.value ? 'primary' : 'secondary'"
+              [outlined]="task.status !== status.value"
+              size="small"
+              (onClick)="cambiarStatusTask(task.id, status.value)" />
+          }
+        </div>
+      </div>
+
+      <p-divider />
+
+      <!-- Acciones -->
+      <div class="drawer-section">
+        <div class="flex gap-2">
+          <p-button
+            label="Editar"
+            icon="pi pi-pencil"
+            severity="secondary"
+            [outlined]="true"
+            [style]="{ flex: 1 }"
+            (onClick)="abrirFormularioEditarTarea(task)" />
+          <p-button
+            label="Eliminar"
+            icon="pi pi-trash"
+            severity="danger"
+            [outlined]="true"
+            [style]="{ flex: 1 }"
+            (onClick)="confirmarEliminarTarea(task)" />
+        </div>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Task Form Drawer (Crear/Editar) -->
+<p-drawer
+  [(visible)]="showTaskFormDrawer"
+  [position]="'right'"
+  [style]="{ width: '500px' }"
+  [modal]="true"
+  (onHide)="cerrarFormularioTarea()"
+>
+  <ng-template pTemplate="header">
+    <div class="drawer-header">
+      <h3>{{ isEditingTask() ? 'Editar Tarea' : 'Nueva Tarea' }}</h3>
+    </div>
+  </ng-template>
+
+  <div class="drawer-content">
+    @if (taskFormData(); as form) {
+      <!-- Título -->
+      <div class="field">
+        <label for="taskTitle">Título *</label>
+        <input
+          id="taskTitle"
+          type="text"
+          pInputText
+          [ngModel]="form.title"
+          (ngModelChange)="updateTaskFormField('title', $event)"
+          placeholder="Título de la tarea"
+          class="w-full" />
+      </div>
+
+      <!-- Descripción -->
+      <div class="field">
+        <label for="taskDescription">Descripción</label>
+        <textarea
+          id="taskDescription"
+          pTextarea
+          [ngModel]="form.description"
+          (ngModelChange)="updateTaskFormField('description', $event)"
+          placeholder="Descripción de la tarea"
+          [rows]="3"
+          class="w-full">
+        </textarea>
+      </div>
+
+      <!-- Fase -->
+      <div class="field">
+        <label for="taskPhase">Fase *</label>
+        <p-select
+          id="taskPhase"
+          [options]="phaseOptions()"
+          [ngModel]="form.phaseId"
+          (ngModelChange)="updateTaskFormField('phaseId', $event)"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar fase"
+          [style]="{ width: '100%' }" />
+      </div>
+
+      <!-- Tipo de tarea -->
+      <div class="field">
+        <label for="taskType">Tipo de tarea</label>
+        <p-select
+          id="taskType"
+          [options]="taskTypeOptions"
+          [ngModel]="form.taskType"
+          (ngModelChange)="updateTaskFormField('taskType', $event)"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar tipo"
+          [style]="{ width: '100%' }" />
+      </div>
+
+      <!-- Prioridad -->
+      <div class="field">
+        <label for="taskPriority">Prioridad</label>
+        <p-select
+          id="taskPriority"
+          [options]="priorityOptions"
+          [ngModel]="form.priority"
+          (ngModelChange)="updateTaskFormField('priority', $event)"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar prioridad"
+          [style]="{ width: '100%' }" />
+      </div>
+
+      <!-- Fechas -->
+      <div class="grid">
+        <div class="col-6">
+          <div class="field">
+            <label for="taskStartDate">Fecha inicio</label>
+            <p-datepicker
+              id="taskStartDate"
+              [ngModel]="form.startDate"
+              (ngModelChange)="updateTaskFormField('startDate', $event)"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              [style]="{ width: '100%' }" />
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="field">
+            <label for="taskDueDate">Fecha vencimiento</label>
+            <p-datepicker
+              id="taskDueDate"
+              [ngModel]="form.dueDate"
+              (ngModelChange)="updateTaskFormField('dueDate', $event)"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              [style]="{ width: '100%' }" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Horas estimadas -->
+      <div class="field">
+        <label for="taskHours">Horas estimadas</label>
+        <p-inputnumber
+          id="taskHours"
+          [ngModel]="form.estimatedHours"
+          (ngModelChange)="updateTaskFormField('estimatedHours', $event)"
+          [min]="0"
+          [max]="999"
+          suffix=" horas"
+          [style]="{ width: '100%' }" />
+      </div>
+
+      <!-- Botones -->
+      <div class="flex gap-2 mt-4">
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          [outlined]="true"
+          [style]="{ flex: 1 }"
+          (onClick)="cerrarFormularioTarea()" />
+        <p-button
+          [label]="isEditingTask() ? 'Actualizar' : 'Crear'"
+          icon="pi pi-check"
+          [style]="{ flex: 1 }"
+          (onClick)="guardarTarea()" />
+      </div>
+    }
+  </div>
+</p-drawer>
+
+<p-toast />
+<p-confirmDialog />

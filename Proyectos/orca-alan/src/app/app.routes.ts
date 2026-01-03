@@ -87,6 +87,38 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/notificaciones-config/notificaciones-config').then(m => m.NotificacionesConfigComponent)
   },
   {
+    path: 'notificaciones-reglas',
+    loadComponent: () => import('./pages/notificaciones-reglas/notificaciones-reglas').then(m => m.NotificacionesReglasComponent)
+  },
+  {
+    path: 'notificaciones-reglas/nueva',
+    loadComponent: () => import('./pages/notificacion-regla-nueva/notificacion-regla-nueva').then(m => m.NotificacionReglaNuevaComponent)
+  },
+  {
+    path: 'notificaciones-reglas/editar/:id',
+    loadComponent: () => import('./pages/notificacion-regla-nueva/notificacion-regla-nueva').then(m => m.NotificacionReglaNuevaComponent)
+  },
+  {
+    path: 'notificaciones-logs',
+    loadComponent: () => import('./pages/notificaciones-logs/notificaciones-logs').then(m => m.NotificacionesLogsComponent)
+  },
+  {
+    path: 'proyectos',
+    loadComponent: () => import('./pages/proyectos/proyectos').then(m => m.ProyectosComponent)
+  },
+  {
+    path: 'proyectos/crear',
+    loadComponent: () => import('./pages/proyecto-crear/proyecto-crear').then(m => m.ProyectoCrearComponent)
+  },
+  {
+    path: 'proyectos/:id/editar',
+    loadComponent: () => import('./pages/proyecto-crear/proyecto-crear').then(m => m.ProyectoCrearComponent)
+  },
+  {
+    path: 'proyectos/:id',
+    loadComponent: () => import('./pages/proyecto-detalle/proyecto-detalle').then(m => m.ProyectoDetalleComponent)
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }

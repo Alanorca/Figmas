@@ -212,13 +212,13 @@
 
       <!-- Pie de tabla con totales por columna -->
       <ng-template pTemplate="footer">
-        <tr class="font-semibold surface-100">
+        <tr class="font-semibold surface-ground">
           <td></td>
           <td>
-            <span class="text-900">Totales</span>
+            <span class="text-color">Totales</span>
           </td>
           <td>
-            <span class="text-600">{{ procesos().length }} procesos</span>
+            <span class="text-color-secondary">{{ procesos().length }} procesos</span>
           </td>
           <td>
             <div class="flex gap-1">
@@ -639,7 +639,7 @@
 <!-- Drawer Acciones Masivas -->
 <p-drawer [(visible)]="showAccionesMasivasDrawer" position="right" [style]="{width: '400px'}" header="Acciones Masivas">
   <div class="flex flex-column gap-4">
-    <p class="text-600 m-0">Aplicar cambios a {{ procesosSeleccionados().length }} procesos seleccionados</p>
+    <p class="text-color-secondary m-0">Aplicar cambios a {{ procesosSeleccionados().length }} procesos seleccionados</p>
 
     <!-- Estado -->
     <div class="flex flex-column gap-2">

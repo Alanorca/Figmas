@@ -1,0 +1,268 @@
+---
+title: "Gesti贸n de Procesos"
+sidebar_label: "Gesti贸n de Procesos"
+sidebar_position: 1
+---
+
+import ZoomableDiagram from '@site/src/components/ZoomableDiagram';
+
+# Historia de Usuario: Gesti贸n de Procesos
+
+## 馃搵 Informaci贸n General
+
+**ID:** US-PROC-001
+**M贸dulo:** Gesti贸n de Procesos
+**Prioridad:** Alta
+**Sprint:** Sprint 1
+
+---
+
+## 馃懁 Historia de Usuario
+
+**Como** usuario administrador
+**Quiero** crear, modificar, eliminar y consultar procesos donde intervienen activos e informaci贸n externa
+**Para** poder mapear la manera como opera mi organizaci贸n mediante nodos interactivos que representen datos, decisiones y relaciones.
+
+---
+
+## 鉁?Criterios de Aceptaci贸n
+
+```gherkin
+Feature: Creaci贸n de Procesos
+
+  Scenario: Creaci贸n exitosa de proceso
+    Given no existe un proceso con el mismo nombre
+    And el usuario tiene permisos de administrador
+    When el usuario ingresa nombre, descripci贸n, apetito de riesgo y objetivos/KPIs del proceso
+    And crea los nodos correspondientes al proceso
+    And hace clic en guardar
+    Then el sistema crea el proceso
+    And muestra un mensaje de confirmaci贸n
+    And el proceso aparece en el listado
+
+  Scenario: Validaci贸n de datos obligatorios
+    Given el usuario est谩 creando un proceso
+    When intenta guardar sin completar campos obligatorios ni crear al menos un nodo
+    Then el sistema muestra mensajes de validaci贸n
+    And no permite guardar hasta completar los datos requeridos
+```
+
+```gherkin
+Feature: Modificaci贸n de procesos
+
+  Scenario: Edici贸n exitosa de proceso
+    Given existe un proceso en el sistema
+    When el usuario selecciona editar
+    And modifica el nombre, descripci贸n o los nodos del proceso
+    And guarda los cambios
+    Then el sistema actualiza el proceso
+    And persiste los cambios correctamente
+    And muestra un mensaje de confirmaci贸n
+
+  Scenario: Prevenci贸n de nombres duplicados
+    Given existe un proceso con el nombre "ventas"
+    When el usuario intenta cambiar el nombre de otro proceso a "ventas"
+    Then el sistema muestra un error de nombre duplicado
+    And no permite guardar el cambio
+```
+
+```gherkin
+Feature: Eliminaci贸n f铆sica de procesos
+
+  Scenario: Eliminaci贸n f铆sica exitosa
+    Given existe un proceso
+    When el usuario selecciona eliminar
+    And confirma la acci贸n en el di谩logo
+    Then el sistema elimina el proceso permanentemente
+    And muestra un mensaje de confirmaci贸n
+
+  Scenario: Inactivaci贸n de proceso
+    Given existe un proceso
+    When el usuario intenta inactivar
+    Then el sistema muestra advertencia de configuraci贸n existente
+    And al inactivar, el proceso deja de estar activo
+```
+
+```gherkin
+Feature: Consulta y listado de procesos
+
+  Scenario: Listado con paginaci贸n
+    Given existen m煤ltiples procesos en el sistema
+    When el usuario accede al m贸dulo
+    Then el sistema muestra los procesos paginados
+    And permite ordenar por las columnas mostradas
+    And muestra estado activo/inactivo de cada tipo
+
+  Scenario: Consulta de proceso espec铆fico
+    Given existe un proceso con ID espec铆fico
+    When el usuario accede al detalle
+    Then el sistema muestra toda la informaci贸n del proceso
+    And muestra todos los nodos conectados definidos
+```
+
+---
+
+## 馃攧 Flujo de Usuario
+
+<ZoomableDiagram
+  title="Flujo de Gesti贸n de Procesos"
+  height="500px"
+  chart={`graph TB
+    Start[Usuario Administrador] --> ListTypes[Ver Listado de Procesos]
+    ListTypes --> Decision{Acci贸n}
+
+    Decision -->|Crear| CreateForm[Formulario de Creaci贸n]
+    CreateForm --> InputData[Ingresar Nombre, Descripci贸n, Apetito de Riesgo y Objetivos/KPIs]
+    InputData --> DefineProps[Definir y conectar nodos]
+    DefineProps --> Validate{Validaci贸n}
+    Validate -->|Error| CreateForm
+    Validate -->|OK| SaveType[Guardar Proceso]
+    SaveType --> Success[Mensaje de 脡xito]
+
+    Decision -->|Editar| SelectType[Seleccionar Proceso]
+    SelectType --> EditForm[Formulario de Edici贸n]
+    EditForm --> ModifyData[Modificar Nombre, Descripci贸n o Nodos conectados]
+    ModifyData --> SaveChanges[Guardar Cambios]
+    SaveChanges --> Success
+
+    Decision -->|Eliminar| SelectDel[Seleccionar Proceso]
+    SelectDel --> CheckNotEmpty{Tiene configuraci贸n?}
+    CheckNotEmpty -->|S铆| ShowWarning[Advertencia]
+    ShowWarning --> OfferInactive[Ofrecer Inactivar]
+    OfferInactive --> Inactive[Inactivar Proceso]
+    CheckNotEmpty -->|No| ConfirmDel[Confirmar Eliminaci贸n]
+    ConfirmDel --> DeleteType[Eliminar Permanentemente]
+    DeleteType --> Success
+    Inactive --> Success
+
+    Decision -->|Inactivar| SelectInactive[Seleccionar Proceso]
+    SelectInactive --> ShowWarningInactive[Advertencia de configuraci贸n existente]
+    ShowWarningInactive --> Inactive
+
+    Decision -->|Consultar| ViewDetail[Ver Detalle Completo]
+    ViewDetail --> ShowProps[Mostrar Diagrama de Nodos conectados]
+
+    Success --> ListTypes
+    ShowProps --> ListTypes
+
+    style Start stroke:#4caf50,stroke-width:2px
+    style SaveType stroke:#2196f3,stroke-width:2px
+    style DeleteType stroke:#f44336,stroke-width:2px
+    style Success stroke:#4caf50,stroke-width:2px`}
+/>
+
+---
+
+## 馃帹 Mockups / Dise帽os
+
+Dise帽os disponibles en Figma (aprobados por UX/UI Designer: Alan Franco)
+
+---
+
+## 馃敡 Documentaci贸n T茅cnica Relacionada
+
+### API Endpoints
+
+Referencia para documentaci贸n t茅cnica:
+
+```http
+GET /processes/{id}
+GET /processes
+POST /processes
+PUT /processes/{id}
+DELETE /processes/{id}
+PATCH /processes/{id}/deactivate
+```
+
+### Reglas de Negocio
+
+- Los nombres de procesos deben ser 煤nicos.
+- El estado `isActive` controla la operaci贸n o estado idle de los procesos.
+- Los tipos de nodos que deben incluirse son: Activo, Integraci贸n, Branching, Decisi贸n, Prompt, Transformaci贸n, ML, Matem谩tico.
+- El riesgo de un proceso se calcula a partir del riesgo agrupado de los activos que lo componen.
+- Debe ser posible definir las relaciones del proceso con otros procesos definidos.
+- Un proceso debe tener al menos un nodo para ser v谩lido.
+- Los procesos pueden ser eliminados f铆sicamente solo si no tienen configuraciones asociadas.
+- Los procesos con configuraciones existentes deben ser inactivados en lugar de eliminados.
+- El nodo de tipo activo deberá de regresar todos los campos del activo (datos y métadato) además de las propiedades custom que su tipo de activos tenga definidas, y mapas con todos los eventos (riesgos o incidentes) que tenga definido el activo objeto de la revisión
+- Los nodos de tipo activo deberán permitir seleccionar cualquier activo (no únicamente los que tengan como padre directamente a un contenedor organizacional)
+- Cada que se recibe un webhook entrante se dispara la ejecución configurada del webhook (nodos subsiguientes en el proceso, dicho de otra manera el recibir un webhook arranca la ejecución del proceso)
+---
+
+### Modelo de Datos
+
+Tablas relacionadas: `processes`, `process_nodes`, `process_relationships`, `assets`, `risk_calculations`
+
+**Campos principales del proceso:**
+- `id`: Identificador 煤nico
+- `name`: Nombre del proceso (煤nico)
+- `description`: Descripci贸n detallada
+- `risk_appetite`: Apetito de riesgo asociado
+- `objectives_kpis`: Objetivos y KPIs relacionados
+- `isActive`: Estado activo/inactivo del proceso
+- `created_at`: Fecha de creaci贸n
+- `updated_at`: Fecha de 煤ltima actualizaci贸n
+
+**Tipos de nodos soportados:**
+- Activo: Representa un activo involucrado en el proceso
+- Integraci贸n: Conexi贸n con sistemas externos
+- Branching: Punto de ramificaci贸n condicional
+- Decisi贸n: Nodo de decisi贸n l贸gica
+- Prompt: Interacci贸n con el usuario
+- Transformaci贸n: Transformaci贸n de datos
+- ML: Modelo de Machine Learning
+- Matem谩tico: Operaci贸n matem谩tica
+- Webhook: webhooks entrantes y salientes para enviar/recibir información de/hacia sistemas externos
+
+---
+
+## 馃摑 Notas Adicionales
+
+### Equipo
+
+- **Product Owner:** Francisco Puente
+- **UX/UI Designer:** Alan Franco
+- **Frontend Developers:** Cesar Gonzalez, Juan Martinez
+- **Backend Developer:** Josue Cardenas
+- **QA Engineer:** Emmanuel Vazquez
+
+### Alcance
+
+**鉁?Fase 1 incluye:**
+- Funcionalidad CRUD completa de procesos
+- Gesti贸n de nodos conectados
+- Validaci贸n de nombres 煤nicos
+- Sistema de inactivaci贸n para procesos con configuraciones
+- Eliminaci贸n f铆sica para procesos sin configuraciones
+- Consulta de detalles y relaciones
+
+**鉂?No incluye (Fase 2):**
+- Creaci贸n de procesos automatizada por IA
+- An谩lisis predictivo de riesgos
+- Sugerencias autom谩ticas de optimizaci贸n
+- Simulaci贸n de flujos de proceso
+
+### Roadmap
+
+| Fase | Fecha | Estado |
+|------|-------|--------|
+| Fase 1 | 30/septiembre/2025 | En Desarrollo |
+| Fase 2 | Por definir | Planificado |
+
+---
+
+## 馃彿锔?Etiquetas
+
+`operations` `processes` `CRUD` `admin` `sprint-1` `nodes` `workflow`
+
+---
+
+## 馃敆 Enlaces Relacionados
+
+- [Volver al 铆ndice de User Stories](./index.mdx)
+- [M贸dulo de Procesos](../index.mdx)
+- [Documentaci贸n T茅cnica](../technical/index.mdx)
+
+---
+
+_脷ltima actualizaci贸n: 16/10/2025_

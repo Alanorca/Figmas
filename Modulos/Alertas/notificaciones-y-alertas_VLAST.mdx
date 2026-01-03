@@ -1,0 +1,770 @@
+---
+title: "Notificaciones y Alertas Configurables"
+sidebar_label: "Notificaciones y Alertas"
+sidebar_position: 6
+---
+
+import ZoomableDiagram from '@site/src/components/ZoomableDiagram';
+
+# Historia de Usuario: Notificaciones y Alertas Configurables
+
+## 馃搵 Informaci贸n General
+
+- **ID**: US-NOTIFICATIONS-001
+- **M贸dulo**: Gesti贸n de Notificaciones / Alertas
+- **Prioridad**: Alta
+- **Sprint**: Sprint 5
+
+## 馃懁 Historia de Usuario
+
+**Como** Administrador del Sistema o Usuario del Sistema ORCA SNS
+**Quiero** configurar notificaciones para eventos de alta, baja, modificaci贸n y vencimiento de entidades del sistema, as铆 como definir alertas cuando se rebasen umbrales en valores cr铆ticos
+**Para** mantenerme informado sobre cambios importantes, anticipar vencimientos y reaccionar oportunamente a eventos cr铆ticos.
+
+## 馃幆 Entidades Soportadas
+
+| Entidad                      | C贸digo              | Eventos Soportados                    |
+|------------------------------|---------------------|---------------------------------------|
+| Contenedores Organizacionales| `ORG_CONTAINER`     | Alta, Baja, Modificaci贸n              |
+| Activos                      | `ASSET`             | Alta, Baja, Modificaci贸n, Vencimiento |
+| Riesgos                      | `RISK`              | Alta, Baja, Modificaci贸n, Vencimiento |
+| Incidentes                   | `INCIDENT`          | Alta, Baja, Modificaci贸n, Vencimiento |
+| Defectos                     | `DEFECT`            | Alta, Baja, Modificaci贸n, Vencimiento |
+| Resultados ML                | `ML_RESULT`         | Alta, Modificaci贸n                    |
+| Cuestionarios                | `QUESTIONNAIRE`     | Alta, Baja, Modificaci贸n              |
+| Procesos                     | `PROCESS`           | Alta, Baja, Modificaci贸n, KPI Change  |
+| Revisiones de Cumplimiento   | `COMPLIANCE_REVIEW` | Alta, Baja, Modificaci贸n, Aprobaci贸n, Rechazo, Vencimiento |
+
+## 馃摤 Canales de Notificaci贸n
+
+| Canal              | Descripci贸n                                                |
+|--------------------|------------------------------------------------------------|
+| **In-App**         | Notificaciones dentro del sistema (centro de notificaciones) |
+| **Email**          | Correos electr贸nicos a direcciones configuradas            |
+
+## 鉁?Criterios de Aceptaci贸n
+
+### Feature: Configuraci贸n de Notificaciones por Eventos
+
+```gherkin
+Scenario: Configurar notificaci贸n para creaci贸n de nuevas entidades
+  Given un "Administrador" accede a "Configuraci贸n de Notificaciones"
+  When crea una nueva regla:
+    | Campo                      | Valor                                    |
+    | Nombre                     | Notificar nuevos riesgos cr铆ticos        |
+    | Entidad                    | Riesgo (RISK)                            |
+    | Evento                     | Creaci贸n (CREATE)                        |
+    | Condici贸n (opcional)       | riskLevel = 'Critical'                   |
+    | Destinatarios              | gestor.riesgos@empresa.com               |
+    | Canales                    | Email, In-App                            |
+    | Estado                     | Activa                                   |
+  And guarda la regla
+  Then cuando se cree un riesgo con nivel "Critical":
+    | Se env铆a email al destinatario                    |
+    | Se muestra notificaci贸n in-app en tiempo real     |
+```
+
+```gherkin
+Scenario: Configurar notificaci贸n para eliminaci贸n de entidades
+  Given un usuario configura notificaciones
+  When crea una regla para eliminaci贸n:
+    | Campo                      | Valor                                    |
+    | Nombre                     | Alerta eliminaci贸n de activos cr铆ticos   |
+    | Entidad                    | Activo (ASSET)                           |
+    | Evento                     | Eliminaci贸n (DELETE)                     |
+    | Condici贸n                  | classification = 'Critical'              |
+    | Destinatarios              | ciso@empresa.com                         |
+    | Canales                    | Email, In-App                            |
+  Then cuando se elimine un activo cr铆tico se notifica al CISO
+```
+
+```gherkin
+Scenario: Configurar notificaci贸n para modificaci贸n de propiedades
+  Given un usuario configura notificaciones de cambios
+  When crea una regla:
+    | Campo                      | Valor                                    |
+    | Nombre                     | Cambios en estado de incidentes          |
+    | Entidad                    | Incidente (INCIDENT)                     |
+    | Evento                     | Modificaci贸n (UPDATE)                    |
+    | Propiedades Monitoreadas   | status, severity                         |
+    | Destinatarios              | Due帽o del incidente (din谩mico)           |
+    | Canales                    | Email, In-App                            |
+  Then cuando cambie el estado o severidad de un incidente:
+    | Se notifica al due帽o del incidente               |
+    | El mensaje incluye valor anterior y nuevo        |
+```
+
+### Feature: Notificaciones de Vencimiento
+
+```gherkin
+Scenario: Configurar recordatorio de vencimiento
+  Given un usuario configura alertas de vencimiento
+  When crea una regla:
+    | Campo                      | Valor                                    |
+    | Nombre                     | Recordatorio vencimiento de revisiones   |
+    | Entidad                    | Revisi贸n de Cumplimiento                 |
+    | Tipo                       | Vencimiento Anticipado                   |
+    | Campo de Fecha             | dueDate                                  |
+    | D铆as de Anticipaci贸n       | 7, 3, 1                                  |
+    | Destinatarios              | Usuarios asignados (din谩mico)            |
+    | Canales                    | Email, In-App                            |
+  Then el sistema env铆a recordatorios autom谩ticos:
+    | 7 d铆as antes: "La revisi贸n vence en 7 d铆as"      |
+    | 3 d铆as antes: "URGENTE: Vence en 3 d铆as"         |
+    | 1 d铆a antes: "脷LTIMO D脥A: Vence ma帽ana"          |
+```
+
+```gherkin
+Scenario: Notificaci贸n de entidad vencida
+  Given existe una regla de vencimiento activa
+  And un riesgo tiene fecha de mitigaci贸n vencida
+  When el sistema ejecuta verificaci贸n diaria de vencimientos
+  Then env铆a notificaci贸n de vencido:
+    | Tipo: OVERDUE                                    |
+    | Mensaje: "VENCIDO: El riesgo X venci贸 hace N d铆as" |
+    | Se repite diariamente hasta resoluci贸n           |
+```
+
+### Feature: Notificaciones para Revisiones de Cumplimiento
+
+```gherkin
+Scenario: Notificaci贸n de aprobaci贸n de respuesta
+  Given existe una revisi贸n de cumplimiento
+  And un aprobador aprueba una respuesta
+  When el sistema detecta la aprobaci贸n
+  Then notifica al usuario que respondi贸:
+    | Canal: Email e In-App                            |
+    | Mensaje: "Tu respuesta fue APROBADA"             |
+    | Incluye: puntaje obtenido, enlace a la revisi贸n  |
+```
+
+```gherkin
+Scenario: Notificaci贸n de rechazo de respuesta
+  Given un aprobador rechaza una respuesta
+  When el sistema detecta el rechazo
+  Then notifica al usuario que respondi贸:
+    | Canal: Email e In-App                            |
+    | Mensaje: "Tu respuesta fue RECHAZADA"            |
+    | Incluye: raz贸n del rechazo, enlace para corregir |
+```
+
+### Feature: Notificaciones para Procesos y KPIs
+
+```gherkin
+Scenario: Notificaci贸n de cambio autom谩tico en KPI
+  Given existe un proceso con KPIs monitoreados
+  And el sistema actualiza autom谩ticamente un KPI
+  When el KPI cambia m谩s de 20% respecto al valor anterior
+  Then notifica al due帽o del proceso:
+    | Mensaje: "KPI '{{kpiName}}' cambi贸 de {{oldValue}} a {{newValue}}" |
+    | Incluye: variaci贸n porcentual, estado respecto a meta |
+```
+
+### Feature: Alertas por Umbral
+
+```gherkin
+Scenario: Configurar alerta cuando se rebasa umbral
+  Given un "Gestor de Riesgos" configura alertas
+  When crea una alerta de umbral:
+    | Campo                      | Valor                                    |
+    | Nombre                     | Exceso de riesgos cr铆ticos               |
+    | M茅trica                    | Cantidad de riesgos nivel Critical       |
+    | Condici贸n                  | COUNT > 10                               |
+    | Destinatarios              | ciso@empresa.com                         |
+    | Canales                    | Email, In-App                            |
+  Then cuando haya m谩s de 10 riesgos cr铆ticos:
+    | Se dispara alerta inmediatamente                 |
+    | Se notifica a los destinatarios                  |
+```
+
+```gherkin
+Scenario: Alerta de cumplimiento por debajo del m铆nimo
+  Given se configura alerta de umbral para cumplimiento
+  When el puntaje promedio de una unidad baja de 70%
+  Then se dispara alerta:
+    | Mensaje: "Cumplimiento bajo: {{orgUnit}} tiene {{score}}%" |
+    | Destinatarios: Responsable de la unidad          |
+```
+
+```gherkin
+Scenario: Configurar alerta desde vista de tabla de entidades
+  Given un usuario accede a la vista de tabla de Riesgos
+  When selecciona la opci贸n "Crear Alerta" desde el men煤 de la tabla
+  Then puede configurar una alerta basada en:
+    | Tipo de Configuraci贸n      | Opciones                                 |
+    | Umbral                     | COUNT, AVERAGE, SUM de registros         |
+    | Valor espec铆fico           | Propiedad = valor determinado            |
+    | Propiedades est谩ndar       | Campos nativos de la entidad             |
+    | Propiedades extendidas     | Campos custom definidos en el tipo       |
+  And la alerta queda vinculada a esa vista/entidad
+```
+
+```gherkin
+Scenario: Configurar alerta desde Data Board (vista multitabla)
+  Given un usuario accede al Data Board con m煤ltiples entidades
+  When selecciona columnas y configura una alerta
+  Then puede definir alertas que:
+    | Crucen datos de m煤ltiples entidades              |
+    | Monitoreen propiedades est谩ndar y extendidas     |
+    | Apliquen filtros combinados del data board       |
+    | Se disparen cuando se cumplan las condiciones    |
+```
+
+```gherkin
+Scenario: Alerta basada en propiedades extendidas
+  Given existe un tipo de activo con propiedad extendida "fecha_mantenimiento"
+  When un usuario configura una alerta:
+    | Campo                      | Valor                                    |
+    | Propiedad                  | fecha_mantenimiento (extendida)          |
+    | Condici贸n                  | < HOY + 7 d铆as                           |
+    | Destinatarios              | {{entity.owner}}                         |
+  Then el sistema monitorea la propiedad extendida
+  And dispara alertas cuando se cumpla la condici贸n
+```
+
+### Feature: Centro de Notificaciones
+
+```gherkin
+Scenario: Usuario visualiza sus notificaciones
+  Given un usuario tiene notificaciones pendientes
+  When accede al centro de notificaciones (icono campana)
+  Then ve:
+    | Contador de no le铆das en el icono                |
+    | Lista ordenada por fecha (recientes primero)     |
+    | Cada notificaci贸n muestra: tipo, t铆tulo, fecha   |
+    | Indicador visual de no le铆da                     |
+```
+
+```gherkin
+Scenario: Usuario marca notificaci贸n como le铆da
+  Given un usuario tiene 5 notificaciones no le铆das
+  When hace clic en una notificaci贸n
+  Then se marca como le铆da autom谩ticamente
+  And el contador se actualiza
+  And puede navegar a la entidad relacionada
+```
+
+```gherkin
+Scenario: Usuario filtra notificaciones
+  Given un usuario accede al centro de notificaciones
+  When aplica filtros:
+    | Filtro disponible          | Opciones                     |
+    | Estado                     | Todas, No le铆das, Le铆das     |
+    | Tipo                       | Alertas, Vencimientos, Cambios |
+    | Entidad                    | Riesgos, Activos, Incidentes... |
+  Then el listado se actualiza seg煤n los filtros
+```
+
+### Feature: Preferencias de Usuario
+
+```gherkin
+Scenario: Usuario configura sus preferencias de notificaci贸n
+  Given un usuario accede a "Mis Preferencias"
+  When configura:
+    | Preferencia                | Valor                        |
+    | Alertas Cr铆ticas           | Email: S铆, In-App: S铆        |
+    | Vencimientos               | Email: S铆, In-App: S铆        |
+    | Cambios en mis entidades   | Email: No, In-App: S铆        |
+    | Horario No Molestar        | 22:00 - 07:00                |
+  And guarda preferencias
+  Then el sistema respeta las preferencias para futuras notificaciones
+  And las alertas cr铆ticas ignoran el horario "No molestar"
+```
+
+### Feature: Configuraci贸n Centralizada de Notificaciones por Perfil
+
+```gherkin
+Scenario: Administrador crea un perfil de notificaci贸n centralizado
+  Given un usuario con rol "ADMIN" (tenant) o "BO_ADMIN" (backoffice) accede a "Configuraci贸n de Notificaciones"
+  When crea un nuevo perfil de notificaci贸n:
+    | Campo                      | Valor                                    |
+    | Nombre del Perfil          | Notificaciones de Riesgos Cr铆ticos       |
+    | Entidades Aplicables       | Riesgos (seleccionados en 谩rbol)         |
+    | Evento: Creaci贸n           | 鉁?Habilitado                             |
+    | Evento: Modificaci贸n       | 鉁?Habilitado                             |
+    | Evento: Eliminaci贸n        | 鉁?Habilitado                             |
+    | Evento: Vencimiento        | 鉁?Habilitado                             |
+  And configura destinatarios:
+    | Tipo Destinatario          | Valor                                    |
+    | Propietarios (din谩mico)    | {{entity.owner}}                         |
+    | Asignados (din谩mico)       | {{entity.assignedTo}}                    |
+    | Usuarios plataforma        | usuario1, usuario2                       |
+    | Emails externos            | externo@empresa.com                      |
+  And guarda el perfil
+  Then el perfil queda activo para los elementos seleccionados
+  And las notificaciones se env铆an autom谩ticamente seg煤n la configuraci贸n
+```
+
+```gherkin
+Scenario: Selecci贸n de entidades espec铆ficas mediante 谩rbol
+  Given un administrador est谩 configurando un perfil de notificaci贸n
+  When accede al selector de entidades
+  Then ve un 谩rbol jer谩rquico con:
+    | Nivel 1                    | Nivel 2                      |
+    | Contenedores Org.          | (lista de contenedores)      |
+    | Activos                    | (谩rbol de activos)           |
+    | Riesgos                    | (lista de riesgos)           |
+    | Incidentes                 | (lista de incidentes)        |
+    | Cumplimiento               | (revisiones de cumplimiento) |
+    | Procesos                   | (lista de procesos)          |
+    | Cuestionarios              | (lista de cuestionarios)     |
+    | Defectos                   | (lista de defectos)          |
+    | Resultados ML              | (lista de resultados ML)     |
+  And puede seleccionar elementos individuales o ramas completas
+  And puede aplicar filtros para limitar la selecci贸n
+```
+
+```gherkin
+Scenario: Configurar destinatarios din谩micos
+  Given un administrador configura destinatarios de un perfil
+  When agrega destinatarios din谩micos:
+    | Variable                   | Descripci贸n                              |
+    | {{entity.owner}}           | Propietario de la entidad                |
+    | {{entity.assignedTo}}      | Usuario asignado                         |
+    | {{entity.createdBy}}       | Creador de la entidad                    |
+    | {{entity.approvers}}       | Aprobadores (para revisiones)            |
+  Then el sistema resuelve din谩micamente los destinatarios al disparar la notificaci贸n
+```
+
+```gherkin
+Scenario: Restricci贸n de acceso a configuraci贸n centralizada
+  Given un usuario sin permisos de administraci贸n
+  When intenta acceder a "Configuraci贸n de Notificaciones"
+  Then el sistema muestra error de acceso denegado
+  And solo usuarios con rol "ADMIN" (tenant) o "BO_ADMIN" (backoffice) pueden acceder
+```
+
+## 馃攧 Flujo de Usuario
+
+<ZoomableDiagram
+  title="Flujo del Sistema de Notificaciones y Alertas"
+  height="800px"
+  chart={`graph TD
+    subgraph "Configuraci贸n"
+        Start[Usuario accede a<br/>Configuraci贸n] --> SelectType{Tipo}
+        SelectType -->|Notificaci贸n| ConfigNotif[Configurar Regla<br/>de Notificaci贸n]
+        SelectType -->|Alerta| ConfigAlert[Configurar Alerta<br/>por Umbral]
+        SelectType -->|Vencimiento| ConfigExp[Configurar<br/>Recordatorio]
+        
+        ConfigNotif --> SelectEntity[Seleccionar Entidad]
+        ConfigAlert --> DefineMetric[Definir M茅trica]
+        ConfigExp --> SelectDate[Seleccionar Campo Fecha]
+        
+        SelectEntity --> SelectEvent[Seleccionar Evento]
+        DefineMetric --> SetThreshold[Definir Umbral]
+        SelectDate --> SetDays[Definir D铆as Anticipaci贸n]
+        
+        SelectEvent --> SetRecipients[Configurar Destinatarios]
+        SetThreshold --> SetRecipients
+        SetDays --> SetRecipients
+        
+        SetRecipients --> SelectChannels[Seleccionar Canales<br/>Email / In-App]
+        SelectChannels --> SaveRule[Guardar Regla]
+        SaveRule --> RuleActive[Regla Activa]
+    end
+
+    subgraph "Procesamiento"
+        RuleActive --> EventOccurs{Evento}
+        EventOccurs -->|Cambio Entidad| MatchRules[Evaluar Reglas]
+        EventOccurs -->|Scheduler| CheckExp[Verificar Vencimientos]
+        EventOccurs -->|Scheduler| CheckThresh[Evaluar Umbrales]
+        
+        MatchRules --> PrepareNotif[Preparar Notificaci贸n]
+        CheckExp --> PrepareNotif
+        CheckThresh --> PrepareNotif
+    end
+
+    subgraph "Env铆o"
+        PrepareNotif --> ResolveRecip[Resolver Destinatarios]
+        ResolveRecip --> CheckPrefs[Aplicar Preferencias]
+        CheckPrefs --> SendEmail[Enviar Email]
+        CheckPrefs --> SendInApp[Notificaci贸n In-App]
+        
+        SendEmail --> LogNotif[Registrar en Log]
+        SendInApp --> LogNotif
+        SendInApp --> UpdateBadge[Actualizar Contador]
+    end
+
+    subgraph "Recepci贸n"
+        UpdateBadge --> NotifCenter[Centro de<br/>Notificaciones]
+        NotifCenter --> UserAction{Acci贸n}
+        UserAction -->|Ver| MarkRead[Marcar Le铆da]
+        UserAction -->|Navegar| GoToEntity[Ir a Entidad]
+    end
+
+    style Start stroke:#4caf50,stroke-width:2px
+    style RuleActive stroke:#2196f3,stroke-width:2px
+    style PrepareNotif stroke:#ff9800,stroke-width:2px
+    style NotifCenter stroke:#9c27b0,stroke-width:2px
+  `}
+/>
+
+## 馃帹 Mockups / Dise帽os
+
+Dise帽os disponibles en Figma (Pendientes de creaci贸n por UX/UI Designer: Alan Franco)
+
+### Pantallas a Dise帽ar:
+1. Listado de Reglas de Notificaci贸n
+2. Formulario de Nueva Regla
+3. Centro de Notificaciones (Bandeja)
+4. Preferencias de Usuario
+5. Configuraci贸n Centralizada de Perfiles (Admin)
+6. Formulario de Perfil de Notificaci贸n con 脕rbol de Entidades
+
+## 馃摗 Documentaci贸n T茅cnica Relacionada
+
+### API Endpoints
+
+```typescript
+// ==================== REGLAS DE NOTIFICACI脫N ====================
+POST   /api/notifications/rules                   // Crear regla
+GET    /api/notifications/rules                   // Listar reglas
+GET    /api/notifications/rules/:id               // Obtener regla
+PUT    /api/notifications/rules/:id               // Actualizar regla
+DELETE /api/notifications/rules/:id               // Eliminar regla
+PATCH  /api/notifications/rules/:id/toggle        // Activar/Desactivar
+
+// ==================== ALERTAS POR UMBRAL ====================
+POST   /api/notifications/alerts                  // Crear alerta
+GET    /api/notifications/alerts                  // Listar alertas
+GET    /api/notifications/alerts/:id              // Obtener alerta
+PUT    /api/notifications/alerts/:id              // Actualizar alerta
+DELETE /api/notifications/alerts/:id              // Eliminar alerta
+GET    /api/notifications/alerts/active           // Alertas disparadas
+
+// ==================== CENTRO DE NOTIFICACIONES ====================
+GET    /api/notifications/inbox                   // Bandeja del usuario
+GET    /api/notifications/inbox/count             // Contador no le铆das
+PATCH  /api/notifications/inbox/:id/read          // Marcar como le铆da
+PATCH  /api/notifications/inbox/read-all          // Marcar todas le铆das
+DELETE /api/notifications/inbox/:id               // Eliminar notificaci贸n
+
+// ==================== PREFERENCIAS ====================
+GET    /api/notifications/preferences             // Obtener preferencias
+PUT    /api/notifications/preferences             // Actualizar preferencias
+
+// ==================== VENCIMIENTOS ====================
+GET    /api/notifications/expiration-rules        // Listar reglas vencimiento
+POST   /api/notifications/expiration-rules        // Crear regla vencimiento
+
+// ==================== PERFILES DE NOTIFICACI脫N (Config. Centralizada) ====================
+POST   /api/notifications/profiles                // Crear perfil de notificaci贸n
+GET    /api/notifications/profiles                // Listar perfiles
+GET    /api/notifications/profiles/:id            // Obtener perfil por ID
+PUT    /api/notifications/profiles/:id            // Actualizar perfil
+DELETE /api/notifications/profiles/:id            // Eliminar perfil
+PATCH  /api/notifications/profiles/:id/toggle     // Activar/Desactivar perfil
+GET    /api/notifications/profiles/entities-tree  // 脕rbol de entidades seleccionables
+
+// ==================== AUDITOR脥A ====================
+GET    /api/notifications/logs                    // Historial de env铆os
+```
+
+### Reglas de Negocio
+
+1. **Tipos de Eventos Soportados**:
+   - `CREATE`: Creaci贸n de entidad
+   - `UPDATE`: Modificaci贸n de entidad
+   - `DELETE`: Eliminaci贸n de entidad
+   - `APPROVAL`: Aprobaci贸n (revisiones de cumplimiento)
+   - `REJECTION`: Rechazo (revisiones de cumplimiento)
+   - `EXPIRATION_REMINDER`: Recordatorio de vencimiento
+   - `OVERDUE`: Entidad vencida
+   - `THRESHOLD_EXCEEDED`: Umbral superado
+   - `KPI_CHANGE`: Cambio en KPI de proceso
+
+2. **Prioridades**:
+   - `CRITICAL`: Ignora "No molestar", env铆o inmediato
+   - `HIGH`: Env铆o inmediato
+   - `MEDIUM`: Env铆o normal
+   - `LOW`: Puede agruparse
+
+3. **Destinatarios Din谩micos**:
+   - `{{entity.owner}}`: Due帽o de la entidad
+   - `{{entity.assignedTo}}`: Usuario asignado
+   - `{{entity.createdBy}}`: Creador
+   - `{{entity.approvers}}`: Aprobadores (revisiones)
+
+4. **Vencimientos**:
+   - Procesamiento diario a las 00:00 UTC
+   - D铆as de anticipaci贸n configurables (array de n煤meros)
+   - Notificaci贸n OVERDUE diaria hasta resoluci贸n
+
+5. **Preferencias de Usuario**:
+   - Configuraci贸n por tipo de notificaci贸n y canal
+   - Horario "No molestar" (excepto cr铆ticas)
+   - Prevalecen sobre configuraci贸n de regla
+
+6. **Configuraci贸n Centralizada (Perfiles)**:
+   - Acceso restringido a roles `ADMIN` (tenant) y `BO_ADMIN` (backoffice)
+   - Eventos configurables: Creaci贸n, Modificaci贸n, Eliminaci贸n, Vencimiento
+   - Selecci贸n de entidades mediante 谩rbol jer谩rquico
+   - Entidades soportadas: Contenedores, Activos, Riesgos, Incidentes, Cumplimiento, Procesos, Cuestionarios, Defectos, Resultados ML
+   - Destinatarios: usuarios plataforma, emails externos, variables din谩micas
+   - Variables din谩micas: `{{entity.owner}}`, `{{entity.assignedTo}}`, `{{entity.createdBy}}`, `{{entity.approvers}}`
+
+7. **Propiedades Extendidas para Alertas**:
+   - **Contenedores**: Propiedades custom definidas en `ContainerPropertyDefinition`
+   - **Activos**: Propiedades del tipo de activo (`AssetType` 鈫?`AssetTypeProperty`)
+   - **Riesgos/Incidentes/Defectos**: Propiedades del subtipo de evento (`EventSubType` 鈫?`EventSubTypeProperty`)
+   - Las alertas pueden monitorear tanto propiedades est谩ndar como extendidas
+   - Configuraci贸n desde vistas de tabla y Data Board con selecci贸n de propiedades disponibles
+   - Soporte para tipos: TEXT, NUMBER, DATE, DATETIME, BOOLEAN, CATALOG (opciones)
+
+### Modelo de Datos
+
+```typescript
+// postgres table: notificationRules
+interface NotificationRule {
+  id: string;
+  name: string;
+  entityType: EntityType;
+  eventTypes: EventType[];
+  conditions?: Condition[];
+  monitoredProperties?: string[];
+  recipients: RecipientConfig;
+  channels: ('email' | 'inApp')[];
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  status: 'active' | 'inactive';
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+}
+
+// postgres table: alertRules
+interface AlertRule {
+  id: string;
+  name: string;
+  metric: {
+    type: 'count' | 'average';
+    entityType: EntityType;
+    filters?: Condition[];
+  };
+  threshold: {
+    operator: '>' | '<' | '>=' | '<=';
+    value: number;
+  };
+  recipients: RecipientConfig;
+  channels: ('email' | 'inApp')[];
+  status: 'active' | 'inactive';
+  currentState: 'normal' | 'triggered';
+  createdAt: string;
+  createdBy: string;
+}
+
+// postgres table: expirationRules
+interface ExpirationRule {
+  id: string;
+  name: string;
+  entityType: EntityType;
+  dateField: string;
+  reminderDays: number[];
+  overdueEnabled: boolean;
+  recipients: RecipientConfig;
+  channels: ('email' | 'inApp')[];
+  status: 'active' | 'inactive';
+  createdAt: string;
+  createdBy: string;
+}
+
+// postgres table: notificationProfiles (Configuraci贸n Centralizada)
+interface NotificationProfile {
+  id: string;
+  name: string;
+  description?: string;
+  // Eventos habilitados por checkbox
+  events: {
+    onCreate: boolean;      // Creaci贸n
+    onUpdate: boolean;      // Modificaci贸n
+    onDelete: boolean;      // Eliminaci贸n
+    onExpiration: boolean;  // Vencimiento
+  };
+  // Entidades seleccionadas (IDs del 谩rbol de selecci贸n)
+  entitySelections: EntitySelection[];
+  // Filtros opcionales para las entidades
+  entityFilters?: Condition[];
+  // Destinatarios
+  recipients: RecipientConfig;
+  channels: ('email' | 'inApp')[];
+  status: 'active' | 'inactive';
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+}
+
+// Selecci贸n de entidad en el 谩rbol
+interface EntitySelection {
+  entityType: EntityType;     // Tipo de entidad
+  entityIds?: string[];       // IDs espec铆ficos (null = todos)
+  includeChildren?: boolean;  // Incluir hijos en jerarqu铆a
+}
+
+// postgres table: notifications
+interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  priority: Priority;
+  title: string;
+  message: string;
+  entityType?: EntityType;
+  entityId?: string;
+  actionUrl?: string;
+  status: 'unread' | 'read';
+  readAt?: string;
+  createdAt: string;
+}
+
+// postgres table: userNotificationPreferences
+interface UserNotificationPreferences {
+  userId: string;
+  channelPreferences: {
+    critical: { email: boolean; inApp: boolean };
+    high: { email: boolean; inApp: boolean };
+    medium: { email: boolean; inApp: boolean };
+    low: { email: boolean; inApp: boolean };
+  };
+  quietHours: {
+    enabled: boolean;
+    from: string;
+    to: string;
+  };
+  updatedAt: string;
+}
+
+// postgres table: notificationLogs
+interface NotificationLog {
+  id: string;
+  ruleId?: string;
+  alertId?: string;
+  eventType: EventType;
+  entityType: EntityType;
+  entityId: string;
+  recipients: string[];
+  channels: string[];
+  status: 'sent' | 'failed';
+  sentAt: string;
+}
+
+interface RecipientConfig {
+  userIds?: string[];
+  emails?: string[];
+  dynamicRecipients?: string[];
+}
+
+interface Condition {
+  field: string;
+  operator: '=' | '!=' | '>' | '<' | 'IN';
+  value: any;
+}
+
+enum EntityType {
+  ORG_CONTAINER = 'ORG_CONTAINER',
+  ASSET = 'ASSET',
+  RISK = 'RISK',
+  INCIDENT = 'INCIDENT',
+  DEFECT = 'DEFECT',
+  ML_RESULT = 'ML_RESULT',
+  QUESTIONNAIRE = 'QUESTIONNAIRE',
+  PROCESS = 'PROCESS',
+  COMPLIANCE_REVIEW = 'COMPLIANCE_REVIEW'
+}
+
+enum EventType {
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
+  APPROVAL = 'APPROVAL',
+  REJECTION = 'REJECTION',
+  EXPIRATION_REMINDER = 'EXPIRATION_REMINDER',
+  OVERDUE = 'OVERDUE',
+  THRESHOLD_EXCEEDED = 'THRESHOLD_EXCEEDED',
+  KPI_CHANGE = 'KPI_CHANGE'
+}
+```
+
+## 馃摑 Notas Adicionales
+
+### Equipo
+
+- **Product Owner**: Francisco Puente
+- **UX/UI Designer**: Alan Franco
+- **Frontend Developers**: Cesar Gonzalez, Juan Martinez
+- **Backend Developer**: Josue Cardenas
+- **QA Engineer**: Emmanuel Vazquez
+
+### Alcance Fase 1 (30/enero/2026)
+
+#### 鉁?Incluye:
+
+- **Notificaciones por Eventos**:
+  - Creaci贸n, modificaci贸n y eliminaci贸n de entidades
+  - Condiciones simples de filtrado
+  - Monitoreo de propiedades espec铆ficas (para UPDATE)
+
+- **Notificaciones de Vencimiento**:
+  - Recordatorios N d铆as antes (m谩ximo 5 d铆as configurables)
+  - Notificaci贸n de entidad vencida
+
+- **Notificaciones Espec铆ficas**:
+  - Aprobaci贸n/rechazo de revisiones de cumplimiento
+  - Cambios significativos en KPIs de procesos (>20%)
+
+- **Alertas por Umbral**:
+  - M茅tricas simples: COUNT y AVERAGE
+  - Operadores b谩sicos: >, <, >=, <=
+  - Configuraci贸n desde vistas de tabla de entidades
+  - Configuraci贸n desde Data Board (vista multitabla)
+  - B煤squeda de valores espec铆ficos en propiedades
+  - Soporte para propiedades extendidas (custom) de las entidades
+
+- **Canales**:
+  - Email (integraci贸n con servicio existente)
+  - In-App (centro de notificaciones)
+
+- **Centro de Notificaciones**:
+  - Listado de notificaciones del usuario
+  - Marcar como le铆do
+  - Filtros b谩sicos (estado, tipo)
+  - Contador de no le铆das
+
+- **Preferencias de Usuario**:
+  - Activar/desactivar canales por prioridad
+  - Horario "No molestar" b谩sico
+
+- **Configuraci贸n Centralizada de Perfiles**:
+  - Perfiles de notificaci贸n por m贸dulo/entidad
+  - Checkboxes para eventos: Creaci贸n, Modificaci贸n, Eliminaci贸n, Vencimiento
+  - Selecci贸n de entidades mediante 谩rbol jer谩rquico
+  - Entidades: Contenedores, Activos, Riesgos, Incidentes, Cumplimiento, Procesos, Cuestionarios, Defectos, Resultados ML
+  - Destinatarios: propietarios autom谩ticos, usuarios adicionales, emails externos
+  - Variables din谩micas: `{{entity.owner}}`, `{{entity.assignedTo}}`, `{{entity.createdBy}}`, `{{entity.approvers}}`
+  - Filtros para elementos espec铆ficos
+  - Acceso restringido: roles `ADMIN` (tenant) y `BO_ADMIN` (backoffice)
+
+#### 鈴?No incluye (Fase 2):
+
+- Notificaciones push m贸vil
+- Canales externos (Slack, Teams, SMS, Webhooks)
+- Alertas compuestas (m煤ltiples condiciones)
+- Escalamiento autom谩tico
+- Digestos/res煤menes peri贸dicos
+- Acciones autom谩ticas al disparar alertas
+- Notificaciones en tiempo real (WebSocket) - se usar谩 polling
+- Plantillas personalizables de mensajes
+- M茅tricas y dashboard de notificaciones
+
+### Roadmap
+
+| Fase     | Fecha              | Estado        |
+|----------|--------------------|---------------|
+| Fase 1   | 30/enero/2026      | En Desarrollo |
+| Fase 2   | Q2 2026            | Planificado   |
+
+## 馃彿锔?Etiquetas
+
+`notifications` `alerts` `thresholds` `expiration-reminders` `email` `in-app` `user-preferences` `compliance` `risk-management` `sprint-5`
+
+---
+
+**脷ltima actualizaci贸n**: 29/12/2024

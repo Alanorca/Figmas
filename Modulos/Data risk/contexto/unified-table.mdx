@@ -1,0 +1,610 @@
+---
+title: "Tabla Unificada de Riesgos e Incidentes"
+sidebar_label: "Tabla Unificada"
+sidebar_position: 5
+---
+
+import ZoomableDiagram from '@site/src/components/ZoomableDiagram';
+
+# Historia de Usuario: Tabla Unificada de Gestión de Riesgos e Incidentes
+
+## 📋 Información General
+
+- **ID**: US-UNIFIED-TABLE-001
+- **Módulo**: Gestión de Cumplimiento / Visualización de Datos
+- **Prioridad**: Alta
+- **Sprint**: Sprint 4
+
+## 👤 Historia de Usuario
+
+**Como** Usuario del sistema
+**Quiero** visualizar y analizar riesgos e incidentes en una tabla unificada con capacidades avanzadas de filtrado, personalización de columnas y generación dinámica de gráficas
+**Para** poder identificar patrones, tendencias y áreas de atención prioritaria, facilitando la toma de decisiones informadas y la comunicación efectiva de hallazgos a stakeholders.
+
+## ✅ Criterios de Aceptación
+
+### Feature: Visualización Selectiva de Entidades
+
+```gherkin
+Scenario: Seleccionar tipo de entidad a visualizar
+  Given el usuario está en el módulo de "Tabla Unificada"
+  When accede a la vista principal
+  Then visualiza un selector de tipo de entidad con las opciones:
+    | Tipo       | Icono   | Descripción            |
+    | Riesgos    | shield  | Riesgos identificados  |
+    | Incidentes | alert   | Incidentes registrados |
+  And puede seleccionar uno o ambos tipos simultáneamente
+  And la tabla se actualiza dinámicamente mostrando solo las entidades seleccionadas
+  And el contador total refleja el número de registros filtrados
+  And muestra contadores individuales por tipo de entidad
+
+Scenario: Visualizar riesgos con contexto de activo/proceso
+  Given el usuario ha seleccionado visualizar "Riesgos"
+  When la tabla carga los datos
+  Then cada fila de riesgo muestra las columnas definidas en el modelo de datos del proyecto
+  And incluye obligatoriamente una columna "Activo/Proceso" que muestra el contenedor asociado
+  And la columna "Activo/Proceso" indica mediante badge si es "Activo" o "Proceso"
+  And al hacer clic en "Activo/Proceso" navega al detalle correspondiente
+  And al hacer clic en la fila abre el panel de detalle del riesgo
+
+Scenario: Visualizar incidentes con contexto de activo/proceso
+  Given el usuario ha seleccionado visualizar "Incidentes"
+  When la tabla carga los datos
+  Then cada fila de incidente muestra las columnas definidas en el modelo de datos del proyecto
+  And incluye obligatoriamente una columna "Activo/Proceso" que muestra el contenedor afectado
+  And la columna "Activo/Proceso" indica mediante badge si es "Activo" o "Proceso"
+  And al hacer clic en "Activo/Proceso" navega al detalle correspondiente
+  And al hacer clic en la fila abre el panel de detalle del incidente
+
+Scenario: Visualizar vista combinada de riesgos e incidentes
+  Given el usuario ha seleccionado visualizar "Riesgos" e "Incidentes"
+  When la tabla carga los datos
+  Then muestra una columna adicional "Tipo Entidad" con badge distintivo
+  And las columnas comunes entre ambas entidades se unifican automáticamente
+  And las columnas específicas de cada tipo muestran "-" cuando no aplican
+  And puede ordenar y filtrar por "Tipo Entidad"
+```
+
+### Feature: Sistema de Filtrado Avanzado
+
+```gherkin
+Scenario: Aplicar filtros por columna de texto
+  Given el usuario está visualizando la tabla
+  When hace clic en el icono de filtro de una columna de tipo texto
+  Then aparece un popover de filtro con:
+    | Elemento                | Funcionalidad                           |
+    | Campo de búsqueda       | Búsqueda por texto libre                |
+    | Operador                | Contiene/Empieza con/Termina con/Igual  |
+    | Lista de valores únicos | Checkbox para selección múltiple        |
+    | Botón Limpiar           | Elimina el filtro de esta columna       |
+    | Botón Aplicar           | Aplica el filtro configurado            |
+  And al configurar el filtro y hacer clic en "Aplicar"
+  Then la tabla muestra solo registros que cumplen la condición
+  And el header de la columna muestra un indicador visual de filtro activo
+  And el contador de registros se actualiza
+
+Scenario: Aplicar filtros por columna de selección/categoría
+  Given el usuario está visualizando la tabla
+  When hace clic en el filtro de una columna de tipo selección (ej: Estado, Severidad, Nivel)
+  Then aparece un popover con:
+    | Elemento         | Funcionalidad                                |
+    | Checkboxes       | Lista de valores únicos con conteo cada uno  |
+    | Seleccionar todo | Checkbox para seleccionar/deseleccionar todos|
+    | Búsqueda         | Filtrar opciones en listas largas            |
+  And cada opción muestra el número de registros que coinciden
+  And al seleccionar una o más opciones y aplicar
+  Then la tabla muestra solo registros con los valores seleccionados
+
+Scenario: Aplicar filtros por columna de fecha
+  Given el usuario está visualizando la tabla
+  When hace clic en el filtro de una columna de tipo fecha
+  Then aparece un popover con:
+    | Elemento            | Funcionalidad                                              |
+    | Date picker rango   | Seleccionar fecha inicio y fin                             |
+    | Presets rápidos     | Hoy/Últimos 7 días/Último mes/Último trimestre/Este año    |
+  And al seleccionar un rango o preset
+  Then la tabla muestra registros dentro del rango de fechas seleccionado
+
+Scenario: Aplicar filtros por columna numérica
+  Given el usuario está visualizando la tabla
+  When hace clic en el filtro de una columna de tipo numérico
+  Then aparece un popover con:
+    | Elemento        | Funcionalidad                    |
+    | Input mínimo    | Valor mínimo del rango           |
+    | Input máximo    | Valor máximo del rango           |
+    | Slider doble    | Selector visual de rango         |
+  And al configurar el rango deseado
+  Then la tabla muestra solo registros con valores dentro del rango
+
+Scenario: Filtrar por Activo o Proceso específico
+  Given el usuario quiere ver registros de un activo o proceso específico
+  When hace clic en el filtro de la columna "Activo/Proceso"
+  Then aparece un popover con:
+    | Elemento                    | Funcionalidad                        |
+    | Búsqueda con autocompletado | Buscar activos/procesos por nombre   |
+    | Filtro por tipo             | Checkbox: Activos / Procesos         |
+    | Lista de resultados         | Activos y procesos que coinciden     |
+  And al seleccionar uno o más activos/procesos
+  Then la tabla muestra solo registros asociados a la selección
+
+Scenario: Combinar múltiples filtros
+  Given el usuario ha aplicado filtros en varias columnas
+  When visualiza la tabla
+  Then la tabla muestra solo registros que cumplen TODOS los filtros (lógica AND)
+  And aparece una barra de filtros activos sobre la tabla mostrando:
+    | Elemento              | Funcionalidad                     |
+    | Chips de filtro       | Un chip por cada filtro activo    |
+    | Botón X en cada chip  | Elimina ese filtro individual     |
+    | Botón "Limpiar todo"  | Elimina todos los filtros         |
+    | Contador de filtros   | Número de filtros activos         |
+
+Scenario: Búsqueda global en la tabla
+  Given el usuario está visualizando la tabla unificada
+  When escribe un término en el campo de búsqueda global
+  Then la tabla filtra mostrando registros donde cualquier columna visible contenga el término
+  And resalta los términos encontrados en las celdas
+  And la búsqueda es case-insensitive
+```
+
+### Feature: Personalización de Columnas
+
+```gherkin
+Scenario: Mostrar/ocultar columnas de la tabla
+  Given el usuario está visualizando la tabla unificada
+  When hace clic en el botón "Columnas" (icono de configuración de columnas)
+  Then aparece un dropdown/panel con:
+    | Sección              | Contenido                                     |
+    | Lista de columnas    | Todas las columnas con toggle de visibilidad  |
+    | Indicador            | Muestra columnas visibles vs total            |
+  And cada columna muestra:
+    | Elemento     | Descripción                                |
+    | Toggle/Check | Activar/desactivar visibilidad             |
+    | Nombre       | Nombre de la columna                       |
+    | Icono tipo   | Indica tipo de dato (texto/número/fecha)   |
+
+Scenario: Ocultar columna específica
+  Given el usuario está en el panel de configuración de columnas
+  And una columna está actualmente visible
+  When desactiva el toggle de esa columna
+  Then la columna se oculta inmediatamente de la tabla
+  And el indicador actualiza el conteo de columnas visibles
+  And la configuración persiste durante la sesión
+
+Scenario: Reordenar columnas mediante drag and drop en la tabla
+  Given el usuario está visualizando la tabla
+  When arrastra el header de una columna
+  And lo suelta en una nueva posición
+  Then la columna se reposiciona en la ubicación indicada
+  And el orden se mantiene durante la sesión
+
+Scenario: Restaurar columnas por defecto
+  Given el usuario ha modificado la visibilidad y orden de varias columnas
+  When hace clic en "Restaurar por defecto" en el panel de columnas
+  Then la tabla vuelve a mostrar las columnas predeterminadas
+  And el orden vuelve al original
+  And muestra confirmación: "Columnas restauradas"
+
+Scenario: Redimensionar ancho de columnas
+  Given el usuario está visualizando la tabla
+  When posiciona el cursor en el borde derecho de un header de columna
+  And arrastra para aumentar o disminuir el ancho
+  Then la columna se redimensiona en tiempo real
+  And las demás columnas se ajustan automáticamente
+  And el nuevo ancho persiste durante la sesión
+```
+
+### Feature: Asistente de Gráficas Dinámicas
+
+```gherkin
+Scenario: Abrir asistente de gráficas
+  Given el usuario está visualizando datos en la tabla
+  And tiene al menos 1 registro en la tabla
+  When hace clic en el botón "Gráficas" (icono de chart)
+  Then se abre un modal de tamaño grande (80% viewport) con:
+    | Sección                  | Ubicación        | Descripción                         |
+    | Configuración de gráfica | Panel izquierdo  | Wizard de configuración paso a paso |
+    | Vista previa             | Panel derecho    | Gráfica renderizada en tiempo real  |
+    | Acciones                 | Footer del modal | Cancelar / Exportar imagen / Cerrar |
+
+Scenario: Seleccionar tipo de gráfica
+  Given el usuario tiene abierto el asistente de gráficas
+  When está en el paso "Tipo de Gráfica"
+  Then visualiza una grilla con los tipos disponibles:
+    | Tipo   | Icono | Descripción                      | Mejor Para                               |
+    | Pie    | 🥧    | Gráfica circular de proporciones | Distribución porcentual de una categoría |
+    | Dona   | 🍩    | Circular con centro vacío        | Distribución con énfasis en total        |
+    | Barras | 📊    | Barras verticales comparativas   | Comparar cantidades entre categorías     |
+    | Líneas | 📈    | Tendencia con puntos conectados  | Evolución temporal de métricas           |
+    | Embudo | 🔻    | Etapas secuenciales decrecientes | Procesos con etapas (estados)            |
+    | Radar  | 🕸️    | Polígono multidimensional        | Comparar múltiples métricas              |
+    | Radial | 🎯    | Barras circulares desde el centro| Rankings o comparaciones circulares      |
+  And cada tipo muestra un preview miniatura
+  And al seleccionar un tipo, el panel derecho muestra un ejemplo placeholder
+
+Scenario: Configurar gráfica de Pie/Dona - distribución simple
+  Given el usuario ha seleccionado el tipo "Pie" o "Dona"
+  When avanza al paso "Configurar Datos"
+  Then el asistente solicita:
+    | Campo                    | Tipo     | Descripción                                 |
+    | Columna de Categorías    | Dropdown | Columna para segmentar los datos            |
+    | Agregación               | Dropdown | Conteo / Suma / Promedio                    |
+    | Columna de Valores       | Dropdown | Solo visible si agregación es Suma/Promedio |
+  And al configurar los campos
+  Then la vista previa muestra el gráfico con los datos reales
+  And muestra leyenda con colores distintivos por categoría
+  And al pasar el mouse sobre un segmento muestra tooltip con detalle
+
+Scenario: Configurar gráfica de Barras - comparación por categoría
+  Given el usuario ha seleccionado el tipo "Barras"
+  When configura los datos:
+    | Campo                 | Descripción                              |
+    | Eje X (Categorías)    | Columna para categorías del eje X        |
+    | Eje Y (Valores)       | Tipo de agregación para el eje Y         |
+    | Agrupar por           | Columna opcional para barras agrupadas   |
+  Then la vista previa muestra barras verticales con los datos
+  And si selecciona "Agrupar por", muestra barras agrupadas con leyenda
+
+Scenario: Configurar gráfica de Líneas - tendencia temporal
+  Given el usuario ha seleccionado el tipo "Líneas"
+  When configura los datos:
+    | Campo                 | Descripción                                              |
+    | Eje X (Tiempo)        | Columna de fecha para el eje temporal                    |
+    | Agrupación temporal   | Por día / Por semana / Por mes / Por trimestre / Por año |
+    | Eje Y (Valores)       | Tipo de agregación                                       |
+    | Series                | Columna opcional para múltiples líneas                   |
+  Then la vista previa muestra líneas de tendencia
+  And cada serie tiene color y marcadores distintivos
+  And los puntos muestran tooltip con valor exacto al pasar el mouse
+
+Scenario: Configurar gráfica de Embudo - estados secuenciales
+  Given el usuario ha seleccionado el tipo "Embudo"
+  When configura los datos:
+    | Campo                 | Descripción                     |
+    | Etapas (Categoría)    | Columna de estados o categorías |
+    | Valores               | Tipo de agregación              |
+  And opcionalmente define el orden de las etapas
+  Then la vista previa muestra un embudo con etapas decrecientes
+  And muestra tasa de conversión entre etapas si aplica
+
+Scenario: Configurar gráfica de Radar - múltiples dimensiones
+  Given el usuario ha seleccionado el tipo "Radar"
+  When configura los datos:
+    | Campo                 | Descripción                               |
+    | Dimensiones           | Columnas numéricas a comparar             |
+    | Valores               | Tipo de agregación para cada dimensión    |
+    | Agrupar por           | Columna para comparar múltiples polígonos |
+  Then la vista previa muestra un polígono radar con las dimensiones
+  And cada grupo tiene un polígono con color distintivo
+
+Scenario: Configurar gráfica Radial - ranking visual
+  Given el usuario ha seleccionado el tipo "Radial"
+  When configura los datos:
+    | Campo                 | Descripción                        |
+    | Categorías            | Columna para las barras radiales   |
+    | Valores               | Tipo de agregación                 |
+    | Ordenar por           | Mayor a menor / Menor a mayor      |
+    | Límite                | Número máximo de elementos (Top N) |
+  Then la vista previa muestra barras radiales desde el centro
+  And ordena según la configuración seleccionada
+  And respeta el límite de elementos configurado
+
+Scenario: Personalizar apariencia de la gráfica
+  Given el usuario ha configurado una gráfica
+  When avanza al paso "Personalizar"
+  Then puede ajustar:
+    | Opción              | Valores disponibles                                     |
+    | Título de gráfica   | Campo de texto libre                                    |
+    | Mostrar leyenda     | Sí/No + posición (arriba/abajo/derecha/izquierda)       |
+    | Mostrar etiquetas   | Sí/No (valores sobre barras/segmentos)                  |
+    | Paleta de colores   | Default/Semántica/Monocromática/Personalizada           |
+    | Mostrar grid        | Sí/No                                                   |
+  And los cambios se reflejan en tiempo real en la vista previa
+
+Scenario: Exportar gráfica como imagen
+  Given el usuario ha configurado y personalizado una gráfica
+  When hace clic en "Exportar"
+  Then aparece un menú con opciones:
+    | Formato | Descripción                    |
+    | PNG     | Imagen con fondo transparente  |
+    | JPG     | Imagen con fondo blanco        |
+    | SVG     | Vectorial escalable            |
+  And al seleccionar un formato, descarga la imagen
+  And el nombre del archivo incluye: tipo_grafica_fecha_hora
+
+Scenario: Los datos de la gráfica respetan los filtros de la tabla
+  Given el usuario tiene filtros activos en la tabla
+  When abre el asistente de gráficas
+  Then el asistente indica el número de registros filtrados que se usarán
+  And cualquier gráfica generada usa solo los datos filtrados
+  And muestra advertencia si hay muy pocos datos para el tipo de gráfica seleccionado
+```
+
+### Feature: Ordenamiento y Paginación
+
+```gherkin
+Scenario: Ordenar tabla por columna
+  Given el usuario está visualizando la tabla
+  When hace clic en el header de una columna ordenable
+  Then la tabla se ordena por esa columna de forma ascendente
+  And el header muestra un indicador de orden (flecha arriba)
+  And al hacer clic nuevamente, cambia a orden descendente
+  And al hacer clic una tercera vez, elimina el ordenamiento
+
+Scenario: Paginación de resultados
+  Given hay más registros que el tamaño de página configurado
+  When el usuario visualiza la tabla
+  Then la tabla muestra el número de registros según tamaño de página
+  And aparece un control de paginación con:
+    | Elemento             | Descripción                          |
+    | Selector de página   | Números de página clickeables        |
+    | Anterior/Siguiente   | Botones de navegación                |
+    | Registros por página | Dropdown: 10/25/50/100               |
+    | Info de rango        | "Mostrando X-Y de Z"                 |
+  And puede cambiar el número de registros por página
+  And la preferencia persiste durante la sesión
+
+Scenario: Ir a página específica
+  Given hay múltiples páginas de resultados
+  When el usuario hace clic en un número de página específico
+  Then la tabla navega a esa página
+  And el indicador de rango se actualiza
+```
+
+### Feature: Acciones sobre Registros
+
+```gherkin
+Scenario: Ver detalle de un registro
+  Given el usuario está visualizando la tabla
+  When hace clic en una fila
+  Then se abre un panel lateral o modal con el detalle completo del registro
+  And puede ver toda la información según el tipo de entidad
+  And tiene acciones rápidas: Editar, Ver historial, Ir al activo/proceso
+
+Scenario: Exportar datos de la tabla
+  Given el usuario tiene datos en la tabla (con o sin filtros)
+  When hace clic en "Exportar" (icono de descarga)
+  Then aparece un menú con opciones:
+    | Opción          | Descripción                              |
+    | Exportar todo   | Todos los registros filtrados            |
+    | Exportar página | Solo la página actual                    |
+  And puede seleccionar formato:
+    | Formato | Descripción                    |
+    | CSV     | Valores separados por comas    |
+    | Excel   | Archivo .xlsx con formato      |
+  And la exportación incluye solo las columnas visibles
+  And respeta los filtros aplicados
+```
+
+## 🔄 Flujo de Usuario
+
+<ZoomableDiagram
+  title="Flujo Completo de Tabla Unificada"
+  height="900px"
+  chart={`graph TD
+    subgraph "Acceso y Selección"
+        Start[Usuario accede a<br/>Tabla Unificada] --> SelectEntity[Seleccionar Tipo<br/>de Entidad]
+        SelectEntity --> EntityType{Tipo?}
+        EntityType -->|Riesgos| LoadRisks[Cargar Riesgos<br/>con contexto Activo/Proceso]
+        EntityType -->|Incidentes| LoadIncidents[Cargar Incidentes<br/>con contexto Activo/Proceso]
+        EntityType -->|Ambos| LoadBoth[Cargar Vista<br/>Combinada]
+        LoadRisks --> DisplayTable[Mostrar Tabla<br/>con Datos]
+        LoadIncidents --> DisplayTable
+        LoadBoth --> DisplayTable
+    end
+
+    subgraph "Filtrado y Personalización"
+        DisplayTable --> UserAction{Acción del<br/>Usuario}
+        UserAction -->|Filtrar| OpenFilter[Abrir Filtro<br/>de Columna]
+        OpenFilter --> ConfigFilter[Configurar<br/>Condiciones]
+        ConfigFilter --> ApplyFilter[Aplicar Filtro]
+        ApplyFilter --> UpdateTable[Actualizar<br/>Tabla]
+        UpdateTable --> UserAction
+
+        UserAction -->|Personalizar Columnas| OpenColumns[Abrir Panel<br/>de Columnas]
+        OpenColumns --> ToggleColumns[Mostrar/Ocultar<br/>Columnas]
+        ToggleColumns --> ReorderColumns[Reordenar<br/>Columnas]
+        ReorderColumns --> UpdateTable
+
+        UserAction -->|Buscar| GlobalSearch[Búsqueda<br/>Global]
+        GlobalSearch --> UpdateTable
+    end
+
+    subgraph "Asistente de Gráficas"
+        UserAction -->|Crear Gráfica| OpenChartModal[Abrir Modal<br/>de Gráficas]
+        OpenChartModal --> SelectChartType[Seleccionar Tipo<br/>de Gráfica]
+        SelectChartType --> ChartType{Tipo?}
+        ChartType -->|Pie/Dona| ConfigPie[Configurar<br/>Categoría + Agregación]
+        ChartType -->|Barras| ConfigBars[Configurar<br/>Ejes + Agrupación]
+        ChartType -->|Líneas| ConfigLines[Configurar<br/>Tiempo + Series]
+        ChartType -->|Embudo| ConfigFunnel[Configurar<br/>Etapas]
+        ChartType -->|Radar| ConfigRadar[Configurar<br/>Dimensiones]
+        ChartType -->|Radial| ConfigRadial[Configurar<br/>Ranking]
+
+        ConfigPie --> PreviewChart[Vista Previa<br/>en Tiempo Real]
+        ConfigBars --> PreviewChart
+        ConfigLines --> PreviewChart
+        ConfigFunnel --> PreviewChart
+        ConfigRadar --> PreviewChart
+        ConfigRadial --> PreviewChart
+
+        PreviewChart --> CustomizeChart[Personalizar<br/>Apariencia]
+        CustomizeChart --> ChartAction{Acción?}
+        ChartAction -->|Exportar| ExportImage[Descargar<br/>PNG/JPG/SVG]
+        ChartAction -->|Ajustar| SelectChartType
+        ChartAction -->|Cerrar| UserAction
+    end
+
+    subgraph "Acciones sobre Datos"
+        UserAction -->|Ver Detalle| OpenDetail[Abrir Panel<br/>de Detalle]
+        OpenDetail --> DetailActions[Editar/Historial/<br/>Navegar a Activo]
+        DetailActions --> UserAction
+
+        UserAction -->|Exportar| ExportData[Exportar<br/>CSV/Excel]
+        ExportData --> UserAction
+    end
+
+    style Start fill:#4caf50,stroke:#333,stroke-width:2px
+    style DisplayTable fill:#2196f3,stroke:#333,stroke-width:2px
+    style OpenChartModal fill:#9c27b0,stroke:#333,stroke-width:2px
+    style PreviewChart fill:#ff9800,stroke:#333,stroke-width:2px
+    style ExportImage fill:#4caf50,stroke:#333,stroke-width:2px
+  `}
+/>
+
+## 🎨 Mockups / Diseños
+
+Diseños disponibles en Figma (Pendientes de revisión por UX/UI Designer: Alan Franco)
+
+### Wireframes Sugeridos:
+
+1. **Vista Principal de Tabla**
+   - Header con selector de entidades (tabs o toggle buttons)
+   - Barra de búsqueda global + botones de acciones (Columnas, Gráficas, Exportar)
+   - Barra de filtros activos (chips)
+   - Tabla con headers interactivos (ordenamiento, filtros)
+   - Footer con paginación
+
+2. **Panel de Filtro de Columna**
+   - Popover anclado al header de columna
+   - Diseño adaptado al tipo de dato (texto, número, fecha, selección)
+
+3. **Modal de Asistente de Gráficas**
+   - Layout 40%-60% (configuración | vista previa)
+   - Wizard con pasos claros
+   - Vista previa interactiva con tooltips
+
+## 📝 Notas Adicionales
+
+### Equipo
+
+- **Product Owner**: Francisco Puente
+- **UX/UI Designer**: Alan Franco
+- **Frontend Developers**: Cesar Gonzalez, Juan Martinez
+- **Backend Developer**: Josue Cardenas
+- **QA Engineer**: Emmanuel Vazquez
+
+### Notas de Implementación
+
+:::info Columnas de la Tabla
+Las columnas específicas que se mostrarán para Riesgos e Incidentes dependerán de los modelos de datos ya definidos en el proyecto. Los escenarios de esta historia describen el comportamiento funcional independiente de las columnas específicas.
+:::
+
+:::info Colores Semánticos
+Para columnas que representen niveles de riesgo, severidad o estados, se utilizarán los colores semánticos ya definidos en el sistema de diseño del proyecto.
+:::
+
+### Alcance
+
+#### ✅ Fase 1 incluye:
+
+**Visualización**
+- Selector de tipo de entidad (Riesgos, Incidentes)
+- Tabla con columnas según modelo de datos del proyecto
+- Visualización de Activo/Proceso contenedor con navegación
+- Vista combinada de múltiples tipos de entidad
+- Indicadores visuales (badges) para estados y niveles
+
+**Filtrado**
+- Filtros por columna con operadores apropiados al tipo de dato
+- Filtros de texto (contiene, empieza con, igual)
+- Filtros de selección (checkbox múltiple)
+- Filtros de fecha (rangos, presets rápidos)
+- Filtros numéricos (rangos, slider)
+- Combinación de múltiples filtros (lógica AND)
+- Barra de filtros activos con eliminación individual
+- Búsqueda global en columnas de texto
+
+**Personalización de Columnas**
+- Mostrar/ocultar columnas
+- Reordenar columnas mediante drag and drop
+- Redimensionar ancho de columnas
+- Restaurar configuración por defecto
+- Persistencia durante la sesión
+
+**Asistente de Gráficas**
+- Modal con configuración y vista previa
+- 7 tipos de gráficas: Pie, Dona, Barras, Líneas, Embudo, Radar, Radial
+- Configuración de columna de categorías
+- Configuración de agregación (conteo, suma, promedio)
+- Agrupación secundaria para gráficas de barras
+- Agrupación temporal para gráficas de líneas
+- Personalización básica (título, leyenda, etiquetas, colores)
+- Exportación como imagen (PNG, JPG, SVG)
+- Datos respetan filtros activos de la tabla
+
+**Ordenamiento y Paginación**
+- Ordenamiento por columna (asc/desc)
+- Paginación con tamaños configurables
+- Indicadores de total de registros
+
+**Acciones**
+- Ver detalle de registro
+- Exportar a CSV/Excel
+
+---
+
+#### ⏳ Fase 2 incluye:
+
+**Entidades Adicionales**
+- Soporte para Defectos como tercer tipo de entidad
+- Columnas específicas para Defectos
+- Integración con módulo de calidad
+
+
+
+**Gráficas Avanzadas**
+- Guardar gráficas como widgets de dashboard
+- Gráficas con drill-down interactivo
+- Comparativas temporales (periodo anterior)
+- Exportación de datos de gráfica a Excel
+- Gráficas combinadas (barras + líneas)
+- Animaciones y transiciones avanzadas
+
+**Acciones Avanzadas**
+- Selección múltiple de registros
+- Acciones en lote (cambiar estado, asignar responsable)
+- Programar exportaciones periódicas
+- Alertas basadas en filtros
+- Integración con notificaciones
+
+**Colaboración**
+- Compartir vista actual con link
+- Comentarios en registros desde la tabla
+- Historial de cambios inline
+
+### Roadmap
+
+| Fase   | Funcionalidad Principal                         | Fecha Estimada       | Estado      |
+|--------|-------------------------------------------------|----------------------|-------------|
+| Fase 1 | Tabla Riesgos/Incidentes + Filtros + Gráficas   | 23/diciembre/2025    | Planificado |
+| Fase 2 | Defectos + Vistas Guardadas + Features Avanzados| 30/enero/2026        | Backlog     |
+
+### Dependencias
+
+- Módulo de Gestión de Riesgos (completado)
+- Módulo de Gestión de Incidentes (completado)
+- Módulo de Gestión de Activos (completado)
+- Módulo de Gestión de Procesos (completado)
+
+### Consideraciones de UX
+
+1. **Rendimiento percibido**: Implementar skeleton loaders durante carga de datos
+2. **Feedback inmediato**: Los filtros muestran contador antes de aplicar
+3. **Prevención de errores**: Validar combinaciones de filtros que retornen 0 resultados
+4. **Consistencia**: Usar mismos colores semánticos que el resto del sistema
+5. **Accesibilidad**: Soporte completo de teclado para filtros y tabla
+
+### Métricas de Éxito
+
+- Tiempo promedio para encontrar un registro específico < 30 segundos
+- Adopción del asistente de gráficas > 40% de usuarios activos
+- Reducción de solicitudes de reportes ad-hoc al equipo técnico > 60%
+- NPS de la funcionalidad > 8
+
+## 🏷️ Etiquetas
+
+`compliance` `unified-table` `risks` `incidents` `filtering` `charts` `data-visualization` `dynamic-charts` `export` `sprint-4` `grc`
+
+---
+
+**Última actualización**: 04/12/2025

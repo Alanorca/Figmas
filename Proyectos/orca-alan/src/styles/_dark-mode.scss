@@ -1,0 +1,717 @@
+// ============================================================================
+// ORCA DESIGN SYSTEM - DARK MODE MIXINS
+// ============================================================================
+// Mixins y utilidades para soporte de dark mode consistente.
+// Importar en componentes: @use 'styles/dark-mode' as dark;
+// O usar junto con mixins: @use 'styles/mixins' as *;
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// DARK MODE WRAPPER
+// ----------------------------------------------------------------------------
+// Uso: @include dark-mode { ... estilos para dark mode ... }
+
+@mixin dark-mode {
+  :host-context(.dark) {
+    @content;
+  }
+}
+
+// Alternativa para estilos globales (en styles.scss)
+@mixin dark-mode-global {
+  .dark {
+    @content;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// SEMANTIC COLOR TOKENS PARA DARK MODE
+// ----------------------------------------------------------------------------
+// Estos tokens se pueden usar directamente en componentes.
+// Cambian automáticamente según el modo.
+
+// Backgrounds
+$dm-bg-page: var(--surface-950);
+$dm-bg-card: var(--surface-900);
+$dm-bg-elevated: var(--surface-800);
+$dm-bg-hover: var(--surface-700);
+$dm-bg-active: var(--surface-600);
+
+// Borders
+$dm-border-default: var(--surface-700);
+$dm-border-subtle: var(--surface-800);
+$dm-border-strong: var(--surface-600);
+
+// Text
+$dm-text-primary: var(--surface-0);
+$dm-text-secondary: var(--surface-400);
+$dm-text-muted: var(--surface-500);
+$dm-text-disabled: var(--surface-600);
+
+// ----------------------------------------------------------------------------
+// CARD DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin card-dark {
+  background: $dm-bg-card;
+  border-color: $dm-border-default;
+}
+
+@mixin card-elevated-dark {
+  background: $dm-bg-elevated;
+  border-color: $dm-border-default;
+}
+
+@mixin card-selectable-dark {
+  background: $dm-bg-elevated;
+  border-color: $dm-border-default;
+
+  &:hover {
+    background: $dm-bg-hover;
+    border-color: var(--primary-400);
+  }
+
+  &.selected,
+  &.active {
+    background: color-mix(in srgb, var(--primary-color) 15%, #{$dm-bg-card});
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+
+    // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
+    [class*="-nombre"],
+    [class*="-title"],
+    .item-title,
+    .item-name {
+      color: #FFFFFF !important;
+      font-weight: 600;
+    }
+
+    [class*="-descripcion"],
+    [class*="-subtitle"],
+    .item-subtitle,
+    .item-description {
+      color: rgba(255, 255, 255, 0.85) !important;
+    }
+  }
+}
+
+// Mixin completo para aplicar dark mode a cards
+@mixin dark-card($selectable: false) {
+  @include dark-mode {
+    @if $selectable {
+      @include card-selectable-dark;
+    } @else {
+      @include card-dark;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// PANEL DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin panel-dark {
+  background: $dm-bg-card;
+  border-color: $dm-border-default;
+
+  .panel-header,
+  .section-header {
+    border-color: $dm-border-default;
+
+    h2, h3, h4 {
+      color: $dm-text-primary;
+    }
+  }
+}
+
+@mixin dark-panel {
+  @include dark-mode {
+    @include panel-dark;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// TABLE DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin table-dark {
+  :host ::ng-deep .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: $dm-bg-elevated;
+      color: $dm-text-primary;
+      border-color: $dm-border-default;
+    }
+
+    .p-datatable-tbody > tr {
+      &:hover {
+        background: $dm-bg-hover !important;
+      }
+
+      > td {
+        border-color: $dm-border-default;
+        color: $dm-text-primary;
+      }
+    }
+
+    .p-datatable-footer {
+      background: $dm-bg-elevated;
+      border-color: $dm-border-default;
+      color: $dm-text-secondary;
+    }
+  }
+}
+
+@mixin dark-table {
+  @include dark-mode {
+    @include table-dark;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// FORM ELEMENTS DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin form-elements-dark {
+  label {
+    color: $dm-text-primary;
+  }
+
+  .field-hint,
+  .form-hint {
+    color: $dm-text-secondary;
+  }
+
+  input, textarea, select {
+    background: $dm-bg-elevated;
+    border-color: $dm-border-default;
+    color: $dm-text-primary;
+
+    &::placeholder {
+      color: $dm-text-muted;
+    }
+  }
+}
+
+@mixin dark-form {
+  @include dark-mode {
+    @include form-elements-dark;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// LIST ITEMS DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin list-item-dark {
+  border-color: $dm-border-default;
+
+  &:hover {
+    background: $dm-bg-hover;
+  }
+
+  .item-title,
+  .item-name {
+    color: $dm-text-primary;
+  }
+
+  .item-subtitle,
+  .item-description,
+  .item-email {
+    color: $dm-text-secondary;
+  }
+}
+
+@mixin dark-list-item {
+  @include dark-mode {
+    @include list-item-dark;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// EMPTY STATE DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin empty-state-dark {
+  background: $dm-bg-elevated;
+  border-color: $dm-border-strong;
+
+  i, .empty-icon {
+    color: $dm-text-muted;
+  }
+
+  p, .empty-message {
+    color: $dm-text-secondary;
+  }
+
+  h3, .empty-title {
+    color: $dm-text-primary;
+  }
+}
+
+@mixin dark-empty-state {
+  @include dark-mode {
+    @include empty-state-dark;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// BADGE / TAG DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin badge-dark {
+  background: $dm-bg-hover;
+  color: $dm-text-primary;
+}
+
+@mixin dark-badge {
+  @include dark-mode {
+    @include badge-dark;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// WARNING / INFO BOXES DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin info-box-dark {
+  background: color-mix(in srgb, var(--blue-500) 15%, #{$dm-bg-elevated});
+  border-color: var(--blue-700);
+  color: var(--blue-300);
+
+  i {
+    color: var(--blue-400);
+  }
+}
+
+@mixin warning-box-dark {
+  background: color-mix(in srgb, var(--orange-500) 15%, #{$dm-bg-elevated});
+  border-color: var(--orange-700);
+  color: var(--orange-300);
+
+  i {
+    color: var(--orange-400);
+  }
+}
+
+@mixin success-box-dark {
+  background: color-mix(in srgb, var(--green-500) 15%, #{$dm-bg-elevated});
+  border-color: var(--green-700);
+  color: var(--green-300);
+
+  i {
+    color: var(--green-400);
+  }
+}
+
+@mixin error-box-dark {
+  background: color-mix(in srgb, var(--red-500) 15%, #{$dm-bg-elevated});
+  border-color: var(--red-700);
+  color: var(--red-300);
+
+  i {
+    color: var(--red-400);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// GRID / PERMISSIONS DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin grid-dark {
+  border-color: $dm-border-default;
+
+  .grid-header {
+    background: $dm-bg-elevated;
+    border-color: $dm-border-default;
+
+    span, th {
+      color: $dm-text-primary;
+    }
+  }
+
+  .grid-row {
+    border-color: $dm-border-default;
+
+    &:hover {
+      background: $dm-bg-hover;
+    }
+
+    .row-label,
+    .row-title {
+      color: $dm-text-primary;
+    }
+
+    .row-icon {
+      background: $dm-bg-hover;
+      color: $dm-text-secondary;
+    }
+  }
+}
+
+@mixin dark-grid {
+  @include dark-mode {
+    @include grid-dark;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// BUTTON VARIANTS DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin icon-button-dark {
+  background: $dm-bg-elevated;
+  border-color: $dm-border-default;
+  color: $dm-text-secondary;
+
+  &:hover {
+    background: $dm-bg-hover;
+    color: $dm-text-primary;
+    border-color: var(--primary-400);
+  }
+
+  &.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// SCROLLBAR DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin scrollbar-dark {
+  &::-webkit-scrollbar-track {
+    background: $dm-bg-elevated;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--surface-600);
+
+    &:hover {
+      background: var(--surface-500);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// LOADING OVERLAY DARK MODE
+// ----------------------------------------------------------------------------
+
+@mixin loading-overlay-dark {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+// ----------------------------------------------------------------------------
+// COMPLETE PAGE DARK MODE
+// ----------------------------------------------------------------------------
+// Uso rápido para aplicar dark mode a una página completa
+
+@mixin dark-page-base {
+  @include dark-mode {
+    background-color: $dm-bg-page;
+
+    .page-header {
+      h1 {
+        color: $dm-text-primary;
+      }
+
+      .page-subtitle {
+        color: $dm-text-secondary;
+      }
+    }
+
+    .card,
+    .panel,
+    [class*="-card"],
+    [class*="-panel"] {
+      @include card-dark;
+    }
+
+    .empty-state,
+    [class*="empty-"] {
+      @include empty-state-dark;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// UTILITY: COLOR MIX FOR SELECTIONS
+// ----------------------------------------------------------------------------
+// Genera un color de fondo para selección que funciona en dark mode
+
+@function selection-bg($color: var(--primary-color), $intensity: 20%) {
+  @return color-mix(in srgb, #{$color} #{$intensity}, var(--surface-900));
+}
+
+// ----------------------------------------------------------------------------
+// SELECTION STATE MIXINS - WCAG 2.1 AA COMPLIANT
+// ----------------------------------------------------------------------------
+// Mixins para estados de selección consistentes en light y dark mode.
+// IMPORTANTE: Usar estos mixins en lugar de primary-50 para estados seleccionados.
+// WCAG 2.1 AA requiere ratio de contraste mínimo de 4.5:1 para texto.
+
+/// Estado seleccionado para cards (light mode base)
+/// Uso: .mi-card.selected { @include selection-state-light; }
+@mixin selection-state-light {
+  background-color: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card));
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+}
+
+/// Estado seleccionado para cards (dark mode) - WCAG AA Compliant
+/// Uso: @include dark-mode { .mi-card.selected { @include selection-state-dark; } }
+@mixin selection-state-dark {
+  background-color: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900));
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+}
+
+/// Texto para estado seleccionado (dark mode) - WCAG AA Compliant
+/// Uso: @include dark-mode { .mi-card.selected { @include selection-text-dark; } }
+@mixin selection-text-dark {
+  // Texto principal: blanco puro para máximo contraste (ratio 4.5:1+)
+  .item-title,
+  .item-name,
+  [class*="-nombre"],
+  [class*="-title"] {
+    color: #FFFFFF !important;
+    font-weight: 600;
+  }
+
+  // Texto secundario: blanco con opacidad para jerarquía visual
+  .item-subtitle,
+  .item-description,
+  .item-email,
+  [class*="-descripcion"],
+  [class*="-subtitle"],
+  [class*="-email"] {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+}
+
+/// Mixin completo para estado seleccionado (incluye light y dark)
+/// Uso: .mi-card { @include with-selection-state; }
+@mixin with-selection-state {
+  &.selected,
+  &.active,
+  &[aria-selected="true"] {
+    @include selection-state-light;
+  }
+
+  @include dark-mode {
+    &.selected,
+    &.active,
+    &[aria-selected="true"] {
+      @include selection-state-dark;
+      @include selection-text-dark;
+    }
+  }
+}
+
+/// Hover state para cards (light mode)
+@mixin hover-state-light {
+  background-color: var(--surface-hover);
+  border-color: var(--primary-200);
+}
+
+/// Hover state para cards (dark mode)
+@mixin hover-state-dark {
+  background-color: var(--surface-700);
+  border-color: var(--primary-400);
+}
+
+/// Mixin completo para hover state (incluye light y dark)
+@mixin with-hover-state {
+  &:hover:not(.selected):not(.active):not([disabled]) {
+    @include hover-state-light;
+  }
+
+  @include dark-mode {
+    &:hover:not(.selected):not(.active):not([disabled]) {
+      @include hover-state-dark;
+    }
+  }
+}
+
+/// Mixin combinado: selección + hover + disabled (uso recomendado)
+/// Uso: .mi-card { @include interactive-states; }
+@mixin interactive-states {
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  // Hover
+  @include with-hover-state;
+
+  // Selected
+  @include with-selection-state;
+
+  // Disabled
+  &.disabled,
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHIP / TAG SELECTION
+// ----------------------------------------------------------------------------
+
+/// Chip seleccionable (light mode)
+@mixin chip-selectable-light {
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  color: var(--text-color);
+
+  &:hover {
+    border-color: var(--primary-200);
+    background: var(--surface-hover);
+  }
+
+  &.selected {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+  }
+}
+
+/// Chip seleccionable (dark mode)
+@mixin chip-selectable-dark {
+  background: var(--surface-800);
+  border-color: var(--surface-700);
+
+  &:hover {
+    border-color: var(--primary-400);
+    background: var(--surface-700);
+  }
+
+  &.selected {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+  }
+}
+
+/// Chip completo con dark mode
+@mixin chip-selectable {
+  @include chip-selectable-light;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  @include dark-mode {
+    @include chip-selectable-dark;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// LIST ITEM SELECTION
+// ----------------------------------------------------------------------------
+
+/// List item seleccionable - WCAG 2.1 AA Compliant
+@mixin list-item-selectable {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+
+  &.selected,
+  &.active {
+    background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card));
+    border-color: var(--primary-color);
+  }
+
+  @include dark-mode {
+    &:hover {
+      background: var(--surface-800);
+    }
+
+    &.selected,
+    &.active {
+      background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900));
+      border-color: var(--primary-color);
+
+      // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
+      [class*="-nombre"],
+      [class*="-title"],
+      .item-title,
+      .item-name {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+
+      [class*="-descripcion"],
+      [class*="-subtitle"],
+      .item-subtitle,
+      .item-description {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CHECKBOX / RADIO GROUP IN CARDS
+// ----------------------------------------------------------------------------
+
+/// Option card con radio/checkbox - WCAG 2.1 AA Compliant
+@mixin option-selectable {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-ground);
+  border: 2px solid var(--surface-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-200);
+    background: var(--surface-hover);
+  }
+
+  &.selected {
+    border-color: var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card));
+  }
+
+  @include dark-mode {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+
+    &:hover {
+      border-color: var(--primary-400);
+      background: var(--surface-700);
+    }
+
+    &.selected {
+      background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900));
+      border-color: var(--primary-color);
+
+      // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
+      [class*="-nombre"],
+      [class*="-title"],
+      .item-title,
+      .item-name,
+      .option-label {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+
+      [class*="-descripcion"],
+      [class*="-subtitle"],
+      .item-subtitle,
+      .item-description,
+      .option-description {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+    }
+  }
+}

@@ -476,7 +476,7 @@
                   <div class="collapsible-title">
                     <i class="pi pi-users text-blue-500"></i>
                     <span>Han contestado</span>
-                    <p-badge [value]="getPersonasContestaron().length + ''" severity="info" styleClass="ml-auto" />
+                    <p-badge [value]="getPersonasContestaron().length + ''" severity="info" styleClass="ml-auto mr-2" />
                   </div>
                   <i class="pi" [ngClass]="seccionRespuestasExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                 </div>
@@ -488,10 +488,6 @@
                                   [style]="{'background-color': persona.completado ? 'var(--green-100)' : 'var(--yellow-100)', 'color': persona.completado ? 'var(--green-600)' : 'var(--yellow-600)'}" />
                         <div class="persona-mini-info flex-1">
                           <span class="persona-mini-nombre">{{ persona.nombre }}</span>
-                          <div class="persona-mini-progress">
-                            <p-progressBar [value]="persona.progreso" [showValue]="false" styleClass="h-0.25rem" />
-                            <span class="text-xs">{{ persona.progreso }}%</span>
-                          </div>
                         </div>
                         <p-menu #menuPersonaHan [model]="getMenuPersonaExterna(persona)" [popup]="true" appendTo="body" />
                         <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small" severity="secondary" (onClick)="menuPersonaHan.toggle($event)" />
@@ -512,7 +508,7 @@
                   <div class="collapsible-title">
                     <i class="pi pi-verified text-green-500"></i>
                     <span>Aprobadores</span>
-                    <p-badge [value]="getAprobadoresRevision().length + ''" severity="success" styleClass="ml-auto" />
+                    <p-badge [value]="getAprobadoresRevision().length + ''" severity="success" styleClass="ml-auto mr-2" />
                   </div>
                   <i class="pi" [ngClass]="seccionAprobadoresExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                 </div>
@@ -546,7 +542,7 @@
                     <div class="collapsible-title">
                       <i class="pi pi-globe text-purple-500"></i>
                       <span>Evaluados Externos</span>
-                      <p-badge [value]="asignacionSeleccionada()!.evaluadosExternos!.length + ''" severity="contrast" styleClass="ml-auto" />
+                      <p-badge [value]="asignacionSeleccionada()!.evaluadosExternos!.length + ''" severity="contrast" styleClass="ml-auto mr-2" />
                     </div>
                     <i class="pi" [ngClass]="seccionEvaluadosExternosExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                   </div>
@@ -874,7 +870,7 @@
                   <div class="collapsible-title">
                     <i class="pi pi-users text-blue-500"></i>
                     <span>Han contestado</span>
-                    <p-badge [value]="getPersonasContestaron().length + ''" severity="info" styleClass="ml-auto" />
+                    <p-badge [value]="getPersonasContestaron().length + ''" severity="info" styleClass="ml-auto mr-2" />
                   </div>
                   <i class="pi" [ngClass]="seccionRespuestasExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                 </div>
@@ -886,10 +882,6 @@
                                   [style]="{'background-color': persona.completado ? 'var(--green-100)' : 'var(--yellow-100)', 'color': persona.completado ? 'var(--green-600)' : 'var(--yellow-600)'}" />
                         <div class="persona-mini-info flex-1">
                           <span class="persona-mini-nombre">{{ persona.nombre }}</span>
-                          <div class="persona-mini-progress">
-                            <p-progressBar [value]="persona.progreso" [showValue]="false" styleClass="h-0.25rem" />
-                            <span class="text-xs">{{ persona.progreso }}%</span>
-                          </div>
                         </div>
                         <p-menu #menuPersonaHan [model]="getMenuPersonaExterna(persona)" [popup]="true" appendTo="body" />
                         <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small" severity="secondary" (onClick)="menuPersonaHan.toggle($event)" />
@@ -910,7 +902,7 @@
                   <div class="collapsible-title">
                     <i class="pi pi-verified text-green-500"></i>
                     <span>Aprobadores</span>
-                    <p-badge [value]="getAprobadoresRevision().length + ''" severity="success" styleClass="ml-auto" />
+                    <p-badge [value]="getAprobadoresRevision().length + ''" severity="success" styleClass="ml-auto mr-2" />
                   </div>
                   <i class="pi" [ngClass]="seccionAprobadoresExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
                 </div>
