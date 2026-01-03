@@ -70,7 +70,7 @@
                      class="w-full" />
             } @else {
               <div class="flex align-items-center gap-2">
-                <span class="material-icons text-500">{{ getTipoIcon(activo.tipo) }}</span>
+                <span class="material-icons text-color-secondary">{{ getTipoIcon(activo.tipo) }}</span>
                 <span class="font-medium">{{ activo.nombre }}</span>
               </div>
             }
@@ -117,19 +117,19 @@
           </td>
           <!-- Riesgos (solo lectura) -->
           <td>
-            <span class="font-bold" [class]="activo.riesgos.length > 0 ? 'text-orange-500' : 'text-500'">
+            <span class="font-bold" [class]="activo.riesgos.length > 0 ? 'text-orange-500' : 'text-color-secondary'">
               {{ activo.riesgos.length }}
             </span>
           </td>
           <!-- Incidentes (solo lectura) -->
           <td>
-            <span class="font-bold" [class]="activo.incidentes.length > 0 ? 'text-red-500' : 'text-500'">
+            <span class="font-bold" [class]="activo.incidentes.length > 0 ? 'text-red-500' : 'text-color-secondary'">
               {{ activo.incidentes.length }}
             </span>
           </td>
           <!-- Defectos (solo lectura) -->
           <td>
-            <span class="font-bold" [class]="activo.defectos.length > 0 ? 'text-purple-500' : 'text-500'">
+            <span class="font-bold" [class]="activo.defectos.length > 0 ? 'text-purple-500' : 'text-color-secondary'">
               {{ activo.defectos.length }}
             </span>
           </td>
@@ -155,20 +155,20 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="10" class="text-center py-4">
-            <span class="text-500">No hay activos registrados</span>
+            <span class="text-color-secondary">No hay activos registrados</span>
           </td>
         </tr>
       </ng-template>
 
       <!-- Pie de tabla con totales por columna -->
       <ng-template pTemplate="footer">
-        <tr class="font-semibold surface-100">
+        <tr class="font-semibold surface-ground">
           <td></td>
           <td>
-            <span class="text-900">Totales</span>
+            <span class="text-color">Totales</span>
           </td>
           <td>
-            <span class="text-600">{{ activos().length }} activos</span>
+            <span class="text-color-secondary">{{ activos().length }} activos</span>
           </td>
           <td>
             <div class="flex gap-1">
@@ -245,23 +245,23 @@
       <!-- Info General -->
       <div class="grid">
         <div class="col-6">
-          <p class="text-500 text-sm m-0">Tipo</p>
+          <p class="text-color-secondary text-sm m-0">Tipo</p>
           <p class="font-medium m-0 capitalize">{{ activo.tipo }}</p>
         </div>
         <div class="col-6">
-          <p class="text-500 text-sm m-0">Criticidad</p>
+          <p class="text-color-secondary text-sm m-0">Criticidad</p>
           <p-tag [value]="activo.criticidad" [severity]="getCriticidadSeverity(activo.criticidad)"></p-tag>
         </div>
         <div class="col-6">
-          <p class="text-500 text-sm m-0">Responsable</p>
+          <p class="text-color-secondary text-sm m-0">Responsable</p>
           <p class="font-medium m-0">{{ activo.responsable }}</p>
         </div>
         <div class="col-6">
-          <p class="text-500 text-sm m-0">Departamento</p>
+          <p class="text-color-secondary text-sm m-0">Departamento</p>
           <p class="font-medium m-0">{{ activo.departamento }}</p>
         </div>
         <div class="col-12">
-          <p class="text-500 text-sm m-0">Descripcion</p>
+          <p class="text-color-secondary text-sm m-0">Descripcion</p>
           <p class="m-0">{{ activo.descripcion }}</p>
         </div>
       </div>
@@ -274,11 +274,11 @@
           @if (activo.riesgos.length > 0) {
             <div class="flex flex-column gap-2">
               @for (riesgo of activo.riesgos; track riesgo.id) {
-                <div class="p-3 surface-100 border-round">
+                <div class="p-3 surface-ground border-round list-item-hover">
                   <div class="flex justify-content-between align-items-start">
                     <div>
                       <p class="font-medium m-0">{{ riesgo.descripcion }}</p>
-                      <p class="text-sm text-500 m-0 mt-1">
+                      <p class="text-sm text-color-secondary m-0 mt-1">
                         Nivel: {{ riesgo.probabilidad * riesgo.impacto }} (P:{{ riesgo.probabilidad }} x I:{{ riesgo.impacto }})
                       </p>
                     </div>
@@ -288,7 +288,7 @@
               }
             </div>
           } @else {
-            <p class="text-500 py-2">No hay riesgos registrados</p>
+            <p class="text-color-secondary py-2">No hay riesgos registrados</p>
           }
         </div>
 
@@ -298,11 +298,11 @@
           @if (activo.incidentes.length > 0) {
             <div class="flex flex-column gap-2">
               @for (incidente of activo.incidentes; track incidente.id) {
-                <div class="p-3 surface-100 border-round">
+                <div class="p-3 surface-ground border-round list-item-hover">
                   <div class="flex justify-content-between align-items-start">
                     <div>
                       <p class="font-medium m-0">{{ incidente.titulo }}</p>
-                      <p class="text-sm text-500 m-0 mt-1">{{ incidente.descripcion }}</p>
+                      <p class="text-sm text-color-secondary m-0 mt-1">{{ incidente.descripcion }}</p>
                     </div>
                     <div class="flex gap-2">
                       <p-tag [value]="incidente.severidad" [severity]="getCriticidadSeverity(incidente.severidad)"></p-tag>
@@ -313,7 +313,7 @@
               }
             </div>
           } @else {
-            <p class="text-500 py-2">No hay incidentes registrados</p>
+            <p class="text-color-secondary py-2">No hay incidentes registrados</p>
           }
         </div>
 
@@ -323,11 +323,11 @@
           @if (activo.defectos.length > 0) {
             <div class="flex flex-column gap-2">
               @for (defecto of activo.defectos; track defecto.id) {
-                <div class="p-3 surface-100 border-round">
+                <div class="p-3 surface-ground border-round list-item-hover">
                   <div class="flex justify-content-between align-items-start">
                     <div>
                       <p class="font-medium m-0">{{ defecto.titulo }}</p>
-                      <p class="text-sm text-500 m-0 mt-1">{{ defecto.descripcion }}</p>
+                      <p class="text-sm text-color-secondary m-0 mt-1">{{ defecto.descripcion }}</p>
                     </div>
                     <div class="flex gap-2">
                       <p-tag [value]="defecto.tipo"></p-tag>
@@ -338,7 +338,7 @@
               }
             </div>
           } @else {
-            <p class="text-500 py-2">No hay defectos registrados</p>
+            <p class="text-color-secondary py-2">No hay defectos registrados</p>
           }
         </div>
       </div>
@@ -352,7 +352,7 @@
 <!-- Drawer Acciones Masivas -->
 <p-drawer [(visible)]="showAccionesMasivasDrawer" position="right" [style]="{width: '400px'}" header="Acciones Masivas">
   <div class="flex flex-column gap-4">
-    <p class="text-600 m-0">Aplicar cambios a {{ activosSeleccionados().length }} activos seleccionados</p>
+    <p class="text-color-secondary m-0">Aplicar cambios a {{ activosSeleccionados().length }} activos seleccionados</p>
 
     <!-- Tipo -->
     <div class="flex flex-column gap-2">

@@ -1,0 +1,611 @@
+<div class="proyectos-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Gestión de Proyectos</h1>
+    <p class="page-subtitle">Administra proyectos, fases y tareas</p>
+  </div>
+
+  <!-- Toolbar -->
+  <p-toolbar styleClass="toolbar-tabla">
+    <ng-template pTemplate="start">
+      <div class="flex align-items-center gap-3">
+        <!-- Botón de acciones masivas -->
+        @if (proyectosSeleccionados().length > 0) {
+          <p-button
+            label="Acciones"
+            icon="pi pi-check-square"
+            [badge]="proyectosSeleccionados().length.toString()"
+            badgeSeverity="contrast"
+            severity="success"
+            [outlined]="true"
+            pTooltip="Acciones masivas"
+            tooltipPosition="bottom"
+            (onClick)="abrirAccionesMasivasDrawer()" />
+        }
+      </div>
+    </ng-template>
+
+    <ng-template pTemplate="center">
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search" />
+        <input
+          type="text"
+          pInputText
+          placeholder="Buscar proyectos..."
+          (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+          style="width: 280px" />
+      </p-iconfield>
+    </ng-template>
+
+    <ng-template pTemplate="end">
+      <div class="flex gap-2 align-items-center">
+        <p-menu #exportMenu [model]="exportMenuItems" [popup]="true" appendTo="body"></p-menu>
+        <p-button
+          icon="pi pi-download"
+          severity="secondary"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="exportMenu.toggle($event)"
+          pTooltip="Descargar"
+          tooltipPosition="bottom" />
+
+        @if (proyectosService.searchFilter() || proyectosService.statusFilter() || proyectosService.priorityFilter()) {
+          <p-button
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="limpiarFiltros(); dt.clear()"
+            pTooltip="Limpiar filtros"
+            tooltipPosition="bottom" />
+        }
+
+        <p-button
+          label="Nuevo Proyecto"
+          icon="pi pi-plus"
+          (onClick)="crearProyecto()" />
+      </div>
+    </ng-template>
+  </p-toolbar>
+
+  <!-- Tabla Principal -->
+  <p-card styleClass="table-card">
+    <p-table
+      #dt
+      [value]="projects()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} proyectos"
+      [globalFilterFields]="['name', 'description', 'status', 'priority']"
+      [filterDelay]="300"
+      [rowHover]="true"
+      styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '60rem' }"
+      [selection]="proyectosSeleccionados()"
+      (selectionChange)="onSelectionChange($event)"
+      dataKey="id">
+
+      <!-- Headers con filtros -->
+      <ng-template pTemplate="header">
+        <!-- Fila de títulos -->
+        <tr>
+          <th style="width: 50px">
+            <p-tableHeaderCheckbox />
+          </th>
+          <th pSortableColumn="name" style="width: 28%">
+            <div class="flex align-items-center">
+              Proyecto
+              <p-sortIcon field="name" />
+            </div>
+          </th>
+          <th pSortableColumn="status" style="width: 12%">
+            <div class="flex align-items-center">
+              Estado
+              <p-sortIcon field="status" />
+            </div>
+          </th>
+          <th pSortableColumn="priority" style="width: 10%">
+            <div class="flex align-items-center">
+              Prioridad
+              <p-sortIcon field="priority" />
+            </div>
+          </th>
+          <th pSortableColumn="progress" style="width: 13%">
+            <div class="flex align-items-center">
+              Progreso
+              <p-sortIcon field="progress" />
+            </div>
+          </th>
+          <th pSortableColumn="endDate" style="width: 15%">
+            <div class="flex align-items-center">
+              Fechas
+              <p-sortIcon field="endDate" />
+            </div>
+          </th>
+          <th style="width: 8%">Tareas</th>
+          <th style="width: 7%">Acciones</th>
+        </tr>
+        <!-- Fila de filtros -->
+        <tr>
+          <th></th>
+          <th>
+            <p-columnFilter type="text" field="name" [showMenu]="false">
+              <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                <input
+                  pInputText
+                  type="text"
+                  [ngModel]="value"
+                  (ngModelChange)="filter($event)"
+                  placeholder="Buscar..."
+                  class="p-column-filter" />
+              </ng-template>
+            </p-columnFilter>
+          </th>
+          <th>
+            <p-columnFilter field="status" matchMode="in" [showMenu]="false">
+              <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                <p-multiSelect
+                  [ngModel]="value"
+                  (ngModelChange)="filter($event)"
+                  [options]="statusFilterOptions"
+                  placeholder="Todos"
+                  appendTo="body"
+                  [showHeader]="false">
+                  <ng-template let-option pTemplate="item">
+                    <p-tag [value]="option.label" [severity]="getStatusSeverity(option.value)" />
+                  </ng-template>
+                </p-multiSelect>
+              </ng-template>
+            </p-columnFilter>
+          </th>
+          <th>
+            <p-columnFilter field="priority" matchMode="in" [showMenu]="false">
+              <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                <p-multiSelect
+                  [ngModel]="value"
+                  (ngModelChange)="filter($event)"
+                  [options]="priorityFilterOptions"
+                  placeholder="Todas"
+                  appendTo="body"
+                  [showHeader]="false">
+                  <ng-template let-option pTemplate="item">
+                    <p-tag [value]="option.label" [severity]="getPrioritySeverity(option.value)" />
+                  </ng-template>
+                </p-multiSelect>
+              </ng-template>
+            </p-columnFilter>
+          </th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th>
+            <p-button
+              icon="pi pi-filter-slash"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              (onClick)="dt.clear()"
+              pTooltip="Limpiar filtros" />
+          </th>
+        </tr>
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template pTemplate="body" let-proyecto>
+        <tr class="project-row" (click)="abrirDrawer(proyecto)">
+          <td (click)="$event.stopPropagation()">
+            <p-tableCheckbox [value]="proyecto" />
+          </td>
+
+          <!-- Proyecto -->
+          <td>
+            <div class="project-info">
+              <span class="project-name">{{ proyecto.name }}</span>
+              @if (proyecto.description) {
+                <span class="project-description">{{ proyecto.description }}</span>
+              }
+            </div>
+          </td>
+
+          <!-- Estado -->
+          <td>
+            <p-tag
+              [value]="getStatusLabel(proyecto.status)"
+              [severity]="getStatusSeverity(proyecto.status)" />
+          </td>
+
+          <!-- Prioridad -->
+          <td>
+            <p-tag
+              [value]="getPriorityLabel(proyecto.priority)"
+              [severity]="getPrioritySeverity(proyecto.priority)" />
+          </td>
+
+          <!-- Progreso -->
+          <td>
+            <div class="progress-cell">
+              <p-progressBar
+                [value]="proyecto.calculatedProgress || proyecto.progress"
+                [showValue]="false"
+                [style]="{ height: '8px' }" />
+              <span class="progress-value">{{ proyecto.calculatedProgress || proyecto.progress }}%</span>
+            </div>
+          </td>
+
+          <!-- Fechas -->
+          <td>
+            <div class="dates-cell">
+              <span class="date-range">
+                {{ formatDate(proyecto.startDate) }} - {{ formatDate(proyecto.endDate) }}
+              </span>
+              @if (getDaysRemaining(proyecto.endDate) >= 0) {
+                <span class="days-remaining" [class.warning]="getDaysRemaining(proyecto.endDate) <= 7">
+                  {{ getDaysRemaining(proyecto.endDate) }} días
+                </span>
+              } @else {
+                <span class="days-remaining overdue">
+                  Vencido
+                </span>
+              }
+            </div>
+          </td>
+
+          <!-- Tareas -->
+          <td>
+            <div class="tasks-cell">
+              @if (proyecto.taskStats) {
+                <span class="task-count">
+                  {{ proyecto.taskStats.completed }}/{{ proyecto.taskStats.total }}
+                </span>
+              } @else {
+                <span class="task-count">
+                  {{ proyecto._count?.tasks || 0 }}
+                </span>
+              }
+            </div>
+          </td>
+
+          <!-- Acciones -->
+          <td (click)="$event.stopPropagation()">
+            <div class="actions-cell">
+              <p-button
+                icon="pi pi-ellipsis-v"
+                [rounded]="true"
+                [text]="true"
+                (click)="abrirPopover($event, proyecto)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="text-center py-6">
+            <div class="empty-state">
+              <i class="pi pi-folder-open text-4xl text-secondary mb-3"></i>
+              <p class="text-secondary mb-3">No se encontraron proyectos</p>
+              <p-button
+                label="Crear Proyecto"
+                icon="pi pi-plus"
+                (onClick)="crearProyecto()" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Pie de tabla con totales -->
+      <ng-template pTemplate="footer">
+        <tr class="font-semibold surface-100">
+          <td>
+            @if (proyectosSeleccionados().length > 0) {
+              <span class="text-primary text-sm">{{ proyectosSeleccionados().length }}</span>
+            }
+          </td>
+          <td>
+            <span class="text-900">Totales</span>
+          </td>
+          <td>
+            <div class="flex gap-1 flex-wrap">
+              <p-tag [value]="getContadores().inProgress.toString()" severity="info" styleClass="text-xs" pTooltip="En progreso" />
+              <p-tag [value]="getContadores().completed.toString()" severity="success" styleClass="text-xs" pTooltip="Completados" />
+            </div>
+          </td>
+          <td>
+            <div class="flex gap-1">
+              <p-tag [value]="getContadores().critical.toString()" severity="danger" styleClass="text-xs" pTooltip="Críticos" />
+              <p-tag [value]="getContadores().high.toString()" severity="warn" styleClass="text-xs" pTooltip="Altos" />
+            </div>
+          </td>
+          <td colspan="3">
+            <span class="text-600">{{ getContadores().total }} proyectos</span>
+          </td>
+          <td></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Popover de acciones (único para toda la tabla) -->
+<p-popover #opAcciones appendTo="body" styleClass="p-0">
+  @if (proyectoMenuActual) {
+    <ul class="p-menu-list p-reset" style="min-width: 180px">
+      <li class="p-menu-item">
+        <a class="p-menu-item-link" (click)="verProyecto(proyectoMenuActual); opAcciones.hide()">
+          <span class="p-menu-item-icon pi pi-eye"></span>
+          <span class="p-menu-item-label">Ver detalle</span>
+        </a>
+      </li>
+      <li class="p-menu-item">
+        <a class="p-menu-item-link" (click)="editarProyecto(proyectoMenuActual); opAcciones.hide()">
+          <span class="p-menu-item-icon pi pi-pencil"></span>
+          <span class="p-menu-item-label">Editar</span>
+        </a>
+      </li>
+      <li class="p-menu-separator"></li>
+      <li class="p-menu-item">
+        <a class="p-menu-item-link text-red-500" (click)="confirmarEliminar(proyectoMenuActual); opAcciones.hide()">
+          <span class="p-menu-item-icon pi pi-trash text-red-500"></span>
+          <span class="p-menu-item-label">Eliminar</span>
+        </a>
+      </li>
+    </ul>
+  }
+</p-popover>
+
+<!-- Drawer de Detalle Rápido -->
+<p-drawer
+  [(visible)]="showDrawer"
+  [position]="'right'"
+  [style]="{ width: '450px' }"
+  [modal]="true"
+  (onHide)="cerrarDrawer()">
+  <ng-template pTemplate="header">
+    <div class="drawer-header">
+      <h3>Detalle del Proyecto</h3>
+    </div>
+  </ng-template>
+
+  @if (proyectoSeleccionado(); as proyecto) {
+    <div class="drawer-content">
+      <!-- Info básica -->
+      <div class="drawer-section">
+        <h4>{{ proyecto.name }}</h4>
+        @if (proyecto.description) {
+          <p class="description">{{ proyecto.description }}</p>
+        }
+
+        <div class="tags-row">
+          <p-tag
+            [value]="getStatusLabel(proyecto.status)"
+            [severity]="getStatusSeverity(proyecto.status)" />
+          <p-tag
+            [value]="getPriorityLabel(proyecto.priority)"
+            [severity]="getPrioritySeverity(proyecto.priority)" />
+        </div>
+      </div>
+
+      <p-divider />
+
+      <!-- Progreso -->
+      <div class="drawer-section">
+        <h5>Progreso General</h5>
+        <div class="progress-big">
+          <p-progressBar
+            [value]="proyecto.calculatedProgress || proyecto.progress"
+            [showValue]="true" />
+        </div>
+      </div>
+
+      <p-divider />
+
+      <!-- Fechas -->
+      <div class="drawer-section">
+        <h5>Fechas</h5>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Inicio</span>
+            <span class="value">{{ formatDate(proyecto.startDate) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Fin</span>
+            <span class="value">{{ formatDate(proyecto.endDate) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Días restantes</span>
+            <span class="value" [class.warning]="getDaysRemaining(proyecto.endDate) <= 7" [class.overdue]="getDaysRemaining(proyecto.endDate) < 0">
+              {{ getDaysRemaining(proyecto.endDate) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p-divider />
+
+      <!-- Estadísticas de tareas -->
+      @if (proyecto.taskStats) {
+        <div class="drawer-section">
+          <h5>Tareas</h5>
+          <div class="task-stats">
+            <div class="task-stat">
+              <span class="stat-num">{{ proyecto.taskStats.total }}</span>
+              <span class="stat-label">Total</span>
+            </div>
+            <div class="task-stat completed">
+              <span class="stat-num">{{ proyecto.taskStats.completed }}</span>
+              <span class="stat-label">Completadas</span>
+            </div>
+            <div class="task-stat pending">
+              <span class="stat-num">{{ proyecto.taskStats.pending }}</span>
+              <span class="stat-label">Pendientes</span>
+            </div>
+            <div class="task-stat in-progress">
+              <span class="stat-num">{{ proyecto.taskStats.inProgress }}</span>
+              <span class="stat-label">En Progreso</span>
+            </div>
+          </div>
+        </div>
+
+        <p-divider />
+      }
+
+      <!-- Fases -->
+      @if (proyecto.phases && proyecto.phases.length > 0) {
+        <div class="drawer-section">
+          <h5>Fases ({{ proyecto.phases.length }})</h5>
+          <div class="phases-list">
+            @for (fase of proyecto.phases; track fase.id) {
+              <div class="phase-item">
+                <div class="phase-header">
+                  <span class="phase-name">{{ fase.name }}</span>
+                  <p-tag
+                    [value]="getPhaseStatusLabel(fase.status)"
+                    [severity]="getPhaseStatusSeverity(fase.status)"
+                    [style]="{ fontSize: '0.7rem' }" />
+                </div>
+                <p-progressBar
+                  [value]="fase.progress"
+                  [showValue]="false"
+                  [style]="{ height: '4px' }" />
+              </div>
+            }
+          </div>
+        </div>
+
+        <p-divider />
+      }
+
+      <!-- Acciones -->
+      <div class="drawer-actions">
+        <p-button
+          label="Ver Completo"
+          icon="pi pi-external-link"
+          (onClick)="verProyecto(proyecto)"
+          [style]="{ width: '100%' }" />
+        <div class="action-buttons">
+          <p-button
+            label="Editar"
+            icon="pi pi-pencil"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="editarProyecto(proyecto)" />
+          <p-button
+            label="Eliminar"
+            icon="pi pi-trash"
+            severity="danger"
+            [outlined]="true"
+            (onClick)="confirmarEliminar(proyecto)" />
+        </div>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Drawer: Acciones Masivas -->
+<p-drawer
+  [(visible)]="showAccionesMasivasDrawer"
+  position="right"
+  [style]="{ width: '420px' }"
+  header="Acciones Masivas">
+  <div class="acciones-masivas-content">
+    <!-- Header con contador -->
+    <div class="acciones-masivas-header mb-4">
+      <div class="flex align-items-center gap-2 mb-2">
+        <p-tag
+          [value]="proyectosSeleccionados().length + ' proyectos seleccionados'"
+          severity="success"
+          icon="pi pi-check-circle" />
+      </div>
+      <p class="text-secondary text-sm m-0">
+        Selecciona los campos que deseas modificar y establece los nuevos valores.
+      </p>
+    </div>
+
+    <!-- Campo: Estado -->
+    <div class="accion-masiva-field mb-3">
+      <label class="block text-sm font-medium mb-2">Cambiar Estado</label>
+      <p-select
+        [options]="statusOptions"
+        [(ngModel)]="accionMasivaEstado"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar nuevo estado"
+        [showClear]="true"
+        [style]="{ width: '100%' }"
+        appendTo="body">
+        <ng-template let-option pTemplate="item">
+          <p-tag [value]="option.label" [severity]="getStatusSeverity(option.value)" />
+        </ng-template>
+        <ng-template let-option pTemplate="selectedItem">
+          <p-tag [value]="option.label" [severity]="getStatusSeverity(option.value)" />
+        </ng-template>
+      </p-select>
+    </div>
+
+    <!-- Campo: Prioridad -->
+    <div class="accion-masiva-field mb-4">
+      <label class="block text-sm font-medium mb-2">Cambiar Prioridad</label>
+      <p-select
+        [options]="priorityOptions"
+        [(ngModel)]="accionMasivaPrioridad"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar nueva prioridad"
+        [showClear]="true"
+        [style]="{ width: '100%' }"
+        appendTo="body">
+        <ng-template let-option pTemplate="item">
+          <p-tag [value]="option.label" [severity]="getPrioritySeverity(option.value)" />
+        </ng-template>
+        <ng-template let-option pTemplate="selectedItem">
+          <p-tag [value]="option.label" [severity]="getPrioritySeverity(option.value)" />
+        </ng-template>
+      </p-select>
+    </div>
+
+    <!-- Acciones adicionales -->
+    <p-divider />
+    <div class="acciones-adicionales">
+      <p-button
+        label="Eliminar seleccionados"
+        icon="pi pi-trash"
+        severity="danger"
+        [outlined]="true"
+        [style]="{ width: '100%' }"
+        (onClick)="eliminarSeleccionados()" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-between align-items-center w-full">
+      <span class="text-secondary text-sm">
+        @if (getCantidadCambiosPendientes() > 0) {
+          {{ getCantidadCambiosPendientes() }} campo(s) a modificar
+        } @else {
+          Selecciona campos para modificar
+        }
+      </span>
+      <div class="flex gap-2">
+        <p-button
+          label="Cancelar"
+          [text]="true"
+          severity="secondary"
+          (onClick)="showAccionesMasivasDrawer.set(false)" />
+        <p-button
+          label="Aplicar cambios"
+          icon="pi pi-check"
+          (onClick)="aplicarAccionesMasivas()"
+          [disabled]="getCantidadCambiosPendientes() === 0" />
+      </div>
+    </div>
+  </ng-template>
+</p-drawer>
+
+<!-- Dialogs -->
+<p-confirmDialog />
+<p-toast />

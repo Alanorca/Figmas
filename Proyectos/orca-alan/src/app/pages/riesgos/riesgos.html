@@ -83,10 +83,10 @@
                         [style]="{width: '70px'}" />
             } @else {
               <div class="flex align-items-center gap-2">
-                <div class="w-6rem bg-gray-200 border-round" style="height: 8px;">
+                <div class="w-6rem progress-bar-track" style="height: 8px;">
                   <div class="bg-primary border-round" [style.width.%]="riesgo.probabilidad * 20" style="height: 100%;"></div>
                 </div>
-                <span class="font-bold">{{ riesgo.probabilidad }}</span>
+                <span class="font-bold text-color">{{ riesgo.probabilidad }}</span>
               </div>
             }
           </td>
@@ -99,10 +99,10 @@
                         [style]="{width: '70px'}" />
             } @else {
               <div class="flex align-items-center gap-2">
-                <div class="w-6rem bg-gray-200 border-round" style="height: 8px;">
+                <div class="w-6rem progress-bar-track" style="height: 8px;">
                   <div class="bg-orange-500 border-round" [style.width.%]="riesgo.impacto * 20" style="height: 100%;"></div>
                 </div>
-                <span class="font-bold">{{ riesgo.impacto }}</span>
+                <span class="font-bold text-color">{{ riesgo.impacto }}</span>
               </div>
             }
           </td>
@@ -154,20 +154,20 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="10" class="text-center py-4">
-            <span class="text-500">No hay riesgos registrados</span>
+            <span class="text-color-secondary">No hay riesgos registrados</span>
           </td>
         </tr>
       </ng-template>
 
       <!-- Pie de tabla con totales por columna -->
       <ng-template pTemplate="footer">
-        <tr class="font-semibold surface-100">
+        <tr class="font-semibold surface-ground">
           <td></td>
           <td>
-            <span class="text-900">Totales</span>
+            <span class="text-color">Totales</span>
           </td>
           <td>
-            <span class="text-600">{{ riesgos().length }} riesgos</span>
+            <span class="text-color-secondary">{{ riesgos().length }} riesgos</span>
           </td>
           <td></td>
           <td>
@@ -211,7 +211,7 @@
         <div class="flex flex-column gap-2">
           <label class="font-medium">Probabilidad: {{ nuevoRiesgo().probabilidad }}</label>
           <p-slider [(ngModel)]="nuevoRiesgo().probabilidad" [min]="1" [max]="5" [step]="1"></p-slider>
-          <div class="flex justify-content-between text-xs text-500">
+          <div class="flex justify-content-between text-xs text-color-secondary">
             <span>Muy Baja</span>
             <span>Muy Alta</span>
           </div>
@@ -221,15 +221,15 @@
         <div class="flex flex-column gap-2">
           <label class="font-medium">Impacto: {{ nuevoRiesgo().impacto }}</label>
           <p-slider [(ngModel)]="nuevoRiesgo().impacto" [min]="1" [max]="5" [step]="1"></p-slider>
-          <div class="flex justify-content-between text-xs text-500">
+          <div class="flex justify-content-between text-xs text-color-secondary">
             <span>Muy Bajo</span>
             <span>Muy Alto</span>
           </div>
         </div>
       </div>
     </div>
-    <div class="p-3 surface-100 border-round text-center">
-      <p class="text-500 text-sm m-0 mb-1">Nivel de Riesgo Calculado</p>
+    <div class="p-3 surface-ground border-round text-center">
+      <p class="text-color-secondary text-sm m-0 mb-1">Nivel de Riesgo Calculado</p>
       <p-tag [value]="getNivelLabel(nuevoRiesgo().probabilidad * nuevoRiesgo().impacto) + ' (' + (nuevoRiesgo().probabilidad * nuevoRiesgo().impacto) + ')'"
              [severity]="getNivelSeverity(nuevoRiesgo().probabilidad * nuevoRiesgo().impacto)"
              styleClass="text-lg"></p-tag>
@@ -253,7 +253,7 @@
 <!-- Drawer Acciones Masivas -->
 <p-drawer [(visible)]="showAccionesMasivasDrawer" position="right" [style]="{width: '400px'}" header="Acciones Masivas">
   <div class="flex flex-column gap-4">
-    <p class="text-600 m-0">Aplicar cambios a {{ riesgosSeleccionados().length }} riesgos seleccionados</p>
+    <p class="text-color-secondary m-0">Aplicar cambios a {{ riesgosSeleccionados().length }} riesgos seleccionados</p>
 
     <!-- Probabilidad -->
     <div class="flex flex-column gap-2">

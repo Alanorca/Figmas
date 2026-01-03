@@ -1,0 +1,995 @@
+---
+title: "Gesti贸n de Proyectos y Tareas"
+sidebar_label: "Gesti贸n de Proyectos"
+sidebar_position: 7
+---
+
+import ZoomableDiagram from '@site/src/components/ZoomableDiagram';
+
+# Historia de Usuario: Gesti贸n de Proyectos y Tareas
+
+## 馃搵 Informaci贸n General
+
+- **ID**: US-PROJECTS-001
+- **M贸dulo**: Gesti贸n de Proyectos / Seguimiento de Tareas
+- **Prioridad**: Alta
+- **Sprint**: Sprint 4-5
+
+## 馃懁 Historia de Usuario
+
+**Como** Gestor de Proyectos, L铆der de 脕rea o Usuario del Sistema ORCA SNS
+**Quiero** crear y gestionar proyectos con fases, tareas, responsables, evidencias y objetivos SMART, dando seguimiento a mitigaciones de riesgos, oportunidades detectadas por ML y tareas manuales, con vistas de Gantt y Calendario
+**Para** planificar, ejecutar y monitorear iniciativas de mejora, planes de acci贸n y proyectos de cumplimiento, asegurando el cumplimiento de plazos y la documentaci贸n de avances mediante KPIs y notificaciones autom谩ticas.
+
+## 馃幆 Funcionalidades Principales
+
+| Funcionalidad              | Descripci贸n                                              |
+|----------------------------|----------------------------------------------------------|
+| **Proyectos**              | Contenedor principal con objetivos SMART y KPIs          |
+| **Fases**                  | Etapas del proyecto con fechas y secuencia               |
+| **Tareas**                 | Actividades asignables con responsables y evidencias     |
+| **Vinculaci贸n ML**         | Seguimiento a mitigaciones y oportunidades de ML         |
+| **Notificaciones**         | Alertas autom谩ticas de vencimiento y cambios             |
+| **Vista Gantt**            | Visualizaci贸n temporal de fases y tareas                 |
+| **Vista Calendario**       | Vista mensual/semanal de tareas y entregas               |
+
+## 鉁?Criterios de Aceptaci贸n
+
+### Feature: Gesti贸n de Proyectos
+
+```gherkin
+Scenario: Crear nuevo proyecto con objetivos SMART
+  Given un "Gestor de Proyectos" accede al m贸dulo de "Proyectos"
+  When selecciona "Nuevo Proyecto"
+  And completa la informaci贸n b谩sica:
+    | Campo                      | Valor                                        |
+    | Nombre                     | Plan de Remediaci贸n ISO 27001 2026           |
+    | Descripci贸n                | Implementaci贸n de controles faltantes        |
+    | Fecha de Inicio            | 2026-01-15                                   |
+    | Fecha de Fin               | 2026-06-30                                   |
+    | Responsable del Proyecto   | gerente.seguridad@empresa.com                |
+    | Unidad Organizacional      | Direcci贸n de TI                              |
+    | Prioridad                  | Alta                                         |
+    | Estado                     | Planificaci贸n                                |
+  And define los Objetivos SMART:
+    | Objetivo                                                           | Tipo        |
+    | Implementar 15 controles de seguridad antes del 30/06/2026        | Espec铆fico  |
+    | Reducir hallazgos de auditor铆a en 80%                              | Medible     |
+    | Alcanzar certificaci贸n ISO 27001                                   | Alcanzable  |
+    | Alineado a estrategia de seguridad corporativa                     | Relevante   |
+    | Completar antes de auditor铆a externa Q3 2026                       | Temporal    |
+  And hace clic en "Crear Proyecto"
+  Then el sistema crea el proyecto con ID 煤nico
+  And el proyecto aparece en el listado con estado "Planificaci贸n"
+  And se calcula autom谩ticamente la duraci贸n: 167 d铆as
+```
+
+```gherkin
+Scenario: Definir KPIs del proyecto
+  Given existe un proyecto "Plan de Remediaci贸n ISO 27001 2026"
+  When el responsable accede a la pesta帽a "KPIs"
+  And agrega los siguientes indicadores:
+    | KPI                              | Meta    | Unidad     | F贸rmula de C谩lculo              |
+    | Porcentaje de Avance             | 100%    | Porcentaje | (Tareas Completadas / Total) * 100 |
+    | Controles Implementados          | 15      | Cantidad   | COUNT(controles status=Implementado) |
+    | Tareas Vencidas                  | 0       | Cantidad   | COUNT(tareas vencidas)          |
+    | Cumplimiento de Cronograma       | 95%     | Porcentaje | (Entregas a tiempo / Total) * 100 |
+  And guarda la configuraci贸n
+  Then los KPIs aparecen en el dashboard del proyecto
+  And se actualizan autom谩ticamente seg煤n el progreso
+  And se muestran alertas visuales cuando un KPI est谩 fuera de meta
+```
+
+```gherkin
+Scenario: Visualizar dashboard de proyecto
+  Given existe un proyecto con fases y tareas definidas
+  When el usuario accede al proyecto
+  Then ve el dashboard con:
+    | Secci贸n                    | Contenido                                    |
+    | Informaci贸n General        | Nombre, fechas, responsable, estado          |
+    | Objetivos SMART            | Lista de objetivos con indicador de logro    |
+    | KPIs                       | Gr谩ficos y valores actuales vs meta          |
+    | Progreso General           | Barra de progreso porcentual                 |
+    | Resumen de Fases           | Estado de cada fase                          |
+    | Tareas Pr贸ximas a Vencer   | Lista de tareas con vencimiento cercano      |
+    | Actividad Reciente         | 脷ltimos cambios en el proyecto               |
+```
+
+### Feature: Gesti贸n de Fases del Proyecto
+
+```gherkin
+Scenario: Crear fases del proyecto
+  Given existe un proyecto "Plan de Remediaci贸n ISO 27001 2026"
+  When el responsable accede a "Fases del Proyecto"
+  And crea las siguientes fases:
+    | Fase                       | Fecha Inicio | Fecha Fin  | Orden | Dependencia    |
+    | Diagn贸stico Inicial        | 2026-01-15   | 2026-02-15 | 1     | -              |
+    | Dise帽o de Controles        | 2026-02-16   | 2026-03-31 | 2     | Fase 1         |
+    | Implementaci贸n             | 2026-04-01   | 2026-05-31 | 3     | Fase 2         |
+    | Validaci贸n y Pruebas       | 2026-06-01   | 2026-06-20 | 4     | Fase 3         |
+    | Cierre y Documentaci贸n     | 2026-06-21   | 2026-06-30 | 5     | Fase 4         |
+  Then cada fase se crea con estado "Pendiente"
+  And las fechas se validan contra las fechas del proyecto
+  And las dependencias se registran para el c谩lculo del Gantt
+```
+
+```gherkin
+Scenario: Actualizar estado de fase
+  Given existe una fase "Diagn贸stico Inicial" en estado "Pendiente"
+  When el responsable cambia el estado a "En Progreso"
+  Then la fase se actualiza con el nuevo estado
+  And se registra la fecha de inicio real
+  And se notifica a los responsables de las tareas de la fase
+  And el progreso del proyecto se recalcula
+```
+
+```gherkin
+Scenario: Completar fase y habilitar siguiente
+  Given existe una fase "Diagn贸stico Inicial" con todas las tareas completadas
+  When el responsable marca la fase como "Completada"
+  Then la fase cambia a estado "Completada"
+  And se registra la fecha de fin real
+  And la siguiente fase dependiente cambia a estado "Disponible"
+  And se notifica al responsable de la siguiente fase
+```
+
+### Feature: Gesti贸n de Tareas
+
+```gherkin
+Scenario: Crear tarea manual dentro de una fase
+  Given existe una fase "Implementaci贸n" del proyecto
+  When un usuario crea una nueva tarea:
+    | Campo                      | Valor                                        |
+    | T铆tulo                     | Configurar firewall perimetral               |
+    | Descripci贸n                | Implementar reglas seg煤n pol铆tica de seguridad |
+    | Fase                       | Implementaci贸n                               |
+    | Responsable                | admin.redes@empresa.com                      |
+    | Fecha de Inicio            | 2026-04-01                                   |
+    | Fecha de Vencimiento       | 2026-04-15                                   |
+    | Prioridad                  | Alta                                         |
+    | Esfuerzo Estimado          | 40 horas                                     |
+    | Tipo                       | Manual                                       |
+  And guarda la tarea
+  Then la tarea se crea con estado "Pendiente"
+  And se asigna a la fase correspondiente
+  And se notifica al responsable asignado
+  And aparece en las vistas Gantt y Calendario
+```
+
+```gherkin
+Scenario: Crear tarea vinculada a mitigaci贸n de riesgo (ML)
+  Given existe un resultado ML que identific贸 un riesgo a mitigar
+  And el riesgo tiene una acci贸n de mitigaci贸n pendiente
+  When un usuario crea una tarea de seguimiento:
+    | Campo                      | Valor                                        |
+    | T铆tulo                     | Mitigar vulnerabilidad en servidor web       |
+    | Tipo                       | Mitigaci贸n ML                                |
+    | Vinculaci贸n                | RISK-2025-0042 (Resultado ML)                |
+    | Responsable                | admin.seguridad@empresa.com                  |
+    | Fecha de Vencimiento       | 2026-04-30                                   |
+  Then la tarea se crea vinculada al resultado ML
+  And el estado de la mitigaci贸n en el riesgo se sincroniza
+  And al completar la tarea, el riesgo actualiza su estado de mitigaci贸n
+```
+
+```gherkin
+Scenario: Crear tarea vinculada a oportunidad detectada por ML
+  Given existe un resultado ML que identific贸 una oportunidad de mejora
+  When un usuario crea una tarea de seguimiento:
+    | Campo                      | Valor                                        |
+    | T铆tulo                     | Implementar automatizaci贸n de backups        |
+    | Tipo                       | Oportunidad ML                               |
+    | Vinculaci贸n                | OPP-2025-0018 (Resultado ML)                 |
+    | Responsable                | admin.infraestructura@empresa.com            |
+    | Fecha de Vencimiento       | 2026-05-15                                   |
+    | Beneficio Esperado         | Reducci贸n de 60% en tiempo de respaldo       |
+  Then la tarea se crea vinculada a la oportunidad ML
+  And se puede dar seguimiento al beneficio alcanzado al completar
+```
+
+```gherkin
+Scenario: Crear tarea de plan de mitigaci贸n para incidente
+  Given existe un incidente "INC-2025-0156" que requiere acciones correctivas
+  When un usuario crea una tarea de mitigaci贸n:
+    | Campo                      | Valor                                        |
+    | T铆tulo                     | Implementar controles post-incidente acceso no autorizado |
+    | Tipo                       | Plan de Mitigaci贸n - Incidente               |
+    | Vinculaci贸n                | INC-2025-0156                                |
+    | Responsable                | admin.seguridad@empresa.com                  |
+    | Fecha de Vencimiento       | 2026-02-28                                   |
+    | Acciones Requeridas        | Revisar pol铆ticas de acceso, implementar MFA |
+  Then la tarea se crea vinculada al incidente
+  And el incidente muestra la tarea en su secci贸n "Plan de Mitigaci贸n"
+  And al completar la tarea, se actualiza el estado de mitigaci贸n del incidente
+  And se registra en el historial del incidente
+```
+
+```gherkin
+Scenario: Crear tarea de plan de mitigaci贸n para defecto
+  Given existe un defecto/hallazgo "DEF-2025-0089" pendiente de remediaci贸n
+  When un usuario crea una tarea de mitigaci贸n:
+    | Campo                      | Valor                                        |
+    | T铆tulo                     | Remediar deficiencia en documentaci贸n de procedimientos |
+    | Tipo                       | Plan de Mitigaci贸n - Defecto                 |
+    | Vinculaci贸n                | DEF-2025-0089                                |
+    | Responsable                | analista.procesos@empresa.com                |
+    | Fecha de Vencimiento       | 2026-03-15                                   |
+    | Acciones Requeridas        | Actualizar procedimientos, capacitar personal |
+  Then la tarea se crea vinculada al defecto
+  And el defecto muestra la tarea en su secci贸n "Plan de Remediaci贸n"
+  And al completar la tarea, se puede cerrar el defecto
+  And se genera evidencia de remediaci贸n autom谩ticamente
+```
+
+```gherkin
+Scenario: Visualizar tareas agrupadas por tipo de vinculaci贸n
+  Given existen tareas de diferentes tipos en un proyecto
+  When el usuario filtra por tipo de tarea
+  Then puede ver tareas agrupadas por:
+    | Tipo                              | Entidad Vinculada      | Cantidad |
+    | Manual                            | -                      | 12       |
+    | Mitigaci贸n de Riesgo (ML)         | Riesgos                | 5        |
+    | Oportunidad (ML)                  | Resultados ML          | 3        |
+    | Plan de Mitigaci贸n - Incidente    | Incidentes             | 4        |
+    | Plan de Mitigaci贸n - Defecto      | Defectos/Hallazgos     | 6        |
+  And cada grupo muestra el estado de avance consolidado
+```
+
+```gherkin
+Scenario: Asignar y reasignar responsable de tarea
+  Given existe una tarea "Configurar firewall perimetral"
+  When el gestor del proyecto cambia el responsable:
+    | Campo                      | Valor                                        |
+    | Responsable Anterior       | admin.redes@empresa.com                      |
+    | Nuevo Responsable          | especialista.seguridad@empresa.com           |
+    | Motivo                     | Reasignaci贸n por carga de trabajo            |
+  Then la tarea se actualiza con el nuevo responsable
+  And se notifica al responsable anterior (removido)
+  And se notifica al nuevo responsable (asignado)
+  And se registra el cambio en el historial de la tarea
+```
+
+```gherkin
+Scenario: Actualizar progreso de tarea
+  Given existe una tarea asignada a "admin.redes@empresa.com"
+  When el responsable actualiza el progreso:
+    | Campo                      | Valor                                        |
+    | Porcentaje de Avance       | 60%                                          |
+    | Horas Trabajadas           | 24 horas                                     |
+    | Comentario                 | Configuraci贸n de reglas b谩sicas completada   |
+    | Estado                     | En Progreso                                  |
+  Then el progreso de la tarea se actualiza
+  And el progreso de la fase se recalcula autom谩ticamente
+  And el progreso del proyecto se recalcula autom谩ticamente
+  And los KPIs relacionados se actualizan
+```
+
+```gherkin
+Scenario: Completar tarea
+  Given existe una tarea "Configurar firewall perimetral" en progreso
+  When el responsable marca la tarea como completada:
+    | Campo                      | Valor                                        |
+    | Estado                     | Completada                                   |
+    | Fecha de Completado        | 2026-04-14 (autom谩tica)                      |
+    | Horas Reales               | 38 horas                                     |
+    | Comentario de Cierre       | Configuraci贸n implementada y probada         |
+  Then la tarea cambia a estado "Completada"
+  And se registra la fecha de completado
+  And se compara con la fecha de vencimiento (a tiempo / retrasada)
+  And se actualiza el KPI de "Cumplimiento de Cronograma"
+```
+
+### Feature: Gesti贸n de Evidencias
+
+```gherkin
+Scenario: Cargar evidencia en una tarea
+  Given existe una tarea "Configurar firewall perimetral"
+  When el responsable sube una evidencia:
+    | Campo                      | Valor                                        |
+    | Archivo                    | config_firewall_v1.pdf                       |
+    | Tipo de Evidencia          | Documento de Configuraci贸n                   |
+    | Descripci贸n                | Archivo de configuraci贸n exportado           |
+    | Fecha del Documento        | 2026-04-14                                   |
+  Then el archivo se almacena en el sistema
+  And se vincula a la tarea
+  And se registra qui茅n subi贸 la evidencia y cu谩ndo
+  And la evidencia aparece en el listado de la tarea
+```
+
+```gherkin
+Scenario: Cargar m煤ltiples evidencias
+  Given existe una tarea que requiere documentaci贸n
+  When el responsable sube m煤ltiples archivos:
+    | Archivo                    | Tipo                    | Tama帽o   |
+    | diagrama_red.png           | Diagrama                | 2.5 MB   |
+    | procedimiento.docx         | Procedimiento           | 1.2 MB   |
+    | screenshot_config.jpg      | Captura de Pantalla     | 800 KB   |
+    | log_implementacion.txt     | Log/Registro            | 150 KB   |
+  Then todos los archivos se cargan correctamente
+  And se muestran en el listado de evidencias de la tarea
+  And el tama帽o total no excede el l铆mite (50MB por tarea)
+```
+
+```gherkin
+Scenario: Visualizar y descargar evidencias
+  Given existe una tarea con 4 evidencias cargadas
+  When un usuario autorizado accede a las evidencias
+  Then puede ver:
+    | Informaci贸n                | Disponible                                   |
+    | Lista de archivos          | Nombre, tipo, tama帽o, fecha                  |
+    | Preview                    | Para im谩genes y PDFs                         |
+    | Descarga individual        | Cualquier archivo                            |
+    | Descarga masiva            | ZIP con todas las evidencias                 |
+    | Historial                  | Qui茅n subi贸 cada archivo                     |
+```
+
+### Feature: Estados y Flujo de Trabajo
+
+```gherkin
+Scenario: Flujo de estados de proyecto
+  Given el sistema define los siguientes estados de proyecto:
+    | Estado                     | Descripci贸n                                  | Transiciones Permitidas        |
+    | Planificaci贸n              | Proyecto en definici贸n                       | En Progreso, Cancelado         |
+    | En Progreso                | Proyecto en ejecuci贸n                        | Pausado, Completado, Cancelado |
+    | Pausado                    | Proyecto temporalmente detenido              | En Progreso, Cancelado         |
+    | Completado                 | Proyecto finalizado exitosamente             | -                              |
+    | Cancelado                  | Proyecto cancelado                           | -                              |
+  Then las transiciones de estado se validan seg煤n las reglas definidas
+  And no se permite cambiar de "Completado" o "Cancelado" a otro estado
+```
+
+```gherkin
+Scenario: Flujo de estados de tarea
+  Given el sistema define los siguientes estados de tarea:
+    | Estado                     | Descripci贸n                                  | Color      |
+    | Pendiente                  | Tarea creada, no iniciada                    | Gris       |
+    | En Progreso                | Tarea en ejecuci贸n                           | Azul       |
+    | En Revisi贸n                | Tarea completada, pendiente de validaci贸n    | Amarillo   |
+    | Completada                 | Tarea finalizada y validada                  | Verde      |
+    | Bloqueada                  | Tarea detenida por dependencia/impedimento   | Rojo       |
+    | Cancelada                  | Tarea cancelada                              | Gris oscuro|
+  Then cada estado tiene su representaci贸n visual distintiva
+```
+
+### Feature: Notificaciones Autom谩ticas
+
+```gherkin
+Scenario: Notificaci贸n previa a vencimiento de tarea
+  Given existe una tarea con fecha de vencimiento en 3 d铆as
+  And est谩 configurada notificaci贸n con anticipaci贸n de [7, 3, 1] d铆as
+  When el sistema ejecuta verificaci贸n diaria de vencimientos
+  Then env铆a notificaci贸n al responsable:
+    | Canal                      | Mensaje                                      |
+    | Email                      | "RECORDATORIO: La tarea 'X' vence en 3 d铆as" |
+    | In-App                     | Notificaci贸n con enlace a la tarea           |
+  And la notificaci贸n incluye:
+    | Informaci贸n                | Valor                                        |
+    | Nombre de la tarea         | Configurar firewall perimetral               |
+    | Proyecto                   | Plan de Remediaci贸n ISO 27001 2026           |
+    | Fecha de vencimiento       | 2026-04-15                                   |
+    | Responsable                | admin.redes@empresa.com                      |
+```
+
+```gherkin
+Scenario: Notificaci贸n de tarea vencida
+  Given existe una tarea con fecha de vencimiento pasada
+  And la tarea no est谩 completada
+  When el sistema detecta el vencimiento
+  Then env铆a notificaci贸n:
+    | Destinatarios              | Responsable + Gestor del Proyecto            |
+    | Prioridad                  | Alta                                         |
+    | Mensaje                    | "鈿狅笍 VENCIDA: La tarea 'X' venci贸 hace N d铆as" |
+  And la tarea se marca visualmente como vencida
+  And se repite la notificaci贸n diariamente hasta resoluci贸n
+```
+
+```gherkin
+Scenario: Notificaci贸n de actualizaci贸n de estado
+  Given existe una tarea asignada
+  When el responsable cambia el estado de "En Progreso" a "Completada"
+  Then se notifica:
+    | Destinatario               | Notificaci贸n                                 |
+    | Gestor del proyecto        | "La tarea 'X' fue completada por Y"          |
+    | Responsable anterior       | Si fue reasignada, confirmaci贸n de cambio    |
+```
+
+```gherkin
+Scenario: Notificaci贸n de nueva asignaci贸n
+  Given un gestor asigna una tarea a un usuario
+  When se guarda la asignaci贸n
+  Then el usuario asignado recibe notificaci贸n:
+    | Canal                      | Contenido                                    |
+    | Email                      | Detalle de la tarea, proyecto, fechas        |
+    | In-App                     | Notificaci贸n con enlace directo              |
+  And la notificaci贸n incluye bot贸n "Ver Tarea"
+```
+
+### Feature: Vista Gantt
+
+```gherkin
+Scenario: Visualizar proyecto en vista Gantt
+  Given existe un proyecto con fases y tareas
+  When el usuario accede a la "Vista Gantt"
+  Then se muestra un diagrama de Gantt con:
+    | Elemento                   | Visualizaci贸n                                |
+    | Eje horizontal             | L铆nea de tiempo (d铆as/semanas/meses)         |
+    | Fases                      | Barras agrupadas por fase                    |
+    | Tareas                     | Barras individuales dentro de cada fase      |
+    | Dependencias               | Flechas conectando tareas dependientes       |
+    | Hoy                        | L铆nea vertical indicando fecha actual        |
+    | Progreso                   | Relleno proporcional al % de avance          |
+    | Hitos                      | Diamantes en fechas clave                    |
+```
+
+```gherkin
+Scenario: Interactuar con vista Gantt
+  Given el usuario est谩 en la vista Gantt
+  When interact煤a con el diagrama:
+    | Acci贸n                     | Resultado                                    |
+    | Hover sobre tarea          | Tooltip con detalles (nombre, fechas, %)     |
+    | Clic en tarea              | Abre panel lateral con detalle completo      |
+    | Zoom in/out                | Ajusta escala temporal                       |
+    | Scroll horizontal          | Navega en el tiempo                          |
+    | Filtrar por responsable    | Muestra solo tareas del usuario seleccionado |
+    | Filtrar por estado         | Muestra solo tareas en estado seleccionado   |
+```
+
+```gherkin
+Scenario: Identificar tareas cr铆ticas en Gantt
+  Given existe un proyecto con varias tareas
+  When se visualiza el Gantt
+  Then se destacan visualmente:
+    | Condici贸n                  | Indicador Visual                             |
+    | Tarea vencida              | Barra roja                                   |
+    | Tarea pr贸xima a vencer     | Barra naranja (< 3 d铆as)                     |
+    | Tarea bloqueada            | Barra con patr贸n rayado                      |
+    | Tarea completada           | Barra verde con checkmark                    |
+    | Ruta cr铆tica               | Tareas resaltadas (opcional)                 |
+```
+
+### Feature: Vista Calendario
+
+```gherkin
+Scenario: Visualizar tareas en vista Calendario
+  Given existe un proyecto con tareas asignadas
+  When el usuario accede a la "Vista Calendario"
+  Then se muestra un calendario con:
+    | Elemento                   | Visualizaci贸n                                |
+    | Vista por defecto          | Mes actual                                   |
+    | Tareas                     | Cards en su fecha de vencimiento             |
+    | Color de tarea             | Seg煤n estado o prioridad                     |
+    | Navegaci贸n                 | Anterior/Siguiente mes                       |
+    | Selector de vista          | Mes / Semana                                 |
+```
+
+```gherkin
+Scenario: Interactuar con vista Calendario
+  Given el usuario est谩 en la vista Calendario
+  When interact煤a:
+    | Acci贸n                     | Resultado                                    |
+    | Clic en tarea              | Abre panel con detalle de la tarea           |
+    | Clic en d铆a vac铆o          | Opci贸n de crear nueva tarea en esa fecha     |
+    | Filtrar por proyecto       | Muestra solo tareas del proyecto             |
+    | Filtrar por asignado       | Muestra solo mis tareas / todas              |
+```
+
+```gherkin
+Scenario: Vista Calendario personal (Mis Tareas)
+  Given un usuario tiene tareas asignadas en m煤ltiples proyectos
+  When accede a "Mi Calendario"
+  Then ve todas sus tareas consolidadas:
+    | Informaci贸n                | Visualizaci贸n                                |
+    | Tareas de todos proyectos  | Agrupadas por fecha                          |
+    | C贸digo de colores          | Por proyecto o prioridad                     |
+    | Resumen del d铆a            | Cantidad de tareas por d铆a                   |
+    | Vista de agenda            | Lista cronol贸gica de pr贸ximas tareas         |
+```
+
+### Feature: Seguimiento de Progreso
+
+```gherkin
+Scenario: Calcular progreso autom谩tico del proyecto
+  Given existe un proyecto con la siguiente estructura:
+    | Fase                 | Tareas | Completadas | Peso de Fase |
+    | Diagn贸stico          | 5      | 5           | 20%          |
+    | Dise帽o               | 8      | 4           | 25%          |
+    | Implementaci贸n       | 12     | 0           | 35%          |
+    | Validaci贸n           | 6      | 0           | 15%          |
+    | Cierre               | 3      | 0           | 5%           |
+  When el sistema calcula el progreso
+  Then el progreso del proyecto es:
+    | C谩lculo                                                      |
+    | Fase 1: 100% 脳 20% = 20%                                     |
+    | Fase 2: 50% 脳 25% = 12.5%                                    |
+    | Fase 3: 0% 脳 35% = 0%                                        |
+    | Fase 4: 0% 脳 15% = 0%                                        |
+    | Fase 5: 0% 脳 5% = 0%                                         |
+    | Total: 32.5%                                                 |
+  And el progreso se muestra en el dashboard del proyecto
+```
+
+```gherkin
+Scenario: Visualizar m茅tricas de desempe帽o
+  Given existe un proyecto en ejecuci贸n
+  When el gestor accede al dashboard de m茅tricas
+  Then ve:
+    | M茅trica                    | Valor Ejemplo    | Indicador         |
+    | Progreso General           | 32.5%            | Barra de progreso |
+    | Tareas Completadas         | 9 de 34          | Contador          |
+    | Tareas Vencidas            | 2                | Badge rojo        |
+    | D铆as Restantes             | 78               | Contador          |
+    | Cumplimiento de Cronograma | 87%              | Sem谩foro          |
+    | Horas Estimadas vs Reales  | 200 / 180        | Comparativo       |
+```
+
+## 馃攧 Flujo de Usuario
+
+<ZoomableDiagram
+  title="Flujo de Gesti贸n de Proyectos y Tareas"
+  height="900px"
+  chart={`graph TD
+    subgraph "Creaci贸n de Proyecto"
+        Start[Usuario crea<br/>Nuevo Proyecto] --> DefineBasics[Definir Informaci贸n<br/>B谩sica]
+        DefineBasics --> DefineSMART[Definir Objetivos<br/>SMART]
+        DefineSMART --> DefineKPIs[Configurar KPIs]
+        DefineKPIs --> CreatePhases[Crear Fases<br/>del Proyecto]
+        CreatePhases --> SaveProject[Guardar Proyecto]
+    end
+
+    subgraph "Gesti贸n de Tareas"
+        SaveProject --> CreateTasks{Crear Tareas}
+        CreateTasks -->|Manual| ManualTask[Tarea Manual]
+        CreateTasks -->|ML| MLTask[Tarea vinculada<br/>a Resultado ML]
+        
+        ManualTask --> AssignResponsible[Asignar<br/>Responsable]
+        MLTask --> AssignResponsible
+        
+        AssignResponsible --> SetDates[Definir Fechas<br/>Inicio/Vencimiento]
+        SetDates --> NotifyAssigned[Notificar al<br/>Responsable]
+    end
+
+    subgraph "Ejecuci贸n"
+        NotifyAssigned --> WorkOnTask[Responsable<br/>Trabaja en Tarea]
+        WorkOnTask --> UpdateProgress[Actualizar<br/>Progreso %]
+        UpdateProgress --> UploadEvidence[Cargar<br/>Evidencias]
+        UploadEvidence --> CompleteTask{驴Completar?}
+        
+        CompleteTask -->|No| WorkOnTask
+        CompleteTask -->|S铆| MarkComplete[Marcar como<br/>Completada]
+        
+        MarkComplete --> UpdatePhase[Actualizar<br/>Progreso de Fase]
+        UpdatePhase --> UpdateProject[Actualizar<br/>Progreso de Proyecto]
+        UpdateProject --> UpdateKPIs[Recalcular<br/>KPIs]
+    end
+
+    subgraph "Monitoreo"
+        UpdateKPIs --> Dashboard[Dashboard<br/>del Proyecto]
+        Dashboard --> Views{Vistas}
+        Views --> GanttView[Vista Gantt]
+        Views --> CalendarView[Vista Calendario]
+        Views --> KPIView[Vista KPIs]
+    end
+
+    subgraph "Notificaciones"
+        SetDates --> ScheduleReminders[Programar<br/>Recordatorios]
+        ScheduleReminders --> CheckExpiration{驴Pr贸ximo a<br/>Vencer?}
+        CheckExpiration -->|S铆| SendReminder[Enviar<br/>Recordatorio]
+        CheckExpiration -->|No| WaitCheck[Esperar<br/>Siguiente Verificaci贸n]
+        SendReminder --> WaitCheck
+        
+        MarkComplete --> NotifyManager[Notificar<br/>Gestor del Proyecto]
+    end
+
+    style Start stroke:#4caf50,stroke-width:2px
+    style SaveProject stroke:#2196f3,stroke-width:2px
+    style MarkComplete stroke:#4caf50,stroke-width:2px
+    style Dashboard stroke:#9c27b0,stroke-width:2px
+    style GanttView stroke:#ff9800,stroke-width:2px
+    style CalendarView stroke:#00bcd4,stroke-width:2px
+  `}
+/>
+
+## 馃帹 Mockups / Dise帽os
+
+Dise帽os a crear en Figma por UX/UI Designer: Alan Franco
+
+### Pantallas a Dise帽ar:
+1. Listado de Proyectos (cards/tabla)
+2. Dashboard de Proyecto
+3. Formulario Crear/Editar Proyecto
+4. Gesti贸n de Fases
+5. Listado de Tareas
+6. Formulario Crear/Editar Tarea
+7. Detalle de Tarea con Evidencias
+8. Vista Gantt
+9. Vista Calendario
+10. Panel de KPIs
+
+## 馃摗 Documentaci贸n T茅cnica Relacionada
+
+### API Endpoints
+
+```typescript
+// ==================== PROYECTOS ====================
+POST   /api/projects                              // Crear proyecto
+GET    /api/projects                              // Listar proyectos
+GET    /api/projects/:id                          // Obtener proyecto
+PUT    /api/projects/:id                          // Actualizar proyecto
+DELETE /api/projects/:id                          // Eliminar proyecto
+GET    /api/projects/:id/dashboard                // Dashboard del proyecto
+GET    /api/projects/:id/progress                 // Progreso calculado
+PATCH  /api/projects/:id/status                   // Cambiar estado
+
+// ==================== OBJETIVOS SMART ====================
+POST   /api/projects/:id/objectives               // Agregar objetivo
+GET    /api/projects/:id/objectives               // Listar objetivos
+PUT    /api/projects/:id/objectives/:objId        // Actualizar objetivo
+DELETE /api/projects/:id/objectives/:objId        // Eliminar objetivo
+
+// ==================== KPIs ====================
+POST   /api/projects/:id/kpis                     // Agregar KPI
+GET    /api/projects/:id/kpis                     // Listar KPIs con valores actuales
+PUT    /api/projects/:id/kpis/:kpiId              // Actualizar KPI
+DELETE /api/projects/:id/kpis/:kpiId              // Eliminar KPI
+
+// ==================== FASES ====================
+POST   /api/projects/:id/phases                   // Crear fase
+GET    /api/projects/:id/phases                   // Listar fases
+PUT    /api/projects/:id/phases/:phaseId          // Actualizar fase
+DELETE /api/projects/:id/phases/:phaseId          // Eliminar fase
+PATCH  /api/projects/:id/phases/:phaseId/status   // Cambiar estado de fase
+POST   /api/projects/:id/phases/reorder           // Reordenar fases
+
+// ==================== TAREAS ====================
+POST   /api/tasks                                 // Crear tarea
+GET    /api/tasks                                 // Listar tareas (con filtros)
+GET    /api/tasks/:id                             // Obtener tarea
+PUT    /api/tasks/:id                             // Actualizar tarea
+DELETE /api/tasks/:id                             // Eliminar tarea
+PATCH  /api/tasks/:id/status                      // Cambiar estado
+PATCH  /api/tasks/:id/progress                    // Actualizar progreso
+PATCH  /api/tasks/:id/assign                      // Asignar/reasignar responsable
+
+// Filtros para GET /api/tasks
+GET    /api/tasks?projectId=xxx                   // Por proyecto
+GET    /api/tasks?phaseId=xxx                     // Por fase
+GET    /api/tasks?assignedTo=xxx                  // Por responsable
+GET    /api/tasks?status=pending,in_progress      // Por estado
+GET    /api/tasks?type=manual,risk_mitigation,opportunity,incident_mitigation,defect_mitigation // Por tipo
+GET    /api/tasks?dueBefore=2026-04-15            // Por fecha de vencimiento
+GET    /api/tasks?linkedEntityType=INCIDENT       // Por tipo de entidad vinculada
+GET    /api/tasks?linkedEntityId=xxx              // Por entidad espec铆fica
+
+// ==================== EVIDENCIAS ====================
+POST   /api/tasks/:id/evidences                   // Subir evidencia
+GET    /api/tasks/:id/evidences                   // Listar evidencias
+GET    /api/tasks/:id/evidences/:evidenceId       // Obtener/descargar evidencia
+DELETE /api/tasks/:id/evidences/:evidenceId       // Eliminar evidencia
+GET    /api/tasks/:id/evidences/download-all      // Descargar ZIP
+
+// ==================== VISTAS ====================
+GET    /api/projects/:id/gantt                    // Datos para vista Gantt
+GET    /api/projects/:id/calendar                 // Datos para vista Calendario
+GET    /api/calendar/my-tasks                     // Calendario personal (todas las tareas del usuario)
+
+// ==================== VINCULACI脫N A ENTIDADES ====================
+GET    /api/ml-results/pending-actions            // Resultados ML con acciones pendientes
+POST   /api/tasks/link-ml-result                  // Crear tarea desde resultado ML
+GET    /api/tasks/:id/ml-result                   // Obtener resultado ML vinculado
+
+GET    /api/incidents/:id/mitigation-tasks        // Tareas de mitigaci贸n del incidente
+POST   /api/tasks/link-incident                   // Crear tarea desde incidente
+GET    /api/incidents/pending-mitigation          // Incidentes con mitigaci贸n pendiente
+
+GET    /api/defects/:id/remediation-tasks         // Tareas de remediaci贸n del defecto
+POST   /api/tasks/link-defect                     // Crear tarea desde defecto
+GET    /api/defects/pending-remediation           // Defectos con remediaci贸n pendiente
+
+GET    /api/tasks/:id/linked-entity               // Obtener entidad vinculada (gen茅rico)
+```
+
+### Reglas de Negocio
+
+1. **Estados de Proyecto**:
+   - `PLANNING`: Proyecto en definici贸n inicial
+   - `IN_PROGRESS`: Proyecto en ejecuci贸n activa
+   - `PAUSED`: Proyecto temporalmente detenido
+   - `COMPLETED`: Proyecto finalizado exitosamente
+   - `CANCELLED`: Proyecto cancelado
+
+2. **Estados de Tarea**:
+   - `PENDING`: No iniciada
+   - `IN_PROGRESS`: En ejecuci贸n
+   - `IN_REVIEW`: Completada, pendiente de validaci贸n
+   - `COMPLETED`: Finalizada y validada
+   - `BLOCKED`: Detenida por impedimento
+   - `CANCELLED`: Cancelada
+
+3. **Tipos de Tarea**:
+   - `MANUAL`: Tarea creada manualmente sin vinculaci贸n
+   - `RISK_MITIGATION`: Vinculada a mitigaci贸n de riesgo (desde ML)
+   - `OPPORTUNITY`: Vinculada a oportunidad detectada (desde ML)
+   - `INCIDENT_MITIGATION`: Plan de mitigaci贸n para incidente
+   - `DEFECT_MITIGATION`: Plan de mitigaci贸n/remediaci贸n para defecto
+
+4. **C谩lculo de Progreso**:
+   - Tarea: Porcentaje manual (0-100%)
+   - Fase: Promedio ponderado de tareas (o simple)
+   - Proyecto: Promedio ponderado de fases seg煤n peso asignado
+
+5. **Notificaciones de Vencimiento**:
+   - Configurables por proyecto: d铆as de anticipaci贸n
+   - Default: 7, 3, 1 d铆as antes
+   - Notificaci贸n diaria de vencidas hasta resoluci贸n
+
+6. **Evidencias**:
+   - Tipos soportados: PDF, Word, Excel, Im谩genes, Texto
+   - Tama帽o m谩ximo por archivo: 25MB
+   - Tama帽o m谩ximo por tarea: 50MB
+   - Almacenamiento: Firebase Storage
+
+7. **Objetivos SMART**:
+   - Cada proyecto debe tener al menos 1 objetivo
+   - Categor铆as: Espec铆fico, Medible, Alcanzable, Relevante, Temporal
+   - Estado: Pendiente, En Progreso, Logrado, No Logrado
+
+8. **KPIs**:
+   - Se calculan autom谩ticamente seg煤n f贸rmula definida
+   - Tipos de f贸rmula: COUNT, AVERAGE, PERCENTAGE, CUSTOM
+   - Alertas cuando valor actual difiere de meta
+
+### Modelo de Datos
+
+```typescript
+// Firestore Collection: projects
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  startDate: string;                               // ISO date
+  endDate: string;                                 // ISO date
+  responsibleUserId: string;
+  orgUnitId: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: ProjectStatus;
+  
+  // Objetivos SMART
+  objectives: SMARTObjective[];
+  
+  // KPIs
+  kpis: ProjectKPI[];
+  
+  // Progreso calculado
+  progress: number;                                // 0-100
+  
+  // Metadata
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  
+  // Configuraci贸n de notificaciones
+  notificationConfig: {
+    reminderDays: number[];                        // ej: [7, 3, 1]
+    notifyOnStatusChange: boolean;
+    notifyOnTaskComplete: boolean;
+  };
+}
+
+interface SMARTObjective {
+  id: string;
+  description: string;
+  category: 'specific' | 'measurable' | 'achievable' | 'relevant' | 'time_bound';
+  status: 'pending' | 'in_progress' | 'achieved' | 'not_achieved';
+  targetDate?: string;
+  completedDate?: string;
+}
+
+interface ProjectKPI {
+  id: string;
+  name: string;
+  description?: string;
+  targetValue: number;
+  currentValue: number;
+  unit: string;                                    // ej: '%', 'cantidad', 'horas'
+  formula: {
+    type: 'count' | 'average' | 'percentage' | 'custom';
+    expression?: string;                           // Para custom
+  };
+  status: 'on_track' | 'at_risk' | 'off_track';
+  lastCalculated: string;
+}
+
+// Firestore Collection: projectPhases
+interface ProjectPhase {
+  id: string;
+  projectId: string;
+  name: string;
+  description?: string;
+  order: number;
+  startDate: string;
+  endDate: string;
+  actualStartDate?: string;
+  actualEndDate?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  weight: number;                                  // Peso para c谩lculo de progreso (0-100)
+  dependsOnPhaseId?: string;                       // Fase de la que depende
+  progress: number;                                // 0-100 calculado
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Firestore Collection: tasks
+interface Task {
+  id: string;
+  projectId: string;
+  phaseId: string;
+  title: string;
+  description?: string;
+  
+  // Asignaci贸n
+  assignedTo: string;                              // userId
+  assignedBy: string;                              // userId
+  assignedAt: string;
+  
+  // Fechas
+  startDate: string;
+  dueDate: string;
+  completedDate?: string;
+  
+  // Progreso
+  progress: number;                                // 0-100
+  status: TaskStatus;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  
+  // Esfuerzo
+  estimatedHours?: number;
+  actualHours?: number;
+  
+  // Tipo y vinculaci贸n
+  type: TaskType;
+  linkedEntityType?: 'RISK' | 'ML_RESULT' | 'INCIDENT' | 'DEFECT';
+  linkedEntityId?: string;
+  
+  // Evidencias (referencias)
+  evidenceIds: string[];
+  
+  // Metadata
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  
+  // Historial de cambios
+  history: TaskHistoryEntry[];
+}
+
+interface TaskHistoryEntry {
+  timestamp: string;
+  userId: string;
+  action: 'created' | 'updated' | 'status_changed' | 'assigned' | 'progress_updated';
+  changes?: {
+    field: string;
+    oldValue: any;
+    newValue: any;
+  }[];
+  comment?: string;
+}
+
+// Firestore Collection: taskEvidences
+interface TaskEvidence {
+  id: string;
+  taskId: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;                                // bytes
+  storageUrl: string;
+  evidenceType: 'document' | 'image' | 'log' | 'screenshot' | 'other';
+  description?: string;
+  documentDate?: string;
+  uploadedBy: string;
+  uploadedAt: string;
+}
+
+enum ProjectStatus {
+  PLANNING = 'planning',
+  IN_PROGRESS = 'in_progress',
+  PAUSED = 'paused',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}
+
+enum TaskStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  IN_REVIEW = 'in_review',
+  COMPLETED = 'completed',
+  BLOCKED = 'blocked',
+  CANCELLED = 'cancelled'
+}
+
+enum TaskType {
+  MANUAL = 'manual',
+  RISK_MITIGATION = 'risk_mitigation',
+  OPPORTUNITY = 'opportunity',
+  INCIDENT_MITIGATION = 'incident_mitigation',
+  DEFECT_MITIGATION = 'defect_mitigation'
+}
+```
+
+## 馃摑 Notas Adicionales
+
+### Equipo
+
+- **Product Owner**: Francisco Puente
+- **UX/UI Designer**: Alan Franco
+- **Frontend Developers**: Cesar Gonzalez, Juan Martinez
+- **Backend Developer**: Josue Cardenas
+- **QA Engineer**: Emmanuel Vazquez
+
+### Alcance Fase 1 (30/enero/2026)
+
+#### 鉁?Incluye:
+
+- **Proyectos**:
+  - CRUD completo de proyectos
+  - Definici贸n de objetivos SMART
+  - Configuraci贸n de KPIs b谩sicos (COUNT, PERCENTAGE)
+  - Dashboard de proyecto con progreso
+
+- **Fases**:
+  - CRUD de fases
+  - Ordenamiento y dependencias simples
+  - C谩lculo autom谩tico de progreso
+
+- **Tareas**:
+  - CRUD completo de tareas
+  - Tipos: Manual, Mitigaci贸n de Riesgo (ML), Oportunidad (ML), Plan de Mitigaci贸n de Incidente, Plan de Mitigaci贸n de Defecto
+  - Asignaci贸n y reasignaci贸n de responsables
+  - Actualizaci贸n de progreso porcentual
+  - Estados completos con flujo de trabajo
+  - Vinculaci贸n bidireccional con entidades origen
+
+- **Evidencias**:
+  - Carga de archivos (PDF, Word, Excel, Im谩genes)
+  - Listado y descarga individual
+  - Preview b谩sico de im谩genes y PDFs
+
+- **Vistas**:
+  - Vista Gantt b谩sica (visualizaci贸n, hover, clic)
+  - Vista Calendario mensual
+  - Filtros b谩sicos (proyecto, responsable, estado)
+
+- **Notificaciones**:
+  - Recordatorios de vencimiento (N d铆as antes)
+  - Notificaci贸n de tarea vencida
+  - Notificaci贸n de asignaci贸n
+  - Notificaci贸n de cambio de estado
+
+- **Integraci贸n con Entidades**:
+  - Crear tarea desde resultado ML (mitigaciones de riesgos y oportunidades)
+  - Crear tarea de plan de mitigaci贸n desde incidente
+  - Crear tarea de plan de remediaci贸n desde defecto/hallazgo
+  - Sincronizaci贸n bidireccional de estados
+  - Actualizaci贸n autom谩tica de entidad origen al completar tarea
+
+	- Vista KANBAN para cambios de estatus de tareas
+
+	- Reportes exportables (PDF/Excel)
+
+	- Comentarios/discusiones en tareas
+	- M煤ltiples responsables por tarea
+	- Aprobaciones de tareas por otro usuario de sistema designado por proyecto
+
+### Roadmap
+
+| Fase     | Fecha              | Estado        |
+|----------|--------------------|---------------|
+| Fase 1   | 30/enero/2026      | En Desarrollo |
+| Fase 2   | Q2 2026            | Planificado   |
+
+## 馃彿锔?Etiquetas
+
+`projects` `tasks` `phases` `gantt` `calendar` `smart-objectives` `kpis` `evidences` `ml-integration` `mitigations` `opportunities` `notifications` `sprint-4` `sprint-5`
+
+---
+
+**脷ltima actualizaci贸n**: 24/12/2024

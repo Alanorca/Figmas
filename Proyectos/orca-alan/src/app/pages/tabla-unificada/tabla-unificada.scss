@@ -773,14 +773,28 @@
   margin-bottom: 0.75rem;
   overflow: hidden;
   transition: all 0.2s;
+  background: var(--surface-ground);
 
   &:hover {
-    border-color: var(--primary-200);
+    border-color: var(--primary-color);
   }
 
   &.active {
     border-color: var(--primary-color);
-    background: var(--primary-50);
+    background: var(--highlight-bg);
+  }
+
+  .campo-nombre {
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .campo-tipo {
+    color: var(--text-color-secondary);
+    font-size: 0.75rem;
+    background: var(--surface-200);
+    padding: 2px 8px;
+    border-radius: 4px;
   }
 }
 
@@ -807,6 +821,14 @@
 .accion-masiva-control {
   padding: 0 1rem 1rem;
   animation: slideDown 0.2s ease-out;
+
+  .control-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+  }
 }
 
 @keyframes slideDown {
@@ -869,6 +891,73 @@
   .p-inputtext-sm {
     padding: 0.4rem 0.6rem;
   }
+}
+
+// Historial Timeline
+.historial-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.historial-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  color: white;
+
+  i {
+    font-size: 0.875rem;
+  }
+}
+
+.historial-evento {
+  padding-bottom: var(--spacing-3);
+
+  .historial-evento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-1);
+  }
+
+  .historial-accion {
+    color: var(--text-color);
+    font-weight: 600;
+  }
+
+  .historial-fecha {
+    color: var(--text-color-secondary);
+  }
+
+  .historial-usuario {
+    color: var(--text-color);
+  }
+
+  .historial-detalles {
+    color: var(--text-color-secondary);
+  }
+}
+
+// Search Highlight - usa tokens que funcionan en ambos modos
+.search-highlight,
+mark.search-highlight {
+  background-color: var(--highlight-bg);
+  color: var(--highlight-text-color);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+// Detalle acciones mejoradas
+.detalle-acciones {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 // Responsive

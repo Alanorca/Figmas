@@ -637,6 +637,154 @@ Estos colores funcionan en light mode pero fallan en dark mode:
 | `$surface-50` | Usar variables CSS con override |
 | Colores hardcoded | Variables CSS semánticas |
 
+---
+
+## Tokens Auto-Adaptativos (Recomendado)
+
+> **REGLA DE ORO:** Siempre que sea posible, usar tokens auto-adaptativos que funcionan en AMBOS modos sin necesidad de `:host-context(.dark)`. Esto reduce código, evita bugs y mejora mantenibilidad.
+
+### Tokens Seguros - Sin Override Necesario
+
+Estos tokens de PrimeNG se adaptan **automáticamente** al tema activo:
+
+| Token | Light Mode | Dark Mode | Uso Recomendado |
+|-------|------------|-----------|-----------------|
+| `--surface-ground` | Blanco/Gris claro | Gris oscuro | **Fondo de contenedores** |
+| `--surface-card` | Blanco | Gris oscuro | Fondo de cards |
+| `--surface-border` | Gris claro | Gris medio | **Bordes estándar** |
+| `--surface-hover` | Gris muy claro | Gris oscuro | **Estados hover** |
+| `--text-color` | Negro/Gris oscuro | Blanco | **Texto principal** |
+| `--text-color-secondary` | Gris medio | Gris claro | **Texto secundario** |
+| `--highlight-bg` | Primary claro | Primary oscuro | **Estados seleccionados** |
+| `--highlight-text-color` | Primary oscuro | Blanco | **Texto en selección** |
+| `--primary-color` | Primary | Primary | Acentos, iconos activos |
+| `--surface-200` | Gris claro | Gris oscuro | Badges, chips |
+
+### Ejemplo: Card Expandible SIN Dark Mode Override
+
+```scss
+// ✅ CORRECTO - Usa solo tokens auto-adaptativos
+.mi-card {
+  background: var(--surface-ground);      // Se adapta automáticamente
+  border: 1px solid var(--surface-border); // Se adapta automáticamente
+  border-radius: 8px;
+
+  &:hover {
+    border-color: var(--primary-color);
+  }
+
+  &.active {
+    border-color: var(--primary-color);
+    background: var(--highlight-bg);       // Se adapta automáticamente
+  }
+
+  .card-title {
+    color: var(--text-color);              // Se adapta automáticamente
+    font-weight: 600;
+  }
+
+  .card-subtitle {
+    color: var(--text-color-secondary);    // Se adapta automáticamente
+  }
+
+  .card-badge {
+    background: var(--surface-200);        // Se adapta automáticamente
+    color: var(--text-color-secondary);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+}
+
+// ❌ NO NECESITAS ESTO si usas tokens auto-adaptativos:
+// :host-context(.dark) .mi-card { ... }
+```
+
+### Cuándo SÍ Usar `:host-context(.dark)`
+
+Solo cuando necesites comportamientos **diferentes** entre modos:
+
+```scss
+// ✅ Caso válido: Color semántico diferente
+.status-badge {
+  background: var(--green-100);  // Verde claro en light
+}
+
+:host-context(.dark) .status-badge {
+  background: var(--green-900);  // Verde oscuro en dark
+}
+
+// ✅ Caso válido: Sombras (no visibles en dark)
+.elevated-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+:host-context(.dark) .elevated-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);  // Más pronunciada
+}
+```
+
+### Anti-Patrones a Evitar
+
+```scss
+// ❌ INCORRECTO - Overrides innecesarios
+.my-card {
+  background: var(--surface-card);
+}
+:host-context(.dark) .my-card {
+  background: var(--surface-800);  // Innecesario, --surface-card ya se adapta
+}
+
+// ❌ INCORRECTO - Tokens específicos de modo
+.my-card {
+  background: var(--surface-50);   // Solo existe en light
+}
+
+// ❌ INCORRECTO - color-mix cuando hay token disponible
+.selected {
+  background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-800));
+}
+// ✅ MEJOR - Usar el token diseñado para esto
+.selected {
+  background: var(--highlight-bg);
+}
+
+// ❌ INCORRECTO - Selector demasiado amplio
+:host-context(.dark) {
+  // Estilos que afectan a TODO el componente
+}
+// ✅ MEJOR - Selector específico
+:host-context(.dark) .elemento-especifico {
+  // Solo lo que necesita override
+}
+```
+
+### Checklist: Nuevo Componente con Soporte de Temas
+
+1. **Fondos**
+   - [ ] ¿Usé `--surface-ground` o `--surface-card` para contenedores?
+   - [ ] ¿Usé `--highlight-bg` para estados seleccionados/activos?
+
+2. **Textos**
+   - [ ] ¿Usé `--text-color` para texto principal?
+   - [ ] ¿Usé `--text-color-secondary` para texto secundario/hints?
+   - [ ] ¿Usé `--highlight-text-color` para texto en elementos seleccionados?
+
+3. **Bordes y Decoración**
+   - [ ] ¿Usé `--surface-border` para bordes estándar?
+   - [ ] ¿Usé `--primary-color` para bordes de foco/activo?
+   - [ ] ¿Usé `--surface-200` para badges/chips?
+
+4. **Estados**
+   - [ ] ¿Usé `--surface-hover` para estados hover?
+   - [ ] ¿Evité usar `--primary-50`, `--surface-50`, `--surface-100`?
+
+5. **Verificación Final**
+   - [ ] ¿Probé el componente en ambos modos (light/dark)?
+   - [ ] ¿Hay algún `:host-context(.dark)` innecesario que pueda eliminar?
+   - [ ] ¿Los checkboxes, inputs y componentes de PrimeNG se ven correctamente?
+
+---
+
 ### Ejemplo Completo
 
 ```scss
@@ -940,4 +1088,4 @@ Antes de crear un nuevo componente, verificar:
 
 Mantener este documento actualizado conforme evoluciona el diseño del sistema.
 
-**Última actualización:** Diciembre 2025 (Dark Mode System + WCAG 2.1 AA Selection States)
+**Última actualización:** Diciembre 2025 (Tokens Auto-Adaptativos + Dark Mode System + WCAG 2.1 AA)

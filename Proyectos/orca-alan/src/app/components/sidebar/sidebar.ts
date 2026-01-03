@@ -897,7 +897,8 @@ export class SidebarComponent implements OnDestroy {
       expanded: true,
       items: [
         { label: 'Activos', icon: 'pi pi-database', routerLink: '/activos' },
-        { label: 'Procesos', icon: 'pi pi-cog', routerLink: '/procesos' }
+        { label: 'Procesos', icon: 'pi pi-cog', routerLink: '/procesos' },
+        { label: 'Proyectos', icon: 'pi pi-folder', routerLink: '/proyectos' }
       ]
     },
     {
@@ -975,7 +976,11 @@ export class SidebarComponent implements OnDestroy {
     'crear': 'Crear',
     'detalle': 'Detalle',
     'objetivos-kpis': 'Objetivos y KPIs',
-    'nuevo': 'Nuevo'
+    'nuevo': 'Nuevo',
+    'proyectos': 'Proyectos',
+    'proyecto-crear': 'Crear Proyecto',
+    'proyecto-detalle': 'Detalle del Proyecto',
+    'editar': 'Editar'
   };
 
   constructor() {

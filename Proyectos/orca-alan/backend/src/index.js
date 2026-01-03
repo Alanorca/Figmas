@@ -21,6 +21,8 @@ const organigramasRoutes = require('./routes/organigramas.routes');
 const catalogosRoutes = require('./routes/catalogos.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const notificationsRoutes = require('./routes/notifications.routes');
+const projectsRoutes = require('./routes/projects.routes');
+const tasksRoutes = require('./routes/tasks.routes');
 
 // Importar servicios
 const schedulerService = require('./services/scheduler.service');
@@ -59,6 +61,8 @@ app.use('/api/organigramas', organigramasRoutes);
 app.use('/api/catalogos', catalogosRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/projects', projectsRoutes);
+app.use('/api/tasks', tasksRoutes);
 
 // Ruta de health check
 app.get('/api/health', (req, res) => {

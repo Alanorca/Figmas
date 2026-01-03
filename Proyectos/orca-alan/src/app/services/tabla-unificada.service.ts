@@ -411,6 +411,10 @@ export class TablaUnificadaService {
     return this.estado;
   }
 
+  getDatosUnificados(): RegistroUnificado[] {
+    return this.datosUnificados();
+  }
+
   setEntidadesSeleccionadas(entidades: TipoEntidad[]): void {
     this.estado.update(s => ({ ...s, entidadesSeleccionadas: entidades, pagina: 0 }));
   }

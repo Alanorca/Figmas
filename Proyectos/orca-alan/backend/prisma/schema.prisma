@@ -962,3 +962,170 @@ model NotificationProfile {
 
   @@map("notification_profiles")
 }
+
+// ============================================================
+// MÓDULO: GESTIÓN DE PROYECTOS Y TAREAS
+// ============================================================
+
+model Project {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  startDate         DateTime
+  endDate           DateTime
+  responsibleUserId String
+  orgUnitId         String?
+  priority          String   @default("medium") // low, medium, high, critical
+  status            String   @default("planning") // planning, in_progress, paused, completed, cancelled
+  progress          Int      @default(0)
+
+  // Configuración notificaciones
+  reminderDays      String   @default("[7,3,1]") // JSON array
+
+  createdAt         DateTime @default(now())
+  createdBy         String
+  updatedAt         DateTime @updatedAt
+
+  // Relaciones
+  objectives        ProjectObjective[]
+  kpis              ProjectKPI[]
+  phases            ProjectPhase[]
+  tasks             Task[]
+
+  @@map("projects")
+}
+
+model ProjectObjective {
+  id            String    @id @default(cuid())
+  projectId     String
+  description   String
+  category      String    // specific, measurable, achievable, relevant, time_bound
+  status        String    @default("pending") // pending, in_progress, achieved, not_achieved
+  targetDate    DateTime?
+  completedDate DateTime?
+
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_objectives")
+}
+
+model ProjectKPI {
+  id           String   @id @default(cuid())
+  projectId    String
+  name         String
+  description  String?
+  targetValue  Float
+  currentValue Float    @default(0)
+  unit         String
+  formulaType  String   // count, average, percentage, custom
+  formula      String?
+  status       String   @default("on_track") // on_track, at_risk, off_track
+
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_kpis")
+}
+
+model ProjectPhase {
+  id               String    @id @default(cuid())
+  projectId        String
+  name             String
+  description      String?
+  orderNum         Int
+  startDate        DateTime
+  endDate          DateTime
+  actualStartDate  DateTime?
+  actualEndDate    DateTime?
+  status           String    @default("pending") // pending, in_progress, completed, cancelled
+  weight           Int       @default(100)
+  dependsOnPhaseId String?
+  progress         Int       @default(0)
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  project          Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  dependsOn        ProjectPhase?  @relation("PhaseDependency", fields: [dependsOnPhaseId], references: [id])
+  dependents       ProjectPhase[] @relation("PhaseDependency")
+  tasks            Task[]
+
+  @@map("project_phases")
+}
+
+model Task {
+  id               String    @id @default(cuid())
+  projectId        String
+  phaseId          String
+  title            String
+  description      String?
+
+  // Asignación
+  assignedTo       String
+  assignedBy       String
+  assignedAt       DateTime  @default(now())
+
+  // Fechas
+  startDate        DateTime
+  dueDate          DateTime
+  completedDate    DateTime?
+
+  // Progreso
+  progress         Int       @default(0)
+  status           String    @default("pending") // pending, in_progress, in_review, completed, blocked, cancelled
+  priority         String    @default("medium")
+
+  // Esfuerzo
+  estimatedHours   Float?
+  actualHours      Float?
+
+  // Tipo y vinculación
+  taskType         String    @default("manual") // manual, risk_mitigation, opportunity, incident_mitigation, defect_mitigation
+  linkedEntityType String?   // RISK, ML_RESULT, INCIDENT, DEFECT
+  linkedEntityId   String?
+
+  createdAt        DateTime  @default(now())
+  createdBy        String
+  updatedAt        DateTime  @updatedAt
+
+  project          Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase            ProjectPhase   @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  evidences        TaskEvidence[]
+  history          TaskHistory[]
+
+  @@index([projectId, status])
+  @@index([assignedTo, status])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+model TaskEvidence {
+  id           String    @id @default(cuid())
+  taskId       String
+  fileName     String
+  fileType     String
+  fileSize     Int
+  storageUrl   String
+  evidenceType String    // document, image, log, screenshot, other
+  description  String?
+  documentDate DateTime?
+  uploadedBy   String
+  uploadedAt   DateTime  @default(now())
+
+  task         Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("task_evidences")
+}
+
+model TaskHistory {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  action    String   // created, updated, status_changed, assigned, progress_updated
+  changes   String?  // JSON
+  comment   String?
+  timestamp DateTime @default(now())
+
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@map("task_history")
+}
