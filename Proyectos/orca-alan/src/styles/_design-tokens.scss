@@ -689,6 +689,44 @@
 }
 
 // =============================================================================
+// SELECTABLE CARD TOKENS (Light Mode)
+// =============================================================================
+// Tokens semánticos para cards/chips seleccionables.
+// Estos tokens NO se invierten en dark mode, mantienen valores correctos.
+// Usar estos en lugar de surface-900 + color-mix() para evitar problemas.
+
+:root {
+  // Card backgrounds
+  --card-bg: var(--surface-card);
+  --card-bg-hover: var(--surface-hover);
+  --card-bg-selected: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card));
+
+  // Card borders
+  --card-border: var(--surface-border);
+  --card-border-hover: var(--primary-200);
+  --card-border-selected: var(--primary-color);
+
+  // Card text (normal state)
+  --card-text-primary: var(--text-color);
+  --card-text-secondary: var(--text-color-secondary);
+
+  // Card text (selected state) - WCAG AA compliant
+  --card-text-selected: var(--text-color);
+  --card-text-selected-secondary: var(--text-color-secondary);
+
+  // Chip/Tag selectable
+  --chip-bg: var(--surface-100);
+  --chip-bg-hover: var(--surface-200);
+  --chip-bg-selected: var(--primary-color);
+  --chip-text: var(--text-color);
+  --chip-text-selected: #ffffff;
+
+  // Icon colors in selected state
+  --icon-selected: var(--primary-color);
+  --icon-on-selected-bg: var(--primary-700);
+}
+
+// =============================================================================
 // DARK MODE THEME
 // =============================================================================
 
@@ -855,4 +893,39 @@
   // RIPPLE (Dark theme)
   // ===========================================================================
   --ripple-background: rgba(255, 255, 255, 0.08);
+
+  // ===========================================================================
+  // SELECTABLE CARD TOKENS (Dark theme) - WCAG 2.1 AA Compliant
+  // ===========================================================================
+  // ⚠️ IMPORTANTE: Estos valores son HARDCODED para evitar inversión de tokens.
+  // NO usar color-mix() con var(--surface-900) aquí.
+
+  // Card backgrounds - usando zinc scale fijo
+  --card-bg: #27272a;                    // zinc-800
+  --card-bg-hover: #3f3f46;              // zinc-700
+  --card-bg-selected: #1a3329;           // 15% emerald-500 + zinc-900 (precalculado)
+
+  // Card borders
+  --card-border: #3f3f46;                // zinc-700
+  --card-border-hover: #34d399;          // emerald-400
+  --card-border-selected: #10b981;       // emerald-500
+
+  // Card text (normal state)
+  --card-text-primary: #fafafa;          // zinc-50
+  --card-text-secondary: #a1a1aa;        // zinc-400
+
+  // Card text (selected state) - WCAG AA: ratio 4.5:1+
+  --card-text-selected: #ffffff;         // Blanco puro (13.8:1 sobre #1a3329)
+  --card-text-selected-secondary: rgba(255, 255, 255, 0.85); // (10.2:1)
+
+  // Chip/Tag selectable
+  --chip-bg: #27272a;                    // zinc-800
+  --chip-bg-hover: #3f3f46;              // zinc-700
+  --chip-bg-selected: #10b981;           // emerald-500
+  --chip-text: #fafafa;                  // zinc-50
+  --chip-text-selected: #ffffff;
+
+  // Icon colors in selected state
+  --icon-selected: #34d399;              // emerald-400 (mejor contraste en dark)
+  --icon-on-selected-bg: #34d399;        // emerald-400
 }

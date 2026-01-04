@@ -43,20 +43,23 @@ interface PhaseForm {
   orderNum: number;
 }
 
-interface ObjectiveForm {
-  id: string;
-  description: string;
-  category: 'specific' | 'measurable' | 'achievable' | 'relevant' | 'time_bound';
-  targetDate: Date | null;
-}
-
 interface KPIForm {
   id: string;
   name: string;
   description: string;
   targetValue: number;
+  currentValue: number;
   unit: string;
   formulaType: 'count' | 'average' | 'percentage' | 'custom';
+}
+
+interface ObjectiveForm {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  tipo: 'estrategico' | 'operativo';
+  progreso: number;
+  kpis: KPIForm[];
 }
 
 @Component({
@@ -95,7 +98,7 @@ export class ProyectoCrearComponent {
   // Paso actual del wizard (0-3)
   pasoActual = signal(0);
 
-  // Steps del wizard
+  // Steps del wizard (3 pasos como proceso-crear)
   steps = [
     {
       icon: 'pi pi-info-circle',
@@ -104,18 +107,13 @@ export class ProyectoCrearComponent {
     },
     {
       icon: 'pi pi-bullseye',
-      label: 'Objetivos SMART',
-      descripcion: 'Establece objetivos específicos, medibles y alcanzables'
+      label: 'Objetivos y KPIs',
+      descripcion: 'Establece objetivos y sus indicadores clave'
     },
     {
-      icon: 'pi pi-chart-line',
-      label: 'KPIs',
-      descripcion: 'Define indicadores clave de desempeño'
-    },
-    {
-      icon: 'pi pi-list-check',
-      label: 'Fases',
-      descripcion: 'Organiza el proyecto en fases y revisa la información'
+      icon: 'pi pi-check-circle',
+      label: 'Revisión',
+      descripcion: 'Revisa y confirma la información del proyecto'
     }
   ];
 
@@ -143,32 +141,37 @@ export class ProyectoCrearComponent {
     { label: 'Operaciones', value: 'org-3' }
   ]);
 
-  // ========== PASO 2: Objetivos SMART ==========
+  // ========== PASO 2: Objetivos y KPIs (unificado como proceso-crear) ==========
   objetivos = signal<ObjectiveForm[]>([]);
 
-  categoriaOptions = [
-    { label: 'Específico', value: 'specific', icon: 'pi pi-bullseye', description: 'Objetivo claro y definido' },
-    { label: 'Medible', value: 'measurable', icon: 'pi pi-chart-bar', description: 'Cuantificable y verificable' },
-    { label: 'Alcanzable', value: 'achievable', icon: 'pi pi-check-circle', description: 'Realista con recursos disponibles' },
-    { label: 'Relevante', value: 'relevant', icon: 'pi pi-star', description: 'Alineado con metas estratégicas' },
-    { label: 'Temporal', value: 'time_bound', icon: 'pi pi-clock', description: 'Con fecha límite definida' }
+  // Modo de visualización (seleccionar existentes o crear nuevos)
+  modoObjetivos = signal<'seleccionar' | 'crear'>('crear');
+  objetivosExistentes = signal<{id: string, nombre: string}[]>([]);
+
+  tipoOptions = [
+    { label: 'Estratégico', value: 'estrategico' },
+    { label: 'Operativo', value: 'operativo' }
   ];
 
-  mostrarFormObjetivo = signal(false);
-  editandoObjetivoId = signal<string | null>(null);
+  // Estado de objetivos (colapsados, editando)
+  objetivosColapsados = signal<Set<string>>(new Set());
+  objetivoEditandoId = signal<string | null>(null);
+
+  // Form de nuevo objetivo
+  mostrarFormObjetivoInline = signal(false);
+  nuevoObjetivoNombre = signal('');
   nuevoObjetivoDescripcion = signal('');
-  nuevoObjetivoCategoria = signal<ObjectiveForm['category']>('specific');
-  nuevoObjetivoFecha = signal<Date | null>(null);
+  nuevoObjetivoTipo = signal<'estrategico' | 'operativo'>('estrategico');
 
-  // ========== PASO 3: KPIs ==========
-  kpis = signal<KPIForm[]>([]);
-
-  formulaTypeOptions = [
-    { label: 'Conteo', value: 'count', description: 'Suma total de elementos' },
-    { label: 'Promedio', value: 'average', description: 'Media aritmética' },
-    { label: 'Porcentaje', value: 'percentage', description: 'Proporción sobre 100' },
-    { label: 'Personalizado', value: 'custom', description: 'Fórmula propia' }
-  ];
+  // Form de KPI (dentro de objetivo)
+  kpiFormVisibleParaObjetivo = signal<string | null>(null);
+  kpiEditandoId = signal<string | null>(null);
+  nuevoKPINombre = signal('');
+  nuevoKPIDescripcion = signal('');
+  nuevoKPIActual = signal<number>(0);
+  nuevoKPIMeta = signal<number>(100);
+  nuevoKPIUnidad = signal('%');
+  nuevoKPIFormulaType = signal<KPIForm['formulaType']>('percentage');
 
   unidadOptions = [
     { label: 'Porcentaje (%)', value: '%' },
@@ -179,15 +182,15 @@ export class ProyectoCrearComponent {
     { label: 'Dólares (USD)', value: 'USD' }
   ];
 
-  mostrarFormKPI = signal(false);
-  editandoKPIId = signal<string | null>(null);
-  nuevoKPINombre = signal('');
-  nuevoKPIDescripcion = signal('');
-  nuevoKPIValorMeta = signal<number>(100);
-  nuevoKPIUnidad = signal('%');
-  nuevoKPIFormulaType = signal<KPIForm['formulaType']>('percentage');
+  formulaTypeOptions = [
+    { label: 'Conteo', value: 'count' },
+    { label: 'Promedio', value: 'average' },
+    { label: 'Porcentaje', value: 'percentage' },
+    { label: 'Personalizado', value: 'custom' }
+  ];
 
-  // ========== PASO 4: Fases ==========
+  // Para compatibilidad con el guardado
+  kpis = signal<KPIForm[]>([]);
   fases = signal<PhaseForm[]>([]);
 
   mostrarFormFase = signal(false);
@@ -200,7 +203,7 @@ export class ProyectoCrearComponent {
 
   // ========== Computed ==========
   totalObjetivos = computed(() => this.objetivos().length);
-  totalKPIs = computed(() => this.kpis().length);
+  totalKPIs = computed(() => this.objetivos().reduce((acc, obj) => acc + obj.kpis.length, 0));
   totalFases = computed(() => this.fases().length);
 
   duracionProyecto = computed(() => {
@@ -250,21 +253,27 @@ export class ProyectoCrearComponent {
         this.responsableId.set(project.responsibleUserId);
         this.unidadOrganizacionalId.set(project.orgUnitId || '');
 
-        // Cargar objetivos, KPIs y fases si existen
+        // Cargar objetivos con KPIs anidados
         if (project.objectives) {
+          // Mapear KPIs a objetivos (por ahora sin relación directa, los agregamos vacíos)
+          const kpisList = project.kpis || [];
           this.objetivos.set(project.objectives.map((o: ProjectObjective) => ({
             id: o.id,
-            description: o.description,
-            category: o.category as ObjectiveForm['category'],
-            targetDate: o.targetDate ? new Date(o.targetDate) : null
+            nombre: o.description, // Usamos description como nombre
+            descripcion: '',
+            tipo: 'estrategico' as const,
+            progreso: 0,
+            kpis: [] // KPIs se añadirán manualmente
           })));
         }
 
+        // Mantener compatibilidad con kpis standalone
         if (project.kpis) {
           this.kpis.set(project.kpis.map((k: ProjectKPI) => ({
             id: k.id,
             name: k.name,
             description: k.description || '',
+            currentValue: k.currentValue || 0,
             targetValue: k.targetValue,
             unit: k.unit,
             formulaType: k.formulaType as KPIForm['formulaType']
@@ -295,7 +304,7 @@ export class ProyectoCrearComponent {
   // ========== Navegación ==========
   siguiente(): void {
     if (this.validarPasoActual()) {
-      this.pasoActual.update(p => Math.min(p + 1, 3));
+      this.pasoActual.update(p => Math.min(p + 1, 2));
     }
   }
 
@@ -325,55 +334,86 @@ export class ProyectoCrearComponent {
           return false;
         }
         return true;
-      case 1: // Objetivos
+      case 1: // Objetivos y KPIs
         return true; // Opcional
-      case 2: // KPIs
-        return true; // Opcional
-      case 3: // Fases
-        return true; // Opcional
+      case 2: // Revisión
+        return true;
       default:
         return true;
     }
   }
 
-  // ========== Objetivos SMART ==========
+  // ========== Objetivos con KPIs anidados (como proceso-crear) ==========
+
+  // Helpers para estado de objetivos
+  isObjetivoColapsado(id: string): boolean {
+    return this.objetivosColapsados().has(id);
+  }
+
+  toggleObjetivoColapsado(id: string): void {
+    this.objetivosColapsados.update(set => {
+      const newSet = new Set(set);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }
+
+  expandirTodosObjetivos(): void {
+    this.objetivosColapsados.set(new Set());
+  }
+
+  colapsarTodosObjetivos(): void {
+    const ids = this.objetivos().map(o => o.id);
+    this.objetivosColapsados.set(new Set(ids));
+  }
+
+  isEditandoObjetivo(id: string): boolean {
+    return this.objetivoEditandoId() === id;
+  }
+
+  // Form de objetivos
   abrirFormObjetivo(objetivo?: ObjectiveForm): void {
     if (objetivo) {
-      this.editandoObjetivoId.set(objetivo.id);
-      this.nuevoObjetivoDescripcion.set(objetivo.description);
-      this.nuevoObjetivoCategoria.set(objetivo.category);
-      this.nuevoObjetivoFecha.set(objetivo.targetDate);
+      this.objetivoEditandoId.set(objetivo.id);
+      this.nuevoObjetivoNombre.set(objetivo.nombre);
+      this.nuevoObjetivoDescripcion.set(objetivo.descripcion);
+      this.nuevoObjetivoTipo.set(objetivo.tipo);
     } else {
-      this.editandoObjetivoId.set(null);
+      this.objetivoEditandoId.set(null);
+      this.nuevoObjetivoNombre.set('');
       this.nuevoObjetivoDescripcion.set('');
-      this.nuevoObjetivoCategoria.set('specific');
-      this.nuevoObjetivoFecha.set(null);
+      this.nuevoObjetivoTipo.set('estrategico');
+      this.mostrarFormObjetivoInline.set(true);
     }
-    this.mostrarFormObjetivo.set(true);
   }
 
   cerrarFormObjetivo(): void {
-    this.mostrarFormObjetivo.set(false);
-    this.editandoObjetivoId.set(null);
+    this.mostrarFormObjetivoInline.set(false);
+    this.objetivoEditandoId.set(null);
+    this.nuevoObjetivoNombre.set('');
     this.nuevoObjetivoDescripcion.set('');
   }
 
   guardarObjetivo(): void {
-    if (!this.nuevoObjetivoDescripcion().trim()) {
-      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'La descripción es requerida' });
+    if (!this.nuevoObjetivoNombre().trim()) {
+      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre es requerido' });
       return;
     }
 
-    const editandoId = this.editandoObjetivoId();
+    const editandoId = this.objetivoEditandoId();
     if (editandoId) {
       this.objetivos.update(list =>
         list.map(o =>
           o.id === editandoId
             ? {
                 ...o,
-                description: this.nuevoObjetivoDescripcion(),
-                category: this.nuevoObjetivoCategoria(),
-                targetDate: this.nuevoObjetivoFecha()
+                nombre: this.nuevoObjetivoNombre(),
+                descripcion: this.nuevoObjetivoDescripcion(),
+                tipo: this.nuevoObjetivoTipo()
               }
             : o
         )
@@ -382,9 +422,11 @@ export class ProyectoCrearComponent {
     } else {
       const nuevoObjetivo: ObjectiveForm = {
         id: `OBJ-${Date.now()}`,
-        description: this.nuevoObjetivoDescripcion(),
-        category: this.nuevoObjetivoCategoria(),
-        targetDate: this.nuevoObjetivoFecha()
+        nombre: this.nuevoObjetivoNombre(),
+        descripcion: this.nuevoObjetivoDescripcion(),
+        tipo: this.nuevoObjetivoTipo(),
+        progreso: 0,
+        kpis: []
       };
       this.objetivos.update(list => [...list, nuevoObjetivo]);
       this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'Objetivo creado' });
@@ -398,87 +440,125 @@ export class ProyectoCrearComponent {
     this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'Objetivo eliminado' });
   }
 
-  getCategoriaLabel(category: string): string {
-    return this.categoriaOptions.find(c => c.value === category)?.label || category;
+  getTipoLabel(tipo: string): string {
+    return this.tipoOptions.find(t => t.value === tipo)?.label || tipo;
   }
 
-  getCategoriaIcon(category: string): string {
-    return this.categoriaOptions.find(c => c.value === category)?.icon || 'pi pi-circle';
+  // ========== KPIs dentro de objetivos ==========
+  isFormKPIVisible(objetivoId: string): boolean {
+    return this.kpiFormVisibleParaObjetivo() === objetivoId;
   }
 
-  // ========== KPIs ==========
-  abrirFormKPI(kpi?: KPIForm): void {
+  abrirFormKPI(objetivoId: string, kpi?: KPIForm): void {
+    this.kpiFormVisibleParaObjetivo.set(objetivoId);
     if (kpi) {
-      this.editandoKPIId.set(kpi.id);
+      this.kpiEditandoId.set(kpi.id);
       this.nuevoKPINombre.set(kpi.name);
-      this.nuevoKPIDescripcion.set(kpi.description);
-      this.nuevoKPIValorMeta.set(kpi.targetValue);
+      this.nuevoKPIDescripcion.set(kpi.description || '');
+      this.nuevoKPIActual.set(kpi.currentValue);
+      this.nuevoKPIMeta.set(kpi.targetValue);
       this.nuevoKPIUnidad.set(kpi.unit);
       this.nuevoKPIFormulaType.set(kpi.formulaType);
     } else {
-      this.editandoKPIId.set(null);
+      this.kpiEditandoId.set(null);
       this.nuevoKPINombre.set('');
       this.nuevoKPIDescripcion.set('');
-      this.nuevoKPIValorMeta.set(100);
+      this.nuevoKPIActual.set(0);
+      this.nuevoKPIMeta.set(100);
       this.nuevoKPIUnidad.set('%');
       this.nuevoKPIFormulaType.set('percentage');
     }
-    this.mostrarFormKPI.set(true);
   }
 
   cerrarFormKPI(): void {
-    this.mostrarFormKPI.set(false);
-    this.editandoKPIId.set(null);
+    this.kpiFormVisibleParaObjetivo.set(null);
+    this.kpiEditandoId.set(null);
     this.nuevoKPINombre.set('');
     this.nuevoKPIDescripcion.set('');
   }
 
-  guardarKPI(): void {
+  guardarKPI(objetivoId: string): void {
     if (!this.nuevoKPINombre().trim()) {
       this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre es requerido' });
       return;
     }
 
-    const editandoId = this.editandoKPIId();
-    if (editandoId) {
-      this.kpis.update(list =>
-        list.map(k =>
-          k.id === editandoId
-            ? {
-                ...k,
-                name: this.nuevoKPINombre(),
-                description: this.nuevoKPIDescripcion(),
-                targetValue: this.nuevoKPIValorMeta(),
-                unit: this.nuevoKPIUnidad(),
-                formulaType: this.nuevoKPIFormulaType()
-              }
-            : k
-        )
-      );
-      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'KPI actualizado' });
-    } else {
-      const nuevoKPI: KPIForm = {
-        id: `KPI-${Date.now()}`,
-        name: this.nuevoKPINombre(),
-        description: this.nuevoKPIDescripcion(),
-        targetValue: this.nuevoKPIValorMeta(),
-        unit: this.nuevoKPIUnidad(),
-        formulaType: this.nuevoKPIFormulaType()
-      };
-      this.kpis.update(list => [...list, nuevoKPI]);
-      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'KPI creado' });
-    }
+    const editandoId = this.kpiEditandoId();
 
+    this.objetivos.update(list =>
+      list.map(objetivo => {
+        if (objetivo.id !== objetivoId) return objetivo;
+
+        if (editandoId) {
+          // Actualizar KPI existente
+          return {
+            ...objetivo,
+            kpis: objetivo.kpis.map(k =>
+              k.id === editandoId
+                ? {
+                    ...k,
+                    name: this.nuevoKPINombre(),
+                    description: this.nuevoKPIDescripcion(),
+                    currentValue: this.nuevoKPIActual(),
+                    targetValue: this.nuevoKPIMeta(),
+                    unit: this.nuevoKPIUnidad(),
+                    formulaType: this.nuevoKPIFormulaType()
+                  }
+                : k
+            )
+          };
+        } else {
+          // Crear nuevo KPI
+          const nuevoKPI: KPIForm = {
+            id: `KPI-${Date.now()}`,
+            name: this.nuevoKPINombre(),
+            description: this.nuevoKPIDescripcion(),
+            currentValue: this.nuevoKPIActual(),
+            targetValue: this.nuevoKPIMeta(),
+            unit: this.nuevoKPIUnidad(),
+            formulaType: this.nuevoKPIFormulaType()
+          };
+          return {
+            ...objetivo,
+            kpis: [...objetivo.kpis, nuevoKPI]
+          };
+        }
+      })
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: editandoId ? 'Actualizado' : 'Agregado',
+      detail: editandoId ? 'KPI actualizado' : 'KPI creado'
+    });
     this.cerrarFormKPI();
   }
 
-  eliminarKPI(id: string): void {
-    this.kpis.update(list => list.filter(k => k.id !== id));
+  eliminarKPI(objetivoId: string, kpiId: string): void {
+    this.objetivos.update(list =>
+      list.map(objetivo => {
+        if (objetivo.id !== objetivoId) return objetivo;
+        return {
+          ...objetivo,
+          kpis: objetivo.kpis.filter(k => k.id !== kpiId)
+        };
+      })
+    );
     this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'KPI eliminado' });
   }
 
   getFormulaTypeLabel(type: string): string {
     return this.formulaTypeOptions.find(f => f.value === type)?.label || type;
+  }
+
+  // Calcular progreso de objetivo basado en KPIs
+  calcularProgresoObjetivo(objetivo: ObjectiveForm): number {
+    if (objetivo.kpis.length === 0) return 0;
+    const progresos = objetivo.kpis.map(kpi => {
+      if (kpi.targetValue === 0) return 100;
+      return Math.min((kpi.currentValue / kpi.targetValue) * 100, 100);
+    });
+    return Math.round(progresos.reduce((a, b) => a + b, 0) / progresos.length);
   }
 
   // ========== Fases ==========
@@ -619,20 +699,34 @@ export class ProyectoCrearComponent {
         projectId = project.id;
       }
 
-      // Crear objetivos SMART
+      // Crear objetivos con KPIs anidados
       const objetivosActuales = this.objetivos();
       for (const objetivo of objetivosActuales) {
         // Solo crear si no tiene ID del servidor (IDs temporales empiezan con OBJ-)
         if (objetivo.id.startsWith('OBJ-')) {
-          await this.proyectosService.createObjective(projectId, {
-            description: objetivo.description,
-            category: objetivo.category,
-            targetDate: objetivo.targetDate?.toISOString()
+          // Crear objetivo
+          const nuevoObjetivo = await this.proyectosService.createObjective(projectId, {
+            description: objetivo.nombre, // Usamos nombre como description
+            category: objetivo.tipo === 'estrategico' ? 'specific' : 'measurable',
+            targetDate: undefined
           });
+
+          // Crear KPIs asociados al objetivo
+          for (const kpi of objetivo.kpis) {
+            if (kpi.id.startsWith('KPI-')) {
+              await this.proyectosService.createKPI(projectId, {
+                name: kpi.name,
+                description: kpi.description || undefined,
+                targetValue: kpi.targetValue,
+                unit: kpi.unit,
+                formulaType: kpi.formulaType
+              });
+            }
+          }
         }
       }
 
-      // Crear KPIs
+      // KPIs standalone (para compatibilidad)
       const kpisActuales = this.kpis();
       for (const kpi of kpisActuales) {
         // Solo crear si no tiene ID del servidor

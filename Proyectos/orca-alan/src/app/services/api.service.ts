@@ -621,7 +621,9 @@ export class ApiService {
         }
       });
     }
-    return this.http.get<any>(`${this.baseUrl}/notifications/inbox`, { params: httpParams });
+    // Agregar header X-User-Id requerido por el backend
+    const headers = { 'X-User-Id': 'user-default-dev' };
+    return this.http.get<any>(`${this.baseUrl}/notifications/inbox`, { params: httpParams, headers });
   }
 
   getNotificationById(id: string): Observable<any> {

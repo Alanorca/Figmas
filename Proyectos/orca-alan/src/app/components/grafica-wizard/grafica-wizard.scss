@@ -778,7 +778,16 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
+        // Usar color hardcoded para dark mode (15% emerald-500 + 85% zinc-900)
+        background: #1a3329 !important;
+
+        .categoria-icon {
+          background: var(--primary-color) !important;
+
+          i {
+            color: #FFFFFF !important;
+          }
+        }
 
         // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
         .categoria-nombre {
@@ -820,10 +829,11 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
+        // Usar color hardcoded para dark mode (15% emerald-500 + 85% zinc-900)
+        background: #1a3329 !important;
 
         i {
-          color: var(--primary-color) !important;
+          color: var(--primary-400) !important;
         }
 
         // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
@@ -862,13 +872,14 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
+        // Usar color hardcoded para dark mode (15% emerald-500 + 85% zinc-900)
+        background: #1a3329 !important;
 
         .fuente-icon {
           background: var(--primary-color) !important;
 
           i {
-            color: var(--surface-0) !important;
+            color: #FFFFFF !important;
           }
         }
 
@@ -906,7 +917,7 @@
       .fuente-count {
         .count-badge {
           background: var(--primary-color) !important;
-          color: var(--surface-0) !important;
+          color: #FFFFFF !important;
         }
       }
     }
@@ -956,7 +967,9 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: color-mix(in srgb, var(--primary-color) 20%, var(--surface-900)) !important;
+        // Usar color hardcoded para dark mode (20% emerald-500 + 80% zinc-900)
+        background: #1d3a2e !important;
+        color: #FFFFFF !important;
       }
     }
 
@@ -981,12 +994,17 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
+        // Usar color hardcoded para dark mode (15% emerald-500 + 85% zinc-900)
+        background: #1a3329 !important;
 
         // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
         span {
           color: #FFFFFF !important;
           font-weight: 600;
+        }
+
+        i {
+          color: var(--primary-400) !important;
         }
       }
 
@@ -1011,7 +1029,8 @@
 
       &.selected {
         border-color: var(--primary-color) !important;
-        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
+        // Usar color hardcoded para dark mode (15% emerald-500 + 85% zinc-900)
+        background: #1a3329 !important;
 
         // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
         .paleta-nombre {

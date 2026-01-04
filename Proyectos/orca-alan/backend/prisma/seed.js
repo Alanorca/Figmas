@@ -1336,6 +1336,127 @@ async function main() {
       progress: 55,
       reminderDays: JSON.stringify([7, 1]),
       createdBy: usuarios[3].id
+    },
+    // ========== NUEVOS PROYECTOS ==========
+    {
+      name: 'Modernización Banca Móvil',
+      description: 'Rediseño completo de la aplicación de banca móvil con nuevas funcionalidades y mejor experiencia de usuario',
+      startDate: new Date('2024-10-01'),
+      endDate: new Date('2025-06-30'),
+      responsibleUserId: usuarios[4].id,
+      priority: 'critical',
+      status: 'in_progress',
+      progress: 20,
+      reminderDays: JSON.stringify([30, 15, 7, 1]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Implementación Open Banking',
+      description: 'Desarrollo de APIs abiertas conforme a regulación de Open Banking para integración con fintechs',
+      startDate: new Date('2024-11-01'),
+      endDate: new Date('2025-08-31'),
+      responsibleUserId: usuarios[4].id,
+      priority: 'high',
+      status: 'planning',
+      progress: 10,
+      reminderDays: JSON.stringify([15, 7, 3]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Centro de Operaciones de Seguridad (SOC)',
+      description: 'Implementación de SOC 24/7 para monitoreo continuo de amenazas y respuesta a incidentes',
+      startDate: new Date('2024-08-15'),
+      endDate: new Date('2025-04-30'),
+      responsibleUserId: usuarios[3].id,
+      priority: 'critical',
+      status: 'in_progress',
+      progress: 40,
+      reminderDays: JSON.stringify([30, 15, 7]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Transformación Digital Sucursales',
+      description: 'Digitalización de procesos en sucursales incluyendo firma electrónica y expediente digital',
+      startDate: new Date('2024-05-01'),
+      endDate: new Date('2025-02-28'),
+      responsibleUserId: usuarios[4].id,
+      priority: 'high',
+      status: 'in_progress',
+      progress: 55,
+      reminderDays: JSON.stringify([15, 7, 3]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Modelo de Riesgo Crediticio ML',
+      description: 'Desarrollo de modelo de scoring crediticio basado en Machine Learning para aprobación automatizada',
+      startDate: new Date('2024-09-15'),
+      endDate: new Date('2025-03-31'),
+      responsibleUserId: usuarios[5].id,
+      priority: 'high',
+      status: 'in_progress',
+      progress: 35,
+      reminderDays: JSON.stringify([15, 7, 1]),
+      createdBy: usuarios[3].id
+    },
+    {
+      name: 'Cumplimiento GDPR/LFPDPPP',
+      description: 'Implementación de controles para cumplimiento de regulaciones de protección de datos personales',
+      startDate: new Date('2024-07-01'),
+      endDate: new Date('2025-01-31'),
+      responsibleUserId: usuarios[2].id,
+      priority: 'high',
+      status: 'in_progress',
+      progress: 60,
+      reminderDays: JSON.stringify([15, 7, 3]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Sistema Antifraude Tiempo Real',
+      description: 'Implementación de sistema de detección de fraude en tiempo real para transacciones digitales',
+      startDate: new Date('2024-06-15'),
+      endDate: new Date('2025-01-15'),
+      responsibleUserId: usuarios[5].id,
+      priority: 'critical',
+      status: 'in_progress',
+      progress: 70,
+      reminderDays: JSON.stringify([30, 15, 7]),
+      createdBy: usuarios[3].id
+    },
+    {
+      name: 'Certificación PCI-DSS v4.0',
+      description: 'Actualización de controles y recertificación bajo el nuevo estándar PCI-DSS versión 4.0',
+      startDate: new Date('2024-04-01'),
+      endDate: new Date('2024-12-31'),
+      responsibleUserId: usuarios[3].id,
+      priority: 'critical',
+      status: 'in_progress',
+      progress: 75,
+      reminderDays: JSON.stringify([30, 15, 7, 1]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Plataforma de Pagos Instantáneos',
+      description: 'Integración con CoDi y desarrollo de plataforma de pagos instantáneos 24/7',
+      startDate: new Date('2024-03-15'),
+      endDate: new Date('2024-11-30'),
+      responsibleUserId: usuarios[4].id,
+      priority: 'high',
+      status: 'completed',
+      progress: 100,
+      reminderDays: JSON.stringify([15, 7]),
+      createdBy: usuarios[0].id
+    },
+    {
+      name: 'Gestión de Identidad Digital',
+      description: 'Implementación de sistema IAM centralizado con MFA y SSO para todos los sistemas del banco',
+      startDate: new Date('2024-10-15'),
+      endDate: new Date('2025-05-31'),
+      responsibleUserId: usuarios[3].id,
+      priority: 'high',
+      status: 'in_progress',
+      progress: 25,
+      reminderDays: JSON.stringify([15, 7, 3]),
+      createdBy: usuarios[0].id
     }
   ];
 
@@ -1366,7 +1487,52 @@ async function main() {
     { projectId: proyectos[2].id, name: 'Análisis Regulatorio', description: 'Revisión de nueva regulación y análisis de impacto', orderNum: 1, startDate: new Date('2024-06-01'), endDate: new Date('2024-07-15'), status: 'completed', weight: 20, progress: 100 },
     { projectId: proyectos[2].id, name: 'Actualización de Políticas', description: 'Redacción de nuevas políticas y procedimientos', orderNum: 2, startDate: new Date('2024-07-16'), endDate: new Date('2024-09-30'), status: 'completed', weight: 30, progress: 100 },
     { projectId: proyectos[2].id, name: 'Capacitación', description: 'Capacitación al personal en nuevas políticas', orderNum: 3, startDate: new Date('2024-10-01'), endDate: new Date('2024-11-15'), status: 'in_progress', weight: 25, progress: 60 },
-    { projectId: proyectos[2].id, name: 'Implementación Sistemas', description: 'Actualización de sistemas de monitoreo AML', orderNum: 4, startDate: new Date('2024-11-16'), endDate: new Date('2024-12-31'), status: 'pending', weight: 25, progress: 0 }
+    { projectId: proyectos[2].id, name: 'Implementación Sistemas', description: 'Actualización de sistemas de monitoreo AML', orderNum: 4, startDate: new Date('2024-11-16'), endDate: new Date('2024-12-31'), status: 'pending', weight: 25, progress: 0 },
+
+    // ========== FASES PARA NUEVOS PROYECTOS ==========
+
+    // Fases para Modernización Banca Móvil (proyectos[8])
+    { projectId: proyectos[8].id, name: 'Investigación UX', description: 'Investigación de usuarios y análisis de competencia', orderNum: 1, startDate: new Date('2024-10-01'), endDate: new Date('2024-11-15'), status: 'completed', weight: 15, progress: 100 },
+    { projectId: proyectos[8].id, name: 'Diseño UI/UX', description: 'Diseño de interfaces y prototipos interactivos', orderNum: 2, startDate: new Date('2024-11-16'), endDate: new Date('2025-01-15'), status: 'in_progress', weight: 20, progress: 60 },
+    { projectId: proyectos[8].id, name: 'Desarrollo Frontend', description: 'Desarrollo de nueva app móvil en React Native', orderNum: 3, startDate: new Date('2025-01-16'), endDate: new Date('2025-04-15'), status: 'pending', weight: 35, progress: 0 },
+    { projectId: proyectos[8].id, name: 'Integración Backend', description: 'Integración con APIs y servicios existentes', orderNum: 4, startDate: new Date('2025-04-16'), endDate: new Date('2025-05-31'), status: 'pending', weight: 20, progress: 0 },
+    { projectId: proyectos[8].id, name: 'Lanzamiento', description: 'Pruebas finales y lanzamiento en tiendas', orderNum: 5, startDate: new Date('2025-06-01'), endDate: new Date('2025-06-30'), status: 'pending', weight: 10, progress: 0 },
+
+    // Fases para Centro de Operaciones de Seguridad SOC (proyectos[10])
+    { projectId: proyectos[10].id, name: 'Diseño del SOC', description: 'Arquitectura física y lógica del centro de operaciones', orderNum: 1, startDate: new Date('2024-08-15'), endDate: new Date('2024-10-15'), status: 'completed', weight: 20, progress: 100 },
+    { projectId: proyectos[10].id, name: 'Implementación SIEM', description: 'Instalación y configuración de plataforma SIEM', orderNum: 2, startDate: new Date('2024-10-16'), endDate: new Date('2024-12-31'), status: 'in_progress', weight: 30, progress: 55 },
+    { projectId: proyectos[10].id, name: 'Contratación y Capacitación', description: 'Reclutamiento y formación del equipo SOC', orderNum: 3, startDate: new Date('2025-01-01'), endDate: new Date('2025-02-28'), status: 'pending', weight: 25, progress: 0 },
+    { projectId: proyectos[10].id, name: 'Operación Piloto', description: 'Operación piloto 24/7 con soporte externo', orderNum: 4, startDate: new Date('2025-03-01'), endDate: new Date('2025-04-30'), status: 'pending', weight: 25, progress: 0 },
+
+    // Fases para Transformación Digital Sucursales (proyectos[11])
+    { projectId: proyectos[11].id, name: 'Análisis de Procesos', description: 'Mapeo de procesos actuales en sucursales', orderNum: 1, startDate: new Date('2024-05-01'), endDate: new Date('2024-06-30'), status: 'completed', weight: 15, progress: 100 },
+    { projectId: proyectos[11].id, name: 'Desarrollo Plataforma', description: 'Desarrollo de plataforma digital para sucursales', orderNum: 2, startDate: new Date('2024-07-01'), endDate: new Date('2024-10-31'), status: 'completed', weight: 35, progress: 100 },
+    { projectId: proyectos[11].id, name: 'Piloto Sucursales', description: 'Implementación piloto en 10 sucursales', orderNum: 3, startDate: new Date('2024-11-01'), endDate: new Date('2024-12-31'), status: 'in_progress', weight: 25, progress: 45 },
+    { projectId: proyectos[11].id, name: 'Rollout Nacional', description: 'Despliegue en todas las sucursales', orderNum: 4, startDate: new Date('2025-01-01'), endDate: new Date('2025-02-28'), status: 'pending', weight: 25, progress: 0 },
+
+    // Fases para Modelo de Riesgo Crediticio ML (proyectos[12])
+    { projectId: proyectos[12].id, name: 'Recolección de Datos', description: 'Extracción y preparación de datos históricos', orderNum: 1, startDate: new Date('2024-09-15'), endDate: new Date('2024-10-31'), status: 'completed', weight: 20, progress: 100 },
+    { projectId: proyectos[12].id, name: 'Desarrollo del Modelo', description: 'Entrenamiento y validación del modelo ML', orderNum: 2, startDate: new Date('2024-11-01'), endDate: new Date('2025-01-15'), status: 'in_progress', weight: 35, progress: 50 },
+    { projectId: proyectos[12].id, name: 'Validación Regulatoria', description: 'Validación del modelo con áreas de riesgo y cumplimiento', orderNum: 3, startDate: new Date('2025-01-16'), endDate: new Date('2025-02-28'), status: 'pending', weight: 25, progress: 0 },
+    { projectId: proyectos[12].id, name: 'Producción', description: 'Puesta en producción e integración con sistemas', orderNum: 4, startDate: new Date('2025-03-01'), endDate: new Date('2025-03-31'), status: 'pending', weight: 20, progress: 0 },
+
+    // Fases para Sistema Antifraude Tiempo Real (proyectos[14])
+    { projectId: proyectos[14].id, name: 'Análisis de Fraudes', description: 'Análisis de patrones de fraude históricos', orderNum: 1, startDate: new Date('2024-06-15'), endDate: new Date('2024-07-31'), status: 'completed', weight: 15, progress: 100 },
+    { projectId: proyectos[14].id, name: 'Desarrollo Motor de Reglas', description: 'Desarrollo del motor de reglas antifraude', orderNum: 2, startDate: new Date('2024-08-01'), endDate: new Date('2024-10-15'), status: 'completed', weight: 30, progress: 100 },
+    { projectId: proyectos[14].id, name: 'Integración Canales', description: 'Integración con todos los canales digitales', orderNum: 3, startDate: new Date('2024-10-16'), endDate: new Date('2024-12-15'), status: 'in_progress', weight: 35, progress: 70 },
+    { projectId: proyectos[14].id, name: 'Operación y Ajustes', description: 'Operación en producción y ajuste de umbrales', orderNum: 4, startDate: new Date('2024-12-16'), endDate: new Date('2025-01-15'), status: 'pending', weight: 20, progress: 0 },
+
+    // Fases para Certificación PCI-DSS v4.0 (proyectos[15])
+    { projectId: proyectos[15].id, name: 'Gap Analysis', description: 'Análisis de brechas vs PCI-DSS v4.0', orderNum: 1, startDate: new Date('2024-04-01'), endDate: new Date('2024-05-31'), status: 'completed', weight: 20, progress: 100 },
+    { projectId: proyectos[15].id, name: 'Remediación', description: 'Implementación de controles faltantes', orderNum: 2, startDate: new Date('2024-06-01'), endDate: new Date('2024-09-30'), status: 'completed', weight: 40, progress: 100 },
+    { projectId: proyectos[15].id, name: 'Pre-Auditoría', description: 'Evaluación interna pre-certificación', orderNum: 3, startDate: new Date('2024-10-01'), endDate: new Date('2024-11-15'), status: 'in_progress', weight: 20, progress: 65 },
+    { projectId: proyectos[15].id, name: 'Certificación QSA', description: 'Auditoría por QSA certificador', orderNum: 4, startDate: new Date('2024-11-16'), endDate: new Date('2024-12-31'), status: 'pending', weight: 20, progress: 0 },
+
+    // Fases para Gestión de Identidad Digital (proyectos[17])
+    { projectId: proyectos[17].id, name: 'Evaluación IAM', description: 'Evaluación de soluciones IAM del mercado', orderNum: 1, startDate: new Date('2024-10-15'), endDate: new Date('2024-11-30'), status: 'completed', weight: 15, progress: 100 },
+    { projectId: proyectos[17].id, name: 'Diseño Arquitectura', description: 'Diseño de arquitectura IAM centralizada', orderNum: 2, startDate: new Date('2024-12-01'), endDate: new Date('2025-01-15'), status: 'in_progress', weight: 20, progress: 40 },
+    { projectId: proyectos[17].id, name: 'Implementación Core', description: 'Implementación de directorio y SSO', orderNum: 3, startDate: new Date('2025-01-16'), endDate: new Date('2025-03-31'), status: 'pending', weight: 35, progress: 0 },
+    { projectId: proyectos[17].id, name: 'Migración Aplicaciones', description: 'Migración de aplicaciones al nuevo IAM', orderNum: 4, startDate: new Date('2025-04-01'), endDate: new Date('2025-05-31'), status: 'pending', weight: 30, progress: 0 }
   ];
 
   const fases = [];
@@ -1395,7 +1561,51 @@ async function main() {
     { projectId: proyectos[2].id, phaseId: fases[12].id, title: 'Desarrollar material de capacitación', description: 'Crear presentaciones y manuales para el personal', assignedTo: usuarios[8].id, assignedBy: usuarios[2].id, startDate: new Date('2024-10-01'), dueDate: new Date('2024-10-15'), progress: 100, status: 'completed', priority: 'high', taskType: 'manual', createdBy: usuarios[2].id },
     { projectId: proyectos[2].id, phaseId: fases[12].id, title: 'Capacitar a oficiales de cumplimiento', description: 'Sesiones de capacitación intensiva', assignedTo: usuarios[8].id, assignedBy: usuarios[2].id, startDate: new Date('2024-10-16'), dueDate: new Date('2024-10-31'), progress: 100, status: 'completed', priority: 'critical', taskType: 'manual', createdBy: usuarios[2].id },
     { projectId: proyectos[2].id, phaseId: fases[12].id, title: 'Capacitar a personal de sucursales', description: 'Capacitación masiva al personal de front', assignedTo: usuarios[9].id, assignedBy: usuarios[8].id, startDate: new Date('2024-11-01'), dueDate: new Date('2024-11-10'), progress: 60, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[8].id },
-    { projectId: proyectos[2].id, phaseId: fases[12].id, title: 'Evaluar conocimiento adquirido', description: 'Aplicar evaluaciones post-capacitación', assignedTo: usuarios[8].id, assignedBy: usuarios[2].id, startDate: new Date('2024-11-11'), dueDate: new Date('2024-11-15'), progress: 0, status: 'pending', priority: 'medium', taskType: 'manual', createdBy: usuarios[2].id }
+    { projectId: proyectos[2].id, phaseId: fases[12].id, title: 'Evaluar conocimiento adquirido', description: 'Aplicar evaluaciones post-capacitación', assignedTo: usuarios[8].id, assignedBy: usuarios[2].id, startDate: new Date('2024-11-11'), dueDate: new Date('2024-11-15'), progress: 0, status: 'pending', priority: 'medium', taskType: 'manual', createdBy: usuarios[2].id },
+
+    // ========== TAREAS PARA NUEVOS PROYECTOS ==========
+
+    // Tareas para Modernización Banca Móvil - Fase Diseño UI/UX (fases[15])
+    { projectId: proyectos[8].id, phaseId: fases[15].id, title: 'Diseñar flujo de login biométrico', description: 'Diseño UX para autenticación con huella y facial', assignedTo: usuarios[7].id, assignedBy: usuarios[4].id, startDate: new Date('2024-11-16'), dueDate: new Date('2024-12-15'), progress: 100, status: 'completed', priority: 'high', taskType: 'manual', createdBy: usuarios[4].id },
+    { projectId: proyectos[8].id, phaseId: fases[15].id, title: 'Crear sistema de diseño', description: 'Definir componentes UI reutilizables', assignedTo: usuarios[7].id, assignedBy: usuarios[4].id, startDate: new Date('2024-12-01'), dueDate: new Date('2024-12-31'), progress: 80, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[4].id },
+    { projectId: proyectos[8].id, phaseId: fases[15].id, title: 'Prototipar dashboard principal', description: 'Prototipo interactivo en Figma', assignedTo: usuarios[7].id, assignedBy: usuarios[4].id, startDate: new Date('2024-12-15'), dueDate: new Date('2025-01-10'), progress: 40, status: 'in_progress', priority: 'medium', taskType: 'manual', createdBy: usuarios[4].id },
+    { projectId: proyectos[8].id, phaseId: fases[15].id, title: 'Pruebas de usabilidad', description: 'Testing con usuarios reales', assignedTo: usuarios[9].id, assignedBy: usuarios[7].id, startDate: new Date('2025-01-05'), dueDate: new Date('2025-01-15'), progress: 0, status: 'pending', priority: 'high', taskType: 'manual', createdBy: usuarios[7].id },
+
+    // Tareas para SOC - Fase Implementación SIEM (fases[20])
+    { projectId: proyectos[10].id, phaseId: fases[20].id, title: 'Instalar plataforma Splunk', description: 'Instalación y configuración inicial de Splunk Enterprise', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-10-16'), dueDate: new Date('2024-11-15'), progress: 100, status: 'completed', priority: 'critical', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[10].id, phaseId: fases[20].id, title: 'Configurar fuentes de datos', description: 'Integrar logs de firewalls, AD, endpoints', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-11-16'), dueDate: new Date('2024-12-15'), progress: 70, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[10].id, phaseId: fases[20].id, title: 'Desarrollar casos de uso', description: 'Crear reglas de correlación y alertas', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-12-01'), dueDate: new Date('2024-12-31'), progress: 35, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[10].id, phaseId: fases[20].id, title: 'Crear dashboards operativos', description: 'Dashboards para analistas SOC', assignedTo: usuarios[7].id, assignedBy: usuarios[6].id, startDate: new Date('2024-12-15'), dueDate: new Date('2024-12-31'), progress: 20, status: 'in_progress', priority: 'medium', taskType: 'manual', createdBy: usuarios[6].id },
+
+    // Tareas para Transformación Digital - Fase Piloto (fases[25])
+    { projectId: proyectos[11].id, phaseId: fases[25].id, title: 'Desplegar en sucursales piloto', description: 'Instalación en 10 sucursales seleccionadas', assignedTo: usuarios[4].id, assignedBy: usuarios[0].id, startDate: new Date('2024-11-01'), dueDate: new Date('2024-11-30'), progress: 100, status: 'completed', priority: 'critical', taskType: 'manual', createdBy: usuarios[0].id },
+    { projectId: proyectos[11].id, phaseId: fases[25].id, title: 'Capacitar personal de piloto', description: 'Entrenamiento a ejecutivos de sucursales', assignedTo: usuarios[9].id, assignedBy: usuarios[4].id, startDate: new Date('2024-11-15'), dueDate: new Date('2024-12-05'), progress: 80, status: 'in_review', priority: 'high', taskType: 'manual', createdBy: usuarios[4].id },
+    { projectId: proyectos[11].id, phaseId: fases[25].id, title: 'Monitorear adopción', description: 'Seguimiento de métricas de uso', assignedTo: usuarios[7].id, assignedBy: usuarios[4].id, startDate: new Date('2024-12-01'), dueDate: new Date('2024-12-31'), progress: 30, status: 'in_progress', priority: 'medium', taskType: 'manual', createdBy: usuarios[4].id },
+    { projectId: proyectos[11].id, phaseId: fases[25].id, title: 'Documentar lecciones aprendidas', description: 'Recopilar feedback y mejoras', assignedTo: usuarios[9].id, assignedBy: usuarios[4].id, startDate: new Date('2024-12-20'), dueDate: new Date('2024-12-31'), progress: 0, status: 'pending', priority: 'low', taskType: 'manual', createdBy: usuarios[4].id },
+
+    // Tareas para Modelo ML - Fase Desarrollo (fases[28])
+    { projectId: proyectos[12].id, phaseId: fases[28].id, title: 'Feature engineering', description: 'Desarrollo de variables predictivas', assignedTo: usuarios[7].id, assignedBy: usuarios[5].id, startDate: new Date('2024-11-01'), dueDate: new Date('2024-11-30'), progress: 100, status: 'completed', priority: 'high', taskType: 'manual', createdBy: usuarios[5].id },
+    { projectId: proyectos[12].id, phaseId: fases[28].id, title: 'Entrenamiento de modelos', description: 'Pruebas con XGBoost, Random Forest, Neural Networks', assignedTo: usuarios[7].id, assignedBy: usuarios[5].id, startDate: new Date('2024-12-01'), dueDate: new Date('2024-12-31'), progress: 60, status: 'in_progress', priority: 'critical', taskType: 'manual', createdBy: usuarios[5].id },
+    { projectId: proyectos[12].id, phaseId: fases[28].id, title: 'Validación cruzada', description: 'Cross-validation y tuning de hiperparámetros', assignedTo: usuarios[7].id, assignedBy: usuarios[5].id, startDate: new Date('2025-01-01'), dueDate: new Date('2025-01-10'), progress: 0, status: 'pending', priority: 'high', taskType: 'manual', createdBy: usuarios[5].id },
+    { projectId: proyectos[12].id, phaseId: fases[28].id, title: 'Documentar modelo ganador', description: 'Documentación técnica y explicabilidad', assignedTo: usuarios[7].id, assignedBy: usuarios[5].id, startDate: new Date('2025-01-11'), dueDate: new Date('2025-01-15'), progress: 0, status: 'pending', priority: 'medium', taskType: 'manual', createdBy: usuarios[5].id },
+
+    // Tareas para Sistema Antifraude - Fase Integración (fases[33])
+    { projectId: proyectos[14].id, phaseId: fases[33].id, title: 'Integrar con banca móvil', description: 'API de scoring en tiempo real para app móvil', assignedTo: usuarios[4].id, assignedBy: usuarios[5].id, startDate: new Date('2024-10-16'), dueDate: new Date('2024-11-15'), progress: 100, status: 'completed', priority: 'critical', taskType: 'manual', createdBy: usuarios[5].id },
+    { projectId: proyectos[14].id, phaseId: fases[33].id, title: 'Integrar con banca web', description: 'Integración con portal de banca en línea', assignedTo: usuarios[4].id, assignedBy: usuarios[5].id, startDate: new Date('2024-11-16'), dueDate: new Date('2024-12-05'), progress: 90, status: 'in_review', priority: 'critical', taskType: 'manual', createdBy: usuarios[5].id },
+    { projectId: proyectos[14].id, phaseId: fases[33].id, title: 'Integrar con ATMs', description: 'Conexión con red de cajeros automáticos', assignedTo: usuarios[4].id, assignedBy: usuarios[5].id, startDate: new Date('2024-12-01'), dueDate: new Date('2024-12-15'), progress: 50, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[5].id },
+    { projectId: proyectos[14].id, phaseId: fases[33].id, title: 'Pruebas E2E de fraude', description: 'Pruebas end-to-end con escenarios de fraude', assignedTo: usuarios[7].id, assignedBy: usuarios[5].id, startDate: new Date('2024-12-10'), dueDate: new Date('2024-12-15'), progress: 20, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[5].id },
+
+    // Tareas para PCI-DSS - Fase Pre-Auditoría (fases[37])
+    { projectId: proyectos[15].id, phaseId: fases[37].id, title: 'Ejecutar escaneos ASV', description: 'Escaneos de vulnerabilidades trimestrales', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-10-01'), dueDate: new Date('2024-10-15'), progress: 100, status: 'completed', priority: 'critical', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[15].id, phaseId: fases[37].id, title: 'Remediar hallazgos críticos', description: 'Corregir vulnerabilidades identificadas', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-10-16'), dueDate: new Date('2024-11-05'), progress: 85, status: 'in_progress', priority: 'critical', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[15].id, phaseId: fases[37].id, title: 'Preparar evidencias', description: 'Compilar evidencias para cada requisito', assignedTo: usuarios[7].id, assignedBy: usuarios[3].id, startDate: new Date('2024-10-20'), dueDate: new Date('2024-11-10'), progress: 60, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[15].id, phaseId: fases[37].id, title: 'Simulacro de auditoría', description: 'Ensayo interno de entrevistas QSA', assignedTo: usuarios[3].id, assignedBy: usuarios[0].id, startDate: new Date('2024-11-10'), dueDate: new Date('2024-11-15'), progress: 0, status: 'pending', priority: 'high', taskType: 'manual', createdBy: usuarios[0].id },
+
+    // Tareas para Identidad Digital - Fase Diseño (fases[40])
+    { projectId: proyectos[17].id, phaseId: fases[40].id, title: 'Definir políticas de acceso', description: 'Documentar políticas de acceso por rol', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-12-01'), dueDate: new Date('2024-12-20'), progress: 70, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[17].id, phaseId: fases[40].id, title: 'Diseñar flujo MFA', description: 'Arquitectura de autenticación multifactor', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-12-10'), dueDate: new Date('2024-12-31'), progress: 40, status: 'in_progress', priority: 'critical', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[17].id, phaseId: fases[40].id, title: 'Evaluar proveedores IdP', description: 'Análisis de Okta, Azure AD, Ping', assignedTo: usuarios[4].id, assignedBy: usuarios[3].id, startDate: new Date('2024-12-15'), dueDate: new Date('2025-01-10'), progress: 15, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[17].id, phaseId: fases[40].id, title: 'POC con proveedor seleccionado', description: 'Prueba de concepto con 3 aplicaciones', assignedTo: usuarios[4].id, assignedBy: usuarios[3].id, startDate: new Date('2025-01-05'), dueDate: new Date('2025-01-15'), progress: 0, status: 'pending', priority: 'high', taskType: 'manual', createdBy: usuarios[3].id }
   ];
 
   const tareas = [];
@@ -1404,6 +1614,179 @@ async function main() {
     tareas.push(tarea);
   }
   console.log(`✓ Creadas ${tareas.length} tareas de proyecto`);
+
+  // ============================================================
+  // Crear KPIs de Proyectos
+  // ============================================================
+  const kpisProyectoData = [
+    // KPIs para ISO 27001
+    { projectId: proyectos[0].id, name: 'Controles Implementados', description: 'Porcentaje de controles ISO 27001 implementados', targetValue: 114, currentValue: 68, unit: 'controles', formulaType: 'count', status: 'on_track' },
+    { projectId: proyectos[0].id, name: 'Vulnerabilidades Críticas', description: 'Número de vulnerabilidades críticas abiertas', targetValue: 0, currentValue: 3, unit: 'vulnerabilidades', formulaType: 'count', status: 'at_risk' },
+    { projectId: proyectos[0].id, name: 'Cobertura de Capacitación', description: 'Empleados capacitados en seguridad', targetValue: 100, currentValue: 78, unit: '%', formulaType: 'percentage', status: 'on_track' },
+    { projectId: proyectos[0].id, name: 'Cumplimiento Anexo A', description: 'Cumplimiento de controles del Anexo A', targetValue: 95, currentValue: 72, unit: '%', formulaType: 'percentage', status: 'on_track' },
+
+    // KPIs para Migración Cloud
+    { projectId: proyectos[1].id, name: 'Servicios Migrados', description: 'Porcentaje de servicios migrados a cloud', targetValue: 100, currentValue: 45, unit: '%', formulaType: 'percentage', status: 'on_track' },
+    { projectId: proyectos[1].id, name: 'Disponibilidad', description: 'SLA de disponibilidad del servicio', targetValue: 99.9, currentValue: 99.7, unit: '%', formulaType: 'percentage', status: 'on_track' },
+    { projectId: proyectos[1].id, name: 'Reducción Costos Infra', description: 'Ahorro en costos de infraestructura', targetValue: 30, currentValue: 18, unit: '%', formulaType: 'percentage', status: 'at_risk' },
+    { projectId: proyectos[1].id, name: 'Tiempo de Despliegue', description: 'Tiempo promedio de despliegue', targetValue: 15, currentValue: 25, unit: 'minutos', formulaType: 'average', status: 'off_track' },
+
+    // KPIs para AML/PLD
+    { projectId: proyectos[2].id, name: 'Personal Capacitado', description: 'Personal capacitado en nuevas políticas', targetValue: 500, currentValue: 380, unit: 'empleados', formulaType: 'count', status: 'on_track' },
+    { projectId: proyectos[2].id, name: 'Alertas Procesadas', description: 'Alertas AML procesadas en tiempo', targetValue: 98, currentValue: 94, unit: '%', formulaType: 'percentage', status: 'at_risk' },
+    { projectId: proyectos[2].id, name: 'Falsos Positivos', description: 'Reducción de falsos positivos', targetValue: 40, currentValue: 28, unit: '%', formulaType: 'percentage', status: 'on_track' },
+
+    // KPIs para SOC 2
+    { projectId: proyectos[5].id, name: 'Políticas Documentadas', description: 'Políticas SOC 2 documentadas', targetValue: 45, currentValue: 22, unit: 'políticas', formulaType: 'count', status: 'on_track' },
+    { projectId: proyectos[5].id, name: 'Evidencias Recolectadas', description: 'Evidencias para auditoría', targetValue: 200, currentValue: 85, unit: 'evidencias', formulaType: 'count', status: 'on_track' },
+
+    // KPIs para Evaluación Proveedores
+    { projectId: proyectos[6].id, name: 'Proveedores Evaluados', description: 'Proveedores críticos evaluados', targetValue: 25, currentValue: 18, unit: 'proveedores', formulaType: 'count', status: 'on_track' },
+    { projectId: proyectos[6].id, name: 'Score Promedio', description: 'Score promedio de proveedores', targetValue: 80, currentValue: 75, unit: 'puntos', formulaType: 'average', status: 'on_track' },
+
+    // ========== KPIs PARA NUEVOS PROYECTOS ==========
+
+    // KPIs para Modernización Banca Móvil
+    { projectId: proyectos[8].id, name: 'Diseño Completado', description: 'Porcentaje de pantallas diseñadas', targetValue: 100, currentValue: 60, unit: '%', formulaType: 'percentage', status: 'on_track' },
+    { projectId: proyectos[8].id, name: 'NPS Objetivo', description: 'Net Promoter Score objetivo', targetValue: 70, currentValue: 0, unit: 'puntos', formulaType: 'count', status: 'on_track' },
+    { projectId: proyectos[8].id, name: 'Tiempo Carga App', description: 'Tiempo de carga inicial de la app', targetValue: 2, currentValue: 0, unit: 'segundos', formulaType: 'average', status: 'on_track' },
+
+    // KPIs para Centro de Operaciones SOC
+    { projectId: proyectos[10].id, name: 'Fuentes Integradas', description: 'Fuentes de logs integradas al SIEM', targetValue: 50, currentValue: 28, unit: 'fuentes', formulaType: 'count', status: 'on_track' },
+    { projectId: proyectos[10].id, name: 'MTTD', description: 'Tiempo medio de detección de amenazas', targetValue: 15, currentValue: 45, unit: 'minutos', formulaType: 'average', status: 'off_track' },
+    { projectId: proyectos[10].id, name: 'MTTR', description: 'Tiempo medio de respuesta a incidentes', targetValue: 60, currentValue: 120, unit: 'minutos', formulaType: 'average', status: 'at_risk' },
+    { projectId: proyectos[10].id, name: 'Casos de Uso Activos', description: 'Reglas de correlación activas', targetValue: 100, currentValue: 35, unit: 'casos', formulaType: 'count', status: 'on_track' },
+
+    // KPIs para Transformación Digital Sucursales
+    { projectId: proyectos[11].id, name: 'Sucursales Digitalizadas', description: 'Sucursales con nueva plataforma', targetValue: 200, currentValue: 10, unit: 'sucursales', formulaType: 'count', status: 'on_track' },
+    { projectId: proyectos[11].id, name: 'Reducción Papel', description: 'Reducción en uso de papel', targetValue: 80, currentValue: 45, unit: '%', formulaType: 'percentage', status: 'on_track' },
+    { projectId: proyectos[11].id, name: 'Tiempo Atención', description: 'Reducción tiempo de atención', targetValue: 40, currentValue: 25, unit: '%', formulaType: 'percentage', status: 'on_track' },
+
+    // KPIs para Modelo de Riesgo Crediticio ML
+    { projectId: proyectos[12].id, name: 'AUC-ROC', description: 'Área bajo la curva ROC', targetValue: 0.85, currentValue: 0.78, unit: 'score', formulaType: 'percentage', status: 'on_track' },
+    { projectId: proyectos[12].id, name: 'Precisión', description: 'Precisión del modelo', targetValue: 90, currentValue: 82, unit: '%', formulaType: 'percentage', status: 'at_risk' },
+    { projectId: proyectos[12].id, name: 'Recall', description: 'Sensibilidad del modelo', targetValue: 85, currentValue: 79, unit: '%', formulaType: 'percentage', status: 'on_track' },
+
+    // KPIs para Sistema Antifraude
+    { projectId: proyectos[14].id, name: 'Transacciones Analizadas', description: 'Transacciones analizadas en tiempo real', targetValue: 100, currentValue: 85, unit: '%', formulaType: 'percentage', status: 'on_track' },
+    { projectId: proyectos[14].id, name: 'Tasa Detección Fraude', description: 'Fraudes detectados vs total', targetValue: 95, currentValue: 88, unit: '%', formulaType: 'percentage', status: 'at_risk' },
+    { projectId: proyectos[14].id, name: 'Falsos Positivos', description: 'Tasa de falsos positivos', targetValue: 5, currentValue: 8, unit: '%', formulaType: 'percentage', status: 'off_track' },
+    { projectId: proyectos[14].id, name: 'Tiempo Respuesta', description: 'Tiempo de scoring por transacción', targetValue: 100, currentValue: 85, unit: 'ms', formulaType: 'average', status: 'on_track' },
+
+    // KPIs para PCI-DSS v4.0
+    { projectId: proyectos[15].id, name: 'Requisitos Cumplidos', description: 'Requisitos PCI-DSS cumplidos', targetValue: 300, currentValue: 245, unit: 'requisitos', formulaType: 'count', status: 'on_track' },
+    { projectId: proyectos[15].id, name: 'Vulnerabilidades Abiertas', description: 'Vulnerabilidades críticas sin remediar', targetValue: 0, currentValue: 5, unit: 'vulnerabilidades', formulaType: 'count', status: 'at_risk' },
+    { projectId: proyectos[15].id, name: 'Cobertura Escaneos', description: 'Sistemas escaneados trimestralmente', targetValue: 100, currentValue: 92, unit: '%', formulaType: 'percentage', status: 'on_track' },
+
+    // KPIs para Gestión Identidad Digital
+    { projectId: proyectos[17].id, name: 'Aplicaciones Integradas', description: 'Aplicaciones con SSO', targetValue: 50, currentValue: 8, unit: 'apps', formulaType: 'count', status: 'on_track' },
+    { projectId: proyectos[17].id, name: 'Usuarios MFA', description: 'Usuarios con MFA habilitado', targetValue: 100, currentValue: 0, unit: '%', formulaType: 'percentage', status: 'on_track' },
+    { projectId: proyectos[17].id, name: 'Tiempo Provisioning', description: 'Tiempo de alta de usuarios', targetValue: 1, currentValue: 24, unit: 'horas', formulaType: 'average', status: 'off_track' }
+  ];
+
+  await prisma.projectKPI.createMany({ data: kpisProyectoData });
+  console.log(`✓ Creados ${kpisProyectoData.length} KPIs de proyecto`);
+
+  // ============================================================
+  // Crear Objetivos de Proyectos
+  // ============================================================
+  const objetivosProyectoData = [
+    // Objetivos ISO 27001
+    { projectId: proyectos[0].id, description: 'Lograr certificación ISO 27001:2022 antes del cierre fiscal', category: 'specific', status: 'in_progress', targetDate: new Date('2025-06-30') },
+    { projectId: proyectos[0].id, description: 'Implementar el 100% de controles del Anexo A aplicables', category: 'measurable', status: 'in_progress', targetDate: new Date('2025-02-28') },
+    { projectId: proyectos[0].id, description: 'Reducir incidentes de seguridad en un 50%', category: 'achievable', status: 'pending', targetDate: new Date('2025-06-30') },
+    { projectId: proyectos[0].id, description: 'Alinear prácticas con estándares internacionales', category: 'relevant', status: 'in_progress' },
+    { projectId: proyectos[0].id, description: 'Completar pre-auditoría en Q1 2025', category: 'time_bound', status: 'pending', targetDate: new Date('2025-03-31') },
+
+    // Objetivos Migración Cloud
+    { projectId: proyectos[1].id, description: 'Migrar 100% de aplicaciones críticas a la nube', category: 'specific', status: 'in_progress', targetDate: new Date('2025-02-28') },
+    { projectId: proyectos[1].id, description: 'Mantener SLA de 99.9% durante y después de la migración', category: 'measurable', status: 'in_progress' },
+    { projectId: proyectos[1].id, description: 'Reducir costos de infraestructura en 30%', category: 'achievable', status: 'pending', targetDate: new Date('2025-03-31') },
+    { projectId: proyectos[1].id, description: 'Cumplir con regulaciones CNBV para operación en nube', category: 'relevant', status: 'achieved', completedDate: new Date('2024-08-15') },
+
+    // Objetivos AML/PLD
+    { projectId: proyectos[2].id, description: 'Actualizar 100% de políticas AML conforme a nueva regulación', category: 'specific', status: 'achieved', completedDate: new Date('2024-09-30') },
+    { projectId: proyectos[2].id, description: 'Capacitar al 100% del personal en nuevas políticas', category: 'measurable', status: 'in_progress', targetDate: new Date('2024-11-15') },
+    { projectId: proyectos[2].id, description: 'Reducir falsos positivos en alertas AML en 40%', category: 'achievable', status: 'in_progress', targetDate: new Date('2024-12-31') },
+
+    // Objetivos SOC 2
+    { projectId: proyectos[5].id, description: 'Obtener certificación SOC 2 Type II', category: 'specific', status: 'pending', targetDate: new Date('2025-07-31') },
+    { projectId: proyectos[5].id, description: 'Documentar todos los controles de seguridad, disponibilidad y confidencialidad', category: 'measurable', status: 'in_progress', targetDate: new Date('2025-03-31') },
+
+    // ========== OBJETIVOS PARA NUEVOS PROYECTOS ==========
+
+    // Objetivos Modernización Banca Móvil
+    { projectId: proyectos[8].id, description: 'Lanzar nueva app móvil en tiendas iOS y Android', category: 'specific', status: 'pending', targetDate: new Date('2025-06-30') },
+    { projectId: proyectos[8].id, description: 'Alcanzar NPS de 70 puntos en primeros 3 meses', category: 'measurable', status: 'pending', targetDate: new Date('2025-09-30') },
+    { projectId: proyectos[8].id, description: 'Reducir tiempo de carga a menos de 2 segundos', category: 'achievable', status: 'pending' },
+    { projectId: proyectos[8].id, description: 'Mejorar experiencia de usuarios móviles del banco', category: 'relevant', status: 'in_progress' },
+
+    // Objetivos Centro de Operaciones SOC
+    { projectId: proyectos[10].id, description: 'Operar SOC 24/7 con equipo interno', category: 'specific', status: 'pending', targetDate: new Date('2025-04-30') },
+    { projectId: proyectos[10].id, description: 'Reducir MTTD a menos de 15 minutos', category: 'measurable', status: 'in_progress', targetDate: new Date('2025-04-30') },
+    { projectId: proyectos[10].id, description: 'Integrar 50 fuentes de logs al SIEM', category: 'achievable', status: 'in_progress', targetDate: new Date('2025-02-28') },
+    { projectId: proyectos[10].id, description: 'Mejorar postura de seguridad del banco', category: 'relevant', status: 'in_progress' },
+
+    // Objetivos Transformación Digital Sucursales
+    { projectId: proyectos[11].id, description: 'Digitalizar 200 sucursales a nivel nacional', category: 'specific', status: 'in_progress', targetDate: new Date('2025-02-28') },
+    { projectId: proyectos[11].id, description: 'Reducir uso de papel en 80%', category: 'measurable', status: 'in_progress', targetDate: new Date('2025-02-28') },
+    { projectId: proyectos[11].id, description: 'Reducir tiempo de atención al cliente en 40%', category: 'achievable', status: 'in_progress' },
+    { projectId: proyectos[11].id, description: 'Completar piloto exitoso en Q4 2024', category: 'time_bound', status: 'in_progress', targetDate: new Date('2024-12-31') },
+
+    // Objetivos Modelo de Riesgo Crediticio ML
+    { projectId: proyectos[12].id, description: 'Poner en producción modelo de scoring ML', category: 'specific', status: 'pending', targetDate: new Date('2025-03-31') },
+    { projectId: proyectos[12].id, description: 'Alcanzar AUC-ROC mínimo de 0.85', category: 'measurable', status: 'in_progress', targetDate: new Date('2025-01-15') },
+    { projectId: proyectos[12].id, description: 'Reducir tasa de morosidad en 15%', category: 'achievable', status: 'pending', targetDate: new Date('2025-06-30') },
+    { projectId: proyectos[12].id, description: 'Obtener aprobación regulatoria del modelo', category: 'relevant', status: 'pending', targetDate: new Date('2025-02-28') },
+
+    // Objetivos Sistema Antifraude
+    { projectId: proyectos[14].id, description: 'Analizar 100% de transacciones digitales en tiempo real', category: 'specific', status: 'in_progress', targetDate: new Date('2025-01-15') },
+    { projectId: proyectos[14].id, description: 'Alcanzar tasa de detección de fraude del 95%', category: 'measurable', status: 'in_progress', targetDate: new Date('2025-01-15') },
+    { projectId: proyectos[14].id, description: 'Reducir falsos positivos a menos del 5%', category: 'achievable', status: 'in_progress' },
+    { projectId: proyectos[14].id, description: 'Proteger a clientes contra fraude digital', category: 'relevant', status: 'achieved', completedDate: new Date('2024-10-15') },
+
+    // Objetivos PCI-DSS v4.0
+    { projectId: proyectos[15].id, description: 'Obtener certificación PCI-DSS v4.0', category: 'specific', status: 'in_progress', targetDate: new Date('2024-12-31') },
+    { projectId: proyectos[15].id, description: 'Cumplir 100% de requisitos PCI-DSS v4.0', category: 'measurable', status: 'in_progress', targetDate: new Date('2024-11-15') },
+    { projectId: proyectos[15].id, description: 'Remediar todas las vulnerabilidades críticas', category: 'achievable', status: 'in_progress', targetDate: new Date('2024-11-05') },
+    { projectId: proyectos[15].id, description: 'Completar pre-auditoría exitosa', category: 'time_bound', status: 'in_progress', targetDate: new Date('2024-11-15') },
+
+    // Objetivos Gestión Identidad Digital
+    { projectId: proyectos[17].id, description: 'Implementar IAM centralizado para todas las aplicaciones', category: 'specific', status: 'pending', targetDate: new Date('2025-05-31') },
+    { projectId: proyectos[17].id, description: 'Habilitar MFA para 100% de usuarios', category: 'measurable', status: 'pending', targetDate: new Date('2025-05-31') },
+    { projectId: proyectos[17].id, description: 'Reducir tiempo de provisioning a 1 hora', category: 'achievable', status: 'pending' },
+    { projectId: proyectos[17].id, description: 'Mejorar seguridad de acceso a sistemas del banco', category: 'relevant', status: 'in_progress' }
+  ];
+
+  await prisma.projectObjective.createMany({ data: objetivosProyectoData });
+  console.log(`✓ Creados ${objetivosProyectoData.length} objetivos de proyecto`);
+
+  // ============================================================
+  // Agregar más tareas para mejor visualización del Kanban
+  // ============================================================
+  const tareasAdicionalesData = [
+    // Más tareas para ISO 27001 con diferentes estados
+    { projectId: proyectos[0].id, phaseId: fases[2].id, title: 'Definir política de clasificación de datos', description: 'Crear esquema de clasificación de información', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2024-12-15'), dueDate: new Date('2025-01-30'), progress: 0, status: 'pending', priority: 'high', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[0].id, phaseId: fases[2].id, title: 'Implementar gestión de logs centralizados', description: 'Configurar sistema de logs centralizado con retención de 1 año', assignedTo: usuarios[4].id, assignedBy: usuarios[3].id, startDate: new Date('2024-11-01'), dueDate: new Date('2024-12-31'), progress: 65, status: 'in_review', priority: 'high', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[0].id, phaseId: fases[2].id, title: 'Validar controles de acceso físico', description: 'Verificar controles de acceso a data centers', assignedTo: usuarios[7].id, assignedBy: usuarios[3].id, startDate: new Date('2024-10-15'), dueDate: new Date('2024-11-30'), progress: 0, status: 'blocked', priority: 'medium', taskType: 'manual', createdBy: usuarios[3].id },
+    { projectId: proyectos[0].id, phaseId: fases[3].id, title: 'Preparar documentación para auditoría', description: 'Compilar evidencias y documentación para pre-auditoría', assignedTo: usuarios[6].id, assignedBy: usuarios[3].id, startDate: new Date('2025-02-15'), dueDate: new Date('2025-03-15'), progress: 0, status: 'pending', priority: 'critical', taskType: 'manual', createdBy: usuarios[3].id },
+
+    // Más tareas para Migración Cloud
+    { projectId: proyectos[1].id, phaseId: fases[7].id, title: 'Configurar WAF en ambiente cloud', description: 'Implementar Web Application Firewall para proteger aplicaciones', assignedTo: usuarios[6].id, assignedBy: usuarios[4].id, startDate: new Date('2024-10-15'), dueDate: new Date('2024-11-15'), progress: 90, status: 'in_review', priority: 'critical', taskType: 'manual', createdBy: usuarios[4].id },
+    { projectId: proyectos[1].id, phaseId: fases[7].id, title: 'Migrar servicios de autenticación', description: 'Migrar SSO y servicios de autenticación a cloud', assignedTo: usuarios[4].id, assignedBy: usuarios[0].id, startDate: new Date('2024-11-01'), dueDate: new Date('2024-12-15'), progress: 25, status: 'in_progress', priority: 'critical', taskType: 'manual', createdBy: usuarios[0].id },
+    { projectId: proyectos[1].id, phaseId: fases[8].id, title: 'Plan de rollback para producción', description: 'Documentar y probar plan de rollback en caso de fallo', assignedTo: usuarios[4].id, assignedBy: usuarios[0].id, startDate: new Date('2025-01-01'), dueDate: new Date('2025-01-15'), progress: 0, status: 'pending', priority: 'high', taskType: 'manual', createdBy: usuarios[0].id },
+    { projectId: proyectos[1].id, phaseId: fases[8].id, title: 'Migración de bases de datos productivas', description: 'Migrar BD Oracle y SQL Server a cloud', assignedTo: usuarios[4].id, assignedBy: usuarios[0].id, startDate: new Date('2025-01-15'), dueDate: new Date('2025-02-15'), progress: 0, status: 'pending', priority: 'critical', taskType: 'manual', createdBy: usuarios[0].id },
+
+    // Más tareas para AML/PLD
+    { projectId: proyectos[2].id, phaseId: fases[13].id, title: 'Actualizar reglas de monitoreo transaccional', description: 'Configurar nuevas reglas en sistema de monitoreo AML', assignedTo: usuarios[8].id, assignedBy: usuarios[2].id, startDate: new Date('2024-11-16'), dueDate: new Date('2024-12-15'), progress: 15, status: 'in_progress', priority: 'high', taskType: 'manual', createdBy: usuarios[2].id },
+    { projectId: proyectos[2].id, phaseId: fases[13].id, title: 'Integrar con base de datos de sanciones', description: 'Conectar sistema con listas internacionales de sanciones', assignedTo: usuarios[4].id, assignedBy: usuarios[8].id, startDate: new Date('2024-12-01'), dueDate: new Date('2024-12-20'), progress: 0, status: 'pending', priority: 'critical', taskType: 'manual', createdBy: usuarios[8].id },
+    { projectId: proyectos[2].id, phaseId: fases[13].id, title: 'Pruebas de rendimiento sistema AML', description: 'Validar rendimiento con carga de producción', assignedTo: usuarios[7].id, assignedBy: usuarios[8].id, startDate: new Date('2024-12-15'), dueDate: new Date('2024-12-30'), progress: 0, status: 'pending', priority: 'medium', taskType: 'manual', createdBy: usuarios[8].id }
+  ];
+
+  for (const tareaData of tareasAdicionalesData) {
+    await prisma.task.create({ data: tareaData });
+  }
+  console.log(`✓ Creadas ${tareasAdicionalesData.length} tareas adicionales`);
 
   console.log('\n🎉 ¡Seed completado exitosamente!');
   console.log('📊 Resumen de datos creados:');
@@ -1425,9 +1808,11 @@ async function main() {
   console.log('   - 3 reglas de alertas por umbral');
   console.log('   - 3 reglas de vencimiento');
   console.log('   - 5 notificaciones de ejemplo');
-  console.log('   - 8 proyectos');
-  console.log('   - 14 fases de proyecto');
-  console.log('   - 13 tareas de proyecto\n');
+  console.log('   - 18 proyectos');
+  console.log('   - 45 fases de proyecto');
+  console.log('   - 65+ tareas de proyecto');
+  console.log('   - 40 KPIs de proyecto');
+  console.log('   - 45 objetivos de proyecto\n');
 }
 
 main()

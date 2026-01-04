@@ -115,38 +115,39 @@
     }
   }
 
+  // Dark mode: Usando tokens Zinc para consistencia con el tema global
   &.dark-mode {
-    background: #1a1a2e;
-    color: #eee;
+    background: var(--surface-card); // #18181b en dark mode
+    color: var(--text-color);
 
     .config-panel {
-      background: #16213e;
-      border-color: #0f3460;
+      background: var(--surface-ground); // #09090b en dark mode
+      border-color: var(--surface-border);
     }
 
     .config-header {
-      background: #0f3460;
+      background: var(--surface-100);
     }
 
     .config-section h4 {
-      color: #ddd;
+      color: var(--text-color);
     }
 
     .chart-area {
-      background: #16213e;
+      background: var(--surface-card);
     }
 
     .chart-stats {
-      background: #0f3460;
+      background: var(--surface-100);
     }
 
     .toggle-item {
-      background: #0f3460;
-      border-color: #1a4a7a;
-      color: #aaa;
+      background: var(--surface-100);
+      border-color: var(--surface-border);
+      color: var(--text-color-secondary);
 
       &:hover {
-        background: #1a4a7a;
+        background: var(--surface-200);
       }
 
       &.active {
@@ -156,7 +157,7 @@
     }
 
     .asistente-item {
-      background: #0f3460;
+      background: var(--surface-100);
     }
   }
 }

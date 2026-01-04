@@ -101,6 +101,18 @@
           <i class="pi pi-list"></i>
           Tareas
         </p-tab>
+        <p-tab [value]="4">
+          <i class="pi pi-objects-column"></i>
+          Kanban
+        </p-tab>
+        <p-tab [value]="5">
+          <i class="pi pi-calendar"></i>
+          Calendario
+        </p-tab>
+        <p-tab [value]="6">
+          <i class="pi pi-chart-pie"></i>
+          KPIs
+        </p-tab>
       </p-tablist>
 
       <p-tabpanels>
@@ -196,49 +208,148 @@
 
         <!-- Gantt Tab -->
         <p-tabpanel [value]="1">
-          <div class="gantt-container">
-            <p-card header="Vista Gantt">
+          <div class="gantt-container-enhanced">
+            <!-- Gantt Toolbar -->
+            <div class="gantt-toolbar">
+              <div class="gantt-toolbar-left">
+                <span class="gantt-title">
+                  <i class="pi pi-chart-bar"></i>
+                  Diagrama de Gantt
+                </span>
+                <span class="gantt-subtitle">{{ ganttItems().length }} elementos</span>
+              </div>
+              <div class="gantt-toolbar-right">
+                <div class="gantt-zoom-controls">
+                  <span class="zoom-label">Zoom:</span>
+                  <p-button
+                    icon="pi pi-minus"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    (onClick)="ganttZoomOut()"
+                    pTooltip="Alejar" />
+                  <span class="zoom-level">{{ ganttZoomLevel() }}%</span>
+                  <p-button
+                    icon="pi pi-plus"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    (onClick)="ganttZoomIn()"
+                    pTooltip="Acercar" />
+                </div>
+                <p-button
+                  icon="pi pi-refresh"
+                  [rounded]="true"
+                  [text]="true"
+                  size="small"
+                  (onClick)="resetGanttZoom()"
+                  pTooltip="Restablecer zoom" />
+              </div>
+            </div>
+
+            <!-- Gantt Chart -->
+            <div class="gantt-chart-wrapper">
               @if (ganttItems().length > 0) {
-                <div class="gantt-chart">
-                  <!-- Header con fechas -->
-                  <div class="gantt-header">
-                    <div class="gantt-labels-header">Elemento</div>
+                <div class="gantt-chart" [style.min-width.%]="ganttZoomLevel()">
+                  <!-- Timeline Header -->
+                  <div class="gantt-timeline-ruler">
+                    <div class="gantt-labels-header">
+                      <span>Elemento</span>
+                    </div>
                     <div class="gantt-timeline-header">
-                      <span class="date-start">{{ formatDate(proyecto.startDate) }}</span>
-                      <span class="date-end">{{ formatDate(proyecto.endDate) }}</span>
+                      @for (month of ganttMonths(); track month.label) {
+                        <div class="gantt-month" [style.width.%]="month.width">
+                          <span>{{ month.label }}</span>
+                        </div>
+                      }
                     </div>
                   </div>
 
-                  <!-- Filas del Gantt -->
+                  <!-- Today Line Indicator -->
+                  <div class="gantt-today-line" [style.left]="getTodayPosition()">
+                    <div class="today-marker">
+                      <span class="today-label">Hoy</span>
+                    </div>
+                  </div>
+
+                  <!-- Gantt Body -->
                   <div class="gantt-body">
                     @for (item of ganttItems(); track item.id) {
-                      <div class="gantt-row" [class.phase-row]="item.type === 'phase'" [class.task-row]="item.type === 'task'">
+                      <div
+                        class="gantt-row"
+                        [class.phase-row]="item.type === 'phase'"
+                        [class.task-row]="item.type === 'task'"
+                        [class.completed]="item.status === 'completed'"
+                        (click)="onGanttItemClick(item)"
+                      >
                         <div class="gantt-label">
-                          <i [class]="item.type === 'phase' ? 'pi pi-folder' : 'pi pi-check-square'"></i>
-                          <span>{{ item.name }}</span>
+                          <i class="pi" [ngClass]="item.type === 'phase' ? 'pi-folder' : 'pi-check-square'"></i>
+                          <span class="item-name" [pTooltip]="item.name">{{ item.name }}</span>
+                          <p-tag
+                            [value]="item.progress + '%'"
+                            [severity]="getGanttProgressSeverity(item.progress)"
+                            styleClass="progress-badge"
+                          />
                         </div>
                         <div class="gantt-timeline">
+                          <!-- Grid lines -->
+                          <div class="gantt-grid-lines">
+                            @for (month of ganttMonths(); track month.label) {
+                              <div class="grid-line" [style.width.%]="month.width"></div>
+                            }
+                          </div>
+
+                          <!-- Bar -->
                           <div
                             class="gantt-bar"
                             [style.left]="getItemOffset(item)"
                             [style.width]="getItemWidth(item)"
                             [style.background-color]="item.color"
+                            [pTooltip]="getGanttTooltip(item)"
+                            tooltipPosition="top"
                           >
-                            <div class="gantt-progress" [style.width.%]="item.progress"></div>
-                            <span class="gantt-bar-label">{{ item.progress }}%</span>
+                            <div class="gantt-progress-fill" [style.width.%]="item.progress"></div>
+                            @if (getItemWidthValue(item) > 8) {
+                              <span class="gantt-bar-label">{{ item.progress }}%</span>
+                            }
                           </div>
                         </div>
                       </div>
                     }
                   </div>
+
+                  <!-- Legend -->
+                  <div class="gantt-legend">
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #3b82f6"></div>
+                      <span>En Progreso</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #10b981"></div>
+                      <span>Completado</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #94a3b8"></div>
+                      <span>Pendiente</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #ef4444"></div>
+                      <span>Bloqueado</span>
+                    </div>
+                    <div class="legend-item today-legend">
+                      <div class="legend-line"></div>
+                      <span>Hoy</span>
+                    </div>
+                  </div>
                 </div>
               } @else {
                 <div class="empty-state">
                   <i class="pi pi-chart-bar"></i>
-                  <p>No hay elementos para mostrar en el Gantt</p>
+                  <h3>Sin elementos</h3>
+                  <p>No hay fases o tareas para mostrar en el Gantt</p>
                 </div>
               }
-            </p-card>
+            </div>
           </div>
         </p-tabpanel>
 
@@ -442,6 +553,371 @@
                 </ng-template>
               </p-table>
             </p-card>
+          </div>
+        </p-tabpanel>
+
+        <!-- Kanban Tab -->
+        <p-tabpanel [value]="4">
+          <div class="kanban-container">
+            <!-- Toolbar -->
+            <div class="kanban-toolbar">
+              <div class="kanban-toolbar-left">
+                <span class="kanban-title">
+                  <i class="pi pi-objects-column"></i>
+                  Vista Kanban
+                </span>
+                <span class="kanban-subtitle">Arrastra las tareas entre columnas para cambiar su estado</span>
+              </div>
+              <div class="kanban-toolbar-right">
+                <p-button
+                  label="Nueva Tarea"
+                  icon="pi pi-plus"
+                  size="small"
+                  (onClick)="abrirFormularioNuevaTarea()" />
+              </div>
+            </div>
+
+            <!-- Kanban Board -->
+            <div class="kanban-board" cdkDropListGroup>
+              @for (column of kanbanColumns(); track column.id) {
+                <div class="kanban-column" [class]="column.bgClass">
+                  <!-- Column Header -->
+                  <div class="kanban-column-header" [style.border-left-color]="column.color">
+                    <div class="column-header-info">
+                      <i class="pi" [ngClass]="column.icon" [style.color]="column.color"></i>
+                      <span class="column-title">{{ column.title }}</span>
+                    </div>
+                    <span class="column-count" [style.background-color]="getKanbanColumnHeaderColor(column.id)">
+                      {{ column.tasks.length }}
+                    </span>
+                  </div>
+
+                  <!-- Column Content - Drop Zone -->
+                  <div
+                    class="kanban-column-content"
+                    cdkDropList
+                    [id]="'kanban-' + column.id"
+                    [cdkDropListData]="column.tasks"
+                    [cdkDropListConnectedTo]="kanbanColumnIds"
+                    (cdkDropListDropped)="onTaskDrop($event, column.id)"
+                  >
+                    @for (task of column.tasks; track task.id) {
+                      <div
+                        class="kanban-card"
+                        cdkDrag
+                        [cdkDragData]="task"
+                        [class.overdue]="isTaskOverdue(task)"
+                        (click)="abrirTask(task)"
+                      >
+                        <!-- Drag Preview -->
+                        <div class="kanban-card-preview" *cdkDragPreview>
+                          <span class="preview-title">{{ task.title }}</span>
+                        </div>
+
+                        <!-- Card Content -->
+                        <div class="kanban-card-header">
+                          <span class="task-title">{{ task.title }}</span>
+                          <p-tag
+                            [value]="getPriorityLabel(task.priority)"
+                            [severity]="getPrioritySeverity(task.priority)"
+                            styleClass="priority-tag"
+                          />
+                        </div>
+
+                        @if (task.description) {
+                          <p class="task-description">{{ task.description }}</p>
+                        }
+
+                        <!-- Progress -->
+                        <div class="kanban-card-progress">
+                          <div class="progress-bar-track">
+                            <div
+                              class="progress-bar-fill"
+                              [style.width.%]="task.progress"
+                              [style.background-color]="getProgressColor(task.progress)"
+                            ></div>
+                          </div>
+                          <span class="progress-text">{{ task.progress }}%</span>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="kanban-card-footer">
+                          <div class="task-meta">
+                            <span class="task-type">
+                              <i class="pi" [ngClass]="getTaskTypeIcon(task.taskType)"></i>
+                              {{ getTaskTypeLabel(task.taskType) }}
+                            </span>
+                          </div>
+                          <div class="task-dates" [class.overdue]="isTaskOverdue(task)">
+                            <i class="pi pi-calendar"></i>
+                            <span>{{ formatDate(task.dueDate) }}</span>
+                            @if (isTaskOverdue(task)) {
+                              <i class="pi pi-exclamation-triangle overdue-icon"></i>
+                            }
+                          </div>
+                        </div>
+
+                        <!-- Drag Handle Indicator -->
+                        <div class="drag-handle" cdkDragHandle>
+                          <i class="pi pi-ellipsis-v"></i>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Empty State -->
+                    @if (column.tasks.length === 0) {
+                      <div class="kanban-empty-column">
+                        <i class="pi pi-inbox"></i>
+                        <span>Sin tareas</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Calendario Tab -->
+        <p-tabpanel [value]="5">
+          <div class="calendar-container">
+            <!-- Calendar Toolbar -->
+            <div class="calendar-toolbar">
+              <div class="calendar-toolbar-left">
+                <span class="calendar-title">
+                  <i class="pi pi-calendar"></i>
+                  Calendario de Tareas
+                </span>
+                <span class="calendar-subtitle">Click en una fecha para crear una nueva tarea</span>
+              </div>
+              <div class="calendar-toolbar-right">
+                <div class="calendar-legend">
+                  <div class="legend-item">
+                    <span class="legend-dot" style="background: #3b82f6"></span>
+                    <span>En Progreso</span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot" style="background: #10b981"></span>
+                    <span>Completado</span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot" style="background: #94a3b8"></span>
+                    <span>Pendiente</span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-dot" style="background: #ef4444"></span>
+                    <span>Bloqueado</span>
+                  </div>
+                </div>
+                <p-button
+                  label="Nueva Tarea"
+                  icon="pi pi-plus"
+                  size="small"
+                  (onClick)="abrirFormularioNuevaTarea()" />
+              </div>
+            </div>
+
+            <!-- FullCalendar -->
+            <div class="calendar-wrapper">
+              <full-calendar [options]="calendarOptions()" />
+            </div>
+
+            <!-- Calendar Stats -->
+            <div class="calendar-stats">
+              <div class="stat-item">
+                <span class="stat-value">{{ calendarEvents().length }}</span>
+                <span class="stat-label">Total eventos</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ inProgressTasks }}</span>
+                <span class="stat-label">En progreso</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ overdueTasks }}</span>
+                <span class="stat-label">Vencidas</span>
+              </div>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- KPIs Tab -->
+        <p-tabpanel [value]="6">
+          <div class="kpis-container">
+            <!-- KPIs Header -->
+            <div class="kpis-header">
+              <div class="kpis-header-left">
+                <span class="kpis-title">
+                  <i class="pi pi-chart-pie"></i>
+                  Panel de KPIs
+                </span>
+                <span class="kpis-subtitle">Indicadores clave de rendimiento del proyecto</span>
+              </div>
+            </div>
+
+            <!-- KPI Summary Cards -->
+            <div class="kpi-summary-grid">
+              <div class="kpi-summary-card">
+                <div class="kpi-icon green">
+                  <i class="pi pi-check-circle"></i>
+                </div>
+                <div class="kpi-info">
+                  <span class="kpi-value">{{ completedTasks }}</span>
+                  <span class="kpi-label">Tareas Completadas</span>
+                </div>
+                <div class="kpi-change positive">
+                  <i class="pi pi-arrow-up"></i>
+                  <span>{{ totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(0) : 0 }}%</span>
+                </div>
+              </div>
+
+              <div class="kpi-summary-card">
+                <div class="kpi-icon blue">
+                  <i class="pi pi-clock"></i>
+                </div>
+                <div class="kpi-info">
+                  <span class="kpi-value">{{ pendingTasks }}</span>
+                  <span class="kpi-label">Tareas Pendientes</span>
+                </div>
+                <div class="kpi-change neutral">
+                  <i class="pi pi-minus"></i>
+                  <span>{{ totalTasks > 0 ? ((pendingTasks / totalTasks) * 100).toFixed(0) : 0 }}%</span>
+                </div>
+              </div>
+
+              <div class="kpi-summary-card">
+                <div class="kpi-icon orange">
+                  <i class="pi pi-exclamation-triangle"></i>
+                </div>
+                <div class="kpi-info">
+                  <span class="kpi-value">{{ overdueTasks }}</span>
+                  <span class="kpi-label">Tareas Vencidas</span>
+                </div>
+                <div class="kpi-change" [class.negative]="overdueTasks > 0" [class.positive]="overdueTasks === 0">
+                  <i class="pi" [ngClass]="overdueTasks > 0 ? 'pi-arrow-up' : 'pi-check'"></i>
+                  <span>{{ overdueTasks > 0 ? 'Atención' : 'OK' }}</span>
+                </div>
+              </div>
+
+              <div class="kpi-summary-card">
+                <div class="kpi-icon purple">
+                  <i class="pi pi-chart-line"></i>
+                </div>
+                <div class="kpi-info">
+                  <span class="kpi-value">{{ project()?.progress || 0 }}%</span>
+                  <span class="kpi-label">Progreso Global</span>
+                </div>
+                <div class="kpi-progress">
+                  <p-progressBar
+                    [value]="project()?.progress || 0"
+                    [showValue]="false"
+                    [style]="{ height: '6px', width: '100%' }"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="kpi-charts-grid">
+              <!-- Task Status Distribution -->
+              <div class="kpi-chart-card">
+                <div class="chart-header">
+                  <h4>Distribución por Estado</h4>
+                  <span class="chart-subtitle">Estado actual de las tareas</span>
+                </div>
+                <div class="chart-container">
+                  <p-chart
+                    type="pie"
+                    [data]="taskStatusChartData()"
+                    [options]="taskStatusChartOptions"
+                    [style]="{ height: '250px' }"
+                  />
+                </div>
+              </div>
+
+              <!-- Priority Distribution -->
+              <div class="kpi-chart-card">
+                <div class="chart-header">
+                  <h4>Distribución por Prioridad</h4>
+                  <span class="chart-subtitle">Prioridades de las tareas</span>
+                </div>
+                <div class="chart-container">
+                  <p-chart
+                    type="doughnut"
+                    [data]="priorityChartData()"
+                    [options]="doughnutChartOptions"
+                    [style]="{ height: '250px' }"
+                  />
+                </div>
+              </div>
+
+              <!-- Phase Progress -->
+              <div class="kpi-chart-card wide">
+                <div class="chart-header">
+                  <h4>Progreso por Fase</h4>
+                  <span class="chart-subtitle">Avance de cada fase del proyecto</span>
+                </div>
+                <div class="chart-container">
+                  <p-chart
+                    type="bar"
+                    [data]="phaseProgressChartData()"
+                    [options]="phaseProgressChartOptions"
+                    [style]="{ height: '200px' }"
+                  />
+                </div>
+              </div>
+
+              <!-- Weekly Completion Trend -->
+              <div class="kpi-chart-card wide">
+                <div class="chart-header">
+                  <h4>Tendencia de Completado</h4>
+                  <span class="chart-subtitle">Progreso semanal vs meta</span>
+                </div>
+                <div class="chart-container">
+                  <p-chart
+                    type="line"
+                    [data]="weeklyCompletionChartData()"
+                    [options]="lineChartOptions"
+                    [style]="{ height: '200px' }"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Objectives Section -->
+            @if (project()?.objectives && project()!.objectives!.length > 0) {
+              <div class="kpi-objectives-section">
+                <h4>
+                  <i class="pi pi-bullseye"></i>
+                  Objetivos SMART
+                </h4>
+                <div class="objectives-grid">
+                  @for (obj of project()!.objectives; track obj.id) {
+                    <div class="objective-card" [class]="'objective-' + obj.category">
+                      <div class="objective-header">
+                        <span class="objective-category">{{ obj.category | uppercase }}</span>
+                        <p-tag
+                          [value]="obj.status"
+                          [severity]="obj.status === 'achieved' ? 'success' : obj.status === 'in_progress' ? 'info' : 'secondary'"
+                        />
+                      </div>
+                      <p class="objective-description">{{ obj.description }}</p>
+                      @if (obj.targetDate) {
+                        <div class="objective-dates">
+                          <i class="pi pi-calendar"></i>
+                          <span>Fecha objetivo: {{ formatDate(obj.targetDate) }}</span>
+                        </div>
+                      }
+                      @if (obj.completedDate) {
+                        <div class="objective-dates completed">
+                          <i class="pi pi-check-circle"></i>
+                          <span>Completado: {{ formatDate(obj.completedDate) }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
           </div>
         </p-tabpanel>
       </p-tabpanels>

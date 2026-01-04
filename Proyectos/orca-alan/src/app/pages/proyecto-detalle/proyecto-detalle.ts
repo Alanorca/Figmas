@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
+// Angular CDK Drag & Drop
+import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+
 // PrimeNG
 import { ButtonModule } from 'primeng/button';
 import { TabsModule } from 'primeng/tabs';
@@ -25,7 +28,19 @@ import { SliderModule } from 'primeng/slider';
 import { ToolbarModule } from 'primeng/toolbar';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { AvatarModule } from 'primeng/avatar';
+import { BadgeModule } from 'primeng/badge';
 import { MessageService, ConfirmationService } from 'primeng/api';
+
+// FullCalendar
+import { FullCalendarModule } from '@fullcalendar/angular';
+import { CalendarOptions, EventClickArg, DateSelectArg } from '@fullcalendar/core';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+
+// PrimeNG Charts
+import { ChartModule } from 'primeng/chart';
 
 // Services
 import { ProyectosService } from '../../services/proyectos.service';
@@ -70,12 +85,31 @@ interface TimelineEvent {
   type: 'phase' | 'task' | 'milestone';
 }
 
+// Kanban board interfaces
+interface KanbanColumn {
+  id: TaskStatus;
+  title: string;
+  icon: string;
+  color: string;
+  bgClass: string;
+  tasks: Task[];
+}
+
+const KANBAN_COLUMNS_CONFIG: Omit<KanbanColumn, 'tasks'>[] = [
+  { id: 'pending', title: 'Pendiente', icon: 'pi-clock', color: '#94a3b8', bgClass: 'kanban-pending' },
+  { id: 'in_progress', title: 'En Progreso', icon: 'pi-spin pi-spinner', color: '#3b82f6', bgClass: 'kanban-progress' },
+  { id: 'in_review', title: 'En Revisión', icon: 'pi-eye', color: '#f59e0b', bgClass: 'kanban-review' },
+  { id: 'completed', title: 'Completado', icon: 'pi-check-circle', color: '#10b981', bgClass: 'kanban-completed' },
+  { id: 'blocked', title: 'Bloqueado', icon: 'pi-ban', color: '#ef4444', bgClass: 'kanban-blocked' }
+];
+
 @Component({
   selector: 'app-proyecto-detalle',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
+    DragDropModule,
     ButtonModule,
     TabsModule,
     TagModule,
@@ -96,7 +130,11 @@ interface TimelineEvent {
     SliderModule,
     ToolbarModule,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    AvatarModule,
+    BadgeModule,
+    FullCalendarModule,
+    ChartModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './proyecto-detalle.html',
@@ -168,6 +206,293 @@ export class ProyectoDetalleComponent implements OnInit {
       label: p.name
     }));
   });
+
+  // ============================================================
+  // KANBAN BOARD
+  // ============================================================
+  kanbanColumns = computed<KanbanColumn[]>(() => {
+    const allTasks = this.tasks();
+    return KANBAN_COLUMNS_CONFIG.map(col => ({
+      ...col,
+      tasks: allTasks.filter(t => t.status === col.id)
+    }));
+  });
+
+  // IDs de conexión para drag & drop entre columnas
+  kanbanColumnIds = KANBAN_COLUMNS_CONFIG.map(col => `kanban-${col.id}`);
+
+  // ============================================================
+  // GANTT CHART ENHANCED
+  // ============================================================
+  ganttZoomLevel = signal(100);
+
+  // Computed para generar los meses del proyecto
+  ganttMonths = computed(() => {
+    const project = this.project();
+    if (!project) return [];
+
+    const start = new Date(project.startDate);
+    const end = new Date(project.endDate);
+    const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const months: { label: string; width: number }[] = [];
+
+    let current = new Date(start);
+    while (current <= end) {
+      const monthEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0);
+      const effectiveEnd = monthEnd > end ? end : monthEnd;
+      const effectiveStart = current < start ? start : current;
+      const daysInMonth = Math.ceil((effectiveEnd.getTime() - effectiveStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const widthPercent = (daysInMonth / totalDays) * 100;
+
+      months.push({
+        label: current.toLocaleDateString('es-MX', { month: 'short', year: '2-digit' }),
+        width: widthPercent
+      });
+
+      current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+    }
+
+    return months;
+  });
+
+  // ============================================================
+  // CALENDAR VIEW
+  // ============================================================
+  calendarOptions = computed<CalendarOptions>(() => ({
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+    initialView: 'dayGridMonth',
+    locale: 'es',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    buttonText: {
+      today: 'Hoy',
+      month: 'Mes',
+      week: 'Semana',
+      day: 'Día'
+    },
+    events: this.calendarEvents(),
+    eventClick: this.handleEventClick.bind(this),
+    dateClick: this.handleDateClick.bind(this),
+    selectable: true,
+    editable: false,
+    dayMaxEvents: 3,
+    moreLinkText: 'más',
+    eventDisplay: 'block',
+    height: 'auto',
+    aspectRatio: 1.8
+  }));
+
+  // Computed para eventos del calendario
+  calendarEvents = computed(() => {
+    const tasks = this.tasks();
+    const project = this.project();
+    const events: any[] = [];
+
+    // Agregar tareas
+    tasks.forEach(task => {
+      events.push({
+        id: task.id,
+        title: task.title,
+        start: task.startDate,
+        end: task.dueDate,
+        backgroundColor: this.getTaskColor(task.status),
+        borderColor: this.getTaskColor(task.status),
+        extendedProps: {
+          type: 'task',
+          status: task.status,
+          progress: task.progress,
+          priority: task.priority
+        }
+      });
+    });
+
+    // Agregar fases del proyecto
+    if (project?.phases) {
+      project.phases.forEach(phase => {
+        events.push({
+          id: `phase-${phase.id}`,
+          title: `📁 ${phase.name}`,
+          start: phase.startDate,
+          end: phase.endDate,
+          backgroundColor: this.getPhaseColor(phase.status),
+          borderColor: this.getPhaseColor(phase.status),
+          extendedProps: {
+            type: 'phase',
+            status: phase.status,
+            progress: phase.progress
+          }
+        });
+      });
+    }
+
+    return events;
+  });
+
+  // ============================================================
+  // KPI CHARTS DATA
+  // ============================================================
+
+  // Chart options for task status distribution (Pie)
+  taskStatusChartData = computed(() => {
+    const tasks = this.tasks();
+    const statusCounts = {
+      pending: tasks.filter(t => t.status === 'pending').length,
+      in_progress: tasks.filter(t => t.status === 'in_progress').length,
+      in_review: tasks.filter(t => t.status === 'in_review').length,
+      completed: tasks.filter(t => t.status === 'completed').length,
+      blocked: tasks.filter(t => t.status === 'blocked').length
+    };
+
+    return {
+      labels: ['Pendiente', 'En Progreso', 'En Revisión', 'Completado', 'Bloqueado'],
+      datasets: [{
+        data: [statusCounts.pending, statusCounts.in_progress, statusCounts.in_review, statusCounts.completed, statusCounts.blocked],
+        backgroundColor: ['#94a3b8', '#3b82f6', '#f59e0b', '#10b981', '#ef4444'],
+        hoverBackgroundColor: ['#64748b', '#2563eb', '#d97706', '#059669', '#dc2626']
+      }]
+    };
+  });
+
+  taskStatusChartOptions = {
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 20
+        }
+      }
+    },
+    maintainAspectRatio: false
+  };
+
+  // Chart for phase progress (Bar)
+  phaseProgressChartData = computed(() => {
+    const project = this.project();
+    if (!project?.phases) {
+      return { labels: [], datasets: [] };
+    }
+
+    return {
+      labels: project.phases.map(p => p.name),
+      datasets: [{
+        label: 'Progreso %',
+        data: project.phases.map(p => p.progress),
+        backgroundColor: project.phases.map(p => this.getPhaseColor(p.status)),
+        borderWidth: 0,
+        borderRadius: 4
+      }]
+    };
+  });
+
+  phaseProgressChartOptions = {
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        max: 100,
+        grid: { display: false }
+      },
+      y: {
+        grid: { display: false }
+      }
+    },
+    maintainAspectRatio: false
+  };
+
+  // Priority distribution chart (Doughnut)
+  priorityChartData = computed(() => {
+    const tasks = this.tasks();
+    const priorityCounts = {
+      low: tasks.filter(t => t.priority === 'low').length,
+      medium: tasks.filter(t => t.priority === 'medium').length,
+      high: tasks.filter(t => t.priority === 'high').length,
+      critical: tasks.filter(t => t.priority === 'critical').length
+    };
+
+    return {
+      labels: ['Baja', 'Media', 'Alta', 'Crítica'],
+      datasets: [{
+        data: [priorityCounts.low, priorityCounts.medium, priorityCounts.high, priorityCounts.critical],
+        backgroundColor: ['#94a3b8', '#3b82f6', '#f59e0b', '#ef4444'],
+        hoverBackgroundColor: ['#64748b', '#2563eb', '#d97706', '#dc2626']
+      }]
+    };
+  });
+
+  doughnutChartOptions = {
+    cutout: '60%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 15
+        }
+      }
+    },
+    maintainAspectRatio: false
+  };
+
+  // Weekly task completion (Line chart)
+  weeklyCompletionChartData = computed(() => {
+    // Generate last 4 weeks labels
+    const weeks = ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'];
+
+    // Simulated data based on task count
+    const tasksCount = this.tasks().length;
+    const completedCount = this.tasks().filter(t => t.status === 'completed').length;
+
+    return {
+      labels: weeks,
+      datasets: [
+        {
+          label: 'Tareas Completadas',
+          data: [Math.floor(completedCount * 0.2), Math.floor(completedCount * 0.4), Math.floor(completedCount * 0.7), completedCount],
+          fill: true,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4
+        },
+        {
+          label: 'Meta',
+          data: [Math.floor(tasksCount * 0.25), Math.floor(tasksCount * 0.5), Math.floor(tasksCount * 0.75), tasksCount],
+          fill: false,
+          borderColor: '#94a3b8',
+          borderDash: [5, 5],
+          tension: 0.4
+        }
+      ]
+    };
+  });
+
+  lineChartOptions = {
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 15
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+      },
+      x: {
+        grid: { display: false }
+      }
+    },
+    maintainAspectRatio: false
+  };
 
   ngOnInit(): void {
     const id = this.route.snapshot.params['id'];
@@ -647,5 +972,193 @@ export class ProyectoDetalleComponent implements OnInit {
 
   get overdueTasks(): number {
     return this.tasks().filter(t => this.isTaskOverdue(t)).length;
+  }
+
+  get inProgressTasks(): number {
+    return this.tasks().filter(t => t.status === 'in_progress').length;
+  }
+
+  // ============================================================
+  // KANBAN DRAG & DROP
+  // ============================================================
+
+  /**
+   * Maneja el evento de drop cuando una tarea se mueve entre columnas
+   */
+  async onTaskDrop(event: CdkDragDrop<Task[]>, targetStatus: TaskStatus): Promise<void> {
+    const task = event.item.data as Task;
+
+    // Si se mueve a la misma columna, no hacer nada
+    if (task.status === targetStatus) {
+      // Solo reordenar dentro de la misma columna (opcional)
+      if (event.previousIndex !== event.currentIndex) {
+        moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      }
+      return;
+    }
+
+    // Cambiar el estado de la tarea
+    try {
+      await this.proyectosService.updateTaskStatus(task.id, targetStatus);
+
+      // Mostrar mensaje con animación
+      const statusLabel = this.getTaskStatusLabel(targetStatus);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Estado actualizado',
+        detail: `"${task.title}" movida a ${statusLabel}`,
+        life: 2000
+      });
+
+      // Actualizar Gantt items
+      this.buildGanttItems();
+    } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo mover la tarea'
+      });
+    }
+  }
+
+  /**
+   * Obtiene el color de fondo de la columna según el estado
+   */
+  getKanbanColumnHeaderColor(status: TaskStatus): string {
+    const colors: Record<TaskStatus, string> = {
+      pending: 'rgba(148, 163, 184, 0.15)',
+      in_progress: 'rgba(59, 130, 246, 0.15)',
+      in_review: 'rgba(245, 158, 11, 0.15)',
+      completed: 'rgba(16, 185, 129, 0.15)',
+      blocked: 'rgba(239, 68, 68, 0.15)',
+      cancelled: 'rgba(107, 114, 128, 0.15)'
+    };
+    return colors[status];
+  }
+
+  // ============================================================
+  // GANTT CHART METHODS
+  // ============================================================
+
+  ganttZoomIn(): void {
+    const current = this.ganttZoomLevel();
+    if (current < 200) {
+      this.ganttZoomLevel.set(current + 25);
+    }
+  }
+
+  ganttZoomOut(): void {
+    const current = this.ganttZoomLevel();
+    if (current > 50) {
+      this.ganttZoomLevel.set(current - 25);
+    }
+  }
+
+  resetGanttZoom(): void {
+    this.ganttZoomLevel.set(100);
+  }
+
+  getTodayPosition(): string {
+    const project = this.project();
+    if (!project) return '0%';
+
+    const today = new Date();
+    const projectStart = new Date(project.startDate).getTime();
+    const projectEnd = new Date(project.endDate).getTime();
+
+    // Si hoy está fuera del rango del proyecto, no mostrar la línea
+    if (today.getTime() < projectStart || today.getTime() > projectEnd) {
+      return '-100%';
+    }
+
+    const totalDuration = projectEnd - projectStart;
+    const offset = today.getTime() - projectStart;
+    const offsetPercent = (offset / totalDuration) * 100;
+
+    // Ajustar por el ancho de la columna de labels (200px aprox)
+    return `calc(200px + ${offsetPercent}% * (100% - 200px) / 100%)`;
+  }
+
+  getItemWidthValue(item: GanttItem): number {
+    const project = this.project();
+    if (!project) return 0;
+
+    const projectStart = new Date(project.startDate).getTime();
+    const projectEnd = new Date(project.endDate).getTime();
+    const totalDuration = projectEnd - projectStart;
+
+    const itemDuration = item.endDate.getTime() - item.startDate.getTime();
+    return (itemDuration / totalDuration) * 100;
+  }
+
+  getGanttProgressSeverity(progress: number): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    if (progress >= 80) return 'success';
+    if (progress >= 50) return 'info';
+    if (progress >= 25) return 'warn';
+    return 'secondary';
+  }
+
+  getGanttTooltip(item: GanttItem): string {
+    const start = this.formatDate(item.startDate);
+    const end = this.formatDate(item.endDate);
+    const duration = Math.ceil((item.endDate.getTime() - item.startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const type = item.type === 'phase' ? 'Fase' : 'Tarea';
+
+    return `${type}: ${item.name}\nInicio: ${start}\nFin: ${end}\nDuración: ${duration} días\nProgreso: ${item.progress}%`;
+  }
+
+  onGanttItemClick(item: GanttItem): void {
+    if (item.type === 'task') {
+      const task = this.tasks().find(t => t.id === item.id);
+      if (task) {
+        this.abrirTask(task);
+      }
+    }
+  }
+
+  // ============================================================
+  // CALENDAR EVENT HANDLERS
+  // ============================================================
+
+  handleEventClick(clickInfo: EventClickArg): void {
+    const eventId = clickInfo.event.id;
+    const eventType = clickInfo.event.extendedProps['type'];
+
+    if (eventType === 'task') {
+      const task = this.tasks().find(t => t.id === eventId);
+      if (task) {
+        this.abrirTask(task);
+      }
+    } else if (eventType === 'phase') {
+      // Para fases, mostrar un toast con información
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Fase del proyecto',
+        detail: clickInfo.event.title.replace('📁 ', ''),
+        life: 3000
+      });
+    }
+  }
+
+  handleDateClick(dateInfo: any): void {
+    // Abrir formulario de nueva tarea con la fecha seleccionada
+    const project = this.project();
+    if (!project) return;
+
+    this.taskFormData.set({
+      projectId: project.id,
+      phaseId: project.phases?.[0]?.id || '',
+      title: '',
+      description: '',
+      assignedTo: 'user-1',
+      startDate: dateInfo.dateStr,
+      dueDate: dateInfo.dateStr,
+      priority: 'medium',
+      taskType: 'manual',
+      estimatedHours: 8,
+      createdBy: 'user-1'
+    });
+    this.isEditingTask.set(false);
+    this.showTaskFormDrawer.set(true);
   }
 }

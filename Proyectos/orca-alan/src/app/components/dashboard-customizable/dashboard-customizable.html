@@ -409,6 +409,17 @@
                 </div>
               }
 
+              @case ('analisis-inteligente') {
+                <div class="widget-analisis-inteligente">
+                  <app-analisis-inteligente-widget
+                    [modoWidget]="true"
+                    [config]="$any(widget.config)"
+                    (onGuardar)="onAnalisisInteligenteGuardar($event)"
+                    (onCerrar)="eliminarWidget(widget)">
+                  </app-analisis-inteligente-widget>
+                </div>
+              }
+
               @default {
                 <div class="widget-placeholder">
                   <i class="pi pi-box"></i>
@@ -607,6 +618,313 @@
             </app-grafica-wizard>
           }
 
+          <!-- Análisis Inteligente - Wizard Multistep -->
+          @case ('analisis-inteligente') {
+            <div class="ai-wizard-container">
+              <!-- Stepper Visual -->
+              <div class="ai-wizard-stepper">
+                @for (paso of aiPasosConfig; track paso.id; let i = $index) {
+                  <div
+                    class="ai-stepper-item"
+                    [class.active]="i === aiWizardPaso()"
+                    [class.completed]="i < aiWizardPaso()"
+                    [class.clickable]="i < aiWizardPaso()"
+                    (click)="aiWizardIrAPaso(i)">
+                    <div class="ai-stepper-indicator">
+                      <div class="ai-stepper-icon">
+                        @if (i < aiWizardPaso()) {
+                          <i class="pi pi-check"></i>
+                        } @else {
+                          <i [class]="paso.icon"></i>
+                        }
+                      </div>
+                      @if (i < aiPasosConfig.length - 1) {
+                        <div class="ai-stepper-line" [class.completed]="i < aiWizardPaso()"></div>
+                      }
+                    </div>
+                    <span class="ai-stepper-label">{{ paso.label }}</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Error Message -->
+              @if (aiWizardError()) {
+                <p-message severity="error" [text]="aiWizardError()!" styleClass="mb-3 w-full" />
+              }
+
+              <!-- PASO 1: CONSULTA -->
+              @if (aiWizardPaso() === 0) {
+                <div class="ai-step-content">
+                  <div class="ai-step-section">
+                    <label class="ai-section-label">
+                      <i class="pi pi-question-circle"></i>
+                      ¿Qué deseas analizar?
+                    </label>
+                    <p-iconField>
+                      <p-inputIcon styleClass="pi pi-search" />
+                      <input
+                        type="text"
+                        pInputText
+                        class="w-full"
+                        [ngModel]="aiWizardConsulta()"
+                        (ngModelChange)="aiWizardConsulta.set($event)"
+                        placeholder="Ej: Tendencia de incidentes críticos por área..." />
+                    </p-iconField>
+                  </div>
+
+                  <div class="ai-step-section">
+                    <label class="ai-section-label">Tipo de análisis</label>
+                    <div class="ai-type-cards">
+                      @for (tipo of aiTiposAnalisisOptions; track tipo.value) {
+                        <p-card
+                          styleClass="ai-type-card"
+                          [ngClass]="{'selected': aiWizardTipoAnalisis() === tipo.value}"
+                          (click)="aiSetTipoAnalisis(tipo.value)">
+                          <div class="ai-type-card-content">
+                            <i [class]="tipo.icon"></i>
+                            <span class="ai-type-label">{{ tipo.label }}</span>
+                            <span class="ai-type-desc">{{ tipo.descripcion }}</span>
+                          </div>
+                        </p-card>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="ai-step-section">
+                    <label class="ai-section-label">
+                      <i class="pi pi-lightbulb"></i>
+                      Ejemplos de consultas
+                    </label>
+                    <div class="ai-examples-grid">
+                      @for (ejemplo of aiEjemplosConsultas; track ejemplo.texto) {
+                        <p-button
+                          [label]="ejemplo.texto"
+                          [text]="true"
+                          severity="secondary"
+                          size="small"
+                          styleClass="ai-example-btn"
+                          (onClick)="aiUsarEjemplo(ejemplo.texto)" />
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- PASO 2: CONFIGURAR -->
+              @if (aiWizardPaso() === 1) {
+                <div class="ai-step-content">
+                  @if (aiWizardInterpretacion(); as interp) {
+                    <!-- Resumen de interpretación -->
+                    <div class="ai-interp-summary">
+                      <div class="ai-interp-header">
+                        <i class="pi pi-check-circle"></i>
+                        <span>Interpretación de tu consulta</span>
+                        <p-tag
+                          [value]="'Confianza: ' + interp.confianzaInterpretacion + '%'"
+                          [severity]="interp.confianzaInterpretacion >= 80 ? 'success' : interp.confianzaInterpretacion >= 50 ? 'warn' : 'danger'"
+                          size="small">
+                        </p-tag>
+                      </div>
+                      <p class="ai-interp-query">"{{ interp.consultaOriginal }}"</p>
+                    </div>
+
+                    <!-- Entidades detectadas -->
+                    <div class="ai-step-section">
+                      <label class="ai-section-label">Entidades detectadas</label>
+                      <div class="ai-entities-row">
+                        @for (entidad of aiWizardEntidades(); track entidad) {
+                          <p-chip
+                            [label]="aiGetEntidadLabel(entidad)"
+                            [removable]="aiWizardEntidades().length > 1"
+                            (onRemove)="aiEliminarEntidad(entidad)"
+                            styleClass="ai-entity-chip">
+                            <ng-template pTemplate="content">
+                              <i [class]="aiGetEntidadIcon(entidad)" class="mr-2"></i>
+                              <span>{{ aiGetEntidadLabel(entidad) }}</span>
+                            </ng-template>
+                          </p-chip>
+                        }
+                        @if (aiWizardEntidades().length < 4) {
+                          <p-menu #aiAddEntityMenu [model]="aiGetEntidadesMenu()" [popup]="true" appendTo="body"></p-menu>
+                          <p-button
+                            icon="pi pi-plus"
+                            [rounded]="true"
+                            [text]="true"
+                            size="small"
+                            (onClick)="aiAddEntityMenu.toggle($event)"
+                            pTooltip="Agregar entidad">
+                          </p-button>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Filtros detectados -->
+                    @if (interp.filtrosImplicitos?.length > 0) {
+                      <div class="ai-step-section">
+                        <label class="ai-section-label">Filtros detectados</label>
+                        <div class="ai-filters-row">
+                          @for (filtro of interp.filtrosImplicitos; track filtro.campo) {
+                            <p-chip [label]="filtro.etiqueta" styleClass="ai-filter-chip" />
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Opciones de predicción -->
+                    @if (aiWizardTipoAnalisis() === 'predictivo') {
+                      <div class="ai-step-section ai-prediction-options">
+                        <label class="ai-section-label">Opciones de predicción</label>
+                        <div class="ai-options-row">
+                          <div class="ai-option-field">
+                            <label>Horizonte</label>
+                            <p-select
+                              [options]="aiHorizonteOptions"
+                              [ngModel]="aiWizardHorizonte()"
+                              (ngModelChange)="aiWizardHorizonte.set($event)"
+                              optionLabel="label"
+                              optionValue="value"
+                              [style]="{ width: '140px' }">
+                            </p-select>
+                          </div>
+                          <div class="ai-option-field">
+                            <label>Intervalo de confianza</label>
+                            <p-toggleSwitch
+                              [ngModel]="aiWizardIntervaloConfianza()"
+                              (ngModelChange)="aiWizardIntervaloConfianza.set($event)">
+                            </p-toggleSwitch>
+                          </div>
+                        </div>
+                      </div>
+                    }
+
+                    <p-divider />
+
+                    <!-- Selección de visualización -->
+                    <div class="ai-step-section">
+                      <label class="ai-section-label">Tipo de visualización</label>
+                      <div class="ai-visualization-grid">
+                        @for (vis of aiWizardVisualizaciones(); track vis.tipo) {
+                          <p-card
+                            styleClass="ai-vis-card"
+                            [ngClass]="{'selected': aiWizardVisualizacionSeleccionada() === vis.tipo, 'recommended': vis.recomendado}"
+                            (click)="aiWizardVisualizacionSeleccionada.set(vis.tipo)">
+                            <div class="ai-vis-card-content">
+                              <i [class]="aiGetVisualizacionIcon(vis.tipo)"></i>
+                              <span class="ai-vis-name">{{ vis.nombre }}</span>
+                              @if (vis.recomendado) {
+                                <p-tag value="Recomendado" severity="success" [rounded]="true" styleClass="ai-vis-badge" />
+                              }
+                            </div>
+                          </p-card>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- PASO 3: PREVIEW -->
+              @if (aiWizardPaso() === 2) {
+                <div class="ai-step-content ai-preview-step">
+                  @if (aiWizardResultadoPreview(); as preview) {
+                    <div class="ai-preview-header">
+                      <h4>Vista Previa</h4>
+                      <span class="ai-preview-hint">Así se verá el widget en el dashboard</span>
+                    </div>
+
+                    <p-card styleClass="ai-preview-container">
+                      <div class="ai-preview-widget-mock">
+                        <div class="ai-preview-widget-header">
+                          <i class="pi pi-sparkles"></i>
+                          <span>{{ preview.configuracionVisualizacion.titulo }}</span>
+                        </div>
+                        <div class="ai-preview-chart-placeholder">
+                          <i [class]="aiGetVisualizacionIcon(preview.configuracionVisualizacion.tipo)"></i>
+                          <span>{{ preview.configuracionVisualizacion.tipo | titlecase }}</span>
+                        </div>
+                      </div>
+                    </p-card>
+
+                    <div class="ai-config-summary">
+                      <h5>Resumen de Configuración</h5>
+                      <ul>
+                        <li>
+                          <i class="pi pi-chart-bar"></i>
+                          <span>Tipo: <strong>{{ aiWizardTipoAnalisis() | titlecase }}</strong></span>
+                        </li>
+                        <li>
+                          <i [class]="aiGetVisualizacionIcon(aiWizardVisualizacionSeleccionada()!)"></i>
+                          <span>Visualización: <strong>{{ preview.configuracionVisualizacion.tipo | titlecase }}</strong></span>
+                        </li>
+                        <li>
+                          <i class="pi pi-box"></i>
+                          <span>Entidades: <strong>{{ aiWizardEntidades().length }}</strong></span>
+                        </li>
+                        @if (aiWizardTipoAnalisis() === 'predictivo') {
+                          <li>
+                            <i class="pi pi-calendar"></i>
+                            <span>Horizonte: <strong>{{ aiWizardHorizonte() }} meses</strong></span>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+
+                    @if (preview.tipoAnalisis === 'predictivo' && preview.datosPredictivos) {
+                      <div class="ai-preview-info-box">
+                        <i class="pi pi-info-circle"></i>
+                        <div>
+                          <strong>{{ preview.datosPredictivos.tendencia | titlecase }}</strong>
+                          <p>{{ preview.datosPredictivos.resumenTexto }}</p>
+                        </div>
+                      </div>
+                    }
+                  } @else {
+                    <div class="ai-preview-loading">
+                      <p-progressSpinner strokeWidth="3" styleClass="ai-preview-spinner" />
+                      <span>Generando vista previa...</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Footer del wizard -->
+              <div class="ai-wizard-footer">
+                @if (aiWizardPaso() > 0) {
+                  <p-button
+                    label="Atrás"
+                    icon="pi pi-arrow-left"
+                    severity="secondary"
+                    [text]="true"
+                    (onClick)="aiWizardPasoAnterior()">
+                  </p-button>
+                } @else {
+                  <span></span>
+                }
+
+                <div class="ai-footer-right">
+                  @if (aiWizardPaso() < aiPasosConfig.length - 1) {
+                    <p-button
+                      [label]="aiWizardPaso() === 0 ? 'Analizar' : 'Siguiente'"
+                      [icon]="aiWizardPaso() === 0 ? 'pi pi-sparkles' : 'pi pi-arrow-right'"
+                      iconPos="right"
+                      (onClick)="aiWizardSiguientePaso()"
+                      [disabled]="!aiWizardPuedeAvanzar() || aiWizardIsProcessing()"
+                      [loading]="aiWizardIsProcessing()">
+                    </p-button>
+                  } @else {
+                    <p-button
+                      label="Agregar al Dashboard"
+                      icon="pi pi-check"
+                      severity="success"
+                      (onClick)="aiWizardConfirmar()"
+                      [disabled]="!aiWizardResultadoPreview()">
+                    </p-button>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+
           <!-- Widgets sin configuración específica -->
           @default {
             <div class="preconfig-info-box info">
@@ -649,9 +967,9 @@
     </div>
   }
 
-  <!-- Footer con botones (oculto para graficas-interactivas ya que el wizard tiene su propio footer) -->
+  <!-- Footer con botones (oculto para graficas-interactivas y analisis-inteligente ya que tienen su propio footer) -->
   <ng-template pTemplate="footer">
-    @if (widgetPreConfig() && widgetPreConfig()!.tipo !== 'graficas-interactivas') {
+    @if (widgetPreConfig() && widgetPreConfig()!.tipo !== 'graficas-interactivas' && widgetPreConfig()!.tipo !== 'analisis-inteligente') {
       <div class="preconfig-footer">
         <p-button
           label="Cancelar"

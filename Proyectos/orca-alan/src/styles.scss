@@ -932,6 +932,348 @@ html.dark-mode {
   }
 
   /* ===========================================
+     PRECONFIG DRAWER - Dark Mode (WCAG 2.1 AA)
+     =========================================== */
+
+  // Widget info card (nombre y descripción del widget)
+  .preconfig-widget-info {
+    background: #0c2a32 !important; // 12% cyan + 88% zinc-900
+    border-color: #155e75 !important; // cyan-800
+
+    .preconfig-widget-icon {
+      background: #0e7490 !important; // cyan-700
+
+      i {
+        color: #FFFFFF !important; // WCAG: 5.36:1
+      }
+    }
+
+    .preconfig-widget-details {
+      .preconfig-widget-nombre {
+        color: #FFFFFF !important; // WCAG: 14:1+
+        font-weight: 600;
+      }
+
+      .preconfig-widget-desc {
+        color: rgba(255, 255, 255, 0.85) !important; // WCAG: 10:1+
+      }
+    }
+  }
+
+  // Section titles
+  .preconfig-section-title {
+    color: #fafafa !important;
+
+    i {
+      color: #34d399 !important; // emerald-400
+    }
+  }
+
+  // Form labels
+  .preconfig-field {
+    label {
+      color: #a1a1aa !important; // zinc-400
+    }
+
+    .preconfig-hint {
+      color: #71717a !important; // zinc-500
+    }
+  }
+
+  // Toggle options
+  .preconfig-toggle {
+    background: #27272a !important; // zinc-800
+
+    label {
+      color: #fafafa !important;
+    }
+  }
+
+  // Info box
+  .preconfig-info-box {
+    background: #0c2920 !important; // 12% emerald + 88% zinc-900
+    border-color: #047857 !important; // emerald-700
+
+    > i {
+      color: #34d399 !important; // emerald-400
+    }
+
+    > div {
+      strong {
+        color: #6ee7b7 !important; // emerald-300
+      }
+
+      span, p {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+    }
+
+    &.info {
+      background: #0c1929 !important; // 12% blue + 88% zinc-900
+      border-color: #1d4ed8 !important; // blue-700
+
+      > i {
+        color: #60a5fa !important; // blue-400
+      }
+    }
+  }
+
+  // Size preview
+  .preconfig-size-preview {
+    .size-label {
+      color: #a1a1aa !important;
+    }
+
+    .size-value {
+      color: #fafafa !important;
+    }
+  }
+
+  // Footer
+  .preconfig-footer {
+    border-top-color: #3f3f46 !important; // zinc-700
+  }
+
+  // Back button header
+  .preconfig-header {
+    color: #fafafa !important;
+
+    .preconfig-back {
+      color: #a1a1aa !important;
+
+      &:hover {
+        color: #fafafa !important;
+        background: #27272a !important;
+      }
+    }
+  }
+
+  /* ===========================================
+     GRAFICA WIZARD - Dark Mode (WCAG 2.1 AA)
+     Cards de selección con buen contraste
+     =========================================== */
+
+  // Categoría cards (tipo de gráfica)
+  .categoria-card {
+    background: #27272a !important; // zinc-800
+    border-color: #3f3f46 !important; // zinc-700
+
+    &:hover {
+      border-color: #34d399 !important; // emerald-400
+      background: #2a2a2e !important;
+    }
+
+    &.selected {
+      border-color: #10b981 !important; // emerald-500
+      background: #1a3329 !important; // 15% emerald + zinc-900
+
+      .categoria-icon {
+        background: #10b981 !important;
+
+        i {
+          color: #FFFFFF !important;
+        }
+      }
+
+      .categoria-nombre {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+
+      .categoria-desc {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+    }
+
+    .categoria-icon {
+      background: #3f3f46 !important;
+
+      i {
+        color: #fafafa !important;
+      }
+    }
+
+    .categoria-nombre {
+      color: #fafafa !important;
+    }
+
+    .categoria-desc {
+      color: #a1a1aa !important;
+    }
+  }
+
+  // Tipo cards (subtipo de gráfica)
+  .tipo-card {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    &:hover {
+      border-color: #34d399 !important;
+      background: #2a2a2e !important;
+    }
+
+    &.selected {
+      border-color: #10b981 !important;
+      background: #1a3329 !important;
+
+      > i {
+        color: #34d399 !important; // emerald-400
+      }
+
+      .tipo-nombre {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+
+      .tipo-desc {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+    }
+
+    > i {
+      color: #fafafa !important;
+    }
+
+    .tipo-nombre {
+      color: #fafafa !important;
+    }
+
+    .tipo-desc {
+      color: #a1a1aa !important;
+    }
+  }
+
+  // Fuente cards (fuente de datos)
+  .fuente-card {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    &:hover {
+      border-color: #34d399 !important;
+      background: #2a2a2e !important;
+    }
+
+    &.selected {
+      border-color: #10b981 !important;
+      background: #1a3329 !important;
+
+      .fuente-icon {
+        background: #10b981 !important;
+
+        i {
+          color: #FFFFFF !important;
+        }
+      }
+
+      .fuente-nombre {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+
+      .fuente-desc {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+    }
+
+    .fuente-icon {
+      background: #3f3f46 !important;
+
+      i {
+        color: #fafafa !important;
+      }
+    }
+
+    .fuente-nombre {
+      color: #fafafa !important;
+    }
+
+    .fuente-desc {
+      color: #a1a1aa !important;
+    }
+  }
+
+  // Campo chips (selección de campos)
+  .campo-chip {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
+
+    &:hover {
+      border-color: #34d399 !important;
+      background: #2a2a2e !important;
+    }
+
+    &.selected {
+      background: #10b981 !important;
+      border-color: #10b981 !important;
+      color: #FFFFFF !important;
+      font-weight: 600;
+    }
+  }
+
+  // Paleta options
+  .paleta-option {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    &:hover {
+      border-color: #34d399 !important;
+      background: #2a2a2e !important;
+    }
+
+    &.selected {
+      border-color: #10b981 !important;
+      background: #1a3329 !important;
+
+      .paleta-nombre {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+    }
+
+    .paleta-nombre {
+      color: #fafafa !important;
+    }
+  }
+
+  // Cruce options
+  .cruce-option {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    &:hover {
+      border-color: #34d399 !important;
+    }
+
+    &.selected {
+      border-color: #10b981 !important;
+      background: #1a3329 !important;
+
+      i {
+        color: #34d399 !important;
+      }
+
+      span {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+    }
+
+    i, span {
+      color: #fafafa !important;
+    }
+  }
+
+  // Opcion toggle
+  .opcion-toggle {
+    background: #27272a !important;
+
+    span {
+      color: #fafafa !important;
+    }
+  }
+
+  /* ===========================================
      DASHBOARD WIDGETS - Dark Mode Fixes
      =========================================== */
 
@@ -1996,6 +2338,187 @@ html.dark-mode {
       background: rgba(239, 68, 68, 0.2) !important;
       color: var(--red-400) !important;
     }
+  }
+}
+
+/* ===========================================
+   GRAFICA WIZARD - Light Mode (Global Styles)
+   Para drawers que se renderizan en body
+   =========================================== */
+
+// Categoría cards (tipo de gráfica) - Light Mode
+.categoria-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface-ground);
+  border: 2px solid var(--surface-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-200);
+    background: var(--surface-hover);
+  }
+
+  &.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+
+    .categoria-icon {
+      background: var(--primary-color);
+
+      i {
+        color: white;
+      }
+    }
+
+    .categoria-nombre {
+      color: var(--primary-700);
+      font-weight: 600;
+    }
+  }
+
+  .categoria-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    background: var(--surface-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1rem;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .categoria-nombre {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .categoria-desc {
+    font-size: 0.7rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+// Tipo cards (subtipo de gráfica) - Light Mode
+.tipo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  background: var(--surface-ground);
+  border: 2px solid var(--surface-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+
+  &:hover {
+    border-color: var(--primary-200);
+    background: var(--surface-hover);
+  }
+
+  &.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+
+    > i {
+      color: var(--primary-color);
+    }
+
+    .tipo-nombre {
+      color: var(--primary-700);
+      font-weight: 600;
+    }
+  }
+
+  > i {
+    font-size: 1.25rem;
+    color: var(--text-color-secondary);
+  }
+
+  .tipo-nombre {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .tipo-desc {
+    font-size: 0.6rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+// Fuente cards (fuente de datos) - Light Mode
+.fuente-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface-ground);
+  border: 2px solid var(--surface-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-200);
+    background: var(--surface-hover);
+  }
+
+  &.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+
+    .fuente-icon {
+      background: var(--primary-color);
+
+      i {
+        color: white;
+      }
+    }
+
+    .fuente-nombre {
+      color: var(--primary-700);
+      font-weight: 600;
+    }
+  }
+
+  .fuente-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background: var(--surface-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.1rem;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .fuente-nombre {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .fuente-desc {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
   }
 }
 

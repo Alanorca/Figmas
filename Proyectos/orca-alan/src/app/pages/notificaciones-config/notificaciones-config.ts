@@ -1503,169 +1503,184 @@ interface DiaSemana {
         </ng-template>
       </p-dialog>
 
-      <!-- Wizard Nueva Regla -->
+      <!-- Wizard Nueva Regla - Estilo consistente con proceso-crear -->
       @if (wizardReglaVisible) {
         <div class="wizard-overlay visible" (click)="cerrarWizardRegla()"></div>
         <div class="wizard-drawer open">
           <!-- Header del wizard -->
           <div class="wizard-drawer-header">
-            <div class="wizard-title">
-              <i class="pi pi-plus-circle"></i>
-              <span>Nueva Regla de Notificación</span>
+            <div class="wizard-header-content">
+              <h2>Nueva Regla de Notificación</h2>
+              <span class="wizard-subtitle">Configura una regla para automatizar las notificaciones</span>
             </div>
-            <button type="button" class="wizard-close-btn" (click)="cerrarWizardRegla()">
+            <button type="button" class="btn-icon-x" (click)="cerrarWizardRegla()">
               <i class="pi pi-times"></i>
             </button>
           </div>
 
-          <!-- Stepper -->
-          <div class="wizard-stepper-container">
-            <div class="wizard-stepper">
-              @for (paso of pasosWizardRegla; track $index; let i = $index) {
-                <div
-                  class="step-item"
-                  [class.active]="i === pasoWizardRegla()"
-                  [class.completed]="i < pasoWizardRegla()"
-                  [class.clickable]="i < pasoWizardRegla()"
-                  (click)="irAPasoWizard(i)">
-                  <div class="step-indicator">
-                    <div class="step-icon">
-                      @if (i < pasoWizardRegla()) {
-                        <i class="pi pi-check"></i>
-                      } @else {
-                        <i [class]="paso.icon"></i>
-                      }
-                    </div>
-                    @if (i < pasosWizardRegla.length - 1) {
-                      <div class="step-line" [class.completed]="i < pasoWizardRegla()"></div>
+          <!-- Stepper - Estilo proceso-crear -->
+          <div class="stepper-container">
+            @for (paso of pasosWizardRegla; track $index; let i = $index) {
+              <div
+                class="step-item"
+                [class.active]="i === pasoWizardRegla()"
+                [class.completed]="i < pasoWizardRegla()"
+                [class.clickable]="i < pasoWizardRegla()"
+                (click)="irAPasoWizard(i)">
+                <div class="step-indicator">
+                  <div class="step-icon">
+                    @if (i < pasoWizardRegla()) {
+                      <i class="pi pi-check"></i>
+                    } @else {
+                      <i [class]="paso.icon"></i>
                     }
                   </div>
-                  <div class="step-content">
-                    <span class="step-label">{{ paso.label }}</span>
-                  </div>
+                  @if (i < pasosWizardRegla.length - 1) {
+                    <div class="step-line" [class.completed]="i < pasoWizardRegla()"></div>
+                  }
                 </div>
-              }
-            </div>
+                <div class="step-content">
+                  <span class="step-label">{{ paso.label }}</span>
+                  <span class="step-description">{{ paso.descripcion || '' }}</span>
+                </div>
+              </div>
+            }
           </div>
 
           <!-- Contenido del wizard -->
           <div class="wizard-content">
             <!-- PASO 0: Datos Generales -->
             @if (pasoWizardRegla() === 0) {
-              <div class="wizard-step-panel">
-                <h3 class="wizard-panel-title">
-                  <i class="pi pi-file-edit"></i>
-                  Datos Generales
-                </h3>
+              <div class="step-panel panel-columna-izquierda">
+                <h2 class="panel-title">Datos Generales</h2>
 
-                <div class="wizard-form-grid">
-                  <div class="wizard-field full-width">
-                    <label class="wizard-label required">Nombre de la regla</label>
-                    <input
-                      pInputText
-                      [(ngModel)]="wizardReglaForm.nombre"
-                      placeholder="Ej: Notificación de nuevos riesgos"
-                      class="w-full"
-                    />
+                <div class="form-field">
+                  <label class="field-label">Nombre de la regla *</label>
+                  <input
+                    type="text"
+                    class="field-input"
+                    [(ngModel)]="wizardReglaForm.nombre"
+                    placeholder="Ej: Notificación de nuevos riesgos"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Descripción</label>
+                  <textarea
+                    class="field-textarea"
+                    [(ngModel)]="wizardReglaForm.descripcion"
+                    rows="3"
+                    placeholder="Descripción opcional de la regla"
+                  ></textarea>
+                </div>
+
+                <div class="inline-form-row">
+                  <div class="form-field flex-1">
+                    <label class="field-label">Tipo de Entidad *</label>
+                    <div class="select-wrapper">
+                      <select
+                        class="field-select"
+                        [(ngModel)]="wizardReglaForm.entidadTipo">
+                        <option value="">Seleccionar entidad</option>
+                        @for (opt of opcionesEntidad; track opt.value) {
+                          <option [value]="opt.value">{{ opt.label }}</option>
+                        }
+                      </select>
+                      <i class="pi pi-chevron-down select-icon"></i>
+                    </div>
                   </div>
-
-                  <div class="wizard-field full-width">
-                    <label class="wizard-label">Descripción</label>
-                    <textarea
-                      pTextarea
-                      [(ngModel)]="wizardReglaForm.descripcion"
-                      rows="2"
-                      placeholder="Descripción opcional de la regla"
-                      class="w-full"
-                    ></textarea>
+                  <div class="form-field flex-1">
+                    <label class="field-label">Tipo de Evento *</label>
+                    <div class="select-wrapper">
+                      <select
+                        class="field-select"
+                        [(ngModel)]="wizardReglaForm.eventoTipo">
+                        <option value="">Seleccionar evento</option>
+                        @for (opt of opcionesEvento; track opt.value) {
+                          <option [value]="opt.value">{{ opt.label }}</option>
+                        }
+                      </select>
+                      <i class="pi pi-chevron-down select-icon"></i>
+                    </div>
                   </div>
+                </div>
 
-                  <div class="wizard-field">
-                    <label class="wizard-label required">Tipo de Entidad</label>
-                    <p-select
-                      [(ngModel)]="wizardReglaForm.entidadTipo"
-                      [options]="opcionesEntidad"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="Seleccionar entidad"
-                      styleClass="w-full select-dark-mode"
-                    />
+                <div class="inline-form-row">
+                  <div class="form-field flex-1">
+                    <label class="field-label">Severidad</label>
+                    <div class="select-wrapper">
+                      <select
+                        class="field-select"
+                        [(ngModel)]="wizardReglaForm.severidad">
+                        @for (opt of opcionesSeveridad; track opt.value) {
+                          <option [value]="opt.value">{{ opt.label }}</option>
+                        }
+                      </select>
+                      <i class="pi pi-chevron-down select-icon"></i>
+                    </div>
                   </div>
-
-                  <div class="wizard-field">
-                    <label class="wizard-label required">Tipo de Evento</label>
-                    <p-select
-                      [(ngModel)]="wizardReglaForm.eventoTipo"
-                      [options]="opcionesEvento"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="Seleccionar evento"
-                      styleClass="w-full select-dark-mode"
-                    />
-                  </div>
-
-                  <div class="wizard-field">
-                    <label class="wizard-label">Severidad</label>
-                    <p-select
-                      [(ngModel)]="wizardReglaForm.severidad"
-                      [options]="opcionesSeveridad"
-                      optionLabel="label"
-                      optionValue="value"
-                      placeholder="Seleccionar severidad"
-                      styleClass="w-full select-dark-mode"
-                    />
-                  </div>
-
-                  <div class="wizard-field">
-                    <label class="wizard-label">Estado inicial</label>
-                    <div class="wizard-switch-field">
+                  <div class="form-field flex-1">
+                    <label class="field-label">Estado inicial</label>
+                    <div class="toggle-field">
                       <p-toggleSwitch [(ngModel)]="wizardReglaForm.activo" />
-                      <span>{{ wizardReglaForm.activo ? 'Activa' : 'Inactiva' }}</span>
+                      <span class="toggle-label">{{ wizardReglaForm.activo ? 'Activa' : 'Inactiva' }}</span>
                     </div>
                   </div>
+                </div>
 
-                  <div class="wizard-section full-width">
-                    <h4 class="wizard-section-title">
-                      <i class="pi pi-users"></i>
-                      Destinatarios
-                    </h4>
-                    <div class="wizard-checkbox-grid">
-                      <div class="wizard-checkbox-item" [class.active]="wizardReglaForm.notificarCreador">
-                        <p-checkbox [(ngModel)]="wizardReglaForm.notificarCreador" [binary]="true" />
-                        <p-tag value="Creador" severity="info" icon="pi pi-user" />
-                      </div>
-                      <div class="wizard-checkbox-item" [class.active]="wizardReglaForm.notificarResponsable">
-                        <p-checkbox [(ngModel)]="wizardReglaForm.notificarResponsable" [binary]="true" />
-                        <p-tag value="Responsable" severity="success" icon="pi pi-user-edit" />
-                      </div>
-                      <div class="wizard-checkbox-item" [class.active]="wizardReglaForm.notificarAprobadores">
-                        <p-checkbox [(ngModel)]="wizardReglaForm.notificarAprobadores" [binary]="true" />
-                        <p-tag value="Aprobadores" severity="warn" icon="pi pi-users" />
-                      </div>
-                    </div>
+                <!-- Sección Destinatarios -->
+                <div class="config-section">
+                  <h4 class="section-title">
+                    <i class="pi pi-users"></i>
+                    Destinatarios
+                  </h4>
+                  <div class="channels-group">
+                    <label class="channel-checkbox">
+                      <input
+                        type="checkbox"
+                        [(ngModel)]="wizardReglaForm.notificarCreador">
+                      <i class="pi pi-user"></i> Creador
+                    </label>
+                    <label class="channel-checkbox">
+                      <input
+                        type="checkbox"
+                        [(ngModel)]="wizardReglaForm.notificarResponsable">
+                      <i class="pi pi-user-edit"></i> Responsable
+                    </label>
+                    <label class="channel-checkbox">
+                      <input
+                        type="checkbox"
+                        [(ngModel)]="wizardReglaForm.notificarAprobadores">
+                      <i class="pi pi-users"></i> Aprobadores
+                    </label>
                   </div>
+                </div>
 
-                  <div class="wizard-section full-width">
-                    <h4 class="wizard-section-title">
-                      <i class="pi pi-send"></i>
-                      Canales de Notificación
-                    </h4>
-                    <div class="wizard-checkbox-grid">
-                      <div class="wizard-checkbox-item" [class.active]="wizardReglaForm.enviarInApp">
-                        <p-checkbox [(ngModel)]="wizardReglaForm.enviarInApp" [binary]="true" />
-                        <p-tag value="In-App" severity="info" icon="pi pi-desktop" />
-                      </div>
-                      <div class="wizard-checkbox-item" [class.active]="wizardReglaForm.enviarEmail">
-                        <p-checkbox [(ngModel)]="wizardReglaForm.enviarEmail" [binary]="true" />
-                        <p-tag value="Email" severity="warn" icon="pi pi-envelope" />
-                      </div>
-                    </div>
+                <!-- Sección Canales -->
+                <div class="config-section">
+                  <h4 class="section-title">
+                    <i class="pi pi-send"></i>
+                    Canales de Notificación
+                  </h4>
+                  <div class="channels-group">
+                    <label class="channel-checkbox">
+                      <input
+                        type="checkbox"
+                        [(ngModel)]="wizardReglaForm.enviarInApp">
+                      <i class="pi pi-bell"></i> In-App
+                    </label>
+                    <label class="channel-checkbox">
+                      <input
+                        type="checkbox"
+                        [(ngModel)]="wizardReglaForm.enviarEmail">
+                      <i class="pi pi-envelope"></i> Email
+                    </label>
                   </div>
                 </div>
 
                 <!-- Errores de validación -->
                 @if (getErroresPasoWizard().length > 0) {
-                  <div class="wizard-validation-errors">
+                  <div class="validation-errors">
                     @for (error of getErroresPasoWizard(); track error) {
                       <span class="error-item">
                         <i class="pi pi-exclamation-circle"></i>
@@ -1679,124 +1694,124 @@ interface DiaSemana {
 
             <!-- PASO 1: Diseño de Notificación -->
             @if (pasoWizardRegla() === 1) {
-              <div class="wizard-step-panel">
-                <h3 class="wizard-panel-title">
-                  <i class="pi pi-palette"></i>
-                  Diseño de Notificación
-                </h3>
+              <div class="step-panel panel-columna-izquierda">
+                <h2 class="panel-title">Diseño de Notificación</h2>
 
                 @if (!wizardReglaForm.enviarEmail) {
-                  <div class="wizard-info-message">
+                  <div class="info-message">
                     <i class="pi pi-info-circle"></i>
                     <span>El canal de email no está habilitado. Puedes habilitarlo en el paso anterior para diseñar la plantilla.</span>
                   </div>
                 } @else {
                   <!-- Asunto del correo -->
-                  <div class="wizard-field full-width mb-4">
-                    <label class="wizard-label">Asunto del correo</label>
+                  <div class="form-field">
+                    <label class="field-label">Asunto del correo</label>
                     <input
-                      pInputText
+                      type="text"
+                      class="field-input"
                       [(ngModel)]="wizardReglaForm.plantillaMensaje"
                       placeholder="Ej: Nueva notificación - [nombre]"
-                      class="w-full"
                     />
                   </div>
 
                   <!-- Barra de herramientas -->
-                  <div class="wizard-toolbar">
-                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('header')" pTooltip="Título">
+                  <div class="editor-toolbar">
+                    <button type="button" class="toolbar-btn" (click)="agregarBloqueWizard('header')" pTooltip="Título">
                       <i class="pi pi-heading"></i>
                       <span>Título</span>
                     </button>
-                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('paragraph')" pTooltip="Párrafo">
+                    <button type="button" class="toolbar-btn" (click)="agregarBloqueWizard('paragraph')" pTooltip="Párrafo">
                       <i class="pi pi-align-left"></i>
                       <span>Párrafo</span>
                     </button>
-                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('variable')" pTooltip="Variable">
+                    <button type="button" class="toolbar-btn" (click)="agregarBloqueWizard('variable')" pTooltip="Variable">
                       <i class="pi pi-code"></i>
                       <span>Variable</span>
                     </button>
-                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('button')" pTooltip="Botón">
+                    <button type="button" class="toolbar-btn" (click)="agregarBloqueWizard('button')" pTooltip="Botón">
                       <i class="pi pi-external-link"></i>
                       <span>Botón</span>
                     </button>
-                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('divider')" pTooltip="Separador">
+                    <button type="button" class="toolbar-btn" (click)="agregarBloqueWizard('divider')" pTooltip="Separador">
                       <i class="pi pi-minus"></i>
                       <span>Línea</span>
                     </button>
-                    <button type="button" class="wizard-toolbar-btn" (click)="agregarBloqueWizard('alert')" pTooltip="Alerta">
+                    <button type="button" class="toolbar-btn" (click)="agregarBloqueWizard('alert')" pTooltip="Alerta">
                       <i class="pi pi-exclamation-triangle"></i>
                       <span>Alerta</span>
                     </button>
                   </div>
 
                   <!-- Canvas del editor -->
-                  <div class="wizard-email-canvas">
+                  <div class="email-canvas">
                     @if (wizardReglaBlocks().length === 0) {
-                      <div class="wizard-empty-state">
+                      <div class="empty-state">
                         <i class="pi pi-file-edit"></i>
                         <p>Agrega bloques usando los botones de arriba</p>
                       </div>
                     }
                     @for (block of wizardReglaBlocks(); track block.id; let i = $index) {
-                      <div class="wizard-block">
-                        <div class="wizard-block-content">
+                      <div class="email-block">
+                        <div class="block-content">
                           @switch (block.type) {
                             @case ('header') {
                               <input
                                 type="text"
+                                class="field-input header-input"
                                 [(ngModel)]="block.content"
                                 placeholder="Título"
-                                class="wizard-block-input header-input"
                               />
                             }
                             @case ('paragraph') {
                               <textarea
+                                class="field-textarea"
                                 [(ngModel)]="block.content"
                                 placeholder="Escribe tu texto..."
                                 rows="2"
-                                class="wizard-block-input"
                               ></textarea>
                             }
                             @case ('variable') {
-                              <p-select
-                                [(ngModel)]="block.content"
-                                [options]="opcionesVariables"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Seleccionar variable"
-                                styleClass="w-full select-dark-mode"
-                              />
+                              <div class="select-wrapper">
+                                <select
+                                  class="field-select"
+                                  [(ngModel)]="block.content">
+                                  <option value="">Seleccionar variable</option>
+                                  @for (opt of opcionesVariables; track opt.value) {
+                                    <option [value]="opt.value">{{ opt.label }}</option>
+                                  }
+                                </select>
+                                <i class="pi pi-chevron-down select-icon"></i>
+                              </div>
                             }
                             @case ('button') {
                               <input
                                 type="text"
+                                class="field-input"
                                 [(ngModel)]="block.content"
                                 placeholder="Texto del botón"
-                                class="wizard-block-input"
                               />
                             }
                             @case ('divider') {
-                              <hr class="wizard-block-divider" />
+                              <hr class="block-divider" />
                             }
                             @case ('alert') {
                               <input
                                 type="text"
+                                class="field-input alert-input"
                                 [(ngModel)]="block.content"
                                 placeholder="Mensaje de alerta"
-                                class="wizard-block-input alert-input"
                               />
                             }
                           }
                         </div>
-                        <div class="wizard-block-actions">
-                          <button type="button" (click)="moverBloqueWizard(i, -1)" [disabled]="i === 0" pTooltip="Subir">
+                        <div class="block-actions">
+                          <button type="button" class="btn-icon" (click)="moverBloqueWizard(i, -1)" [disabled]="i === 0" pTooltip="Subir">
                             <i class="pi pi-arrow-up"></i>
                           </button>
-                          <button type="button" (click)="moverBloqueWizard(i, 1)" [disabled]="i === wizardReglaBlocks().length - 1" pTooltip="Bajar">
+                          <button type="button" class="btn-icon" (click)="moverBloqueWizard(i, 1)" [disabled]="i === wizardReglaBlocks().length - 1" pTooltip="Bajar">
                             <i class="pi pi-arrow-down"></i>
                           </button>
-                          <button type="button" class="delete-btn" (click)="eliminarBloqueWizard(block.id)" pTooltip="Eliminar">
+                          <button type="button" class="btn-icon-x" (click)="eliminarBloqueWizard(block.id)" pTooltip="Eliminar">
                             <i class="pi pi-trash"></i>
                           </button>
                         </div>
@@ -1809,54 +1824,64 @@ interface DiaSemana {
 
             <!-- PASO 2: Resumen -->
             @if (pasoWizardRegla() === 2) {
-              <div class="wizard-step-panel">
-                <h3 class="wizard-panel-title">
-                  <i class="pi pi-check-circle"></i>
-                  Resumen de la Configuración
-                </h3>
+              <div class="step-panel panel-columna-izquierda revision-panel">
+                <h2 class="panel-title">Revisión</h2>
 
-                <div class="wizard-summary">
-                  <div class="wizard-summary-section">
-                    <h4>Información General</h4>
-                    <div class="wizard-summary-grid">
-                      <div class="wizard-summary-item">
-                        <span class="summary-label">Nombre:</span>
-                        <span class="summary-value">{{ wizardReglaForm.nombre || '-' }}</span>
+                <div class="revision-single-column">
+                  <!-- Información General -->
+                  <div class="revision-section">
+                    <div class="section-row">
+                      <label>Nombre de la regla</label>
+                      <span class="section-value">{{ wizardReglaForm.nombre || '-' }}</span>
+                    </div>
+                    <div class="section-row">
+                      <label>Entidad</label>
+                      <span class="section-value">{{ wizardReglaForm.entidadTipo || '-' }}</span>
+                    </div>
+                    <div class="section-row">
+                      <label>Evento</label>
+                      <span class="section-value">{{ wizardReglaForm.eventoTipo || '-' }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Descripción -->
+                  <div class="revision-section">
+                    <label>Descripción</label>
+                    <div class="descripcion-box">
+                      {{ wizardReglaForm.descripcion || 'Sin descripción' }}
+                    </div>
+                  </div>
+
+                  <!-- Severidad y Estado -->
+                  <div class="revision-section">
+                    <div class="inline-form-row">
+                      <div class="revision-item">
+                        <label>Severidad</label>
+                        <span class="objetivo-tag" [class.estrategico]="wizardReglaForm.severidad === 'critical'">
+                          {{ wizardReglaForm.severidad || 'info' }}
+                        </span>
                       </div>
-                      <div class="wizard-summary-item">
-                        <span class="summary-label">Descripción:</span>
-                        <span class="summary-value">{{ wizardReglaForm.descripcion || 'Sin descripción' }}</span>
-                      </div>
-                      <div class="wizard-summary-item">
-                        <span class="summary-label">Entidad:</span>
-                        <span class="summary-value">{{ wizardReglaForm.entidadTipo || '-' }}</span>
-                      </div>
-                      <div class="wizard-summary-item">
-                        <span class="summary-label">Evento:</span>
-                        <span class="summary-value">{{ wizardReglaForm.eventoTipo || '-' }}</span>
-                      </div>
-                      <div class="wizard-summary-item">
-                        <span class="summary-label">Severidad:</span>
-                        <p-tag [value]="wizardReglaForm.severidad || 'info'" [severity]="wizardReglaForm.severidad === 'critical' ? 'danger' : wizardReglaForm.severidad === 'warning' ? 'warn' : 'info'" />
-                      </div>
-                      <div class="wizard-summary-item">
-                        <span class="summary-label">Estado:</span>
-                        <p-tag [value]="wizardReglaForm.activo ? 'Activa' : 'Inactiva'" [severity]="wizardReglaForm.activo ? 'success' : 'secondary'" />
+                      <div class="revision-item">
+                        <label>Estado</label>
+                        <span class="objetivo-tag" [class.estrategico]="wizardReglaForm.activo">
+                          {{ wizardReglaForm.activo ? 'Activa' : 'Inactiva' }}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  <div class="wizard-summary-section">
-                    <h4>Destinatarios</h4>
-                    <div class="wizard-summary-tags">
+                  <!-- Destinatarios -->
+                  <div class="revision-section">
+                    <label>Destinatarios</label>
+                    <div class="tags-group">
                       @if (wizardReglaForm.notificarCreador) {
-                        <p-tag value="Creador" severity="info" icon="pi pi-user" />
+                        <span class="kpis-count-badge"><i class="pi pi-user"></i> Creador</span>
                       }
                       @if (wizardReglaForm.notificarResponsable) {
-                        <p-tag value="Responsable" severity="success" icon="pi pi-user-edit" />
+                        <span class="kpis-count-badge"><i class="pi pi-user-edit"></i> Responsable</span>
                       }
                       @if (wizardReglaForm.notificarAprobadores) {
-                        <p-tag value="Aprobadores" severity="warn" icon="pi pi-users" />
+                        <span class="kpis-count-badge"><i class="pi pi-users"></i> Aprobadores</span>
                       }
                       @if (!wizardReglaForm.notificarCreador && !wizardReglaForm.notificarResponsable && !wizardReglaForm.notificarAprobadores) {
                         <span class="no-selection">Ningún destinatario seleccionado</span>
@@ -1864,14 +1889,15 @@ interface DiaSemana {
                     </div>
                   </div>
 
-                  <div class="wizard-summary-section">
-                    <h4>Canales de Notificación</h4>
-                    <div class="wizard-summary-tags">
+                  <!-- Canales -->
+                  <div class="revision-section">
+                    <label>Canales de Notificación</label>
+                    <div class="tags-group">
                       @if (wizardReglaForm.enviarInApp) {
-                        <p-tag value="In-App" severity="info" icon="pi pi-desktop" />
+                        <span class="kpis-count-badge"><i class="pi pi-bell"></i> In-App</span>
                       }
                       @if (wizardReglaForm.enviarEmail) {
-                        <p-tag value="Email" severity="warn" icon="pi pi-envelope" />
+                        <span class="kpis-count-badge"><i class="pi pi-envelope"></i> Email</span>
                       }
                       @if (!wizardReglaForm.enviarInApp && !wizardReglaForm.enviarEmail) {
                         <span class="no-selection">Ningún canal seleccionado</span>
@@ -1880,13 +1906,11 @@ interface DiaSemana {
                   </div>
 
                   @if (wizardReglaForm.enviarEmail) {
-                    <div class="wizard-summary-section">
-                      <h4>Plantilla de Email</h4>
-                      <div class="wizard-summary-email">
-                        <span class="email-blocks-count">
-                          <i class="pi pi-th-large"></i>
-                          {{ wizardReglaBlocks().length }} bloques configurados
-                        </span>
+                    <div class="revision-section">
+                      <label>Plantilla de Email</label>
+                      <div class="descripcion-box">
+                        <i class="pi pi-th-large"></i>
+                        {{ wizardReglaBlocks().length }} bloques configurados
                       </div>
                     </div>
                   }
@@ -1895,42 +1919,26 @@ interface DiaSemana {
             }
           </div>
 
-          <!-- Footer del wizard -->
-          <div class="wizard-footer">
-            <div class="wizard-footer-left">
+          <!-- Footer del wizard - Estilo proceso-crear -->
+          <div class="wizard-footer-fixed">
+            <div class="footer-content">
               @if (pasoWizardRegla() > 0) {
-                <p-button
-                  label="Anterior"
-                  icon="pi pi-arrow-left"
-                  [outlined]="true"
-                  (onClick)="anteriorPasoWizard()"
-                />
+                <button class="btn-atras" (click)="anteriorPasoWizard()">
+                  <i class="pi pi-arrow-left"></i>
+                  Atrás
+                </button>
+              } @else {
+                <button class="btn-atras" (click)="cerrarWizardRegla()">Cancelar</button>
               }
-            </div>
-
-            <div class="wizard-footer-right">
-              <p-button
-                label="Cancelar"
-                [text]="true"
-                severity="secondary"
-                (onClick)="cerrarWizardRegla()"
-              />
 
               @if (pasoWizardRegla() < pasosWizardRegla.length - 1) {
-                <p-button
-                  label="Siguiente"
-                  icon="pi pi-arrow-right"
-                  iconPos="right"
-                  [disabled]="!validarPasoWizard()"
-                  (onClick)="siguientePasoWizard()"
-                />
+                <button class="btn-siguiente" [disabled]="!validarPasoWizard()" (click)="siguientePasoWizard()">
+                  Siguiente
+                </button>
               } @else {
-                <p-button
-                  label="Crear Regla"
-                  icon="pi pi-check"
-                  [disabled]="!validarPasoWizard()"
-                  (onClick)="confirmarWizardRegla()"
-                />
+                <button class="btn-guardar" [disabled]="!validarPasoWizard()" (click)="confirmarWizardRegla()">
+                  Crear Regla
+                </button>
               }
             </div>
           </div>
@@ -6591,7 +6599,7 @@ interface DiaSemana {
     }
 
     /* ===================================
-       WIZARD NUEVA REGLA - ESTILOS
+       WIZARD NUEVA REGLA - ESTILOS (Consistentes con proceso-crear)
        =================================== */
 
     .wizard-overlay {
@@ -6619,7 +6627,7 @@ interface DiaSemana {
       width: 700px;
       max-width: 90vw;
       height: 100vh;
-      background: var(--surface-card);
+      background: var(--surface-ground);
       box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
       z-index: 1001;
       display: flex;
@@ -6636,111 +6644,44 @@ interface DiaSemana {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: var(--spacing-4);
+      padding: var(--spacing-5) var(--spacing-6);
       border-bottom: 1px solid var(--surface-border);
-      background: var(--surface-ground);
-    }
+      background: var(--surface-0);
 
-    .wizard-title {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-2);
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-semibold);
-      color: var(--text-color);
+      .wizard-header-content {
+        h2 {
+          font-size: 1.5rem;
+          font-weight: var(--font-weight-semibold);
+          color: var(--text-color);
+          margin: 0;
+        }
 
-      i {
-        color: var(--primary-color);
+        .wizard-subtitle {
+          font-size: var(--font-size-sm);
+          color: var(--text-color-secondary);
+          margin-top: var(--spacing-1);
+        }
       }
     }
 
-    .wizard-close-btn {
-      width: 32px;
-      height: 32px;
-      border: none;
-      background: transparent;
-      color: var(--text-color-secondary);
-      border-radius: var(--border-radius-full);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-
-      &:hover {
-        background: var(--surface-hover);
-        color: var(--text-color);
-      }
-    }
-
-    .wizard-stepper-container {
-      padding: var(--spacing-4);
-      border-bottom: 1px solid var(--surface-border);
-      background: var(--surface-50);
-    }
-
-    .wizard-stepper {
+    /* Stepper - Estilo proceso-crear */
+    .wizard-drawer .stepper-container {
       display: flex;
       gap: 0;
+      padding: var(--spacing-5);
+      background: var(--surface-0);
+      border-bottom: 1px solid var(--surface-border);
+    }
 
-      .step-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: var(--spacing-1);
-        cursor: default;
-        opacity: 0.5;
-        transition: all 0.2s ease;
-
-        &.active {
-          opacity: 1;
-
-          .step-icon {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-
-            i {
-              color: white;
-            }
-          }
-
-          .step-label {
-            color: var(--primary-color);
-            font-weight: var(--font-weight-semibold);
-          }
-        }
-
-        &.completed {
-          opacity: 1;
-          cursor: pointer;
-
-          .step-icon {
-            background: var(--green-500);
-            border-color: var(--green-500);
-
-            i {
-              color: white;
-            }
-          }
-
-          .step-line {
-            background: var(--green-500);
-          }
-        }
-
-        &.clickable:hover {
-          .step-icon {
-            transform: scale(1.05);
-          }
-        }
-      }
+    .wizard-drawer .step-item {
+      flex: 1;
+      display: flex;
+      gap: var(--spacing-4);
 
       .step-indicator {
         display: flex;
-        align-items: center;
-        width: 100%;
-        justify-content: center;
+        align-items: flex-start;
+        gap: 0;
       }
 
       .step-icon {
@@ -6753,154 +6694,248 @@ interface DiaSemana {
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        transition: all 0.2s ease;
 
         i {
-          font-size: 0.85rem;
+          font-size: var(--font-size-sm);
           color: var(--text-color-secondary);
         }
       }
 
       .step-line {
-        flex: 1;
+        width: 100%;
         height: 2px;
         background: var(--surface-border);
-        margin: 0 var(--spacing-2);
-        max-width: 50px;
-        transition: background 0.2s ease;
+        margin-top: 15px;
+        margin-left: var(--spacing-2);
+        min-width: 40px;
       }
 
       .step-content {
-        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
+        flex: 1;
       }
 
       .step-label {
-        font-size: 0.75rem;
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
         color: var(--text-color-secondary);
-        white-space: nowrap;
+      }
+
+      .step-description {
+        font-size: var(--font-size-xs);
+        color: var(--surface-400);
+        line-height: 1.4;
+      }
+
+      &.active {
+        .step-icon {
+          background: var(--primary-color);
+          border-color: var(--primary-color);
+          i { color: var(--surface-0); }
+        }
+        .step-label { color: var(--text-color); }
+      }
+
+      &.completed {
+        .step-icon {
+          background: var(--primary-color);
+          border-color: var(--primary-color);
+          i { color: var(--surface-0); }
+        }
+        .step-line { background: var(--primary-color); }
+        .step-label { color: var(--primary-color); }
+      }
+
+      &.clickable {
+        cursor: pointer;
       }
     }
 
     .wizard-content {
       flex: 1;
       overflow-y: auto;
-      padding: var(--spacing-4);
+      padding: var(--spacing-6);
+      padding-bottom: 100px;
     }
 
-    .wizard-step-panel {
-      animation: wizardFadeIn 0.2s ease;
-    }
-
-    @keyframes wizardFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
+    /* Step Panel - Estilo proceso-crear */
+    .wizard-drawer .step-panel {
+      .panel-title {
+        font-size: var(--font-size-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-color);
+        margin: 0 0 var(--spacing-6) 0;
       }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
 
-    .wizard-panel-title {
-      font-size: var(--font-size-base);
-      font-weight: var(--font-weight-semibold);
-      color: var(--text-color);
-      margin: 0 0 var(--spacing-4) 0;
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-2);
+      &.panel-columna-izquierda {
+        max-width: 100%;
 
-      i {
-        color: var(--primary-color);
-      }
-    }
+        .form-field {
+          margin-bottom: var(--spacing-5);
+        }
 
-    .wizard-form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--spacing-4);
-
-      .full-width {
-        grid-column: 1 / -1;
+        &.revision-panel {
+          .panel-title {
+            background: var(--primary-color);
+            color: var(--surface-0);
+            padding: var(--spacing-3) var(--spacing-4);
+            border-radius: var(--border-radius-lg);
+            margin-bottom: var(--spacing-6);
+          }
+        }
       }
     }
 
-    .wizard-field {
+    /* Form Elements - Estilo proceso-crear */
+    .wizard-drawer .form-field {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-2);
     }
 
-    .wizard-label {
+    .wizard-drawer .field-label {
       font-size: var(--font-size-sm);
       font-weight: var(--font-weight-medium);
       color: var(--text-color);
+    }
 
-      &.required::after {
-        content: ' *';
-        color: var(--red-500);
+    .wizard-drawer .field-input,
+    .wizard-drawer .field-textarea,
+    .wizard-drawer .field-select {
+      padding: var(--spacing-3) var(--spacing-4);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius-lg);
+      font-size: var(--font-size-sm);
+      color: var(--text-color);
+      background: var(--surface-0);
+      transition: border-color var(--transition-duration);
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+
+      &::placeholder {
+        color: var(--surface-400);
       }
     }
 
-    .wizard-switch-field {
+    .wizard-drawer .field-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .wizard-drawer .select-wrapper {
+      position: relative;
+
+      .field-select {
+        width: 100%;
+        appearance: none;
+        padding-right: 40px;
+        cursor: pointer;
+      }
+
+      .select-icon {
+        position: absolute;
+        right: var(--spacing-4);
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-color-secondary);
+        pointer-events: none;
+      }
+    }
+
+    .wizard-drawer .inline-form-row {
+      display: flex;
+      gap: var(--spacing-4);
+
+      .form-field {
+        margin-bottom: 0;
+
+        &.flex-1 { flex: 1; }
+        &.flex-2 { flex: 2; }
+      }
+    }
+
+    .wizard-drawer .toggle-field {
       display: flex;
       align-items: center;
-      gap: var(--spacing-2);
-      padding: var(--spacing-2) 0;
+      gap: var(--spacing-3);
+      padding: var(--spacing-3) 0;
 
-      span {
+      .toggle-label {
         font-size: var(--font-size-sm);
         color: var(--text-color);
       }
     }
 
-    .wizard-section {
-      padding-top: var(--spacing-3);
-    }
+    /* Config Section - Estilo proceso-crear */
+    .wizard-drawer .config-section {
+      margin-top: var(--spacing-5);
+      padding-top: var(--spacing-4);
+      border-top: 1px solid var(--surface-border);
 
-    .wizard-section-title {
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-      color: var(--text-color);
-      margin: 0 0 var(--spacing-3) 0;
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-2);
+      .section-title {
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
+        color: var(--text-color);
+        margin: 0 0 var(--spacing-3) 0;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
 
-      i {
-        color: var(--primary-color);
-        font-size: 0.9rem;
+        i {
+          color: var(--primary-color);
+          font-size: 0.9rem;
+        }
       }
     }
 
-    .wizard-checkbox-grid {
+    .wizard-drawer .channels-group {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--spacing-2);
+      gap: var(--spacing-4);
     }
 
-    .wizard-checkbox-item {
-      display: flex;
+    .wizard-drawer .channel-checkbox {
+      display: inline-flex;
       align-items: center;
       gap: var(--spacing-2);
+      font-size: var(--font-size-sm);
+      color: var(--text-color);
+      cursor: pointer;
       padding: var(--spacing-2) var(--spacing-3);
       background: var(--surface-ground);
       border: 1px solid var(--surface-border);
       border-radius: var(--border-radius-lg);
       transition: all 0.2s ease;
 
-      &.active {
-        background: rgba(16, 185, 129, 0.1);
-        border-color: var(--primary-color);
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: var(--primary-color);
+      }
+
+      i {
+        font-size: 14px;
+        color: var(--text-color-secondary);
       }
 
       &:hover {
         border-color: var(--primary-200);
+        background: var(--primary-50);
+
+        i {
+          color: var(--primary-color);
+        }
       }
     }
 
-    .wizard-validation-errors {
+    /* Validation Errors */
+    .wizard-drawer .validation-errors {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-1);
@@ -6923,7 +6958,8 @@ interface DiaSemana {
       }
     }
 
-    .wizard-info-message {
+    /* Info Message */
+    .wizard-drawer .info-message {
       display: flex;
       align-items: center;
       gap: var(--spacing-3);
@@ -6943,23 +6979,24 @@ interface DiaSemana {
       }
     }
 
-    .wizard-toolbar {
+    /* Editor Toolbar - Estilo proceso-crear */
+    .wizard-drawer .editor-toolbar {
       display: flex;
       flex-wrap: wrap;
       gap: var(--spacing-2);
       padding: var(--spacing-3);
-      background: var(--surface-ground);
+      background: var(--surface-0);
       border: 1px solid var(--surface-border);
       border-radius: var(--border-radius-lg);
       margin-bottom: var(--spacing-3);
     }
 
-    .wizard-toolbar-btn {
+    .wizard-drawer .toolbar-btn {
       display: flex;
       align-items: center;
       gap: var(--spacing-1);
       padding: var(--spacing-2) var(--spacing-3);
-      background: var(--surface-card);
+      background: var(--surface-ground);
       border: 1px solid var(--surface-border);
       border-radius: var(--border-radius-md);
       font-size: var(--font-size-xs);
@@ -6982,41 +7019,38 @@ interface DiaSemana {
       }
     }
 
-    .wizard-email-canvas {
+    /* Email Canvas */
+    .wizard-drawer .email-canvas {
       min-height: 200px;
       max-height: 400px;
       overflow-y: auto;
       padding: var(--spacing-3);
-      background: var(--surface-ground);
+      background: var(--surface-0);
       border: 1px solid var(--surface-border);
       border-radius: var(--border-radius-lg);
     }
 
-    .wizard-empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: var(--spacing-2);
-      padding: var(--spacing-6);
+    .wizard-drawer .empty-state {
+      text-align: center;
+      padding: 48px var(--spacing-6);
       color: var(--text-color-secondary);
 
       i {
-        font-size: 2rem;
-        opacity: 0.5;
+        font-size: 48px;
+        margin-bottom: var(--spacing-4);
+        color: var(--surface-300);
       }
 
       p {
-        font-size: var(--font-size-sm);
-        margin: 0;
+        margin: 0 0 var(--spacing-5) 0;
       }
     }
 
-    .wizard-block {
+    .wizard-drawer .email-block {
       display: flex;
-      gap: var(--spacing-2);
+      gap: var(--spacing-3);
       padding: var(--spacing-3);
-      background: var(--surface-card);
+      background: var(--surface-ground);
       border: 1px solid var(--surface-border);
       border-radius: var(--border-radius-md);
       margin-bottom: var(--spacing-2);
@@ -7024,128 +7058,150 @@ interface DiaSemana {
       &:last-child {
         margin-bottom: 0;
       }
-    }
 
-    .wizard-block-content {
-      flex: 1;
+      .block-content {
+        flex: 1;
 
-      .wizard-block-input {
-        width: 100%;
-        padding: var(--spacing-2);
-        background: var(--surface-ground);
-        border: 1px solid var(--surface-border);
-        border-radius: var(--border-radius-sm);
-        color: var(--text-color);
-        font-size: var(--font-size-sm);
-        resize: none;
-
-        &:focus {
-          outline: none;
-          border-color: var(--primary-color);
-        }
-
-        &.header-input {
+        .header-input {
           font-size: var(--font-size-lg);
           font-weight: var(--font-weight-semibold);
         }
 
-        &.alert-input {
+        .alert-input {
           border-left: 3px solid var(--orange-400);
         }
+
+        .block-divider {
+          border: none;
+          border-top: 1px solid var(--surface-border);
+          margin: var(--spacing-2) 0;
+        }
       }
 
-      .wizard-block-divider {
-        border: none;
-        border-top: 1px solid var(--surface-border);
-        margin: var(--spacing-2) 0;
-      }
-    }
-
-    .wizard-block-actions {
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-1);
-
-      button {
-        width: 28px;
-        height: 28px;
-        border: none;
-        background: var(--surface-ground);
-        color: var(--text-color-secondary);
-        border-radius: var(--border-radius-sm);
-        cursor: pointer;
+      .block-actions {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-
-        &:hover:not(:disabled) {
-          background: var(--surface-hover);
-          color: var(--text-color);
-        }
-
-        &:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
-        }
-
-        &.delete-btn:hover:not(:disabled) {
-          background: var(--red-100);
-          color: var(--red-500);
-        }
-
-        i {
-          font-size: 0.75rem;
-        }
+        flex-direction: column;
+        gap: var(--spacing-1);
       }
     }
 
-    .wizard-summary {
+    .wizard-drawer .btn-icon {
+      padding: var(--spacing-2);
+      background: none;
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius-md);
+      color: var(--text-color-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background: var(--surface-100);
+        border-color: var(--text-color-secondary);
+      }
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      i {
+        font-size: var(--font-size-xs);
+      }
+    }
+
+    .wizard-drawer .btn-icon-x {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      i {
+        font-size: var(--font-size-sm);
+        color: var(--text-color-secondary);
+      }
+
+      &:hover i { color: var(--red-500); }
+    }
+
+    /* Revision Section - Estilo proceso-crear */
+    .wizard-drawer .revision-single-column {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-4);
     }
 
-    .wizard-summary-section {
-      padding: var(--spacing-4);
-      background: var(--surface-ground);
-      border: 1px solid var(--surface-border);
-      border-radius: var(--border-radius-lg);
-
-      h4 {
-        font-size: var(--font-size-sm);
-        font-weight: var(--font-weight-semibold);
-        color: var(--text-color);
-        margin: 0 0 var(--spacing-3) 0;
-        padding-bottom: var(--spacing-2);
-        border-bottom: 1px solid var(--surface-border);
-      }
-    }
-
-    .wizard-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--spacing-3);
-    }
-
-    .wizard-summary-item {
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-1);
-
-      .summary-label {
+    .wizard-drawer .revision-section {
+      label {
+        display: block;
         font-size: var(--font-size-xs);
         color: var(--text-color-secondary);
+        margin-bottom: var(--spacing-2);
       }
 
-      .summary-value {
-        font-size: var(--font-size-sm);
-        color: var(--text-color);
-        font-weight: var(--font-weight-medium);
+      .section-row {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-4);
+        margin-bottom: var(--spacing-2);
+
+        label {
+          min-width: 140px;
+          margin-bottom: 0;
+        }
+
+        .section-value {
+          font-size: var(--font-size-sm);
+          color: var(--text-color);
+          font-weight: var(--font-weight-medium);
+        }
+      }
+
+      .revision-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
       }
     }
 
-    .wizard-summary-tags {
+    .wizard-drawer .descripcion-box {
+      padding: var(--spacing-4);
+      background: var(--surface-0);
+      border-radius: var(--border-radius-lg);
+      border: 1px solid var(--surface-border);
+      font-size: var(--font-size-sm);
+      color: var(--text-color);
+      line-height: 1.6;
+
+      i {
+        margin-right: var(--spacing-2);
+        color: var(--primary-color);
+      }
+    }
+
+    .wizard-drawer .objetivo-tag {
+      padding: var(--spacing-1) var(--spacing-3);
+      border-radius: var(--border-radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-medium);
+      background: var(--blue-100);
+      color: var(--blue-600);
+
+      &.estrategico {
+        background: var(--primary-100);
+        color: var(--primary-color);
+      }
+    }
+
+    .wizard-drawer .tags-group {
       display: flex;
       flex-wrap: wrap;
       gap: var(--spacing-2);
@@ -7157,33 +7213,84 @@ interface DiaSemana {
       }
     }
 
-    .wizard-summary-email {
-      .email-blocks-count {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-2);
-        font-size: var(--font-size-sm);
-        color: var(--text-color);
+    .wizard-drawer .kpis-count-badge {
+      padding: 6px 12px;
+      background: var(--surface-200);
+      color: var(--text-color-secondary);
+      border-radius: var(--border-radius-xl);
+      font-size: 12px;
+      font-weight: var(--font-weight-medium);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-2);
 
-        i {
-          color: var(--primary-color);
-        }
+      i {
+        font-size: 11px;
       }
     }
 
-    .wizard-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: var(--spacing-4);
+    /* Footer Fixed - Estilo proceso-crear */
+    .wizard-footer-fixed {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface-0);
       border-top: 1px solid var(--surface-border);
-      background: var(--surface-50);
+      padding: var(--spacing-4) var(--spacing-6);
+      z-index: 100;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+
+      .footer-content {
+        display: flex;
+        justify-content: center;
+        gap: var(--spacing-4);
+      }
     }
 
-    .wizard-footer-left,
-    .wizard-footer-right {
+    .wizard-drawer .btn-atras {
       display: flex;
+      align-items: center;
       gap: var(--spacing-2);
+      padding: var(--spacing-3) var(--spacing-6);
+      background: none;
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius-lg);
+      font-size: var(--font-size-sm);
+      color: var(--text-color-secondary);
+      cursor: pointer;
+      transition: all var(--transition-duration);
+
+      i {
+        font-size: var(--font-size-sm);
+      }
+
+      &:hover {
+        background: var(--surface-ground);
+        border-color: var(--text-color-secondary);
+      }
+    }
+
+    .wizard-drawer .btn-siguiente,
+    .wizard-drawer .btn-guardar {
+      padding: var(--spacing-3) var(--spacing-6);
+      background: var(--primary-color);
+      border: none;
+      border-radius: var(--border-radius-lg);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--surface-0);
+      cursor: pointer;
+      transition: all var(--transition-duration);
+
+      &:hover:not(:disabled) {
+        background: var(--primary-hover-color);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
 
     /* Drawer overlay */

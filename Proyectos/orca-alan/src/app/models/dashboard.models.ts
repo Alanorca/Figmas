@@ -137,7 +137,7 @@ export interface ChartConfigCompleta {
 }
 
 // Tipos de widget disponibles
-// Tipos de widget según historias de usuario (W1-W6)
+// Tipos de widget según historias de usuario (W1-W7)
 export type TipoWidget =
   | 'kpi-card'              // W5: Tarjeta de KPI individual
   | 'kpi-grid'              // W5: Grid de KPIs (múltiples cards)
@@ -145,7 +145,8 @@ export type TipoWidget =
   | 'graficas-guardadas'    // W2: Lista de gráficas guardadas
   | 'table-mini'            // W3: Tabla de datos
   | 'actividad-reciente'    // W4: Últimas actividades con filtros
-  | 'calendario';           // W6: Calendario de eventos
+  | 'calendario'            // W6: Calendario de eventos
+  | 'analisis-inteligente'; // W7: Análisis con NLP + ML
 
 // Tamaños predefinidos para widgets
 export type TamanoWidget = 'small' | 'medium' | 'large' | 'wide' | 'tall' | 'full';
@@ -310,7 +311,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
   // W1: Gráficas Interactivas (primero en el catálogo)
   {
     tipo: 'graficas-interactivas',
-    nombre: 'Gráficas interactivas y asistidas por IA',
+    nombre: 'Graficas interactivas',
     descripcion: 'Panel completo: barras, líneas, dona, área. Configuración, IA y guardado',
     icono: 'pi pi-chart-bar',
     categoria: 'graficas',
@@ -387,6 +388,18 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     tamanoDefault: 'medium',
     minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
     configDefault: { showHeader: true }
+  },
+
+  // W7: Análisis Inteligente (NLP + ML)
+  {
+    tipo: 'analisis-inteligente',
+    nombre: 'Análisis Inteligente',
+    descripcion: 'Consultas en lenguaje natural con análisis predictivo y correlación',
+    icono: 'pi pi-sparkles',
+    categoria: 'graficas',
+    tamanoDefault: 'large',
+    minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
+    configDefault: { showHeader: false }
   }
 ];
 

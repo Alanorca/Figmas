@@ -5,11 +5,57 @@
 // Importar en componentes: @use 'styles/dark-mode' as dark;
 // O usar junto con mixins: @use 'styles/mixins' as *;
 // ============================================================================
+//
+// ⚠️ IMPORTANTE - PROBLEMAS CONOCIDOS Y SOLUCIONES:
+//
+// 1. INVERSIÓN DE TOKENS EN DARK MODE:
+//    - var(--surface-900) se INVIERTE en dark mode (se vuelve claro #fafafa)
+//    - NUNCA usar var(--surface-900) en color-mix() para dark mode
+//    - SIEMPRE usar colores hardcoded: #18181b (zinc-900), #27272a (zinc-800)
+//
+// 2. COMPONENTES EN DRAWERS/DIALOGS:
+//    - PrimeNG renderiza drawers/dialogs en el <body>, fuera del componente
+//    - :host-context(.dark) NO FUNCIONA para contenido de drawers
+//    - SOLUCIÓN: Agregar estilos en styles.scss bajo html.dark-mode
+//
+// 3. CONTRASTE WCAG 2.1 AA:
+//    - Ratio mínimo texto normal: 4.5:1
+//    - Ratio mínimo texto grande (18pt+): 3:1
+//    - En cards seleccionadas dark: usar #FFFFFF (no var(--text-color))
+//
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// COLORES HARDCODED PARA DARK MODE
+// ----------------------------------------------------------------------------
+// Usar estos valores en lugar de CSS variables para evitar inversión
+
+$dm-zinc-950: #09090b;
+$dm-zinc-900: #18181b;
+$dm-zinc-800: #27272a;
+$dm-zinc-700: #3f3f46;
+$dm-zinc-600: #52525b;
+$dm-zinc-500: #71717a;
+$dm-zinc-400: #a1a1aa;
+$dm-zinc-300: #d4d4d8;
+$dm-zinc-200: #e4e4e7;
+$dm-zinc-100: #f4f4f5;
+$dm-zinc-50: #fafafa;
+
+$dm-emerald-500: #10b981;
+$dm-emerald-400: #34d399;
+$dm-emerald-300: #6ee7b7;
+
+// Colores calculados para selección (15% primary + 85% zinc-900)
+$dm-selection-emerald: #1a3329;
+$dm-selection-cyan: #0c2a32;
+$dm-selection-blue: #172554;
 
 // ----------------------------------------------------------------------------
 // DARK MODE WRAPPER
 // ----------------------------------------------------------------------------
 // Uso: @include dark-mode { ... estilos para dark mode ... }
+// ⚠️ NO funciona para contenido de drawers renderizados en body
 
 @mixin dark-mode {
   :host-context(.dark) {
@@ -18,8 +64,9 @@
 }
 
 // Alternativa para estilos globales (en styles.scss)
+// ✅ USAR ESTA para componentes en drawers
 @mixin dark-mode-global {
-  .dark {
+  html.dark-mode {
     @content;
   }
 }
@@ -450,6 +497,9 @@ $dm-text-disabled: var(--surface-600);
 // Mixins para estados de selección consistentes en light y dark mode.
 // IMPORTANTE: Usar estos mixins en lugar de primary-50 para estados seleccionados.
 // WCAG 2.1 AA requiere ratio de contraste mínimo de 4.5:1 para texto.
+//
+// ⚠️ NO usar color-mix() con var(--surface-900) - se invierte en dark mode!
+// ✅ Usar los colores hardcoded definidos arriba: $dm-selection-emerald, etc.
 
 /// Estado seleccionado para cards (light mode base)
 /// Uso: .mi-card.selected { @include selection-state-light; }
@@ -460,10 +510,12 @@ $dm-text-disabled: var(--surface-600);
 }
 
 /// Estado seleccionado para cards (dark mode) - WCAG AA Compliant
+/// ⚠️ Usa color hardcoded para evitar inversión de tokens
 /// Uso: @include dark-mode { .mi-card.selected { @include selection-state-dark; } }
 @mixin selection-state-dark {
-  background-color: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900));
-  border: 2px solid var(--primary-color);
+  // ✅ Color hardcoded: 15% emerald-500 + 85% zinc-900 = #1a3329
+  background-color: $dm-selection-emerald !important;
+  border: 2px solid $dm-emerald-500 !important;
   border-radius: 8px;
 }
 
@@ -715,3 +767,79 @@ $dm-text-disabled: var(--surface-600);
     }
   }
 }
+
+// ============================================================================
+// GUÍA RÁPIDA - CARDS SELECCIONABLES EN DARK MODE
+// ============================================================================
+//
+// ┌─────────────────────────────────────────────────────────────────────────┐
+// │ PROBLEMA: Cards seleccionadas con mal contraste en dark mode           │
+// ├─────────────────────────────────────────────────────────────────────────┤
+// │                                                                         │
+// │ ❌ INCORRECTO - Causa inversión de colores:                             │
+// │                                                                         │
+// │    .mi-card.selected {                                                  │
+// │      background: color-mix(in srgb, var(--primary-color) 15%,           │
+// │                           var(--surface-900));  // ← SE INVIERTE!       │
+// │    }                                                                    │
+// │                                                                         │
+// │ ✅ CORRECTO - Usa colores hardcoded:                                    │
+// │                                                                         │
+// │    .mi-card.selected {                                                  │
+// │      background: #1a3329 !important;  // 15% emerald + zinc-900         │
+// │      border-color: #10b981 !important;                                  │
+// │                                                                         │
+// │      .titulo { color: #FFFFFF !important; }                             │
+// │      .descripcion { color: rgba(255,255,255,0.85) !important; }         │
+// │    }                                                                    │
+// │                                                                         │
+// └─────────────────────────────────────────────────────────────────────────┘
+//
+// ┌─────────────────────────────────────────────────────────────────────────┐
+// │ PROBLEMA: Estilos no aplican en drawers/dialogs                         │
+// ├─────────────────────────────────────────────────────────────────────────┤
+// │                                                                         │
+// │ PrimeNG renderiza <p-drawer> y <p-dialog> en el <body>, fuera del       │
+// │ componente. Por eso :host-context(.dark) no funciona.                   │
+// │                                                                         │
+// │ ❌ INCORRECTO - No funciona para drawers:                               │
+// │                                                                         │
+// │    // En mi-componente.scss                                             │
+// │    :host-context(.dark) {                                               │
+// │      .mi-card { background: #27272a; }  // ← NO APLICA EN DRAWER        │
+// │    }                                                                    │
+// │                                                                         │
+// │ ✅ CORRECTO - Agregar en styles.scss:                                   │
+// │                                                                         │
+// │    // En styles.scss                                                    │
+// │    html.dark-mode {                                                     │
+// │      .mi-card { background: #27272a !important; }  // ← FUNCIONA        │
+// │    }                                                                    │
+// │                                                                         │
+// └─────────────────────────────────────────────────────────────────────────┘
+//
+// ┌─────────────────────────────────────────────────────────────────────────┐
+// │ COLORES DE REFERENCIA PARA DARK MODE                                    │
+// ├─────────────────────────────────────────────────────────────────────────┤
+// │                                                                         │
+// │ BACKGROUNDS:                                                            │
+// │   Normal:     #27272a (zinc-800)                                        │
+// │   Hover:      #3f3f46 (zinc-700)                                        │
+// │   Selected:   #1a3329 (15% emerald + zinc-900)                          │
+// │                                                                         │
+// │ BORDERS:                                                                │
+// │   Normal:     #3f3f46 (zinc-700)                                        │
+// │   Hover:      #34d399 (emerald-400)                                     │
+// │   Selected:   #10b981 (emerald-500)                                     │
+// │                                                                         │
+// │ TEXTOS EN SELECTED:                                                     │
+// │   Título:     #FFFFFF (blanco puro)    - Contraste: 13.8:1              │
+// │   Subtítulo:  rgba(255,255,255,0.85)   - Contraste: 10.2:1              │
+// │                                                                         │
+// │ TEXTOS NORMALES:                                                        │
+// │   Principal:  #fafafa (zinc-50)        - Contraste: 15.1:1              │
+// │   Secundario: #a1a1aa (zinc-400)       - Contraste: 6.3:1               │
+// │                                                                         │
+// └─────────────────────────────────────────────────────────────────────────┘
+//
+// ============================================================================

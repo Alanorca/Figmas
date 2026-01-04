@@ -24,6 +24,14 @@ import { TagModule } from 'primeng/tag';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { ChipModule } from 'primeng/chip';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { MessageModule } from 'primeng/message';
+import { TextareaModule } from 'primeng/textarea';
+import { CardModule } from 'primeng/card';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ConfirmationService, MessageService, MenuItem } from 'primeng/api';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import {
@@ -43,6 +51,7 @@ import {
 } from 'ng-apexcharts';
 
 import { DashboardService } from '../../services/dashboard.service';
+import { ThemeService } from '../../services/theme.service';
 import {
   DashboardDataService,
   KPIMetricGlobal,
@@ -87,6 +96,9 @@ import { CalendarioWidgetComponent, CalendarioEvento } from '../calendario-widge
 import { GraficasGuardadasWidgetComponent, GraficaGuardada } from '../graficas-guardadas-widget/graficas-guardadas-widget';
 import { GraficaWizardComponent } from '../grafica-wizard/grafica-wizard';
 import { GraficaWizardResult } from '../../models/grafica-wizard.models';
+import { AnalisisInteligenteWidgetComponent } from '../analisis-inteligente-widget/analisis-inteligente-widget';
+import { ResultadoAnalisis, TipoVisualizacion } from '../../models/analisis-inteligente.models';
+import { AnalisisInteligenteService } from '../../services/analisis-inteligente.service';
 
 @Component({
   selector: 'app-dashboard-customizable',
@@ -109,13 +121,22 @@ import { GraficaWizardResult } from '../../models/grafica-wizard.models';
     ToggleButtonModule,
     DialogModule,
     RadioButtonModule,
+    ChipModule,
+    ProgressSpinnerModule,
+    MessageModule,
+    TextareaModule,
+    CardModule,
+    IconFieldModule,
+    InputIconModule,
+    ToggleSwitchModule,
     DashboardWidgetComponent,
     NgApexchartsModule,
     GraficasInteractivasComponent,
     WidgetConfiguratorComponent,
     CalendarioWidgetComponent,
     GraficasGuardadasWidgetComponent,
-    GraficaWizardComponent
+    GraficaWizardComponent,
+    AnalisisInteligenteWidgetComponent
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './dashboard-customizable.html',
@@ -124,6 +145,7 @@ import { GraficaWizardResult } from '../../models/grafica-wizard.models';
 export class DashboardCustomizableComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  private themeService = inject(ThemeService);
   dashboardService = inject(DashboardService);
   dataService = inject(DashboardDataService);
   private exportService = inject(ExportService);
@@ -174,17 +196,11 @@ export class DashboardCustomizableComponent implements OnInit {
   tendenciaData = this.dataService.tendenciaData;
   alertasDistribucion = this.dataService.alertasDistribucion;
 
-  // Detección de tema oscuro - computed basado en clase del body
+  // Detección de tema oscuro - usa el ThemeService reactivo
   temaActual = computed<'light' | 'dark'>(() => {
-    // Verificar tema del sistema
-    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-      const isDark = document.body.classList.contains('dark') ||
-                     document.body.classList.contains('dark-mode') ||
-                     document.documentElement.classList.contains('dark') ||
-                     window.matchMedia('(prefers-color-scheme: dark)').matches;
-      return isDark ? 'dark' : 'light';
-    }
-    return 'light';
+    // Usar el signal reactivo del ThemeService en lugar de leer el DOM directamente
+    // Esto garantiza que el tema se actualice correctamente cuando cambia
+    return this.themeService.currentTheme();
   });
 
   // Cache de datos de gráficas por widget ID (computed para evitar recálculos)
@@ -1566,6 +1582,63 @@ export class DashboardCustomizableComponent implements OnInit {
   preConfigGraficaFiltroNivel = signal<string>('');       // Filtro de nivel/área
   preConfigGraficaFiltroTipo = signal<string>('');        // Filtro de tipo
 
+  // ==================== CONFIGURACIÓN DE ANÁLISIS INTELIGENTE ====================
+
+  private analisisInteligenteService = inject(AnalisisInteligenteService);
+
+  // Estado del wizard de análisis inteligente
+  aiWizardPaso = signal(0);
+  aiWizardConsulta = signal('');
+  aiWizardTipoAnalisis = signal<'descriptivo' | 'predictivo' | 'correlacion'>('descriptivo');
+  aiWizardInterpretacion = signal<any>(null);
+  aiWizardEntidades = signal<string[]>([]);
+  aiWizardVisualizaciones = signal<any[]>([]);
+  aiWizardVisualizacionSeleccionada = signal<string | null>(null);
+  aiWizardHorizonte = signal<number>(6);
+  aiWizardIntervaloConfianza = signal(true);
+  aiWizardResultadoPreview = signal<any>(null);
+  aiWizardIsProcessing = signal(false);
+  aiWizardError = signal<string | null>(null);
+  aiWizardSugerenciasFiltradas = signal<string[]>([]);
+
+  // Opciones para el wizard
+  aiTiposAnalisisOptions = [
+    { label: 'Descriptivo', value: 'descriptivo', icon: 'pi pi-chart-bar', descripcion: 'Analiza datos actuales' },
+    { label: 'Predictivo', value: 'predictivo', icon: 'pi pi-chart-line', descripcion: 'Proyecta tendencias' },
+    { label: 'Correlación', value: 'correlacion', icon: 'pi pi-share-alt', descripcion: 'Encuentra relaciones' }
+  ];
+
+  aiHorizonteOptions = [
+    { label: '1 mes', value: 1 },
+    { label: '3 meses', value: 3 },
+    { label: '6 meses', value: 6 },
+    { label: '12 meses', value: 12 }
+  ];
+
+  aiEntidadesDisponibles = [
+    { label: 'Riesgos', value: 'riesgos', icon: 'pi pi-shield' },
+    { label: 'Controles', value: 'controles', icon: 'pi pi-check-square' },
+    { label: 'Incidentes', value: 'incidentes', icon: 'pi pi-exclamation-triangle' },
+    { label: 'Activos', value: 'activos', icon: 'pi pi-box' },
+    { label: 'Áreas', value: 'areas', icon: 'pi pi-sitemap' },
+    { label: 'Cumplimiento', value: 'cumplimiento', icon: 'pi pi-verified' },
+    { label: 'Procesos', value: 'procesos', icon: 'pi pi-cog' },
+    { label: 'Objetivos', value: 'objetivos', icon: 'pi pi-flag' }
+  ];
+
+  aiEjemplosConsultas = [
+    { texto: '¿Cuántos riesgos críticos hay por área?', categoria: 'descriptivo' },
+    { texto: 'Distribución de incidentes por severidad', categoria: 'descriptivo' },
+    { texto: '¿Cuál será la tendencia de incidentes los próximos 6 meses?', categoria: 'predictivo' },
+    { texto: '¿Existe relación entre controles implementados y reducción de incidentes?', categoria: 'correlacion' }
+  ];
+
+  aiPasosConfig = [
+    { id: 'consulta', label: 'Consulta', icon: 'pi pi-search' },
+    { id: 'configurar', label: 'Configurar', icon: 'pi pi-cog' },
+    { id: 'preview', label: 'Preview', icon: 'pi pi-eye' }
+  ];
+
   // Fuentes de datos disponibles
   fuentesDatosOptions = [
     { label: 'Procesos', value: 'procesos', icon: 'pi pi-sitemap', descripcion: 'Procesos de gestión' },
@@ -2080,6 +2153,10 @@ export class DashboardCustomizableComponent implements OnInit {
         this.inputAsistenteGrafica.set('');
         this.respuestaAsistenteGrafica.set('');
         break;
+      case 'analisis-inteligente':
+        // Resetear wizard de análisis inteligente
+        this.resetAiWizard();
+        break;
     }
 
     this.showCatalogoDrawer.set(false);
@@ -2474,6 +2551,253 @@ export class DashboardCustomizableComponent implements OnInit {
       summary: 'Gráfica cargada',
       detail: `${grafica.nombre} cargada en el dashboard`
     });
+  }
+
+  // ==================== ANÁLISIS INTELIGENTE ====================
+
+  // Handler para guardar resultado de análisis inteligente como widget
+  onAnalisisInteligenteGuardar(resultado: ResultadoAnalisis): void {
+    console.log('Análisis inteligente guardado:', resultado);
+
+    // Buscar el item del catálogo para gráficas interactivas
+    const catalogItem = WIDGET_CATALOG.find(w => w.tipo === 'graficas-interactivas');
+    if (!catalogItem) return;
+
+    // Crear configuración del widget basada en el resultado del análisis
+    const widgetConfig = {
+      graficaTipo: resultado.configuracionVisualizacion.tipo,
+      graficaMostrarLeyenda: resultado.configuracionVisualizacion.mostrarLeyenda,
+      graficaMostrarDataLabels: resultado.configuracionVisualizacion.mostrarDataLabels,
+      showHeader: true
+    };
+
+    this.dashboardService.agregarWidgetConConfig(
+      catalogItem,
+      resultado.configuracionVisualizacion.titulo,
+      resultado.configuracionVisualizacion.subtitulo || '',
+      widgetConfig
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Widget creado',
+      detail: `Se creó el widget "${resultado.configuracionVisualizacion.titulo}" basado en tu análisis`
+    });
+  }
+
+  // Reset del wizard de análisis inteligente
+  resetAiWizard(): void {
+    this.aiWizardPaso.set(0);
+    this.aiWizardConsulta.set('');
+    this.aiWizardTipoAnalisis.set('descriptivo');
+    this.aiWizardInterpretacion.set(null);
+    this.aiWizardEntidades.set([]);
+    this.aiWizardVisualizaciones.set([]);
+    this.aiWizardVisualizacionSeleccionada.set(null);
+    this.aiWizardResultadoPreview.set(null);
+    this.aiWizardError.set(null);
+  }
+
+  // Navegación del wizard
+  aiWizardIrAPaso(paso: number): void {
+    if (paso < this.aiWizardPaso()) {
+      this.aiWizardPaso.set(paso);
+    }
+  }
+
+  aiWizardPasoAnterior(): void {
+    if (this.aiWizardPaso() > 0) {
+      this.aiWizardPaso.set(this.aiWizardPaso() - 1);
+    }
+  }
+
+  async aiWizardSiguientePaso(): Promise<void> {
+    const paso = this.aiWizardPaso();
+
+    if (paso === 0) {
+      await this.aiProcesarConsulta();
+    } else if (paso === 1) {
+      await this.aiGenerarPreview();
+    }
+  }
+
+  aiWizardPuedeAvanzar(): boolean {
+    const paso = this.aiWizardPaso();
+    if (paso === 0) {
+      return this.aiWizardConsulta().trim().length > 0;
+    } else if (paso === 1) {
+      return this.aiWizardVisualizacionSeleccionada() !== null && this.aiWizardEntidades().length > 0;
+    }
+    return true;
+  }
+
+  // Procesar consulta NLP
+  async aiProcesarConsulta(): Promise<void> {
+    const texto = this.aiWizardConsulta().trim();
+    if (!texto) return;
+
+    this.aiWizardIsProcessing.set(true);
+    this.aiWizardError.set(null);
+
+    try {
+      const interpretacion = await this.analisisInteligenteService.interpretarConsulta(texto);
+      this.aiWizardInterpretacion.set(interpretacion);
+      this.aiWizardEntidades.set([...interpretacion.entidadesDetectadas]);
+      this.aiWizardTipoAnalisis.set(interpretacion.tipoAnalisisSugerido);
+
+      const visualizaciones = this.analisisInteligenteService.sugerirVisualizaciones(
+        interpretacion.tipoAnalisisSugerido,
+        interpretacion.entidadesDetectadas
+      );
+      this.aiWizardVisualizaciones.set(visualizaciones);
+
+      const recomendada = visualizaciones.find((v: any) => v.recomendado);
+      this.aiWizardVisualizacionSeleccionada.set(recomendada?.tipo || visualizaciones[0]?.tipo || null);
+
+      this.aiWizardPaso.set(1);
+    } catch (err: any) {
+      this.aiWizardError.set(err.message || 'Error al procesar la consulta');
+    } finally {
+      this.aiWizardIsProcessing.set(false);
+    }
+  }
+
+  // Generar preview
+  async aiGenerarPreview(): Promise<void> {
+    const visualizacion = this.aiWizardVisualizacionSeleccionada();
+    const interpretacion = this.aiWizardInterpretacion();
+
+    if (!visualizacion || !interpretacion) return;
+
+    this.aiWizardIsProcessing.set(true);
+    this.aiWizardError.set(null);
+    this.aiWizardPaso.set(2);
+
+    try {
+      const resultado = await this.analisisInteligenteService.generarAnalisis(
+        interpretacion,
+        this.aiWizardTipoAnalisis(),
+        visualizacion as TipoVisualizacion,
+        {
+          horizontePrediccion: this.aiWizardHorizonte() as any,
+          mostrarIntervaloConfianza: this.aiWizardIntervaloConfianza()
+        }
+      );
+
+      this.aiWizardResultadoPreview.set(resultado);
+    } catch (err: any) {
+      this.aiWizardError.set(err.message || 'Error al generar el preview');
+      this.aiWizardPaso.set(1);
+    } finally {
+      this.aiWizardIsProcessing.set(false);
+    }
+  }
+
+  // Confirmar y agregar widget de análisis inteligente
+  aiWizardConfirmar(): void {
+    const resultado = this.aiWizardResultadoPreview();
+    if (!resultado) return;
+
+    const catalogItem = this.widgetPreConfig();
+    if (!catalogItem) return;
+
+    // Crear configuración del widget
+    const widgetConfig = {
+      analisisResultado: resultado,
+      graficaTipo: resultado.configuracionVisualizacion.tipo,
+      showHeader: this.preConfigShowHeader()
+    };
+
+    this.dashboardService.agregarWidgetConConfig(
+      catalogItem,
+      resultado.configuracionVisualizacion.titulo,
+      resultado.configuracionVisualizacion.subtitulo || '',
+      widgetConfig
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Widget agregado',
+      detail: `Se agregó el widget de Análisis Inteligente`
+    });
+
+    this.showPreConfigDrawer.set(false);
+    this.widgetPreConfig.set(null);
+    this.resetAiWizard();
+  }
+
+  // Cancelar wizard de análisis inteligente
+  aiWizardCancelar(): void {
+    this.showPreConfigDrawer.set(false);
+    this.widgetPreConfig.set(null);
+    this.resetAiWizard();
+  }
+
+  // Usar ejemplo de consulta
+  aiUsarEjemplo(texto: string): void {
+    this.aiWizardConsulta.set(texto);
+  }
+
+  // Agregar/eliminar entidades
+  aiAgregarEntidad(entidad: string): void {
+    const actuales = this.aiWizardEntidades();
+    if (!actuales.includes(entidad) && actuales.length < 4) {
+      this.aiWizardEntidades.set([...actuales, entidad]);
+    }
+  }
+
+  aiEliminarEntidad(entidad: string): void {
+    const actuales = this.aiWizardEntidades();
+    this.aiWizardEntidades.set(actuales.filter(e => e !== entidad));
+  }
+
+  aiGetEntidadesMenu(): any[] {
+    const editables = this.aiWizardEntidades();
+    return this.aiEntidadesDisponibles
+      .filter(e => !editables.includes(e.value))
+      .map(e => ({
+        label: e.label,
+        icon: e.icon,
+        command: () => this.aiAgregarEntidad(e.value)
+      }));
+  }
+
+  aiGetEntidadLabel(entidad: string): string {
+    return this.aiEntidadesDisponibles.find(e => e.value === entidad)?.label || entidad;
+  }
+
+  aiGetEntidadIcon(entidad: string): string {
+    return this.aiEntidadesDisponibles.find(e => e.value === entidad)?.icon || 'pi pi-circle';
+  }
+
+  aiGetVisualizacionIcon(tipo: string): string {
+    const iconos: Record<string, string> = {
+      bar: 'pi pi-chart-bar',
+      line: 'pi pi-chart-line',
+      pie: 'pi pi-chart-pie',
+      donut: 'pi pi-circle',
+      area: 'pi pi-chart-line',
+      scatter: 'pi pi-share-alt',
+      heatmap: 'pi pi-table',
+      radar: 'pi pi-slack',
+      funnel: 'pi pi-filter',
+      treemap: 'pi pi-th-large',
+      table: 'pi pi-table'
+    };
+    return iconos[tipo] || 'pi pi-chart-bar';
+  }
+
+  aiSetTipoAnalisis(tipo: string): void {
+    this.aiWizardTipoAnalisis.set(tipo as 'descriptivo' | 'predictivo' | 'correlacion');
+  }
+
+  aiGetTagSeverity(tipo: string): 'info' | 'warn' | 'success' | 'secondary' {
+    switch (tipo) {
+      case 'descriptivo': return 'info';
+      case 'predictivo': return 'warn';
+      case 'correlacion': return 'success';
+      default: return 'secondary';
+    }
   }
 
   // ==================== EXPORTACIÓN ====================

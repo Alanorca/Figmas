@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
@@ -70,6 +73,9 @@ interface Objetivo {
     RouterLink,
     ButtonModule,
     InputTextModule,
+    TextareaModule,
+    InputNumberModule,
+    SelectModule,
     TagModule,
     ToastModule,
     DialogModule,
@@ -89,6 +95,60 @@ export class ObjetivosKpisComponent implements OnInit {
   modo = signal<'ver' | 'editar'>('ver');
   procesoId = signal<string | null>(null);
   procesoNombre = signal('Proceso de Gestión de Riesgos');
+
+  // ========== WIZARD DE CREACIÓN ==========
+  creandoObjetivo = signal(false);
+  pasoActual = signal(0);
+
+  steps = [
+    {
+      icon: 'pi pi-info-circle',
+      label: 'Información Básica',
+      descripcion: 'Define el nombre, tipo y descripción del objetivo'
+    },
+    {
+      icon: 'pi pi-chart-bar',
+      label: 'KPIs',
+      descripcion: 'Agrega los indicadores clave de rendimiento'
+    },
+    {
+      icon: 'pi pi-check-circle',
+      label: 'Revisión',
+      descripcion: 'Revisa la información antes de guardar'
+    }
+  ];
+
+  // Datos del wizard
+  wizardNombre = signal('');
+  wizardDescripcion = signal('');
+  wizardTipo = signal<'estrategico' | 'operativo'>('estrategico');
+  wizardKPIs = signal<KPI[]>([]);
+
+  // Modo de tabs para KPIs en wizard (Seleccionar / Crear)
+  wizardModoKPI = signal<'seleccionar' | 'crear'>('crear');
+
+  // KPIs existentes para seleccionar
+  kpisExistentes = signal<KPI[]>([
+    { id: 'KPI-EX-001', nombre: 'Índice de Satisfacción del Cliente', meta: 90, actual: 0, escala: '%', umbralAlerta: 70, umbralMaximo: null, severidad: 'warning', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'semanal', direccion: 'mayor_mejor' },
+    { id: 'KPI-EX-002', nombre: 'Tasa de Conversión', meta: 15, actual: 0, escala: '%', umbralAlerta: 10, umbralMaximo: null, severidad: 'info', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'diaria', direccion: 'mayor_mejor' },
+    { id: 'KPI-EX-003', nombre: 'Tiempo Promedio de Respuesta', meta: 24, actual: 0, escala: 'Horas', umbralAlerta: 50, umbralMaximo: 48, severidad: 'warning', canalesNotificacion: ['in-app', 'email'], frecuenciaEvaluacion: 'diaria', direccion: 'menor_mejor' },
+    { id: 'KPI-EX-004', nombre: 'Nivel de Cumplimiento Regulatorio', meta: 100, actual: 0, escala: '%', umbralAlerta: 90, umbralMaximo: null, severidad: 'critical', canalesNotificacion: ['in-app', 'email'], frecuenciaEvaluacion: 'semanal', direccion: 'mayor_mejor' },
+    { id: 'KPI-EX-005', nombre: 'Rotación de Personal', meta: 5, actual: 0, escala: '%', umbralAlerta: 80, umbralMaximo: 15, severidad: 'warning', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'mensual', direccion: 'menor_mejor' }
+  ]);
+
+  // Form KPI en wizard
+  wizardMostrarFormKPI = signal(false);
+  wizardKPIEditandoId = signal<string | null>(null);
+  wizardKPINombre = signal('');
+  wizardKPIMeta = signal<number>(100);
+  wizardKPIActual = signal<number>(0);
+  wizardKPIEscala = signal('Porcentaje');
+  wizardKPIUmbralAlerta = signal<number>(50);
+  wizardKPIUmbralMaximo = signal<number | null>(null);
+  wizardKPISeveridad = signal<AlertSeverity>('warning');
+  wizardKPICanales = signal<NotificationChannel[]>(['in-app']);
+  wizardKPIFrecuencia = signal<EvaluationFrequency>('diaria');
+  wizardKPIDireccion = signal<'mayor_mejor' | 'menor_mejor'>('mayor_mejor');
 
   // Estado
   objetivoSeleccionadoId = signal<string | null>(null);
@@ -335,6 +395,12 @@ export class ObjetivosKpisComponent implements OnInit {
   formKPIUmbralAlerta = signal<number>(50);
   formKPIDireccion = signal<'mayor_mejor' | 'menor_mejor'>('mayor_mejor');
 
+  // Opciones para selects
+  tipoOptions = [
+    { label: 'Estratégico', value: 'estrategico' },
+    { label: 'Operativo', value: 'operativo' }
+  ];
+
   escalasOptions = [
     { label: 'Porcentaje', value: 'Porcentaje' },
     { label: '%', value: '%' },
@@ -472,17 +538,209 @@ export class ObjetivosKpisComponent implements OnInit {
   }
 
   crearObjetivo(): void {
+    // Abrir el wizard de creación
+    this.resetWizard();
+    this.creandoObjetivo.set(true);
+  }
+
+  // ========== WIZARD METHODS ==========
+  resetWizard(): void {
+    this.pasoActual.set(0);
+    this.wizardNombre.set('');
+    this.wizardDescripcion.set('');
+    this.wizardTipo.set('estrategico');
+    this.wizardKPIs.set([]);
+    this.resetWizardKPIForm();
+  }
+
+  resetWizardKPIForm(): void {
+    this.wizardMostrarFormKPI.set(false);
+    this.wizardKPIEditandoId.set(null);
+    this.wizardKPINombre.set('');
+    this.wizardKPIMeta.set(100);
+    this.wizardKPIActual.set(0);
+    this.wizardKPIEscala.set('Porcentaje');
+    this.wizardKPIUmbralAlerta.set(50);
+    this.wizardKPIUmbralMaximo.set(null);
+    this.wizardKPISeveridad.set('warning');
+    this.wizardKPICanales.set(['in-app']);
+    this.wizardKPIFrecuencia.set('diaria');
+    this.wizardKPIDireccion.set('mayor_mejor');
+  }
+
+  cancelarWizard(): void {
+    this.creandoObjetivo.set(false);
+    this.resetWizard();
+  }
+
+  siguienteWizard(): void {
+    if (this.validarPasoActual()) {
+      this.pasoActual.update(p => Math.min(p + 1, 2));
+    }
+  }
+
+  anteriorWizard(): void {
+    this.pasoActual.update(p => Math.max(p - 1, 0));
+  }
+
+  irAPaso(paso: number): void {
+    if (paso <= this.pasoActual()) {
+      this.pasoActual.set(paso);
+    }
+  }
+
+  validarPasoActual(): boolean {
+    switch (this.pasoActual()) {
+      case 0:
+        if (!this.wizardNombre().trim()) {
+          this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre del objetivo es requerido' });
+          return false;
+        }
+        return true;
+      case 1:
+        return true; // KPIs son opcionales
+      default:
+        return true;
+    }
+  }
+
+  // Seleccionar un KPI existente
+  seleccionarKPIExistente(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const kpiId = select.value;
+
+    if (!kpiId) return;
+
+    const kpiExistente = this.kpisExistentes().find(k => k.id === kpiId);
+    if (kpiExistente) {
+      // Clonar el KPI con un nuevo ID para evitar duplicados
+      const nuevoKPI: KPI = {
+        ...kpiExistente,
+        id: `KPI-${Date.now()}`,
+        actual: 0 // Reset actual value for new objective
+      };
+
+      // Verificar que no esté ya agregado (por nombre)
+      const yaAgregado = this.wizardKPIs().some(k => k.nombre === nuevoKPI.nombre);
+      if (yaAgregado) {
+        this.messageService.add({ severity: 'warn', summary: 'Duplicado', detail: 'Este KPI ya está agregado al objetivo' });
+        select.value = '';
+        return;
+      }
+
+      this.wizardKPIs.update(list => [...list, nuevoKPI]);
+      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: `KPI "${nuevoKPI.nombre}" agregado` });
+      select.value = ''; // Reset select
+    }
+  }
+
+  // KPIs en el wizard
+  abrirFormKPIWizard(kpi?: KPI): void {
+    if (kpi) {
+      this.wizardKPIEditandoId.set(kpi.id);
+      this.wizardKPINombre.set(kpi.nombre);
+      this.wizardKPIMeta.set(kpi.meta);
+      this.wizardKPIActual.set(kpi.actual);
+      this.wizardKPIEscala.set(kpi.escala);
+      this.wizardKPIUmbralAlerta.set(kpi.umbralAlerta);
+      this.wizardKPIUmbralMaximo.set(kpi.umbralMaximo);
+      this.wizardKPISeveridad.set(kpi.severidad);
+      this.wizardKPICanales.set([...kpi.canalesNotificacion]);
+      this.wizardKPIFrecuencia.set(kpi.frecuenciaEvaluacion);
+      this.wizardKPIDireccion.set(kpi.direccion);
+    } else {
+      this.resetWizardKPIForm();
+    }
+    this.wizardMostrarFormKPI.set(true);
+  }
+
+  cerrarFormKPIWizard(): void {
+    this.wizardMostrarFormKPI.set(false);
+    this.wizardKPIEditandoId.set(null);
+  }
+
+  guardarKPIWizard(): void {
+    if (!this.wizardKPINombre().trim()) {
+      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre del KPI es requerido' });
+      return;
+    }
+
+    const editandoId = this.wizardKPIEditandoId();
+    const nuevoKPI: KPI = {
+      id: editandoId || `KPI-${Date.now()}`,
+      nombre: this.wizardKPINombre(),
+      meta: this.wizardKPIMeta(),
+      actual: this.wizardKPIActual(),
+      escala: this.wizardKPIEscala(),
+      umbralAlerta: this.wizardKPIUmbralAlerta(),
+      umbralMaximo: this.wizardKPIUmbralMaximo(),
+      severidad: this.wizardKPISeveridad(),
+      canalesNotificacion: [...this.wizardKPICanales()],
+      frecuenciaEvaluacion: this.wizardKPIFrecuencia(),
+      direccion: this.wizardKPIDireccion()
+    };
+
+    if (editandoId) {
+      this.wizardKPIs.update(list => list.map(k => k.id === editandoId ? nuevoKPI : k));
+      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'KPI actualizado' });
+    } else {
+      this.wizardKPIs.update(list => [...list, nuevoKPI]);
+      this.messageService.add({ severity: 'success', summary: 'Agregado', detail: 'KPI agregado' });
+    }
+
+    this.cerrarFormKPIWizard();
+  }
+
+  eliminarKPIWizard(kpiId: string): void {
+    this.wizardKPIs.update(list => list.filter(k => k.id !== kpiId));
+    this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'KPI eliminado' });
+  }
+
+  isWizardChannelSelected(channel: NotificationChannel): boolean {
+    return this.wizardKPICanales().includes(channel);
+  }
+
+  toggleWizardChannel(channel: NotificationChannel): void {
+    const current = this.wizardKPICanales();
+    if (current.includes(channel)) {
+      this.wizardKPICanales.set(current.filter(c => c !== channel));
+    } else {
+      this.wizardKPICanales.set([...current, channel]);
+    }
+  }
+
+  guardarObjetivoWizard(): void {
+    if (!this.wizardNombre().trim()) {
+      this.messageService.add({ severity: 'warn', summary: 'Validación', detail: 'El nombre del objetivo es requerido' });
+      return;
+    }
+
     const nuevoObjetivo: Objetivo = {
       id: `OBJ-${Date.now()}`,
-      nombre: 'Nuevo Objetivo',
-      descripcion: '',
-      tipo: 'estrategico',
+      nombre: this.wizardNombre(),
+      descripcion: this.wizardDescripcion(),
+      tipo: this.wizardTipo(),
       progreso: 0,
-      kpis: []
+      kpis: [...this.wizardKPIs()]
     };
+
     this.objetivos.update(list => [...list, nuevoObjetivo]);
     this.objetivoSeleccionadoId.set(nuevoObjetivo.id);
-    this.iniciarEdicionObjetivo();
+    this.creandoObjetivo.set(false);
+    this.resetWizard();
+    this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Objetivo creado exitosamente' });
+  }
+
+  getWizardKPIProgreso(kpi: KPI): number {
+    if (kpi.meta === 0) return 0;
+    return Math.min(Math.round((kpi.actual / kpi.meta) * 100), 100);
+  }
+
+  getWizardKPIProgresoColor(kpi: KPI): string {
+    const progreso = this.getWizardKPIProgreso(kpi);
+    if (progreso >= 66) return 'progress-green';
+    if (progreso >= 33) return 'progress-yellow';
+    return 'progress-red';
   }
 
   // CRUD KPIs

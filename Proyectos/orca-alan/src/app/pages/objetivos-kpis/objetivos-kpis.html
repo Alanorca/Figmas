@@ -1,51 +1,470 @@
 <p-toast />
 
-<div class="objetivos-kpis-page">
+@if (creandoObjetivo()) {
+<!-- ==================== WIZARD DE CREACIÓN (Patrón proyecto-crear) ==================== -->
+<div class="objetivo-crear-container">
   <!-- Header -->
-  <header class="page-header">
+  <div class="page-header">
     <div class="header-left">
-      <h1>{{ modo() === 'editar' ? 'Editar Objetivos y KPIs' : 'Objetivos y KPIs' }}</h1>
-      <p class="page-subtitle">{{ procesoNombre() }}</p>
-    </div>
-  </header>
-
-  <!-- Toolbar -->
-  <div class="page-toolbar">
-    <div class="toolbar-left">
-      <div class="search-input-wrapper">
-        <i class="pi pi-search"></i>
-        <input
-          type="text"
-          placeholder="Buscar objetivo..."
-          [ngModel]="busquedaObjetivos()"
-          (ngModelChange)="busquedaObjetivos.set($event)"
-        />
+      <p-button
+        icon="pi pi-arrow-left"
+        [rounded]="true"
+        [text]="true"
+        (onClick)="cancelarWizard()"
+        pTooltip="Volver"
+      />
+      <div class="header-info">
+        <h1>Nuevo Objetivo</h1>
+        <p class="subtitle">{{ steps[pasoActual()].descripcion }}</p>
       </div>
-    </div>
-    <div class="toolbar-right">
-      @if (modo() === 'ver') {
-        <button class="btn-secondary" (click)="cambiarModo('editar')">
-          <i class="pi pi-pencil"></i>
-          Editar
-        </button>
-        <button class="btn-primary" (click)="crearObjetivo()">
-          <i class="pi pi-plus"></i>
-          Nuevo Objetivo
-        </button>
-      } @else {
-        <button class="btn-secondary" (click)="cambiarModo('ver')">
-          <i class="pi pi-times"></i>
-          Cancelar
-        </button>
-        <button class="btn-primary" (click)="guardarObjetivo()">
-          <i class="pi pi-check"></i>
-          Guardar
-        </button>
-      }
     </div>
   </div>
 
-  <!-- Main Content - Two Columns -->
+  <!-- Wizard Steps -->
+  <div class="wizard-steps">
+    @for (step of steps; track $index; let i = $index) {
+      <div
+        class="step-item"
+        [class.active]="pasoActual() === i"
+        [class.completed]="pasoActual() > i"
+        [class.disabled]="pasoActual() < i"
+        (click)="irAPaso(i)"
+      >
+        <div class="step-number">
+          @if (pasoActual() > i) {
+            <i class="pi pi-check"></i>
+          } @else {
+            <i [class]="step.icon"></i>
+          }
+        </div>
+        <div class="step-label">{{ step.label }}</div>
+      </div>
+      @if (i < steps.length - 1) {
+        <div class="step-connector" [class.completed]="pasoActual() > i"></div>
+      }
+    }
+  </div>
+
+  <!-- Content -->
+  <div class="wizard-content">
+    <!-- Paso 1: Información Básica -->
+    @if (pasoActual() === 0) {
+      <div class="step-content">
+        <div class="form-section">
+          <h3>Información del Objetivo</h3>
+
+          <div class="form-grid">
+            <div class="form-field full-width">
+              <label for="nombre">Nombre del Objetivo *</label>
+              <input
+                id="nombre"
+                type="text"
+                pInputText
+                [ngModel]="wizardNombre()"
+                (ngModelChange)="wizardNombre.set($event)"
+                placeholder="Ej: Incrementar satisfacción del cliente"
+                class="w-full"
+              />
+            </div>
+
+            <div class="form-field full-width">
+              <label for="descripcion">Descripción</label>
+              <textarea
+                id="descripcion"
+                pInputTextarea
+                [ngModel]="wizardDescripcion()"
+                (ngModelChange)="wizardDescripcion.set($event)"
+                placeholder="Describe el objetivo de forma detallada..."
+                rows="3"
+                class="w-full"
+              ></textarea>
+            </div>
+
+            <div class="form-field">
+              <label for="tipo">Tipo de Objetivo</label>
+              <p-select
+                id="tipo"
+                [options]="tipoOptions"
+                [ngModel]="wizardTipo()"
+                (ngModelChange)="wizardTipo.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{ width: '100%' }"
+              />
+            </div>
+          </div>
+
+          <!-- Resumen -->
+          @if (wizardNombre()) {
+            <div class="summary-card">
+              <h4>Resumen</h4>
+              <div class="summary-grid">
+                <div class="summary-item">
+                  <span class="label">Tipo</span>
+                  <p-tag
+                    [value]="wizardTipo() === 'estrategico' ? 'Estratégico' : 'Operativo'"
+                    [severity]="wizardTipo() === 'estrategico' ? 'info' : 'secondary'"
+                  />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Paso 2: KPIs -->
+    @if (pasoActual() === 1) {
+      <div class="step-content">
+        <div class="form-section">
+          <div class="section-header">
+            <div>
+              <h3>Indicadores Clave (KPIs)</h3>
+              <p class="section-description">Define los indicadores que medirán el progreso del objetivo.</p>
+            </div>
+            <p-button
+              label="Agregar KPI"
+              icon="pi pi-plus"
+              (onClick)="abrirFormKPIWizard()"
+            />
+          </div>
+
+          <!-- Form KPI -->
+          @if (wizardMostrarFormKPI()) {
+            <div class="inline-form">
+              <div class="form-grid">
+                <div class="form-field full-width">
+                  <label>Nombre del KPI *</label>
+                  <input
+                    type="text"
+                    pInputText
+                    [ngModel]="wizardKPINombre()"
+                    (ngModelChange)="wizardKPINombre.set($event)"
+                    placeholder="Ej: Índice de satisfacción"
+                    class="w-full"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Meta</label>
+                  <p-inputNumber
+                    [ngModel]="wizardKPIMeta()"
+                    (ngModelChange)="wizardKPIMeta.set($event)"
+                    [showButtons]="true"
+                    [min]="0"
+                    [style]="{ width: '100%' }"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Valor Actual</label>
+                  <p-inputNumber
+                    [ngModel]="wizardKPIActual()"
+                    (ngModelChange)="wizardKPIActual.set($event)"
+                    [showButtons]="true"
+                    [min]="0"
+                    [style]="{ width: '100%' }"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Escala</label>
+                  <p-select
+                    [options]="escalasOptions"
+                    [ngModel]="wizardKPIEscala()"
+                    (ngModelChange)="wizardKPIEscala.set($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    [style]="{ width: '100%' }"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Umbral Alerta (%)</label>
+                  <p-inputNumber
+                    [ngModel]="wizardKPIUmbralAlerta()"
+                    (ngModelChange)="wizardKPIUmbralAlerta.set($event)"
+                    [showButtons]="true"
+                    [min]="0"
+                    [max]="100"
+                    suffix="%"
+                    [style]="{ width: '100%' }"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Dirección</label>
+                  <p-select
+                    [options]="direccionOptions"
+                    [ngModel]="wizardKPIDireccion()"
+                    (ngModelChange)="wizardKPIDireccion.set($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    [style]="{ width: '100%' }"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Severidad</label>
+                  <p-select
+                    [options]="severidadOptions"
+                    [ngModel]="wizardKPISeveridad()"
+                    (ngModelChange)="wizardKPISeveridad.set($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    [style]="{ width: '100%' }"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label>Frecuencia de Evaluación</label>
+                  <p-select
+                    [options]="frecuenciaOptions"
+                    [ngModel]="wizardKPIFrecuencia()"
+                    (ngModelChange)="wizardKPIFrecuencia.set($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    [style]="{ width: '100%' }"
+                  />
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <p-button
+                  label="Cancelar"
+                  severity="secondary"
+                  [text]="true"
+                  (onClick)="cerrarFormKPIWizard()"
+                />
+                <p-button
+                  [label]="wizardKPIEditandoId() ? 'Actualizar' : 'Agregar'"
+                  icon="pi pi-check"
+                  (onClick)="guardarKPIWizard()"
+                />
+              </div>
+            </div>
+          }
+
+          <!-- Lista de KPIs -->
+          @if (wizardKPIs().length > 0) {
+            <div class="items-list">
+              @for (kpi of wizardKPIs(); track kpi.id) {
+                <div class="item-card">
+                  <div class="item-icon kpi">
+                    <i class="pi pi-chart-line"></i>
+                  </div>
+                  <div class="item-content">
+                    <div class="item-header">
+                      <span class="item-name">{{ kpi.nombre }}</span>
+                      <p-tag
+                        [value]="kpi.escala"
+                        severity="secondary"
+                        [style]="{ fontSize: '0.7rem' }"
+                      />
+                    </div>
+                    <div class="kpi-meta">
+                      <span class="kpi-target">
+                        <i class="pi pi-flag"></i>
+                        Meta: {{ kpi.meta }} {{ kpi.escala }}
+                      </span>
+                      <span class="kpi-current">
+                        <i class="pi pi-chart-bar"></i>
+                        Actual: {{ kpi.actual }} {{ kpi.escala }}
+                      </span>
+                    </div>
+                    <div class="kpi-progress-bar">
+                      <div
+                        class="kpi-progress-fill"
+                        [class]="getWizardKPIProgresoColor(kpi)"
+                        [style.width.%]="getWizardKPIProgreso(kpi)"
+                      ></div>
+                    </div>
+                  </div>
+                  <div class="item-actions">
+                    <p-button
+                      icon="pi pi-pencil"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="secondary"
+                      (onClick)="abrirFormKPIWizard(kpi)"
+                    />
+                    <p-button
+                      icon="pi pi-trash"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="danger"
+                      (onClick)="eliminarKPIWizard(kpi.id)"
+                    />
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (!wizardMostrarFormKPI()) {
+            <div class="empty-state">
+              <i class="pi pi-chart-line"></i>
+              <p>No hay KPIs definidos</p>
+              <p class="hint">Los KPIs ayudan a medir el progreso del objetivo</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Paso 3: Revisión -->
+    @if (pasoActual() === 2) {
+      <div class="step-content">
+        <div class="form-section">
+          <h3>Revisión del Objetivo</h3>
+          <p class="section-description">Verifica que la información sea correcta antes de guardar.</p>
+
+          <div class="final-summary">
+            <div class="summary-cards">
+              <div class="summary-card-mini">
+                <i class="pi pi-bullseye"></i>
+                <div>
+                  <span class="label">Objetivo</span>
+                  <span class="value">{{ wizardNombre() || 'Sin nombre' }}</span>
+                </div>
+              </div>
+              <div class="summary-card-mini">
+                <i class="pi pi-tag"></i>
+                <div>
+                  <span class="label">Tipo</span>
+                  <span class="value">{{ wizardTipo() === 'estrategico' ? 'Estratégico' : 'Operativo' }}</span>
+                </div>
+              </div>
+              <div class="summary-card-mini">
+                <i class="pi pi-chart-line"></i>
+                <div>
+                  <span class="label">KPIs</span>
+                  <span class="value">{{ wizardKPIs().length }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          @if (wizardDescripcion()) {
+            <div class="description-section">
+              <h4>Descripción</h4>
+              <p class="description-text">{{ wizardDescripcion() }}</p>
+            </div>
+          }
+
+          @if (wizardKPIs().length > 0) {
+            <div class="kpis-review-section">
+              <h4>KPIs del Objetivo</h4>
+              <div class="items-list">
+                @for (kpi of wizardKPIs(); track kpi.id) {
+                  <div class="item-card readonly">
+                    <div class="item-icon kpi">
+                      <i class="pi pi-chart-line"></i>
+                    </div>
+                    <div class="item-content">
+                      <div class="item-header">
+                        <span class="item-name">{{ kpi.nombre }}</span>
+                        <p-tag [value]="kpi.escala" severity="secondary" />
+                      </div>
+                      <div class="kpi-meta">
+                        <span>Meta: {{ kpi.meta }}</span>
+                        <span>Actual: {{ kpi.actual }}</span>
+                        <span>Umbral: {{ kpi.umbralAlerta }}%</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Footer Navigation -->
+  <div class="wizard-footer">
+    <div class="footer-left">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        (onClick)="cancelarWizard()"
+      />
+    </div>
+    <div class="footer-right">
+      @if (pasoActual() > 0) {
+        <p-button
+          label="Anterior"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="anteriorWizard()"
+        />
+      }
+      @if (pasoActual() < 2) {
+        <p-button
+          label="Siguiente"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          (onClick)="siguienteWizard()"
+        />
+      } @else {
+        <p-button
+          label="Guardar Objetivo"
+          icon="pi pi-check"
+          (onClick)="guardarObjetivoWizard()"
+        />
+      }
+    </div>
+  </div>
+</div>
+} @else {
+<div class="objetivos-kpis-page">
+    <!-- ==================== VISTA NORMAL ==================== -->
+    <!-- Header -->
+    <header class="page-header">
+      <div class="header-left">
+        <h1>{{ modo() === 'editar' ? 'Editar Objetivos y KPIs' : 'Objetivos y KPIs' }}</h1>
+        <p class="page-subtitle">{{ procesoNombre() }}</p>
+      </div>
+    </header>
+
+    <!-- Toolbar -->
+    <div class="page-toolbar">
+      <div class="toolbar-left">
+        <div class="search-input-wrapper">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar objetivo..."
+            [ngModel]="busquedaObjetivos()"
+            (ngModelChange)="busquedaObjetivos.set($event)"
+          />
+        </div>
+      </div>
+      <div class="toolbar-right">
+        @if (modo() === 'ver') {
+          <button class="btn-secondary" (click)="cambiarModo('editar')">
+            <i class="pi pi-pencil"></i>
+            Editar
+          </button>
+          <button class="btn-primary" (click)="crearObjetivo()">
+            <i class="pi pi-plus"></i>
+            Nuevo Objetivo
+          </button>
+        } @else {
+          <button class="btn-secondary" (click)="cambiarModo('ver')">
+            <i class="pi pi-times"></i>
+            Cancelar
+          </button>
+          <button class="btn-primary" (click)="guardarObjetivo()">
+            <i class="pi pi-check"></i>
+            Guardar
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Main Content - Two Columns -->
   <div class="main-content">
     <!-- Left Column - Objectives List -->
     <div class="left-column">
@@ -659,6 +1078,7 @@
     </div>
   </div>
 </div>
+}
 
 <!-- Dialog para atender alerta -->
 <p-dialog
