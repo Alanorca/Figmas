@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of, catchError, map } from 'rxjs';
+import { Observable, of, from, map, filter, switchMap } from 'rxjs';
+import { IndexedDBService } from './indexeddb.service';
 
 // Interfaces para el backend
 export interface UserNotificationPreferences {
@@ -129,15 +129,11 @@ export interface EntityTreeNode {
   providedIn: 'root'
 })
 export class NotificacionesService {
-  private http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:3000/api/notifications';
+  private db = inject(IndexedDBService);
+  private currentUserId = 'u1'; // Default user
 
-  private getHeaders(usuarioId?: string): HttpHeaders {
-    let headers = new HttpHeaders();
-    if (usuarioId) {
-      headers = headers.set('X-User-Id', usuarioId);
-    }
-    return headers;
+  constructor() {
+    this.db.init();
   }
 
   // ============================================================
@@ -145,18 +141,34 @@ export class NotificacionesService {
   // ============================================================
 
   getPreferences(usuarioId?: string): Observable<UserNotificationPreferences> {
-    const headers = this.getHeaders(usuarioId);
-    return this.http.get<UserNotificationPreferences>(`${this.baseUrl}/preferences`, { headers }).pipe(
-      map(prefs => this.transformPreferencesFromBackend(prefs)),
-      catchError(() => of(this.getDefaultPreferences()))
+    const uid = usuarioId || this.currentUserId;
+    return from(this.db.getAll<any>('user_notification_preferences')).pipe(
+      map(prefs => {
+        const userPref = prefs.find(p => p.usuarioId === uid);
+        if (userPref) {
+          return this.transformPreferencesFromBackend(userPref);
+        }
+        return this.getDefaultPreferences();
+      })
     );
   }
 
   updatePreferences(preferences: UserNotificationPreferences, usuarioId?: string): Observable<UserNotificationPreferences> {
-    const headers = this.getHeaders(usuarioId);
-    const payload = this.transformPreferencesToBackend(preferences);
-    return this.http.put<UserNotificationPreferences>(`${this.baseUrl}/preferences`, payload, { headers }).pipe(
-      map(prefs => this.transformPreferencesFromBackend(prefs))
+    const uid = usuarioId || this.currentUserId;
+    return from(this.db.getAll<any>('user_notification_preferences')).pipe(
+      map(async prefs => {
+        const existing = prefs.find(p => p.usuarioId === uid);
+        const payload = this.transformPreferencesToBackend({ ...preferences, usuarioId: uid });
+
+        if (existing) {
+          await this.db.put('user_notification_preferences', { ...existing, ...payload });
+        } else {
+          await this.db.add('user_notification_preferences', payload);
+        }
+
+        return this.transformPreferencesFromBackend(payload);
+      }),
+      map(promise => promise as any)
     );
   }
 
@@ -220,29 +232,48 @@ export class NotificacionesService {
   // ============================================================
 
   getNotificationRules(): Observable<NotificationRule[]> {
-    return this.http.get<NotificationRule[]>(`${this.baseUrl}/rules`).pipe(
-      catchError(() => of([]))
-    );
+    return from(this.db.getAll<NotificationRule>('notification_rules'));
   }
 
   getNotificationRule(id: string): Observable<NotificationRule> {
-    return this.http.get<NotificationRule>(`${this.baseUrl}/rules/${id}`);
+    return from(this.db.get<NotificationRule>('notification_rules', id)).pipe(
+      filter((rule): rule is NotificationRule => rule !== undefined)
+    );
   }
 
   createNotificationRule(rule: Partial<NotificationRule>): Observable<NotificationRule> {
-    return this.http.post<NotificationRule>(`${this.baseUrl}/rules`, rule);
+    const newRule = {
+      ...rule,
+      fechaCreacion: new Date(),
+      fechaModificacion: new Date()
+    } as NotificationRule;
+    return from(this.db.add('notification_rules', newRule));
   }
 
   updateNotificationRule(id: string, rule: Partial<NotificationRule>): Observable<NotificationRule> {
-    return this.http.put<NotificationRule>(`${this.baseUrl}/rules/${id}`, rule);
+    return from(this.db.get<NotificationRule>('notification_rules', id)).pipe(
+      map(async existing => {
+        const updated = { ...existing, ...rule, id, fechaModificacion: new Date() };
+        await this.db.put('notification_rules', updated);
+        return updated;
+      }),
+      map(promise => promise as any)
+    );
   }
 
   deleteNotificationRule(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/rules/${id}`);
+    return from(this.db.delete('notification_rules', id));
   }
 
   toggleNotificationRule(id: string): Observable<{ activo: boolean }> {
-    return this.http.patch<{ activo: boolean }>(`${this.baseUrl}/rules/${id}/toggle`, {});
+    return from(this.db.get<NotificationRule>('notification_rules', id)).pipe(
+      filter((rule): rule is NotificationRule => rule !== undefined),
+      switchMap(async rule => {
+        const updated = { ...rule, activo: !rule.activo, fechaModificacion: new Date() };
+        await this.db.put('notification_rules', updated);
+        return { activo: updated.activo };
+      })
+    );
   }
 
   // ============================================================
@@ -250,29 +281,48 @@ export class NotificacionesService {
   // ============================================================
 
   getAlertRules(): Observable<AlertRule[]> {
-    return this.http.get<AlertRule[]>(`${this.baseUrl}/alerts`).pipe(
-      catchError(() => of([]))
-    );
+    return from(this.db.getAll<AlertRule>('alert_rules'));
   }
 
   getAlertRule(id: string): Observable<AlertRule> {
-    return this.http.get<AlertRule>(`${this.baseUrl}/alerts/${id}`);
+    return from(this.db.get<AlertRule>('alert_rules', id)).pipe(
+      filter((rule): rule is AlertRule => rule !== undefined)
+    );
   }
 
   createAlertRule(rule: Partial<AlertRule>): Observable<AlertRule> {
-    return this.http.post<AlertRule>(`${this.baseUrl}/alerts`, rule);
+    const newRule = {
+      ...rule,
+      fechaCreacion: new Date(),
+      fechaModificacion: new Date()
+    } as AlertRule;
+    return from(this.db.add('alert_rules', newRule));
   }
 
   updateAlertRule(id: string, rule: Partial<AlertRule>): Observable<AlertRule> {
-    return this.http.put<AlertRule>(`${this.baseUrl}/alerts/${id}`, rule);
+    return from(this.db.get<AlertRule>('alert_rules', id)).pipe(
+      map(async existing => {
+        const updated = { ...existing, ...rule, id, fechaModificacion: new Date() };
+        await this.db.put('alert_rules', updated);
+        return updated;
+      }),
+      map(promise => promise as any)
+    );
   }
 
   deleteAlertRule(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/alerts/${id}`);
+    return from(this.db.delete('alert_rules', id));
   }
 
   toggleAlertRule(id: string): Observable<{ activo: boolean }> {
-    return this.http.patch<{ activo: boolean }>(`${this.baseUrl}/alerts/${id}/toggle`, {});
+    return from(this.db.get<AlertRule>('alert_rules', id)).pipe(
+      filter((rule): rule is AlertRule => rule !== undefined),
+      switchMap(async rule => {
+        const updated = { ...rule, activo: !rule.activo, fechaModificacion: new Date() };
+        await this.db.put('alert_rules', updated);
+        return { activo: updated.activo };
+      })
+    );
   }
 
   // ============================================================
@@ -280,29 +330,48 @@ export class NotificacionesService {
   // ============================================================
 
   getExpirationRules(): Observable<ExpirationRule[]> {
-    return this.http.get<ExpirationRule[]>(`${this.baseUrl}/expiration-rules`).pipe(
-      catchError(() => of([]))
-    );
+    return from(this.db.getAll<ExpirationRule>('expiration_rules'));
   }
 
   getExpirationRule(id: string): Observable<ExpirationRule> {
-    return this.http.get<ExpirationRule>(`${this.baseUrl}/expiration-rules/${id}`);
+    return from(this.db.get<ExpirationRule>('expiration_rules', id)).pipe(
+      filter((rule): rule is ExpirationRule => rule !== undefined)
+    );
   }
 
   createExpirationRule(rule: Partial<ExpirationRule>): Observable<ExpirationRule> {
-    return this.http.post<ExpirationRule>(`${this.baseUrl}/expiration-rules`, rule);
+    const newRule = {
+      ...rule,
+      fechaCreacion: new Date(),
+      fechaModificacion: new Date()
+    } as ExpirationRule;
+    return from(this.db.add('expiration_rules', newRule));
   }
 
   updateExpirationRule(id: string, rule: Partial<ExpirationRule>): Observable<ExpirationRule> {
-    return this.http.put<ExpirationRule>(`${this.baseUrl}/expiration-rules/${id}`, rule);
+    return from(this.db.get<ExpirationRule>('expiration_rules', id)).pipe(
+      map(async existing => {
+        const updated = { ...existing, ...rule, id, fechaModificacion: new Date() };
+        await this.db.put('expiration_rules', updated);
+        return updated;
+      }),
+      map(promise => promise as any)
+    );
   }
 
   deleteExpirationRule(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/expiration-rules/${id}`);
+    return from(this.db.delete('expiration_rules', id));
   }
 
   toggleExpirationRule(id: string): Observable<{ activo: boolean }> {
-    return this.http.patch<{ activo: boolean }>(`${this.baseUrl}/expiration-rules/${id}/toggle`, {});
+    return from(this.db.get<ExpirationRule>('expiration_rules', id)).pipe(
+      filter((rule): rule is ExpirationRule => rule !== undefined),
+      switchMap(async rule => {
+        const updated = { ...rule, activo: !rule.activo, fechaModificacion: new Date() };
+        await this.db.put('expiration_rules', updated);
+        return { activo: updated.activo };
+      })
+    );
   }
 
   // ============================================================
@@ -310,8 +379,23 @@ export class NotificacionesService {
   // ============================================================
 
   getLogs(params?: { page?: number; limit?: number; estado?: string; canal?: string }): Observable<NotificationLog[]> {
-    return this.http.get<NotificationLog[]>(`${this.baseUrl}/logs`, { params: params as any }).pipe(
-      catchError(() => of([]))
+    return from(this.db.getAll<NotificationLog>('notification_logs')).pipe(
+      map(logs => {
+        let filtered = logs;
+        if (params?.estado) {
+          filtered = filtered.filter(l => l.estado === params.estado);
+        }
+        if (params?.canal) {
+          filtered = filtered.filter(l => l.canal === params.canal);
+        }
+        // Sort by date descending
+        filtered.sort((a, b) => new Date(b.fechaEnvio).getTime() - new Date(a.fechaEnvio).getTime());
+        // Pagination
+        const page = params?.page || 1;
+        const limit = params?.limit || 50;
+        const start = (page - 1) * limit;
+        return filtered.slice(start, start + limit);
+      })
     );
   }
 
@@ -320,19 +404,38 @@ export class NotificacionesService {
   // ============================================================
 
   getInbox(usuarioId?: string): Observable<Notification[]> {
-    const headers = this.getHeaders(usuarioId);
-    return this.http.get<Notification[]>(`${this.baseUrl}/inbox`, { headers }).pipe(
-      catchError(() => of([]))
+    const uid = usuarioId || this.currentUserId;
+    return from(this.db.getAll<Notification>('notifications')).pipe(
+      map(notifications => {
+        return notifications
+          .filter(n => n.usuarioId === uid && !n.archivada)
+          .sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime());
+      })
     );
   }
 
   markAsRead(notificationId: string): Observable<Notification> {
-    return this.http.patch<Notification>(`${this.baseUrl}/inbox/${notificationId}/read`, {});
+    return from(this.db.get<Notification>('notifications', notificationId)).pipe(
+      map(async notification => {
+        const updated = { ...notification, leida: true, fechaLeida: new Date() };
+        await this.db.put('notifications', updated);
+        return updated;
+      }),
+      map(promise => promise as any)
+    );
   }
 
   markAllAsRead(usuarioId?: string): Observable<void> {
-    const headers = this.getHeaders(usuarioId);
-    return this.http.post<void>(`${this.baseUrl}/inbox/mark-all-read`, {}, { headers });
+    const uid = usuarioId || this.currentUserId;
+    return from(this.db.getAll<Notification>('notifications')).pipe(
+      map(async notifications => {
+        const userNotifications = notifications.filter(n => n.usuarioId === uid && !n.leida);
+        for (const notification of userNotifications) {
+          await this.db.put('notifications', { ...notification, leida: true, fechaLeida: new Date() });
+        }
+      }),
+      map(() => void 0)
+    );
   }
 
   // ============================================================
@@ -340,21 +443,74 @@ export class NotificacionesService {
   // ============================================================
 
   getEntityTree(): Observable<EntityTreeNode[]> {
-    return this.http.get<EntityTreeNode[]>(`${this.baseUrl}/entity-tree`).pipe(
-      catchError(() => of([]))
-    );
+    // Return a static entity tree structure
+    return of([
+      {
+        key: 'activos',
+        label: 'Activos',
+        icon: 'pi pi-server',
+        selectable: false,
+        children: [
+          { key: 'activos_hardware', label: 'Hardware', selectable: true },
+          { key: 'activos_software', label: 'Software', selectable: true },
+          { key: 'activos_datos', label: 'Datos', selectable: true },
+          { key: 'activos_servicios', label: 'Servicios', selectable: true }
+        ]
+      },
+      {
+        key: 'riesgos',
+        label: 'Riesgos',
+        icon: 'pi pi-exclamation-triangle',
+        selectable: true
+      },
+      {
+        key: 'incidentes',
+        label: 'Incidentes',
+        icon: 'pi pi-bolt',
+        selectable: true
+      },
+      {
+        key: 'defectos',
+        label: 'Defectos',
+        icon: 'pi pi-bug',
+        selectable: true
+      },
+      {
+        key: 'cuestionarios',
+        label: 'Cuestionarios',
+        icon: 'pi pi-list-check',
+        selectable: true
+      },
+      {
+        key: 'procesos',
+        label: 'Procesos',
+        icon: 'pi pi-sitemap',
+        selectable: true
+      },
+      {
+        key: 'proyectos',
+        label: 'Proyectos',
+        icon: 'pi pi-folder',
+        selectable: true
+      }
+    ]);
   }
 
   // ============================================================
-  // SCHEDULER (Admin)
+  // SCHEDULER (Stub - No backend needed)
   // ============================================================
 
   getSchedulerStatus(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/scheduler/status`);
+    // Return mock scheduler status
+    return of([
+      { name: 'expiration-check', status: 'active', lastRun: new Date(), nextRun: new Date(Date.now() + 3600000) },
+      { name: 'email-digest', status: 'active', lastRun: new Date(), nextRun: new Date(Date.now() + 86400000) }
+    ]);
   }
 
   runSchedulerJob(jobName: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/scheduler/run/${jobName}`, {});
+    // Mock running a job
+    return of({ success: true, job: jobName, message: 'Job ejecutado correctamente (modo demo)' });
   }
 
   // ============================================================
@@ -362,15 +518,43 @@ export class NotificacionesService {
   // ============================================================
 
   sendTestNotification(usuarioId: string, severidad: string = 'info'): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/trigger/test`, { usuarioId, severidad });
+    const notification: Notification = {
+      id: 'test-' + Date.now(),
+      usuarioId,
+      tipo: 'test',
+      titulo: 'Notificación de prueba',
+      mensaje: `Esta es una notificación de prueba con severidad ${severidad}`,
+      severidad,
+      leida: false,
+      archivada: false,
+      enSeguimiento: false,
+      fechaCreacion: new Date()
+    };
+
+    return from(this.db.add('notifications', notification)).pipe(
+      map(() => ({ success: true, notification }))
+    );
   }
 
   triggerEvent(eventoTipo: string, entidadTipo: string, entidadId: string, entidadData?: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/trigger/event`, {
-      eventoTipo,
+    // In demo mode, just create a notification for the event
+    const notification: Notification = {
+      id: 'event-' + Date.now(),
+      usuarioId: this.currentUserId,
+      tipo: eventoTipo,
+      titulo: `Evento: ${eventoTipo}`,
+      mensaje: `Se ha disparado el evento ${eventoTipo} para ${entidadTipo} (${entidadId})`,
+      severidad: 'info',
       entidadTipo,
       entidadId,
-      entidadData
-    });
+      leida: false,
+      archivada: false,
+      enSeguimiento: false,
+      fechaCreacion: new Date()
+    };
+
+    return from(this.db.add('notifications', notification)).pipe(
+      map(() => ({ success: true, processed: 1 }))
+    );
   }
 }
