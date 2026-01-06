@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -28,7 +28,10 @@ import { BadgeModule } from 'primeng/badge';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ChartModule } from 'primeng/chart';
 import { KnobModule } from 'primeng/knob';
-
+import { AccordionModule } from 'primeng/accordion';
+import { DatePickerModule } from 'primeng/datepicker';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DialogModule } from 'primeng/dialog';
 
 // Services
 import { ApiService } from '../../services/api.service';
@@ -39,8 +42,6 @@ import {
   Riesgo,
   Incidente,
   Defecto,
-  HealthStatus,
-  RiskAppetite,
   ActivoGraph,
   ActivoResumen,
   ToleranceConfig
@@ -54,7 +55,7 @@ const HEALTH_STATUS_CONFIG = {
 };
 
 const CRITICIDAD_CONFIG: Record<string, { label: string; severity: 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast'; color: string }> = {
-  critica: { label: 'Crítica', severity: 'danger', color: '#dc2626' },
+  critica: { label: 'Critica', severity: 'danger', color: '#dc2626' },
   alta: { label: 'Alta', severity: 'danger', color: '#ef4444' },
   media: { label: 'Media', severity: 'warn', color: '#f59e0b' },
   baja: { label: 'Baja', severity: 'success', color: '#22c55e' }
@@ -99,7 +100,11 @@ const TIPO_ACTIVO_ICONS: Record<string, string> = {
     AvatarModule,
     BadgeModule,
     ChartModule,
-    KnobModule
+    KnobModule,
+    AccordionModule,
+    DatePickerModule,
+    CheckboxModule,
+    DialogModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './activo-detalle.html',
@@ -115,7 +120,27 @@ export class ActivoDetalleComponent implements OnInit {
   // Estado principal
   activoId = signal<string>('');
   loading = signal(true);
-  activeTab = signal(0);
+
+  // Navegacion por tabs
+  mainTab = signal<'general' | 'reglas' | 'riesgos' | 'incidentes' | 'auditoria'>('general');
+  secondaryTab = signal<'info' | 'salud' | 'tolerancia' | 'propiedades'>('info');
+  showContent = signal(true);
+
+  // Dialog del grafo
+  showGraphDialog = signal(false);
+  graphZoom = signal(1);
+  graphPanX = signal(0);
+  graphPanY = signal(0);
+  isDragging = signal(false);
+  lastMouseX = signal(0);
+  lastMouseY = signal(0);
+  graphLayout = 'vertical';
+  layoutOptions = [
+    { label: 'Jerarquico Vertical', value: 'vertical' },
+    { label: 'Jerarquico Horizontal', value: 'horizontal' },
+    { label: 'Radial', value: 'radial' },
+    { label: 'Circular', value: 'circular' }
+  ];
 
   // Datos del activo
   activo = signal<Activo | null>(null);
@@ -164,68 +189,6 @@ export class ActivoDetalleComponent implements OnInit {
   riesgosCount = computed(() => this.activo()?.riesgos?.length || 0);
   incidentesCount = computed(() => this.activo()?.incidentes?.length || 0);
   defectosCount = computed(() => this.activo()?.defectos?.length || 0);
-
-  // Bullet chart data para Apetito de Riesgo
-  bulletChartData = computed(() => {
-    const a = this.activo();
-    if (!a?.riskAppetite) return null;
-
-    return {
-      labels: ['Riesgo'],
-      datasets: [
-        {
-          label: 'Riesgo Inherente',
-          data: [a.riskAppetite.riesgoInherente],
-          backgroundColor: '#ef4444',
-          barThickness: 30
-        },
-        {
-          label: 'Riesgo Residual',
-          data: [a.riskAppetite.riesgoResidual],
-          backgroundColor: '#3b82f6',
-          barThickness: 20
-        }
-      ]
-    };
-  });
-
-  bulletChartOptions = computed(() => {
-    const a = this.activo();
-    const appetiteTarget = a?.riskAppetite?.apetitoRiesgo || 50;
-
-    return {
-      indexAxis: 'y' as const,
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true, position: 'bottom' as const },
-        annotation: {
-          annotations: {
-            target: {
-              type: 'line',
-              xMin: appetiteTarget,
-              xMax: appetiteTarget,
-              borderColor: '#10b981',
-              borderWidth: 3,
-              label: {
-                display: true,
-                content: `Meta: ${appetiteTarget}%`,
-                position: 'end'
-              }
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          min: 0,
-          max: 100,
-          title: { display: true, text: 'Nivel de Riesgo (%)' }
-        },
-        y: { display: false }
-      }
-    };
-  });
 
   ngOnInit() {
     this.route.params.subscribe(params => {
@@ -308,7 +271,7 @@ export class ActivoDetalleComponent implements OnInit {
           detail: 'Configuracion de tolerancia actualizada'
         });
       },
-      error: (err) => {
+      error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -401,6 +364,30 @@ export class ActivoDetalleComponent implements OnInit {
     });
   }
 
+  // Metodos para calculos
+  calculateProgress(current: number, target: number): number {
+    if (target === 0) return 100;
+    return Math.min(100, (current / target) * 100);
+  }
+
+  getInitials(name: string): string {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  getShortName(name: string): string {
+    if (!name) return '';
+    const words = name.split(' ');
+    if (words.length >= 2) {
+      return words.slice(0, 2).join(' ');
+    }
+    return name.length > 15 ? name.substring(0, 15) + '...' : name;
+  }
+
   // Metodos para el grafo visual
   getOrbitalX(index: number, total: number): number {
     const radius = 130;
@@ -441,6 +428,78 @@ export class ActivoDetalleComponent implements OnInit {
       this.navigateToIncidente(node.data);
     } else if (node.type === 'defecto') {
       this.navigateToDefecto(node.data);
+    }
+  }
+
+  // Metodos para el dialog del grafo
+  openGraphDialog() {
+    this.showGraphDialog.set(true);
+  }
+
+  zoomIn() {
+    this.graphZoom.update(z => Math.min(z + 0.2, 2));
+  }
+
+  zoomOut() {
+    this.graphZoom.update(z => Math.max(z - 0.2, 0.5));
+  }
+
+  resetZoom() {
+    this.graphZoom.set(1);
+    this.graphPanX.set(0);
+    this.graphPanY.set(0);
+  }
+
+  // Metodos para pan y zoom con mouse
+  onGraphWheel(event: WheelEvent) {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? -0.1 : 0.1;
+    const newZoom = Math.max(0.3, Math.min(3, this.graphZoom() + delta));
+    this.graphZoom.set(newZoom);
+  }
+
+  onGraphMouseDown(event: MouseEvent) {
+    // Solo activar pan con click derecho (button === 2)
+    if (event.button === 2) {
+      event.preventDefault();
+      this.isDragging.set(true);
+      this.lastMouseX.set(event.clientX);
+      this.lastMouseY.set(event.clientY);
+    }
+  }
+
+  onGraphMouseMove(event: MouseEvent) {
+    if (this.isDragging()) {
+      const deltaX = event.clientX - this.lastMouseX();
+      const deltaY = event.clientY - this.lastMouseY();
+
+      // Ajustar el movimiento segun el zoom actual
+      const zoomFactor = this.graphZoom();
+      this.graphPanX.update(x => x + deltaX / zoomFactor);
+      this.graphPanY.update(y => y + deltaY / zoomFactor);
+
+      this.lastMouseX.set(event.clientX);
+      this.lastMouseY.set(event.clientY);
+    }
+  }
+
+  onGraphMouseUp() {
+    this.isDragging.set(false);
+  }
+
+  getTypePercentage(type: string): number {
+    const total = this.riesgosCount() + this.incidentesCount() + this.defectosCount() + this.childAssets().length + this.parentAssets().length;
+    if (total === 0) return 0;
+
+    switch (type) {
+      case 'incidente':
+        return (this.incidentesCount() / total) * 100;
+      case 'riesgo':
+        return (this.riesgosCount() / total) * 100;
+      case 'activo':
+        return ((this.childAssets().length + this.parentAssets().length) / total) * 100;
+      default:
+        return 0;
     }
   }
 }
