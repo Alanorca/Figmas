@@ -2339,6 +2339,231 @@ html.dark-mode {
       color: var(--red-400) !important;
     }
   }
+
+  /* ===========================================
+     OBJETIVOS-KPIS PAGE - Dark Mode
+     Cards seleccionables con contraste WCAG 2.1 AA
+     =========================================== */
+
+  // Columna izquierda - lista de objetivos
+  .objetivos-kpis-page .left-column,
+  .left-column {
+    background: #18181b !important; // zinc-900
+    border-color: #3f3f46 !important; // zinc-700
+  }
+
+  // Cards de objetivos (página objetivos-kpis)
+  .objetivos-kpis-page .objetivo-item,
+  .objetivo-item {
+    background: #27272a !important; // zinc-800
+    border-color: #3f3f46 !important; // zinc-700
+
+    &:hover:not(.selected) {
+      background: #3f3f46 !important; // zinc-700
+      border-color: #52525b !important;
+      box-shadow: none !important;
+    }
+
+    // Nombre del objetivo (normal)
+    .objetivo-nombre {
+      color: #fafafa !important;
+    }
+
+    .progress-value {
+      color: #a1a1aa !important;
+    }
+  }
+
+  // Estado seleccionado - WCAG 2.1 AA Compliant (selectores específicos)
+  .objetivos-kpis-page .objetivo-item.selected,
+  .objetivos-list .objetivo-item.selected,
+  .objetivo-item.selected {
+    background: #1a3329 !important; // 15% emerald + zinc-900
+    border: 2px solid #10b981 !important; // emerald-500
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+  }
+
+  // Texto en estado seleccionado - máxima especificidad
+  .objetivos-kpis-page .objetivo-item.selected .objetivo-nombre,
+  .objetivos-list .objetivo-item.selected .objetivo-nombre,
+  .objetivo-item.selected .objetivo-nombre,
+  .objetivo-item.selected .objetivo-header .objetivo-nombre {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+  }
+
+  .objetivos-kpis-page .objetivo-item.selected .progress-value,
+  .objetivos-list .objetivo-item.selected .progress-value,
+  .objetivo-item.selected .progress-value,
+  .objetivo-item.selected .objetivo-progress .progress-value {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  .objetivos-kpis-page .objetivo-item.selected .progress-bar,
+  .objetivos-list .objetivo-item.selected .progress-bar,
+  .objetivo-item.selected .progress-bar {
+    background: rgba(255, 255, 255, 0.2) !important;
+  }
+
+  // Badges de tipo objetivo
+  .objetivo-tipo {
+    &.estrategico {
+      background: rgba(59, 130, 246, 0.3) !important;
+      color: #93c5fd !important; // blue-300
+    }
+    &.operativo {
+      background: rgba(249, 115, 22, 0.3) !important;
+      color: #fdba74 !important; // orange-300
+    }
+  }
+
+  // Columna derecha - detalle
+  .objetivos-kpis-page .right-column,
+  .right-column {
+    background: #18181b !important;
+  }
+
+  .detail-header {
+    border-color: #3f3f46 !important;
+  }
+
+  .detail-title {
+    color: #fafafa !important;
+  }
+
+  .detail-label {
+    color: #a1a1aa !important; // zinc-400
+  }
+
+  .detail-value {
+    color: #fafafa !important;
+  }
+
+  // Badges de tipo en detalle
+  .tipo-badge {
+    &.estrategico {
+      background: rgba(59, 130, 246, 0.3) !important;
+      color: #93c5fd !important;
+    }
+    &.operativo {
+      background: rgba(249, 115, 22, 0.3) !important;
+      color: #fdba74 !important;
+    }
+  }
+
+  // KPIs en la página
+  .kpi-view-row {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    .kpi-nombre {
+      color: #fafafa !important;
+    }
+
+    .kpi-progress .progress-text {
+      color: #a1a1aa !important;
+    }
+  }
+
+  // Empty states
+  .empty-state,
+  .empty-detail {
+    color: #71717a !important; // zinc-500
+
+    i {
+      color: #52525b !important;
+    }
+
+    p {
+      color: #71717a !important;
+    }
+  }
+
+  /* ===========================================
+     DRAWER OBJETIVOS - Dark Mode (proceso-detalle)
+     =========================================== */
+
+  .drawer-left-column {
+    background: #18181b !important;
+    border-color: #3f3f46 !important;
+  }
+
+  .drawer-search-box {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+  }
+
+  .drawer-objetivo-item {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    &:hover:not(.selected) {
+      background: #3f3f46 !important;
+      border-color: #52525b !important;
+    }
+
+    &.selected {
+      background: #1a3329 !important;
+      border: 2px solid #10b981 !important;
+
+      .drawer-objetivo-nombre {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+
+      .progress-value {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+
+      .progress-bar {
+        background: rgba(255, 255, 255, 0.2) !important;
+      }
+    }
+  }
+
+  .drawer-objetivo-tipo {
+    &.estrategico {
+      background: rgba(59, 130, 246, 0.3) !important;
+      color: #93c5fd !important;
+    }
+    &.operativo {
+      background: rgba(249, 115, 22, 0.3) !important;
+      color: #fdba74 !important;
+    }
+  }
+
+  .drawer-add-objetivo {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+  }
+
+  .drawer-right-column {
+    background: #18181b !important;
+  }
+
+  .drawer-detail-header {
+    border-color: #3f3f46 !important;
+  }
+
+  .drawer-detail-title {
+    color: #fafafa !important;
+  }
+
+  .drawer-detail-label {
+    color: #a1a1aa !important;
+  }
+
+  .drawer-detail-value {
+    color: #fafafa !important;
+  }
+
+  .drawer-empty-state {
+    color: #71717a !important;
+
+    i {
+      color: #52525b !important;
+    }
+  }
 }
 
 /* ===========================================

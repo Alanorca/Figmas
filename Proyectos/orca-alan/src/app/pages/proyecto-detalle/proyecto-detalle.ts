@@ -76,6 +76,55 @@ interface GanttItem {
   parent?: string;
 }
 
+// ============================================================
+// OBJETIVOS Y KPIs INTERFACES (replicado de objetivos-kpis)
+// ============================================================
+type AlertSeverity = 'info' | 'warning' | 'critical';
+type NotificationChannel = 'email' | 'in-app' | 'webhook';
+type EvaluationFrequency = 'inmediata' | 'diaria' | 'semanal' | 'mensual';
+type AlertStatus = 'activa' | 'atendida' | 'resuelta';
+
+interface ProjectKPI {
+  id: string;
+  nombre: string;
+  meta: number;
+  actual: number;
+  escala: string;
+  umbralAlerta: number;
+  umbralMaximo: number | null;
+  severidad: AlertSeverity;
+  canalesNotificacion: NotificationChannel[];
+  frecuenciaEvaluacion: EvaluationFrequency;
+  direccion: 'mayor_mejor' | 'menor_mejor';
+}
+
+interface ProjectObjetivo {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  tipo: 'estrategico' | 'operativo';
+  progreso: number;
+  kpis: ProjectKPI[];
+}
+
+interface ProjectKPIAlert {
+  id: string;
+  kpiId: string;
+  kpiNombre: string;
+  objetivoId: string;
+  objetivoNombre: string;
+  severity: AlertSeverity;
+  mensaje: string;
+  valorActual: number;
+  valorUmbral: number;
+  tipoViolacion: 'bajo_minimo' | 'sobre_maximo';
+  status: AlertStatus;
+  fechaCreacion: Date;
+  fechaAtendida?: Date;
+  atendidaPor?: string;
+  comentarioResolucion?: string;
+}
+
 interface TimelineEvent {
   title: string;
   date: string;
@@ -155,8 +204,177 @@ export class ProyectoDetalleComponent implements OnInit {
   // Vista de planificación (Gantt, Tareas, Kanban, Calendario)
   activePlanningView = signal<'gantt' | 'tareas' | 'kanban' | 'calendario'>('gantt');
 
-  // KPIs - Vista tipo objetivos-kpis
+  // ============================================================
+  // OBJETIVOS Y KPIs - Vista tipo objetivos-kpis
+  // ============================================================
   kpiSelectedObjectiveId = signal<string | null>(null);
+  kpiTabActivo = signal<'kpis' | 'alertas'>('kpis');
+  kpiModo = signal<'ver' | 'editar'>('ver');
+  kpiBusquedaObjetivos = signal('');
+
+  // Objetivos del proyecto con KPIs
+  projectObjetivos = signal<ProjectObjetivo[]>([
+    {
+      id: 'obj-1',
+      nombre: 'Cumplir con el cronograma establecido',
+      descripcion: 'Asegurar que todas las fases del proyecto se completen dentro de los plazos definidos, minimizando retrasos y optimizando recursos.',
+      tipo: 'estrategico',
+      progreso: 65,
+      kpis: [
+        { id: 'kpi-1-1', nombre: 'Cumplimiento de Hitos', meta: 100, actual: 75, escala: '%', umbralAlerta: 70, umbralMaximo: null, severidad: 'warning', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'semanal', direccion: 'mayor_mejor' },
+        { id: 'kpi-1-2', nombre: 'Desviación de Cronograma', meta: 5, actual: 8, escala: 'Días', umbralAlerta: 80, umbralMaximo: 15, severidad: 'critical', canalesNotificacion: ['in-app', 'email'], frecuenciaEvaluacion: 'diaria', direccion: 'menor_mejor' },
+        { id: 'kpi-1-3', nombre: 'Tareas Completadas a Tiempo', meta: 90, actual: 82, escala: '%', umbralAlerta: 75, umbralMaximo: null, severidad: 'info', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'semanal', direccion: 'mayor_mejor' }
+      ]
+    },
+    {
+      id: 'obj-2',
+      nombre: 'Mantener la calidad del entregable',
+      descripcion: 'Garantizar que todos los entregables cumplan con los estándares de calidad definidos y satisfagan las expectativas del cliente.',
+      tipo: 'operativo',
+      progreso: 80,
+      kpis: [
+        { id: 'kpi-2-1', nombre: 'Defectos Detectados', meta: 5, actual: 3, escala: 'Bugs', umbralAlerta: 60, umbralMaximo: 10, severidad: 'warning', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'diaria', direccion: 'menor_mejor' },
+        { id: 'kpi-2-2', nombre: 'Cobertura de Pruebas', meta: 80, actual: 78, escala: '%', umbralAlerta: 70, umbralMaximo: null, severidad: 'info', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'semanal', direccion: 'mayor_mejor' },
+        { id: 'kpi-2-3', nombre: 'Satisfacción del Cliente', meta: 90, actual: 85, escala: '%', umbralAlerta: 75, umbralMaximo: null, severidad: 'critical', canalesNotificacion: ['in-app', 'email'], frecuenciaEvaluacion: 'mensual', direccion: 'mayor_mejor' }
+      ]
+    },
+    {
+      id: 'obj-3',
+      nombre: 'Optimizar el presupuesto asignado',
+      descripcion: 'Mantener los costos del proyecto dentro del presupuesto aprobado, identificando oportunidades de ahorro sin comprometer la calidad.',
+      tipo: 'estrategico',
+      progreso: 45,
+      kpis: [
+        { id: 'kpi-3-1', nombre: 'Variación de Presupuesto', meta: 0, actual: 12, escala: '%', umbralAlerta: 80, umbralMaximo: 20, severidad: 'critical', canalesNotificacion: ['in-app', 'email'], frecuenciaEvaluacion: 'semanal', direccion: 'menor_mejor' },
+        { id: 'kpi-3-2', nombre: 'ROI Proyectado', meta: 150, actual: 120, escala: '%', umbralAlerta: 100, umbralMaximo: null, severidad: 'warning', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'mensual', direccion: 'mayor_mejor' }
+      ]
+    },
+    {
+      id: 'obj-4',
+      nombre: 'Asegurar la adopción del equipo',
+      descripcion: 'Lograr que todo el equipo adopte las nuevas metodologías y herramientas implementadas en el proyecto.',
+      tipo: 'operativo',
+      progreso: 70,
+      kpis: [
+        { id: 'kpi-4-1', nombre: 'Capacitaciones Completadas', meta: 100, actual: 85, escala: '%', umbralAlerta: 70, umbralMaximo: null, severidad: 'info', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'semanal', direccion: 'mayor_mejor' },
+        { id: 'kpi-4-2', nombre: 'Uso de Herramientas', meta: 90, actual: 72, escala: '%', umbralAlerta: 60, umbralMaximo: null, severidad: 'warning', canalesNotificacion: ['in-app'], frecuenciaEvaluacion: 'diaria', direccion: 'mayor_mejor' }
+      ]
+    }
+  ]);
+
+  // Alertas de KPIs del proyecto
+  projectAlertas = signal<ProjectKPIAlert[]>([
+    {
+      id: 'alert-1',
+      kpiId: 'kpi-1-2',
+      kpiNombre: 'Desviación de Cronograma',
+      objetivoId: 'obj-1',
+      objetivoNombre: 'Cumplir con el cronograma establecido',
+      severity: 'critical',
+      mensaje: 'La desviación de cronograma (8 días) supera el umbral crítico de 5 días',
+      valorActual: 8,
+      valorUmbral: 5,
+      tipoViolacion: 'sobre_maximo',
+      status: 'activa',
+      fechaCreacion: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+    },
+    {
+      id: 'alert-2',
+      kpiId: 'kpi-3-1',
+      kpiNombre: 'Variación de Presupuesto',
+      objetivoId: 'obj-3',
+      objetivoNombre: 'Optimizar el presupuesto asignado',
+      severity: 'critical',
+      mensaje: 'La variación de presupuesto (12%) requiere atención inmediata',
+      valorActual: 12,
+      valorUmbral: 0,
+      tipoViolacion: 'sobre_maximo',
+      status: 'activa',
+      fechaCreacion: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+    },
+    {
+      id: 'alert-3',
+      kpiId: 'kpi-4-2',
+      kpiNombre: 'Uso de Herramientas',
+      objetivoId: 'obj-4',
+      objetivoNombre: 'Asegurar la adopción del equipo',
+      severity: 'warning',
+      mensaje: 'El uso de herramientas está por debajo del objetivo (72% vs 90%)',
+      valorActual: 72,
+      valorUmbral: 60,
+      tipoViolacion: 'bajo_minimo',
+      status: 'atendida',
+      fechaCreacion: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      fechaAtendida: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      atendidaPor: 'Carlos Martínez',
+      comentarioResolucion: 'Se programaron sesiones de capacitación adicionales'
+    }
+  ]);
+
+  // Computed para objetivos filtrados
+  objetivosFiltrados = computed(() => {
+    const busqueda = this.kpiBusquedaObjetivos().toLowerCase();
+    if (!busqueda) return this.projectObjetivos();
+    return this.projectObjetivos().filter(o =>
+      o.nombre.toLowerCase().includes(busqueda) ||
+      o.descripcion.toLowerCase().includes(busqueda)
+    );
+  });
+
+  // Objetivo seleccionado
+  objetivoSeleccionado = computed(() => {
+    const id = this.kpiSelectedObjectiveId();
+    if (!id) return null;
+    return this.projectObjetivos().find(o => o.id === id) || null;
+  });
+
+  // Alertas del objetivo seleccionado
+  alertasDelObjetivo = computed(() => {
+    const objetivoId = this.kpiSelectedObjectiveId();
+    if (!objetivoId) return [];
+    return this.projectAlertas().filter(a => a.objetivoId === objetivoId);
+  });
+
+  // Contadores de alertas
+  alertasActivasCount = computed(() =>
+    this.projectAlertas().filter(a => a.status === 'activa').length
+  );
+
+  alertasActivasDelObjetivoCount = computed(() =>
+    this.alertasDelObjetivo().filter(a => a.status === 'activa').length
+  );
+
+  tieneAlertasActivas = computed(() =>
+    this.alertasDelObjetivo().some(a => a.status === 'activa')
+  );
+
+  tieneAlertaCriticaActiva = computed(() =>
+    this.alertasDelObjetivo().some(a => a.severity === 'critical' && a.status === 'activa')
+  );
+
+  // Para el badge global de alertas
+  tieneAlertaCriticaGlobal = computed(() =>
+    this.projectAlertas().some(a => a.severity === 'critical' && a.status === 'activa')
+  );
+
+  // Opciones para selects de KPIs
+  tipoObjetivoOptions = [
+    { label: 'Estratégico', value: 'estrategico' },
+    { label: 'Operativo', value: 'operativo' }
+  ];
+
+  escalasOptions = [
+    { label: 'Porcentaje', value: '%' },
+    { label: 'Días', value: 'Días' },
+    { label: 'Horas', value: 'Horas' },
+    { label: 'Unidades', value: 'Unidades' },
+    { label: 'Bugs', value: 'Bugs' }
+  ];
+
+  direccionOptions = [
+    { label: 'Mayor es mejor', value: 'mayor_mejor' },
+    { label: 'Menor es mejor', value: 'menor_mejor' }
+  ];
 
   // Proyecto
   project = computed(() => this.proyectosService.selectedProject());
@@ -231,6 +449,48 @@ export class ProyectoDetalleComponent implements OnInit {
   // GANTT CHART ENHANCED
   // ============================================================
   ganttZoomLevel = signal(100);
+
+  // Estado de fases expandidas/colapsadas
+  expandedPhases = signal<Set<string>>(new Set());
+
+  // Orden personalizado de tareas por fase (phaseId -> [taskIds en orden])
+  taskOrderByPhase = signal<Map<string, string[]>>(new Map());
+
+  // Drag and Resize state (horizontal - fechas)
+  ganttDragState = signal<{
+    isDragging: boolean;
+    isResizing: boolean;
+    resizeEdge: 'left' | 'right' | null;
+    itemId: string | null;
+    startX: number;
+    initialStartDate: Date | null;
+    initialEndDate: Date | null;
+    timelineWidth: number;
+  }>({
+    isDragging: false,
+    isResizing: false,
+    resizeEdge: null,
+    itemId: null,
+    startX: 0,
+    initialStartDate: null,
+    initialEndDate: null,
+    timelineWidth: 0
+  });
+
+  // Reorder state (vertical - orden)
+  ganttReorderState = signal<{
+    isDragging: boolean;
+    draggedItemId: string | null;
+    draggedItemType: 'phase' | 'task' | null;
+    dropTargetId: string | null;
+    dropPosition: 'before' | 'after' | 'inside' | null;
+  }>({
+    isDragging: false,
+    draggedItemId: null,
+    draggedItemType: null,
+    dropTargetId: null,
+    dropPosition: null
+  });
 
   // Computed para generar los meses del proyecto
   ganttMonths = computed(() => {
@@ -531,25 +791,68 @@ export class ProyectoDetalleComponent implements OnInit {
     if (!project) return;
 
     const items: GanttItem[] = [];
+    const expandedPhases = this.expandedPhases();
+    const tasks = this.tasks();
 
-    // Agregar fases
-    if (project.phases) {
-      project.phases.forEach(phase => {
-        items.push({
-          id: phase.id,
-          name: phase.name,
-          type: 'phase',
-          startDate: new Date(phase.startDate),
-          endDate: new Date(phase.endDate),
-          progress: phase.progress,
-          status: phase.status,
-          color: this.getPhaseColor(phase.status)
-        });
+    // Ordenar fases por su propiedad orderNum
+    const sortedPhases = project.phases
+      ? [...project.phases].sort((a, b) => (a.orderNum ?? 0) - (b.orderNum ?? 0))
+      : [];
+
+    // Agregar fases con sus tareas agrupadas
+    sortedPhases.forEach(phase => {
+      // Agregar la fase
+      items.push({
+        id: phase.id,
+        name: phase.name,
+        type: 'phase',
+        startDate: new Date(phase.startDate),
+        endDate: new Date(phase.endDate),
+        progress: phase.progress,
+        status: phase.status,
+        color: this.getPhaseColor(phase.status)
       });
-    }
 
-    // Agregar tareas
-    this.tasks().forEach(task => {
+      // Si la fase está expandida (por defecto todas expandidas), agregar sus tareas
+      const isExpanded = expandedPhases.size === 0 || expandedPhases.has(phase.id);
+      if (isExpanded) {
+        const phaseTasks = tasks.filter(t => t.phaseId === phase.id);
+
+        // Ordenar tareas según el orden personalizado si existe
+        const taskOrder = this.taskOrderByPhase();
+        const phaseTaskOrder = taskOrder.get(phase.id);
+
+        let sortedTasks = phaseTasks;
+        if (phaseTaskOrder && phaseTaskOrder.length > 0) {
+          sortedTasks = [...phaseTasks].sort((a, b) => {
+            const indexA = phaseTaskOrder.indexOf(a.id);
+            const indexB = phaseTaskOrder.indexOf(b.id);
+            // Si no está en la lista de orden, ponerlo al final
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+          });
+        }
+
+        sortedTasks.forEach(task => {
+          items.push({
+            id: task.id,
+            name: task.title,
+            type: 'task',
+            startDate: new Date(task.startDate),
+            endDate: new Date(task.dueDate),
+            progress: task.progress,
+            status: task.status,
+            color: this.getTaskColor(task.status),
+            parent: task.phaseId
+          });
+        });
+      }
+    });
+
+    // Agregar tareas sin fase al final
+    const orphanTasks = tasks.filter(t => !t.phaseId || !sortedPhases.find(p => p.id === t.phaseId));
+    orphanTasks.forEach(task => {
       items.push({
         id: task.id,
         name: task.title,
@@ -563,9 +866,40 @@ export class ProyectoDetalleComponent implements OnInit {
       });
     });
 
-    // Ordenar por fecha de inicio
-    items.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
     this.ganttItems.set(items);
+  }
+
+  // Método para expandir/colapsar fases
+  togglePhaseExpand(phaseId: string): void {
+    const expanded = this.expandedPhases();
+    const newExpanded = new Set(expanded);
+
+    // Si está vacío, inicializar con todas las fases expandidas excepto la que se hace clic
+    if (newExpanded.size === 0) {
+      const project = this.project();
+      if (project?.phases) {
+        project.phases.forEach(p => {
+          if (p.id !== phaseId) newExpanded.add(p.id);
+        });
+      }
+    } else if (newExpanded.has(phaseId)) {
+      newExpanded.delete(phaseId);
+    } else {
+      newExpanded.add(phaseId);
+    }
+
+    this.expandedPhases.set(newExpanded);
+    this.buildGanttItems();
+  }
+
+  isPhaseExpanded(phaseId: string): boolean {
+    const expanded = this.expandedPhases();
+    // Si está vacío, todas están expandidas por defecto
+    return expanded.size === 0 || expanded.has(phaseId);
+  }
+
+  getPhaseTaskCount(phaseId: string): number {
+    return this.tasks().filter(t => t.phaseId === phaseId).length;
   }
 
   buildTimelineEvents(): void {
@@ -1121,12 +1455,480 @@ export class ProyectoDetalleComponent implements OnInit {
   }
 
   onGanttItemClick(item: GanttItem): void {
+    // Solo abrir si no estamos arrastrando
+    const state = this.ganttDragState();
+    if (state.isDragging || state.isResizing) return;
+
     if (item.type === 'task') {
       const task = this.tasks().find(t => t.id === item.id);
       if (task) {
         this.abrirTask(task);
       }
     }
+  }
+
+  // ============================================================
+  // GANTT DRAG & RESIZE
+  // ============================================================
+
+  onGanttBarMouseDown(event: MouseEvent, item: GanttItem, edge: 'left' | 'right' | 'center'): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Obtener el ancho del timeline
+    const timelineElement = (event.target as HTMLElement).closest('.gantt-timeline') as HTMLElement;
+    const timelineWidth = timelineElement?.offsetWidth || 1000;
+
+    if (edge === 'center') {
+      // Drag para mover
+      this.ganttDragState.set({
+        isDragging: true,
+        isResizing: false,
+        resizeEdge: null,
+        itemId: item.id,
+        startX: event.clientX,
+        initialStartDate: new Date(item.startDate),
+        initialEndDate: new Date(item.endDate),
+        timelineWidth
+      });
+    } else {
+      // Resize
+      this.ganttDragState.set({
+        isDragging: false,
+        isResizing: true,
+        resizeEdge: edge,
+        itemId: item.id,
+        startX: event.clientX,
+        initialStartDate: new Date(item.startDate),
+        initialEndDate: new Date(item.endDate),
+        timelineWidth
+      });
+    }
+
+    // Agregar listeners globales
+    document.addEventListener('mousemove', this.onGanttMouseMove);
+    document.addEventListener('mouseup', this.onGanttMouseUp);
+  }
+
+  onGanttMouseMove = (event: MouseEvent): void => {
+    const state = this.ganttDragState();
+    if (!state.isDragging && !state.isResizing) return;
+    if (!state.itemId || !state.initialStartDate || !state.initialEndDate) return;
+
+    const project = this.project();
+    if (!project) return;
+
+    const projectStart = new Date(project.startDate).getTime();
+    const projectEnd = new Date(project.endDate).getTime();
+    const totalDuration = projectEnd - projectStart;
+
+    // Calcular delta en píxeles y convertir a milisegundos
+    const deltaX = event.clientX - state.startX;
+    const deltaPercent = deltaX / state.timelineWidth;
+    const deltaMs = deltaPercent * totalDuration;
+
+    // Encontrar el item actual
+    const items = this.ganttItems();
+    const itemIndex = items.findIndex(i => i.id === state.itemId);
+    if (itemIndex === -1) return;
+
+    const currentItem = items[itemIndex];
+    let newStartDate = state.initialStartDate;
+    let newEndDate = state.initialEndDate;
+
+    if (state.isDragging) {
+      // Mover toda la barra
+      newStartDate = new Date(state.initialStartDate.getTime() + deltaMs);
+      newEndDate = new Date(state.initialEndDate.getTime() + deltaMs);
+
+      // Limitar dentro del proyecto
+      if (newStartDate.getTime() < projectStart) {
+        const diff = projectStart - newStartDate.getTime();
+        newStartDate = new Date(projectStart);
+        newEndDate = new Date(newEndDate.getTime() + diff);
+      }
+      if (newEndDate.getTime() > projectEnd) {
+        const diff = newEndDate.getTime() - projectEnd;
+        newEndDate = new Date(projectEnd);
+        newStartDate = new Date(newStartDate.getTime() - diff);
+      }
+    } else if (state.isResizing) {
+      if (state.resizeEdge === 'left') {
+        // Resize desde la izquierda
+        newStartDate = new Date(state.initialStartDate.getTime() + deltaMs);
+        // Mínimo 1 día de duración
+        const minEnd = new Date(newStartDate.getTime() + 24 * 60 * 60 * 1000);
+        if (newStartDate.getTime() < projectStart) {
+          newStartDate = new Date(projectStart);
+        }
+        if (newStartDate.getTime() >= state.initialEndDate.getTime() - 24 * 60 * 60 * 1000) {
+          newStartDate = new Date(state.initialEndDate.getTime() - 24 * 60 * 60 * 1000);
+        }
+      } else if (state.resizeEdge === 'right') {
+        // Resize desde la derecha
+        newEndDate = new Date(state.initialEndDate.getTime() + deltaMs);
+        // Mínimo 1 día de duración
+        if (newEndDate.getTime() > projectEnd) {
+          newEndDate = new Date(projectEnd);
+        }
+        if (newEndDate.getTime() <= state.initialStartDate.getTime() + 24 * 60 * 60 * 1000) {
+          newEndDate = new Date(state.initialStartDate.getTime() + 24 * 60 * 60 * 1000);
+        }
+      }
+    }
+
+    // Actualizar el item visualmente
+    const updatedItems = [...items];
+    updatedItems[itemIndex] = {
+      ...currentItem,
+      startDate: newStartDate,
+      endDate: newEndDate
+    };
+    this.ganttItems.set(updatedItems);
+  };
+
+  onGanttMouseUp = (): void => {
+    const state = this.ganttDragState();
+
+    if ((state.isDragging || state.isResizing) && state.itemId) {
+      // Guardar los cambios en la tarea o fase real
+      const item = this.ganttItems().find(i => i.id === state.itemId);
+      if (item) {
+        this.updateGanttItemDates(item);
+      }
+    }
+
+    // Reset state
+    this.ganttDragState.set({
+      isDragging: false,
+      isResizing: false,
+      resizeEdge: null,
+      itemId: null,
+      startX: 0,
+      initialStartDate: null,
+      initialEndDate: null,
+      timelineWidth: 0
+    });
+
+    // Remover listeners
+    document.removeEventListener('mousemove', this.onGanttMouseMove);
+    document.removeEventListener('mouseup', this.onGanttMouseUp);
+  };
+
+  updateGanttItemDates(item: GanttItem): void {
+    const project = this.project();
+    if (!project) return;
+
+    if (item.type === 'task') {
+      // Actualizar tarea usando el servicio
+      this.proyectosService.tasks.update(tasks =>
+        tasks.map(t => t.id === item.id ? {
+          ...t,
+          startDate: item.startDate.toISOString().split('T')[0],
+          dueDate: item.endDate.toISOString().split('T')[0]
+        } : t)
+      );
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Tarea actualizada',
+        detail: `"${item.name}" movida a ${this.formatDate(item.startDate)} - ${this.formatDate(item.endDate)}`
+      });
+    } else if (item.type === 'phase') {
+      // Actualizar fase usando el servicio
+      const phases = project.phases || [];
+      const phaseIndex = phases.findIndex(p => p.id === item.id);
+      if (phaseIndex !== -1) {
+        const updatedPhases = [...phases];
+        updatedPhases[phaseIndex] = {
+          ...updatedPhases[phaseIndex],
+          startDate: item.startDate.toISOString().split('T')[0],
+          endDate: item.endDate.toISOString().split('T')[0]
+        };
+
+        this.proyectosService.selectedProject.set({
+          ...project,
+          phases: updatedPhases
+        });
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Fase actualizada',
+          detail: `"${item.name}" movida a ${this.formatDate(item.startDate)} - ${this.formatDate(item.endDate)}`
+        });
+      }
+    }
+  }
+
+  isGanttItemDragging(itemId: string): boolean {
+    const state = this.ganttDragState();
+    return (state.isDragging || state.isResizing) && state.itemId === itemId;
+  }
+
+  // ============================================================
+  // GANTT REORDER (Vertical drag & drop)
+  // ============================================================
+
+  onGanttRowDragStart(event: DragEvent, item: GanttItem): void {
+    if (!event.dataTransfer) return;
+
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', item.id);
+
+    this.ganttReorderState.set({
+      isDragging: true,
+      draggedItemId: item.id,
+      draggedItemType: item.type,
+      dropTargetId: null,
+      dropPosition: null
+    });
+
+    // Agregar clase al elemento arrastrado
+    const target = event.target as HTMLElement;
+    setTimeout(() => target.classList.add('dragging-row'), 0);
+  }
+
+  onGanttRowDragOver(event: DragEvent, targetItem: GanttItem): void {
+    event.preventDefault();
+    if (!event.dataTransfer) return;
+
+    const state = this.ganttReorderState();
+    if (!state.isDragging || state.draggedItemId === targetItem.id) return;
+
+    event.dataTransfer.dropEffect = 'move';
+
+    // Determinar posición del drop (antes, después, o dentro si es fase)
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const y = event.clientY - rect.top;
+    const height = rect.height;
+
+    let dropPosition: 'before' | 'after' | 'inside' = 'after';
+
+    if (y < height * 0.3) {
+      dropPosition = 'before';
+    } else if (y > height * 0.7) {
+      dropPosition = 'after';
+    } else if (targetItem.type === 'phase' && state.draggedItemType === 'task') {
+      // Solo permitir drop inside si el target es fase y el dragged es tarea
+      dropPosition = 'inside';
+    } else {
+      dropPosition = y < height / 2 ? 'before' : 'after';
+    }
+
+    this.ganttReorderState.set({
+      ...state,
+      dropTargetId: targetItem.id,
+      dropPosition
+    });
+  }
+
+  onGanttRowDragLeave(event: DragEvent): void {
+    // Solo limpiar si realmente salimos del elemento
+    const relatedTarget = event.relatedTarget as HTMLElement;
+    const currentTarget = event.currentTarget as HTMLElement;
+
+    if (!currentTarget.contains(relatedTarget)) {
+      const state = this.ganttReorderState();
+      this.ganttReorderState.set({
+        ...state,
+        dropTargetId: null,
+        dropPosition: null
+      });
+    }
+  }
+
+  onGanttRowDrop(event: DragEvent, targetItem: GanttItem): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const state = this.ganttReorderState();
+    if (!state.isDragging || !state.draggedItemId) return;
+
+    const draggedItem = this.ganttItems().find(i => i.id === state.draggedItemId);
+    if (!draggedItem || draggedItem.id === targetItem.id) {
+      this.resetGanttReorderState();
+      return;
+    }
+
+    this.executeGanttReorder(draggedItem, targetItem, state.dropPosition || 'after');
+    this.resetGanttReorderState();
+  }
+
+  onGanttRowDragEnd(event: DragEvent): void {
+    const target = event.target as HTMLElement;
+    target.classList.remove('dragging-row');
+    this.resetGanttReorderState();
+  }
+
+  resetGanttReorderState(): void {
+    this.ganttReorderState.set({
+      isDragging: false,
+      draggedItemId: null,
+      draggedItemType: null,
+      dropTargetId: null,
+      dropPosition: null
+    });
+  }
+
+  executeGanttReorder(draggedItem: GanttItem, targetItem: GanttItem, position: 'before' | 'after' | 'inside' | null): void {
+    const project = this.project();
+    if (!project) return;
+
+    // Si es mover una tarea dentro de una fase
+    if (position === 'inside' && targetItem.type === 'phase' && draggedItem.type === 'task') {
+      this.moveTaskToPhase(draggedItem.id, targetItem.id);
+      return;
+    }
+
+    // Reordenar items del mismo tipo
+    const validPosition: 'before' | 'after' = position === 'before' ? 'before' : 'after';
+
+    if (draggedItem.type === 'phase' && targetItem.type === 'phase') {
+      this.reorderPhases(draggedItem.id, targetItem.id, validPosition);
+    } else if (draggedItem.type === 'task') {
+      this.reorderTasks(draggedItem, targetItem, validPosition);
+    }
+  }
+
+  moveTaskToPhase(taskId: string, phaseId: string): void {
+    this.proyectosService.tasks.update(tasks =>
+      tasks.map(t => t.id === taskId ? { ...t, phaseId } : t)
+    );
+
+    this.buildGanttItems();
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Tarea movida',
+      detail: 'La tarea fue movida a la nueva fase'
+    });
+  }
+
+  reorderPhases(draggedId: string, targetId: string, position: 'before' | 'after'): void {
+    const project = this.project();
+    if (!project || !project.phases) return;
+
+    const phases = [...project.phases];
+    const draggedIndex = phases.findIndex(p => p.id === draggedId);
+    const targetIndex = phases.findIndex(p => p.id === targetId);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    // Remover el elemento arrastrado
+    const [draggedPhase] = phases.splice(draggedIndex, 1);
+
+    // Calcular nuevo índice
+    let newIndex = targetIndex;
+    if (draggedIndex < targetIndex) {
+      newIndex = position === 'before' ? targetIndex - 1 : targetIndex;
+    } else {
+      newIndex = position === 'before' ? targetIndex : targetIndex + 1;
+    }
+
+    // Insertar en nueva posición
+    phases.splice(newIndex, 0, draggedPhase);
+
+    // Actualizar orden
+    const updatedPhases = phases.map((p, idx) => ({ ...p, orderNum: idx }));
+
+    this.proyectosService.selectedProject.set({
+      ...project,
+      phases: updatedPhases
+    });
+
+    this.buildGanttItems();
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Orden actualizado',
+      detail: 'Las fases han sido reordenadas'
+    });
+  }
+
+  reorderTasks(draggedItem: GanttItem, targetItem: GanttItem, position: 'before' | 'after'): void {
+    const tasks = this.tasks();
+
+    // Obtener las tareas de la misma fase o todas si el target es una fase
+    const draggedTask = tasks.find(t => t.id === draggedItem.id);
+    if (!draggedTask) return;
+
+    // Si el target es una fase, mover la tarea al final de esa fase
+    if (targetItem.type === 'phase') {
+      this.moveTaskToPhase(draggedItem.id, targetItem.id);
+      return;
+    }
+
+    const targetTask = tasks.find(t => t.id === targetItem.id);
+    if (!targetTask) return;
+
+    const targetPhaseId = targetTask.phaseId;
+
+    // Si están en diferentes fases, mover a la fase del target
+    if (draggedTask.phaseId !== targetPhaseId) {
+      this.proyectosService.tasks.update(allTasks =>
+        allTasks.map(t => t.id === draggedTask.id ? { ...t, phaseId: targetPhaseId } : t)
+      );
+    }
+
+    // Obtener o crear el orden de tareas para esta fase
+    const currentTaskOrder = this.taskOrderByPhase();
+    const newTaskOrder = new Map(currentTaskOrder);
+
+    // Obtener las tareas de la fase destino
+    const phaseTasks = tasks.filter(t => t.phaseId === targetPhaseId || t.id === draggedTask.id);
+    let phaseTaskIds = newTaskOrder.get(targetPhaseId) || phaseTasks.map(t => t.id);
+
+    // Si no existe orden, crear uno basado en las tareas actuales
+    if (!newTaskOrder.has(targetPhaseId)) {
+      phaseTaskIds = phaseTasks.filter(t => t.phaseId === targetPhaseId).map(t => t.id);
+    }
+
+    // Remover la tarea arrastrada de su posición actual
+    phaseTaskIds = phaseTaskIds.filter(id => id !== draggedItem.id);
+
+    // Encontrar la posición del target
+    const targetIndex = phaseTaskIds.indexOf(targetItem.id);
+
+    // Insertar en la nueva posición
+    if (targetIndex !== -1) {
+      const insertIndex = position === 'before' ? targetIndex : targetIndex + 1;
+      phaseTaskIds.splice(insertIndex, 0, draggedItem.id);
+    } else {
+      // Si no encuentra el target, agregar al final
+      phaseTaskIds.push(draggedItem.id);
+    }
+
+    // Actualizar el mapa de orden
+    newTaskOrder.set(targetPhaseId, phaseTaskIds);
+
+    // Si se movió de otra fase, limpiar de la fase anterior
+    if (draggedTask.phaseId !== targetPhaseId && draggedTask.phaseId) {
+      const oldPhaseOrder = newTaskOrder.get(draggedTask.phaseId);
+      if (oldPhaseOrder) {
+        newTaskOrder.set(draggedTask.phaseId, oldPhaseOrder.filter(id => id !== draggedItem.id));
+      }
+    }
+
+    this.taskOrderByPhase.set(newTaskOrder);
+    this.buildGanttItems();
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Tarea reordenada',
+      detail: `"${draggedItem.name}" movida ${position === 'before' ? 'antes de' : 'después de'} "${targetItem.name}"`
+    });
+  }
+
+  getGanttDropIndicatorClass(itemId: string): string {
+    const state = this.ganttReorderState();
+    if (state.dropTargetId !== itemId) return '';
+
+    return `drop-${state.dropPosition}`;
+  }
+
+  isGanttRowBeingDragged(itemId: string): boolean {
+    const state = this.ganttReorderState();
+    return state.isDragging && state.draggedItemId === itemId;
   }
 
   // ============================================================
@@ -1173,5 +1975,78 @@ export class ProyectoDetalleComponent implements OnInit {
     });
     this.isEditingTask.set(false);
     this.showTaskFormDrawer.set(true);
+  }
+
+  // ============================================================
+  // OBJETIVOS Y KPIs HELPERS
+  // ============================================================
+
+  seleccionarObjetivo(id: string): void {
+    this.kpiSelectedObjectiveId.set(id);
+    this.kpiTabActivo.set('kpis');
+  }
+
+  getTipoObjetivoLabel(tipo: 'estrategico' | 'operativo'): string {
+    return tipo === 'estrategico' ? 'Estratégico' : 'Operativo';
+  }
+
+  getObjetivoProgresoColor(progreso: number): string {
+    if (progreso >= 80) return 'high';
+    if (progreso >= 50) return 'medium';
+    if (progreso >= 25) return 'low';
+    return 'critical';
+  }
+
+  getKPIProgreso(kpi: ProjectKPI): number {
+    if (kpi.direccion === 'mayor_mejor') {
+      return Math.min(100, Math.round((kpi.actual / kpi.meta) * 100));
+    } else {
+      // Para menor_mejor, invertimos la lógica
+      if (kpi.actual <= kpi.meta) return 100;
+      const exceso = kpi.actual - kpi.meta;
+      const margen = kpi.umbralMaximo ? kpi.umbralMaximo - kpi.meta : kpi.meta;
+      return Math.max(0, 100 - Math.round((exceso / margen) * 100));
+    }
+  }
+
+  getKPIProgresoColor(kpi: ProjectKPI): string {
+    const progreso = this.getKPIProgreso(kpi);
+    if (progreso >= 80) return 'high';
+    if (progreso >= 50) return 'medium';
+    if (progreso >= 25) return 'low';
+    return 'critical';
+  }
+
+  getKPIStatusClass(kpi: ProjectKPI): string {
+    const progreso = this.getKPIProgreso(kpi);
+    if (progreso >= 80) return 'on-track';
+    if (progreso >= 50) return 'warning';
+    return 'critical';
+  }
+
+  getAlertSeverityClass(severity: AlertSeverity): string {
+    return severity;
+  }
+
+  getAlertStatusLabel(status: AlertStatus): string {
+    const labels: Record<AlertStatus, string> = {
+      activa: 'Activa',
+      atendida: 'Atendida',
+      resuelta: 'Resuelta'
+    };
+    return labels[status];
+  }
+
+  formatAlertDate(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+
+    if (hours < 1) return 'Hace menos de 1 hora';
+    if (hours < 24) return `Hace ${hours} hora${hours > 1 ? 's' : ''}`;
+    if (days === 1) return 'Ayer';
+    if (days < 7) return `Hace ${days} días`;
+    return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 }

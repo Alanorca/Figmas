@@ -322,11 +322,42 @@
                             [class.phase-row]="item.type === 'phase'"
                             [class.task-row]="item.type === 'task'"
                             [class.completed]="item.status === 'completed'"
+                            [class.dragging-row]="isGanttRowBeingDragged(item.id)"
+                            [ngClass]="getGanttDropIndicatorClass(item.id)"
+                            draggable="true"
+                            (dragstart)="onGanttRowDragStart($event, item)"
+                            (dragover)="onGanttRowDragOver($event, item)"
+                            (dragleave)="onGanttRowDragLeave($event)"
+                            (drop)="onGanttRowDrop($event, item)"
+                            (dragend)="onGanttRowDragEnd($event)"
                             (click)="onGanttItemClick(item)"
                           >
                             <div class="gantt-label">
-                              <i class="pi" [ngClass]="item.type === 'phase' ? 'pi-folder' : 'pi-check-square'"></i>
+                              <span class="gantt-drag-handle" (mousedown)="$event.stopPropagation()">
+                                <i class="pi pi-bars"></i>
+                              </span>
+                              @if (item.type === 'phase') {
+                                <button
+                                  class="phase-toggle-btn"
+                                  (click)="togglePhaseExpand(item.id); $event.stopPropagation()"
+                                  [pTooltip]="isPhaseExpanded(item.id) ? 'Colapsar' : 'Expandir'"
+                                >
+                                  <i class="pi" [ngClass]="isPhaseExpanded(item.id) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                                </button>
+                                @if (isPhaseExpanded(item.id)) {
+                                  <i class="pi pi-folder-open"></i>
+                                } @else {
+                                  <i class="pi pi-folder"></i>
+                                }
+                              } @else {
+                                <i class="pi pi-check-square"></i>
+                              }
                               <span class="item-name" [pTooltip]="item.name">{{ item.name }}</span>
+                              @if (item.type === 'phase') {
+                                <span class="phase-task-count" [pTooltip]="getPhaseTaskCount(item.id) + ' tareas'">
+                                  ({{ getPhaseTaskCount(item.id) }})
+                                </span>
+                              }
                               <p-tag
                                 [value]="item.progress + '%'"
                                 [severity]="getGanttProgressSeverity(item.progress)"
@@ -341,19 +372,38 @@
                                 }
                               </div>
 
-                              <!-- Bar -->
+                              <!-- Bar con drag & resize -->
                               <div
                                 class="gantt-bar"
+                                [class.dragging]="isGanttItemDragging(item.id)"
                                 [style.left]="getItemOffset(item)"
                                 [style.width]="getItemWidth(item)"
                                 [style.background-color]="item.color"
                                 [pTooltip]="getGanttTooltip(item)"
                                 tooltipPosition="top"
                               >
-                                <div class="gantt-progress-fill" [style.width.%]="item.progress"></div>
-                                @if (getItemWidthValue(item) > 8) {
-                                  <span class="gantt-bar-label">{{ item.progress }}%</span>
-                                }
+                                <!-- Resize handle izquierdo -->
+                                <div
+                                  class="gantt-resize-handle left"
+                                  (mousedown)="onGanttBarMouseDown($event, item, 'left')"
+                                ></div>
+
+                                <!-- Área central para drag -->
+                                <div
+                                  class="gantt-bar-content"
+                                  (mousedown)="onGanttBarMouseDown($event, item, 'center')"
+                                >
+                                  <div class="gantt-progress-fill" [style.width.%]="item.progress"></div>
+                                  @if (getItemWidthValue(item) > 8) {
+                                    <span class="gantt-bar-label">{{ item.progress }}%</span>
+                                  }
+                                </div>
+
+                                <!-- Resize handle derecho -->
+                                <div
+                                  class="gantt-resize-handle right"
+                                  (mousedown)="onGanttBarMouseDown($event, item, 'right')"
+                                ></div>
                               </div>
                             </div>
                           </div>
@@ -741,167 +791,263 @@
           </div>
         </p-tabpanel>
 
-        <!-- Objetivos y KPIs Tab (similar a procesos) -->
+        <!-- Objetivos y KPIs Tab (replicado de objetivos-kpis) -->
         <p-tabpanel [value]="3">
           <div class="objetivos-kpis-page">
-            <!-- Main Content - Two Columns -->
-            <div class="kpis-main-content">
-              <!-- Left Column - KPI Summary & Charts -->
-              <div class="kpis-left-column">
-                <!-- KPI Summary Cards -->
-                <div class="kpi-summary-grid compact">
-                  <div class="kpi-summary-card">
-                    <div class="kpi-icon green">
-                      <i class="pi pi-check-circle"></i>
-                    </div>
-                    <div class="kpi-info">
-                      <span class="kpi-value">{{ completedTasks }}</span>
-                      <span class="kpi-label">Completadas</span>
-                    </div>
-                    <div class="kpi-change positive">
-                      <span>{{ totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(0) : 0 }}%</span>
-                    </div>
-                  </div>
-
-                  <div class="kpi-summary-card">
-                    <div class="kpi-icon blue">
-                      <i class="pi pi-clock"></i>
-                    </div>
-                    <div class="kpi-info">
-                      <span class="kpi-value">{{ pendingTasks }}</span>
-                      <span class="kpi-label">Pendientes</span>
-                    </div>
-                    <div class="kpi-change neutral">
-                      <span>{{ totalTasks > 0 ? ((pendingTasks / totalTasks) * 100).toFixed(0) : 0 }}%</span>
-                    </div>
-                  </div>
-
-                  <div class="kpi-summary-card">
-                    <div class="kpi-icon orange">
-                      <i class="pi pi-exclamation-triangle"></i>
-                    </div>
-                    <div class="kpi-info">
-                      <span class="kpi-value">{{ overdueTasks }}</span>
-                      <span class="kpi-label">Vencidas</span>
-                    </div>
-                    <div class="kpi-change" [class.negative]="overdueTasks > 0" [class.positive]="overdueTasks === 0">
-                      <span>{{ overdueTasks > 0 ? 'Alerta' : 'OK' }}</span>
-                    </div>
-                  </div>
-
-                  <div class="kpi-summary-card">
-                    <div class="kpi-icon purple">
-                      <i class="pi pi-chart-line"></i>
-                    </div>
-                    <div class="kpi-info">
-                      <span class="kpi-value">{{ project()?.progress || 0 }}%</span>
-                      <span class="kpi-label">Progreso</span>
-                    </div>
-                    <div class="kpi-progress">
-                      <p-progressBar
-                        [value]="project()?.progress || 0"
-                        [showValue]="false"
-                        [style]="{ height: '6px', width: '100%' }"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Charts Section -->
-                <div class="kpi-charts-section">
-                  <!-- Task Status Distribution -->
-                  <div class="kpi-chart-card">
-                    <div class="chart-header">
-                      <h4>Distribución por Estado</h4>
-                    </div>
-                    <div class="chart-container">
-                      <p-chart
-                        type="pie"
-                        [data]="taskStatusChartData()"
-                        [options]="taskStatusChartOptions"
-                        [style]="{ height: '200px' }"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Phase Progress -->
-                  <div class="kpi-chart-card">
-                    <div class="chart-header">
-                      <h4>Progreso por Fase</h4>
-                    </div>
-                    <div class="chart-container">
-                      <p-chart
-                        type="bar"
-                        [data]="phaseProgressChartData()"
-                        [options]="phaseProgressChartOptions"
-                        [style]="{ height: '200px' }"
-                      />
-                    </div>
-                  </div>
+            <!-- Toolbar -->
+            <div class="page-toolbar">
+              <div class="toolbar-left">
+                <div class="search-input-wrapper">
+                  <i class="pi pi-search"></i>
+                  <input
+                    type="text"
+                    placeholder="Buscar objetivo..."
+                    [ngModel]="kpiBusquedaObjetivos()"
+                    (ngModelChange)="kpiBusquedaObjetivos.set($event)"
+                  />
                 </div>
               </div>
+              <div class="toolbar-right">
+                @if (alertasActivasCount() > 0) {
+                  <span class="alertas-badge-global" [class.critical]="tieneAlertaCriticaGlobal()">
+                    <i class="pi pi-bell"></i>
+                    {{ alertasActivasCount() }} alertas activas
+                  </span>
+                }
+              </div>
+            </div>
 
-              <!-- Right Column - Objectives List -->
-              <div class="kpis-right-column">
-                <div class="objetivos-header">
-                  <h3>
-                    <i class="pi pi-bullseye"></i>
-                    Objetivos del Proyecto
-                  </h3>
-                </div>
-
+            <!-- Main Content - Two Columns -->
+            <div class="main-content">
+              <!-- Left Column - Objectives List -->
+              <div class="left-column">
                 <div class="objetivos-list">
-                  @if (project()?.objectives && project()!.objectives!.length > 0) {
-                    @for (obj of project()!.objectives; track obj.id) {
-                      <div
-                        class="objetivo-item"
-                        [class.selected]="kpiSelectedObjectiveId() === obj.id"
-                        [class]="'objetivo-' + obj.category"
-                        (click)="kpiSelectedObjectiveId.set(obj.id)"
-                      >
-                        <div class="objetivo-header">
-                          <span class="objetivo-nombre">{{ obj.description }}</span>
-                          <span class="objetivo-tipo" [class]="obj.category">
-                            {{ obj.category | uppercase }}
-                          </span>
-                        </div>
-                        <div class="objetivo-status">
-                          <p-tag
-                            [value]="obj.status === 'achieved' ? 'Alcanzado' : obj.status === 'in_progress' ? 'En Progreso' : 'Pendiente'"
-                            [severity]="obj.status === 'achieved' ? 'success' : obj.status === 'in_progress' ? 'info' : 'secondary'"
-                          />
-                          @if (obj.targetDate) {
-                            <span class="objetivo-fecha">
-                              <i class="pi pi-calendar"></i>
-                              {{ formatDate(obj.targetDate) }}
-                            </span>
-                          }
-                        </div>
+                  @for (objetivo of objetivosFiltrados(); track objetivo.id) {
+                    <div
+                      class="objetivo-item"
+                      [class.selected]="kpiSelectedObjectiveId() === objetivo.id"
+                      (click)="seleccionarObjetivo(objetivo.id)"
+                    >
+                      <div class="objetivo-header">
+                        <span class="objetivo-nombre">{{ objetivo.nombre }}</span>
+                        <span class="objetivo-tipo" [class]="objetivo.tipo">
+                          {{ getTipoObjetivoLabel(objetivo.tipo) }}
+                        </span>
                       </div>
-                    }
-                  } @else {
-                    <div class="empty-state-small">
-                      <i class="pi pi-bullseye"></i>
-                      <p>No hay objetivos definidos</p>
-                      <span class="hint">Los objetivos SMART ayudan a medir el éxito del proyecto</span>
+                      <div class="objetivo-progress">
+                        <div class="progress-bar">
+                          <div
+                            class="progress-fill"
+                            [class]="getObjetivoProgresoColor(objetivo.progreso)"
+                            [style.width.%]="objetivo.progreso"
+                          ></div>
+                        </div>
+                        <span class="progress-value">{{ objetivo.progreso }}%</span>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="empty-state">
+                      <i class="pi pi-inbox"></i>
+                      <p>No se encontraron objetivos</p>
                     </div>
                   }
                 </div>
+              </div>
 
-                <!-- Priority Distribution Chart (bottom of right column) -->
-                <div class="kpi-chart-card priority-chart">
-                  <div class="chart-header">
-                    <h4>Distribución por Prioridad</h4>
+              <!-- Right Column - Objective Detail -->
+              <div class="right-column">
+                @if (objetivoSeleccionado(); as objetivo) {
+                  <!-- Detail Header -->
+                  <div class="detail-header">
+                    <h2 class="detail-title">Detalle del Objetivo</h2>
+                    <div class="header-right">
+                      @if (alertasActivasDelObjetivoCount() > 0) {
+                        <span class="alertas-badge" [class.critical]="tieneAlertaCriticaActiva()">
+                          <i class="pi pi-bell"></i>
+                          {{ alertasActivasDelObjetivoCount() }}
+                        </span>
+                      }
+                    </div>
                   </div>
-                  <div class="chart-container">
-                    <p-chart
-                      type="doughnut"
-                      [data]="priorityChartData()"
-                      [options]="doughnutChartOptions"
-                      [style]="{ height: '180px' }"
-                    />
+
+                  <!-- Tabs de navegación -->
+                  <div class="detail-tabs">
+                    <button
+                      class="tab-btn"
+                      [class.active]="kpiTabActivo() === 'kpis'"
+                      (click)="kpiTabActivo.set('kpis')">
+                      <i class="pi pi-chart-bar"></i>
+                      KPIs
+                      <span class="tab-count">{{ objetivo.kpis.length }}</span>
+                    </button>
+                    <button
+                      class="tab-btn"
+                      [class.active]="kpiTabActivo() === 'alertas'"
+                      (click)="kpiTabActivo.set('alertas')">
+                      <i class="pi pi-bell"></i>
+                      Alertas
+                      @if (alertasDelObjetivo().length > 0) {
+                        <span class="tab-count" [class.has-active]="tieneAlertasActivas()">
+                          {{ alertasDelObjetivo().length }}
+                        </span>
+                      }
+                    </button>
                   </div>
-                </div>
+
+                  <!-- Detail Content -->
+                  <div class="detail-content">
+                    @if (kpiTabActivo() === 'kpis') {
+                      <!-- Nombre -->
+                      <div class="detail-section">
+                        <label class="detail-label">Nombre</label>
+                        <p class="detail-value">{{ objetivo.nombre }}</p>
+                      </div>
+
+                      <!-- Descripción -->
+                      <div class="detail-section">
+                        <label class="detail-label">Descripción</label>
+                        <p class="detail-value">{{ objetivo.descripcion || 'Sin descripción' }}</p>
+                      </div>
+
+                      <!-- Tipo -->
+                      <div class="detail-section">
+                        <label class="detail-label">Tipo</label>
+                        <span class="tipo-badge" [class]="objetivo.tipo">
+                          {{ getTipoObjetivoLabel(objetivo.tipo) }}
+                        </span>
+                      </div>
+
+                      <!-- Progreso -->
+                      <div class="detail-section progress-section">
+                        <div class="progress-header">
+                          <label class="detail-label">Progreso</label>
+                          <span class="progress-value-large">{{ objetivo.progreso }}%</span>
+                        </div>
+                        <div class="progress-bar-large">
+                          <div
+                            class="progress-fill"
+                            [class]="getObjetivoProgresoColor(objetivo.progreso)"
+                            [style.width.%]="objetivo.progreso"
+                          ></div>
+                        </div>
+                      </div>
+
+                      <!-- KPIs Section -->
+                      <div class="kpis-section">
+                        <div class="kpis-header">
+                          <h3>KPIs Asociados</h3>
+                        </div>
+
+                        <div class="kpis-list">
+                          @for (kpi of objetivo.kpis; track kpi.id) {
+                            <div class="kpi-row" [class]="getKPIStatusClass(kpi)">
+                              <div class="kpi-info-main">
+                                <span class="kpi-nombre">{{ kpi.nombre }}</span>
+                                <div class="kpi-meta">
+                                  <span class="kpi-escala">
+                                    <i class="pi pi-tag"></i>
+                                    {{ kpi.escala }}
+                                  </span>
+                                  <span class="kpi-direccion">
+                                    <i [class]="kpi.direccion === 'mayor_mejor' ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
+                                    {{ kpi.direccion === 'mayor_mejor' ? 'Mayor mejor' : 'Menor mejor' }}
+                                  </span>
+                                </div>
+                              </div>
+                              <div class="kpi-values">
+                                <div class="kpi-actual">
+                                  <span class="label">Actual</span>
+                                  <span class="value">{{ kpi.actual }} {{ kpi.escala }}</span>
+                                </div>
+                                <div class="kpi-meta-value">
+                                  <span class="label">Meta</span>
+                                  <span class="value">{{ kpi.meta }} {{ kpi.escala }}</span>
+                                </div>
+                              </div>
+                              <div class="kpi-progress-container">
+                                <div class="kpi-progress-bar">
+                                  <div
+                                    class="kpi-progress-fill"
+                                    [class]="getKPIProgresoColor(kpi)"
+                                    [style.width.%]="getKPIProgreso(kpi)"
+                                  ></div>
+                                </div>
+                                <span class="kpi-progress-value">{{ getKPIProgreso(kpi) }}%</span>
+                              </div>
+                            </div>
+                          } @empty {
+                            <div class="empty-state-small">
+                              <i class="pi pi-chart-line"></i>
+                              <p>No hay KPIs definidos para este objetivo</p>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    } @else {
+                      <!-- Alertas Tab -->
+                      <div class="alertas-section">
+                        @if (alertasDelObjetivo().length > 0) {
+                          <div class="alertas-list">
+                            @for (alerta of alertasDelObjetivo(); track alerta.id) {
+                              <div class="alerta-card" [class]="alerta.severity" [class.atendida]="alerta.status !== 'activa'">
+                                <div class="alerta-header">
+                                  <div class="alerta-severity">
+                                    <i [class]="alerta.severity === 'critical' ? 'pi pi-exclamation-circle' : alerta.severity === 'warning' ? 'pi pi-exclamation-triangle' : 'pi pi-info-circle'"></i>
+                                    <span class="severity-label">{{ alerta.severity | uppercase }}</span>
+                                  </div>
+                                  <span class="alerta-status" [class]="alerta.status">
+                                    {{ getAlertStatusLabel(alerta.status) }}
+                                  </span>
+                                </div>
+                                <div class="alerta-body">
+                                  <p class="alerta-mensaje">{{ alerta.mensaje }}</p>
+                                  <div class="alerta-details">
+                                    <span class="alerta-kpi">
+                                      <i class="pi pi-chart-line"></i>
+                                      {{ alerta.kpiNombre }}
+                                    </span>
+                                    <span class="alerta-fecha">
+                                      <i class="pi pi-clock"></i>
+                                      {{ formatAlertDate(alerta.fechaCreacion) }}
+                                    </span>
+                                  </div>
+                                  <div class="alerta-valores">
+                                    <span>Valor actual: <strong>{{ alerta.valorActual }}</strong></span>
+                                    <span>Umbral: <strong>{{ alerta.valorUmbral }}</strong></span>
+                                  </div>
+                                </div>
+                                @if (alerta.status === 'atendida' && alerta.comentarioResolucion) {
+                                  <div class="alerta-resolucion">
+                                    <span class="resolucion-label">
+                                      <i class="pi pi-check"></i>
+                                      Atendida por {{ alerta.atendidaPor }}
+                                    </span>
+                                    <p class="resolucion-comentario">{{ alerta.comentarioResolucion }}</p>
+                                  </div>
+                                }
+                              </div>
+                            }
+                          </div>
+                        } @else {
+                          <div class="empty-state-small">
+                            <i class="pi pi-check-circle"></i>
+                            <p>No hay alertas para este objetivo</p>
+                            <span class="hint">Todos los KPIs están dentro de los umbrales definidos</span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <!-- No objective selected -->
+                  <div class="no-selection">
+                    <div class="no-selection-content">
+                      <i class="pi pi-bullseye"></i>
+                      <h3>Selecciona un objetivo</h3>
+                      <p>Haz clic en un objetivo de la lista para ver sus KPIs y alertas asociadas</p>
+                    </div>
+                  </div>
+                }
               </div>
             </div>
           </div>
