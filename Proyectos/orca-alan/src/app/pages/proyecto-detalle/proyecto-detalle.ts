@@ -152,6 +152,12 @@ export class ProyectoDetalleComponent implements OnInit {
   loading = signal(true);
   activeTab = signal(0);
 
+  // Vista de planificación (Gantt, Tareas, Kanban, Calendario)
+  activePlanningView = signal<'gantt' | 'tareas' | 'kanban' | 'calendario'>('gantt');
+
+  // KPIs - Vista tipo objetivos-kpis
+  kpiSelectedObjectiveId = signal<string | null>(null);
+
   // Proyecto
   project = computed(() => this.proyectosService.selectedProject());
   tasks = computed(() => this.proyectosService.tasks());
@@ -987,17 +993,19 @@ export class ProyectoDetalleComponent implements OnInit {
    */
   async onTaskDrop(event: CdkDragDrop<Task[]>, targetStatus: TaskStatus): Promise<void> {
     const task = event.item.data as Task;
+    const previousStatus = task.status;
 
     // Si se mueve a la misma columna, no hacer nada
-    if (task.status === targetStatus) {
-      // Solo reordenar dentro de la misma columna (opcional)
-      if (event.previousIndex !== event.currentIndex) {
-        moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-      }
+    if (previousStatus === targetStatus) {
       return;
     }
 
-    // Cambiar el estado de la tarea
+    // Actualizar inmediatamente el estado local para feedback instantáneo
+    this.proyectosService.tasks.update(tasks =>
+      tasks.map(t => t.id === task.id ? { ...t, status: targetStatus } : t)
+    );
+
+    // Cambiar el estado de la tarea en el backend/storage
     try {
       await this.proyectosService.updateTaskStatus(task.id, targetStatus);
 
@@ -1013,6 +1021,11 @@ export class ProyectoDetalleComponent implements OnInit {
       // Actualizar Gantt items
       this.buildGanttItems();
     } catch (error) {
+      // Revertir el cambio si falla
+      this.proyectosService.tasks.update(tasks =>
+        tasks.map(t => t.id === task.id ? { ...t, status: previousStatus } : t)
+      );
+
       this.messageService.add({
         severity: 'error',
         summary: 'Error',

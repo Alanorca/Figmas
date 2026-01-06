@@ -26,11 +26,27 @@ router.post('/defectos', controller.createDefecto);
 router.put('/defectos/:id', controller.updateDefecto);
 router.delete('/defectos/:id', controller.deleteDefecto);
 
+// ==================== ESTADO DE SALUD ====================
+router.get('/health/diagnostic', controller.getHealthDiagnostic);
+router.post('/health/recalculate', controller.recalculateAllHealth);
+
+// ==================== APETITO DE RIESGO ====================
+router.get('/risk-appetites', controller.getRiskAppetites);
+router.post('/risk-appetites', controller.createRiskAppetite);
+
 // ==================== ACTIVOS (al final porque usa :id) ====================
 router.get('/', controller.getActivos);
 router.get('/:id', controller.getActivoById);
 router.post('/', controller.createActivo);
 router.put('/:id', controller.updateActivo);
 router.delete('/:id', controller.deleteActivo);
+
+// ==================== RUTAS CON :id (después de rutas base) ====================
+router.patch('/:id/health/reset', controller.resetActivoHealth);
+router.put('/:id/tolerance', controller.updateActivoTolerance);
+router.put('/:id/risk-appetite', controller.assignRiskAppetite);
+router.get('/:id/children', controller.getActivoChildren);
+router.get('/:id/parents', controller.getActivoParents);
+router.get('/:id/graph', controller.getActivoGraph);
 
 module.exports = router;

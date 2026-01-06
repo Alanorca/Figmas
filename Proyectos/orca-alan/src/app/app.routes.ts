@@ -19,6 +19,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/activos/activos').then(m => m.ActivosComponent)
   },
   {
+    path: 'activos/:id/detalle',
+    loadComponent: () => import('./pages/activo-detalle/activo-detalle').then(m => m.ActivoDetalleComponent)
+  },
+  {
     path: 'organigramas',
     loadComponent: () => import('./pages/organigramas/organigramas').then(m => m.OrganigramasComponent)
   },

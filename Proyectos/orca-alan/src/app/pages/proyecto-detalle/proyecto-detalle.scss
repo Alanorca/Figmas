@@ -1561,19 +1561,35 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  border: 2px solid transparent;
+  border-radius: 8px;
 
   // CDK Drop List placeholder
   .cdk-drag-placeholder {
-    background: var(--surface-200);
-    border: 2px dashed var(--surface-400);
+    background: var(--primary-100);
+    border: 2px dashed var(--primary-400);
     border-radius: 8px;
-    min-height: 100px;
-    opacity: 0.5;
+    min-height: 80px;
+    opacity: 0.7;
   }
 
   // When dragging over
   &.cdk-drop-list-dragging {
-    background: rgba(99, 102, 241, 0.05);
+    background: rgba(99, 102, 241, 0.08);
+    border-color: var(--primary-300);
+
+    .kanban-empty-column {
+      border: 2px dashed var(--primary-400);
+      background: rgba(99, 102, 241, 0.05);
+      border-radius: 8px;
+    }
+  }
+
+  // When receiving drag
+  &.cdk-drop-list-receiving {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--green-400);
   }
 }
 
@@ -1591,8 +1607,8 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
 
-    .drag-handle {
-      opacity: 1;
+    .drag-handle-left {
+      opacity: 0.8;
     }
   }
 
@@ -1603,21 +1619,55 @@
 
   // While being dragged
   &.cdk-drag-preview {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
     border: 2px solid var(--primary-400);
+    transform: rotate(2deg);
+    opacity: 0.95;
   }
 
   &.cdk-drag-animating {
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
   }
+
+  // Card being dragged (original position)
+  &.cdk-drag-dragging {
+    opacity: 0.4;
+  }
 }
 
 .kanban-card-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+
+  .drag-handle-left {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    color: var(--text-color-secondary);
+    cursor: grab;
+    opacity: 0.4;
+    transition: opacity 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+    margin-top: 1px;
+    margin-left: -4px;
+
+    .material-icons {
+      font-size: 18px;
+    }
+
+    &:hover {
+      opacity: 1;
+      color: var(--primary-color);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
 
   .task-title {
     font-weight: 500;
@@ -1630,6 +1680,7 @@
   .priority-tag {
     font-size: 0.65rem !important;
     padding: 0.15rem 0.4rem !important;
+    flex-shrink: 0;
   }
 }
 
@@ -1716,20 +1767,6 @@
   }
 }
 
-.drag-handle {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  color: var(--text-color-secondary);
-  cursor: grab;
-  padding: 0.25rem;
-
-  &:active {
-    cursor: grabbing;
-  }
-}
 
 .kanban-empty-column {
   display: flex;
@@ -2177,6 +2214,405 @@ html.dark-mode {
     .objective-card {
       background: var(--surface-100) !important;
       border-color: var(--surface-border) !important;
+    }
+  }
+}
+
+// ============================================================
+// PLANNING VIEW SWITCHER
+// ============================================================
+
+.planning-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.planning-view-switcher {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  .view-switcher-left {
+    .view-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-color);
+
+      i {
+        color: var(--primary-color);
+      }
+    }
+  }
+
+  .view-switcher-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: var(--surface-100);
+    padding: 0.25rem;
+    border-radius: 8px;
+  }
+
+  .view-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-color-secondary);
+
+    i {
+      font-size: 1.125rem;
+    }
+
+    &:hover {
+      background: var(--surface-200);
+      color: var(--text-color);
+    }
+
+    &.active {
+      background: var(--primary-color);
+      color: white;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+
+      &:hover {
+        background: var(--primary-600);
+      }
+    }
+  }
+
+  .view-switcher-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.gantt-toolbar.secondary,
+.secondary-toolbar {
+  background: var(--surface-50) !important;
+  border-color: var(--surface-200) !important;
+}
+
+// ============================================================
+// OBJETIVOS Y KPIS - TWO COLUMN LAYOUT
+// ============================================================
+
+.objetivos-kpis-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.kpis-main-content {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.5rem;
+  min-height: calc(100vh - 500px);
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpis-left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.kpi-summary-grid.compact {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+
+  @media (max-width: 1400px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kpi-summary-card {
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+
+    .kpi-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+
+      i {
+        font-size: 1.125rem;
+      }
+    }
+
+    .kpi-info {
+      .kpi-value {
+        font-size: 1.5rem;
+      }
+
+      .kpi-label {
+        font-size: 0.75rem;
+      }
+    }
+
+    .kpi-change {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+    }
+
+    .kpi-progress {
+      width: 100%;
+    }
+  }
+}
+
+.kpi-charts-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpis-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  padding: 1.25rem;
+
+  .objetivos-header {
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i {
+        color: var(--primary-color);
+      }
+    }
+  }
+
+  .objetivos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+  }
+
+  .objetivo-item {
+    padding: 0.875rem 1rem;
+    background: var(--surface-50);
+    border-radius: 8px;
+    border: 1px solid var(--surface-200);
+    border-left: 3px solid var(--surface-300);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--surface-100);
+      border-color: var(--surface-300);
+    }
+
+    &.selected {
+      background: rgba(99, 102, 241, 0.08);
+      border-color: var(--primary-300);
+      border-left-color: var(--primary-color);
+    }
+
+    &.objetivo-specific {
+      border-left-color: #3b82f6;
+    }
+
+    &.objetivo-measurable {
+      border-left-color: #10b981;
+    }
+
+    &.objetivo-achievable {
+      border-left-color: #f59e0b;
+    }
+
+    &.objetivo-relevant {
+      border-left-color: #8b5cf6;
+    }
+
+    &.objetivo-time_bound {
+      border-left-color: #ef4444;
+    }
+
+    .objetivo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+
+      .objetivo-nombre {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-color);
+        line-height: 1.3;
+        flex: 1;
+      }
+
+      .objetivo-tipo {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        background: var(--surface-200);
+        color: var(--text-color-secondary);
+
+        &.specific { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+        &.measurable { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        &.achievable { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        &.relevant { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+        &.time_bound { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+      }
+    }
+
+    .objetivo-status {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      .objetivo-fecha {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--text-color-secondary);
+
+        i {
+          font-size: 0.75rem;
+        }
+      }
+    }
+  }
+
+  .empty-state-small {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-color-secondary);
+
+    i {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      opacity: 0.5;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--text-color);
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+      opacity: 0.7;
+    }
+  }
+
+  .priority-chart {
+    margin-top: auto;
+
+    .chart-header {
+      h4 {
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+
+// ============================================================
+// DARK MODE - Planning & KPIs
+// ============================================================
+:host ::ng-deep html.dark-mode,
+html.dark-mode {
+  .planning-view-switcher {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .view-title {
+      color: var(--text-color) !important;
+    }
+
+    .view-switcher-icons {
+      background: var(--surface-100) !important;
+    }
+
+    .view-icon-btn {
+      color: var(--text-color-secondary) !important;
+
+      &:hover {
+        background: var(--surface-200) !important;
+        color: var(--text-color) !important;
+      }
+
+      &.active {
+        background: var(--primary-color) !important;
+        color: white !important;
+      }
+    }
+  }
+
+  .kpis-right-column {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .objetivo-item {
+      background: var(--surface-100) !important;
+      border-color: var(--surface-border) !important;
+
+      &:hover {
+        background: var(--surface-200) !important;
+      }
+
+      &.selected {
+        background: rgba(99, 102, 241, 0.12) !important;
+        border-color: var(--primary-400) !important;
+      }
+
+      .objetivo-nombre {
+        color: var(--text-color) !important;
+      }
+
+      .objetivo-fecha {
+        color: var(--text-color-secondary) !important;
+      }
     }
   }
 }

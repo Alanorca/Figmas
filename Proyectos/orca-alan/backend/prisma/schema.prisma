@@ -202,11 +202,48 @@ model Activo {
   plantilla       PlantillaActivo? @relation(fields: [plantillaId], references: [id])
   propiedadesCustom String? // JSON de PropiedadCustomValor[]
 
+  // Estado de Salud del Activo
+  incidentToleranceThreshold  Int       @default(10)    // Umbral de tolerancia a incidentes
+  currentIncidentCount        Int       @default(0)     // Contador actual de incidentes
+  healthStatus                String    @default("HEALTHY") // HEALTHY, STRESSED, CRITICAL
+  lastIncidentDate            DateTime?                 // Fecha del último incidente
+  requiresImmediateAttention  Boolean   @default(false) // Requiere atención inmediata
+  incidentCountResetDays      Int       @default(365)   // Días para reset del contador
+
+  // Valor y Estado
+  assetValue                  Float?                    // Valor monetario del activo
+  isActive                    Boolean   @default(true)  // Estado activo/inactivo
+
+  // Jerarquía de Activos (auto-referencia)
+  parentAssetId               String?
+  parentAsset                 Activo?   @relation("ActivoJerarquia", fields: [parentAssetId], references: [id])
+  childAssets                 Activo[]  @relation("ActivoJerarquia")
+
+  // Apetito de Riesgo
+  riskAppetiteId              String?
+  riskAppetite                RiskAppetite? @relation(fields: [riskAppetiteId], references: [id])
+
   riesgos         Riesgo[]
   incidentes      Incidente[]
   defectos        Defecto[]
 
   @@map("activos")
+}
+
+model RiskAppetite {
+  id                String   @id @default(cuid())
+  nombre            String
+  descripcion       String?
+  riesgoInherente   Float    // Valor de riesgo inherente (0-100)
+  riesgoResidual    Float    // Valor de riesgo residual (0-100)
+  apetitoRiesgo     Float    // Línea de meta/target (0-100)
+  categoriaRiesgo   String   // bajo, medio, alto
+  fechaCreacion     DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  activos           Activo[]
+
+  @@map("risk_appetites")
 }
 
 model Riesgo {

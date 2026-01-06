@@ -1,0 +1,657 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="activo-detalle-container">
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-container">
+      <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+      <p>Cargando activo...</p>
+    </div>
+  } @else if (activo()) {
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="goBack()"
+          pTooltip="Volver a la lista"
+        />
+
+        <div class="breadcrumb">
+          @for (parent of parentAssets(); track parent.id) {
+            <span class="breadcrumb-item" (click)="navigateToActivo(parent.id)">
+              {{ parent.nombre }}
+            </span>
+            <i class="pi pi-chevron-right breadcrumb-separator"></i>
+          }
+          <span class="breadcrumb-current">{{ activo()!.nombre }}</span>
+        </div>
+      </div>
+
+      <div class="header-tags">
+        <p-tag
+          [value]="healthConfig().label"
+          [severity]="healthConfig().severity"
+          [icon]="'pi ' + healthConfig().icon"
+        />
+        <p-tag
+          [value]="criticidadConfigComputed().label"
+          [severity]="criticidadConfigComputed().severity"
+        />
+        <p-tag
+          [value]="activo()!.tipo | titlecase"
+          severity="info"
+          [icon]="'pi ' + tipoIcon()"
+        />
+      </div>
+
+      <div class="header-actions">
+        <p-button
+          icon="pi pi-cog"
+          label="Tolerancia"
+          [outlined]="true"
+          (onClick)="openToleranceConfig()"
+        />
+        <p-button
+          icon="pi pi-refresh"
+          label="Reset Salud"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="resetHealth()"
+        />
+        <p-button
+          icon="pi pi-pencil"
+          label="Editar"
+          (onClick)="editActivo()"
+        />
+      </div>
+    </div>
+
+    <!-- Titulo -->
+    <div class="page-title">
+      <h1>
+        <i class="pi {{ tipoIcon() }}"></i>
+        {{ activo()!.nombre }}
+      </h1>
+      <p class="subtitle">{{ activo()!.descripcion }}</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <!-- Card de Estado de Salud -->
+      <div class="stat-card health-card" [class]="'health-' + activo()!.healthStatus?.toLowerCase()">
+        <div class="health-header">
+          <span class="health-label">Estado de Salud</span>
+          <i class="pi {{ healthConfig().icon }}" [style.color]="healthConfig().color"></i>
+        </div>
+        <div class="health-status">{{ healthConfig().label }}</div>
+        <div class="health-progress">
+          <p-progressBar
+            [value]="healthPercentage()"
+            [showValue]="false"
+            [style]="{ height: '8px' }"
+          />
+          <span class="progress-label">
+            {{ activo()!.currentIncidentCount || 0 }} / {{ activo()!.incidentToleranceThreshold || 10 }} incidentes
+          </span>
+        </div>
+        @if (activo()!.lastIncidentDate) {
+          <div class="last-incident">
+            <i class="pi pi-clock"></i>
+            Ultimo incidente: {{ formatDate(activo()!.lastIncidentDate) }}
+          </div>
+        }
+      </div>
+
+      <!-- Cards de metricas -->
+      <div class="stat-card">
+        <div class="stat-icon riesgos">
+          <i class="pi pi-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ riesgosCount() }}</span>
+          <span class="stat-label">Riesgos</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon incidentes">
+          <i class="pi pi-bolt"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ incidentesCount() }}</span>
+          <span class="stat-label">Incidentes</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon defectos">
+          <i class="pi pi-bug"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ defectosCount() }}</span>
+          <span class="stat-label">Defectos</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon valor">
+          <i class="pi pi-dollar"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ activo()!.assetValue ? ('$' + (activo()!.assetValue | number)) : 'N/A' }}</span>
+          <span class="stat-label">Valor</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon hijos">
+          <i class="pi pi-sitemap"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ childAssets().length }}</span>
+          <span class="stat-label">Sub-activos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <p-tabs [(value)]="activeTab" styleClass="activo-tabs">
+      <p-tablist>
+        <p-tab [value]="0">
+          <i class="pi pi-info-circle"></i>
+          Info General
+        </p-tab>
+        <p-tab [value]="1">
+          <i class="pi pi-exclamation-triangle"></i>
+          Riesgos
+          @if (riesgosCount() > 0) {
+            <p-badge [value]="riesgosCount().toString()" severity="danger" />
+          }
+        </p-tab>
+        <p-tab [value]="2">
+          <i class="pi pi-bolt"></i>
+          Incidentes
+          @if (incidentesCount() > 0) {
+            <p-badge [value]="incidentesCount().toString()" severity="warn" />
+          }
+        </p-tab>
+        <p-tab [value]="3">
+          <i class="pi pi-bug"></i>
+          Defectos
+          @if (defectosCount() > 0) {
+            <p-badge [value]="defectosCount().toString()" severity="info" />
+          }
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Tab Info General -->
+        <p-tabpanel [value]="0">
+          <div class="info-grid">
+            <!-- Informacion basica -->
+            <p-card header="Informacion del Activo" styleClass="info-card">
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="info-label">Responsable</span>
+                  <span class="info-value">{{ activo()!.responsable }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Departamento</span>
+                  <span class="info-value">{{ activo()!.departamento }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Tipo</span>
+                  <span class="info-value">
+                    <i class="pi {{ tipoIcon() }}"></i>
+                    {{ activo()!.tipo | titlecase }}
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Criticidad</span>
+                  <span class="info-value">
+                    <p-tag
+                      [value]="criticidadConfigComputed().label"
+                      [severity]="criticidadConfigComputed().severity"
+                    />
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Fecha de Registro</span>
+                  <span class="info-value">{{ formatDate(activo()!.fechaRegistro) }}</span>
+                </div>
+                @if (activo()!.assetValue) {
+                  <div class="info-item">
+                    <span class="info-label">Valor del Activo</span>
+                    <span class="info-value">${{ activo()!.assetValue | number }}</span>
+                  </div>
+                }
+              </div>
+            </p-card>
+
+            <!-- Alertas de Salud -->
+            @if (activo()!.healthStatus !== 'HEALTHY' || activo()!.requiresImmediateAttention) {
+              <p-card header="Alertas" styleClass="alerts-card">
+                <div class="alerts-list">
+                  @if (activo()!.healthStatus === 'CRITICAL') {
+                    <div class="alert critical">
+                      <i class="pi pi-times-circle"></i>
+                      <div>
+                        <strong>Estado Critico</strong>
+                        <p>El activo ha superado su umbral de tolerancia de incidentes.</p>
+                      </div>
+                    </div>
+                  }
+                  @if (activo()!.healthStatus === 'STRESSED') {
+                    <div class="alert warning">
+                      <i class="pi pi-exclamation-triangle"></i>
+                      <div>
+                        <strong>Estado Estresado</strong>
+                        <p>El activo esta cerca de su umbral de tolerancia ({{ healthPercentage() | number:'1.0-0' }}%).</p>
+                      </div>
+                    </div>
+                  }
+                  @if (activo()!.requiresImmediateAttention) {
+                    <div class="alert attention">
+                      <i class="pi pi-bell"></i>
+                      <div>
+                        <strong>Requiere Atencion Inmediata</strong>
+                        <p>Este activo necesita revision prioritaria.</p>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </p-card>
+            }
+
+            <!-- Bullet Chart - Apetito de Riesgo -->
+            @if (activo()!.riskAppetite) {
+              <p-card header="Apetito de Riesgo" styleClass="risk-appetite-card">
+                <div class="risk-appetite-content">
+                  <div class="risk-info">
+                    <span class="risk-name">{{ activo()!.riskAppetite!.nombre }}</span>
+                    <p-tag
+                      [value]="activo()!.riskAppetite!.categoriaRiesgo | titlecase"
+                      [severity]="activo()!.riskAppetite!.categoriaRiesgo === 'alto' ? 'danger' : activo()!.riskAppetite!.categoriaRiesgo === 'medio' ? 'warn' : 'success'"
+                    />
+                  </div>
+                  <div class="bullet-chart-container" style="height: 120px;">
+                    @if (bulletChartData()) {
+                      <p-chart type="bar" [data]="bulletChartData()!" [options]="bulletChartOptions()" />
+                    }
+                  </div>
+                  <div class="risk-metrics">
+                    <div class="metric">
+                      <span class="metric-label">Riesgo Inherente</span>
+                      <span class="metric-value" style="color: #ef4444">{{ activo()!.riskAppetite!.riesgoInherente }}%</span>
+                    </div>
+                    <div class="metric">
+                      <span class="metric-label">Riesgo Residual</span>
+                      <span class="metric-value" style="color: #3b82f6">{{ activo()!.riskAppetite!.riesgoResidual }}%</span>
+                    </div>
+                    <div class="metric">
+                      <span class="metric-label">Meta (Apetito)</span>
+                      <span class="metric-value" style="color: #10b981">{{ activo()!.riskAppetite!.apetitoRiesgo }}%</span>
+                    </div>
+                  </div>
+                </div>
+              </p-card>
+            }
+
+            <!-- Grafo de Relaciones -->
+            <p-card header="Grafo de Relaciones" styleClass="graph-card full-width">
+              <div class="graph-container">
+                @if (graphData() && graphData()!.nodes.length > 1) {
+                  <!-- Visualizacion del Grafo con HTML/CSS -->
+                  <div class="graph-visual-html">
+                    <!-- Nodo central -->
+                    <div class="center-node">
+                      <div class="node-bubble activo">
+                        <i class="pi" [class]="tipoIcon()"></i>
+                      </div>
+                      <span class="node-name">{{ activo()!.nombre }}</span>
+                    </div>
+
+                    <!-- Nodos orbitales -->
+                    <div class="orbital-nodes">
+                      @for (node of graphData()!.nodes; track node.id; let i = $index) {
+                        @if (node.type !== 'activo') {
+                          <div
+                            class="orbital-node"
+                            [class]="'orbital-' + node.type"
+                            [style.left.px]="getOrbitalX(getEdgeIndex(node.id), graphData()!.edges.length)"
+                            [style.top.px]="getOrbitalY(getEdgeIndex(node.id), graphData()!.edges.length)"
+                            (click)="onNodeClick(node)"
+                          >
+                            <div class="node-bubble" [class]="node.type">
+                              @switch (node.type) {
+                                @case ('activo-padre') { <i class="pi pi-arrow-up"></i> }
+                                @case ('activo-hijo') { <i class="pi pi-arrow-down"></i> }
+                                @case ('riesgo') { <i class="pi pi-exclamation-triangle"></i> }
+                                @case ('incidente') { <i class="pi pi-bolt"></i> }
+                                @case ('defecto') { <i class="pi pi-bug"></i> }
+                              }
+                            </div>
+                            <span class="node-name">{{ node.label | slice:0:18 }}{{ node.label.length > 18 ? '...' : '' }}</span>
+                          </div>
+                        }
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Estadisticas del grafo -->
+                  <div class="graph-stats">
+                    <div class="graph-stat">
+                      <i class="pi pi-sitemap"></i>
+                      <span class="stat-value">{{ graphData()!.nodes.length }}</span>
+                      <span class="stat-label">Nodos</span>
+                    </div>
+                    <div class="graph-stat">
+                      <i class="pi pi-arrow-right-arrow-left"></i>
+                      <span class="stat-value">{{ graphData()!.edges.length }}</span>
+                      <span class="stat-label">Conexiones</span>
+                    </div>
+                  </div>
+
+                  <!-- Lista de relaciones -->
+                  <div class="relations-list">
+                    @for (node of graphData()!.nodes; track node.id) {
+                      @if (node.type !== 'activo') {
+                        <div class="relation-item" [class]="'relation-' + node.type" (click)="onNodeClick(node)">
+                          <span class="relation-type">{{ getNodeTypeLabel(node.type) }}</span>
+                          <span class="relation-label">{{ node.label }}</span>
+                          <i class="pi pi-chevron-right relation-arrow"></i>
+                        </div>
+                      }
+                    }
+                  </div>
+                } @else {
+                  <div class="no-relations">
+                    <i class="pi pi-sitemap"></i>
+                    <p>No hay relaciones configuradas para este activo</p>
+                  </div>
+                }
+              </div>
+              <div class="graph-legend">
+                <div class="legend-item">
+                  <span class="legend-color activo"></span>
+                  Activo Actual
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color padre"></span>
+                  Activo Padre
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color hijo"></span>
+                  Sub-activo
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color riesgo"></span>
+                  Riesgo
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color incidente"></span>
+                  Incidente
+                </div>
+                <div class="legend-item">
+                  <span class="legend-color defecto"></span>
+                  Defecto
+                </div>
+              </div>
+            </p-card>
+
+            <!-- Configuracion de Tolerancia -->
+            <p-card header="Configuracion de Tolerancia" styleClass="tolerance-card">
+              <div class="tolerance-info">
+                <div class="tolerance-item">
+                  <span class="tolerance-label">Umbral de Incidentes</span>
+                  <span class="tolerance-value">{{ activo()!.incidentToleranceThreshold || 10 }}</span>
+                </div>
+                <div class="tolerance-item">
+                  <span class="tolerance-label">Dias para Reset</span>
+                  <span class="tolerance-value">{{ activo()!.incidentCountResetDays || 365 }} dias</span>
+                </div>
+                <div class="tolerance-item">
+                  <span class="tolerance-label">Contador Actual</span>
+                  <span class="tolerance-value">{{ activo()!.currentIncidentCount || 0 }}</span>
+                </div>
+              </div>
+              <p-button
+                icon="pi pi-cog"
+                label="Configurar"
+                [outlined]="true"
+                (onClick)="openToleranceConfig()"
+              />
+            </p-card>
+
+            <!-- Sub-activos (Hijos) -->
+            @if (childAssets().length > 0) {
+              <p-card header="Sub-activos" styleClass="children-card">
+                <div class="children-list">
+                  @for (child of childAssets(); track child.id) {
+                    <div class="child-item" (click)="navigateToActivo(child.id)">
+                      <div class="child-info">
+                        <i class="pi {{ tipoActivoIcons[child.tipo] || 'pi-box' }}"></i>
+                        <span class="child-name">{{ child.nombre }}</span>
+                      </div>
+                      <div class="child-tags">
+                        <p-tag
+                          [value]="healthStatusConfig[child.healthStatus || 'HEALTHY'].label"
+                          [severity]="healthStatusConfig[child.healthStatus || 'HEALTHY'].severity"
+                          size="small"
+                        />
+                      </div>
+                    </div>
+                  }
+                </div>
+              </p-card>
+            }
+
+            <!-- Propiedades Custom -->
+            @if (activo()!.propiedadesCustom && activo()!.propiedadesCustom!.length > 0) {
+              <p-card header="Propiedades Adicionales" styleClass="props-card">
+                <div class="props-list">
+                  @for (prop of activo()!.propiedadesCustom; track prop.propiedadId) {
+                    <div class="prop-item">
+                      <span class="prop-label">{{ prop.campo }}</span>
+                      <span class="prop-value">{{ prop.valor }}</span>
+                    </div>
+                  }
+                </div>
+              </p-card>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab Riesgos -->
+        <p-tabpanel [value]="1">
+          <p-table
+            [value]="activo()!.riesgos"
+            [paginator]="true"
+            [rows]="10"
+            styleClass="p-datatable-sm"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Descripcion</th>
+                <th>Probabilidad</th>
+                <th>Impacto</th>
+                <th>Estado</th>
+                <th>Responsable</th>
+                <th>Fecha</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-riesgo>
+              <tr class="clickable-row" (click)="navigateToRiesgo(riesgo)">
+                <td>{{ riesgo.descripcion }}</td>
+                <td>
+                  <p-tag [value]="riesgo.probabilidad + '/5'" [severity]="riesgo.probabilidad >= 4 ? 'danger' : riesgo.probabilidad >= 3 ? 'warn' : 'success'" />
+                </td>
+                <td>
+                  <p-tag [value]="riesgo.impacto + '/5'" [severity]="riesgo.impacto >= 4 ? 'danger' : riesgo.impacto >= 3 ? 'warn' : 'success'" />
+                </td>
+                <td>
+                  <p-tag [value]="riesgo.estado" [severity]="getEstadoSeverity(riesgo.estado)" />
+                </td>
+                <td>{{ riesgo.responsable }}</td>
+                <td>{{ formatDate(riesgo.fechaIdentificacion) }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="text-center">
+                  <div class="empty-state">
+                    <i class="pi pi-shield"></i>
+                    <p>No hay riesgos registrados</p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- Tab Incidentes -->
+        <p-tabpanel [value]="2">
+          <p-table
+            [value]="activo()!.incidentes"
+            [paginator]="true"
+            [rows]="10"
+            styleClass="p-datatable-sm"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Titulo</th>
+                <th>Severidad</th>
+                <th>Estado</th>
+                <th>Reportado por</th>
+                <th>Fecha</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-incidente>
+              <tr class="clickable-row" (click)="navigateToIncidente(incidente)">
+                <td>{{ incidente.titulo }}</td>
+                <td>
+                  <p-tag [value]="incidente.severidad" [severity]="getSeveridadSeverity(incidente.severidad)" />
+                </td>
+                <td>
+                  <p-tag [value]="incidente.estado" [severity]="getEstadoSeverity(incidente.estado)" />
+                </td>
+                <td>{{ incidente.reportadoPor }}</td>
+                <td>{{ formatDate(incidente.fechaReporte) }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="text-center">
+                  <div class="empty-state">
+                    <i class="pi pi-bolt"></i>
+                    <p>No hay incidentes registrados</p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- Tab Defectos -->
+        <p-tabpanel [value]="3">
+          <p-table
+            [value]="activo()!.defectos"
+            [paginator]="true"
+            [rows]="10"
+            styleClass="p-datatable-sm"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Titulo</th>
+                <th>Tipo</th>
+                <th>Prioridad</th>
+                <th>Estado</th>
+                <th>Detectado por</th>
+                <th>Fecha</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-defecto>
+              <tr class="clickable-row" (click)="navigateToDefecto(defecto)">
+                <td>{{ defecto.titulo }}</td>
+                <td>
+                  <p-tag [value]="defecto.tipo" severity="info" />
+                </td>
+                <td>
+                  <p-tag [value]="defecto.prioridad" [severity]="getSeveridadSeverity(defecto.prioridad)" />
+                </td>
+                <td>
+                  <p-tag [value]="defecto.estado" [severity]="getEstadoSeverity(defecto.estado)" />
+                </td>
+                <td>{{ defecto.detectadoPor }}</td>
+                <td>{{ formatDate(defecto.fechaDeteccion) }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="text-center">
+                  <div class="empty-state">
+                    <i class="pi pi-bug"></i>
+                    <p>No hay defectos registrados</p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  } @else {
+    <div class="not-found">
+      <i class="pi pi-exclamation-circle"></i>
+      <h2>Activo no encontrado</h2>
+      <p>El activo solicitado no existe o no tienes permisos para verlo.</p>
+      <p-button label="Volver a la lista" icon="pi pi-arrow-left" (onClick)="goBack()" />
+    </div>
+  }
+</div>
+
+<!-- Drawer de Configuracion de Tolerancia -->
+<p-drawer [(visible)]="showToleranceDrawer" header="Configuracion de Tolerancia" position="right" [style]="{width: '400px'}">
+  <div class="tolerance-form">
+    <div class="form-field">
+      <label for="threshold">Umbral de Incidentes</label>
+      <p-inputNumber
+        id="threshold"
+        [(ngModel)]="toleranceForm().incidentToleranceThreshold"
+        [min]="1"
+        [max]="100"
+        [showButtons]="true"
+      />
+      <small>Numero de incidentes antes de pasar a estado Critico</small>
+    </div>
+
+    <div class="form-field">
+      <label for="resetDays">Dias para Reset Automatico</label>
+      <p-inputNumber
+        id="resetDays"
+        [(ngModel)]="toleranceForm().incidentCountResetDays"
+        [min]="1"
+        [max]="730"
+        [showButtons]="true"
+      />
+      <small>Dias sin incidentes para resetear el contador automaticamente</small>
+    </div>
+
+    <div class="form-actions">
+      <p-button
+        label="Cancelar"
+        [outlined]="true"
+        (onClick)="showToleranceDrawer.set(false)"
+      />
+      <p-button
+        label="Guardar"
+        icon="pi pi-check"
+        (onClick)="saveToleranceConfig()"
+      />
+    </div>
+  </div>
+</p-drawer>

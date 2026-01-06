@@ -1,7 +1,10 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, from, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap, catchError } from 'rxjs/operators';
 import { IndexedDBService } from './indexeddb.service';
+
+const API_URL = 'http://localhost:3000/api';
 
 // Utility to simulate async delay (optional, for more realistic UX)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -11,6 +14,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 })
 export class ApiService {
   private db = inject(IndexedDBService);
+  private http = inject(HttpClient);
 
   constructor() {
     // Initialize IndexedDB on service creation
@@ -393,46 +397,41 @@ export class ApiService {
   }
 
   // ============================================================
-  // Activos de Negocio
+  // Activos de Negocio (usando Backend HTTP)
   // ============================================================
 
   getActivos(): Observable<any[]> {
-    return from(this.db.getAll<any>('activos')).pipe(
-      switchMap(async activos => {
-        const plantillas = await this.db.getAll<any>('plantillas_activo');
-        const riesgos = await this.db.getAll<any>('riesgos');
-        const incidentes = await this.db.getAll<any>('incidentes');
-        const defectos = await this.db.getAll<any>('defectos');
-
-        return activos.map(a => ({
-          ...a,
-          plantilla: plantillas.find(p => p.id === a.plantillaId),
-          _count: {
-            riesgos: riesgos.filter(r => r.activoId === a.id).length,
-            incidentes: incidentes.filter(i => i.activoId === a.id).length,
-            defectos: defectos.filter(d => d.activoId === a.id).length
-          }
-        }));
+    return this.http.get<any[]>(`${API_URL}/activos`).pipe(
+      map(activos => activos.map(a => ({
+        ...a,
+        propiedadesCustom: typeof a.propiedadesCustom === 'string'
+          ? JSON.parse(a.propiedadesCustom || '[]')
+          : (a.propiedadesCustom || []),
+        riesgos: a.riesgos || [],
+        incidentes: a.incidentes || [],
+        defectos: a.defectos || []
+      }))),
+      catchError(err => {
+        console.error('Error cargando activos desde backend:', err);
+        return of([]);
       })
     );
   }
 
   getActivoById(id: string): Observable<any> {
-    return from(this.db.get<any>('activos', id)).pipe(
-      switchMap(async activo => {
-        if (!activo) return null;
-        const plantilla = activo.plantillaId ? await this.db.get<any>('plantillas_activo', activo.plantillaId) : null;
-        const riesgos = await this.db.getAll<any>('riesgos');
-        const incidentes = await this.db.getAll<any>('incidentes');
-        const defectos = await this.db.getAll<any>('defectos');
-
-        return {
-          ...activo,
-          plantilla,
-          riesgos: riesgos.filter(r => r.activoId === activo.id),
-          incidentes: incidentes.filter(i => i.activoId === activo.id),
-          defectos: defectos.filter(d => d.activoId === activo.id)
-        };
+    return this.http.get<any>(`${API_URL}/activos/${id}`).pipe(
+      map(activo => ({
+        ...activo,
+        propiedadesCustom: typeof activo.propiedadesCustom === 'string'
+          ? JSON.parse(activo.propiedadesCustom || '[]')
+          : (activo.propiedadesCustom || []),
+        riesgos: activo.riesgos || [],
+        incidentes: activo.incidentes || [],
+        defectos: activo.defectos || []
+      })),
+      catchError(err => {
+        console.error('Error cargando activo:', err);
+        return of(null);
       })
     );
   }
@@ -440,32 +439,25 @@ export class ApiService {
   createActivo(data: any): Observable<any> {
     const activo = {
       ...data,
-      id: 'act-' + Math.random().toString(36).substring(2, 9),
-      createdAt: new Date().toISOString(),
-      propiedadesCustom: typeof data.propiedadesCustom === 'string' ? data.propiedadesCustom : JSON.stringify(data.propiedadesCustom || [])
+      propiedadesCustom: typeof data.propiedadesCustom === 'string'
+        ? data.propiedadesCustom
+        : JSON.stringify(data.propiedadesCustom || [])
     };
-    return from(this.db.add('activos', activo));
+    return this.http.post<any>(`${API_URL}/activos`, activo);
   }
 
   updateActivo(id: string, data: any): Observable<any> {
-    return from(this.db.get<any>('activos', id)).pipe(
-      switchMap(activo => {
-        if (!activo) throw new Error('Activo no encontrado');
-        const updated = {
-          ...activo,
-          ...data,
-          updatedAt: new Date().toISOString(),
-          propiedadesCustom: data.propiedadesCustom
-            ? (typeof data.propiedadesCustom === 'string' ? data.propiedadesCustom : JSON.stringify(data.propiedadesCustom))
-            : activo.propiedadesCustom
-        };
-        return from(this.db.put('activos', updated));
-      })
-    );
+    const updated = {
+      ...data,
+      propiedadesCustom: data.propiedadesCustom
+        ? (typeof data.propiedadesCustom === 'string' ? data.propiedadesCustom : JSON.stringify(data.propiedadesCustom))
+        : undefined
+    };
+    return this.http.put<any>(`${API_URL}/activos/${id}`, updated);
   }
 
   deleteActivo(id: string): Observable<void> {
-    return from(this.db.delete('activos', id));
+    return this.http.delete<void>(`${API_URL}/activos/${id}`);
   }
 
   // ============================================================
@@ -1739,5 +1731,65 @@ export class ApiService {
 
   createTaskFromEntity(data: any): Observable<any> {
     return this.createTask(data);
+  }
+
+  // ============================================================
+  // Estado de Salud de Activos (usando Backend HTTP)
+  // ============================================================
+
+  resetActivoHealth(id: string): Observable<any> {
+    return this.http.patch<any>(`${API_URL}/activos/${id}/health/reset`, {});
+  }
+
+  recalculateAllActivosHealth(): Observable<any> {
+    return this.http.post<any>(`${API_URL}/activos/health/recalculate`, {});
+  }
+
+  getHealthDiagnostic(): Observable<any> {
+    return this.http.get<any>(`${API_URL}/activos/health/diagnostic`);
+  }
+
+  // ============================================================
+  // Jerarquia de Activos (usando Backend HTTP)
+  // ============================================================
+
+  getActivoChildren(id: string): Observable<any[]> {
+    return this.http.get<any[]>(`${API_URL}/activos/${id}/children`);
+  }
+
+  getActivoParents(id: string): Observable<any[]> {
+    return this.http.get<any[]>(`${API_URL}/activos/${id}/parents`);
+  }
+
+  // ============================================================
+  // Configuracion de Tolerancia (usando Backend HTTP)
+  // ============================================================
+
+  updateActivoTolerance(id: string, config: { incidentToleranceThreshold: number; incidentCountResetDays: number }): Observable<any> {
+    return this.http.put<any>(`${API_URL}/activos/${id}/tolerance`, config);
+  }
+
+  // ============================================================
+  // Apetito de Riesgo (usando Backend HTTP)
+  // ============================================================
+
+  getRiskAppetites(): Observable<any[]> {
+    return this.http.get<any[]>(`${API_URL}/activos/risk-appetites`);
+  }
+
+  createRiskAppetite(data: any): Observable<any> {
+    return this.http.post<any>(`${API_URL}/activos/risk-appetites`, data);
+  }
+
+  assignRiskAppetite(activoId: string, riskAppetiteId: string): Observable<any> {
+    return this.http.put<any>(`${API_URL}/activos/${activoId}/risk-appetite`, { riskAppetiteId });
+  }
+
+  // ============================================================
+  // Grafo de Relaciones de Activo (usando Backend HTTP)
+  // ============================================================
+
+  getActivoGraph(id: string): Observable<any> {
+    return this.http.get<any>(`${API_URL}/activos/${id}/graph`);
   }
 }

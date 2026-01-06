@@ -6,6 +6,8 @@ export type Severidad = 'critica' | 'alta' | 'media' | 'baja';
 export type EstadoIncidente = 'abierto' | 'en_proceso' | 'resuelto' | 'cerrado';
 export type TipoDefecto = 'funcional' | 'seguridad' | 'rendimiento' | 'usabilidad';
 export type EstadoDefecto = 'nuevo' | 'confirmado' | 'en_correccion' | 'corregido' | 'verificado';
+export type HealthStatus = 'HEALTHY' | 'STRESSED' | 'CRITICAL';
+export type CategoriaRiesgo = 'bajo' | 'medio' | 'alto';
 
 // Tipos para propiedades custom de activos
 export type TipoPropiedadCustom = 'texto' | 'numero' | 'fecha' | 'booleano' | 'seleccion' | 'multiseleccion' | 'url' | 'email';
@@ -80,6 +82,27 @@ export interface Defecto {
   detectadoPor: string;
 }
 
+// Apetito de Riesgo
+export interface RiskAppetite {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  riesgoInherente: number;
+  riesgoResidual: number;
+  apetitoRiesgo: number;
+  categoriaRiesgo: CategoriaRiesgo;
+  fechaCreacion?: Date;
+}
+
+// Activo resumido para jerarquía
+export interface ActivoResumen {
+  id: string;
+  nombre: string;
+  tipo: TipoActivo;
+  criticidad?: Criticidad;
+  healthStatus?: HealthStatus;
+}
+
 export interface Activo {
   id: string;
   nombre: string;
@@ -94,7 +117,25 @@ export interface Activo {
   defectos: Defecto[];
   // Propiedades custom basadas en plantilla
   plantillaId?: string;
+  plantilla?: PlantillaActivo;
   propiedadesCustom?: PropiedadCustomValor[];
+  // Estado de Salud
+  incidentToleranceThreshold?: number;
+  currentIncidentCount?: number;
+  healthStatus?: HealthStatus;
+  lastIncidentDate?: Date;
+  requiresImmediateAttention?: boolean;
+  incidentCountResetDays?: number;
+  // Valor y Estado
+  assetValue?: number;
+  isActive?: boolean;
+  // Jerarquía
+  parentAssetId?: string;
+  parentAsset?: ActivoResumen;
+  childAssets?: ActivoResumen[];
+  // Apetito de Riesgo
+  riskAppetiteId?: string;
+  riskAppetite?: RiskAppetite;
 }
 
 export interface NodoOrganigrama {
@@ -114,4 +155,47 @@ export interface Organigrama {
   descripcion: string;
   fechaCreacion: Date;
   raiz: NodoOrganigrama;
+}
+
+// Grafo de relaciones de activo
+export interface ActivoGraphNode {
+  id: string;
+  label: string;
+  type: 'activo' | 'activo-padre' | 'activo-hijo' | 'riesgo' | 'incidente' | 'defecto';
+  data: any;
+}
+
+export interface ActivoGraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  label: string;
+}
+
+export interface ActivoGraph {
+  nodes: ActivoGraphNode[];
+  edges: ActivoGraphEdge[];
+}
+
+// Diagnóstico de salud
+export interface HealthDiagnostic {
+  summary: {
+    HEALTHY: number;
+    STRESSED: number;
+    CRITICAL: number;
+  };
+  criticalAssets: Array<{
+    id: string;
+    nombre: string;
+    currentIncidentCount: number;
+    incidentToleranceThreshold: number;
+    lastIncidentDate?: Date;
+  }>;
+  attentionRequired: number;
+}
+
+// Configuración de tolerancia
+export interface ToleranceConfig {
+  incidentToleranceThreshold: number;
+  incidentCountResetDays: number;
 }

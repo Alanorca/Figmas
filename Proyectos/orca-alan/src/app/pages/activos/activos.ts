@@ -1,4 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { CardModule } from 'primeng/card';
@@ -35,6 +36,7 @@ import { Activo, TipoActivo, Criticidad } from '../../models';
 })
 export class ActivosComponent implements OnInit {
   private api = inject(ApiService);
+  private router = inject(Router);
 
   activos = signal<Activo[]>([]);
 
@@ -134,10 +136,15 @@ export class ActivosComponent implements OnInit {
     this.showDetailDialog.set(true);
   }
 
+  navigateToDetail(activo: Activo): void {
+    this.router.navigate(['/activos', activo.id, 'detalle']);
+  }
+
   getMenuItemsActivo(activo: Activo): MenuItem[] {
     return [
-      { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.viewDetail(activo) },
-      { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(activo) },
+      { label: 'Ver detalle completo', icon: 'pi pi-external-link', command: () => this.navigateToDetail(activo) },
+      { label: 'Ver resumen', icon: 'pi pi-eye', command: () => this.viewDetail(activo) },
+      { label: 'Edicion rapida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(activo) },
       { separator: true },
       { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.eliminarActivo(activo) }
     ];

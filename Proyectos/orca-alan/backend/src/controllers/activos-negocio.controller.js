@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const assetHealthService = require('../services/asset-health.service');
 
 // ==================== PLANTILLAS ====================
 
@@ -146,7 +147,14 @@ const getActivoById = async (req, res) => {
         plantilla: true,
         riesgos: true,
         incidentes: true,
-        defectos: true
+        defectos: true,
+        riskAppetite: true,
+        parentAsset: {
+          select: { id: true, nombre: true, tipo: true, criticidad: true }
+        },
+        childAssets: {
+          select: { id: true, nombre: true, tipo: true, criticidad: true, healthStatus: true }
+        }
       }
     });
 
@@ -480,6 +488,310 @@ const deleteDefecto = async (req, res) => {
   }
 };
 
+// ==================== ESTADO DE SALUD ====================
+
+const resetActivoHealth = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const activo = await assetHealthService.resetIncidentCount(id);
+    res.json(activo);
+  } catch (error) {
+    console.error('Error al resetear salud del activo:', error);
+    res.status(500).json({ error: 'Error al resetear salud del activo' });
+  }
+};
+
+const recalculateAllHealth = async (req, res) => {
+  try {
+    const result = await assetHealthService.recalculateAllHealth();
+    res.json(result);
+  } catch (error) {
+    console.error('Error al recalcular salud de activos:', error);
+    res.status(500).json({ error: 'Error al recalcular salud de activos' });
+  }
+};
+
+const getHealthDiagnostic = async (req, res) => {
+  try {
+    const diagnostic = await assetHealthService.getHealthDiagnostic();
+    res.json(diagnostic);
+  } catch (error) {
+    console.error('Error al obtener diagnóstico de salud:', error);
+    res.status(500).json({ error: 'Error al obtener diagnóstico de salud' });
+  }
+};
+
+// ==================== JERARQUÍA DE ACTIVOS ====================
+
+const getActivoChildren = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const children = await prisma.activo.findMany({
+      where: { parentAssetId: id },
+      select: {
+        id: true,
+        nombre: true,
+        tipo: true,
+        criticidad: true,
+        healthStatus: true,
+        isActive: true,
+        _count: {
+          select: { childAssets: true, riesgos: true, incidentes: true }
+        }
+      },
+      orderBy: { nombre: 'asc' }
+    });
+
+    res.json(children);
+  } catch (error) {
+    console.error('Error al obtener hijos del activo:', error);
+    res.status(500).json({ error: 'Error al obtener hijos del activo' });
+  }
+};
+
+const getActivoParents = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Obtener cadena de ancestros
+    const parents = [];
+    let currentId = id;
+
+    while (currentId) {
+      const activo = await prisma.activo.findUnique({
+        where: { id: currentId },
+        select: {
+          id: true,
+          nombre: true,
+          tipo: true,
+          parentAssetId: true
+        }
+      });
+
+      if (!activo || !activo.parentAssetId) break;
+
+      const parent = await prisma.activo.findUnique({
+        where: { id: activo.parentAssetId },
+        select: {
+          id: true,
+          nombre: true,
+          tipo: true,
+          criticidad: true,
+          parentAssetId: true
+        }
+      });
+
+      if (parent) {
+        parents.push(parent);
+        currentId = parent.id;
+      } else {
+        break;
+      }
+    }
+
+    res.json(parents.reverse()); // Ordenar desde la raíz hacia abajo
+  } catch (error) {
+    console.error('Error al obtener padres del activo:', error);
+    res.status(500).json({ error: 'Error al obtener padres del activo' });
+  }
+};
+
+// ==================== CONFIGURACIÓN DE TOLERANCIA ====================
+
+const updateActivoTolerance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { incidentToleranceThreshold, incidentCountResetDays } = req.body;
+
+    const activo = await prisma.activo.update({
+      where: { id },
+      data: {
+        incidentToleranceThreshold,
+        incidentCountResetDays
+      }
+    });
+
+    // Recalcular estado de salud con nuevo umbral
+    const updatedActivo = await assetHealthService.updateAssetHealth(id);
+
+    res.json(updatedActivo);
+  } catch (error) {
+    console.error('Error al actualizar tolerancia del activo:', error);
+    res.status(500).json({ error: 'Error al actualizar tolerancia del activo' });
+  }
+};
+
+// ==================== APETITO DE RIESGO ====================
+
+const getRiskAppetites = async (req, res) => {
+  try {
+    const appetites = await prisma.riskAppetite.findMany({
+      orderBy: { nombre: 'asc' }
+    });
+    res.json(appetites);
+  } catch (error) {
+    console.error('Error al obtener apetitos de riesgo:', error);
+    res.status(500).json({ error: 'Error al obtener apetitos de riesgo' });
+  }
+};
+
+const createRiskAppetite = async (req, res) => {
+  try {
+    const { nombre, descripcion, riesgoInherente, riesgoResidual, apetitoRiesgo, categoriaRiesgo } = req.body;
+
+    const appetite = await prisma.riskAppetite.create({
+      data: {
+        nombre,
+        descripcion,
+        riesgoInherente,
+        riesgoResidual,
+        apetitoRiesgo,
+        categoriaRiesgo
+      }
+    });
+
+    res.status(201).json(appetite);
+  } catch (error) {
+    console.error('Error al crear apetito de riesgo:', error);
+    res.status(500).json({ error: 'Error al crear apetito de riesgo' });
+  }
+};
+
+const assignRiskAppetite = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { riskAppetiteId } = req.body;
+
+    const activo = await prisma.activo.update({
+      where: { id },
+      data: { riskAppetiteId },
+      include: { riskAppetite: true }
+    });
+
+    res.json(activo);
+  } catch (error) {
+    console.error('Error al asignar apetito de riesgo:', error);
+    res.status(500).json({ error: 'Error al asignar apetito de riesgo' });
+  }
+};
+
+// ==================== DATOS PARA GRAFO ====================
+
+const getActivoGraph = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const activo = await prisma.activo.findUnique({
+      where: { id },
+      include: {
+        riesgos: { select: { id: true, descripcion: true, probabilidad: true, impacto: true, estado: true } },
+        incidentes: { select: { id: true, titulo: true, severidad: true, estado: true } },
+        defectos: { select: { id: true, titulo: true, tipo: true, prioridad: true, estado: true } },
+        parentAsset: { select: { id: true, nombre: true, tipo: true } },
+        childAssets: { select: { id: true, nombre: true, tipo: true, healthStatus: true } }
+      }
+    });
+
+    if (!activo) {
+      return res.status(404).json({ error: 'Activo no encontrado' });
+    }
+
+    // Construir nodos
+    const nodes = [
+      { id: activo.id, label: activo.nombre, type: 'activo', data: activo }
+    ];
+
+    // Agregar nodo padre si existe
+    if (activo.parentAsset) {
+      nodes.push({
+        id: activo.parentAsset.id,
+        label: activo.parentAsset.nombre,
+        type: 'activo-padre',
+        data: activo.parentAsset
+      });
+    }
+
+    // Agregar nodos hijos
+    activo.childAssets.forEach(child => {
+      nodes.push({
+        id: child.id,
+        label: child.nombre,
+        type: 'activo-hijo',
+        data: child
+      });
+    });
+
+    // Agregar nodos de riesgos
+    activo.riesgos.forEach(riesgo => {
+      nodes.push({
+        id: riesgo.id,
+        label: riesgo.descripcion.substring(0, 30) + '...',
+        type: 'riesgo',
+        data: riesgo
+      });
+    });
+
+    // Agregar nodos de incidentes
+    activo.incidentes.forEach(incidente => {
+      nodes.push({
+        id: incidente.id,
+        label: incidente.titulo,
+        type: 'incidente',
+        data: incidente
+      });
+    });
+
+    // Construir edges
+    const edges = [];
+
+    // Edge del padre al activo
+    if (activo.parentAsset) {
+      edges.push({
+        id: `${activo.parentAsset.id}-${activo.id}`,
+        source: activo.parentAsset.id,
+        target: activo.id,
+        label: 'padre de'
+      });
+    }
+
+    // Edges del activo a hijos
+    activo.childAssets.forEach(child => {
+      edges.push({
+        id: `${activo.id}-${child.id}`,
+        source: activo.id,
+        target: child.id,
+        label: 'contiene'
+      });
+    });
+
+    // Edges a riesgos
+    activo.riesgos.forEach(riesgo => {
+      edges.push({
+        id: `${activo.id}-${riesgo.id}`,
+        source: activo.id,
+        target: riesgo.id,
+        label: 'tiene riesgo'
+      });
+    });
+
+    // Edges a incidentes
+    activo.incidentes.forEach(incidente => {
+      edges.push({
+        id: `${activo.id}-${incidente.id}`,
+        source: activo.id,
+        target: incidente.id,
+        label: 'tiene incidente'
+      });
+    });
+
+    res.json({ nodes, edges });
+  } catch (error) {
+    console.error('Error al obtener grafo del activo:', error);
+    res.status(500).json({ error: 'Error al obtener grafo del activo' });
+  }
+};
+
 module.exports = {
   // Plantillas
   getPlantillas,
@@ -506,5 +818,20 @@ module.exports = {
   getDefectos,
   createDefecto,
   updateDefecto,
-  deleteDefecto
+  deleteDefecto,
+  // Estado de Salud
+  resetActivoHealth,
+  recalculateAllHealth,
+  getHealthDiagnostic,
+  // Jerarquía
+  getActivoChildren,
+  getActivoParents,
+  // Tolerancia
+  updateActivoTolerance,
+  // Apetito de Riesgo
+  getRiskAppetites,
+  createRiskAppetite,
+  assignRiskAppetite,
+  // Grafo
+  getActivoGraph
 };
