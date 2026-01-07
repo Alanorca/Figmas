@@ -321,6 +321,18 @@ export class DashboardCustomizableComponent implements OnInit {
   // Filtros activos para cascada (señales para actualización dinámica)
   graficaFiltrosCascada = signal<{ campo: string; valor: string }[]>([]);
 
+  // Filtro activo para sincronización entre widgets
+  graficaInteractivaFiltroActivo = signal<FiltroGrafica | null>(null);
+
+  // Signals para drawer de drill-down
+  showDrillDownDrawer = signal(false);
+  drillDownData = signal<{
+    categoria: string;
+    campo: string;
+    widget: DashboardWidget;
+    registros: ProcesoKPIResumen[];
+  } | null>(null);
+
   // Campos disponibles con conteo dinámico de items
   graficaInteractivaCamposDisponibles = computed(() => {
     const procesos = this.procesosResumen();
@@ -499,20 +511,189 @@ export class DashboardCustomizableComponent implements OnInit {
   }
 
   // Handler para click en data point de gráficas interactivas
-  onGraficaInteractivaDataPointClick(event: { categoria: string; valor: number; serie?: string }): void {
-    console.log('Data point clicked en gráfica interactiva:', event);
-    // Se podría implementar drill-down o filtrado
+  onGraficaInteractivaDataPointClick(event: { categoria: string; valor: number; serie?: string }, widget: DashboardWidget): void {
+    console.log('Data point clicked en gráfica interactiva:', event, 'Widget:', widget.id);
+    // Abrir drawer de detalles con los registros de esa categoría
+    this.abrirDrillDownDetalles(event.categoria, widget.config.graficaAgrupacion || 'estado', widget);
   }
 
   // Handler para click en leyenda de gráficas interactivas
-  onGraficaInteractivaLegendClick(event: { serie: string; visible: boolean }): void {
-    console.log('Legend clicked en gráfica interactiva:', event);
+  onGraficaInteractivaLegendClick(event: { serie: string; visible: boolean }, widget: DashboardWidget): void {
+    console.log('Legend clicked en gráfica interactiva:', event, 'Widget:', widget.id);
+    // La visibilidad de la serie se maneja internamente en el componente
   }
 
   // Handler para filtro aplicado desde gráficas interactivas
-  onGraficaInteractivaFiltroAplicado(filtro: FiltroGrafica | null): void {
-    console.log('Filtro aplicado desde gráfica interactiva:', filtro);
-    // Se podría usar para filtrar otros widgets
+  onGraficaInteractivaFiltroAplicado(filtro: FiltroGrafica | null, widget: DashboardWidget): void {
+    console.log('Filtro aplicado desde gráfica interactiva:', filtro, 'Widget:', widget.id);
+    // Sincronizar filtro con otros widgets del dashboard
+    if (filtro) {
+      this.sincronizarFiltroEnWidgets(filtro, widget.id);
+    }
+  }
+
+  // Handler para drill-down desde gráficas interactivas
+  onGraficaInteractivaDrillDown(event: { tipo: string; categoria: string; campo: string; filtro?: FiltroGrafica }, widget: DashboardWidget): void {
+    console.log('Drill-down en gráfica interactiva:', event, 'Widget:', widget.id);
+
+    switch (event.tipo) {
+      case 'detalle':
+        // Abrir drawer con detalles del elemento
+        this.abrirDrillDownDetalles(event.categoria, event.campo, widget);
+        break;
+      case 'desglose':
+        // Cambiar agrupación del widget a un campo más detallado
+        widget.config.graficaAgrupacion = event.campo;
+        this.dashboardService.actualizarWidget(widget.id, { config: widget.config });
+        break;
+      case 'filtro':
+        // Aplicar filtro al widget
+        if (event.filtro) {
+          this.sincronizarFiltroEnWidgets(event.filtro, widget.id);
+        }
+        break;
+    }
+  }
+
+  // Handler para exportar segmento desde gráficas interactivas
+  onGraficaInteractivaExportSegment(event: { categoria: string; valor: number }, widget: DashboardWidget): void {
+    console.log('Exportar segmento desde gráfica interactiva:', event, 'Widget:', widget.id);
+
+    // Filtrar datos por la categoría seleccionada y exportar
+    const campo = widget.config.graficaAgrupacion || 'estado';
+    const datosFiltrados = this.procesosResumen().filter(p => {
+      const valorCampo = this.obtenerValorCampo(p, campo);
+      return valorCampo === event.categoria;
+    });
+
+    if (datosFiltrados.length > 0) {
+      const exportData: TableExportData = {
+        headers: ['Proceso', 'Estado', 'Cumplimiento', 'Objetivos', 'KPIs'],
+        rows: datosFiltrados.map(p => [
+          p.procesoNombre,
+          p.estado,
+          `${p.cumplimientoPromedio}%`,
+          `${p.totalObjetivos}`,
+          `${p.totalKPIs}`
+        ]),
+        title: `${widget.titulo} - ${event.categoria}`
+      };
+
+      this.exportService.exportAsExcel(exportData);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Exportación exitosa',
+        detail: `Se exportaron ${datosFiltrados.length} registros de "${event.categoria}"`
+      });
+    }
+  }
+
+  // Handler para crear alerta desde gráficas interactivas
+  onGraficaInteractivaCreateAlert(event: { categoria: string; valor: number; campo: string }, widget: DashboardWidget): void {
+    console.log('Crear alerta desde gráfica interactiva:', event, 'Widget:', widget.id);
+
+    // Mostrar mensaje informativo (la funcionalidad de alertas se puede expandir)
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Crear Alerta',
+      detail: `Alerta configurada para "${event.campo}" cuando "${event.categoria}" supere ${event.valor}`,
+      life: 5000
+    });
+  }
+
+  // Método auxiliar para abrir drawer de drill-down con detalles
+  private abrirDrillDownDetalles(categoria: string, campo: string, widget: DashboardWidget): void {
+    // Filtrar procesos por la categoría seleccionada
+    const registrosFiltrados = this.procesosResumen().filter(p => {
+      const valorCampo = this.obtenerValorCampo(p, campo);
+      return valorCampo === categoria;
+    });
+
+    if (registrosFiltrados.length > 0) {
+      // Almacenar datos para el drawer
+      this.drillDownData.set({
+        categoria,
+        campo,
+        widget,
+        registros: registrosFiltrados
+      });
+      this.showDrillDownDrawer.set(true);
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin datos',
+        detail: `No se encontraron registros para "${categoria}"`
+      });
+    }
+  }
+
+  // Método auxiliar para obtener valor de un campo de proceso
+  private obtenerValorCampo(proceso: ProcesoKPIResumen, campo: string): string {
+    switch (campo) {
+      case 'estado': return proceso.estado;
+      case 'cumplimiento':
+        const cumpl = proceso.cumplimientoPromedio;
+        if (cumpl >= 90) return '90-100%';
+        if (cumpl >= 70) return '70-89%';
+        if (cumpl >= 50) return '50-69%';
+        return '<50%';
+      case 'alertas':
+        const alertas = proceso.alertasActivas;
+        if (alertas === 0) return 'Sin alertas';
+        if (alertas <= 2) return '1-2 alertas';
+        if (alertas <= 5) return '3-5 alertas';
+        return '>5 alertas';
+      case 'tendencia':
+        return proceso.tendencia === 'up' ? 'Mejorando' : proceso.tendencia === 'down' ? 'Declinando' : 'Estable';
+      case 'objetivos':
+        return `${proceso.totalObjetivos} objetivos`;
+      case 'kpis':
+        const kpis = proceso.totalKPIs;
+        if (kpis <= 5) return '1-5 KPIs';
+        if (kpis <= 10) return '6-10 KPIs';
+        return '>10 KPIs';
+      default: return proceso.procesoNombre || 'N/A';
+    }
+  }
+
+  // Método para sincronizar filtro con otros widgets de gráficas
+  private sincronizarFiltroEnWidgets(filtro: FiltroGrafica, widgetOrigenId: string): void {
+    // Actualizar el filtro global para que otros widgets lo usen
+    this.graficaInteractivaFiltroActivo.set(filtro);
+
+    // Notificar al usuario
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Filtro aplicado',
+      detail: `Filtrando por ${filtro.campo}: "${filtro.valor}"`,
+      life: 3000
+    });
+  }
+
+  // Método para exportar datos del drill-down a Excel
+  exportarDrillDownData(): void {
+    const data = this.drillDownData();
+    if (!data) return;
+
+    const exportData: TableExportData = {
+      headers: ['Proceso', 'Estado', 'Cumplimiento', 'Objetivos', 'KPIs', 'Alertas'],
+      rows: data.registros.map(p => [
+        p.procesoNombre,
+        p.estado,
+        `${p.cumplimientoPromedio}%`,
+        `${p.totalObjetivos}`,
+        `${p.totalKPIs}`,
+        `${p.alertasActivas}`
+      ]),
+      title: `${data.widget.titulo} - ${data.categoria}`
+    };
+
+    this.exportService.exportAsExcel(exportData);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Exportación exitosa',
+      detail: `Se exportaron ${data.registros.length} registros`
+    });
   }
 
   /** Obtiene datos de gráfica desde el cache (preferido) o genera si no existe */
@@ -1913,7 +2094,7 @@ export class DashboardCustomizableComponent implements OnInit {
   respuestaAsistenteGrafica = signal('');
   recomendacionTipoGrafica = signal('');
 
-  // Tipos de gráfica agrupados para el select
+  // Tipos de gráfica agrupados para el select (43 tipos como en graficas-interactivas)
   tiposGraficaOptions = [
     {
       label: 'Circulares',
@@ -1921,7 +2102,8 @@ export class DashboardCustomizableComponent implements OnInit {
         { label: 'Pie', value: 'pie', icon: 'pi pi-chart-pie' },
         { label: 'Dona', value: 'donut', icon: 'pi pi-circle' },
         { label: 'Radial Bar', value: 'radialBar', icon: 'pi pi-spinner' },
-        { label: 'Polar Area', value: 'polarArea', icon: 'pi pi-sun' }
+        { label: 'Polar Area', value: 'polarArea', icon: 'pi pi-sun' },
+        { label: 'Velocímetro', value: 'gauge', icon: 'pi pi-gauge' }
       ]
     },
     {
@@ -1930,7 +2112,9 @@ export class DashboardCustomizableComponent implements OnInit {
         { label: 'Barras Horizontal', value: 'bar', icon: 'pi pi-chart-bar' },
         { label: 'Columnas', value: 'column', icon: 'pi pi-align-justify' },
         { label: 'Barras Apiladas', value: 'stackedBar', icon: 'pi pi-server' },
-        { label: 'Barras Agrupadas', value: 'groupedBar', icon: 'pi pi-th-large' }
+        { label: 'Barras H. Apiladas', value: 'stackedBarHorizontal', icon: 'pi pi-align-left' },
+        { label: 'Barras Agrupadas', value: 'groupedBar', icon: 'pi pi-th-large' },
+        { label: 'Combo (Barras + Línea)', value: 'combo', icon: 'pi pi-sliders-h' }
       ]
     },
     {
@@ -1938,6 +2122,7 @@ export class DashboardCustomizableComponent implements OnInit {
       items: [
         { label: 'Línea', value: 'line', icon: 'pi pi-chart-line' },
         { label: 'Área', value: 'area', icon: 'pi pi-stop' },
+        { label: 'Áreas Apiladas', value: 'stackedArea', icon: 'pi pi-bars' },
         { label: 'Stepline', value: 'stepline', icon: 'pi pi-sort-amount-down' },
         { label: 'Spline', value: 'spline', icon: 'pi pi-wave-pulse' }
       ]
@@ -1946,16 +2131,36 @@ export class DashboardCustomizableComponent implements OnInit {
       label: 'Avanzadas',
       items: [
         { label: 'Radar', value: 'radar', icon: 'pi pi-compass' },
-        { label: 'Scatter', value: 'scatter', icon: 'pi pi-stop-circle' },
+        { label: 'Dispersión', value: 'scatter', icon: 'pi pi-stop-circle' },
+        { label: 'Burbujas', value: 'bubble', icon: 'pi pi-circle' },
         { label: 'Heatmap', value: 'heatmap', icon: 'pi pi-table' },
-        { label: 'Treemap', value: 'treemap', icon: 'pi pi-objects-column' }
+        { label: 'Treemap', value: 'treemap', icon: 'pi pi-objects-column' },
+        { label: 'Sunburst', value: 'sunburst', icon: 'pi pi-sun' }
       ]
     },
     {
-      label: 'Embudo',
+      label: 'Flujo / Embudo',
       items: [
-        { label: 'Funnel', value: 'funnel', icon: 'pi pi-filter' },
-        { label: 'Pirámide', value: 'pyramid', icon: 'pi pi-sort-amount-up' }
+        { label: 'Embudo', value: 'funnel', icon: 'pi pi-filter' },
+        { label: 'Pirámide', value: 'pyramid', icon: 'pi pi-sort-amount-up' },
+        { label: 'Sankey', value: 'sankey', icon: 'pi pi-share-alt' },
+        { label: 'Cascada', value: 'waterfall', icon: 'pi pi-arrow-down-left' }
+      ]
+    },
+    {
+      label: 'Estadísticas',
+      items: [
+        { label: 'Boxplot', value: 'boxplot', icon: 'pi pi-minus' },
+        { label: 'Bullet', value: 'bullet', icon: 'pi pi-arrow-right' },
+        { label: 'Dumbbell', value: 'dumbbell', icon: 'pi pi-arrows-h' },
+        { label: 'Regresión', value: 'regression', icon: 'pi pi-chart-line' }
+      ]
+    },
+    {
+      label: 'Matrices',
+      items: [
+        { label: 'Mapa de Riesgos', value: 'riskMatrix', icon: 'pi pi-th-large' },
+        { label: 'Matriz Correlación', value: 'correlationMatrix', icon: 'pi pi-table' }
       ]
     },
     {
@@ -1990,24 +2195,46 @@ export class DashboardCustomizableComponent implements OnInit {
   /** Obtiene descripción del tipo de gráfica */
   getGraficaTipoDescripcion(tipo: string): string {
     const descripciones: Record<string, string> = {
+      // Circulares
       'pie': 'Gráfica circular para mostrar proporciones de un todo',
       'donut': 'Similar al pie pero con espacio central para información adicional',
       'radialBar': 'Barras circulares ideales para mostrar progreso o porcentajes',
       'polarArea': 'Combina características de pie y radar para comparaciones',
+      'gauge': 'Velocímetro circular para mostrar un valor dentro de un rango (KPIs)',
+      // Barras
       'bar': 'Barras horizontales para comparar categorías',
       'column': 'Barras verticales ideales para series temporales',
       'stackedBar': 'Muestra composición y comparación simultáneamente',
+      'stackedBarHorizontal': 'Barras horizontales apiladas para composición con etiquetas largas',
       'groupedBar': 'Compara múltiples series lado a lado',
+      'combo': 'Combina barras y línea de tendencia en una sola gráfica',
+      // Líneas
       'line': 'Muestra tendencias y cambios a lo largo del tiempo',
       'area': 'Similar a línea pero enfatiza el volumen bajo la curva',
+      'stackedArea': 'Áreas apiladas que muestran contribución de cada serie al total',
       'stepline': 'Línea escalonada para datos discretos',
       'spline': 'Línea suavizada para tendencias continuas',
+      // Avanzadas
       'radar': 'Compara múltiples variables en ejes radiales',
       'scatter': 'Muestra correlación entre dos variables',
+      'bubble': 'Dispersión con tamaño variable para 3 dimensiones de datos',
       'heatmap': 'Visualiza densidad o intensidad en una matriz',
       'treemap': 'Muestra jerarquías y proporciones con rectángulos',
+      'sunburst': 'Gráfica radial jerárquica con anillos concéntricos',
+      // Flujo/Embudo
       'funnel': 'Visualiza etapas de un proceso con reducción',
       'pyramid': 'Similar al funnel pero simétrico',
+      'sankey': 'Diagrama de flujo para visualizar transferencias entre categorías',
+      'waterfall': 'Muestra efecto acumulativo de valores positivos y negativos',
+      // Estadísticas
+      'boxplot': 'Diagrama de caja y bigotes para distribución estadística',
+      'bullet': 'Progreso hacia un objetivo comparado con meta',
+      'dumbbell': 'Compara dos valores por categoría (antes/después)',
+      'regression': 'Línea de tendencia con análisis de regresión estadística',
+      // Matrices
+      'riskMatrix': 'Matriz de probabilidad vs impacto para análisis de riesgos',
+      'correlationMatrix': 'Muestra correlaciones entre múltiples variables',
+      // IA/Predictivo
       'trendline': 'Línea con análisis de tendencia integrado',
       'forecast': 'Proyección predictiva basada en datos históricos',
       'rangeArea': 'Muestra rangos de valores con área sombreada'

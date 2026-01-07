@@ -756,17 +756,55 @@
               optionValue="value"
               [style]="{ width: '100%' }" />
           </div>
-          <div class="field">
-            <label>{{ filtroTemp().operador === 'entre' ? 'Valor mínimo' : 'Valor' }}</label>
-            <p-inputNumber
-              [(ngModel)]="filtroTemp().valor"
-              [style]="{ width: '100%' }" />
-          </div>
+
+          <!-- Slider de rango doble para operador "entre" -->
           @if (filtroTemp().operador === 'entre') {
+            <div class="field slider-rango-container">
+              <label>Seleccionar rango</label>
+              <div class="slider-valores">
+                <span class="slider-valor-min">{{ rangoSliderNumerico()[0] }}</span>
+                <span class="slider-valor-max">{{ rangoSliderNumerico()[1] }}</span>
+              </div>
+              <p-slider
+                [(ngModel)]="rangoSliderNumerico"
+                [range]="true"
+                [min]="rangoColumnaActual().min"
+                [max]="rangoColumnaActual().max"
+                [step]="rangoColumnaActual().step"
+                (ngModelChange)="onSliderRangoChange($event)"
+                styleClass="slider-rango-doble" />
+              <div class="slider-limites">
+                <span>Mín: {{ rangoColumnaActual().min }}</span>
+                <span>Máx: {{ rangoColumnaActual().max }}</span>
+              </div>
+            </div>
+            <div class="field valores-exactos">
+              <div class="grid">
+                <div class="col-6">
+                  <label>Desde</label>
+                  <p-inputNumber
+                    [(ngModel)]="filtroTemp().valor"
+                    [min]="rangoColumnaActual().min"
+                    [max]="rangoColumnaActual().max"
+                    [style]="{ width: '100%' }"
+                    (ngModelChange)="rangoSliderNumerico.set([$event, rangoSliderNumerico()[1]])" />
+                </div>
+                <div class="col-6">
+                  <label>Hasta</label>
+                  <p-inputNumber
+                    [(ngModel)]="filtroTemp().valorHasta"
+                    [min]="rangoColumnaActual().min"
+                    [max]="rangoColumnaActual().max"
+                    [style]="{ width: '100%' }"
+                    (ngModelChange)="rangoSliderNumerico.set([rangoSliderNumerico()[0], $event])" />
+                </div>
+              </div>
+            </div>
+          } @else {
             <div class="field">
-              <label>Valor máximo</label>
+              <label>Valor</label>
               <p-inputNumber
-                [(ngModel)]="filtroTemp().valorHasta"
+                [(ngModel)]="filtroTemp().valor"
                 [style]="{ width: '100%' }" />
             </div>
           }
@@ -1048,6 +1086,150 @@
       <div class="detalle-section">
         <h4><i class="pi pi-align-left mr-2"></i>Descripción</h4>
         <p class="descripcion-texto">{{ registro.descripcion }}</p>
+      </div>
+
+      <p-divider />
+
+      <!-- Sistema de Comentarios -->
+      <div class="detalle-section comentarios-section">
+        <div class="comentarios-header">
+          <h4 (click)="mostrandoComentarios.set(!mostrandoComentarios())">
+            <i class="pi pi-comments mr-2"></i>
+            Comentarios ({{ comentariosRegistro().length }})
+            <i [class]="mostrandoComentarios() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="toggle-icon"></i>
+          </h4>
+        </div>
+
+        @if (mostrandoComentarios()) {
+          <!-- Input para nuevo comentario -->
+          <div class="nuevo-comentario">
+            <div class="comentario-input-wrapper">
+              <input
+                pInputText
+                [ngModel]="nuevoComentario()"
+                (ngModelChange)="nuevoComentario.set($event)"
+                placeholder="Escribe un comentario..."
+                (keyup.enter)="agregarComentario()"
+                class="w-full" />
+              <p-button
+                icon="pi pi-send"
+                [rounded]="true"
+                size="small"
+                [disabled]="!nuevoComentario().trim()"
+                (onClick)="agregarComentario()"
+                pTooltip="Enviar comentario" />
+            </div>
+          </div>
+
+          <!-- Lista de comentarios -->
+          <div class="comentarios-lista">
+            @if (comentariosRegistro().length === 0) {
+              <div class="no-comentarios">
+                <i class="pi pi-comment"></i>
+                <span>No hay comentarios aún</span>
+              </div>
+            } @else {
+              @for (comentario of comentariosRegistro(); track comentario.id) {
+                <div class="comentario-item">
+                  <div class="comentario-avatar">
+                    <i class="pi pi-user"></i>
+                  </div>
+                  <div class="comentario-contenido">
+                    <div class="comentario-meta">
+                      <span class="comentario-autor">{{ comentario.autor }}</span>
+                      <span class="comentario-fecha">{{ formatearFechaComentario(comentario.fecha) }}</span>
+                      @if (comentario.editado) {
+                        <span class="comentario-editado">(editado)</span>
+                      }
+                    </div>
+
+                    @if (comentarioEditandoId() === comentario.id) {
+                      <!-- Modo edición -->
+                      <div class="comentario-edicion">
+                        <input
+                          pInputText
+                          [ngModel]="comentarioEditandoTexto()"
+                          (ngModelChange)="comentarioEditandoTexto.set($event)"
+                          (keyup.enter)="guardarEdicionComentario()"
+                          (keyup.escape)="cancelarEdicionComentario()"
+                          class="w-full" />
+                        <div class="comentario-edicion-actions">
+                          <p-button
+                            icon="pi pi-check"
+                            size="small"
+                            severity="success"
+                            [text]="true"
+                            (onClick)="guardarEdicionComentario()" />
+                          <p-button
+                            icon="pi pi-times"
+                            size="small"
+                            severity="secondary"
+                            [text]="true"
+                            (onClick)="cancelarEdicionComentario()" />
+                        </div>
+                      </div>
+                    } @else {
+                      <!-- Modo vista -->
+                      <p class="comentario-texto">{{ comentario.texto }}</p>
+                      <div class="comentario-acciones">
+                        <button class="comentario-btn" (click)="iniciarEdicionComentario(comentario)" pTooltip="Editar">
+                          <i class="pi pi-pencil"></i>
+                        </button>
+                        <button class="comentario-btn eliminar" (click)="eliminarComentario(comentario.id)" pTooltip="Eliminar">
+                          <i class="pi pi-trash"></i>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      <p-divider />
+
+      <!-- Historial de Cambios Inline -->
+      <div class="detalle-section historial-section">
+        <div class="historial-header">
+          <h4 (click)="mostrandoHistorial.set(!mostrandoHistorial())">
+            <i class="pi pi-history mr-2"></i>
+            Historial de Cambios ({{ historialInline().length }})
+            <i [class]="mostrandoHistorial() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="toggle-icon"></i>
+          </h4>
+        </div>
+
+        @if (mostrandoHistorial()) {
+          <div class="historial-timeline">
+            @for (item of historialInline(); track $index) {
+              <div class="historial-item">
+                <div class="historial-icono" [style.color]="getHistorialColor(item.accion)">
+                  <i [class]="getHistorialIcon(item.accion)"></i>
+                </div>
+                <div class="historial-contenido">
+                  <div class="historial-accion-row">
+                    <span class="historial-accion">{{ item.accion }}</span>
+                    <span class="historial-fecha">{{ formatearFechaComentario(item.fecha) }}</span>
+                  </div>
+                  <div class="historial-detalles">{{ item.detalles }}</div>
+                  <div class="historial-usuario">
+                    <i class="pi pi-user"></i>
+                    {{ item.usuario }}
+                  </div>
+                  @if (item.campo && item.valorAnterior !== undefined) {
+                    <div class="historial-cambio">
+                      <span class="cambio-campo">{{ item.campo }}:</span>
+                      <span class="cambio-anterior">{{ item.valorAnterior }}</span>
+                      <i class="pi pi-arrow-right"></i>
+                      <span class="cambio-nuevo">{{ item.valorNuevo }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
       </div>
     </div>
 

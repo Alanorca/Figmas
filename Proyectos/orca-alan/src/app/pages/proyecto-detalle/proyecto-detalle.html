@@ -560,6 +560,14 @@
                               size="small"
                               pTooltip="Editar"
                               (onClick)="abrirFormularioEditarTarea(task)" />
+                            <p-button
+                              icon="pi pi-trash"
+                              [rounded]="true"
+                              [text]="true"
+                              severity="danger"
+                              size="small"
+                              pTooltip="Eliminar"
+                              (onClick)="confirmarEliminarTarea(task)" />
                           </div>
                         </td>
                       </tr>
@@ -791,7 +799,7 @@
           </div>
         </p-tabpanel>
 
-        <!-- Objetivos y KPIs Tab (replicado de objetivos-kpis) -->
+        <!-- Objetivos y KPIs Tab (estilo objetivos-kpis) -->
         <p-tabpanel [value]="3">
           <div class="objetivos-kpis-page">
             <!-- Toolbar -->
@@ -808,11 +816,20 @@
                 </div>
               </div>
               <div class="toolbar-right">
-                @if (alertasActivasCount() > 0) {
-                  <span class="alertas-badge-global" [class.critical]="tieneAlertaCriticaGlobal()">
-                    <i class="pi pi-bell"></i>
-                    {{ alertasActivasCount() }} alertas activas
-                  </span>
+                @if (modoObjetivos() === 'ver') {
+                  <button class="btn-secondary" (click)="cambiarModoObjetivos('editar')">
+                    <i class="pi pi-pencil"></i>
+                    Editar
+                  </button>
+                } @else {
+                  <button class="btn-secondary" (click)="cambiarModoObjetivos('ver')">
+                    <i class="pi pi-times"></i>
+                    Cancelar
+                  </button>
+                  <button class="btn-primary" (click)="guardarObjetivo()">
+                    <i class="pi pi-check"></i>
+                    Guardar
+                  </button>
                 }
               </div>
             </div>
@@ -867,6 +884,11 @@
                           {{ alertasActivasDelObjetivoCount() }}
                         </span>
                       }
+                      @if (modoObjetivos() === 'editar') {
+                        <button class="btn-eliminar" (click)="eliminarObjetivo()">
+                          <i class="pi pi-trash"></i>
+                        </button>
+                      }
                     </div>
                   </div>
 
@@ -900,21 +922,52 @@
                       <!-- Nombre -->
                       <div class="detail-section">
                         <label class="detail-label">Nombre</label>
-                        <p class="detail-value">{{ objetivo.nombre }}</p>
+                        @if (editandoObjetivo()) {
+                          <input
+                            type="text"
+                            class="detail-input"
+                            [ngModel]="formObjetivoNombre()"
+                            (ngModelChange)="formObjetivoNombre.set($event)"
+                            placeholder="Nombre del objetivo"
+                          />
+                        } @else {
+                          <p class="detail-value">{{ objetivo.nombre }}</p>
+                        }
                       </div>
 
                       <!-- Descripción -->
                       <div class="detail-section">
                         <label class="detail-label">Descripción</label>
-                        <p class="detail-value">{{ objetivo.descripcion || 'Sin descripción' }}</p>
+                        @if (editandoObjetivo()) {
+                          <textarea
+                            class="detail-textarea"
+                            [ngModel]="formObjetivoDescripcion()"
+                            (ngModelChange)="formObjetivoDescripcion.set($event)"
+                            placeholder="Descripción del objetivo"
+                            rows="3"
+                          ></textarea>
+                        } @else {
+                          <p class="detail-value">{{ objetivo.descripcion || 'Sin descripción' }}</p>
+                        }
                       </div>
 
                       <!-- Tipo -->
                       <div class="detail-section">
                         <label class="detail-label">Tipo</label>
-                        <span class="tipo-badge" [class]="objetivo.tipo">
-                          {{ getTipoObjetivoLabel(objetivo.tipo) }}
-                        </span>
+                        @if (editandoObjetivo()) {
+                          <select
+                            class="detail-select"
+                            [ngModel]="formObjetivoTipo()"
+                            (ngModelChange)="formObjetivoTipo.set($event)"
+                          >
+                            <option value="estrategico">Estratégico</option>
+                            <option value="operativo">Operativo</option>
+                          </select>
+                        } @else {
+                          <span class="tipo-badge" [class]="objetivo.tipo">
+                            {{ getTipoObjetivoLabel(objetivo.tipo) }}
+                          </span>
+                        }
                       </div>
 
                       <!-- Progreso -->
@@ -936,105 +989,449 @@
                       <div class="kpis-section">
                         <div class="kpis-header">
                           <h3>KPIs Asociados</h3>
+                          @if (editandoObjetivo() && !nuevoKPI() && !editandoKPIId()) {
+                            <button class="btn-add-kpi" (click)="iniciarNuevoKPIForm()">
+                              <i class="pi pi-plus"></i>
+                              Agregar KPI
+                            </button>
+                          }
                         </div>
 
                         <div class="kpis-list">
+                          <!-- New KPI Form -->
+                          @if (nuevoKPI()) {
+                            <div class="kpi-edit-row">
+                              <div class="kpi-field nombre">
+                                <label>Nombre</label>
+                                <input
+                                  type="text"
+                                  class="kpi-input"
+                                  [ngModel]="formKPINombre()"
+                                  (ngModelChange)="formKPINombre.set($event)"
+                                  placeholder="Nombre del KPI"
+                                />
+                              </div>
+                              <div class="kpi-field actual">
+                                <label>Actual</label>
+                                <input
+                                  type="number"
+                                  class="kpi-input"
+                                  [ngModel]="formKPIActual()"
+                                  (ngModelChange)="formKPIActual.set($event)"
+                                />
+                              </div>
+                              <div class="kpi-field meta">
+                                <label>Meta</label>
+                                <input
+                                  type="number"
+                                  class="kpi-input"
+                                  [ngModel]="formKPIMeta()"
+                                  (ngModelChange)="formKPIMeta.set($event)"
+                                />
+                              </div>
+                              <div class="kpi-field escala">
+                                <label>Escala</label>
+                                <select
+                                  class="kpi-input"
+                                  [ngModel]="formKPIEscala()"
+                                  (ngModelChange)="formKPIEscala.set($event)"
+                                >
+                                  @for (escala of escalasKPIOptions; track escala.value) {
+                                    <option [value]="escala.value">{{ escala.label }}</option>
+                                  }
+                                </select>
+                              </div>
+                              <div class="kpi-field umbral">
+                                <label>Umbral %</label>
+                                <input
+                                  type="number"
+                                  class="kpi-input"
+                                  [ngModel]="formKPIUmbralAlerta()"
+                                  (ngModelChange)="formKPIUmbralAlerta.set($event)"
+                                  min="0"
+                                  max="100"
+                                />
+                              </div>
+                              <div class="kpi-field direccion">
+                                <label>Dirección</label>
+                                <select
+                                  class="kpi-input"
+                                  [ngModel]="formKPIDireccion()"
+                                  (ngModelChange)="formKPIDireccion.set($event)"
+                                >
+                                  @for (dir of direccionKPIOptions; track dir.value) {
+                                    <option [value]="dir.value">{{ dir.label }}</option>
+                                  }
+                                </select>
+                              </div>
+                              <div class="kpi-actions">
+                                <button class="btn-check" (click)="guardarKPIForm()">
+                                  <i class="pi pi-check"></i>
+                                </button>
+                                <button class="btn-x" (click)="cancelarKPIForm()">
+                                  <i class="pi pi-times"></i>
+                                </button>
+                              </div>
+                              <!-- Configuración de alertas -->
+                              <div class="kpi-alertas-config">
+                                <div class="config-row">
+                                  <div class="kpi-field umbral-max">
+                                    <label>Umbral Máx %</label>
+                                    <input
+                                      type="number"
+                                      class="kpi-input"
+                                      [ngModel]="formKPIUmbralMaximo()"
+                                      (ngModelChange)="formKPIUmbralMaximo.set($event)"
+                                      min="0"
+                                      max="100"
+                                      placeholder="Opcional"
+                                    />
+                                  </div>
+                                  <div class="kpi-field severidad">
+                                    <label>Severidad</label>
+                                    <select
+                                      class="kpi-input"
+                                      [ngModel]="formKPISeveridad()"
+                                      (ngModelChange)="formKPISeveridad.set($event)">
+                                      @for (sev of severidadKPIOptions; track sev.value) {
+                                        <option [value]="sev.value">{{ sev.label }}</option>
+                                      }
+                                    </select>
+                                  </div>
+                                  <div class="kpi-field frecuencia">
+                                    <label>Frecuencia</label>
+                                    <select
+                                      class="kpi-input"
+                                      [ngModel]="formKPIFrecuencia()"
+                                      (ngModelChange)="formKPIFrecuencia.set($event)">
+                                      @for (freq of frecuenciaKPIOptions; track freq.value) {
+                                        <option [value]="freq.value">{{ freq.label }}</option>
+                                      }
+                                    </select>
+                                  </div>
+                                </div>
+                                <div class="config-row canales">
+                                  <label class="config-label">Canales de Notificación</label>
+                                  <div class="channels-group">
+                                    <label class="channel-checkbox">
+                                      <input
+                                        type="checkbox"
+                                        [checked]="isChannelSelected('email')"
+                                        (change)="toggleChannel('email')"
+                                      />
+                                      <i class="pi pi-envelope"></i>
+                                      Email
+                                    </label>
+                                    <label class="channel-checkbox">
+                                      <input
+                                        type="checkbox"
+                                        [checked]="isChannelSelected('in-app')"
+                                        (change)="toggleChannel('in-app')"
+                                      />
+                                      <i class="pi pi-bell"></i>
+                                      In-App
+                                    </label>
+                                    <label class="channel-checkbox">
+                                      <input
+                                        type="checkbox"
+                                        [checked]="isChannelSelected('webhook')"
+                                        (change)="toggleChannel('webhook')"
+                                      />
+                                      <i class="pi pi-link"></i>
+                                      Webhook
+                                    </label>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          }
+
                           @for (kpi of objetivo.kpis; track kpi.id) {
-                            <div class="kpi-row" [class]="getKPIStatusClass(kpi)">
-                              <div class="kpi-info-main">
-                                <span class="kpi-nombre">{{ kpi.nombre }}</span>
-                                <div class="kpi-meta">
-                                  <span class="kpi-escala">
-                                    <i class="pi pi-tag"></i>
-                                    {{ kpi.escala }}
-                                  </span>
-                                  <span class="kpi-direccion">
-                                    <i [class]="kpi.direccion === 'mayor_mejor' ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
-                                    {{ kpi.direccion === 'mayor_mejor' ? 'Mayor mejor' : 'Menor mejor' }}
-                                  </span>
+                            @if (editandoKPIId() === kpi.id) {
+                              <!-- Edit KPI Form -->
+                              <div class="kpi-edit-row">
+                                <div class="kpi-field nombre">
+                                  <label>Nombre</label>
+                                  <input
+                                    type="text"
+                                    class="kpi-input"
+                                    [ngModel]="formKPINombre()"
+                                    (ngModelChange)="formKPINombre.set($event)"
+                                    placeholder="Nombre del KPI"
+                                  />
+                                </div>
+                                <div class="kpi-field actual">
+                                  <label>Actual</label>
+                                  <input
+                                    type="number"
+                                    class="kpi-input"
+                                    [ngModel]="formKPIActual()"
+                                    (ngModelChange)="formKPIActual.set($event)"
+                                  />
+                                </div>
+                                <div class="kpi-field meta">
+                                  <label>Meta</label>
+                                  <input
+                                    type="number"
+                                    class="kpi-input"
+                                    [ngModel]="formKPIMeta()"
+                                    (ngModelChange)="formKPIMeta.set($event)"
+                                  />
+                                </div>
+                                <div class="kpi-field escala">
+                                  <label>Escala</label>
+                                  <select
+                                    class="kpi-input"
+                                    [ngModel]="formKPIEscala()"
+                                    (ngModelChange)="formKPIEscala.set($event)"
+                                  >
+                                    @for (escala of escalasKPIOptions; track escala.value) {
+                                      <option [value]="escala.value">{{ escala.label }}</option>
+                                    }
+                                  </select>
+                                </div>
+                                <div class="kpi-field umbral">
+                                  <label>Umbral %</label>
+                                  <input
+                                    type="number"
+                                    class="kpi-input"
+                                    [ngModel]="formKPIUmbralAlerta()"
+                                    (ngModelChange)="formKPIUmbralAlerta.set($event)"
+                                    min="0"
+                                    max="100"
+                                  />
+                                </div>
+                                <div class="kpi-field direccion">
+                                  <label>Dirección</label>
+                                  <select
+                                    class="kpi-input"
+                                    [ngModel]="formKPIDireccion()"
+                                    (ngModelChange)="formKPIDireccion.set($event)"
+                                  >
+                                    @for (dir of direccionKPIOptions; track dir.value) {
+                                      <option [value]="dir.value">{{ dir.label }}</option>
+                                    }
+                                  </select>
+                                </div>
+                                <div class="kpi-actions">
+                                  <button class="btn-check" (click)="guardarKPIForm()">
+                                    <i class="pi pi-check"></i>
+                                  </button>
+                                  <button class="btn-x" (click)="cancelarKPIForm()">
+                                    <i class="pi pi-times"></i>
+                                  </button>
+                                </div>
+                                <!-- Configuración de alertas -->
+                                <div class="kpi-alertas-config">
+                                  <div class="config-row">
+                                    <div class="kpi-field umbral-max">
+                                      <label>Umbral Máx %</label>
+                                      <input
+                                        type="number"
+                                        class="kpi-input"
+                                        [ngModel]="formKPIUmbralMaximo()"
+                                        (ngModelChange)="formKPIUmbralMaximo.set($event)"
+                                        min="0"
+                                        max="100"
+                                        placeholder="Opcional"
+                                      />
+                                    </div>
+                                    <div class="kpi-field severidad">
+                                      <label>Severidad</label>
+                                      <select
+                                        class="kpi-input"
+                                        [ngModel]="formKPISeveridad()"
+                                        (ngModelChange)="formKPISeveridad.set($event)">
+                                        @for (sev of severidadKPIOptions; track sev.value) {
+                                          <option [value]="sev.value">{{ sev.label }}</option>
+                                        }
+                                      </select>
+                                    </div>
+                                    <div class="kpi-field frecuencia">
+                                      <label>Frecuencia</label>
+                                      <select
+                                        class="kpi-input"
+                                        [ngModel]="formKPIFrecuencia()"
+                                        (ngModelChange)="formKPIFrecuencia.set($event)">
+                                        @for (freq of frecuenciaKPIOptions; track freq.value) {
+                                          <option [value]="freq.value">{{ freq.label }}</option>
+                                        }
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div class="config-row canales">
+                                    <label class="config-label">Canales de Notificación</label>
+                                    <div class="channels-group">
+                                      <label class="channel-checkbox">
+                                        <input
+                                          type="checkbox"
+                                          [checked]="isChannelSelected('email')"
+                                          (change)="toggleChannel('email')"
+                                        />
+                                        <i class="pi pi-envelope"></i>
+                                        Email
+                                      </label>
+                                      <label class="channel-checkbox">
+                                        <input
+                                          type="checkbox"
+                                          [checked]="isChannelSelected('in-app')"
+                                          (change)="toggleChannel('in-app')"
+                                        />
+                                        <i class="pi pi-bell"></i>
+                                        In-App
+                                      </label>
+                                      <label class="channel-checkbox">
+                                        <input
+                                          type="checkbox"
+                                          [checked]="isChannelSelected('webhook')"
+                                          (change)="toggleChannel('webhook')"
+                                        />
+                                        <i class="pi pi-link"></i>
+                                        Webhook
+                                      </label>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                              <div class="kpi-values">
-                                <div class="kpi-actual">
-                                  <span class="label">Actual</span>
-                                  <span class="value">{{ kpi.actual }} {{ kpi.escala }}</span>
+                            } @else {
+                              <!-- View KPI Row -->
+                              <div class="kpi-view-row" [class.has-alert]="tieneAlertaKPI(kpi)">
+                                <div class="kpi-info">
+                                  <div class="kpi-nombre-row">
+                                    <span class="kpi-nombre">{{ kpi.nombre }}</span>
+                                    <span class="kpi-direccion-tag" [class]="kpi.direccion" [title]="kpi.direccion === 'mayor_mejor' ? 'Mejor si el valor es mayor' : 'Mejor si el valor es menor'">
+                                      <i [class]="kpi.direccion === 'mayor_mejor' ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
+                                      {{ getDireccionLabel(kpi.direccion) }}
+                                    </span>
+                                    @if (tieneAlertaKPI(kpi)) {
+                                      <span class="kpi-alert-badge" title="Por debajo del umbral ({{ kpi.umbralAlerta }}%)">
+                                        <i class="pi pi-exclamation-triangle"></i>
+                                        Alerta
+                                      </span>
+                                    }
+                                  </div>
+                                  <div class="kpi-progress">
+                                    <div class="progress-bar">
+                                      <div
+                                        class="progress-fill"
+                                        [class]="getObjetivoProgresoColor(getKPIProgreso(kpi))"
+                                        [style.width.%]="getKPIProgreso(kpi)"
+                                      ></div>
+                                    </div>
+                                    <span class="progress-text">{{ kpi.actual }}/{{ kpi.meta }} {{ kpi.escala }}</span>
+                                  </div>
                                 </div>
-                                <div class="kpi-meta-value">
-                                  <span class="label">Meta</span>
-                                  <span class="value">{{ kpi.meta }} {{ kpi.escala }}</span>
-                                </div>
+                                @if (editandoObjetivo()) {
+                                  <div class="kpi-actions">
+                                    <button class="btn-edit-small" (click)="iniciarEdicionKPIForm(kpi)">
+                                      <i class="pi pi-pencil"></i>
+                                    </button>
+                                    <button class="btn-delete-small" (click)="eliminarKPIForm(kpi.id)">
+                                      <i class="pi pi-trash"></i>
+                                    </button>
+                                  </div>
+                                }
                               </div>
-                              <div class="kpi-progress-container">
-                                <div class="kpi-progress-bar">
-                                  <div
-                                    class="kpi-progress-fill"
-                                    [class]="getKPIProgresoColor(kpi)"
-                                    [style.width.%]="getKPIProgreso(kpi)"
-                                  ></div>
-                                </div>
-                                <span class="kpi-progress-value">{{ getKPIProgreso(kpi) }}%</span>
-                              </div>
-                            </div>
+                            }
                           } @empty {
-                            <div class="empty-state-small">
-                              <i class="pi pi-chart-line"></i>
-                              <p>No hay KPIs definidos para este objetivo</p>
-                            </div>
+                            @if (!nuevoKPI()) {
+                              <div class="kpis-empty">
+                                <p>No hay KPIs asociados a este objetivo</p>
+                              </div>
+                            }
                           }
                         </div>
                       </div>
                     } @else {
                       <!-- Alertas Tab -->
                       <div class="alertas-section">
-                        @if (alertasDelObjetivo().length > 0) {
-                          <div class="alertas-list">
-                            @for (alerta of alertasDelObjetivo(); track alerta.id) {
-                              <div class="alerta-card" [class]="alerta.severity" [class.atendida]="alerta.status !== 'activa'">
+                        <!-- Toolbar de alertas -->
+                        <div class="alertas-toolbar">
+                          <div class="toolbar-left">
+                            <div class="search-input-wrapper small">
+                              <i class="pi pi-search"></i>
+                              <input
+                                type="text"
+                                placeholder="Buscar alertas..."
+                                [ngModel]="busquedaAlertas()"
+                                (ngModelChange)="busquedaAlertas.set($event)"
+                              />
+                            </div>
+                          </div>
+                          <div class="toolbar-right">
+                            <select
+                              class="filter-select"
+                              [ngModel]="filtroAlertaSeveridad()"
+                              (ngModelChange)="filtroAlertaSeveridad.set($event)">
+                              <option [ngValue]="null">Todas las severidades</option>
+                              <option value="info">Info</option>
+                              <option value="warning">Warning</option>
+                              <option value="critical">Critical</option>
+                            </select>
+                            <select
+                              class="filter-select"
+                              [ngModel]="filtroAlertaStatus()"
+                              (ngModelChange)="filtroAlertaStatus.set($event)">
+                              <option [ngValue]="null">Todos los estados</option>
+                              <option value="activa">Activas</option>
+                              <option value="atendida">Atendidas</option>
+                              <option value="resuelta">Resueltas</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <!-- Lista de alertas -->
+                        <div class="alertas-list">
+                          @for (alerta of alertasFiltradas(); track alerta.id) {
+                            <div class="alerta-card" [class]="alerta.severity" [class.atendida]="alerta.status !== 'activa'">
+                              <div class="alerta-severity-indicator"></div>
+                              <div class="alerta-content">
                                 <div class="alerta-header">
-                                  <div class="alerta-severity">
-                                    <i [class]="alerta.severity === 'critical' ? 'pi pi-exclamation-circle' : alerta.severity === 'warning' ? 'pi pi-exclamation-triangle' : 'pi pi-info-circle'"></i>
-                                    <span class="severity-label">{{ alerta.severity | uppercase }}</span>
-                                  </div>
-                                  <span class="alerta-status" [class]="alerta.status">
+                                  <span class="alerta-kpi">{{ alerta.kpiNombre }}</span>
+                                  <span class="alerta-severity-tag" [class]="alerta.severity">
+                                    {{ getSeverityLabel(alerta.severity) }}
+                                  </span>
+                                  <span class="alerta-status-tag" [class]="alerta.status">
                                     {{ getAlertStatusLabel(alerta.status) }}
                                   </span>
                                 </div>
-                                <div class="alerta-body">
-                                  <p class="alerta-mensaje">{{ alerta.mensaje }}</p>
-                                  <div class="alerta-details">
-                                    <span class="alerta-kpi">
-                                      <i class="pi pi-chart-line"></i>
-                                      {{ alerta.kpiNombre }}
-                                    </span>
-                                    <span class="alerta-fecha">
-                                      <i class="pi pi-clock"></i>
-                                      {{ formatAlertDate(alerta.fechaCreacion) }}
-                                    </span>
-                                  </div>
-                                  <div class="alerta-valores">
-                                    <span>Valor actual: <strong>{{ alerta.valorActual }}</strong></span>
-                                    <span>Umbral: <strong>{{ alerta.valorUmbral }}</strong></span>
-                                  </div>
+                                <p class="alerta-mensaje">{{ alerta.mensaje }}</p>
+                                <div class="alerta-meta">
+                                  <span class="alerta-valor">
+                                    <i class="pi pi-chart-line"></i>
+                                    {{ alerta.valorActual }}% / {{ alerta.valorUmbral }}%
+                                  </span>
+                                  <span class="alerta-fecha">
+                                    <i class="pi pi-clock"></i>
+                                    {{ formatDateAlertas(alerta.fechaCreacion) }}
+                                  </span>
                                 </div>
-                                @if (alerta.status === 'atendida' && alerta.comentarioResolucion) {
+                                @if (alerta.comentarioResolucion) {
                                   <div class="alerta-resolucion">
-                                    <span class="resolucion-label">
-                                      <i class="pi pi-check"></i>
-                                      Atendida por {{ alerta.atendidaPor }}
-                                    </span>
-                                    <p class="resolucion-comentario">{{ alerta.comentarioResolucion }}</p>
+                                    <i class="pi pi-comment"></i>
+                                    {{ alerta.comentarioResolucion }}
                                   </div>
                                 }
                               </div>
-                            }
-                          </div>
-                        } @else {
-                          <div class="empty-state-small">
-                            <i class="pi pi-check-circle"></i>
-                            <p>No hay alertas para este objetivo</p>
-                            <span class="hint">Todos los KPIs están dentro de los umbrales definidos</span>
-                          </div>
-                        }
+                              <div class="alerta-actions-col">
+                                @if (alerta.status === 'activa') {
+                                  <button class="btn-atender" (click)="abrirAtenderAlerta(alerta)">
+                                    <i class="pi pi-check"></i>
+                                    Atender
+                                  </button>
+                                }
+                                <button class="btn-historial" (click)="verHistorialKPI(alerta.kpiId)" pTooltip="Ver historial">
+                                  <i class="pi pi-history"></i>
+                                </button>
+                              </div>
+                            </div>
+                          } @empty {
+                            <div class="alertas-empty">
+                              <i class="pi pi-check-circle"></i>
+                              <p>No hay alertas para este objetivo</p>
+                            </div>
+                          }
+                        </div>
                       </div>
                     }
                   </div>
@@ -1353,6 +1750,65 @@
     }
   </div>
 </p-drawer>
+
+<!-- Atender Alerta Dialog -->
+<p-dialog
+  header="Atender Alerta"
+  [(visible)]="showAtenderAlertaDialog"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [closable]="true"
+  (onHide)="cancelarAtencion()"
+>
+  @if (alertaParaAtender(); as alerta) {
+    <div class="atender-alerta-content">
+      <div class="alerta-summary">
+        <div class="summary-row">
+          <span class="label">KPI:</span>
+          <span class="value">{{ alerta.kpiNombre }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Severidad:</span>
+          <span class="severity-tag" [class]="alerta.severity">
+            {{ getSeverityLabel(alerta.severity) }}
+          </span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Valor actual:</span>
+          <span class="value">{{ alerta.valorActual }}%</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Umbral:</span>
+          <span class="value">{{ alerta.valorUmbral }}%</span>
+        </div>
+      </div>
+
+      <div class="comentario-section">
+        <label class="detail-label">Comentario de atención</label>
+        <textarea
+          class="detail-textarea"
+          [ngModel]="comentarioAtencion()"
+          (ngModelChange)="comentarioAtencion.set($event)"
+          placeholder="Describe las acciones tomadas para atender esta alerta..."
+          rows="4"
+        ></textarea>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <button class="btn-cancelar" (click)="cancelarAtencion()">
+      Cancelar
+    </button>
+    <button
+      class="btn-primary"
+      [disabled]="!comentarioAtencion()"
+      (click)="confirmarAtencion()"
+    >
+      <i class="pi pi-check"></i>
+      Confirmar Atención
+    </button>
+  </ng-template>
+</p-dialog>
 
 <p-toast />
 <p-confirmDialog />

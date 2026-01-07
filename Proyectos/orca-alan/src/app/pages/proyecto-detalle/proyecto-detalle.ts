@@ -19,6 +19,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { TableModule } from 'primeng/table';
 import { TimelineModule } from 'primeng/timeline';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
@@ -171,6 +172,7 @@ const KANBAN_COLUMNS_CONFIG: Omit<KanbanColumn, 'tasks'>[] = [
     TableModule,
     TimelineModule,
     ConfirmDialogModule,
+    DialogModule,
     InputTextModule,
     TextareaModule,
     SelectModule,
@@ -402,6 +404,76 @@ export class ProyectoDetalleComponent implements OnInit {
   // Filtro de tareas
   taskSearchFilter = signal('');
   taskStatusFilter = signal<TaskStatus | ''>('');
+
+  // Edición inline de tareas
+  editingTaskId = signal<string | null>(null);
+
+  // Edición inline de KPIs
+  editingKpiId = signal<string | null>(null);
+  editingKpiValueId = signal<string | null>(null);
+
+  // ============================================================
+  // MODO EDICIÓN OBJETIVOS/KPIs (igual que objetivos-kpis)
+  // ============================================================
+  modoObjetivos = signal<'ver' | 'editar'>('ver');
+  editandoObjetivo = signal(false);
+  nuevoKPI = signal(false);
+  editandoKPIId = signal<string | null>(null);
+
+  // Form values para objetivo
+  formObjetivoNombre = signal('');
+  formObjetivoDescripcion = signal('');
+  formObjetivoTipo = signal<'estrategico' | 'operativo'>('estrategico');
+
+  // Form values para KPI (formulario completo)
+  formKPINombre = signal('');
+  formKPIMeta = signal<number>(100);
+  formKPIActual = signal<number>(0);
+  formKPIEscala = signal('%');
+  formKPIUmbralAlerta = signal<number>(50);
+  formKPIUmbralMaximo = signal<number | null>(null);
+  formKPISeveridad = signal<'info' | 'warning' | 'critical'>('warning');
+  formKPICanales = signal<('email' | 'in-app' | 'webhook')[]>(['in-app']);
+  formKPIFrecuencia = signal<'inmediata' | 'diaria' | 'semanal' | 'mensual'>('diaria');
+  formKPIDireccion = signal<'mayor_mejor' | 'menor_mejor'>('mayor_mejor');
+
+  // Opciones para selects de KPIs
+  escalasKPIOptions = [
+    { label: '%', value: '%' },
+    { label: 'Unidades', value: 'Unidades' },
+    { label: 'Días', value: 'Días' },
+    { label: 'Horas', value: 'Horas' },
+    { label: 'Escala 1-5', value: 'Escala 1-5' },
+    { label: 'USD', value: 'USD' }
+  ];
+
+  direccionKPIOptions = [
+    { label: 'Mejor si es más', value: 'mayor_mejor' },
+    { label: 'Mejor si es menos', value: 'menor_mejor' }
+  ];
+
+  severidadKPIOptions = [
+    { label: 'Info', value: 'info' },
+    { label: 'Warning', value: 'warning' },
+    { label: 'Critical', value: 'critical' }
+  ];
+
+  frecuenciaKPIOptions = [
+    { label: 'Inmediata', value: 'inmediata' },
+    { label: 'Diaria', value: 'diaria' },
+    { label: 'Semanal', value: 'semanal' },
+    { label: 'Mensual', value: 'mensual' }
+  ];
+
+  // Filtros para alertas
+  busquedaAlertas = signal('');
+  filtroAlertaSeveridad = signal<'info' | 'warning' | 'critical' | null>(null);
+  filtroAlertaStatus = signal<'activa' | 'atendida' | 'resuelta' | null>(null);
+
+  // Dialog para atender alerta
+  showAtenderAlertaDialog = signal(false);
+  alertaParaAtender = signal<ProjectKPIAlert | null>(null);
+  comentarioAtencion = signal('');
 
   // Computed para tareas filtradas
   filteredTasks = computed(() => {
@@ -1319,6 +1391,51 @@ export class ProyectoDetalleComponent implements OnInit {
   }
 
   // ============================================================
+  // INLINE EDITING - TAREAS
+  // ============================================================
+
+  iniciarEdicionTarea(taskId: string): void {
+    this.editingTaskId.set(taskId);
+  }
+
+  cancelarEdicionTarea(): void {
+    this.editingTaskId.set(null);
+  }
+
+  async guardarTituloTarea(task: Task, nuevoTitulo: string): Promise<void> {
+    if (!nuevoTitulo.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campo requerido',
+        detail: 'El título no puede estar vacío'
+      });
+      return;
+    }
+
+    if (nuevoTitulo.trim() === task.title) {
+      this.editingTaskId.set(null);
+      return;
+    }
+
+    try {
+      await this.proyectosService.updateTask(task.id, { title: nuevoTitulo.trim() } as Partial<Task>);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Tarea actualizada',
+        detail: `Título cambiado a "${nuevoTitulo.trim()}"`
+      });
+      this.editingTaskId.set(null);
+      this.buildGanttItems();
+    } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo actualizar el título'
+      });
+    }
+  }
+
+  // ============================================================
   // KANBAN DRAG & DROP
   // ============================================================
 
@@ -2048,5 +2165,463 @@ export class ProyectoDetalleComponent implements OnInit {
     if (days === 1) return 'Ayer';
     if (days < 7) return `Hace ${days} días`;
     return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  // ============================================================
+  // INLINE EDITING - KPIs
+  // ============================================================
+
+  iniciarEdicionKPI(kpiId: string): void {
+    this.editingKpiId.set(kpiId);
+  }
+
+  cancelarEdicionKPI(): void {
+    this.editingKpiId.set(null);
+  }
+
+  iniciarEdicionValorKPI(kpiId: string, tipo: 'actual' | 'meta'): void {
+    this.editingKpiValueId.set(`${kpiId}-${tipo}`);
+  }
+
+  cancelarEdicionValorKPI(): void {
+    this.editingKpiValueId.set(null);
+  }
+
+  guardarNombreKPI(objetivoId: string, kpi: ProjectKPI, nuevoNombre: string): void {
+    if (!nuevoNombre.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campo requerido',
+        detail: 'El nombre no puede estar vacío'
+      });
+      return;
+    }
+
+    if (nuevoNombre.trim() === kpi.nombre) {
+      this.editingKpiId.set(null);
+      return;
+    }
+
+    // Actualizar el KPI en el objetivo
+    this.projectObjetivos.update(objetivos =>
+      objetivos.map(obj => {
+        if (obj.id === objetivoId) {
+          return {
+            ...obj,
+            kpis: obj.kpis.map(k =>
+              k.id === kpi.id ? { ...k, nombre: nuevoNombre.trim() } : k
+            )
+          };
+        }
+        return obj;
+      })
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'KPI actualizado',
+      detail: `Nombre cambiado a "${nuevoNombre.trim()}"`
+    });
+    this.editingKpiId.set(null);
+  }
+
+  guardarValorKPI(objetivoId: string, kpi: ProjectKPI, tipo: 'actual' | 'meta', nuevoValor: string): void {
+    const valor = parseFloat(nuevoValor);
+    if (isNaN(valor)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Valor inválido',
+        detail: 'Debe ingresar un número válido'
+      });
+      return;
+    }
+
+    // Actualizar el KPI en el objetivo
+    this.projectObjetivos.update(objetivos =>
+      objetivos.map(obj => {
+        if (obj.id === objetivoId) {
+          return {
+            ...obj,
+            kpis: obj.kpis.map(k =>
+              k.id === kpi.id ? { ...k, [tipo]: valor } : k
+            )
+          };
+        }
+        return obj;
+      })
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'KPI actualizado',
+      detail: `${tipo === 'actual' ? 'Valor actual' : 'Meta'} actualizado a ${valor}`
+    });
+    this.editingKpiValueId.set(null);
+  }
+
+  confirmarEliminarKPI(objetivoId: string, kpi: ProjectKPI): void {
+    this.confirmationService.confirm({
+      message: `¿Estás seguro de eliminar el KPI "${kpi.nombre}"?`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        // Eliminar el KPI del objetivo
+        this.projectObjetivos.update(objetivos =>
+          objetivos.map(obj => {
+            if (obj.id === objetivoId) {
+              return {
+                ...obj,
+                kpis: obj.kpis.filter(k => k.id !== kpi.id)
+              };
+            }
+            return obj;
+          })
+        );
+
+        // También eliminar alertas relacionadas con este KPI
+        this.projectAlertas.update(alertas =>
+          alertas.filter(a => a.kpiId !== kpi.id)
+        );
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'KPI eliminado',
+          detail: `El KPI "${kpi.nombre}" ha sido eliminado`
+        });
+      }
+    });
+  }
+
+  // ============================================================
+  // MODO EDICIÓN OBJETIVOS/KPIs (estilo objetivos-kpis)
+  // ============================================================
+
+  cambiarModoObjetivos(nuevoModo: 'ver' | 'editar'): void {
+    this.modoObjetivos.set(nuevoModo);
+    if (nuevoModo === 'editar' && this.objetivoSeleccionado()) {
+      this.iniciarEdicionObjetivo();
+    } else {
+      this.resetEditStatesObjetivos();
+    }
+  }
+
+  resetEditStatesObjetivos(): void {
+    this.editandoObjetivo.set(false);
+    this.editandoKPIId.set(null);
+    this.nuevoKPI.set(false);
+  }
+
+  iniciarEdicionObjetivo(): void {
+    const obj = this.objetivoSeleccionado();
+    if (obj) {
+      this.formObjetivoNombre.set(obj.nombre);
+      this.formObjetivoDescripcion.set(obj.descripcion || '');
+      this.formObjetivoTipo.set(obj.tipo);
+      this.editandoObjetivo.set(true);
+    }
+  }
+
+  guardarObjetivo(): void {
+    const objetivoId = this.kpiSelectedObjectiveId();
+    if (!objetivoId || !this.formObjetivoNombre().trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validación',
+        detail: 'El nombre es requerido'
+      });
+      return;
+    }
+
+    this.projectObjetivos.update(list =>
+      list.map(o =>
+        o.id === objetivoId
+          ? {
+              ...o,
+              nombre: this.formObjetivoNombre(),
+              descripcion: this.formObjetivoDescripcion(),
+              tipo: this.formObjetivoTipo()
+            }
+          : o
+      )
+    );
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Actualizado',
+      detail: 'Objetivo actualizado correctamente'
+    });
+    this.editandoObjetivo.set(false);
+  }
+
+  eliminarObjetivo(): void {
+    const id = this.kpiSelectedObjectiveId();
+    if (!id) return;
+
+    this.confirmationService.confirm({
+      message: '¿Estás seguro de eliminar este objetivo y todos sus KPIs?',
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.projectObjetivos.update(list => list.filter(o => o.id !== id));
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Eliminado',
+          detail: 'Objetivo eliminado'
+        });
+
+        const remaining = this.projectObjetivos();
+        if (remaining.length > 0) {
+          this.kpiSelectedObjectiveId.set(remaining[0].id);
+        } else {
+          this.kpiSelectedObjectiveId.set(null);
+        }
+        this.resetEditStatesObjetivos();
+      }
+    });
+  }
+
+  // ============================================================
+  // CRUD KPIs con formulario completo
+  // ============================================================
+
+  iniciarNuevoKPIForm(): void {
+    this.formKPINombre.set('');
+    this.formKPIMeta.set(100);
+    this.formKPIActual.set(0);
+    this.formKPIEscala.set('%');
+    this.formKPIUmbralAlerta.set(50);
+    this.formKPIUmbralMaximo.set(null);
+    this.formKPISeveridad.set('warning');
+    this.formKPICanales.set(['in-app']);
+    this.formKPIFrecuencia.set('diaria');
+    this.formKPIDireccion.set('mayor_mejor');
+    this.nuevoKPI.set(true);
+    this.editandoKPIId.set(null);
+  }
+
+  iniciarEdicionKPIForm(kpi: ProjectKPI): void {
+    this.formKPINombre.set(kpi.nombre);
+    this.formKPIMeta.set(kpi.meta);
+    this.formKPIActual.set(kpi.actual);
+    this.formKPIEscala.set(kpi.escala);
+    this.formKPIUmbralAlerta.set(kpi.umbralAlerta || 50);
+    this.formKPIUmbralMaximo.set(kpi.umbralMaximo || null);
+    this.formKPISeveridad.set(kpi.severidad || 'warning');
+    this.formKPICanales.set(kpi.canalesNotificacion || ['in-app']);
+    this.formKPIFrecuencia.set(kpi.frecuenciaEvaluacion || 'diaria');
+    this.formKPIDireccion.set(kpi.direccion);
+    this.editandoKPIId.set(kpi.id);
+    this.nuevoKPI.set(false);
+  }
+
+  cancelarKPIForm(): void {
+    this.nuevoKPI.set(false);
+    this.editandoKPIId.set(null);
+  }
+
+  guardarKPIForm(): void {
+    const objetivoId = this.kpiSelectedObjectiveId();
+    if (!objetivoId || !this.formKPINombre().trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validación',
+        detail: 'El nombre del KPI es requerido'
+      });
+      return;
+    }
+
+    const editandoId = this.editandoKPIId();
+    const kpi: ProjectKPI = {
+      id: editandoId || `KPI-${Date.now()}`,
+      nombre: this.formKPINombre(),
+      meta: this.formKPIMeta(),
+      actual: this.formKPIActual(),
+      escala: this.formKPIEscala(),
+      umbralAlerta: this.formKPIUmbralAlerta(),
+      umbralMaximo: this.formKPIUmbralMaximo(),
+      severidad: this.formKPISeveridad(),
+      canalesNotificacion: this.formKPICanales(),
+      frecuenciaEvaluacion: this.formKPIFrecuencia(),
+      direccion: this.formKPIDireccion()
+    };
+
+    if (editandoId) {
+      this.projectObjetivos.update(list =>
+        list.map(o =>
+          o.id === objetivoId
+            ? { ...o, kpis: o.kpis.map(k => k.id === kpi.id ? kpi : k) }
+            : o
+        )
+      );
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Actualizado',
+        detail: 'KPI actualizado'
+      });
+    } else {
+      this.projectObjetivos.update(list =>
+        list.map(o =>
+          o.id === objetivoId
+            ? { ...o, kpis: [...o.kpis, kpi] }
+            : o
+        )
+      );
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Agregado',
+        detail: 'KPI agregado'
+      });
+    }
+
+    this.cancelarKPIForm();
+  }
+
+  eliminarKPIForm(kpiId: string): void {
+    const objetivoId = this.kpiSelectedObjectiveId();
+    if (!objetivoId) return;
+
+    this.projectObjetivos.update(list =>
+      list.map(o =>
+        o.id === objetivoId
+          ? { ...o, kpis: o.kpis.filter(k => k.id !== kpiId) }
+          : o
+      )
+    );
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Eliminado',
+      detail: 'KPI eliminado'
+    });
+  }
+
+  isChannelSelected(channel: 'email' | 'in-app' | 'webhook'): boolean {
+    return this.formKPICanales().includes(channel);
+  }
+
+  toggleChannel(channel: 'email' | 'in-app' | 'webhook'): void {
+    this.formKPICanales.update(channels => {
+      if (channels.includes(channel)) {
+        return channels.filter(c => c !== channel);
+      }
+      return [...channels, channel];
+    });
+  }
+
+  tieneAlertaKPI(kpi: ProjectKPI): boolean {
+    const progreso = this.getKPIProgreso(kpi);
+    return progreso < (kpi.umbralAlerta || 50);
+  }
+
+  getDireccionLabel(direccion: 'mayor_mejor' | 'menor_mejor'): string {
+    return direccion === 'mayor_mejor' ? 'Mejor +' : 'Mejor -';
+  }
+
+  // ============================================================
+  // ALERTAS FILTRADAS Y GESTIÓN
+  // ============================================================
+
+  alertasFiltradas = computed(() => {
+    let resultado = this.alertasDelObjetivo();
+
+    const severidad = this.filtroAlertaSeveridad();
+    if (severidad) {
+      resultado = resultado.filter(a => a.severity === severidad);
+    }
+
+    const status = this.filtroAlertaStatus();
+    if (status) {
+      resultado = resultado.filter(a => a.status === status);
+    }
+
+    const busqueda = this.busquedaAlertas().toLowerCase();
+    if (busqueda) {
+      resultado = resultado.filter(a =>
+        a.kpiNombre?.toLowerCase().includes(busqueda) ||
+        a.mensaje?.toLowerCase().includes(busqueda)
+      );
+    }
+
+    return resultado;
+  });
+
+  getSeverityLabel(severity: 'info' | 'warning' | 'critical'): string {
+    const labels: Record<string, string> = {
+      'info': 'Info',
+      'warning': 'Warning',
+      'critical': 'Crítico'
+    };
+    return labels[severity] || severity;
+  }
+
+  abrirAtenderAlerta(alerta: ProjectKPIAlert): void {
+    this.alertaParaAtender.set(alerta);
+    this.comentarioAtencion.set('');
+    this.showAtenderAlertaDialog.set(true);
+  }
+
+  cancelarAtencion(): void {
+    this.showAtenderAlertaDialog.set(false);
+    this.alertaParaAtender.set(null);
+    this.comentarioAtencion.set('');
+  }
+
+  confirmarAtencion(): void {
+    const alerta = this.alertaParaAtender();
+    const comentario = this.comentarioAtencion();
+
+    if (!alerta || !comentario.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validación',
+        detail: 'El comentario es requerido'
+      });
+      return;
+    }
+
+    this.projectAlertas.update(alertas =>
+      alertas.map(a =>
+        a.id === alerta.id
+          ? {
+              ...a,
+              status: 'atendida' as AlertStatus,
+              fechaAtendida: new Date(),
+              atendidaPor: 'Usuario Actual',
+              comentarioResolucion: comentario
+            }
+          : a
+      )
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Alerta Atendida',
+      detail: 'La alerta ha sido marcada como atendida'
+    });
+
+    this.cancelarAtencion();
+  }
+
+  verHistorialKPI(kpiId: string): void {
+    const historial = this.projectAlertas().filter(a => a.kpiId === kpiId);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Historial',
+      detail: `Se encontraron ${historial.length} alertas para este KPI`
+    });
+  }
+
+  formatDateAlertas(date: Date): string {
+    return new Date(date).toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 }

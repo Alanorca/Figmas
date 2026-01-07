@@ -70,6 +70,16 @@ interface TipoGraficaOpcion {
   descripcion: string;
 }
 
+interface ComentarioRegistro {
+  id: string;
+  registroId: string;
+  texto: string;
+  autor: string;
+  fecha: Date;
+  editado: boolean;
+  fechaEdicion?: Date;
+}
+
 @Component({
   selector: 'app-tabla-unificada',
   standalone: true,
@@ -169,6 +179,17 @@ export class TablaUnificadaComponent implements OnInit {
   // Dialog de historial
   showHistorialDialog = signal(false);
   historialRegistro = signal<{ fecha: Date; usuario: string; accion: string; detalles: string }[]>([]);
+
+  // Sistema de comentarios en registros
+  comentariosRegistro = signal<ComentarioRegistro[]>([]);
+  nuevoComentario = signal('');
+  comentarioEditandoId = signal<string | null>(null);
+  comentarioEditandoTexto = signal('');
+  mostrandoComentarios = signal(true);
+
+  // Historial de cambios inline
+  mostrandoHistorial = signal(false);
+  historialInline = signal<{ fecha: Date; usuario: string; accion: string; detalles: string; campo?: string; valorAnterior?: any; valorNuevo?: any }[]>([]);
 
   // ==================== NUEVAS FUNCIONALIDADES FASE 2 ====================
 
@@ -479,6 +500,40 @@ export class TablaUnificadaComponent implements OnInit {
       .map(c => ({ label: c.header, value: c.field }));
   });
 
+  // Rango de valores para filtros numéricos con slider
+  rangoSliderNumerico = signal<[number, number]>([0, 100]);
+
+  // Computed para obtener min/max de un campo numérico
+  rangoColumnaActual = computed(() => {
+    const columna = this.columnaFiltroActual();
+    if (!columna || columna.tipo !== 'numero') {
+      return { min: 0, max: 100, step: 1 };
+    }
+
+    const datos = this.service.getDatosUnificados();
+    const valores = datos
+      .map(d => (d as any)[columna.field])
+      .filter(v => v !== null && v !== undefined && typeof v === 'number');
+
+    if (valores.length === 0) {
+      return { min: 0, max: 100, step: 1 };
+    }
+
+    const min = Math.min(...valores);
+    const max = Math.max(...valores);
+    const rango = max - min;
+
+    // Calcular step adecuado según el rango
+    let step = 1;
+    if (rango <= 5) step = 0.5;
+    else if (rango <= 10) step = 1;
+    else if (rango <= 100) step = 5;
+    else if (rango <= 1000) step = 10;
+    else step = 50;
+
+    return { min, max, step };
+  });
+
   // Datos de la gráfica
   chartData = computed(() => {
     const config = this.configGrafica();
@@ -590,13 +645,40 @@ export class TablaUnificadaComponent implements OnInit {
   // Métodos de filtros
   abrirFiltro(columna: ColumnaConfig, event: Event): void {
     this.columnaFiltroActual.set(columna);
-    this.filtroTemp.set({
-      operador: columna.tipo === 'texto' ? 'contiene' : 'igual',
-      valor: '',
-      valorHasta: undefined,
-      valoresSeleccionados: []
-    });
+
+    // Inicializar valores según el tipo de columna
+    if (columna.tipo === 'numero') {
+      // Calcular rango para slider
+      const rango = this.rangoColumnaActual();
+      this.rangoSliderNumerico.set([rango.min, rango.max]);
+      this.filtroTemp.set({
+        operador: 'entre', // Por defecto usar rango para numéricos
+        valor: rango.min,
+        valorHasta: rango.max,
+        valoresSeleccionados: []
+      });
+    } else {
+      this.filtroTemp.set({
+        operador: columna.tipo === 'texto' ? 'contiene' : 'igual',
+        valor: '',
+        valorHasta: undefined,
+        valoresSeleccionados: []
+      });
+    }
+
     this.showFiltroPopover.set(true);
+  }
+
+  // Método para actualizar filtro desde el slider de rango
+  onSliderRangoChange(valores: number[]): void {
+    if (valores.length >= 2) {
+      this.rangoSliderNumerico.set([valores[0], valores[1]]);
+      this.filtroTemp.update(f => ({
+        ...f,
+        valor: valores[0],
+        valorHasta: valores[1]
+      }));
+    }
   }
 
   aplicarFiltro(): void {
@@ -727,7 +809,54 @@ export class TablaUnificadaComponent implements OnInit {
   // Métodos de detalle
   verDetalle(registro: RegistroUnificado): void {
     this.registroSeleccionado.set(registro);
+    this.cargarComentarios(registro.id); // Cargar comentarios del registro
+    this.cargarHistorialInline(registro); // Cargar historial de cambios
+    this.nuevoComentario.set(''); // Limpiar input de comentario
+    this.comentarioEditandoId.set(null); // Cancelar cualquier edición
     this.showDetalleDrawer.set(true);
+  }
+
+  cargarHistorialInline(registro: RegistroUnificado): void {
+    // En producción esto vendría del backend
+    const historial = [
+      {
+        fecha: new Date(),
+        usuario: 'Sistema',
+        accion: 'Visualizado',
+        detalles: 'Registro consultado',
+        campo: undefined,
+        valorAnterior: undefined,
+        valorNuevo: undefined
+      },
+      {
+        fecha: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        usuario: registro.responsable || 'Usuario',
+        accion: 'Modificado',
+        detalles: 'Estado actualizado',
+        campo: 'estado',
+        valorAnterior: 'pendiente',
+        valorNuevo: registro.estado
+      },
+      {
+        fecha: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        usuario: 'Admin',
+        accion: 'Asignado',
+        detalles: 'Responsable asignado',
+        campo: 'responsable',
+        valorAnterior: 'Sin asignar',
+        valorNuevo: registro.responsable || 'Sin asignar'
+      },
+      {
+        fecha: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        usuario: registro.tipoEntidad === 'incidente' ? (registro.reportadoPor || 'Sistema') : 'Sistema',
+        accion: 'Creado',
+        detalles: `${this.getTipoEntidadLabel(registro.tipoEntidad)} registrado`,
+        campo: undefined,
+        valorAnterior: undefined,
+        valorNuevo: undefined
+      }
+    ];
+    this.historialInline.set(historial);
   }
 
   // Métodos de edición in-place
@@ -1200,8 +1329,40 @@ export class TablaUnificadaComponent implements OnInit {
     const busqueda = this.busquedaGlobal().trim();
     if (!busqueda) return texto;
 
-    const regex = new RegExp(`(${this.escapeRegex(busqueda)})`, 'gi');
-    return texto.replace(regex, '<mark class="search-highlight">$1</mark>');
+    // Soportar múltiples términos separados por espacios
+    const terminos = busqueda.split(/\s+/).filter(t => t.length > 0);
+
+    if (terminos.length === 0) return texto;
+
+    let resultado = texto;
+
+    // Aplicar highlight para cada término
+    terminos.forEach((termino, index) => {
+      const regex = new RegExp(`(${this.escapeRegex(termino)})`, 'gi');
+      // Alternar entre clases para distinguir múltiples términos
+      const className = index % 2 === 0 ? 'search-highlight' : 'search-highlight-alt';
+      resultado = resultado.replace(regex, `<mark class="${className}">$1</mark>`);
+    });
+
+    return resultado;
+  }
+
+  // Contador de coincidencias para mostrar en UI
+  getCoincidencias(texto: string | undefined | null): number {
+    if (!texto) return 0;
+    const busqueda = this.busquedaGlobal().trim();
+    if (!busqueda) return 0;
+
+    const terminos = busqueda.split(/\s+/).filter(t => t.length > 0);
+    let total = 0;
+
+    terminos.forEach(termino => {
+      const regex = new RegExp(this.escapeRegex(termino), 'gi');
+      const matches = texto.match(regex);
+      total += matches ? matches.length : 0;
+    });
+
+    return total;
   }
 
   private escapeRegex(str: string): string {
@@ -1282,6 +1443,118 @@ export class TablaUnificadaComponent implements OnInit {
       case 'eliminado': return 'var(--red-500)';
       default: return 'var(--primary-color)';
     }
+  }
+
+  // ==================== SISTEMA DE COMENTARIOS ====================
+
+  cargarComentarios(registroId: string): void {
+    // En producción esto cargaría del backend
+    // Por ahora simulamos algunos comentarios
+    const comentariosSimulados: ComentarioRegistro[] = [
+      {
+        id: 'c1',
+        registroId,
+        texto: 'Se ha revisado este registro y requiere seguimiento adicional.',
+        autor: 'Ana García',
+        fecha: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        editado: false
+      },
+      {
+        id: 'c2',
+        registroId,
+        texto: 'Actualización: El responsable ha sido notificado del estado actual.',
+        autor: 'Carlos López',
+        fecha: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        editado: true,
+        fechaEdicion: new Date(Date.now() - 12 * 60 * 60 * 1000)
+      }
+    ];
+    this.comentariosRegistro.set(comentariosSimulados);
+  }
+
+  agregarComentario(): void {
+    const texto = this.nuevoComentario().trim();
+    const registro = this.registroSeleccionado();
+
+    if (!texto || !registro) return;
+
+    const nuevoComentario: ComentarioRegistro = {
+      id: `c${Date.now()}`,
+      registroId: registro.id,
+      texto,
+      autor: 'Usuario Actual', // En producción vendría del servicio de autenticación
+      fecha: new Date(),
+      editado: false
+    };
+
+    this.comentariosRegistro.update(comentarios => [nuevoComentario, ...comentarios]);
+    this.nuevoComentario.set('');
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Comentario agregado',
+      detail: 'Tu comentario ha sido guardado correctamente'
+    });
+  }
+
+  iniciarEdicionComentario(comentario: ComentarioRegistro): void {
+    this.comentarioEditandoId.set(comentario.id);
+    this.comentarioEditandoTexto.set(comentario.texto);
+  }
+
+  guardarEdicionComentario(): void {
+    const id = this.comentarioEditandoId();
+    const texto = this.comentarioEditandoTexto().trim();
+
+    if (!id || !texto) return;
+
+    this.comentariosRegistro.update(comentarios =>
+      comentarios.map(c =>
+        c.id === id
+          ? { ...c, texto, editado: true, fechaEdicion: new Date() }
+          : c
+      )
+    );
+
+    this.comentarioEditandoId.set(null);
+    this.comentarioEditandoTexto.set('');
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Comentario editado',
+      detail: 'Los cambios han sido guardados'
+    });
+  }
+
+  cancelarEdicionComentario(): void {
+    this.comentarioEditandoId.set(null);
+    this.comentarioEditandoTexto.set('');
+  }
+
+  eliminarComentario(id: string): void {
+    this.comentariosRegistro.update(comentarios =>
+      comentarios.filter(c => c.id !== id)
+    );
+
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'Comentario eliminado',
+      detail: 'El comentario ha sido eliminado'
+    });
+  }
+
+  formatearFechaComentario(fecha: Date): string {
+    const ahora = new Date();
+    const diff = ahora.getTime() - new Date(fecha).getTime();
+    const minutos = Math.floor(diff / (1000 * 60));
+    const horas = Math.floor(diff / (1000 * 60 * 60));
+    const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutos < 1) return 'Ahora';
+    if (minutos < 60) return `Hace ${minutos} min`;
+    if (horas < 24) return `Hace ${horas}h`;
+    if (dias < 7) return `Hace ${dias} día${dias > 1 ? 's' : ''}`;
+    return new Date(fecha).toLocaleDateString('es', { day: 'numeric', month: 'short' });
   }
 
   // ==================== WIDGETS DE DASHBOARD ====================

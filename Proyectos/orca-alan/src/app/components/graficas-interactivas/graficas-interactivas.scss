@@ -10,7 +10,7 @@
 
 .graficas-interactivas-container {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 400px 1fr;
   gap: 1.5rem;
   height: 100%;
   min-height: 600px;
@@ -326,6 +326,9 @@
 }
 
 .campo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   padding: 0.35rem 0.65rem;
   border: 1px solid var(--primary-200);
   border-radius: 16px;
@@ -336,6 +339,20 @@
   cursor: pointer;
   transition: all 0.2s ease;
 
+  .chip-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 600;
+  }
+
   &:hover {
     background: var(--primary-100);
     border-color: var(--primary-color);
@@ -345,6 +362,22 @@
     background: var(--primary-color);
     color: #fff;
     border-color: var(--primary-color);
+
+    .chip-count {
+      background: rgba(255, 255, 255, 0.3);
+      color: #fff;
+    }
+  }
+
+  &.sin-datos {
+    border-color: var(--red-200);
+    background: var(--red-50);
+    color: var(--red-600);
+    opacity: 0.7;
+
+    .chip-count {
+      background: var(--red-500);
+    }
   }
 }
 
@@ -379,6 +412,38 @@
 
 .campo-label {
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.campo-info-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.campo-conteo {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  background: var(--green-100);
+  color: var(--green-700);
+  white-space: nowrap;
+
+  &.sin-datos {
+    background: var(--red-100);
+    color: var(--red-700);
+  }
+}
+
+.campo-conteo-selected {
+  font-size: 0.7rem;
+  color: var(--text-color-secondary);
+  margin-left: 0.5rem;
 }
 
 :host ::ng-deep .campo-tipo-tag {
@@ -490,6 +555,10 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
+
+  &.tres-items {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .toggle-item {
@@ -1214,7 +1283,7 @@
 
 @media (max-width: 1024px) {
   .graficas-interactivas-container {
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 340px 1fr;
   }
 }
 
@@ -1594,6 +1663,119 @@
       width: 100% !important;
       height: 100% !important;
     }
+
+    // Animaciones avanzadas en hover para ApexCharts
+    ::ng-deep {
+      .apexcharts-bar-area,
+      .apexcharts-pie-slice,
+      .apexcharts-radar-series polygon,
+      .apexcharts-radialbar-track path {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+      }
+
+      .apexcharts-bar-area:hover,
+      .apexcharts-pie-slice:hover {
+        filter: brightness(1.1);
+        transform-origin: center;
+      }
+
+      .apexcharts-legend-series {
+        transition: opacity 0.2s ease;
+
+        &:hover {
+          opacity: 0.8;
+        }
+      }
+
+      // Efecto de pulso en elementos activos
+      .apexcharts-active {
+        animation: chart-pulse 0.5s ease-out;
+      }
+
+      // Tooltips con animación
+      .apexcharts-tooltip {
+        animation: tooltip-fade-in 0.2s ease-out;
+        backdrop-filter: blur(4px);
+      }
+
+      // Sombras suaves en los elementos
+      .apexcharts-datalabels-group {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+
+  // Chart.js wrapper animaciones
+  p-chart {
+    ::ng-deep canvas {
+      transition: opacity 0.3s ease;
+    }
+  }
+}
+
+// Animaciones keyframes
+@keyframes chart-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chart-bar-grow {
+  from {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+  to {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+}
+
+@keyframes chart-slice-rotate {
+  from {
+    transform: rotate(-90deg) scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+// Efecto de entrada para el contenedor de gráfica
+.chart-area {
+  animation: chart-area-enter 0.4s ease-out;
+}
+
+@keyframes chart-area-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

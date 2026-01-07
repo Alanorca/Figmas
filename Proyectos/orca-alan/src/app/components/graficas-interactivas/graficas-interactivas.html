@@ -138,15 +138,25 @@
             <ng-template let-option pTemplate="item">
               <div class="campo-option">
                 <span class="campo-label">{{ option.label }}</span>
-                <p-tag
-                  [value]="option.tipo"
-                  [severity]="option.tipo === 'categoria' ? 'info' : option.tipo === 'numerico' ? 'success' : 'warn'"
-                  styleClass="campo-tipo-tag" />
+                <div class="campo-info-tags">
+                  @if (option.conteo !== undefined && option.conteo !== null) {
+                    <span class="campo-conteo" [class.sin-datos]="option.conteo === 0">
+                      {{ option.conteo }} {{ option.conteo === 1 ? 'item' : 'items' }}
+                    </span>
+                  }
+                  <p-tag
+                    [value]="option.tipo"
+                    [severity]="option.tipo === 'categoria' ? 'info' : option.tipo === 'numerico' ? 'success' : 'warn'"
+                    styleClass="campo-tipo-tag" />
+                </div>
               </div>
             </ng-template>
             <ng-template let-option pTemplate="selectedItem">
               <div class="campo-option">
                 <span>{{ option.label }}</span>
+                @if (option.conteo !== undefined && option.conteo !== null) {
+                  <span class="campo-conteo-selected">{{ option.conteo }} items</span>
+                }
               </div>
             </ng-template>
           </p-select>
@@ -169,6 +179,25 @@
               <ng-template let-option pTemplate="item">
                 <div class="campo-option">
                   <span class="campo-label">{{ option.label }}</span>
+                  <div class="campo-info-tags">
+                    @if (option.conteo !== undefined && option.conteo !== null) {
+                      <span class="campo-conteo" [class.sin-datos]="option.conteo === 0">
+                        {{ option.conteo }} {{ option.conteo === 1 ? 'item' : 'items' }}
+                      </span>
+                    }
+                    <p-tag
+                      [value]="option.tipo"
+                      [severity]="option.tipo === 'numerico' ? 'success' : 'info'"
+                      styleClass="campo-tipo-tag" />
+                  </div>
+                </div>
+              </ng-template>
+              <ng-template let-option pTemplate="selectedItem">
+                <div class="campo-option">
+                  <span>{{ option.label }}</span>
+                  @if (option.conteo !== undefined && option.conteo !== null) {
+                    <span class="campo-conteo-selected">{{ option.conteo }} items</span>
+                  }
                 </div>
               </ng-template>
             </p-select>
@@ -192,10 +221,14 @@
                     <button
                       class="campo-chip"
                       [class.active]="campoEjeX() === campo.value"
+                      [class.sin-datos]="campo.conteo === 0"
                       (click)="onCampoChange(campo.value)"
                       pTooltip="{{ campo.descripcion }}"
                       tooltipPosition="top">
                       {{ campo.label }}
+                      @if (campo.conteo !== undefined && campo.conteo !== null) {
+                        <span class="chip-count">{{ campo.conteo }}</span>
+                      }
                     </button>
                   }
                 </div>
@@ -260,7 +293,7 @@
           <h4><i class="pi pi-sliders-h mr-2"></i>Opciones</h4>
         </div>
 
-        <div class="opciones-toggles">
+        <div class="opciones-toggles tres-items">
           <div class="toggle-item" [class.active]="animaciones()" (click)="toggleAnimaciones()">
             <i class="pi pi-play"></i>
             <span>Animaciones</span>
@@ -272,10 +305,6 @@
           <div class="toggle-item" [class.active]="mostrarDataLabels()" (click)="toggleDataLabels()">
             <i class="pi pi-tag"></i>
             <span>Etiquetas</span>
-          </div>
-          <div class="toggle-item" [class.active]="tema() === 'dark'" (click)="toggleTema()">
-            <i [class]="tema() === 'dark' ? 'pi pi-sun' : 'pi pi-moon'"></i>
-            <span>{{ tema() === 'dark' ? 'Claro' : 'Oscuro' }}</span>
           </div>
         </div>
       </div>
@@ -612,7 +641,7 @@
       </div>
     }
 
-    <div class="chart-container" #chartContainer>
+    <div class="chart-container" #chartContainer (contextmenu)="onChartContextMenu($event)">
       @if (datosSignal().labels.length > 0) {
         <!-- Usar ApexCharts para gráficas avanzadas (Funnel, TreeMap, RadialBar, etc.) -->
         @if (usarApexCharts()) {
@@ -640,6 +669,9 @@
         </div>
       }
     </div>
+
+    <!-- Menú contextual para drill-down -->
+    <p-contextMenu #drillDownMenu [model]="contextMenuItems()" appendTo="body"></p-contextMenu>
 
     <!-- Lista de anotaciones -->
     @if (anotaciones().length > 0) {
@@ -687,9 +719,9 @@
       <p-tag icon="pi pi-info-circle" severity="secondary" styleClass="tip-tag">
         <span class="tip-text">
           <strong>Tips:</strong>
+          <strong>Clic derecho</strong> para drill-down |
           Clic en leyenda para ocultar series |
           Scroll para zoom |
-          Arrastra para pan |
           Clic en elementos para detalle
         </span>
       </p-tag>

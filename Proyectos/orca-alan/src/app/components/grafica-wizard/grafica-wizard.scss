@@ -483,6 +483,9 @@
 }
 
 .campo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
   padding: var(--spacing-2) var(--spacing-3);
   background: var(--surface-ground);
   border: 1px solid var(--surface-border);
@@ -501,6 +504,25 @@
     background: var(--primary-color);
     border-color: var(--primary-color);
     color: white;
+
+    .chip-count {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+    }
+  }
+
+  .chip-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 var(--spacing-1);
+    background: var(--surface-200);
+    border-radius: var(--border-radius-full);
+    font-size: 0.65rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-color-secondary);
   }
 }
 
@@ -1099,6 +1121,34 @@
         background: var(--primary-color) !important;
         border-color: var(--primary-color) !important;
         color: var(--surface-0) !important;
+      }
+    }
+
+    // Chips de campo con conteo
+    .campo-chip {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+
+      &:hover {
+        border-color: var(--primary-400) !important;
+        background: var(--surface-hover) !important;
+      }
+
+      &.selected {
+        background: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        color: #FFFFFF !important;
+
+        .chip-count {
+          background: rgba(255, 255, 255, 0.25) !important;
+          color: #FFFFFF !important;
+        }
+      }
+
+      .chip-count {
+        background: var(--surface-200) !important;
+        color: var(--text-color-secondary) !important;
       }
     }
 

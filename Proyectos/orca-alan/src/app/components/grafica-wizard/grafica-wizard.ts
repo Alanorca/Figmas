@@ -105,18 +105,42 @@ export class GraficaWizardComponent implements OnInit {
     return this.wizardService.getCamposEntidad(entidad);
   });
 
-  // Computed: Campos de tipo categoría (para agrupación)
-  camposCategoria = computed<CampoEntidad[]>(() => {
+  // Computed: Campos de tipo categoría (para agrupación) con conteo de valores únicos
+  camposCategoria = computed<(CampoEntidad & { conteo: number })[]>(() => {
     const entidad = this.wizardState().fuenteDatos;
+    const datos = this.wizardState().datosDisponibles;
     if (!entidad) return [];
-    return this.wizardService.getCamposCategoria(entidad);
+    const campos = this.wizardService.getCamposCategoria(entidad);
+    return campos.map(campo => ({
+      ...campo,
+      conteo: this.contarValoresUnicos(datos, campo.field)
+    }));
   });
 
-  // Computed: Campos numéricos (para valores)
-  camposNumericos = computed<CampoEntidad[]>(() => {
+  // Computed: Campos numéricos (para valores) con conteo
+  camposNumericos = computed<(CampoEntidad & { conteo: number })[]>(() => {
     const entidad = this.wizardState().fuenteDatos;
+    const datos = this.wizardState().datosDisponibles;
     if (!entidad) return [];
-    return this.wizardService.getCamposNumericos(entidad);
+    const campos = this.wizardService.getCamposNumericos(entidad);
+    return campos.map(campo => ({
+      ...campo,
+      conteo: this.contarValoresConDatos(datos, campo.field)
+    }));
+  });
+
+  // Computed: Todos los campos disponibles con conteo
+  camposDisponiblesConConteo = computed<(CampoEntidad & { conteo: number })[]>(() => {
+    const entidad = this.wizardState().fuenteDatos;
+    const datos = this.wizardState().datosDisponibles;
+    if (!entidad) return [];
+    const campos = this.wizardService.getCamposEntidad(entidad);
+    return campos.map(campo => ({
+      ...campo,
+      conteo: campo.tipo === 'categoria'
+        ? this.contarValoresUnicos(datos, campo.field)
+        : this.contarValoresConDatos(datos, campo.field)
+    }));
   });
 
   // Computed: Cruces disponibles
@@ -439,5 +463,27 @@ export class GraficaWizardComponent implements OnInit {
   getCampoLabel(field: string): string {
     const campos = this.camposDisponibles();
     return campos.find(c => c.field === field)?.label || field;
+  }
+
+  // Helper: Contar valores únicos de un campo (para campos categoría)
+  private contarValoresUnicos(datos: any[], campo: string): number {
+    if (!datos || datos.length === 0) return 0;
+    const valores = new Set<string>();
+    datos.forEach(item => {
+      const valor = item[campo];
+      if (valor !== null && valor !== undefined && valor !== '') {
+        valores.add(String(valor));
+      }
+    });
+    return valores.size;
+  }
+
+  // Helper: Contar registros con datos en un campo (para campos numéricos)
+  private contarValoresConDatos(datos: any[], campo: string): number {
+    if (!datos || datos.length === 0) return 0;
+    return datos.filter(item => {
+      const valor = item[campo];
+      return valor !== null && valor !== undefined && valor !== '';
+    }).length;
   }
 }

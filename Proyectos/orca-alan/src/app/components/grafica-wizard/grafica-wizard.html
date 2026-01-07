@@ -173,6 +173,9 @@
                   [class.selected]="wizardState().campoAgrupacion === campo.field"
                   (click)="seleccionarCampoAgrupacion(campo.field)">
                   {{ campo.label }}
+                  @if (campo.conteo > 0) {
+                    <span class="chip-count">{{ campo.conteo }}</span>
+                  }
                 </button>
               }
             </div>
@@ -193,6 +196,9 @@
                   [class.selected]="wizardState().campoEjeX === campo.field"
                   (click)="seleccionarEjeX(campo.field)">
                   {{ campo.label }}
+                  @if (campo.conteo > 0) {
+                    <span class="chip-count">{{ campo.conteo }}</span>
+                  }
                 </button>
               }
             </div>
@@ -204,12 +210,15 @@
               Eje Y (Valores)
             </label>
             <div class="campos-chips">
-              @for (campo of camposDisponibles(); track campo.field) {
+              @for (campo of camposDisponiblesConConteo(); track campo.field) {
                 <button
                   class="campo-chip"
                   [class.selected]="wizardState().campoEjeY === campo.field"
                   (click)="seleccionarEjeY(campo.field)">
                   {{ campo.label }}
+                  @if (campo.conteo > 0) {
+                    <span class="chip-count">{{ campo.conteo }}</span>
+                  }
                 </button>
               }
             </div>
@@ -235,6 +244,9 @@
                     [class.selected]="wizardState().campoSeries === campo.field"
                     (click)="seleccionarSeries(campo.field)">
                     {{ campo.label }}
+                    @if (campo.conteo > 0) {
+                      <span class="chip-count">{{ campo.conteo }}</span>
+                    }
                   </button>
                 }
               </div>
@@ -274,6 +286,9 @@
                   [class.selected]="wizardState().campoValor === campo.field"
                   (click)="seleccionarCampoValor(campo.field)">
                   {{ campo.label }}
+                  @if (campo.conteo > 0) {
+                    <span class="chip-count">{{ campo.conteo }}</span>
+                  }
                 </button>
               }
             </div>

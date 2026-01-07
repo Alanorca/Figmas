@@ -412,9 +412,12 @@
                     [mostrarDataLabelsExterna]="widget.config.graficaMostrarDataLabels === true"
                     [temaExterno]="widget.config.graficaTema || temaActual()"
                     (campoSeleccionado)="onGraficaInteractivaCampoChange($event)"
-                    (dataPointClick)="onGraficaInteractivaDataPointClick($event)"
-                    (legendClick)="onGraficaInteractivaLegendClick($event)"
-                    (filtroAplicado)="onGraficaInteractivaFiltroAplicado($event)">
+                    (dataPointClick)="onGraficaInteractivaDataPointClick($event, widget)"
+                    (legendClick)="onGraficaInteractivaLegendClick($event, widget)"
+                    (filtroAplicado)="onGraficaInteractivaFiltroAplicado($event, widget)"
+                    (drillDownEvent)="onGraficaInteractivaDrillDown($event, widget)"
+                    (exportSegmentEvent)="onGraficaInteractivaExportSegment($event, widget)"
+                    (createAlertEvent)="onGraficaInteractivaCreateAlert($event, widget)">
                   </app-graficas-interactivas>
                 </div>
               }
@@ -1714,6 +1717,65 @@
         </p-tabpanel>
       </p-tabpanels>
     </p-tabs>
+  </div>
+</p-drawer>
+
+<!-- Drawer de Drill-Down para Gráficas Interactivas -->
+<p-drawer [(visible)]="showDrillDownDrawer" position="right" [style]="{width: '50vw'}" [header]="drillDownData()?.categoria || 'Detalles'">
+  <div class="drilldown-drawer-content">
+    @if (drillDownData()) {
+      <div class="drilldown-header">
+        <p-tag [value]="'Campo: ' + drillDownData()!.campo" severity="info"></p-tag>
+        <span class="drilldown-count">{{ drillDownData()!.registros.length }} registros</span>
+      </div>
+
+      <div class="drilldown-table">
+        <table class="w-full">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Estado</th>
+              <th>Cumplimiento</th>
+              <th>Objetivos</th>
+              <th>KPIs</th>
+              <th>Alertas</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (registro of drillDownData()!.registros; track registro.procesoId) {
+              <tr>
+                <td>{{ registro.procesoNombre }}</td>
+                <td>
+                  <p-tag [value]="registro.estado" [severity]="registro.estado === 'activo' ? 'success' : 'secondary'"></p-tag>
+                </td>
+                <td>
+                  <div class="cumplimiento-cell">
+                    <span>{{ registro.cumplimientoPromedio }}%</span>
+                    <div class="cumplimiento-bar">
+                      <div class="cumplimiento-fill" [style.width.%]="registro.cumplimientoPromedio"
+                           [style.background]="registro.cumplimientoPromedio >= 80 ? '#22c55e' : registro.cumplimientoPromedio >= 50 ? '#f59e0b' : '#ef4444'">
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ registro.totalObjetivos }}</td>
+                <td>{{ registro.totalKPIs }}</td>
+                <td>
+                  <p-tag [value]="registro.alertasActivas + ''" [severity]="registro.alertasActivas > 0 ? 'danger' : 'success'"></p-tag>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="drilldown-actions">
+        <p-button label="Exportar a Excel" icon="pi pi-file-excel" severity="success"
+                  (click)="exportarDrillDownData()"></p-button>
+        <p-button label="Cerrar" icon="pi pi-times" severity="secondary"
+                  (click)="showDrillDownDrawer.set(false)"></p-button>
+      </div>
+    }
   </div>
 </p-drawer>
 
