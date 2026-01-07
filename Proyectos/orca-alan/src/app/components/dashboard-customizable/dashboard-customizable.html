@@ -20,6 +20,16 @@
     </div>
 
     <div class="toolbar-right">
+      <!-- Botón Mis Dashboards -->
+      <p-button
+        icon="pi pi-folder"
+        label="Mis Dashboards"
+        [outlined]="true"
+        size="small"
+        (onClick)="showDashboardsDrawer.set(true)"
+        pTooltip="Gestionar dashboards guardados">
+      </p-button>
+
       <!-- Botones de exportación (siempre visibles) -->
       <p-button
         icon="pi pi-download"
@@ -1491,6 +1501,220 @@
       </div>
     </ng-template>
   }
+</p-drawer>
+
+<!-- Drawer: Seleccionar Gráfica Guardada -->
+<p-drawer
+  [(visible)]="showGraficasGuardadasDrawer"
+  position="right"
+  [style]="{ width: '400px' }"
+  header="Seleccionar Gráfica Guardada">
+  <div class="graficas-guardadas-selector">
+    <p class="selector-description">
+      Selecciona una gráfica guardada para agregar al dashboard:
+    </p>
+
+    <div class="graficas-lista-selector">
+      @for (grafica of graficasGuardadas(); track grafica.id) {
+        <div
+          class="grafica-item-selector"
+          (click)="seleccionarGraficaGuardadaParaDashboard(grafica)">
+          <div class="grafica-preview-mini">
+            <i [class]="getIconoTipoGrafica(grafica.tipo)"></i>
+          </div>
+          <div class="grafica-item-info">
+            <div class="grafica-item-nombre">
+              @if (grafica.favorito) {
+                <i class="pi pi-star-fill star-icon"></i>
+              }
+              {{ grafica.nombre }}
+            </div>
+            @if (grafica.descripcion) {
+              <div class="grafica-item-descripcion">{{ grafica.descripcion }}</div>
+            }
+            <div class="grafica-item-meta">
+              <span class="grafica-tipo-badge">{{ grafica.tipo }}</span>
+              <span class="grafica-fecha">{{ formatFechaRelativa(grafica.fechaModificacion) }}</span>
+            </div>
+          </div>
+          <div class="grafica-item-action">
+            <i class="pi pi-plus-circle"></i>
+          </div>
+        </div>
+      } @empty {
+        <div class="graficas-vacio-selector">
+          <i class="pi pi-chart-bar"></i>
+          <span>No hay gráficas guardadas</span>
+          <small>Guarda gráficas desde la tabla unificada para verlas aquí</small>
+        </div>
+      }
+    </div>
+
+    <div class="selector-footer">
+      <p-button
+        label="Cancelar"
+        [text]="true"
+        severity="secondary"
+        (onClick)="cancelarSeleccionGraficaGuardada()">
+      </p-button>
+    </div>
+  </div>
+</p-drawer>
+
+<!-- Drawer: Mis Dashboards -->
+<p-drawer
+  [(visible)]="showDashboardsDrawer"
+  position="right"
+  [style]="{ width: '380px' }"
+  header="Mis Dashboards">
+  <div class="dashboards-drawer-content">
+    <p-tabs [(value)]="dashboardsDrawerTab">
+      <p-tablist>
+        <p-tab value="seleccionar">
+          <i class="pi pi-list mr-2"></i>
+          Guardados ({{ configuraciones().length }})
+        </p-tab>
+        <p-tab value="crear">
+          <i class="pi pi-plus mr-2"></i>
+          Crear nuevo
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Tab: Seleccionar dashboards guardados -->
+        <p-tabpanel value="seleccionar">
+          <div class="dashboards-lista">
+            <div class="dashboards-cards">
+              @for (config of configuraciones(); track config.id) {
+                <div
+                  class="dashboard-card compact"
+                  [class.activo]="config.id === configActual()?.id"
+                  [class.editando]="dashboardEditandoId() === config.id"
+                  (click)="config.id !== configActual()?.id && dashboardEditandoId() !== config.id ? cargarDashboard(config.id) : null">
+                  <!-- Header compacto -->
+                  <div class="dashboard-card-row">
+                    <div class="dashboard-info">
+                      @if (dashboardEditandoId() !== config.id) {
+                        <span class="dashboard-nombre">
+                          @if (config.isDefault) {
+                            <i class="pi pi-star-fill" pTooltip="Dashboard por defecto"></i>
+                          }
+                          {{ config.nombre }}
+                        </span>
+                        @if (config.id === configActual()?.id) {
+                          <p-tag value="Activo" severity="success" [rounded]="true" styleClass="tag-small"></p-tag>
+                        }
+                      } @else {
+                        <input
+                          type="text"
+                          pInputText
+                          class="dashboard-nombre-input"
+                          [(ngModel)]="dashboardNombreEditando"
+                          (keydown.enter)="guardarNombreDashboard(config.id)"
+                          (keydown.escape)="cancelarEdicionNombre()"
+                          (click)="$event.stopPropagation()" />
+                      }
+                    </div>
+                    <div class="dashboard-acciones" (click)="$event.stopPropagation()">
+                      @if (dashboardEditandoId() !== config.id) {
+                        <p-button
+                          icon="pi pi-pencil"
+                          [rounded]="true"
+                          [text]="true"
+                          size="small"
+                          (onClick)="iniciarEdicionNombre(config)"
+                          pTooltip="Renombrar">
+                        </p-button>
+                        <p-button
+                          icon="pi pi-trash"
+                          [rounded]="true"
+                          [text]="true"
+                          size="small"
+                          severity="danger"
+                          (onClick)="confirmarEliminarDashboard(config)"
+                          [disabled]="config.isDefault || configuraciones().length <= 1"
+                          pTooltip="Eliminar">
+                        </p-button>
+                      } @else {
+                        <p-button
+                          icon="pi pi-check"
+                          [rounded]="true"
+                          [text]="true"
+                          size="small"
+                          severity="success"
+                          (onClick)="guardarNombreDashboard(config.id)"
+                          pTooltip="Guardar">
+                        </p-button>
+                        <p-button
+                          icon="pi pi-times"
+                          [rounded]="true"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          (onClick)="cancelarEdicionNombre()"
+                          pTooltip="Cancelar">
+                        </p-button>
+                      }
+                    </div>
+                  </div>
+                  <!-- Meta compacto -->
+                  <div class="dashboard-meta-row">
+                    <span><i class="pi pi-th-large"></i> {{ config.widgets.length }} widgets</span>
+                    <span><i class="pi pi-calendar"></i> {{ formatDate(config.updatedAt) }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="dashboards-empty">
+                  <i class="pi pi-inbox"></i>
+                  <span>No hay dashboards guardados</span>
+                  <small>Crea tu primer dashboard en la pestaña "Crear nuevo"</small>
+                </div>
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab: Crear nuevo dashboard -->
+        <p-tabpanel value="crear">
+          <div class="crear-dashboard-form">
+            <div class="field">
+              <label for="nuevoDashboardNombre">Nombre del dashboard</label>
+              <input
+                id="nuevoDashboardNombre"
+                type="text"
+                pInputText
+                class="w-full"
+                [(ngModel)]="nuevoDashboardNombre"
+                placeholder="Ej: Dashboard de Riesgos" />
+            </div>
+            <div class="field">
+              <label for="nuevoDashboardDesc">Descripción (opcional)</label>
+              <textarea
+                id="nuevoDashboardDesc"
+                pTextarea
+                class="w-full"
+                [(ngModel)]="nuevoDashboardDescripcion"
+                placeholder="Descripción breve del dashboard..."
+                rows="2">
+              </textarea>
+            </div>
+            <p-button
+              icon="pi pi-plus"
+              label="Crear Dashboard"
+              [style]="{ width: '100%' }"
+              (onClick)="crearNuevoDashboard()"
+              [disabled]="!nuevoDashboardNombre.trim()">
+            </p-button>
+            <p-message
+              severity="info"
+              styleClass="mt-3 w-full"
+              text="El nuevo dashboard se creará vacío. Podrás agregar widgets desde el catálogo.">
+            </p-message>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
 </p-drawer>
 
 <!-- Dialogs -->

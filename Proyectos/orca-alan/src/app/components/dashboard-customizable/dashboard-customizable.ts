@@ -154,12 +154,22 @@ export class DashboardCustomizableComponent implements OnInit {
   showCatalogoDrawer = signal(false);
   showConfigDrawer = signal(false);
   showLayoutDrawer = signal(false);
+  showGraficasGuardadasDrawer = signal(false);
+  graficasGuardadas = signal<GraficaGuardada[]>([]);
   catalogoFiltro = signal('');
   categoriaActiva = signal<string>('todos');
 
   // Widget Configurator avanzado (para tablas)
   showWidgetConfigurator = signal(false);
   configuratorCatalogItem = signal<WidgetCatalogItem | null>(null);
+
+  // Drawer Mis Dashboards
+  showDashboardsDrawer = signal(false);
+  dashboardsDrawerTab = 'seleccionar';
+  nuevoDashboardNombre = '';
+  nuevoDashboardDescripcion = '';
+  dashboardEditandoId = signal<string | null>(null);
+  dashboardNombreEditando = '';
 
   // Drilldown Drawers
   showProcesoDrilldown = signal(false);
@@ -2286,6 +2296,15 @@ export class DashboardCustomizableComponent implements OnInit {
     console.log('[Dashboard] agregarWidget llamado con:', catalogItem.tipo);
     console.log('[Dashboard] esGraficaConfigurable:', esGraficaConfigurable(catalogItem.tipo));
 
+    // Graficas-guardadas: abrir drawer de selección primero
+    if (catalogItem.tipo === 'graficas-guardadas') {
+      console.log('[Dashboard] Abriendo selector de gráficas guardadas');
+      this.cargarGraficasGuardadas();
+      this.showCatalogoDrawer.set(false);
+      this.showGraficasGuardadasDrawer.set(true);
+      return;
+    }
+
     // Graficas-interactivas usa el drawer de preconfig con tabs de configuración
     if (catalogItem.tipo === 'graficas-interactivas') {
       console.log('[Dashboard] Abriendo pre-configuración de gráficas interactivas');
@@ -2537,15 +2556,150 @@ export class DashboardCustomizableComponent implements OnInit {
 
   // ==================== GRÁFICAS GUARDADAS ====================
 
-  // Handler para selección de gráfica guardada
+  // Cargar gráficas guardadas desde localStorage
+  cargarGraficasGuardadas(): void {
+    const guardadas = localStorage.getItem('orca-graficas-guardadas');
+    if (guardadas) {
+      this.graficasGuardadas.set(JSON.parse(guardadas));
+    } else {
+      // Generar ejemplos si no hay gráficas guardadas
+      this.graficasGuardadas.set(this.generarEjemplosGraficasGuardadas());
+    }
+  }
+
+  // Generar ejemplos de gráficas guardadas
+  private generarEjemplosGraficasGuardadas(): GraficaGuardada[] {
+    const ahora = new Date();
+    return [
+      {
+        id: 'g1',
+        nombre: 'Cumplimiento por Proceso',
+        descripcion: 'Comparativa de cumplimiento de todos los procesos',
+        tipo: 'bar',
+        fechaCreacion: new Date(ahora.getTime() - 7 * 24 * 60 * 60 * 1000),
+        fechaModificacion: new Date(ahora.getTime() - 1 * 24 * 60 * 60 * 1000),
+        favorito: true,
+        config: { series: [], labels: [] },
+        preview: { miniSeries: [75, 82, 65, 90, 78], miniLabels: [] }
+      },
+      {
+        id: 'g2',
+        nombre: 'Tendencia Mensual',
+        descripcion: 'Evolución del cumplimiento en los últimos 6 meses',
+        tipo: 'line',
+        fechaCreacion: new Date(ahora.getTime() - 14 * 24 * 60 * 60 * 1000),
+        fechaModificacion: new Date(ahora.getTime() - 2 * 24 * 60 * 60 * 1000),
+        favorito: false,
+        config: { series: [], labels: [] },
+        preview: { miniSeries: [60, 65, 70, 68, 75, 80], miniLabels: [] }
+      },
+      {
+        id: 'g3',
+        nombre: 'Distribución de Alertas',
+        descripcion: 'Alertas por severidad',
+        tipo: 'donut',
+        fechaCreacion: new Date(ahora.getTime() - 5 * 24 * 60 * 60 * 1000),
+        fechaModificacion: ahora,
+        favorito: true,
+        config: { series: [], labels: [] },
+        preview: { miniSeries: [30, 45, 25], miniLabels: ['Críticas', 'Warning', 'Info'] }
+      }
+    ];
+  }
+
+  // Seleccionar gráfica guardada y agregarla al dashboard
+  seleccionarGraficaGuardadaParaDashboard(grafica: GraficaGuardada): void {
+    console.log('[Dashboard] Seleccionando gráfica guardada para agregar:', grafica);
+
+    // Buscar el item del catálogo para graficas-interactivas (no graficas-guardadas)
+    // Así se mostrará directamente la gráfica, no la lista de selección
+    const catalogItem = WIDGET_CATALOG.find(w => w.tipo === 'graficas-interactivas');
+    if (!catalogItem) return;
+
+    // Mapear tipo de gráfica guardada a tipo de graficas-interactivas
+    const tipoGraficaMap: Record<string, string> = {
+      'bar': 'bar',
+      'line': 'line',
+      'donut': 'donut',
+      'pie': 'pie',
+      'area': 'area',
+      'radar': 'radar',
+      'heatmap': 'heatmap'
+    };
+
+    // Crear configuración del widget con los datos de la gráfica guardada
+    const widgetConfig = {
+      graficaTipo: tipoGraficaMap[grafica.tipo] || 'donut',
+      graficaAgrupacion: 'estado',
+      graficaPaleta: 'vibrant',
+      graficaAnimaciones: true,
+      graficaMostrarLeyenda: true,
+      graficaMostrarDataLabels: false,
+      graficaTema: this.temaActual(),
+      showHeader: true,
+      // Guardar referencia a la gráfica original
+      graficaGuardadaId: grafica.id,
+      graficaGuardadaConfig: grafica.config
+    };
+
+    this.dashboardService.agregarWidgetConConfig(
+      catalogItem,
+      grafica.nombre,
+      grafica.descripcion || '',
+      widgetConfig
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Widget agregado',
+      detail: `Gráfica "${grafica.nombre}" agregada al dashboard`
+    });
+
+    // Cerrar drawer
+    this.showGraficasGuardadasDrawer.set(false);
+  }
+
+  // Cancelar selección de gráfica guardada
+  cancelarSeleccionGraficaGuardada(): void {
+    this.showGraficasGuardadasDrawer.set(false);
+    this.showCatalogoDrawer.set(true);
+  }
+
+  // Obtener icono según tipo de gráfica
+  getIconoTipoGrafica(tipo: string): string {
+    const iconos: Record<string, string> = {
+      bar: 'pi pi-chart-bar',
+      line: 'pi pi-chart-line',
+      donut: 'pi pi-chart-pie',
+      pie: 'pi pi-chart-pie',
+      area: 'pi pi-chart-line',
+      radar: 'pi pi-compass',
+      heatmap: 'pi pi-th-large'
+    };
+    return iconos[tipo] || 'pi pi-chart-bar';
+  }
+
+  // Formatear fecha relativa
+  formatFechaRelativa(fecha: Date | string): string {
+    const d = new Date(fecha);
+    const ahora = new Date();
+    const diff = ahora.getTime() - d.getTime();
+    const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (dias === 0) return 'Hoy';
+    if (dias === 1) return 'Ayer';
+    if (dias < 7) return `Hace ${dias} días`;
+    return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  }
+
+  // Handler para selección de gráfica guardada (desde widget existente)
   onGraficaGuardadaSeleccionada(grafica: GraficaGuardada): void {
     console.log('Gráfica guardada seleccionada:', grafica);
   }
 
-  // Handler para cargar gráfica guardada en el dashboard
+  // Handler para cargar gráfica guardada en el dashboard (desde widget existente)
   onCargarGraficaGuardada(grafica: GraficaGuardada): void {
     console.log('Cargar gráfica guardada en dashboard:', grafica);
-    // Aquí se podría crear un nuevo widget con la configuración de la gráfica
     this.messageService.add({
       severity: 'success',
       summary: 'Gráfica cargada',
@@ -3001,5 +3155,126 @@ export class DashboardCustomizableComponent implements OnInit {
     } finally {
       this.exportingCanvas.set(false);
     }
+  }
+
+  // ==================== GESTIÓN DE DASHBOARDS ====================
+
+  /** Crear un nuevo dashboard */
+  crearNuevoDashboard(): void {
+    const nombre = this.nuevoDashboardNombre.trim();
+    if (!nombre) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Ingresa un nombre para el dashboard'
+      });
+      return;
+    }
+
+    this.dashboardService.crearNuevaConfiguracion(nombre, this.nuevoDashboardDescripcion.trim() || undefined);
+    this.dashboardService.guardarConfiguracion();
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Dashboard creado',
+      detail: `"${nombre}" creado correctamente`
+    });
+
+    // Limpiar formulario y volver al tab de selección
+    this.nuevoDashboardNombre = '';
+    this.nuevoDashboardDescripcion = '';
+    this.dashboardsDrawerTab = 'seleccionar';
+  }
+
+  /** Cargar un dashboard existente */
+  cargarDashboard(configId: string): void {
+    // Verificar si hay cambios sin guardar
+    if (this.hasUnsavedChanges()) {
+      this.confirmationService.confirm({
+        message: '¿Hay cambios sin guardar. ¿Descartar y cargar el nuevo dashboard?',
+        header: 'Cambios sin guardar',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+          this.dashboardService.cambiarConfiguracion(configId);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Dashboard cargado',
+            detail: 'Se cambió al dashboard seleccionado'
+          });
+        }
+      });
+    } else {
+      this.dashboardService.cambiarConfiguracion(configId);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Dashboard cargado',
+        detail: 'Se cambió al dashboard seleccionado'
+      });
+    }
+  }
+
+  /** Iniciar edición del nombre de un dashboard */
+  iniciarEdicionNombre(config: any): void {
+    this.dashboardEditandoId.set(config.id);
+    this.dashboardNombreEditando = config.nombre;
+  }
+
+  /** Guardar el nuevo nombre del dashboard */
+  guardarNombreDashboard(configId: string): void {
+    const nuevoNombre = this.dashboardNombreEditando.trim();
+    if (!nuevoNombre) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'El nombre no puede estar vacío'
+      });
+      return;
+    }
+
+    this.dashboardService.renombrarConfiguracion(configId, nuevoNombre);
+    this.dashboardService.guardarConfiguracion();
+    this.dashboardEditandoId.set(null);
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Renombrado',
+      detail: 'Dashboard renombrado correctamente'
+    });
+  }
+
+  /** Cancelar edición del nombre */
+  cancelarEdicionNombre(): void {
+    this.dashboardEditandoId.set(null);
+    this.dashboardNombreEditando = '';
+  }
+
+  /** Confirmar eliminación de un dashboard */
+  confirmarEliminarDashboard(config: any): void {
+    this.confirmationService.confirm({
+      message: `¿Eliminar el dashboard "${config.nombre}"? Esta acción no se puede deshacer.`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-trash',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.dashboardService.eliminarConfiguracion(config.id);
+        this.dashboardService.guardarConfiguracion();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Eliminado',
+          detail: `Dashboard "${config.nombre}" eliminado`
+        });
+      }
+    });
+  }
+
+  /** Formatear fecha para mostrar */
+  formatDate(date: Date | string): string {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   }
 }

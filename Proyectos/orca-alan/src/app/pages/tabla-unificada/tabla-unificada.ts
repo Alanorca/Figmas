@@ -461,7 +461,10 @@ export class TablaUnificadaComponent implements OnInit {
     { tipo: 'dona', nombre: 'Dona', icono: 'pi pi-circle', descripcion: 'Distribución con centro vacío' },
     { tipo: 'barras', nombre: 'Barras', icono: 'pi pi-chart-bar', descripcion: 'Comparar cantidades' },
     { tipo: 'lineas', nombre: 'Líneas', icono: 'pi pi-chart-line', descripcion: 'Tendencia temporal' },
-    { tipo: 'radar', nombre: 'Radar', icono: 'pi pi-slack', descripcion: 'Múltiples dimensiones' }
+    { tipo: 'radar', nombre: 'Radar', icono: 'pi pi-slack', descripcion: 'Múltiples dimensiones' },
+    { tipo: 'embudo', nombre: 'Embudo', icono: 'pi pi-filter', descripcion: 'Procesos secuenciales con reducción' },
+    { tipo: 'piramide', nombre: 'Pirámide', icono: 'pi pi-caret-up', descripcion: 'Jerarquías de importancia' },
+    { tipo: 'radial', nombre: 'Radial', icono: 'pi pi-sun', descripcion: 'Progreso circular con porcentajes' }
   ];
 
   columnasParaGrafica = computed(() => {

@@ -40,48 +40,6 @@
       </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon progress">
-          <i class="pi pi-chart-line"></i>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ proyecto.progress }}%</span>
-          <span class="stat-label">Progreso</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon duration">
-          <i class="pi pi-calendar"></i>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ projectDuration }}</span>
-          <span class="stat-label">Días totales</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon tasks">
-          <i class="pi pi-check-square"></i>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ completedTasks }}/{{ totalTasks }}</span>
-          <span class="stat-label">Tareas completadas</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon remaining">
-          <i class="pi pi-clock"></i>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value" [class.warning]="getDaysRemaining(proyecto.endDate) <= 7" [class.overdue]="getDaysRemaining(proyecto.endDate) < 0">
-            {{ getDaysRemaining(proyecto.endDate) }}
-          </span>
-          <span class="stat-label">Días restantes</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Tabs -->
     <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)">
       <p-tablist>
@@ -107,6 +65,48 @@
         <!-- Dashboard Tab -->
         <p-tabpanel [value]="0">
           <div class="dashboard-content">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon progress">
+                  <i class="pi pi-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-value">{{ proyecto.progress }}%</span>
+                  <span class="stat-label">Progreso</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon duration">
+                  <i class="pi pi-calendar"></i>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-value">{{ projectDuration }}</span>
+                  <span class="stat-label">Días totales</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon tasks">
+                  <i class="pi pi-check-square"></i>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-value">{{ completedTasks }}/{{ totalTasks }}</span>
+                  <span class="stat-label">Tareas completadas</span>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon remaining">
+                  <i class="pi pi-clock"></i>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-value" [class.warning]="getDaysRemaining(proyecto.endDate) <= 7" [class.overdue]="getDaysRemaining(proyecto.endDate) < 0">
+                    {{ getDaysRemaining(proyecto.endDate) }}
+                  </span>
+                  <span class="stat-label">Días restantes</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Info del proyecto -->
             <div class="info-section">
               <p-card header="Información del Proyecto">

@@ -150,6 +150,7 @@ interface BreadcrumbItem {
                 <a
                   [routerLink]="item.routerLink"
                   routerLinkActive="submenu-active"
+                  [routerLinkActiveOptions]="{ exact: true }"
                   class="submenu-item"
                 >
                   <i [class]="item.icon"></i>
@@ -897,8 +898,7 @@ export class SidebarComponent implements OnDestroy {
       expanded: true,
       items: [
         { label: 'Activos', icon: 'pi pi-database', routerLink: '/activos' },
-        { label: 'Procesos', icon: 'pi pi-cog', routerLink: '/procesos' },
-        { label: 'Proyectos', icon: 'pi pi-folder', routerLink: '/proyectos' }
+        { label: 'Procesos', icon: 'pi pi-cog', routerLink: '/procesos' }
       ]
     },
     {
@@ -919,6 +919,15 @@ export class SidebarComponent implements OnDestroy {
       items: [
         { label: 'Cuestionarios', icon: 'pi pi-list-check', routerLink: '/cuestionarios' },
         { label: 'Revisiones', icon: 'pi pi-file-check', routerLink: '/cumplimiento' }
+      ]
+    },
+    {
+      label: 'Proyectos',
+      icon: 'pi pi-folder',
+      expanded: true,
+      items: [
+        { label: 'Lista de Proyectos', icon: 'pi pi-list', routerLink: '/proyectos' },
+        { label: 'Nuevo Proyecto', icon: 'pi pi-plus', routerLink: '/proyectos/crear' }
       ]
     },
     {

@@ -83,6 +83,22 @@ import { DashboardService } from '../../services/dashboard.service';
         </div>
       }
 
+      <!-- Menú flotante para widgets sin header (solo en modo edición) -->
+      @if (widget.config.showHeader === false && modoEdicion()) {
+        <div class="floating-menu">
+          <p-button
+            icon="pi pi-ellipsis-h"
+            [rounded]="true"
+            [text]="true"
+            size="small"
+            severity="secondary"
+            (onClick)="floatingMenu.toggle($event)"
+            pTooltip="Opciones">
+          </p-button>
+          <p-menu #floatingMenu [model]="menuItems()" [popup]="true" appendTo="body"></p-menu>
+        </div>
+      }
+
       <!-- Contenido del Widget -->
       <div class="widget-content" [class.no-header]="widget.config.showHeader === false">
         @if (widget.hasError) {
@@ -121,6 +137,7 @@ import { DashboardService } from '../../services/dashboard.service';
       border-radius: var(--border-radius-lg);
       overflow: hidden;
       transition: all var(--transition-duration) var(--transition-timing);
+      position: relative;
     }
 
     // Dark mode - asegurar que no haya bordes claros visibles
@@ -309,6 +326,31 @@ import { DashboardService } from '../../services/dashboard.service';
 
     .widget-editing .resize-handle.resize-se::after {
       border-color: transparent transparent var(--primary-400) transparent;
+    }
+
+    // Menú flotante para widgets sin header
+    .floating-menu {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+
+      :host ::ng-deep .p-button {
+        background: var(--surface-card);
+        border: 1px solid var(--surface-border);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+          background: var(--surface-100);
+        }
+      }
+    }
+
+    .widget-container:hover .floating-menu,
+    .widget-container.widget-selected .floating-menu {
+      opacity: 1;
     }
   `]
 })

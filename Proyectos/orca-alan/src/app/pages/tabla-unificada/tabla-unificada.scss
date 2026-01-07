@@ -238,6 +238,52 @@
   }
 }
 
+// Estilos para redimensionar columnas
+:host ::ng-deep .p-datatable-resizable {
+  // Handle de resize más visible
+  .p-datatable-thead > tr > th {
+    position: relative;
+
+    // Borde derecho como handle de resize
+    &::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 25%;
+      height: 50%;
+      width: 4px;
+      background: transparent;
+      cursor: col-resize;
+      transition: background 0.2s;
+    }
+
+    &:hover::after {
+      background: var(--primary-200);
+    }
+  }
+
+  // Handle de PrimeNG más visible
+  .p-column-resizer {
+    width: 8px !important;
+    right: -4px !important;
+    cursor: col-resize !important;
+    background: transparent;
+    transition: background 0.2s;
+
+    &:hover,
+    &:active {
+      background: var(--primary-color) !important;
+      opacity: 0.5;
+    }
+  }
+
+  // Línea indicadora de resize
+  .p-column-resizer-helper {
+    width: 2px;
+    background: var(--primary-color);
+  }
+}
+
 // Filtros en header de tabla
 :host ::ng-deep {
   .p-datatable .p-datatable-thead > tr:nth-child(2) > th {

@@ -74,7 +74,7 @@ export interface FiltroActivo {
 }
 
 // Configuración de gráfica
-export type TipoGrafica = 'pie' | 'dona' | 'barras' | 'lineas' | 'embudo' | 'radar' | 'radial';
+export type TipoGrafica = 'pie' | 'dona' | 'barras' | 'lineas' | 'embudo' | 'piramide' | 'radar' | 'radial';
 export type TipoAgregacion = 'conteo' | 'suma' | 'promedio';
 export type AgrupacionTemporal = 'dia' | 'semana' | 'mes' | 'trimestre' | 'año';
 
