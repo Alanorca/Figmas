@@ -214,3 +214,20 @@ export interface ConfiguracionGraficaCombinada extends ConfiguracionGrafica {
   };
   ejeYSecundario: boolean;
 }
+
+// Interfaces para grafo de relaciones
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: TipoEntidad | 'central';
+  icon?: string;
+  color?: string;
+  data?: any;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  label?: string;
+  type?: string;
+}

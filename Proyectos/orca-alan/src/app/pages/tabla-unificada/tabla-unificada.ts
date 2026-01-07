@@ -58,7 +58,9 @@ import {
   WidgetGrafica,
   ExportacionProgramada,
   AlertaFiltro,
-  VistaCompartida
+  VistaCompartida,
+  GraphNode,
+  GraphEdge
 } from '../../models/tabla-unificada.models';
 
 interface TipoGraficaOpcion {
@@ -202,8 +204,8 @@ export class TablaUnificadaComponent implements OnInit {
   mostrandoFormGuardar = signal(false);
   vistaCompartiendoId = signal<string | null>(null);
   vistaEditandoId = signal<string | null>(null);
-  nuevaVistaGuardada = { nombre: '', descripcion: '', fechaExpiracion: null as Date | null };
-  vistaEditando = { nombre: '', descripcion: '', fechaExpiracion: null as Date | null };
+  nuevaVistaGuardada: { nombre: string; descripcion: string; fechaExpiracion: Date | null } = { nombre: '', descripcion: '', fechaExpiracion: null };
+  vistaEditando: { nombre: string; descripcion: string; fechaExpiracion: Date | null } = { nombre: '', descripcion: '', fechaExpiracion: null };
   emailCompartir = '';
 
   // Objetos para formularios de dialogs
@@ -218,6 +220,16 @@ export class TablaUnificadaComponent implements OnInit {
   serieSecundariaColumna = signal('');
   serieSecundariaAgregacion = signal<'conteo' | 'suma' | 'promedio'>('conteo');
   mostrarEjeYSecundario = signal(true);
+
+  // Drawer de relaciones/grafo
+  showRelacionesDrawer = signal(false);
+  registroRelaciones = signal<RegistroUnificado | null>(null);
+  graphData = signal<{ nodes: GraphNode[]; edges: GraphEdge[] } | null>(null);
+  graphZoom = signal(1);
+  graphPanX = signal(0);
+  graphPanY = signal(0);
+  isPanning = false;
+  lastPanPosition = { x: 0, y: 0 };
 
   // Columnas ordenadas según el estado actual (para el drawer)
   columnasOrdenadas = computed(() => {
@@ -955,6 +967,7 @@ export class TablaUnificadaComponent implements OnInit {
   getMenuItemsRegistro(registro: RegistroUnificado): MenuItem[] {
     return [
       { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.verDetalle(registro) },
+      { label: 'Ver relaciones', icon: 'pi pi-sitemap', command: () => this.verRelaciones(registro) },
       { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(registro) },
       { separator: true },
       { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => console.log('Eliminar', registro.id) }
@@ -1697,6 +1710,188 @@ export class TablaUnificadaComponent implements OnInit {
       'diferente': 'diferente de'
     };
     return labels[operador] || operador;
+  }
+
+  // Métodos para grafo de relaciones
+  verRelaciones(registro: RegistroUnificado): void {
+    this.registroRelaciones.set(registro);
+    this.graphZoom.set(1);
+    this.graphPanX.set(0);
+    this.graphPanY.set(0);
+    this.generarGraphData(registro);
+    this.showRelacionesDrawer.set(true);
+  }
+
+  generarGraphData(registro: RegistroUnificado): void {
+    const nodes: GraphNode[] = [];
+    const edges: GraphEdge[] = [];
+
+    // Nodo central (el registro seleccionado)
+    nodes.push({
+      id: registro.id,
+      label: registro.descripcion || registro.nombre || 'Sin nombre',
+      type: 'central',
+      icon: this.getTipoEntidadIcon(registro.tipoEntidad),
+      color: this.getNodeColor(registro.tipoEntidad)
+    });
+
+    // Buscar relaciones en los datos
+    const datos = this.service.datosUnificados();
+
+    // Si tiene contenedor, agregar el contenedor como nodo
+    if (registro.contenedorId && registro.contenedorNombre) {
+      const contenedorTipo = registro.tipoContenedor === 'activo' ? 'activo' : 'proceso';
+      nodes.push({
+        id: registro.contenedorId,
+        label: registro.contenedorNombre,
+        type: contenedorTipo as TipoEntidad,
+        icon: this.getTipoEntidadIcon(contenedorTipo as TipoEntidad),
+        color: this.getNodeColor(contenedorTipo as TipoEntidad)
+      });
+      edges.push({
+        source: registro.id,
+        target: registro.contenedorId,
+        label: 'pertenece a'
+      });
+    }
+
+    // Buscar otros registros que comparten el mismo contenedor
+    if (registro.contenedorId) {
+      const relacionados = datos.filter(d =>
+        d.id !== registro.id &&
+        d.contenedorId === registro.contenedorId
+      ).slice(0, 6);
+
+      relacionados.forEach(rel => {
+        nodes.push({
+          id: rel.id,
+          label: rel.descripcion || rel.nombre || 'Sin nombre',
+          type: rel.tipoEntidad,
+          icon: this.getTipoEntidadIcon(rel.tipoEntidad),
+          color: this.getNodeColor(rel.tipoEntidad)
+        });
+        edges.push({
+          source: registro.contenedorId!,
+          target: rel.id,
+          label: 'contiene'
+        });
+      });
+    }
+
+    // Buscar registros del mismo tipo con estado similar
+    const similares = datos.filter(d =>
+      d.id !== registro.id &&
+      d.tipoEntidad === registro.tipoEntidad &&
+      d.estado === registro.estado &&
+      !nodes.find(n => n.id === d.id)
+    ).slice(0, 4);
+
+    similares.forEach(sim => {
+      nodes.push({
+        id: sim.id,
+        label: sim.descripcion || sim.nombre || 'Sin nombre',
+        type: sim.tipoEntidad,
+        icon: this.getTipoEntidadIcon(sim.tipoEntidad),
+        color: this.getNodeColor(sim.tipoEntidad)
+      });
+      edges.push({
+        source: registro.id,
+        target: sim.id,
+        label: 'relacionado'
+      });
+    });
+
+    this.graphData.set({ nodes, edges });
+  }
+
+  getNodeColor(tipo: TipoEntidad | 'central'): string {
+    const colors: Record<string, string> = {
+      'central': '#6366f1',
+      'riesgo': '#f59e0b',
+      'incidente': '#ef4444',
+      'activo': '#22c55e',
+      'proceso': '#3b82f6',
+      'defecto': '#ec4899',
+      'revision': '#8b5cf6',
+      'cumplimiento': '#06b6d4'
+    };
+    return colors[tipo] || '#6b7280';
+  }
+
+  getNodePosition(index: number, total: number, isCenter: boolean): { x: number; y: number } {
+    if (isCenter) {
+      return { x: 200, y: 200 };
+    }
+    const angle = (2 * Math.PI * index) / (total - 1) - Math.PI / 2;
+    const radius = 150;
+    return {
+      x: 200 + radius * Math.cos(angle),
+      y: 200 + radius * Math.sin(angle)
+    };
+  }
+
+  onGraphWheel(event: WheelEvent): void {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? -0.1 : 0.1;
+    const newZoom = Math.max(0.3, Math.min(3, this.graphZoom() + delta));
+    this.graphZoom.set(newZoom);
+  }
+
+  onGraphMouseDown(event: MouseEvent): void {
+    if (event.button === 0) {
+      this.isPanning = true;
+      this.lastPanPosition = { x: event.clientX, y: event.clientY };
+    }
+  }
+
+  onGraphMouseMove(event: MouseEvent): void {
+    if (!this.isPanning) return;
+
+    const deltaX = event.clientX - this.lastPanPosition.x;
+    const deltaY = event.clientY - this.lastPanPosition.y;
+
+    const zoomFactor = this.graphZoom();
+    this.graphPanX.update(x => x + deltaX / zoomFactor);
+    this.graphPanY.update(y => y + deltaY / zoomFactor);
+
+    this.lastPanPosition = { x: event.clientX, y: event.clientY };
+  }
+
+  onGraphMouseUp(): void {
+    this.isPanning = false;
+  }
+
+  resetGraphView(): void {
+    this.graphZoom.set(1);
+    this.graphPanX.set(0);
+    this.graphPanY.set(0);
+  }
+
+  zoomInGraph(): void {
+    this.graphZoom.update(z => Math.min(z + 0.2, 3));
+  }
+
+  zoomOutGraph(): void {
+    this.graphZoom.update(z => Math.max(z - 0.2, 0.3));
+  }
+
+  // Métodos helper para el grafo
+  getEdgeSourcePosition(edge: GraphEdge): { x: number; y: number } {
+    const data = this.graphData();
+    if (!data) return { x: 0, y: 0 };
+    const node = data.nodes.find(n => n.id === edge.source);
+    if (!node) return { x: 0, y: 0 };
+    const index = data.nodes.indexOf(node);
+    return this.getNodePosition(index, data.nodes.length, node.type === 'central');
+  }
+
+  getEdgeTargetPosition(edge: GraphEdge): { x: number; y: number } {
+    const data = this.graphData();
+    if (!data) return { x: 0, y: 0 };
+    const node = data.nodes.find(n => n.id === edge.target);
+    if (!node) return { x: 0, y: 0 };
+    const index = data.nodes.indexOf(node);
+    return this.getNodePosition(index, data.nodes.length, node.type === 'central');
   }
 
   // Vista compartida methods

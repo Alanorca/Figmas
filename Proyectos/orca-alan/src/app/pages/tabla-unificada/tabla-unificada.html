@@ -66,6 +66,18 @@
 
     <ng-template pTemplate="end">
       <div class="flex gap-2 align-items-center">
+        <!-- Botón de Ver Relaciones (solo con 1 registro seleccionado) -->
+        @if (registrosSeleccionados().length === 1) {
+          <p-button
+            icon="pi pi-sitemap"
+            severity="secondary"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="verRelaciones(registrosSeleccionados()[0])"
+            pTooltip="Ver relaciones"
+            tooltipPosition="bottom" />
+        }
+
         <!-- Botón de Gráficas -->
         <p-button
           icon="pi pi-chart-bar"
@@ -2167,5 +2179,153 @@
       icon="pi pi-times"
       severity="secondary"
       (onClick)="showExportacionesDialog.set(false)" />
+  </ng-template>
+</p-drawer>
+
+<!-- Drawer: Visualización de Relaciones -->
+<p-drawer
+  [(visible)]="showRelacionesDrawer"
+  position="right"
+  [style]="{ width: '600px' }"
+  header="Visualización de Relaciones">
+  <div class="relaciones-drawer-content">
+    @if (registroRelaciones()) {
+      <!-- Header con info del registro -->
+      <div class="relaciones-header">
+        <div class="registro-info">
+          <p-tag
+            [value]="getTipoEntidadLabel(registroRelaciones()!.tipoEntidad)"
+            [icon]="getTipoEntidadIcon(registroRelaciones()!.tipoEntidad)"
+            [severity]="registroRelaciones()!.tipoEntidad === 'riesgo' ? 'warn' : registroRelaciones()!.tipoEntidad === 'incidente' ? 'danger' : 'info'" />
+          <span class="registro-nombre">{{ registroRelaciones()!.descripcion || registroRelaciones()!.nombre }}</span>
+        </div>
+        @if (registroRelaciones()!.contenedorNombre) {
+          <span class="registro-contenedor">
+            <i class="pi pi-folder mr-1"></i>
+            {{ registroRelaciones()!.contenedorNombre }}
+          </span>
+        }
+      </div>
+
+      <!-- Toolbar del grafo -->
+      <div class="graph-toolbar">
+        <div class="flex gap-2">
+          <p-button
+            icon="pi pi-search-plus"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            (onClick)="zoomInGraph()"
+            pTooltip="Acercar" />
+          <p-button
+            icon="pi pi-search-minus"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            (onClick)="zoomOutGraph()"
+            pTooltip="Alejar" />
+          <p-button
+            icon="pi pi-refresh"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            (onClick)="resetGraphView()"
+            pTooltip="Restablecer vista" />
+        </div>
+        <span class="zoom-indicator">{{ (graphZoom() * 100) | number:'1.0-0' }}%</span>
+      </div>
+
+      <!-- Área del grafo -->
+      <div class="graph-container">
+        <div
+          class="graph-area"
+          [style.transform]="'scale(' + graphZoom() + ') translate(' + graphPanX() + 'px, ' + graphPanY() + 'px)'"
+          (wheel)="onGraphWheel($event)"
+          (mousedown)="onGraphMouseDown($event)"
+          (mousemove)="onGraphMouseMove($event)"
+          (mouseup)="onGraphMouseUp()"
+          (mouseleave)="onGraphMouseUp()">
+
+          @if (graphData() && graphData()!.nodes.length > 0) {
+            <svg class="graph-svg" viewBox="0 0 400 400">
+              <!-- Líneas de conexión -->
+              @for (edge of graphData()!.edges; track edge.source + edge.target) {
+                <line
+                  [attr.x1]="getEdgeSourcePosition(edge).x"
+                  [attr.y1]="getEdgeSourcePosition(edge).y"
+                  [attr.x2]="getEdgeTargetPosition(edge).x"
+                  [attr.y2]="getEdgeTargetPosition(edge).y"
+                  class="graph-edge" />
+              }
+
+              <!-- Nodos -->
+              @for (node of graphData()!.nodes; track node.id; let i = $index) {
+                <g class="graph-node" [attr.transform]="'translate(' + getNodePosition(i, graphData()!.nodes.length, node.type === 'central').x + ',' + getNodePosition(i, graphData()!.nodes.length, node.type === 'central').y + ')'">
+                  <circle
+                    [attr.r]="node.type === 'central' ? 35 : 25"
+                    [attr.fill]="node.color"
+                    class="node-circle"
+                    [class.central]="node.type === 'central'" />
+                  <text
+                    class="node-icon"
+                    text-anchor="middle"
+                    dominant-baseline="central"
+                    [attr.font-size]="node.type === 'central' ? '18' : '14'">
+                    {{ node.icon }}
+                  </text>
+                </g>
+              }
+            </svg>
+          } @else {
+            <div class="graph-empty">
+              <i class="pi pi-sitemap text-4xl mb-2"></i>
+              <p>Sin relaciones encontradas</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Leyenda -->
+      <div class="graph-legend">
+        <span class="legend-title">Leyenda:</span>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="legend-color" style="background: #6366f1;"></span>
+            <span>Central</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #f59e0b;"></span>
+            <span>Riesgo</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #ef4444;"></span>
+            <span>Incidente</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #22c55e;"></span>
+            <span>Activo</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #3b82f6;"></span>
+            <span>Proceso</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="graph-stats">
+        <span>{{ graphData()?.nodes?.length || 0 }} nodos</span>
+        <span class="mx-2">•</span>
+        <span>{{ graphData()?.edges?.length || 0 }} relaciones</span>
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar"
+      icon="pi pi-times"
+      severity="secondary"
+      (onClick)="showRelacionesDrawer.set(false)" />
   </ng-template>
 </p-drawer>
