@@ -544,6 +544,32 @@
         }
       </div>
       <div class="chart-actions">
+        <!-- Drill-down toggle -->
+        <p-button
+          icon="pi pi-sitemap"
+          [rounded]="true"
+          [text]="true"
+          [severity]="drillDownActivo() ? 'success' : 'secondary'"
+          (onClick)="toggleDrillDown()"
+          [pTooltip]="drillDownActivo() ? 'Desactivar drill-down' : 'Activar drill-down'"
+          tooltipPosition="top" />
+        <!-- Anotaciones -->
+        <p-button
+          icon="pi pi-comments"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="abrirDialogAnotacion()"
+          pTooltip="Agregar anotación"
+          tooltipPosition="top" />
+        <!-- Comparación temporal -->
+        <p-button
+          icon="pi pi-calendar"
+          [rounded]="true"
+          [text]="true"
+          [severity]="comparacionTemporal().habilitada ? 'success' : 'secondary'"
+          (onClick)="abrirDialogComparacion()"
+          pTooltip="Comparación temporal"
+          tooltipPosition="top" />
         <p-button
           icon="pi pi-refresh"
           [rounded]="true"
@@ -568,13 +594,45 @@
       </div>
     </div>
 
+    <!-- Drill-down breadcrumbs -->
+    @if (drillDownStack().length > 0) {
+      <div class="drilldown-breadcrumbs">
+        <button class="breadcrumb-item home" (click)="limpiarDrillDown()">
+          <i class="pi pi-home"></i>
+        </button>
+        @for (item of drillDownStack(); track $index) {
+          <i class="pi pi-chevron-right breadcrumb-separator"></i>
+          <button class="breadcrumb-item" (click)="navegarDrillDown($index)">
+            {{ item.valor }}
+          </button>
+        }
+        <button class="breadcrumb-back" (click)="salirDrillDown()" pTooltip="Volver">
+          <i class="pi pi-arrow-left"></i>
+        </button>
+      </div>
+    }
+
     <div class="chart-container" #chartContainer>
       @if (datosSignal().labels.length > 0) {
-        <p-chart
-          [type]="chartType()"
-          [data]="chartData()"
-          [options]="chartOptions()"
-          [style]="{ width: '100%', height: '100%' }" />
+        <!-- Usar ApexCharts para gráficas avanzadas (Funnel, TreeMap, RadialBar, etc.) -->
+        @if (usarApexCharts()) {
+          <apx-chart
+            [series]="apexChartOptions().series"
+            [chart]="apexChartOptions().chart"
+            [xaxis]="apexChartOptions().xaxis!"
+            [dataLabels]="apexChartOptions().dataLabels!"
+            [plotOptions]="apexChartOptions().plotOptions!"
+            [legend]="apexChartOptions().legend!"
+            [colors]="apexChartOptions().colors!"
+            [labels]="apexChartOptions().labels!" />
+        } @else {
+          <!-- Usar Chart.js (PrimeNG) para gráficas básicas -->
+          <p-chart
+            [type]="chartType()"
+            [data]="chartData()"
+            [options]="chartOptions()"
+            [style]="{ width: '100%', height: '100%' }" />
+        }
       } @else {
         <div class="no-data-message">
           <i class="pi pi-chart-bar"></i>
@@ -582,6 +640,31 @@
         </div>
       }
     </div>
+
+    <!-- Lista de anotaciones -->
+    @if (anotaciones().length > 0) {
+      <div class="anotaciones-list">
+        <div class="anotaciones-header">
+          <span><i class="pi pi-comments mr-2"></i>Anotaciones ({{ anotaciones().length }})</span>
+        </div>
+        @for (anotacion of anotaciones(); track anotacion.id) {
+          <div class="anotacion-item" [style.border-left-color]="anotacion.color">
+            <div class="anotacion-contenido">
+              <span class="anotacion-texto">{{ anotacion.texto }}</span>
+              <span class="anotacion-meta">{{ anotacion.autor }} - {{ formatFecha(anotacion.fecha) }}</span>
+            </div>
+            <div class="anotacion-acciones">
+              <button class="anotacion-btn" (click)="editarAnotacion(anotacion)">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="anotacion-btn delete" (click)="eliminarAnotacion(anotacion.id)">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
 
     <!-- Stats rápidos -->
     <div class="chart-stats">
@@ -613,3 +696,134 @@
     </div>
   </div>
 </div>
+
+<!-- Dialog para nueva anotación -->
+<p-dialog
+  header="{{ anotacionEditando() ? 'Editar Anotación' : 'Nueva Anotación' }}"
+  [(visible)]="mostrarDialogAnotacion"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [closable]="true"
+  (onHide)="cerrarDialogAnotacion()">
+  <div class="anotacion-form">
+    <div class="form-field">
+      <label for="anotacionTexto">Texto de la anotación</label>
+      <textarea
+        pTextarea
+        id="anotacionTexto"
+        rows="3"
+        [ngModel]="nuevaAnotacion().texto"
+        (ngModelChange)="setAnotacionTexto($event)"
+        placeholder="Escribe tu anotación aquí..."
+        class="w-full"></textarea>
+    </div>
+    <div class="form-field">
+      <label for="anotacionColor">Color</label>
+      <div class="color-picker-row">
+        @for (color of ['#3B82F6', '#22C55E', '#EAB308', '#EF4444', '#8B5CF6', '#EC4899']; track color) {
+          <button
+            class="color-option"
+            [class.selected]="nuevaAnotacion().color === color"
+            [style.background]="color"
+            (click)="setAnotacionColor(color)">
+          </button>
+        }
+      </div>
+    </div>
+    <div class="form-field">
+      <label for="anotacionAutor">Autor</label>
+      <input
+        pInputText
+        id="anotacionAutor"
+        [ngModel]="nuevaAnotacion().autor"
+        (ngModelChange)="setAnotacionAutor($event)"
+        placeholder="Tu nombre"
+        class="w-full" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      icon="pi pi-times"
+      severity="secondary"
+      [text]="true"
+      (onClick)="cerrarDialogAnotacion()" />
+    <p-button
+      label="{{ anotacionEditando() ? 'Actualizar' : 'Guardar' }}"
+      icon="pi pi-check"
+      severity="success"
+      [disabled]="!nuevaAnotacion().texto?.trim()"
+      (onClick)="guardarAnotacion()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog para comparación temporal -->
+<p-dialog
+  header="Comparación Temporal"
+  [(visible)]="mostrarDialogComparacion"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [closable]="true">
+  <div class="comparacion-form">
+    <p class="comparacion-desc">
+      <i class="pi pi-info-circle mr-2"></i>
+      Compara datos entre dos periodos de tiempo para identificar tendencias y cambios.
+    </p>
+
+    <div class="periodo-config">
+      <div class="periodo-item">
+        <label><i class="pi pi-calendar mr-2"></i>Periodo 1 (Actual)</label>
+        <div class="periodo-dates">
+          <span class="periodo-label">{{ comparacionTemporal().periodo1.label }}</span>
+        </div>
+      </div>
+      <div class="periodo-item">
+        <label><i class="pi pi-calendar mr-2"></i>Periodo 2 (Comparación)</label>
+        <div class="periodo-dates">
+          <span class="periodo-label">{{ comparacionTemporal().periodo2.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Modo de visualización</label>
+      <div class="modo-options">
+        <button
+          class="modo-btn"
+          [class.active]="comparacionTemporal().modo === 'overlay'"
+          (click)="setModoComparacion('overlay')">
+          <i class="pi pi-clone"></i>
+          <span>Superpuesto</span>
+        </button>
+        <button
+          class="modo-btn"
+          [class.active]="comparacionTemporal().modo === 'sideBySide'"
+          (click)="setModoComparacion('sideBySide')">
+          <i class="pi pi-th-large"></i>
+          <span>Lado a lado</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    @if (comparacionTemporal().habilitada) {
+      <p-button
+        label="Desactivar"
+        icon="pi pi-times"
+        severity="danger"
+        [text]="true"
+        (onClick)="desactivarComparacionTemporal(); mostrarDialogComparacion.set(false)" />
+    }
+    <p-button
+      label="Cancelar"
+      icon="pi pi-times"
+      severity="secondary"
+      [text]="true"
+      (onClick)="mostrarDialogComparacion.set(false)" />
+    <p-button
+      label="Aplicar Comparación"
+      icon="pi pi-check"
+      severity="success"
+      (onClick)="aplicarComparacionTemporal()" />
+  </ng-template>
+</p-dialog>

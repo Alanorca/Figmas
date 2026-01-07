@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ViewChild, ElementRef, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -36,12 +36,17 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { TimelineModule } from 'primeng/timeline';
+import { ToastModule } from 'primeng/toast';
+import { StepsModule } from 'primeng/steps';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 // Componentes personalizados
 import { GraficasInteractivasComponent, DatosGrafica, FiltroGrafica } from '../../components/graficas-interactivas/graficas-interactivas';
 
 // Services & Models
 import { TablaUnificadaService } from '../../services/tabla-unificada.service';
+import { MessageService } from 'primeng/api';
+import { ActivatedRoute } from '@angular/router';
 import {
   RegistroUnificado,
   TipoEntidad,
@@ -49,7 +54,11 @@ import {
   FiltroActivo,
   TipoColumna,
   ConfiguracionGrafica,
-  TipoGrafica
+  TipoGrafica,
+  WidgetGrafica,
+  ExportacionProgramada,
+  AlertaFiltro,
+  VistaCompartida
 } from '../../models/tabla-unificada.models';
 
 interface TipoGraficaOpcion {
@@ -69,14 +78,19 @@ interface TipoGraficaOpcion {
     DatePickerModule, PaginatorModule, DragDropModule, ToggleButtonModule,
     SelectButtonModule, PanelModule, DividerModule, BadgeModule,
     InputNumberModule, SkeletonModule, DrawerModule, TabsModule,
-    MessageModule, ToolbarModule, IconFieldModule, InputIconModule, AutoCompleteModule, TimelineModule, GraficasInteractivasComponent
+    MessageModule, ToolbarModule, IconFieldModule, InputIconModule, AutoCompleteModule,
+    TimelineModule, ToastModule, StepsModule, ToggleSwitchModule,
+    GraficasInteractivasComponent
   ],
+  providers: [MessageService],
   templateUrl: './tabla-unificada.html',
   styleUrl: './tabla-unificada.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TablaUnificadaComponent {
+export class TablaUnificadaComponent implements OnInit {
   private service = inject(TablaUnificadaService);
+  private messageService = inject(MessageService);
+  private route = inject(ActivatedRoute);
 
   // Referencias
   @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -153,6 +167,57 @@ export class TablaUnificadaComponent {
   // Dialog de historial
   showHistorialDialog = signal(false);
   historialRegistro = signal<{ fecha: Date; usuario: string; accion: string; detalles: string }[]>([]);
+
+  // ==================== NUEVAS FUNCIONALIDADES FASE 2 ====================
+
+  // Widgets de dashboard
+  widgets = this.service.widgets;
+  showGuardarWidgetDialog = signal(false);
+  nuevoWidget = signal<Partial<WidgetGrafica>>({ titulo: '', descripcion: '', tamaño: 'mediano' });
+
+  // Exportaciones programadas
+  exportacionesProgramadas = this.service.exportacionesProgramadas;
+  showExportacionesDialog = signal(false);
+  exportacionesTabActivo = 'nueva'; // 'nueva' | 'lista'
+  exportacionEditandoId = signal<string | null>(null);
+
+  // Alertas basadas en filtros
+  alertas = this.service.alertas;
+  showAlertasDialog = signal(false);
+  alertasTabActivo = 'nueva'; // 'nueva' | 'lista'
+  alertaEditandoId = signal<string | null>(null);
+
+  // Vistas compartidas
+  vistasCompartidas = this.service.vistasCompartidas;
+  showCompartirDialog = signal(false);
+  showVistasCompartidasDialog = signal(false);
+  showVistasDialog = signal(false);
+  nombreVistaCompartida = signal('');
+  descripcionVistaCompartida = signal('');
+  urlVistaCopiada = signal(false);
+  ultimaVistaCreada = signal<VistaCompartida | null>(null);
+  urlVistaCompartida = signal('');
+
+  // Drawer de vistas guardadas
+  mostrandoFormGuardar = signal(false);
+  vistaCompartiendoId = signal<string | null>(null);
+  vistaEditandoId = signal<string | null>(null);
+  nuevaVistaGuardada = { nombre: '', descripcion: '', fechaExpiracion: null as Date | null };
+  vistaEditando = { nombre: '', descripcion: '', fechaExpiracion: null as Date | null };
+  emailCompartir = '';
+
+  // Objetos para formularios de dialogs
+  widgetConfig = { titulo: '', descripcion: '', tamano: 'mediano' as 'pequeño' | 'mediano' | 'grande' };
+  vistaCompartida = { nombre: '', descripcion: '', fechaExpiracion: null as Date | null };
+  nuevaAlerta = { nombre: '', operadorUmbral: 'mayor', umbral: 5, prioridad: '', notificarEmail: false, notificarPush: false, notificarInApp: true };
+  nuevaExportacion = { nombre: '', formato: '', frecuencia: '', hora: null as Date | null, destinatarios: '' };
+  today = new Date();
+
+  // Gráficas combinadas
+  tipoGraficaCombinada = signal<'barras_linea' | 'area_linea' | 'barras_area'>('barras_linea');
+  serieSecundariaColumna = signal('');
+  serieSecundariaAgregacion = signal<'conteo' | 'suma' | 'promedio'>('conteo');
+  mostrarEjeYSecundario = signal(true);
 
   // Columnas ordenadas según el estado actual (para el drawer)
   columnasOrdenadas = computed(() => {
@@ -264,6 +329,33 @@ export class TablaUnificadaComponent {
     { label: 'Antes de', value: 'antes' },
     { label: 'Después de', value: 'despues' },
     { label: 'Entre', value: 'entre' }
+  ];
+
+  // Opciones para alertas
+  operadoresUmbral = [
+    { label: 'Mayor que', value: 'mayor' },
+    { label: 'Menor que', value: 'menor' },
+    { label: 'Igual a', value: 'igual' },
+    { label: 'Diferente de', value: 'diferente' }
+  ];
+
+  prioridadOptions = [
+    { label: 'Baja', value: 'baja' },
+    { label: 'Media', value: 'media' },
+    { label: 'Alta', value: 'alta' },
+    { label: 'Crítica', value: 'critica' }
+  ];
+
+  // Opciones para exportaciones programadas
+  formatoExportacionOptions = [
+    { label: 'Excel (.xlsx)', value: 'excel' },
+    { label: 'CSV', value: 'csv' }
+  ];
+
+  frecuenciaOptions = [
+    { label: 'Diaria', value: 'diaria' },
+    { label: 'Semanal', value: 'semanal' },
+    { label: 'Mensual', value: 'mensual' }
   ];
 
   // Opciones de registros por página
@@ -887,7 +979,9 @@ export class TablaUnificadaComponent {
   exportMenuItems: MenuItem[] = [
     { label: 'Excel (.xlsx)', icon: 'pi pi-file-excel', command: () => this.exportarExcel() },
     { label: 'PDF', icon: 'pi pi-file-pdf', command: () => this.exportarPDF() },
-    { label: 'CSV', icon: 'pi pi-file', command: () => this.exportarCSV() }
+    { label: 'CSV', icon: 'pi pi-file', command: () => this.exportarCSV() },
+    { separator: true },
+    { label: 'Exportaciones programadas', icon: 'pi pi-calendar', command: () => this.showExportacionesDialog.set(true) }
   ];
 
   // Menú de acciones masivas
@@ -1172,5 +1266,752 @@ export class TablaUnificadaComponent {
       case 'eliminado': return 'var(--red-500)';
       default: return 'var(--primary-color)';
     }
+  }
+
+  // ==================== WIDGETS DE DASHBOARD ====================
+  abrirGuardarWidgetDialog(): void {
+    this.nuevoWidget.set({
+      titulo: this.configGrafica().titulo || 'Nueva gráfica',
+      descripcion: '',
+      tamaño: 'mediano'
+    });
+    this.showGuardarWidgetDialog.set(true);
+  }
+
+  guardarComoWidget(): void {
+    const widget = this.nuevoWidget();
+    if (!widget.titulo?.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Ingresa un título para el widget'
+      });
+      return;
+    }
+
+    const nuevoWidget = this.service.guardarWidget({
+      titulo: widget.titulo,
+      descripcion: widget.descripcion,
+      configuracion: this.configGrafica(),
+      filtros: this.estado().filtrosActivos,
+      entidades: this.estado().entidadesSeleccionadas,
+      tamaño: widget.tamaño || 'mediano'
+    });
+
+    this.showGuardarWidgetDialog.set(false);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Widget guardado',
+      detail: `"${nuevoWidget.titulo}" se agregó al dashboard`
+    });
+  }
+
+  eliminarWidget(id: string): void {
+    this.service.eliminarWidget(id);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Widget eliminado',
+      detail: 'El widget se eliminó del dashboard'
+    });
+  }
+
+  // ==================== EXPORTAR GRÁFICA A EXCEL ====================
+  exportarGraficaExcel(): void {
+    const datos = this.datosGraficaInteractiva();
+    const titulo = this.configGrafica().titulo || 'grafica';
+
+    if (!datos.labels.length) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin datos',
+        detail: 'No hay datos para exportar'
+      });
+      return;
+    }
+
+    // Convertir series a valores simples
+    let valores: number[] = [];
+    if (typeof datos.series[0] === 'number') {
+      valores = datos.series as number[];
+    } else {
+      valores = (datos.series[0] as any)?.data || [];
+    }
+
+    this.service.exportarGraficaExcel({ labels: datos.labels, valores }, titulo);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Exportado',
+      detail: 'Los datos de la gráfica se exportaron a Excel'
+    });
+  }
+
+  // ==================== EXPORTACIONES PROGRAMADAS ====================
+  toggleExportacion(id: string): void {
+    this.service.toggleExportacionProgramada(id);
+  }
+
+  eliminarExportacion(id: string): void {
+    this.service.eliminarExportacionProgramada(id);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Eliminado',
+      detail: 'Exportación programada eliminada'
+    });
+  }
+
+  getFrecuenciaLabel(frecuencia: string): string {
+    const labels: Record<string, string> = {
+      'diaria': 'diariamente',
+      'semanal': 'semanalmente',
+      'mensual': 'mensualmente'
+    };
+    return labels[frecuencia] || frecuencia;
+  }
+
+  // ==================== ALERTAS ====================
+  getAlertasActivasCount(): number {
+    return this.alertas().filter(a => a.activa).length;
+  }
+
+  eliminarAlerta(id: string): void {
+    this.service.eliminarAlerta(id);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Eliminado',
+      detail: 'Alerta eliminada'
+    });
+  }
+
+  verificarAlertas(): void {
+    const alertasActivadas = this.service.verificarAlertas();
+    if (alertasActivadas.length > 0) {
+      alertasActivadas.forEach(alerta => {
+        this.messageService.add({
+          severity: this.getPrioridadSeverity(alerta.prioridad),
+          summary: `Alerta: ${alerta.nombre}`,
+          detail: alerta.descripcion || 'Se han cumplido las condiciones de la alerta',
+          life: 10000
+        });
+      });
+    }
+  }
+
+  getPrioridadSeverity(prioridad: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    const map: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
+      'baja': 'success',
+      'media': 'info',
+      'alta': 'warn',
+      'critica': 'danger'
+    };
+    return map[prioridad] || 'info';
+  }
+
+  getPrioridadColor(prioridad: string): string {
+    const colors: Record<string, string> = {
+      'baja': '#22c55e',
+      'media': '#eab308',
+      'alta': '#f97316',
+      'critica': '#ef4444'
+    };
+    return colors[prioridad] || '#6b7280';
+  }
+
+  // ==================== VISTAS COMPARTIDAS ====================
+  abrirCompartirDialog(): void {
+    this.nombreVistaCompartida.set('');
+    this.descripcionVistaCompartida.set('');
+    this.ultimaVistaCreada.set(null);
+    this.urlVistaCopiada.set(false);
+    this.showCompartirDialog.set(true);
+  }
+
+  crearVistaCompartida(): void {
+    const nombre = this.nombreVistaCompartida();
+    if (!nombre.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Ingresa un nombre para la vista compartida'
+      });
+      return;
+    }
+
+    const vista = this.service.crearVistaCompartida(nombre, this.descripcionVistaCompartida());
+    this.ultimaVistaCreada.set(vista);
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Vista compartida creada',
+      detail: 'Copia el enlace para compartir'
+    });
+  }
+
+  getUrlVistaCompartida(): string {
+    const vista = this.ultimaVistaCreada();
+    if (!vista) return '';
+    return this.service.obtenerUrlVistaCompartida(vista.codigo);
+  }
+
+  copiarUrlAlPortapapeles(): void {
+    const url = this.getUrlVistaCompartida();
+    if (url) {
+      navigator.clipboard.writeText(url).then(() => {
+        this.urlVistaCopiada.set(true);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Copiado',
+          detail: 'Enlace copiado al portapapeles'
+        });
+        setTimeout(() => this.urlVistaCopiada.set(false), 3000);
+      });
+    }
+  }
+
+  eliminarVistaCompartida(id: string): void {
+    this.service.eliminarVistaCompartida(id);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Eliminado',
+      detail: 'Vista compartida eliminada'
+    });
+  }
+
+  aplicarVistaCompartida(vista: VistaCompartida): void {
+    this.service.aplicarVistaCompartida(vista);
+    this.showVistasCompartidasDialog.set(false);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Vista aplicada',
+      detail: `Se aplicó la configuración de "${vista.nombre}"`
+    });
+  }
+
+  // ==================== INICIALIZACIÓN ====================
+  ngOnInit(): void {
+    // Verificar si hay una vista compartida en la URL
+    this.route.queryParams.subscribe(params => {
+      if (params['vista']) {
+        const vista = this.service.obtenerVistaCompartida(params['vista']);
+        if (vista) {
+          this.service.aplicarVistaCompartida(vista);
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Vista cargada',
+            detail: `Se aplicó la vista compartida "${vista.nombre}"`
+          });
+        }
+      }
+    });
+
+    // Verificar alertas activas
+    setTimeout(() => this.verificarAlertas(), 2000);
+  }
+
+  // ==================== MÉTODOS PARA DIALOGS DE UI ====================
+
+  // Widget methods
+  setWidgetTamano(tamano: 'pequeño' | 'mediano' | 'grande'): void {
+    this.widgetConfig.tamano = tamano;
+  }
+
+  mostrarGuardarWidget(): void {
+    this.widgetConfig = {
+      titulo: this.getTituloGrafica(),
+      descripcion: '',
+      tamano: 'mediano'
+    };
+    this.showGuardarWidgetDialog.set(true);
+  }
+
+  guardarWidget(): void {
+    if (!this.widgetConfig.titulo?.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Ingresa un título para el widget'
+      });
+      return;
+    }
+
+    const nuevoWidget = this.service.guardarWidget({
+      titulo: this.widgetConfig.titulo,
+      descripcion: this.widgetConfig.descripcion,
+      configuracion: this.configGrafica(),
+      filtros: this.estado().filtrosActivos,
+      entidades: this.estado().entidadesSeleccionadas,
+      tamaño: this.widgetConfig.tamano
+    });
+
+    this.showGuardarWidgetDialog.set(false);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Widget guardado',
+      detail: `"${nuevoWidget.titulo}" se agregó al dashboard`
+    });
+  }
+
+  // Alerta methods
+  mostrarNuevaAlerta(): void {
+    this.alertaEditandoId.set(null);
+    this.nuevaAlerta = {
+      nombre: '',
+      operadorUmbral: 'mayor',
+      umbral: 5,
+      prioridad: '',
+      notificarEmail: false,
+      notificarPush: false,
+      notificarInApp: true
+    };
+    this.alertasTabActivo = 'nueva';
+    this.showAlertasDialog.set(true);
+  }
+
+  toggleAlertaActiva(alerta: AlertaFiltro): void {
+    this.service.toggleAlerta(alerta.id);
+  }
+
+  crearAlerta(): void {
+    if (!this.nuevaAlerta.nombre?.trim() || !this.nuevaAlerta.prioridad) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Completa todos los campos requeridos'
+      });
+      return;
+    }
+
+    const notificarPor: ('email' | 'push' | 'inApp')[] = [];
+    if (this.nuevaAlerta.notificarEmail) notificarPor.push('email');
+    if (this.nuevaAlerta.notificarPush) notificarPor.push('push');
+    if (this.nuevaAlerta.notificarInApp) notificarPor.push('inApp');
+
+    const nuevaAlerta = this.service.crearAlerta({
+      nombre: this.nuevaAlerta.nombre,
+      condiciones: this.estado().filtrosActivos,
+      entidades: this.estado().entidadesSeleccionadas,
+      umbral: this.nuevaAlerta.umbral,
+      operadorUmbral: this.nuevaAlerta.operadorUmbral as 'mayor' | 'menor' | 'igual' | 'diferente',
+      prioridad: this.nuevaAlerta.prioridad as 'baja' | 'media' | 'alta' | 'critica',
+      notificarPor: notificarPor.length > 0 ? notificarPor : ['inApp'],
+      destinatarios: [],
+      activa: true
+    });
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Alerta creada',
+      detail: `"${nuevaAlerta.nombre}" te notificará cuando se cumplan las condiciones`
+    });
+  }
+
+  // Crear/editar alerta y cambiar al tab de lista
+  crearAlertaYCambiarTab(): void {
+    if (!this.nuevaAlerta.nombre?.trim() || !this.nuevaAlerta.prioridad) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Completa todos los campos requeridos'
+      });
+      return;
+    }
+
+    const notificarPor: ('email' | 'push' | 'inApp')[] = [];
+    if (this.nuevaAlerta.notificarEmail) notificarPor.push('email');
+    if (this.nuevaAlerta.notificarPush) notificarPor.push('push');
+    if (this.nuevaAlerta.notificarInApp) notificarPor.push('inApp');
+
+    const editandoId = this.alertaEditandoId();
+
+    if (editandoId) {
+      // Actualizar alerta existente
+      this.service.actualizarAlerta(editandoId, {
+        nombre: this.nuevaAlerta.nombre,
+        umbral: this.nuevaAlerta.umbral,
+        operadorUmbral: this.nuevaAlerta.operadorUmbral as 'mayor' | 'menor' | 'igual' | 'diferente',
+        prioridad: this.nuevaAlerta.prioridad as 'baja' | 'media' | 'alta' | 'critica',
+        notificarPor: notificarPor.length > 0 ? notificarPor : ['inApp']
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Alerta actualizada',
+        detail: `"${this.nuevaAlerta.nombre}" ha sido actualizada`
+      });
+
+      this.alertaEditandoId.set(null);
+    } else {
+      // Crear nueva alerta
+      const nuevaAlerta = this.service.crearAlerta({
+        nombre: this.nuevaAlerta.nombre,
+        condiciones: this.estado().filtrosActivos,
+        entidades: this.estado().entidadesSeleccionadas,
+        umbral: this.nuevaAlerta.umbral,
+        operadorUmbral: this.nuevaAlerta.operadorUmbral as 'mayor' | 'menor' | 'igual' | 'diferente',
+        prioridad: this.nuevaAlerta.prioridad as 'baja' | 'media' | 'alta' | 'critica',
+        notificarPor: notificarPor.length > 0 ? notificarPor : ['inApp'],
+        destinatarios: [],
+        activa: true
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Alerta creada',
+        detail: `"${nuevaAlerta.nombre}" te notificará cuando se cumplan las condiciones`
+      });
+    }
+
+    // Limpiar formulario y cambiar al tab de lista
+    this.nuevaAlerta = {
+      nombre: '',
+      operadorUmbral: 'mayor',
+      umbral: 5,
+      prioridad: '',
+      notificarEmail: false,
+      notificarPush: false,
+      notificarInApp: true
+    };
+    this.alertasTabActivo = 'lista';
+  }
+
+  // Editar alerta existente
+  editarAlerta(alerta: AlertaFiltro): void {
+    this.alertaEditandoId.set(alerta.id);
+    this.nuevaAlerta = {
+      nombre: alerta.nombre,
+      operadorUmbral: alerta.operadorUmbral,
+      umbral: alerta.umbral,
+      prioridad: alerta.prioridad,
+      notificarEmail: alerta.notificarPor.includes('email'),
+      notificarPush: alerta.notificarPor.includes('push'),
+      notificarInApp: alerta.notificarPor.includes('inApp')
+    };
+    this.alertasTabActivo = 'nueva';
+  }
+
+  // Obtener label del operador
+  getOperadorLabel(operador: string): string {
+    const labels: Record<string, string> = {
+      'mayor': 'más de',
+      'menor': 'menos de',
+      'igual': 'exactamente',
+      'diferente': 'diferente de'
+    };
+    return labels[operador] || operador;
+  }
+
+  // Vista compartida methods
+  mostrarCompartirVista(): void {
+    this.vistaCompartida = {
+      nombre: '',
+      descripcion: '',
+      fechaExpiracion: null
+    };
+    this.urlVistaCompartida.set('');
+    this.showCompartirDialog.set(true);
+  }
+
+  generarEnlaceVista(): void {
+    if (!this.vistaCompartida.nombre?.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Ingresa un nombre para la vista'
+      });
+      return;
+    }
+
+    const vista = this.service.crearVistaCompartida(
+      this.vistaCompartida.nombre,
+      this.vistaCompartida.descripcion
+    );
+    const url = this.service.obtenerUrlVistaCompartida(vista.codigo);
+    this.urlVistaCompartida.set(url);
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Enlace generado',
+      detail: 'Copia el enlace para compartir'
+    });
+  }
+
+  copiarUrlVista(): void {
+    const url = this.urlVistaCompartida();
+    if (url) {
+      navigator.clipboard.writeText(url).then(() => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Copiado',
+          detail: 'Enlace copiado al portapapeles'
+        });
+      });
+    }
+  }
+
+  aplicarVista(vista: VistaCompartida): void {
+    this.service.aplicarVistaCompartida(vista);
+    this.showVistasDialog.set(false);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Vista aplicada',
+      detail: `Se aplicó la configuración de "${vista.nombre}"`
+    });
+  }
+
+  copiarUrlVistaGuardada(vista: VistaCompartida): void {
+    const url = this.service.obtenerUrlVistaCompartida(vista.codigo);
+    navigator.clipboard.writeText(url).then(() => {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Copiado',
+        detail: 'Enlace copiado al portapapeles'
+      });
+    });
+  }
+
+  eliminarVista(id: string): void {
+    this.service.eliminarVistaCompartida(id);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Eliminado',
+      detail: 'Vista eliminada'
+    });
+  }
+
+  // Métodos para drawer de vistas guardadas
+  guardarVistaActual(): void {
+    if (!this.nuevaVistaGuardada.nombre.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Ingresa un nombre para la vista'
+      });
+      return;
+    }
+
+    const vista = this.service.crearVistaCompartidaConExpiracion(
+      this.nuevaVistaGuardada.nombre,
+      this.nuevaVistaGuardada.descripcion,
+      this.nuevaVistaGuardada.fechaExpiracion
+    );
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Vista guardada',
+      detail: `"${vista.nombre}" ha sido guardada`
+    });
+
+    // Limpiar formulario
+    this.nuevaVistaGuardada = { nombre: '', descripcion: '', fechaExpiracion: null };
+    this.mostrandoFormGuardar.set(false);
+  }
+
+  cancelarGuardarVista(): void {
+    this.nuevaVistaGuardada = { nombre: '', descripcion: '', fechaExpiracion: null };
+    this.mostrandoFormGuardar.set(false);
+  }
+
+  getUrlVistaGuardada(vista: VistaCompartida): string {
+    return this.service.obtenerUrlVistaCompartida(vista.codigo);
+  }
+
+  // Métodos de edición de vista
+  iniciarEditarVista(vista: VistaCompartida): void {
+    this.vistaEditandoId.set(vista.id);
+    this.vistaEditando = {
+      nombre: vista.nombre,
+      descripcion: vista.descripcion || '',
+      fechaExpiracion: vista.fechaExpiracion ? new Date(vista.fechaExpiracion) : null
+    };
+  }
+
+  cancelarEditarVista(): void {
+    this.vistaEditandoId.set(null);
+    this.vistaEditando = { nombre: '', descripcion: '', fechaExpiracion: null };
+  }
+
+  guardarEdicionVista(): void {
+    const vistaId = this.vistaEditandoId();
+    if (!vistaId || !this.vistaEditando.nombre.trim()) return;
+
+    this.service.actualizarVistaCompartida(vistaId, {
+      nombre: this.vistaEditando.nombre,
+      descripcion: this.vistaEditando.descripcion,
+      fechaExpiracion: this.vistaEditando.fechaExpiracion || undefined
+    });
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Vista actualizada',
+      detail: `"${this.vistaEditando.nombre}" ha sido actualizada`
+    });
+
+    this.vistaEditandoId.set(null);
+    this.vistaEditando = { nombre: '', descripcion: '', fechaExpiracion: null };
+  }
+
+  enviarVistaPorCorreo(vista: VistaCompartida): void {
+    if (!this.emailCompartir.trim()) return;
+
+    const url = this.getUrlVistaGuardada(vista);
+    const subject = encodeURIComponent(`Vista compartida: ${vista.nombre}`);
+    const body = encodeURIComponent(`Hola,\n\nTe comparto esta vista de la tabla unificada:\n\n${vista.nombre}\n${vista.descripcion ? vista.descripcion + '\n' : ''}\nEnlace: ${url}\n\nSaludos`);
+
+    window.open(`mailto:${this.emailCompartir}?subject=${subject}&body=${body}`, '_blank');
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Correo abierto',
+      detail: 'Se abrió tu cliente de correo'
+    });
+
+    this.emailCompartir = '';
+  }
+
+  // Exportación programada methods
+  mostrarNuevaExportacion(): void {
+    this.exportacionEditandoId.set(null);
+    this.nuevaExportacion = {
+      nombre: '',
+      formato: 'excel',
+      frecuencia: 'semanal',
+      hora: null,
+      destinatarios: ''
+    };
+    this.exportacionesTabActivo = 'nueva';
+    this.showExportacionesDialog.set(true);
+  }
+
+  toggleExportacionActiva(exp: ExportacionProgramada): void {
+    this.service.toggleExportacionProgramada(exp.id);
+  }
+
+  crearExportacion(): void {
+    if (!this.nuevaExportacion.nombre?.trim() || !this.nuevaExportacion.formato || !this.nuevaExportacion.frecuencia) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Completa todos los campos requeridos'
+      });
+      return;
+    }
+
+    const destinatarios = this.nuevaExportacion.destinatarios
+      ? this.nuevaExportacion.destinatarios.split(',').map(e => e.trim()).filter(e => e)
+      : [];
+
+    const hora = this.nuevaExportacion.hora
+      ? `${this.nuevaExportacion.hora.getHours().toString().padStart(2, '0')}:${this.nuevaExportacion.hora.getMinutes().toString().padStart(2, '0')}`
+      : '09:00';
+
+    const nuevaExp = this.service.crearExportacionProgramada({
+      nombre: this.nuevaExportacion.nombre,
+      formato: this.nuevaExportacion.formato as 'csv' | 'excel',
+      frecuencia: this.nuevaExportacion.frecuencia as 'diaria' | 'semanal' | 'mensual',
+      hora: hora,
+      destinatarios: destinatarios,
+      filtros: this.estado().filtrosActivos,
+      entidades: this.estado().entidadesSeleccionadas,
+      columnasIncluidas: this.estado().columnasVisibles,
+      activa: true
+    });
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Exportación programada',
+      detail: `"${nuevaExp.nombre}" se ejecutará ${this.getFrecuenciaLabel(nuevaExp.frecuencia)}`
+    });
+  }
+
+  // Crear exportación y cambiar al tab de lista
+  crearExportacionYCambiarTab(): void {
+    if (!this.nuevaExportacion.nombre?.trim() || !this.nuevaExportacion.formato || !this.nuevaExportacion.frecuencia) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Completa todos los campos requeridos'
+      });
+      return;
+    }
+
+    const destinatarios = this.nuevaExportacion.destinatarios
+      ? this.nuevaExportacion.destinatarios.split(',').map(e => e.trim()).filter(e => e)
+      : [];
+
+    const hora = this.nuevaExportacion.hora
+      ? `${this.nuevaExportacion.hora.getHours().toString().padStart(2, '0')}:${this.nuevaExportacion.hora.getMinutes().toString().padStart(2, '0')}`
+      : '09:00';
+
+    const editandoId = this.exportacionEditandoId();
+
+    if (editandoId) {
+      // Actualizar exportación existente
+      this.service.actualizarExportacionProgramada(editandoId, {
+        nombre: this.nuevaExportacion.nombre,
+        formato: this.nuevaExportacion.formato as 'csv' | 'excel',
+        frecuencia: this.nuevaExportacion.frecuencia as 'diaria' | 'semanal' | 'mensual',
+        hora: hora,
+        destinatarios: destinatarios
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Exportación actualizada',
+        detail: `"${this.nuevaExportacion.nombre}" ha sido actualizada`
+      });
+
+      this.exportacionEditandoId.set(null);
+    } else {
+      // Crear nueva exportación
+      const nuevaExp = this.service.crearExportacionProgramada({
+        nombre: this.nuevaExportacion.nombre,
+        formato: this.nuevaExportacion.formato as 'csv' | 'excel',
+        frecuencia: this.nuevaExportacion.frecuencia as 'diaria' | 'semanal' | 'mensual',
+        hora: hora,
+        destinatarios: destinatarios,
+        filtros: this.estado().filtrosActivos,
+        entidades: this.estado().entidadesSeleccionadas,
+        columnasIncluidas: this.estado().columnasVisibles,
+        activa: true
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Exportación programada',
+        detail: `"${nuevaExp.nombre}" se ejecutará ${this.getFrecuenciaLabel(nuevaExp.frecuencia)}`
+      });
+    }
+
+    // Limpiar formulario y cambiar al tab de lista
+    this.nuevaExportacion = {
+      nombre: '',
+      formato: 'excel',
+      frecuencia: 'semanal',
+      hora: null,
+      destinatarios: ''
+    };
+    this.exportacionesTabActivo = 'lista';
+  }
+
+  // Editar exportación existente
+  editarExportacion(exp: ExportacionProgramada): void {
+    this.exportacionEditandoId.set(exp.id);
+
+    // Convertir hora string a Date para el datepicker
+    let horaDate: Date | null = null;
+    if (exp.hora) {
+      const [hours, minutes] = exp.hora.split(':').map(Number);
+      horaDate = new Date();
+      horaDate.setHours(hours, minutes, 0, 0);
+    }
+
+    this.nuevaExportacion = {
+      nombre: exp.nombre,
+      formato: exp.formato,
+      frecuencia: exp.frecuencia,
+      hora: horaDate,
+      destinatarios: exp.destinatarios?.join(', ') || ''
+    };
+
+    this.exportacionesTabActivo = 'nueva';
   }
 }

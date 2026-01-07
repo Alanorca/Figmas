@@ -7,7 +7,12 @@ import {
   ColumnaConfig,
   FiltroActivo,
   EstadoTabla,
-  PresetFecha
+  PresetFecha,
+  WidgetGrafica,
+  ExportacionProgramada,
+  AlertaFiltro,
+  VistaCompartida,
+  ConfiguracionGrafica
 } from '../models/tabla-unificada.models';
 
 @Injectable({
@@ -25,8 +30,68 @@ export class TablaUnificadaService {
   private revisionesData = signal<any[]>([]);
   private cumplimientoData = signal<any[]>([]);
 
+  // Storage keys
+  private readonly WIDGETS_KEY = 'tabla-unificada-widgets';
+  private readonly EXPORTS_KEY = 'tabla-unificada-exports';
+  private readonly ALERTS_KEY = 'tabla-unificada-alerts';
+  private readonly VIEWS_KEY = 'tabla-unificada-views';
+
+  // Signals para nuevas funcionalidades
+  widgets = signal<WidgetGrafica[]>([]);
+  exportacionesProgramadas = signal<ExportacionProgramada[]>([]);
+  alertas = signal<AlertaFiltro[]>([]);
+  vistasCompartidas = signal<VistaCompartida[]>([]);
+
   constructor() {
     this.cargarDatos();
+    this.cargarDatosLocales();
+  }
+
+  private cargarDatosLocales(): void {
+    try {
+      // Cargar widgets
+      const widgetsStr = localStorage.getItem(this.WIDGETS_KEY);
+      if (widgetsStr) {
+        const widgets = JSON.parse(widgetsStr);
+        widgets.forEach((w: any) => w.fechaCreacion = new Date(w.fechaCreacion));
+        this.widgets.set(widgets);
+      }
+
+      // Cargar exportaciones programadas
+      const exportsStr = localStorage.getItem(this.EXPORTS_KEY);
+      if (exportsStr) {
+        const exports = JSON.parse(exportsStr);
+        exports.forEach((e: any) => {
+          if (e.ultimaEjecucion) e.ultimaEjecucion = new Date(e.ultimaEjecucion);
+          if (e.proximaEjecucion) e.proximaEjecucion = new Date(e.proximaEjecucion);
+        });
+        this.exportacionesProgramadas.set(exports);
+      }
+
+      // Cargar alertas
+      const alertsStr = localStorage.getItem(this.ALERTS_KEY);
+      if (alertsStr) {
+        const alerts = JSON.parse(alertsStr);
+        alerts.forEach((a: any) => {
+          if (a.ultimaActivacion) a.ultimaActivacion = new Date(a.ultimaActivacion);
+        });
+        this.alertas.set(alerts);
+      }
+
+      // Cargar vistas compartidas
+      const viewsStr = localStorage.getItem(this.VIEWS_KEY);
+      if (viewsStr) {
+        const views = JSON.parse(viewsStr);
+        views.forEach((v: any) => {
+          v.fechaCreacion = new Date(v.fechaCreacion);
+          if (v.fechaExpiracion) v.fechaExpiracion = new Date(v.fechaExpiracion);
+          if (v.ultimoAcceso) v.ultimoAcceso = new Date(v.ultimoAcceso);
+        });
+        this.vistasCompartidas.set(views);
+      }
+    } catch (e) {
+      console.error('Error cargando datos locales:', e);
+    }
   }
 
   private cargarDatos(): void {
@@ -819,5 +884,345 @@ export class TablaUnificadaService {
       labels: Array.from(ordenado.keys()),
       valores: Array.from(ordenado.values())
     };
+  }
+
+  // ==================== WIDGETS ====================
+  guardarWidget(widget: Omit<WidgetGrafica, 'id' | 'fechaCreacion'>): WidgetGrafica {
+    const nuevoWidget: WidgetGrafica = {
+      ...widget,
+      id: Date.now().toString(),
+      fechaCreacion: new Date()
+    };
+    this.widgets.update(list => [...list, nuevoWidget]);
+    this.guardarWidgetsEnStorage();
+    return nuevoWidget;
+  }
+
+  eliminarWidget(id: string): void {
+    this.widgets.update(list => list.filter(w => w.id !== id));
+    this.guardarWidgetsEnStorage();
+  }
+
+  actualizarWidget(id: string, cambios: Partial<WidgetGrafica>): void {
+    this.widgets.update(list =>
+      list.map(w => w.id === id ? { ...w, ...cambios } : w)
+    );
+    this.guardarWidgetsEnStorage();
+  }
+
+  private guardarWidgetsEnStorage(): void {
+    localStorage.setItem(this.WIDGETS_KEY, JSON.stringify(this.widgets()));
+  }
+
+  // ==================== EXPORTACIONES PROGRAMADAS ====================
+  crearExportacionProgramada(config: Omit<ExportacionProgramada, 'id' | 'ultimaEjecucion' | 'proximaEjecucion'>): ExportacionProgramada {
+    const nuevaExport: ExportacionProgramada = {
+      ...config,
+      id: Date.now().toString(),
+      proximaEjecucion: this.calcularProximaEjecucion(config)
+    };
+    this.exportacionesProgramadas.update(list => [...list, nuevaExport]);
+    this.guardarExportacionesEnStorage();
+    return nuevaExport;
+  }
+
+  eliminarExportacionProgramada(id: string): void {
+    this.exportacionesProgramadas.update(list => list.filter(e => e.id !== id));
+    this.guardarExportacionesEnStorage();
+  }
+
+  toggleExportacionProgramada(id: string): void {
+    this.exportacionesProgramadas.update(list =>
+      list.map(e => e.id === id ? { ...e, activa: !e.activa } : e)
+    );
+    this.guardarExportacionesEnStorage();
+  }
+
+  actualizarExportacionProgramada(id: string, cambios: Partial<ExportacionProgramada>): void {
+    this.exportacionesProgramadas.update(list =>
+      list.map(e => {
+        if (e.id === id) {
+          const actualizada = { ...e, ...cambios };
+          // Recalcular próxima ejecución si cambiaron frecuencia u hora
+          if (cambios.frecuencia || cambios.hora) {
+            actualizada.proximaEjecucion = this.calcularProximaEjecucion(actualizada);
+          }
+          return actualizada;
+        }
+        return e;
+      })
+    );
+    this.guardarExportacionesEnStorage();
+  }
+
+  private calcularProximaEjecucion(config: Partial<ExportacionProgramada>): Date {
+    const ahora = new Date();
+    const [horas, minutos] = (config.hora || '09:00').split(':').map(Number);
+    const proxima = new Date(ahora);
+    proxima.setHours(horas, minutos, 0, 0);
+
+    if (proxima <= ahora) {
+      switch (config.frecuencia) {
+        case 'diaria':
+          proxima.setDate(proxima.getDate() + 1);
+          break;
+        case 'semanal':
+          proxima.setDate(proxima.getDate() + 7);
+          break;
+        case 'mensual':
+          proxima.setMonth(proxima.getMonth() + 1);
+          break;
+      }
+    }
+    return proxima;
+  }
+
+  private guardarExportacionesEnStorage(): void {
+    localStorage.setItem(this.EXPORTS_KEY, JSON.stringify(this.exportacionesProgramadas()));
+  }
+
+  // ==================== ALERTAS ====================
+  crearAlerta(config: Omit<AlertaFiltro, 'id' | 'ultimaActivacion' | 'vecesActivada'>): AlertaFiltro {
+    const nuevaAlerta: AlertaFiltro = {
+      ...config,
+      id: Date.now().toString(),
+      vecesActivada: 0
+    };
+    this.alertas.update(list => [...list, nuevaAlerta]);
+    this.guardarAlertasEnStorage();
+    return nuevaAlerta;
+  }
+
+  eliminarAlerta(id: string): void {
+    this.alertas.update(list => list.filter(a => a.id !== id));
+    this.guardarAlertasEnStorage();
+  }
+
+  toggleAlerta(id: string): void {
+    this.alertas.update(list =>
+      list.map(a => a.id === id ? { ...a, activa: !a.activa } : a)
+    );
+    this.guardarAlertasEnStorage();
+  }
+
+  actualizarAlerta(id: string, cambios: Partial<AlertaFiltro>): void {
+    this.alertas.update(list =>
+      list.map(a => a.id === id ? { ...a, ...cambios } : a)
+    );
+    this.guardarAlertasEnStorage();
+  }
+
+  verificarAlertas(): AlertaFiltro[] {
+    const alertasActivadas: AlertaFiltro[] = [];
+    const alertasActivas = this.alertas().filter(a => a.activa);
+
+    alertasActivas.forEach(alerta => {
+      // Aplicar filtros de la alerta
+      let datos = this.datosUnificados().filter(d =>
+        alerta.entidades.includes(d.tipoEntidad)
+      );
+
+      alerta.condiciones.forEach(filtro => {
+        datos = datos.filter(registro => this.aplicarFiltroPublico(registro, filtro));
+      });
+
+      const cantidad = datos.length;
+      let activar = false;
+
+      switch (alerta.operadorUmbral) {
+        case 'mayor': activar = cantidad > alerta.umbral; break;
+        case 'menor': activar = cantidad < alerta.umbral; break;
+        case 'igual': activar = cantidad === alerta.umbral; break;
+        case 'diferente': activar = cantidad !== alerta.umbral; break;
+      }
+
+      if (activar) {
+        alertasActivadas.push(alerta);
+        this.alertas.update(list =>
+          list.map(a => a.id === alerta.id ? {
+            ...a,
+            ultimaActivacion: new Date(),
+            vecesActivada: a.vecesActivada + 1
+          } : a)
+        );
+      }
+    });
+
+    if (alertasActivadas.length > 0) {
+      this.guardarAlertasEnStorage();
+    }
+
+    return alertasActivadas;
+  }
+
+  private aplicarFiltroPublico(registro: RegistroUnificado, filtro: FiltroActivo): boolean {
+    const valor = (registro as any)[filtro.columna];
+    if (valor === undefined || valor === null) return false;
+
+    switch (filtro.tipo) {
+      case 'texto':
+        return String(valor).toLowerCase().includes(String(filtro.valor).toLowerCase());
+      case 'seleccion':
+        const valores = Array.isArray(filtro.valor) ? filtro.valor : [filtro.valor];
+        return valores.includes(valor);
+      default:
+        return true;
+    }
+  }
+
+  private guardarAlertasEnStorage(): void {
+    localStorage.setItem(this.ALERTS_KEY, JSON.stringify(this.alertas()));
+  }
+
+  // ==================== VISTAS COMPARTIDAS ====================
+  crearVistaCompartida(nombre: string, descripcion?: string): VistaCompartida {
+    const codigo = this.generarCodigoUnico();
+    const estado = this.estado();
+
+    const nuevaVista: VistaCompartida = {
+      id: Date.now().toString(),
+      codigo,
+      nombre,
+      descripcion,
+      creador: 'Usuario', // En producción vendría del servicio de auth
+      fechaCreacion: new Date(),
+      configuracion: {
+        entidades: estado.entidadesSeleccionadas,
+        filtros: estado.filtrosActivos,
+        columnasVisibles: estado.columnasVisibles,
+        ordenColumnas: estado.ordenColumnas,
+        ordenamiento: estado.ordenamiento || undefined
+      },
+      accesos: 0,
+      activa: true
+    };
+
+    this.vistasCompartidas.update(list => [...list, nuevaVista]);
+    this.guardarVistasEnStorage();
+    return nuevaVista;
+  }
+
+  crearVistaCompartidaConExpiracion(nombre: string, descripcion?: string, fechaExpiracion?: Date | null): VistaCompartida {
+    const codigo = this.generarCodigoUnico();
+    const estado = this.estado();
+
+    const nuevaVista: VistaCompartida = {
+      id: Date.now().toString(),
+      codigo,
+      nombre,
+      descripcion,
+      creador: 'Usuario',
+      fechaCreacion: new Date(),
+      fechaExpiracion: fechaExpiracion || undefined,
+      configuracion: {
+        entidades: estado.entidadesSeleccionadas,
+        filtros: estado.filtrosActivos,
+        columnasVisibles: estado.columnasVisibles,
+        ordenColumnas: estado.ordenColumnas,
+        ordenamiento: estado.ordenamiento || undefined
+      },
+      accesos: 0,
+      activa: true
+    };
+
+    this.vistasCompartidas.update(list => [...list, nuevaVista]);
+    this.guardarVistasEnStorage();
+    return nuevaVista;
+  }
+
+  actualizarVistaCompartida(id: string, cambios: Partial<VistaCompartida>): void {
+    this.vistasCompartidas.update(list =>
+      list.map(v => v.id === id ? { ...v, ...cambios } : v)
+    );
+    this.guardarVistasEnStorage();
+  }
+
+  obtenerVistaCompartida(codigo: string): VistaCompartida | undefined {
+    const vista = this.vistasCompartidas().find(v => v.codigo === codigo && v.activa);
+    if (vista) {
+      // Incrementar accesos
+      this.vistasCompartidas.update(list =>
+        list.map(v => v.codigo === codigo ? {
+          ...v,
+          accesos: v.accesos + 1,
+          ultimoAcceso: new Date()
+        } : v)
+      );
+      this.guardarVistasEnStorage();
+    }
+    return vista;
+  }
+
+  aplicarVistaCompartida(vista: VistaCompartida): void {
+    const config = vista.configuracion;
+    this.estado.update(s => ({
+      ...s,
+      entidadesSeleccionadas: config.entidades,
+      filtrosActivos: config.filtros,
+      columnasVisibles: config.columnasVisibles,
+      ordenColumnas: config.ordenColumnas,
+      ordenamiento: config.ordenamiento || null,
+      pagina: 0
+    }));
+  }
+
+  eliminarVistaCompartida(id: string): void {
+    this.vistasCompartidas.update(list => list.filter(v => v.id !== id));
+    this.guardarVistasEnStorage();
+  }
+
+  desactivarVistaCompartida(id: string): void {
+    this.vistasCompartidas.update(list =>
+      list.map(v => v.id === id ? { ...v, activa: false } : v)
+    );
+    this.guardarVistasEnStorage();
+  }
+
+  private generarCodigoUnico(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let codigo = '';
+    for (let i = 0; i < 8; i++) {
+      codigo += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return codigo;
+  }
+
+  obtenerUrlVistaCompartida(codigo: string): string {
+    return `${window.location.origin}/tabla-unificada?vista=${codigo}`;
+  }
+
+  private guardarVistasEnStorage(): void {
+    localStorage.setItem(this.VIEWS_KEY, JSON.stringify(this.vistasCompartidas()));
+  }
+
+  // ==================== EXPORT GRÁFICA A EXCEL ====================
+  exportarGraficaExcel(datosGrafica: { labels: string[]; valores: number[] }, titulo: string): void {
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<?mso-application progid="Excel.Sheet"?>\n';
+    xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+    xml += `<Worksheet ss:Name="${titulo.substring(0, 31)}"><Table>\n`;
+
+    // Headers
+    xml += '<Row>\n';
+    xml += '<Cell><Data ss:Type="String">Categoría</Data></Cell>\n';
+    xml += '<Cell><Data ss:Type="String">Valor</Data></Cell>\n';
+    xml += '</Row>\n';
+
+    // Datos
+    datosGrafica.labels.forEach((label, i) => {
+      xml += '<Row>\n';
+      xml += `<Cell><Data ss:Type="String">${label}</Data></Cell>\n`;
+      xml += `<Cell><Data ss:Type="Number">${datosGrafica.valores[i]}</Data></Cell>\n`;
+      xml += '</Row>\n';
+    });
+
+    // Total
+    xml += '<Row>\n';
+    xml += '<Cell><Data ss:Type="String">Total</Data></Cell>\n';
+    xml += `<Cell><Data ss:Type="Number">${datosGrafica.valores.reduce((a, b) => a + b, 0)}</Data></Cell>\n`;
+    xml += '</Row>\n';
+
+    xml += '</Table></Worksheet></Workbook>';
+    this.descargarArchivo(xml, `grafica-${titulo}-${Date.now()}.xls`, 'application/vnd.ms-excel');
   }
 }

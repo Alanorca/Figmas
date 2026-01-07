@@ -129,3 +129,88 @@ export interface OpcionesExportacion {
   incluirTodo: boolean; // true = todos los filtrados, false = solo página actual
   columnasVisibles: boolean; // true = solo visibles, false = todas
 }
+
+// Widget de dashboard para gráficas guardadas
+export interface WidgetGrafica {
+  id: string;
+  titulo: string;
+  descripcion?: string;
+  configuracion: ConfiguracionGrafica;
+  filtros: FiltroActivo[];
+  entidades: TipoEntidad[];
+  fechaCreacion: Date;
+  tamaño: 'pequeño' | 'mediano' | 'grande';
+  posicion?: { x: number; y: number };
+}
+
+// Exportación programada
+export interface ExportacionProgramada {
+  id: string;
+  nombre: string;
+  formato: FormatoExportacion;
+  frecuencia: 'diaria' | 'semanal' | 'mensual';
+  diasSemana?: number[]; // 0-6 para semanal
+  diaDelMes?: number; // 1-31 para mensual
+  hora: string; // HH:MM
+  destinatarios: string[]; // emails
+  filtros: FiltroActivo[];
+  entidades: TipoEntidad[];
+  columnasIncluidas: string[];
+  activa: boolean;
+  ultimaEjecucion?: Date;
+  proximaEjecucion?: Date;
+}
+
+// Alerta basada en filtros
+export interface AlertaFiltro {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  condiciones: FiltroActivo[];
+  entidades: TipoEntidad[];
+  umbral: number; // Número mínimo de registros que activan la alerta
+  operadorUmbral: 'mayor' | 'menor' | 'igual' | 'diferente';
+  prioridad: 'baja' | 'media' | 'alta' | 'critica';
+  notificarPor: ('email' | 'push' | 'inApp')[];
+  destinatarios: string[];
+  activa: boolean;
+  ultimaActivacion?: Date;
+  vecesActivada: number;
+}
+
+// Vista compartida
+export interface VistaCompartida {
+  id: string;
+  codigo: string; // Código único para URL
+  nombre: string;
+  descripcion?: string;
+  creador: string;
+  fechaCreacion: Date;
+  fechaExpiracion?: Date;
+  configuracion: {
+    entidades: TipoEntidad[];
+    filtros: FiltroActivo[];
+    columnasVisibles: string[];
+    ordenColumnas: string[];
+    ordenamiento?: { campo: string; direccion: 'asc' | 'desc' };
+    graficaConfig?: ConfiguracionGrafica;
+  };
+  accesos: number;
+  ultimoAcceso?: Date;
+  activa: boolean;
+}
+
+// Gráfica combinada
+export type TipoGraficaCombinada = 'barras_linea' | 'area_linea' | 'barras_area';
+
+export interface ConfiguracionGraficaCombinada extends ConfiguracionGrafica {
+  tipoCombinado: TipoGraficaCombinada;
+  serieSecundaria: {
+    columnaCategoria: string;
+    agregacion: TipoAgregacion;
+    columnaValor?: string;
+    tipo: 'linea' | 'area';
+    color?: string;
+  };
+  ejeYSecundario: boolean;
+}

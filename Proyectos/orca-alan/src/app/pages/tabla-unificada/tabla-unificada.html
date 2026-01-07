@@ -1,3 +1,6 @@
+<!-- Toast para notificaciones -->
+<p-toast />
+
 <div class="tabla-unificada-container">
   <!-- Header -->
   <div class="page-header">
@@ -63,6 +66,7 @@
 
     <ng-template pTemplate="end">
       <div class="flex gap-2 align-items-center">
+        <!-- Botón de Gráficas -->
         <p-button
           icon="pi pi-chart-bar"
           severity="secondary"
@@ -73,6 +77,19 @@
           tooltipPosition="bottom"
           [disabled]="contadores().total === 0" />
 
+        <!-- Botón de Alertas -->
+        <p-button
+          icon="pi pi-bell"
+          severity="secondary"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="showAlertasDialog.set(true)"
+          pTooltip="Configurar alertas"
+          tooltipPosition="bottom"
+          [badge]="getAlertasActivasCount() > 0 ? getAlertasActivasCount().toString() : undefined"
+          badgeSeverity="danger" />
+
+        <!-- Menú de Exportaciones -->
         <p-menu #exportMenu [model]="exportMenuItems" [popup]="true" appendTo="body"></p-menu>
         <p-button
           icon="pi pi-download"
@@ -80,8 +97,23 @@
           [rounded]="true"
           [text]="true"
           (onClick)="exportMenu.toggle($event)"
-          pTooltip="Descargar"
+          pTooltip="Exportar datos"
           tooltipPosition="bottom" />
+
+        <!-- Botón de Vistas Guardadas -->
+        <span class="toolbar-btn-badge">
+          <p-button
+            icon="pi pi-bookmark"
+            severity="secondary"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="showVistasDialog.set(true)"
+            pTooltip="Vistas guardadas"
+            tooltipPosition="bottom" />
+          @if (vistasCompartidas().length > 0) {
+            <span class="btn-icon-badge success">{{ vistasCompartidas().length }}</span>
+          }
+        </span>
       </div>
     </ng-template>
   </p-toolbar>
@@ -872,10 +904,30 @@
     (filtroAplicado)="onFiltroGraficaAplicado($event)" />
 
   <ng-template pTemplate="footer">
-    <p-button
-      label="Cerrar"
-      icon="pi pi-times"
-      (onClick)="showGraficasDialog.set(false)" />
+    <div class="flex justify-content-between w-full">
+      <div class="flex gap-2">
+        <!-- Guardar como Widget -->
+        <p-button
+          label="Guardar como Widget"
+          icon="pi pi-bookmark"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="mostrarGuardarWidget()"
+          pTooltip="Guardar configuración para el dashboard" />
+
+        <!-- Exportar gráfica a Excel -->
+        <p-button
+          label="Exportar a Excel"
+          icon="pi pi-file-excel"
+          severity="success"
+          [outlined]="true"
+          (onClick)="exportarGraficaExcel()" />
+      </div>
+      <p-button
+        label="Cerrar"
+        icon="pi pi-times"
+        (onClick)="showGraficasDialog.set(false)" />
+    </div>
   </ng-template>
 </p-dialog>
 
@@ -1304,3 +1356,816 @@
       (onClick)="showHistorialDialog.set(false)" />
   </ng-template>
 </p-dialog>
+
+<!-- Dialog: Guardar como Widget -->
+<p-dialog
+  header="Guardar como Widget"
+  [(visible)]="showGuardarWidgetDialog"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [draggable]="false">
+  <div class="flex flex-column gap-3">
+    <p class="text-secondary m-0">
+      Guarda la configuración actual de la gráfica como un widget para el dashboard.
+    </p>
+    <div class="flex flex-column gap-2">
+      <label for="widgetTitulo" class="font-medium">Título del Widget</label>
+      <input
+        pInputText
+        id="widgetTitulo"
+        [(ngModel)]="widgetConfig.titulo"
+        placeholder="Ej: Riesgos por Estado" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="widgetDescripcion" class="font-medium">Descripción (opcional)</label>
+      <textarea
+        pTextarea
+        id="widgetDescripcion"
+        [(ngModel)]="widgetConfig.descripcion"
+        placeholder="Descripción del widget..."
+        rows="3"></textarea>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Tamaño del Widget</label>
+      <div class="flex gap-2">
+        <p-button
+          label="Pequeño"
+          [outlined]="widgetConfig.tamano !== 'pequeño'"
+          (onClick)="setWidgetTamano('pequeño')"
+          size="small" />
+        <p-button
+          label="Mediano"
+          [outlined]="widgetConfig.tamano !== 'mediano'"
+          (onClick)="setWidgetTamano('mediano')"
+          size="small" />
+        <p-button
+          label="Grande"
+          [outlined]="widgetConfig.tamano !== 'grande'"
+          (onClick)="setWidgetTamano('grande')"
+          size="small" />
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      [text]="true"
+      severity="secondary"
+      (onClick)="showGuardarWidgetDialog.set(false)" />
+    <p-button
+      label="Guardar Widget"
+      icon="pi pi-check"
+      (onClick)="guardarWidget()"
+      [disabled]="!widgetConfig.titulo" />
+  </ng-template>
+</p-dialog>
+
+<!-- Drawer: Configuración de Alertas -->
+<p-drawer
+  [(visible)]="showAlertasDialog"
+  position="right"
+  [style]="{ width: '520px' }"
+  header="Configuración de Alertas">
+  <div class="alertas-drawer-content">
+    <!-- Tabs -->
+    <p-tabs [(value)]="alertasTabActivo">
+      <p-tablist>
+        <p-tab value="nueva">
+          <i class="pi pi-plus mr-2"></i>
+          Nueva Alerta
+        </p-tab>
+        <p-tab value="lista">
+          <span class="tab-icon-badge">
+            <i class="pi pi-bell"></i>
+            @if (alertas().length > 0) {
+              <span class="icon-badge">{{ alertas().length }}</span>
+            }
+          </span>
+          Guardadas
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Tab: Nueva Alerta -->
+        <p-tabpanel value="nueva">
+          <div class="nueva-alerta-form">
+            <p class="text-secondary text-sm mb-4">
+              <i class="pi pi-info-circle mr-1"></i>
+              Configura alertas que se activen cuando los datos cumplan ciertas condiciones.
+            </p>
+
+            <div class="flex flex-column gap-3">
+              <div class="flex flex-column gap-2">
+                <label class="font-medium">Nombre de la alerta</label>
+                <input
+                  pInputText
+                  [(ngModel)]="nuevaAlerta.nombre"
+                  placeholder="Ej: Riesgos críticos altos"
+                  class="w-full" />
+              </div>
+
+              <div class="flex flex-column gap-2">
+                <label class="font-medium">Condición de activación</label>
+                <div class="flex gap-2 align-items-center flex-wrap">
+                  <span class="text-sm">Activar cuando haya</span>
+                  <p-select
+                    [options]="operadoresUmbral"
+                    [(ngModel)]="nuevaAlerta.operadorUmbral"
+                    optionLabel="label"
+                    optionValue="value"
+                    [style]="{ width: '120px' }"
+                    appendTo="body" />
+                  <p-inputNumber
+                    [(ngModel)]="nuevaAlerta.umbral"
+                    [min]="1"
+                    [showButtons]="true"
+                    [style]="{ width: '100px' }" />
+                  <span class="text-sm">registros</span>
+                </div>
+              </div>
+
+              <div class="flex flex-column gap-2">
+                <label class="font-medium">Prioridad</label>
+                <p-select
+                  [options]="prioridadOptions"
+                  [(ngModel)]="nuevaAlerta.prioridad"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccionar prioridad"
+                  [style]="{ width: '100%' }"
+                  appendTo="body" />
+              </div>
+
+              <div class="flex flex-column gap-2">
+                <label class="font-medium">Notificar por</label>
+                <div class="flex gap-3 flex-wrap">
+                  <div class="flex align-items-center gap-2">
+                    <p-checkbox
+                      [(ngModel)]="nuevaAlerta.notificarEmail"
+                      [binary]="true"
+                      inputId="notifEmail" />
+                    <label for="notifEmail" class="text-sm">Email</label>
+                  </div>
+                  <div class="flex align-items-center gap-2">
+                    <p-checkbox
+                      [(ngModel)]="nuevaAlerta.notificarPush"
+                      [binary]="true"
+                      inputId="notifPush" />
+                    <label for="notifPush" class="text-sm">Push</label>
+                  </div>
+                  <div class="flex align-items-center gap-2">
+                    <p-checkbox
+                      [(ngModel)]="nuevaAlerta.notificarInApp"
+                      [binary]="true"
+                      inputId="notifInApp" />
+                    <label for="notifInApp" class="text-sm">En App</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botón de crear -->
+            <div class="mt-4">
+              <p-button
+                [label]="alertaEditandoId() ? 'Guardar Cambios' : 'Crear Alerta'"
+                icon="pi pi-check"
+                [style]="{ width: '100%' }"
+                (onClick)="crearAlertaYCambiarTab()"
+                [disabled]="!nuevaAlerta.nombre || !nuevaAlerta.prioridad" />
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab: Lista de Alertas -->
+        <p-tabpanel value="lista">
+          <div class="alertas-lista-drawer">
+            @if (alertas().length > 0) {
+              <div class="alertas-cards">
+                @for (alerta of alertas(); track alerta.id) {
+                  <div class="alerta-card" [class.inactiva]="!alerta.activa">
+                    <!-- Header de la card -->
+                    <div class="alerta-card-header">
+                      <div class="flex align-items-center gap-2">
+                        <i class="pi pi-bell" [class.text-primary]="alerta.activa"></i>
+                        <span class="alerta-nombre">{{ alerta.nombre }}</span>
+                      </div>
+                      <p-toggleswitch
+                        [(ngModel)]="alerta.activa"
+                        (onChange)="toggleAlertaActiva(alerta)"
+                        pTooltip="Activar/Desactivar" />
+                    </div>
+
+                    <!-- Body de la card -->
+                    <div class="alerta-card-body">
+                      <div class="alerta-info-row">
+                        <span class="info-label">Prioridad:</span>
+                        <p-tag
+                          [value]="alerta.prioridad | titlecase"
+                          [severity]="getPrioridadSeverity(alerta.prioridad)"
+                          styleClass="text-xs" />
+                      </div>
+                      <div class="alerta-info-row">
+                        <span class="info-label">Condición:</span>
+                        <span class="info-value">{{ getOperadorLabel(alerta.operadorUmbral) }} {{ alerta.umbral }} registros</span>
+                      </div>
+                      <div class="alerta-info-row">
+                        <span class="info-label">Notificar:</span>
+                        <div class="flex gap-1 flex-wrap">
+                          @for (notif of alerta.notificarPor; track notif) {
+                            <p-tag [value]="notif" severity="info" styleClass="text-xs" />
+                          }
+                        </div>
+                      </div>
+                      @if (alerta.vecesActivada > 0) {
+                        <div class="alerta-info-row">
+                          <span class="info-label">Activaciones:</span>
+                          <span class="info-value">{{ alerta.vecesActivada }} veces</span>
+                        </div>
+                      }
+                      @if (alerta.ultimaActivacion) {
+                        <div class="alerta-info-row">
+                          <span class="info-label">Última:</span>
+                          <span class="info-value">{{ alerta.ultimaActivacion | date:'dd/MM/yyyy HH:mm' }}</span>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Footer de la card -->
+                    <div class="alerta-card-footer">
+                      <p-button
+                        icon="pi pi-pencil"
+                        severity="secondary"
+                        [text]="true"
+                        size="small"
+                        (onClick)="editarAlerta(alerta)"
+                        pTooltip="Editar" />
+                      <p-button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [text]="true"
+                        size="small"
+                        (onClick)="eliminarAlerta(alerta.id)"
+                        pTooltip="Eliminar" />
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="alertas-empty">
+                <i class="pi pi-bell-slash text-4xl mb-3 text-secondary"></i>
+                <p class="text-secondary mb-2">No hay alertas configuradas</p>
+                <p-button
+                  label="Crear primera alerta"
+                  icon="pi pi-plus"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="alertasTabActivo = 'nueva'" />
+              </div>
+            }
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar"
+      icon="pi pi-times"
+      severity="secondary"
+      (onClick)="showAlertasDialog.set(false)" />
+  </ng-template>
+</p-drawer>
+
+<!-- Dialog: Compartir Vista -->
+<p-dialog
+  header="Compartir Vista Actual"
+  [(visible)]="showCompartirDialog"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [draggable]="false">
+  <div class="flex flex-column gap-3">
+    <p class="text-secondary m-0">
+      Genera un enlace para compartir la vista actual con los filtros y configuración aplicados.
+    </p>
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Nombre de la Vista</label>
+      <input
+        pInputText
+        [(ngModel)]="vistaCompartida.nombre"
+        placeholder="Ej: Riesgos críticos Q1" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Descripción (opcional)</label>
+      <textarea
+        pTextarea
+        [(ngModel)]="vistaCompartida.descripcion"
+        placeholder="Descripción de la vista..."
+        rows="2"></textarea>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Fecha de expiración (opcional)</label>
+      <p-datePicker
+        [(ngModel)]="vistaCompartida.fechaExpiracion"
+        [showIcon]="true"
+        dateFormat="dd/mm/yy"
+        [minDate]="today"
+        placeholder="Sin expiración" />
+    </div>
+
+    @if (urlVistaCompartida()) {
+      <div class="vista-url-container">
+        <label class="font-medium">Enlace generado</label>
+        <div class="flex gap-2 mt-1">
+          <input
+            pInputText
+            [value]="urlVistaCompartida()"
+            readonly
+            class="flex-1" />
+          <p-button
+            icon="pi pi-copy"
+            severity="secondary"
+            (onClick)="copiarUrlVista()"
+            pTooltip="Copiar enlace" />
+        </div>
+      </div>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      [text]="true"
+      severity="secondary"
+      (onClick)="showCompartirDialog.set(false)" />
+    @if (!urlVistaCompartida()) {
+      <p-button
+        label="Generar Enlace"
+        icon="pi pi-link"
+        (onClick)="generarEnlaceVista()"
+        [disabled]="!vistaCompartida.nombre" />
+    } @else {
+      <p-button
+        label="Listo"
+        icon="pi pi-check"
+        (onClick)="showCompartirDialog.set(false)" />
+    }
+  </ng-template>
+</p-dialog>
+
+<!-- Drawer: Vistas Guardadas -->
+<p-drawer
+  [(visible)]="showVistasDialog"
+  position="right"
+  [style]="{ width: '480px' }"
+  header="Vistas Guardadas">
+  <div class="vistas-drawer-content">
+    <!-- Sección para guardar vista actual -->
+    <div class="guardar-vista-section">
+      @if (!mostrandoFormGuardar()) {
+        <p-button
+          label="Guardar vista actual"
+          icon="pi pi-bookmark"
+          [style]="{ width: '100%' }"
+          (onClick)="mostrandoFormGuardar.set(true)" />
+      } @else {
+        <div class="guardar-vista-form">
+          <div class="flex flex-column gap-3">
+            <div class="flex flex-column gap-2">
+              <label class="font-medium">Nombre de la vista</label>
+              <input
+                pInputText
+                [(ngModel)]="nuevaVistaGuardada.nombre"
+                placeholder="Ej: Riesgos críticos Q1"
+                class="w-full" />
+            </div>
+            <div class="flex flex-column gap-2">
+              <label class="font-medium">Descripción (opcional)</label>
+              <textarea
+                pTextarea
+                [(ngModel)]="nuevaVistaGuardada.descripcion"
+                placeholder="Descripción de la vista..."
+                rows="2"
+                class="w-full"></textarea>
+            </div>
+            <div class="flex flex-column gap-2">
+              <label class="font-medium">Fecha de expiración (opcional)</label>
+              <p-datePicker
+                [(ngModel)]="nuevaVistaGuardada.fechaExpiracion"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                [minDate]="today"
+                placeholder="Sin expiración"
+                [style]="{ width: '100%' }"
+                appendTo="body" />
+            </div>
+            <div class="flex gap-2 justify-content-end">
+              <p-button
+                label="Cancelar"
+                [text]="true"
+                severity="secondary"
+                (onClick)="cancelarGuardarVista()" />
+              <p-button
+                label="Guardar"
+                icon="pi pi-check"
+                (onClick)="guardarVistaActual()"
+                [disabled]="!nuevaVistaGuardada.nombre" />
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <p-divider />
+
+    <!-- Lista de vistas guardadas -->
+    <div class="vistas-lista-drawer">
+      @if (vistasCompartidas().length > 0) {
+        <div class="vistas-cards">
+          @for (vista of vistasCompartidas(); track vista.id) {
+            <div class="vista-card" [class.inactiva]="!vista.activa" [class.editando]="vistaEditandoId() === vista.id">
+              <!-- Header de la card -->
+              <div class="vista-card-header">
+                <div class="flex align-items-center gap-2">
+                  <i class="pi pi-bookmark text-primary"></i>
+                  <span class="vista-nombre">{{ vista.nombre }}</span>
+                </div>
+                <div class="flex align-items-center gap-1">
+                  @if (!vista.activa) {
+                    <p-tag value="Inactiva" severity="secondary" styleClass="text-xs" />
+                  }
+                  @if (vista.fechaExpiracion) {
+                    <p-tag
+                      [value]="'Expira ' + (vista.fechaExpiracion | date:'dd/MM')"
+                      severity="warn"
+                      styleClass="text-xs" />
+                  }
+                </div>
+              </div>
+
+              <!-- Formulario de edición in-place -->
+              @if (vistaEditandoId() === vista.id) {
+                <div class="vista-card-editar">
+                  <div class="flex flex-column gap-3">
+                    <div class="flex flex-column gap-2">
+                      <label class="text-sm font-medium">Nombre</label>
+                      <input
+                        pInputText
+                        [(ngModel)]="vistaEditando.nombre"
+                        class="w-full" />
+                    </div>
+                    <div class="flex flex-column gap-2">
+                      <label class="text-sm font-medium">Descripción</label>
+                      <textarea
+                        pTextarea
+                        [(ngModel)]="vistaEditando.descripcion"
+                        rows="2"
+                        class="w-full"></textarea>
+                    </div>
+                    <div class="flex flex-column gap-2">
+                      <label class="text-sm font-medium">Fecha de expiración</label>
+                      <p-datePicker
+                        [(ngModel)]="vistaEditando.fechaExpiracion"
+                        [showIcon]="true"
+                        dateFormat="dd/mm/yy"
+                        [minDate]="today"
+                        placeholder="Sin expiración"
+                        [style]="{ width: '100%' }"
+                        appendTo="body" />
+                    </div>
+                    <div class="flex gap-2 justify-content-end">
+                      <p-button
+                        label="Cancelar"
+                        [text]="true"
+                        severity="secondary"
+                        size="small"
+                        (onClick)="cancelarEditarVista()" />
+                      <p-button
+                        label="Guardar cambios"
+                        icon="pi pi-check"
+                        size="small"
+                        (onClick)="guardarEdicionVista()" />
+                    </div>
+                  </div>
+                </div>
+              } @else {
+                <!-- Body de la card -->
+                <div class="vista-card-body">
+                  @if (vista.descripcion) {
+                    <p class="vista-descripcion">{{ vista.descripcion }}</p>
+                  }
+                  <div class="vista-meta">
+                    <span><i class="pi pi-calendar"></i> {{ vista.fechaCreacion | date:'dd/MM/yyyy' }}</span>
+                    <span><i class="pi pi-eye"></i> {{ vista.accesos }} accesos</span>
+                  </div>
+                </div>
+
+                <!-- Sección de compartir in-place -->
+                <div class="vista-card-compartir">
+                  @if (vistaCompartiendoId() === vista.id) {
+                    <div class="compartir-expandido">
+                      <label class="text-sm font-medium mb-2 block">Enlace para compartir:</label>
+                      <div class="flex gap-2 mb-3">
+                        <input
+                          pInputText
+                          [value]="getUrlVistaGuardada(vista)"
+                          readonly
+                          class="flex-1 text-sm" />
+                        <p-button
+                          icon="pi pi-copy"
+                          severity="secondary"
+                          [outlined]="true"
+                          (onClick)="copiarUrlVistaGuardada(vista)"
+                          pTooltip="Copiar enlace" />
+                      </div>
+
+                      <!-- Enviar por correo -->
+                      <div class="enviar-correo-section">
+                        <label class="text-sm font-medium mb-2 block">Enviar por correo:</label>
+                        <div class="flex gap-2">
+                          <input
+                            pInputText
+                            [(ngModel)]="emailCompartir"
+                            placeholder="email@ejemplo.com"
+                            class="flex-1 text-sm" />
+                          <p-button
+                            icon="pi pi-send"
+                            severity="primary"
+                            [outlined]="true"
+                            (onClick)="enviarVistaPorCorreo(vista)"
+                            [disabled]="!emailCompartir"
+                            pTooltip="Enviar" />
+                        </div>
+                      </div>
+
+                      <p-button
+                        label="Cerrar"
+                        [text]="true"
+                        size="small"
+                        styleClass="mt-3"
+                        (onClick)="vistaCompartiendoId.set(null)" />
+                    </div>
+                  } @else {
+                    <p-button
+                      label="Compartir enlace"
+                      icon="pi pi-share-alt"
+                      [text]="true"
+                      size="small"
+                      (onClick)="vistaCompartiendoId.set(vista.id)" />
+                  }
+                </div>
+
+                <!-- Footer de la card -->
+                <div class="vista-card-footer">
+                  <div class="flex gap-2">
+                    <p-button
+                      icon="pi pi-play"
+                      label="Aplicar"
+                      severity="success"
+                      [outlined]="true"
+                      size="small"
+                      (onClick)="aplicarVista(vista)" />
+                    <p-button
+                      icon="pi pi-pencil"
+                      severity="secondary"
+                      [text]="true"
+                      size="small"
+                      (onClick)="iniciarEditarVista(vista)"
+                      pTooltip="Editar" />
+                  </div>
+                  <p-button
+                    icon="pi pi-trash"
+                    severity="danger"
+                    [text]="true"
+                    size="small"
+                    (onClick)="eliminarVista(vista.id)"
+                    pTooltip="Eliminar" />
+                </div>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="vistas-empty">
+          <i class="pi pi-bookmark text-4xl mb-3 text-secondary"></i>
+          <p class="text-secondary mb-2">No hay vistas guardadas</p>
+          <p class="text-sm text-secondary">Guarda la configuración actual para acceder rápidamente</p>
+        </div>
+      }
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar"
+      icon="pi pi-times"
+      severity="secondary"
+      (onClick)="showVistasDialog.set(false)" />
+  </ng-template>
+</p-drawer>
+
+<!-- Drawer: Exportaciones Programadas -->
+<p-drawer
+  [(visible)]="showExportacionesDialog"
+  position="right"
+  [style]="{ width: '520px' }"
+  header="Exportaciones Programadas">
+  <div class="exportaciones-drawer-content">
+    <!-- Tabs -->
+    <p-tabs [(value)]="exportacionesTabActivo">
+      <p-tablist>
+        <p-tab value="nueva">
+          <i class="pi pi-plus mr-2"></i>
+          Nueva Exportación
+        </p-tab>
+        <p-tab value="lista">
+          <span class="tab-icon-badge">
+            <i class="pi pi-list"></i>
+            @if (exportacionesProgramadas().length > 0) {
+              <span class="icon-badge">{{ exportacionesProgramadas().length }}</span>
+            }
+          </span>
+          Guardadas
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Tab: Nueva Exportación -->
+        <p-tabpanel value="nueva">
+          <div class="nueva-exportacion-form">
+            <p class="text-secondary text-sm mb-4">
+              <i class="pi pi-info-circle mr-1"></i>
+              Programa una exportación automática con los filtros actuales.
+            </p>
+
+            <div class="flex flex-column gap-3">
+              <div class="flex flex-column gap-2">
+                <label class="font-medium">Nombre de la exportación</label>
+                <input
+                  pInputText
+                  [(ngModel)]="nuevaExportacion.nombre"
+                  placeholder="Ej: Reporte semanal de riesgos"
+                  class="w-full" />
+              </div>
+
+              <div class="flex flex-column gap-2">
+                <label class="font-medium">Formato de archivo</label>
+                <p-select
+                  [options]="formatoExportacionOptions"
+                  [(ngModel)]="nuevaExportacion.formato"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccionar formato"
+                  [style]="{ width: '100%' }"
+                  appendTo="body">
+                  <ng-template let-option pTemplate="item">
+                    <div class="flex align-items-center gap-2">
+                      <i [class]="option.value === 'excel' ? 'pi pi-file-excel text-green-500' : 'pi pi-file text-blue-500'"></i>
+                      <span>{{ option.label }}</span>
+                    </div>
+                  </ng-template>
+                  <ng-template let-option pTemplate="selectedItem">
+                    <div class="flex align-items-center gap-2">
+                      <i [class]="option.value === 'excel' ? 'pi pi-file-excel text-green-500' : 'pi pi-file text-blue-500'"></i>
+                      <span>{{ option.label }}</span>
+                    </div>
+                  </ng-template>
+                </p-select>
+              </div>
+
+              <div class="flex flex-column gap-2">
+                <label class="font-medium">Frecuencia</label>
+                <p-select
+                  [options]="frecuenciaOptions"
+                  [(ngModel)]="nuevaExportacion.frecuencia"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccionar frecuencia"
+                  [style]="{ width: '100%' }"
+                  appendTo="body" />
+              </div>
+
+              <div class="flex flex-column gap-2">
+                <label class="font-medium">Hora de ejecución</label>
+                <p-datePicker
+                  [(ngModel)]="nuevaExportacion.hora"
+                  [timeOnly]="true"
+                  [showIcon]="true"
+                  placeholder="Seleccionar hora"
+                  [style]="{ width: '100%' }"
+                  appendTo="body" />
+              </div>
+
+              <div class="flex flex-column gap-2">
+                <label class="font-medium">Destinatarios</label>
+                <input
+                  pInputText
+                  [(ngModel)]="nuevaExportacion.destinatarios"
+                  placeholder="email1@ejemplo.com, email2@ejemplo.com"
+                  class="w-full" />
+                <small class="text-secondary">Separa los emails con comas</small>
+              </div>
+            </div>
+
+            <!-- Botón de crear -->
+            <div class="mt-4">
+              <p-button
+                label="Crear Exportación Programada"
+                icon="pi pi-check"
+                [style]="{ width: '100%' }"
+                (onClick)="crearExportacionYCambiarTab()"
+                [disabled]="!nuevaExportacion.nombre || !nuevaExportacion.formato || !nuevaExportacion.frecuencia" />
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab: Lista de Exportaciones -->
+        <p-tabpanel value="lista">
+          <div class="exportaciones-lista">
+            @if (exportacionesProgramadas().length > 0) {
+              <div class="exportaciones-cards">
+                @for (exp of exportacionesProgramadas(); track exp.id) {
+                  <div class="exportacion-card" [class.inactiva]="!exp.activa">
+                    <!-- Header de la card -->
+                    <div class="exportacion-card-header">
+                      <div class="flex align-items-center gap-2">
+                        <i [class]="exp.formato === 'excel' ? 'pi pi-file-excel text-green-500' : 'pi pi-file text-blue-500'" style="font-size: 1.25rem;"></i>
+                        <span class="exportacion-nombre">{{ exp.nombre }}</span>
+                      </div>
+                      <p-toggleswitch
+                        [(ngModel)]="exp.activa"
+                        (onChange)="toggleExportacionActiva(exp)"
+                        pTooltip="Activar/Desactivar" />
+                    </div>
+
+                    <!-- Body de la card -->
+                    <div class="exportacion-card-body">
+                      <div class="exportacion-info-row">
+                        <span class="info-label">Formato:</span>
+                        <p-tag [value]="exp.formato | uppercase" [severity]="exp.formato === 'excel' ? 'success' : 'info'" styleClass="text-xs" />
+                      </div>
+                      <div class="exportacion-info-row">
+                        <span class="info-label">Frecuencia:</span>
+                        <span class="info-value">{{ exp.frecuencia | titlecase }}</span>
+                      </div>
+                      <div class="exportacion-info-row">
+                        <span class="info-label">Hora:</span>
+                        <span class="info-value">{{ exp.hora }}</span>
+                      </div>
+                      <div class="exportacion-info-row">
+                        <span class="info-label">Próxima ejecución:</span>
+                        <span class="info-value">{{ exp.proximaEjecucion | date:'dd/MM/yyyy HH:mm' }}</span>
+                      </div>
+                      @if (exp.destinatarios && exp.destinatarios.length > 0) {
+                        <div class="exportacion-info-row">
+                          <span class="info-label">Destinatarios:</span>
+                          <span class="info-value text-sm">{{ exp.destinatarios.join(', ') }}</span>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Footer de la card -->
+                    <div class="exportacion-card-footer">
+                      <p-button
+                        icon="pi pi-pencil"
+                        severity="secondary"
+                        [text]="true"
+                        size="small"
+                        (onClick)="editarExportacion(exp)"
+                        pTooltip="Editar" />
+                      <p-button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [text]="true"
+                        size="small"
+                        (onClick)="eliminarExportacion(exp.id)"
+                        pTooltip="Eliminar" />
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="exportaciones-empty">
+                <i class="pi pi-calendar text-4xl mb-3 text-secondary"></i>
+                <p class="text-secondary mb-2">No hay exportaciones programadas</p>
+                <p-button
+                  label="Crear primera exportación"
+                  icon="pi pi-plus"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="exportacionesTabActivo = 'nueva'" />
+              </div>
+            }
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cerrar"
+      icon="pi pi-times"
+      severity="secondary"
+      (onClick)="showExportacionesDialog.set(false)" />
+  </ng-template>
+</p-drawer>

@@ -960,6 +960,456 @@ mark.search-highlight {
   justify-content: flex-end;
 }
 
+// Badge sobre icono en tabs
+.tab-icon-badge {
+  position: relative;
+  display: inline-flex;
+  margin-right: 0.5rem;
+
+  i {
+    font-size: 1rem;
+  }
+
+  .icon-badge {
+    position: absolute;
+    top: -8px;
+    right: -10px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 10px;
+  }
+}
+
+// Badge sobre botón del toolbar
+.toolbar-btn-badge {
+  position: relative;
+  display: inline-flex;
+
+  .btn-icon-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    color: white;
+    border-radius: 10px;
+    z-index: 1;
+
+    &.success {
+      background: var(--green-500);
+    }
+
+    &.info {
+      background: var(--blue-500);
+    }
+
+    &.danger {
+      background: var(--red-500);
+    }
+
+    &.warn {
+      background: var(--orange-500);
+    }
+  }
+}
+
+// Vistas Guardadas Drawer
+.vistas-drawer-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.guardar-vista-section {
+  padding: 0.5rem 0;
+}
+
+.guardar-vista-form {
+  padding: 1rem;
+  background: var(--surface-ground);
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+}
+
+.vistas-lista-drawer {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.vistas-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.vista-card {
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface-card);
+  overflow: hidden;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  &.inactiva {
+    opacity: 0.6;
+    background: var(--surface-ground);
+  }
+}
+
+.vista-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--surface-50);
+  border-bottom: 1px solid var(--surface-border);
+
+  .vista-nombre {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.95rem;
+  }
+}
+
+.vista-card-body {
+  padding: 1rem;
+
+  .vista-descripcion {
+    margin: 0 0 0.75rem 0;
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .vista-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-color-secondary);
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+
+      i {
+        font-size: 0.75rem;
+      }
+    }
+  }
+}
+
+.vista-card-compartir {
+  padding: 0.75rem 1rem;
+  background: var(--surface-ground);
+  border-top: 1px solid var(--surface-border);
+}
+
+.compartir-expandido {
+  padding: 0.5rem 0;
+
+  input {
+    font-size: 0.85rem !important;
+  }
+}
+
+.vista-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+.vista-card-editar {
+  padding: 1rem;
+  background: var(--surface-ground);
+  border-top: 1px solid var(--surface-border);
+}
+
+.vista-card.editando {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-100);
+}
+
+.enviar-correo-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--surface-border);
+}
+
+.vistas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+// Alertas Drawer
+.alertas-drawer-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:host ::ng-deep .alertas-drawer-content {
+  .p-tabs {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .p-tablist {
+    flex-shrink: 0;
+  }
+
+  .p-tabpanels {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .p-tabpanel {
+    padding: 1rem 0;
+  }
+}
+
+.nueva-alerta-form {
+  padding: 0.5rem 0;
+}
+
+.alertas-lista-drawer {
+  padding: 0.5rem 0;
+}
+
+.alertas-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.alerta-card {
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface-card);
+  overflow: hidden;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  &.inactiva {
+    opacity: 0.6;
+    background: var(--surface-ground);
+
+    .alerta-nombre {
+      color: var(--text-color-secondary);
+    }
+  }
+}
+
+.alerta-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--surface-50);
+  border-bottom: 1px solid var(--surface-border);
+
+  .alerta-nombre {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.95rem;
+  }
+}
+
+.alerta-card-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.alerta-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .info-label {
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
+    min-width: 100px;
+    flex-shrink: 0;
+  }
+
+  .info-value {
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+}
+
+.alerta-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-ground);
+  border-top: 1px solid var(--surface-border);
+}
+
+.alertas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+// Exportaciones Programadas Drawer
+.exportaciones-drawer-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:host ::ng-deep .exportaciones-drawer-content {
+  .p-tabs {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .p-tablist {
+    flex-shrink: 0;
+  }
+
+  .p-tabpanels {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .p-tabpanel {
+    padding: 1rem 0;
+  }
+}
+
+.nueva-exportacion-form {
+  padding: 0.5rem 0;
+}
+
+.exportaciones-lista {
+  padding: 0.5rem 0;
+}
+
+.exportaciones-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.exportacion-card {
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  background: var(--surface-card);
+  overflow: hidden;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  &.inactiva {
+    opacity: 0.6;
+    background: var(--surface-ground);
+
+    .exportacion-nombre {
+      color: var(--text-color-secondary);
+    }
+  }
+}
+
+.exportacion-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--surface-50);
+  border-bottom: 1px solid var(--surface-border);
+
+  .exportacion-nombre {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.95rem;
+  }
+}
+
+.exportacion-card-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.exportacion-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .info-label {
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
+    min-width: 120px;
+    flex-shrink: 0;
+  }
+
+  .info-value {
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+}
+
+.exportacion-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-ground);
+  border-top: 1px solid var(--surface-border);
+}
+
+.exportaciones-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
 // Responsive
 @media (max-width: 768px) {
   .toolbar {
@@ -985,5 +1435,14 @@ mark.search-highlight {
 
   .detalle-grid {
     grid-template-columns: 1fr;
+  }
+
+  .exportacion-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .info-label {
+      min-width: unset;
+    }
   }
 }

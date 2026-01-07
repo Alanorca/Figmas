@@ -12,7 +12,29 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { AccordionModule } from 'primeng/accordion';
+import { DialogModule } from 'primeng/dialog';
+import { TextareaModule } from 'primeng/textarea';
+import { NgApexchartsModule } from 'ng-apexcharts';
 import { GroqService } from '../../services/groq.service';
+
+// Importar tipos de ApexCharts
+import {
+  ApexAxisChartSeries,
+  ApexNonAxisChartSeries,
+  ApexChart,
+  ApexXAxis,
+  ApexDataLabels,
+  ApexPlotOptions,
+  ApexLegend,
+  ApexFill,
+  ApexStroke,
+  ApexTooltip,
+  ApexResponsive,
+  ApexTheme,
+  ApexGrid,
+  ApexYAxis,
+  ApexAnnotations
+} from 'ng-apexcharts';
 
 // Tipos de gráficas disponibles
 export type TipoGraficaAvanzada =
@@ -123,6 +145,50 @@ export interface MensajeAsistente {
   };
 }
 
+// Interfaz para anotaciones colaborativas
+export interface AnotacionGrafica {
+  id: string;
+  tipo: 'punto' | 'rango' | 'texto';
+  categoria?: string;
+  valor?: number;
+  texto: string;
+  color: string;
+  autor: string;
+  fecha: Date;
+  x?: number;
+  x2?: number;  // Para rangos
+  y?: number;
+  y2?: number;
+}
+
+// Interfaz para comparación temporal
+export interface ComparacionTemporal {
+  habilitada: boolean;
+  periodo1: { desde: Date; hasta: Date; label: string };
+  periodo2: { desde: Date; hasta: Date; label: string };
+  modo: 'overlay' | 'sideBySide';
+}
+
+// Opciones de ApexCharts combinadas
+export interface ApexChartOptions {
+  series: ApexAxisChartSeries | ApexNonAxisChartSeries;
+  chart: ApexChart;
+  xaxis?: ApexXAxis;
+  yaxis?: ApexYAxis | ApexYAxis[];
+  dataLabels?: ApexDataLabels;
+  plotOptions?: ApexPlotOptions;
+  legend?: ApexLegend;
+  fill?: ApexFill;
+  stroke?: ApexStroke;
+  tooltip?: ApexTooltip;
+  responsive?: ApexResponsive[];
+  theme?: ApexTheme;
+  grid?: ApexGrid;
+  colors?: string[];
+  labels?: string[];
+  annotations?: ApexAnnotations;
+}
+
 @Component({
   selector: 'app-graficas-interactivas',
   standalone: true,
@@ -130,7 +196,7 @@ export interface MensajeAsistente {
     CommonModule, FormsModule, ChartModule,
     ButtonModule, SelectModule, ToggleButtonModule, TabsModule,
     DividerModule, InputTextModule, TooltipModule, TagModule, CardModule,
-    AccordionModule
+    AccordionModule, DialogModule, TextareaModule, NgApexchartsModule
   ],
   templateUrl: './graficas-interactivas.html',
   styleUrl: './graficas-interactivas.scss'
@@ -271,6 +337,32 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   // Filtro activo
   filtroActivo = signal<FiltroGrafica | null>(null);
 
+  // Anotaciones colaborativas
+  anotaciones = signal<AnotacionGrafica[]>([]);
+  mostrarDialogAnotacion = signal(false);
+  nuevaAnotacion = signal<Partial<AnotacionGrafica>>({});
+  anotacionEditando = signal<string | null>(null);
+
+  // Comparación temporal
+  comparacionTemporal = signal<ComparacionTemporal>({
+    habilitada: false,
+    periodo1: { desde: new Date(), hasta: new Date(), label: 'Periodo actual' },
+    periodo2: { desde: new Date(), hasta: new Date(), label: 'Periodo anterior' },
+    modo: 'overlay'
+  });
+  mostrarDialogComparacion = signal(false);
+
+  // Drill-down
+  drillDownStack = signal<{ campo: string; valor: string }[]>([]);
+  drillDownActivo = signal(false);
+
+  // Computed: Determinar si usar ApexCharts para el tipo actual
+  usarApexCharts = computed(() => {
+    const tipo = this.tipoGrafica();
+    // Tipos que requieren ApexCharts para renderizado correcto
+    return ['funnel', 'pyramid', 'radialBar', 'treemap', 'heatmap'].includes(tipo);
+  });
+
   // Campos disponibles para selección de datos
   @Input() camposDisponibles: CampoDisponible[] = [
     { label: 'Tipo de Entidad', value: 'tipoEntidad', tipo: 'categoria', descripcion: 'Riesgo o Incidente' },
@@ -315,6 +407,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
 
   constructor() {
     this.cargarConfiguracionesDesdeStorage();
+    this.cargarAnotacionesDesdeStorage();
   }
 
   // ==================== LIFECYCLE HOOKS ====================
@@ -797,6 +890,390 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     return baseOptions;
   });
 
+  // ==================== APEXCHARTS OPTIONS ====================
+  // Computed: Opciones de ApexCharts para gráficas avanzadas (Funnel, TreeMap, RadialBar, etc.)
+  apexChartOptions = computed<ApexChartOptions>(() => {
+    const tipo = this.tipoGrafica();
+    const datos = this.datosSignal();
+    const paleta = this.paletas[this.paletaSeleccionada()] || this.paletas['vibrant'];
+    const isDark = this.tema() === 'dark';
+
+    // Validar datos
+    if (!datos || !datos.labels || !datos.series) {
+      return {
+        series: [],
+        chart: { type: 'bar', height: 350 }
+      };
+    }
+
+    // Obtener valores numéricos
+    let values: number[] = [];
+    if (Array.isArray(datos.series) && typeof datos.series[0] === 'number') {
+      values = datos.series as number[];
+    } else if (Array.isArray(datos.series) && datos.series.length > 0 && typeof datos.series[0] === 'object') {
+      values = (datos.series as { name: string; data: number[] }[])[0].data;
+    }
+
+    // Ordenar datos para funnel (mayor a menor)
+    let sortedData = datos.labels.map((label, i) => ({
+      label,
+      value: values[i] || 0
+    }));
+
+    if (tipo === 'funnel' || tipo === 'pyramid') {
+      sortedData = sortedData.sort((a, b) => b.value - a.value);
+    }
+
+    const baseChart: ApexChart = {
+      type: this.getApexChartType(tipo),
+      height: 400,
+      toolbar: { show: true, tools: { download: true, zoom: false, pan: false } },
+      animations: {
+        enabled: this.animaciones(),
+        speed: 400,
+        dynamicAnimation: { enabled: true, speed: 350 }
+      },
+      background: 'transparent',
+      events: {
+        dataPointSelection: (_event: any, _chartContext: any, config: any) => {
+          const categoria = sortedData[config.dataPointIndex]?.label || datos.labels[config.dataPointIndex];
+          const valor = sortedData[config.dataPointIndex]?.value || values[config.dataPointIndex];
+          this.handleDrillDown(categoria, valor);
+        }
+      }
+    };
+
+    const baseOptions: ApexChartOptions = {
+      series: [],
+      chart: baseChart,
+      colors: paleta,
+      theme: { mode: isDark ? 'dark' : 'light' },
+      legend: {
+        show: this.mostrarLeyenda(),
+        position: 'bottom',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '11px',
+        labels: { colors: isDark ? '#999' : '#666' }
+      },
+      dataLabels: {
+        enabled: this.mostrarDataLabels(),
+        style: { fontSize: '11px', fontFamily: 'Inter, sans-serif' }
+      },
+      tooltip: {
+        enabled: true,
+        theme: isDark ? 'dark' : 'light',
+        style: { fontSize: '11px', fontFamily: 'Inter, sans-serif' }
+      },
+      responsive: [{
+        breakpoint: 480,
+        options: { chart: { height: 300 }, legend: { position: 'bottom' } }
+      }]
+    };
+
+    // Configuración específica por tipo
+    switch (tipo) {
+      case 'funnel':
+        baseOptions.series = sortedData.map(d => d.value);
+        baseOptions.labels = sortedData.map(d => d.label);
+        baseOptions.chart = { ...baseChart, type: 'bar', height: 400, stacked: true };
+        baseOptions.plotOptions = {
+          bar: {
+            horizontal: true,
+            barHeight: '80%',
+            isFunnel: true,
+            borderRadius: 0
+          }
+        };
+        baseOptions.dataLabels = {
+          enabled: true,
+          formatter: (val: number, opts: any) => `${sortedData[opts.dataPointIndex].label}: ${val}`,
+          dropShadow: { enabled: false }
+        };
+        baseOptions.xaxis = { categories: sortedData.map(d => d.label) };
+        break;
+
+      case 'pyramid':
+        baseOptions.series = sortedData.map(d => d.value).reverse();
+        baseOptions.labels = sortedData.map(d => d.label).reverse();
+        baseOptions.chart = { ...baseChart, type: 'bar', height: 400, stacked: true };
+        baseOptions.plotOptions = {
+          bar: {
+            horizontal: true,
+            barHeight: '80%',
+            isFunnel: true,
+            borderRadius: 0
+          }
+        };
+        baseOptions.dataLabels = {
+          enabled: true,
+          formatter: (val: number, opts: any) => `${sortedData.reverse()[opts.dataPointIndex]?.label || ''}: ${val}`,
+          dropShadow: { enabled: false }
+        };
+        break;
+
+      case 'radialBar':
+        // Para radialBar, convertir valores a porcentajes (0-100)
+        const maxValue = Math.max(...values);
+        const percentages = values.map(v => Math.round((v / maxValue) * 100));
+        baseOptions.series = percentages;
+        baseOptions.labels = datos.labels;
+        baseOptions.chart = { ...baseChart, type: 'radialBar', height: 400 };
+        baseOptions.plotOptions = {
+          radialBar: {
+            offsetY: 0,
+            startAngle: 0,
+            endAngle: 270,
+            hollow: { margin: 5, size: '30%', background: 'transparent' },
+            dataLabels: {
+              name: { show: true, fontSize: '12px' },
+              value: { show: true, fontSize: '14px', formatter: (val: number) => `${val}%` }
+            },
+            barLabels: {
+              enabled: true,
+              useSeriesColors: true,
+              offsetX: -8,
+              fontSize: '11px',
+              formatter: (seriesName: string, opts: any) => `${seriesName}: ${values[opts.seriesIndex]}`
+            }
+          }
+        };
+        break;
+
+      case 'treemap':
+        baseOptions.series = [{
+          data: datos.labels.map((label, i) => ({
+            x: label,
+            y: values[i] || 0
+          }))
+        }];
+        baseOptions.chart = { ...baseChart, type: 'treemap', height: 400 };
+        baseOptions.plotOptions = {
+          treemap: {
+            distributed: true,
+            enableShades: true,
+            shadeIntensity: 0.5,
+            colorScale: {
+              ranges: paleta.slice(0, Math.min(datos.labels.length, paleta.length)).map((color, i) => ({
+                from: i * (Math.max(...values) / paleta.length),
+                to: (i + 1) * (Math.max(...values) / paleta.length),
+                color
+              }))
+            }
+          }
+        };
+        baseOptions.dataLabels = {
+          enabled: true,
+          style: { fontSize: '12px' },
+          formatter: (text: string, op: any) => `${text}: ${op.value}`,
+          offsetY: -4
+        };
+        break;
+
+      case 'heatmap':
+        // Crear datos de heatmap simulados
+        baseOptions.series = datos.labels.map((label, i) => ({
+          name: label,
+          data: [{ x: 'Valor', y: values[i] || 0 }]
+        })) as any;
+        baseOptions.chart = { ...baseChart, type: 'heatmap', height: 400 };
+        baseOptions.plotOptions = {
+          heatmap: {
+            shadeIntensity: 0.5,
+            colorScale: {
+              ranges: [
+                { from: 0, to: 25, color: paleta[4] || '#22c55e', name: 'Bajo' },
+                { from: 26, to: 50, color: paleta[2] || '#eab308', name: 'Medio' },
+                { from: 51, to: 75, color: paleta[1] || '#f97316', name: 'Alto' },
+                { from: 76, to: 100, color: paleta[0] || '#ef4444', name: 'Crítico' }
+              ]
+            }
+          }
+        };
+        break;
+
+      default:
+        // Fallback para otros tipos
+        baseOptions.series = [{ name: this.titulo, data: values }];
+        baseOptions.xaxis = { categories: datos.labels };
+    }
+
+    return baseOptions;
+  });
+
+  // Helper para obtener tipo de ApexChart
+  private getApexChartType(tipo: TipoGraficaAvanzada): 'bar' | 'line' | 'area' | 'pie' | 'donut' | 'radialBar' | 'scatter' | 'heatmap' | 'treemap' | 'radar' | 'polarArea' {
+    const mapping: Record<string, any> = {
+      'funnel': 'bar',
+      'pyramid': 'bar',
+      'radialBar': 'radialBar',
+      'treemap': 'treemap',
+      'heatmap': 'heatmap',
+      'pie': 'pie',
+      'donut': 'donut',
+      'bar': 'bar',
+      'column': 'bar',
+      'line': 'line',
+      'area': 'area',
+      'radar': 'radar',
+      'scatter': 'scatter',
+      'polarArea': 'polarArea'
+    };
+    return mapping[tipo] || 'bar';
+  }
+
+  // ==================== DRILL-DOWN ====================
+  handleDrillDown(categoria: string, valor: number): void {
+    console.log('Drill-down:', { categoria, valor });
+
+    // Emitir evento de click en data point
+    this.dataPointClick.emit({ categoria, valor });
+
+    // Si drill-down está habilitado, agregar al stack
+    if (this.drillDownActivo()) {
+      this.drillDownStack.update(stack => [...stack, { campo: this.campoEjeX(), valor: categoria }]);
+    }
+  }
+
+  toggleDrillDown(): void {
+    this.drillDownActivo.update(v => !v);
+    if (!this.drillDownActivo()) {
+      this.drillDownStack.set([]);
+    }
+  }
+
+  navegarDrillDown(index: number): void {
+    // Navegar a un punto específico del stack
+    this.drillDownStack.update(stack => stack.slice(0, index + 1));
+  }
+
+  salirDrillDown(): void {
+    this.drillDownStack.update(stack => stack.slice(0, -1));
+  }
+
+  limpiarDrillDown(): void {
+    this.drillDownStack.set([]);
+  }
+
+  // ==================== ANOTACIONES ====================
+  abrirDialogAnotacion(): void {
+    this.nuevaAnotacion.set({
+      tipo: 'texto',
+      texto: '',
+      color: '#3B82F6',
+      autor: 'Usuario'
+    });
+    this.anotacionEditando.set(null);
+    this.mostrarDialogAnotacion.set(true);
+  }
+
+  guardarAnotacion(): void {
+    const anotacion = this.nuevaAnotacion();
+    if (!anotacion.texto?.trim()) return;
+
+    if (this.anotacionEditando()) {
+      // Editar existente
+      this.anotaciones.update(list =>
+        list.map(a => a.id === this.anotacionEditando() ? { ...a, ...anotacion } as AnotacionGrafica : a)
+      );
+    } else {
+      // Nueva anotación
+      const nuevaAnotacion: AnotacionGrafica = {
+        id: Date.now().toString(),
+        tipo: anotacion.tipo || 'texto',
+        texto: anotacion.texto || '',
+        color: anotacion.color || '#3B82F6',
+        autor: anotacion.autor || 'Usuario',
+        fecha: new Date(),
+        categoria: anotacion.categoria,
+        valor: anotacion.valor
+      };
+      this.anotaciones.update(list => [...list, nuevaAnotacion]);
+    }
+
+    this.cerrarDialogAnotacion();
+    this.guardarAnotacionesEnStorage();
+  }
+
+  editarAnotacion(anotacion: AnotacionGrafica): void {
+    this.nuevaAnotacion.set({ ...anotacion });
+    this.anotacionEditando.set(anotacion.id);
+    this.mostrarDialogAnotacion.set(true);
+  }
+
+  eliminarAnotacion(id: string): void {
+    this.anotaciones.update(list => list.filter(a => a.id !== id));
+    this.guardarAnotacionesEnStorage();
+  }
+
+  cerrarDialogAnotacion(): void {
+    this.mostrarDialogAnotacion.set(false);
+    this.nuevaAnotacion.set({});
+    this.anotacionEditando.set(null);
+  }
+
+  private guardarAnotacionesEnStorage(): void {
+    try {
+      localStorage.setItem('graficas-anotaciones', JSON.stringify(this.anotaciones()));
+    } catch (e) {
+      console.error('Error guardando anotaciones:', e);
+    }
+  }
+
+  private cargarAnotacionesDesdeStorage(): void {
+    try {
+      const stored = localStorage.getItem('graficas-anotaciones');
+      if (stored) {
+        const anotaciones = JSON.parse(stored);
+        anotaciones.forEach((a: any) => a.fecha = new Date(a.fecha));
+        this.anotaciones.set(anotaciones);
+      }
+    } catch (e) {
+      console.error('Error cargando anotaciones:', e);
+    }
+  }
+
+  // ==================== COMPARACIÓN TEMPORAL ====================
+  abrirDialogComparacion(): void {
+    const hoy = new Date();
+    const hace30Dias = new Date(hoy.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const hace60Dias = new Date(hoy.getTime() - 60 * 24 * 60 * 60 * 1000);
+
+    this.comparacionTemporal.set({
+      habilitada: false,
+      periodo1: { desde: hace30Dias, hasta: hoy, label: 'Últimos 30 días' },
+      periodo2: { desde: hace60Dias, hasta: hace30Dias, label: '30 días anteriores' },
+      modo: 'overlay'
+    });
+    this.mostrarDialogComparacion.set(true);
+  }
+
+  aplicarComparacionTemporal(): void {
+    this.comparacionTemporal.update(c => ({ ...c, habilitada: true }));
+    this.mostrarDialogComparacion.set(false);
+    // Aquí se emitiría un evento para que el componente padre recalcule los datos
+  }
+
+  desactivarComparacionTemporal(): void {
+    this.comparacionTemporal.update(c => ({ ...c, habilitada: false }));
+  }
+
+  setModoComparacion(modo: 'overlay' | 'sideBySide'): void {
+    this.comparacionTemporal.update(c => ({ ...c, modo }));
+  }
+
+  // Métodos para actualizar anotación
+  setAnotacionTexto(texto: string): void {
+    this.nuevaAnotacion.update(a => ({ ...a, texto }));
+  }
+
+  setAnotacionColor(color: string): void {
+    this.nuevaAnotacion.update(a => ({ ...a, color }));
+  }
+
+  setAnotacionAutor(autor: string): void {
+    this.nuevaAnotacion.update(a => ({ ...a, autor }));
+  }
+
   // Helper para convertir hex a rgba
   private hexToRgba(hex: string, alpha: number): string {
     const r = parseInt(hex.slice(1, 3), 16);
@@ -846,13 +1323,48 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   }
 
   exportarSVG(): void {
-    // Chart.js doesn't support SVG directly, export as PNG with higher resolution
+    // Si estamos usando ApexCharts, usar su exportación nativa de SVG
+    if (this.usarApexCharts()) {
+      const apexChart = document.querySelector('.chart-container .apexcharts-canvas');
+      if (apexChart) {
+        const svgElement = apexChart.querySelector('svg');
+        if (svgElement) {
+          const svgData = new XMLSerializer().serializeToString(svgElement);
+          const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+          const svgUrl = URL.createObjectURL(svgBlob);
+          const link = document.createElement('a');
+          link.href = svgUrl;
+          link.download = `grafica-${this.tipoGrafica()}-${Date.now()}.svg`;
+          link.click();
+          URL.revokeObjectURL(svgUrl);
+          return;
+        }
+      }
+    }
+
+    // Para Chart.js, convertir canvas a SVG simulado
     const canvas = document.querySelector('.chart-container canvas') as HTMLCanvasElement;
     if (canvas) {
+      // Crear SVG con imagen embebida del canvas
+      const width = canvas.width;
+      const height = canvas.height;
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
+
+      const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <title>Gráfica ${this.getTipoLabel(this.tipoGrafica())} - ${this.titulo}</title>
+  <desc>Exportado desde ORCA - ${new Date().toLocaleDateString('es-MX')}</desc>
+  <image width="${width}" height="${height}" xlink:href="${dataUrl}"/>
+</svg>`;
+
+      const svgBlob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
       const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png', 1.0);
-      link.download = `grafica-${this.tipoGrafica()}-${Date.now()}.png`;
+      link.href = svgUrl;
+      link.download = `grafica-${this.tipoGrafica()}-${Date.now()}.svg`;
       link.click();
+      URL.revokeObjectURL(svgUrl);
     }
   }
 
