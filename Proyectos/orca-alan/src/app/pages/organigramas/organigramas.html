@@ -1,113 +1,264 @@
-<div class="organigramas-container">
+<div class="organigramas-container h-full">
+  <!-- Header -->
   <div class="page-header">
     <h1>Organigrama</h1>
     <p class="page-subtitle">{{ organigrama()?.nombre || 'Cargando...' }} - {{ organigrama()?.descripcion || '' }}</p>
   </div>
 
-  <p-toolbar>
-    <ng-template pTemplate="end">
-      <div class="flex gap-2">
-        <p-button label="Agregar Persona" icon="pi pi-user-plus" severity="secondary"></p-button>
-        <p-button label="Exportar" icon="pi pi-download"></p-button>
+  <!-- Layout principal con Splitter -->
+  <p-splitter [style]="{'height': 'calc(100vh - 180px)'}" [panelSizes]="[25, 75]" [minSizes]="[20, 50]">
+    <!-- Panel Izquierdo Fijo - Detalle del Nodo -->
+    <ng-template pTemplate>
+      <div class="left-panel h-full flex flex-column">
+        @if (selectedNode(); as nodo) {
+          <!-- Header del panel con info del nodo -->
+          <div class="panel-header p-3 border-bottom-1 surface-border">
+            <div class="flex align-items-center gap-3">
+              <p-avatar icon="pi pi-user" size="xlarge" shape="circle"
+                        [style]="{ 'background-color': 'var(--primary-color)', 'color': 'white' }">
+              </p-avatar>
+              <div class="flex-grow-1">
+                <h3 class="text-xl font-bold text-color m-0">{{ nodo.nombre }}</h3>
+                <p class="text-primary m-0">{{ nodo.cargo }}</p>
+                <p class="text-color-secondary text-sm m-0">{{ nodo.departamento || '-' }}</p>
+              </div>
+              <div class="flex gap-1">
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
+                          (click)="abrirEditar(nodo)" pTooltip="Editar"></p-button>
+                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                          (click)="confirmarEliminar(nodo)" pTooltip="Eliminar"></p-button>
+              </div>
+            </div>
+            @if (nodo.descripcion) {
+              <p class="text-color-secondary text-sm mt-2 mb-0">{{ nodo.descripcion }}</p>
+            }
+          </div>
+
+          <!-- Breadcrumb de navegación -->
+          <div class="px-3 py-2 surface-ground" *ngIf="breadcrumbItems().length > 0">
+            <p-breadcrumb [model]="breadcrumbItems()" [home]="breadcrumbHome" styleClass="border-none bg-transparent p-0">
+            </p-breadcrumb>
+          </div>
+
+          <!-- Información de contacto -->
+          <div class="p-3 flex flex-column gap-2">
+            <div class="flex align-items-center gap-2 p-2 surface-ground border-round">
+              <i class="pi pi-envelope text-color-secondary"></i>
+              <div>
+                <span class="text-color-secondary text-xs block">Email</span>
+                <span class="text-sm">{{ nodo.email || 'No especificado' }}</span>
+              </div>
+            </div>
+            <div class="flex align-items-center gap-2 p-2 surface-ground border-round">
+              <i class="pi pi-phone text-color-secondary"></i>
+              <div>
+                <span class="text-color-secondary text-xs block">Teléfono</span>
+                <span class="text-sm">{{ nodo.telefono || 'No especificado' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <p-divider></p-divider>
+
+          <!-- Sección Inferiores -->
+          <div class="flex-grow-1 flex flex-column overflow-hidden px-3">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <span class="font-bold">Inferiores</span>
+              <span class="text-color-secondary text-sm">{{ nodo.subordinados?.length || 0 }}</span>
+            </div>
+
+            <!-- Búsqueda de subordinados -->
+            <div class="p-inputgroup mb-3">
+              <span class="p-inputgroup-addon">
+                <i class="pi pi-search"></i>
+              </span>
+              <input pInputText placeholder="Buscar inferior..."
+                     [ngModel]="searchSubordinadosQuery()"
+                     (ngModelChange)="searchSubordinadosQuery.set($event)" />
+            </div>
+
+            <!-- Lista de subordinados -->
+            <div class="flex-grow-1 overflow-auto">
+              @if (subordinadosFiltrados().length > 0) {
+                <div class="flex flex-column gap-2">
+                  @for (sub of subordinadosFiltrados(); track sub.id) {
+                    <div class="flex align-items-center gap-2 p-2 surface-ground border-round cursor-pointer list-item-hover"
+                         (click)="seleccionarSubordinado(sub)">
+                      <p-avatar icon="pi pi-user" shape="circle" size="normal"
+                                [style]="{ 'background-color': 'var(--surface-400)', 'color': 'white' }">
+                      </p-avatar>
+                      <div class="flex-grow-1 min-w-0">
+                        <p class="font-medium m-0 text-overflow-ellipsis overflow-hidden white-space-nowrap">{{ sub.nombre }}</p>
+                        <p class="text-color-secondary text-xs m-0">{{ sub.cargo }}</p>
+                      </div>
+                      <i class="pi pi-chevron-right text-color-secondary"></i>
+                    </div>
+                  }
+                </div>
+              } @else if (nodo.subordinados?.length === 0) {
+                <div class="text-center p-3 text-color-secondary">
+                  <i class="pi pi-users text-2xl mb-2 block"></i>
+                  <p class="m-0 text-sm">No tiene subordinados</p>
+                </div>
+              } @else {
+                <div class="text-center p-3 text-color-secondary">
+                  <p class="m-0 text-sm">No se encontraron resultados</p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Botón agregar inferior -->
+          <div class="p-3 border-top-1 surface-border">
+            <p-button label="Agregar Inferior" icon="pi pi-plus" severity="primary" class="w-full"
+                      (click)="abrirCrearHijo(nodo)">
+            </p-button>
+          </div>
+        } @else {
+          <!-- Estado cuando no hay nodo seleccionado -->
+          <div class="flex flex-column align-items-center justify-content-center h-full p-4 text-center">
+            <i class="pi pi-user text-5xl text-color-secondary mb-3"></i>
+            <h3 class="text-color-secondary m-0 mb-2">Selecciona un nodo</h3>
+            <p class="text-color-secondary text-sm m-0">Haz clic en un nodo del organigrama para ver sus detalles</p>
+          </div>
+        }
       </div>
     </ng-template>
-  </p-toolbar>
 
-  <p-card>
-    <div class="org-chart-container overflow-auto">
-      <p-organizationChart [value]="orgChartData" selectionMode="single" (onNodeSelect)="onNodeSelect($event)">
-        <ng-template let-node pTemplate="person">
-          <div class="org-node-content p-3 surface-card border-round shadow-2 cursor-pointer text-center"
-               style="min-width: 180px;">
-            <p-avatar icon="pi pi-user" size="large" shape="circle"
-                      [style]="{ 'background-color': 'var(--primary-color)', 'color': 'white' }"></p-avatar>
-            <p class="font-bold text-color m-0 mt-2">{{ node.data.nombre }}</p>
-            <p class="text-primary text-sm m-0">{{ node.data.cargo }}</p>
-            <p class="text-color-secondary text-xs m-0 mt-1">{{ node.data.departamento }}</p>
-          </div>
-        </ng-template>
-      </p-organizationChart>
-    </div>
-  </p-card>
+    <!-- Panel Derecho - Organigrama -->
+    <ng-template pTemplate>
+      <div class="right-panel h-full flex flex-column">
+        <!-- Toolbar -->
+        <p-toolbar styleClass="border-noround-left border-noround-top">
+          <ng-template pTemplate="start">
+            <span class="font-semibold">Vista del Organigrama</span>
+          </ng-template>
+          <ng-template pTemplate="end">
+            <div class="flex gap-2">
+              <p-button label="Agregar Nodo Raiz" icon="pi pi-plus" severity="secondary"
+                        (click)="abrirCrearRaiz()" [disabled]="orgChartData.length > 0">
+              </p-button>
+              <p-button icon="pi pi-download" severity="secondary" [outlined]="true" pTooltip="Exportar"></p-button>
+            </div>
+          </ng-template>
+        </p-toolbar>
 
-  <!-- Leyenda -->
-  <div class="mt-4">
-    <p-card header="Estadisticas del Organigrama">
-      <div class="grid">
-        <div class="col-12 md:col-3">
-          <div class="text-center p-3 surface-ground border-round">
-            <p class="text-3xl font-bold text-primary m-0">8</p>
-            <p class="text-color-secondary m-0">Total Empleados</p>
-          </div>
+        <!-- Contenedor del organigrama -->
+        <div class="flex-grow-1 overflow-auto p-3 surface-ground">
+          @if (orgChartData.length === 0) {
+            <div class="flex flex-column align-items-center justify-content-center h-full text-center">
+              <i class="pi pi-sitemap text-6xl text-color-secondary mb-3"></i>
+              <h3 class="text-color-secondary m-0 mb-2">No hay nodos en el organigrama</h3>
+              <p class="text-color-secondary m-0 mb-4">Comience creando el primer nodo raiz</p>
+              <p-button label="Crear Nodo Raiz" icon="pi pi-plus" (click)="abrirCrearRaiz()"></p-button>
+            </div>
+          } @else {
+            <p-organizationChart [value]="orgChartData" selectionMode="single" (onNodeSelect)="onNodeSelect($event)">
+              <ng-template let-node pTemplate="person">
+                <div class="org-node-content p-3 surface-card border-round shadow-2 cursor-pointer text-center"
+                     style="min-width: 180px; position: relative;">
+                  <p-avatar icon="pi pi-user" size="large" shape="circle"
+                            [style]="{ 'background-color': 'var(--primary-color)', 'color': 'white' }"></p-avatar>
+                  <p class="font-bold text-color m-0 mt-2">{{ node.data.nombre }}</p>
+                  <p class="text-primary text-sm m-0">{{ node.data.cargo }}</p>
+                  <p class="text-color-secondary text-xs m-0 mt-1">{{ node.data.departamento }}</p>
+                  <p-button icon="pi pi-plus" [rounded]="true" [text]="true" size="small"
+                            class="add-child-btn"
+                            (click)="abrirCrearHijo(node.data); $event.stopPropagation()"
+                            pTooltip="Agregar subordinado" tooltipPosition="top">
+                  </p-button>
+                </div>
+              </ng-template>
+            </p-organizationChart>
+          }
         </div>
-        <div class="col-12 md:col-3">
-          <div class="text-center p-3 surface-ground border-round">
-            <p class="text-3xl font-bold text-orange-500 m-0">4</p>
-            <p class="text-color-secondary m-0">Departamentos</p>
-          </div>
-        </div>
-        <div class="col-12 md:col-3">
-          <div class="text-center p-3 surface-ground border-round">
-            <p class="text-3xl font-bold text-green-500 m-0">3</p>
-            <p class="text-color-secondary m-0">Niveles Jerarquicos</p>
-          </div>
-        </div>
-        <div class="col-12 md:col-3">
-          <div class="text-center p-3 surface-ground border-round">
-            <p class="text-3xl font-bold text-purple-500 m-0">1</p>
-            <p class="text-color-secondary m-0">Direccion General</p>
+
+        <!-- Estadísticas -->
+        <div class="p-3 border-top-1 surface-border">
+          <div class="grid">
+            <div class="col-3">
+              <div class="text-center">
+                <p class="text-xl font-bold text-primary m-0">{{ totalEmpleados() }}</p>
+                <p class="text-color-secondary text-xs m-0">Empleados</p>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="text-center">
+                <p class="text-xl font-bold text-orange-500 m-0">{{ departamentosUnicos() }}</p>
+                <p class="text-color-secondary text-xs m-0">Departamentos</p>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="text-center">
+                <p class="text-xl font-bold text-green-500 m-0">{{ nivelesJerarquicos() }}</p>
+                <p class="text-color-secondary text-xs m-0">Niveles</p>
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="text-center">
+                <p class="text-xl font-bold text-purple-500 m-0">{{ direccionesGenerales() }}</p>
+                <p class="text-color-secondary text-xs m-0">Raíces</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </p-card>
-  </div>
+    </ng-template>
+  </p-splitter>
 </div>
 
-<!-- Dialog Detalle Persona -->
-<p-dialog header="Detalle del Empleado" [modal]="true" [(visible)]="showDetailDialog" [style]="{width: '450px'}">
-  @if (selectedNode(); as persona) {
-    <div class="flex flex-column align-items-center gap-4">
-      <p-avatar icon="pi pi-user" size="xlarge" shape="circle"
-                [style]="{ 'background-color': 'var(--primary-color)', 'color': 'white', 'width': '80px', 'height': '80px', 'font-size': '2rem' }"></p-avatar>
-      <div class="text-center">
-        <h2 class="text-2xl font-bold text-color m-0">{{ persona.nombre }}</h2>
-        <p class="text-xl text-primary m-0 mt-1">{{ persona.cargo }}</p>
-      </div>
+<!-- Toast para notificaciones -->
+<p-toast></p-toast>
 
-      <div class="w-full">
-        <div class="flex align-items-center gap-3 p-3 surface-ground border-round mb-2 list-item-hover">
-          <span class="material-icons text-color-secondary">business</span>
-          <div>
-            <p class="text-color-secondary text-sm m-0">Departamento</p>
-            <p class="font-medium m-0">{{ persona.departamento }}</p>
-          </div>
-        </div>
-        <div class="flex align-items-center gap-3 p-3 surface-ground border-round mb-2 list-item-hover">
-          <span class="material-icons text-color-secondary">email</span>
-          <div>
-            <p class="text-color-secondary text-sm m-0">Email</p>
-            <p class="font-medium m-0">{{ persona.email }}</p>
-          </div>
-        </div>
-        <div class="flex align-items-center gap-3 p-3 surface-ground border-round mb-2 list-item-hover">
-          <span class="material-icons text-color-secondary">phone</span>
-          <div>
-            <p class="text-color-secondary text-sm m-0">Telefono</p>
-            <p class="font-medium m-0">{{ persona.telefono }}</p>
-          </div>
-        </div>
-        <div class="flex align-items-center gap-3 p-3 surface-ground border-round list-item-hover">
-          <span class="material-icons text-color-secondary">people</span>
-          <div>
-            <p class="text-color-secondary text-sm m-0">Subordinados Directos</p>
-            <p class="font-medium m-0">{{ persona.subordinados.length }}</p>
-          </div>
-        </div>
-      </div>
+<!-- Dialog de confirmación -->
+<p-confirmDialog></p-confirmDialog>
+
+<!-- Dialog Crear/Editar Nodo -->
+<p-dialog [header]="getDialogTitle()" [modal]="true" [(visible)]="showNodeDialog" [style]="{width: '500px'}">
+  <form [formGroup]="nodeForm" class="flex flex-column gap-4">
+    <div class="field">
+      <label for="nombre" class="block font-medium mb-2">Nombre *</label>
+      <input pInputText id="nombre" formControlName="nombre" class="w-full" placeholder="Nombre completo" />
+      @if (nodeForm.get('nombre')?.invalid && nodeForm.get('nombre')?.touched) {
+        <small class="p-error">El nombre es requerido</small>
+      }
     </div>
-  }
+
+    <div class="field">
+      <label for="descripcion" class="block font-medium mb-2">Descripción</label>
+      <textarea pTextarea id="descripcion" formControlName="descripcion" class="w-full" rows="3"
+                placeholder="Descripción del nodo organizacional"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="cargo" class="block font-medium mb-2">Cargo *</label>
+      <input pInputText id="cargo" formControlName="cargo" class="w-full" placeholder="Cargo o puesto" />
+      @if (nodeForm.get('cargo')?.invalid && nodeForm.get('cargo')?.touched) {
+        <small class="p-error">El cargo es requerido</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="departamento" class="block font-medium mb-2">Departamento / Área</label>
+      <input pInputText id="departamento" formControlName="departamento" class="w-full" placeholder="Departamento o área" />
+    </div>
+
+    <div class="field">
+      <label for="email" class="block font-medium mb-2">Email</label>
+      <input pInputText id="email" formControlName="email" class="w-full" type="email" placeholder="correo@ejemplo.com" />
+      @if (nodeForm.get('email')?.errors?.['email']) {
+        <small class="p-error">Ingrese un email válido</small>
+      }
+    </div>
+
+    <div class="field">
+      <label for="telefono" class="block font-medium mb-2">Teléfono</label>
+      <input pInputText id="telefono" formControlName="telefono" class="w-full" placeholder="Número de teléfono" />
+    </div>
+  </form>
+
   <ng-template pTemplate="footer">
-    <p-button label="Editar" icon="pi pi-pencil" severity="secondary" [text]="true"></p-button>
-    <p-button label="Cerrar" (onClick)="showDetailDialog.set(false)"></p-button>
+    <p-button label="Cancelar" [text]="true" (click)="cancelarDialog()"></p-button>
+    <p-button label="Guardar" icon="pi pi-check" (click)="guardarNodo()" [disabled]="nodeForm.invalid"></p-button>
   </ng-template>
 </p-dialog>

@@ -141,11 +141,14 @@ export interface Activo {
 export interface NodoOrganigrama {
   id: string;
   nombre: string;
+  descripcion?: string;
   cargo: string;
   departamento: string;
   email: string;
   telefono: string;
   foto?: string;
+  padreId?: string | null;
+  organigramaId?: string;
   subordinados: NodoOrganigrama[];
 }
 
