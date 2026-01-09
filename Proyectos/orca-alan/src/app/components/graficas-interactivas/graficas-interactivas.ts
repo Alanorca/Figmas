@@ -332,7 +332,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
 
   // Paletas de colores predefinidas (estilo AmCharts)
   paletas: Record<string, string[]> = {
-    vibrant: ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#3F51B5', '#03A9F4', '#4CAF50', '#F9CE1D', '#FF9800'],
+    vibrant: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#EC4899', '#14B8A6', '#F97316', '#6366F1'],
     pastel: ['#80DEEA', '#CE93D8', '#FFAB91', '#A5D6A7', '#90CAF9', '#FFF59D', '#BCAAA4', '#B0BEC5', '#F48FB1', '#81D4FA'],
     neon: ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00', '#FF0080', '#8000FF', '#FF8000', '#0080FF', '#80FF00', '#FF0000'],
     corporate: ['#2E5BFF', '#8C54FF', '#00C1D4', '#FAD02C', '#F7C137', '#33D9B2', '#FF5252', '#00B8D4', '#7C4DFF', '#FFAB40'],
@@ -1143,61 +1143,62 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
         datalabels: { display: false }
       },
 
-      // Animaciones avanzadas
+      // Animaciones suaves tipo "disolver"
       animation: this.animaciones() ? {
-        duration: 800,
-        easing: 'easeOutQuart' as const,
+        duration: 1000,
+        easing: 'easeInOutQuad' as const,
         delay: (context: any) => {
-          // Delay escalonado para barras/líneas
+          // Delay escalonado suave para efecto de aparición gradual
           if (context.type === 'data') {
-            return context.dataIndex * 50;
+            return context.dataIndex * 30;
           }
           return 0;
         },
-        // Animaciones específicas por propiedad
+        // Animaciones específicas - todas con easing suave
         x: {
           type: 'number' as const,
-          easing: 'easeOutBounce' as const,
-          duration: 600,
-          from: 0
+          easing: 'easeOutSine' as const,
+          duration: 800,
+          from: (ctx: any) => ctx.chart?.scales?.x?.getPixelForValue(0) || 0
         },
         y: {
           type: 'number' as const,
-          easing: 'easeOutElastic' as const,
-          duration: 800
+          easing: 'easeOutSine' as const,
+          duration: 900
         },
         radius: {
           type: 'number' as const,
-          easing: 'easeOutCubic' as const,
-          duration: 600,
+          easing: 'easeOutSine' as const,
+          duration: 800,
           from: 0
         }
       } : {
         duration: 0
       },
 
-      // Animaciones de transición
+      // Animaciones de transición suaves
       transitions: {
         active: {
           animation: {
-            duration: 200
+            duration: 300,
+            easing: 'easeInOutQuad' as const
           }
         },
         resize: {
           animation: {
-            duration: 400,
-            easing: 'easeOutQuad' as const
+            duration: 500,
+            easing: 'easeInOutQuad' as const
           }
         },
         show: {
           animations: {
-            colors: { from: 'transparent' },
+            colors: { from: 'transparent', duration: 600, easing: 'easeOutSine' as const },
             visible: { type: 'boolean' as const, duration: 0 }
           }
         },
         hide: {
           animations: {
-            colors: { to: 'transparent' },
+            colors: { to: 'transparent', duration: 400, easing: 'easeInSine' as const },
             visible: { type: 'boolean' as const, easing: 'linear', fn: (v: number) => v | 0 }
           }
         }
@@ -1372,14 +1373,14 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
       toolbar: { show: false }, // Desactivar toolbar - usamos nuestros propios botones de exportar
       animations: {
         enabled: this.animaciones(),
-        speed: 800,
+        speed: 1000,
         animateGradually: {
           enabled: true,
-          delay: 100
+          delay: 80
         },
         dynamicAnimation: {
           enabled: true,
-          speed: 450
+          speed: 600
         }
       },
       background: 'transparent',

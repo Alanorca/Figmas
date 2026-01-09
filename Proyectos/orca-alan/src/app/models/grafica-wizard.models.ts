@@ -318,7 +318,7 @@ export const CRUCES_DISPONIBLES: CruceDatosConfig[] = [
 ];
 
 export const PALETAS_COLORES = [
-  { id: 'vibrant', nombre: 'Vibrante', colores: ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#3F51B5'] },
+  { id: 'vibrant', nombre: 'Vibrante', colores: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'] },
   { id: 'pastel', nombre: 'Pastel', colores: ['#80DEEA', '#CE93D8', '#FFAB91', '#A5D6A7', '#90CAF9', '#FFF59D'] },
   { id: 'neon', nombre: 'Neón', colores: ['#00FFFF', '#FF00FF', '#FFFF00', '#00FF00', '#FF0080', '#8000FF'] },
   { id: 'corporate', nombre: 'Corporativo', colores: ['#2E5BFF', '#8C54FF', '#00C1D4', '#FAD02C', '#F7C137', '#33D9B2'] },
