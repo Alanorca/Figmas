@@ -488,6 +488,101 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
   updatedAt: new Date()
 };
 
+// ============================================================================
+// DASHBOARD DE GALERÍA DE GRÁFICAS (TEMPORAL - PARA PRUEBAS)
+// ============================================================================
+// Este dashboard muestra todos los 36 tipos de gráficas para verificación visual
+// Puedes eliminarlo cuando ya no lo necesites
+
+const GRAFICAS_TIPOS = [
+  // Circulares
+  { tipo: 'pie', nombre: 'Pie' },
+  { tipo: 'donut', nombre: 'Donut' },
+  { tipo: 'radialBar', nombre: 'Radial Bar' },
+  { tipo: 'polarArea', nombre: 'Polar Area' },
+  { tipo: 'gauge', nombre: 'Gauge' },
+  // Barras
+  { tipo: 'bar', nombre: 'Barras Horizontales' },
+  { tipo: 'column', nombre: 'Columnas' },
+  { tipo: 'stackedBar', nombre: 'Barras Apiladas' },
+  { tipo: 'groupedBar', nombre: 'Barras Agrupadas' },
+  { tipo: 'stackedBarHorizontal', nombre: 'Apiladas Horizontal' },
+  // Líneas
+  { tipo: 'line', nombre: 'Línea' },
+  { tipo: 'area', nombre: 'Área' },
+  { tipo: 'stepline', nombre: 'Step Line' },
+  { tipo: 'spline', nombre: 'Spline' },
+  { tipo: 'stackedArea', nombre: 'Áreas Apiladas' },
+  // Avanzadas
+  { tipo: 'radar', nombre: 'Radar' },
+  { tipo: 'scatter', nombre: 'Scatter' },
+  { tipo: 'bubble', nombre: 'Bubble' },
+  { tipo: 'heatmap', nombre: 'Heatmap' },
+  { tipo: 'treemap', nombre: 'Treemap' },
+  // Embudo
+  { tipo: 'funnel', nombre: 'Funnel' },
+  { tipo: 'pyramid', nombre: 'Pyramid' },
+  { tipo: 'sankey', nombre: 'Sankey' },
+  // Estadísticas
+  { tipo: 'waterfall', nombre: 'Waterfall' },
+  { tipo: 'bullet', nombre: 'Bullet' },
+  { tipo: 'boxplot', nombre: 'BoxPlot' },
+  { tipo: 'candlestick', nombre: 'Candlestick' },
+  // Especializadas
+  { tipo: 'sunburst', nombre: 'Sunburst' },
+  { tipo: 'riskMatrix', nombre: 'Matriz Riesgo' },
+  { tipo: 'correlationMatrix', nombre: 'Matriz Correlación' },
+  // Combinadas
+  { tipo: 'combo', nombre: 'Combo' },
+  { tipo: 'dumbbell', nombre: 'Dumbbell' },
+  { tipo: 'regression', nombre: 'Regresión' },
+  // Predictivo
+  { tipo: 'trendline', nombre: 'Tendencia' },
+  { tipo: 'forecast', nombre: 'Forecast' },
+  { tipo: 'rangeArea', nombre: 'Range Area' }
+];
+
+// Generar widgets para la galería (2 columnas, 2 rows cada widget)
+const galeriaWidgets: DashboardWidget[] = GRAFICAS_TIPOS.map((g, index) => ({
+  id: `galeria-widget-${g.tipo}`,
+  tipo: 'graficas-interactivas' as TipoWidget,
+  titulo: g.nombre,
+  subtitulo: g.tipo,
+  icono: 'pi pi-chart-bar',
+  x: (index % 2) * 2,
+  y: Math.floor(index / 2) * 2,
+  cols: 2,
+  rows: 2,
+  config: {
+    showHeader: false,
+    graficaTipo: g.tipo,
+    graficaFuenteDatos: 'riesgos',
+    graficaAgrupacion: 'estado',
+    graficaPaleta: 'vibrant',
+    graficaAnimaciones: true,
+    graficaMostrarLeyenda: true,
+    graficaMostrarDataLabels: false
+  },
+  canResize: true,
+  canDrag: true,
+  canRemove: true,
+  canEdit: true
+}));
+
+export const GALLERY_DASHBOARD_CONFIG: DashboardConfig = {
+  id: 'galeria-graficas',
+  nombre: '📊 Galería de Gráficas (36 tipos)',
+  descripcion: 'Dashboard temporal para visualizar todos los tipos de gráficas disponibles. Puedes eliminarlo cuando ya no lo necesites.',
+  isDefault: false,
+  isLocked: false,
+  columns: 4,
+  rowHeight: 150,
+  gap: 12,
+  widgets: galeriaWidgets,
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
 // Helper para generar ID único
 export function generateWidgetId(): string {
   return `widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

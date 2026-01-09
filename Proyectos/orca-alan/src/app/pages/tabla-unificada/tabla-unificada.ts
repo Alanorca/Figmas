@@ -155,6 +155,11 @@ export class TablaUnificadaComponent implements OnInit {
   contenedoresFiltrados = signal<{ nombre: string; tipo: 'activo' | 'proceso'; id: string }[]>([]);
   filtroTipoContenedor = signal<'todos' | 'activo' | 'proceso'>('todos');
 
+  // Filtros de rango numérico con slider
+  filtroProbabilidadRango = signal<[number, number]>([1, 5]);
+  filtroImpactoRango = signal<[number, number]>([1, 5]);
+  filtroNivelRiesgoRango = signal<[number, number]>([1, 25]);
+
   // Lista completa de contenedores disponibles
   contenedoresDisponibles = computed(() => {
     const datos = this.service.getDatosUnificados();
@@ -744,6 +749,69 @@ export class TablaUnificadaComponent implements OnInit {
   // Métodos de búsqueda global
   onBusquedaGlobal(valor: string): void {
     this.busquedaGlobal.set(valor);
+  }
+
+  // Métodos de filtros de rango numérico con slider
+  onProbabilidadRangoChange(index: 0 | 1, valor: number, filterCallback: (value: any) => void): void {
+    const rango = [...this.filtroProbabilidadRango()] as [number, number];
+    rango[index] = valor || 1;
+    // Asegurar que min <= max
+    if (index === 0 && rango[0] > rango[1]) rango[1] = rango[0];
+    if (index === 1 && rango[1] < rango[0]) rango[0] = rango[1];
+    this.filtroProbabilidadRango.set(rango);
+    this.aplicarFiltroRango('probabilidad', rango, filterCallback);
+  }
+
+  onProbabilidadSliderChange(rango: number[], filterCallback: (value: any) => void): void {
+    this.filtroProbabilidadRango.set(rango as [number, number]);
+    this.aplicarFiltroRango('probabilidad', rango as [number, number], filterCallback);
+  }
+
+  onImpactoRangoChange(index: 0 | 1, valor: number, filterCallback: (value: any) => void): void {
+    const rango = [...this.filtroImpactoRango()] as [number, number];
+    rango[index] = valor || 1;
+    if (index === 0 && rango[0] > rango[1]) rango[1] = rango[0];
+    if (index === 1 && rango[1] < rango[0]) rango[0] = rango[1];
+    this.filtroImpactoRango.set(rango);
+    this.aplicarFiltroRango('impacto', rango, filterCallback);
+  }
+
+  onImpactoSliderChange(rango: number[], filterCallback: (value: any) => void): void {
+    this.filtroImpactoRango.set(rango as [number, number]);
+    this.aplicarFiltroRango('impacto', rango as [number, number], filterCallback);
+  }
+
+  onNivelRiesgoRangoChange(index: 0 | 1, valor: number, filterCallback: (value: any) => void): void {
+    const rango = [...this.filtroNivelRiesgoRango()] as [number, number];
+    rango[index] = valor || 1;
+    if (index === 0 && rango[0] > rango[1]) rango[1] = rango[0];
+    if (index === 1 && rango[1] < rango[0]) rango[0] = rango[1];
+    this.filtroNivelRiesgoRango.set(rango);
+    this.aplicarFiltroRango('nivelRiesgo', rango, filterCallback);
+  }
+
+  onNivelRiesgoSliderChange(rango: number[], filterCallback: (value: any) => void): void {
+    this.filtroNivelRiesgoRango.set(rango as [number, number]);
+    this.aplicarFiltroRango('nivelRiesgo', rango as [number, number], filterCallback);
+  }
+
+  private aplicarFiltroRango(campo: string, rango: [number, number], filterCallback: (value: any) => void): void {
+    // Si el rango cubre todo el espectro, limpiar filtro
+    const esRangoCompleto = (campo === 'probabilidad' || campo === 'impacto')
+      ? (rango[0] === 1 && rango[1] === 5)
+      : (rango[0] === 1 && rango[1] === 25);
+
+    if (esRangoCompleto) {
+      filterCallback(null);
+    } else {
+      // Para filtros de rango, PrimeNG espera un objeto con matchMode 'between'
+      // pero como usamos matchMode 'in', pasamos los valores permitidos
+      const valoresPermitidos: number[] = [];
+      for (let i = rango[0]; i <= rango[1]; i++) {
+        valoresPermitidos.push(i);
+      }
+      filterCallback(valoresPermitidos);
+    }
   }
 
   // Métodos de columnas

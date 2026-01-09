@@ -3,15 +3,28 @@
 import { TipoEntidad } from './tabla-unificada.models';
 
 // Categorías de gráficas
-export type CategoriaGrafica = 'circulares' | 'barras' | 'lineas' | 'avanzadas' | 'embudo';
+export type CategoriaGrafica = 'circulares' | 'barras' | 'lineas' | 'avanzadas' | 'embudo' | 'estadisticas' | 'especializadas' | 'combinadas' | 'predictivo';
 
-// Tipos de gráficas disponibles
+// Tipos de gráficas disponibles (sincronizado con graficas-interactivas)
 export type TipoGraficaWizard =
-  | 'pie' | 'doughnut' | 'polarArea'  // Circulares
-  | 'bar' | 'bar-horizontal' | 'bar-stacked'  // Barras
-  | 'line' | 'line-area' | 'line-stepped'  // Líneas
-  | 'radar' | 'scatter' | 'bubble'  // Avanzadas
-  | 'funnel';  // Embudo
+  // Circulares (5)
+  | 'pie' | 'donut' | 'radialBar' | 'polarArea' | 'gauge'
+  // Barras (5)
+  | 'bar' | 'column' | 'stackedBar' | 'groupedBar' | 'stackedBarHorizontal'
+  // Líneas (5)
+  | 'line' | 'area' | 'stepline' | 'spline' | 'stackedArea'
+  // Avanzadas (5)
+  | 'radar' | 'scatter' | 'bubble' | 'heatmap' | 'treemap'
+  // Embudo/Flujo (3)
+  | 'funnel' | 'pyramid' | 'sankey'
+  // Estadísticas (4)
+  | 'waterfall' | 'bullet' | 'boxplot' | 'candlestick'
+  // Especializadas (3)
+  | 'sunburst' | 'riskMatrix' | 'correlationMatrix'
+  // Combinadas (3)
+  | 'combo' | 'dumbbell' | 'regression'
+  // IA/Predictivo (3)
+  | 'trendline' | 'forecast' | 'rangeArea';
 
 // Tipo de campo para configuración dinámica
 export type TipoCampo = 'categoria' | 'numerico' | 'fecha' | 'texto';
@@ -138,53 +151,108 @@ export const CATEGORIAS_GRAFICAS: CategoriaGraficaConfig[] = [
     id: 'circulares',
     nombre: 'Circulares',
     icono: 'pi pi-chart-pie',
-    descripcion: 'Pie, Dona, Polar',
+    descripcion: 'Pie, Donut, Radial, Polar, Gauge',
     tipos: [
-      { id: 'pie', nombre: 'Pie', icono: 'pi pi-chart-pie', descripcion: 'Gráfica circular clásica', requiereEjes: false, soportaSeries: false },
-      { id: 'doughnut', nombre: 'Dona', icono: 'pi pi-circle', descripcion: 'Circular con hueco central', requiereEjes: false, soportaSeries: false },
-      { id: 'polarArea', nombre: 'Área Polar', icono: 'pi pi-sun', descripcion: 'Sectores con diferente radio', requiereEjes: false, soportaSeries: false }
+      { id: 'pie', nombre: 'Pie', icono: 'pi pi-chart-pie', descripcion: 'Gráfica circular clásica para distribuciones', requiereEjes: false, soportaSeries: false },
+      { id: 'donut', nombre: 'Donut', icono: 'pi pi-circle', descripcion: 'Circular con hueco central para totales', requiereEjes: false, soportaSeries: false },
+      { id: 'radialBar', nombre: 'Radial Bar', icono: 'pi pi-sun', descripcion: 'Barras radiales para rankings y progreso', requiereEjes: false, soportaSeries: false },
+      { id: 'polarArea', nombre: 'Área Polar', icono: 'pi pi-slack', descripcion: 'Sectores con radio variable', requiereEjes: false, soportaSeries: false },
+      { id: 'gauge', nombre: 'Velocímetro', icono: 'pi pi-gauge', descripcion: 'Medidor circular para KPIs individuales', requiereEjes: false, soportaSeries: false }
     ]
   },
   {
     id: 'barras',
     nombre: 'Barras',
     icono: 'pi pi-chart-bar',
-    descripcion: 'Vertical, Horizontal, Apiladas',
+    descripcion: 'Columnas, Horizontales, Apiladas, Agrupadas',
     tipos: [
-      { id: 'bar', nombre: 'Barras Verticales', icono: 'pi pi-chart-bar', descripcion: 'Barras verticales clásicas', requiereEjes: true, soportaSeries: true },
-      { id: 'bar-horizontal', nombre: 'Barras Horizontales', icono: 'pi pi-bars', descripcion: 'Barras en horizontal', requiereEjes: true, soportaSeries: true },
-      { id: 'bar-stacked', nombre: 'Barras Apiladas', icono: 'pi pi-chart-bar', descripcion: 'Barras apiladas por categoría', requiereEjes: true, soportaSeries: true }
+      { id: 'bar', nombre: 'Barras Horizontales', icono: 'pi pi-align-left', descripcion: 'Barras horizontales clásicas', requiereEjes: true, soportaSeries: true },
+      { id: 'column', nombre: 'Columnas', icono: 'pi pi-chart-bar', descripcion: 'Barras verticales (columnas)', requiereEjes: true, soportaSeries: true },
+      { id: 'stackedBar', nombre: 'Apiladas Verticales', icono: 'pi pi-objects-column', descripcion: 'Barras apiladas verticalmente', requiereEjes: true, soportaSeries: true },
+      { id: 'groupedBar', nombre: 'Agrupadas', icono: 'pi pi-th-large', descripcion: 'Barras agrupadas lado a lado', requiereEjes: true, soportaSeries: true },
+      { id: 'stackedBarHorizontal', nombre: 'Apiladas Horizontales', icono: 'pi pi-bars', descripcion: 'Barras apiladas horizontalmente', requiereEjes: true, soportaSeries: true }
     ]
   },
   {
     id: 'lineas',
     nombre: 'Líneas',
     icono: 'pi pi-chart-line',
-    descripcion: 'Líneas, Áreas, Escalonadas',
+    descripcion: 'Líneas, Áreas, Spline, Steps',
     tipos: [
-      { id: 'line', nombre: 'Líneas', icono: 'pi pi-chart-line', descripcion: 'Líneas simples', requiereEjes: true, soportaSeries: true },
-      { id: 'line-area', nombre: 'Áreas', icono: 'pi pi-chart-line', descripcion: 'Líneas con área rellena', requiereEjes: true, soportaSeries: true },
-      { id: 'line-stepped', nombre: 'Escalonadas', icono: 'pi pi-chart-line', descripcion: 'Líneas en escalones', requiereEjes: true, soportaSeries: true }
+      { id: 'line', nombre: 'Líneas', icono: 'pi pi-chart-line', descripcion: 'Líneas simples para tendencias', requiereEjes: true, soportaSeries: true },
+      { id: 'area', nombre: 'Áreas', icono: 'pi pi-chart-line', descripcion: 'Líneas con área rellena', requiereEjes: true, soportaSeries: true },
+      { id: 'stepline', nombre: 'Escalonadas', icono: 'pi pi-minus', descripcion: 'Líneas en escalones discretos', requiereEjes: true, soportaSeries: true },
+      { id: 'spline', nombre: 'Spline', icono: 'pi pi-wave-pulse', descripcion: 'Curvas suaves interpoladas', requiereEjes: true, soportaSeries: true },
+      { id: 'stackedArea', nombre: 'Áreas Apiladas', icono: 'pi pi-chart-line', descripcion: 'Áreas apiladas para composición', requiereEjes: true, soportaSeries: true }
     ]
   },
   {
     id: 'avanzadas',
     nombre: 'Avanzadas',
     icono: 'pi pi-star',
-    descripcion: 'Radar, Scatter, Bubble',
+    descripcion: 'Radar, Scatter, Bubble, Heatmap, Treemap',
     tipos: [
-      { id: 'radar', nombre: 'Radar', icono: 'pi pi-star', descripcion: 'Comparación multidimensional', requiereEjes: false, soportaSeries: true },
-      { id: 'scatter', nombre: 'Dispersión', icono: 'pi pi-circle', descripcion: 'Puntos de correlación', requiereEjes: true, soportaSeries: true },
-      { id: 'bubble', nombre: 'Burbujas', icono: 'pi pi-circle-fill', descripcion: 'Dispersión con tamaño variable', requiereEjes: true, soportaSeries: true }
+      { id: 'radar', nombre: 'Radar', icono: 'pi pi-stop', descripcion: 'Comparación multidimensional', requiereEjes: false, soportaSeries: true },
+      { id: 'scatter', nombre: 'Dispersión', icono: 'pi pi-circle-fill', descripcion: 'Correlación entre variables', requiereEjes: true, soportaSeries: true },
+      { id: 'bubble', nombre: 'Burbujas', icono: 'pi pi-circle', descripcion: 'Dispersión con 3 dimensiones', requiereEjes: true, soportaSeries: true },
+      { id: 'heatmap', nombre: 'Mapa de Calor', icono: 'pi pi-table', descripcion: 'Matriz de colores para patrones', requiereEjes: true, soportaSeries: false },
+      { id: 'treemap', nombre: 'Treemap', icono: 'pi pi-objects-column', descripcion: 'Jerarquías proporcionales', requiereEjes: false, soportaSeries: false }
     ]
   },
   {
     id: 'embudo',
-    nombre: 'Embudo',
+    nombre: 'Embudo/Flujo',
     icono: 'pi pi-filter',
-    descripcion: 'Visualización de procesos',
+    descripcion: 'Embudo, Pirámide, Sankey',
     tipos: [
-      { id: 'funnel', nombre: 'Embudo', icono: 'pi pi-filter', descripcion: 'Flujo de etapas', requiereEjes: false, soportaSeries: false }
+      { id: 'funnel', nombre: 'Embudo', icono: 'pi pi-filter', descripcion: 'Flujo de etapas decreciente', requiereEjes: false, soportaSeries: false },
+      { id: 'pyramid', nombre: 'Pirámide', icono: 'pi pi-caret-up', descripcion: 'Jerarquía piramidal', requiereEjes: false, soportaSeries: false },
+      { id: 'sankey', nombre: 'Sankey', icono: 'pi pi-arrows-h', descripcion: 'Flujos y conexiones entre nodos', requiereEjes: false, soportaSeries: false }
+    ]
+  },
+  {
+    id: 'estadisticas',
+    nombre: 'Estadísticas',
+    icono: 'pi pi-calculator',
+    descripcion: 'Waterfall, Bullet, BoxPlot, Candlestick',
+    tipos: [
+      { id: 'waterfall', nombre: 'Waterfall', icono: 'pi pi-sort-amount-down', descripcion: 'Cambios acumulativos paso a paso', requiereEjes: true, soportaSeries: false },
+      { id: 'bullet', nombre: 'Bullet', icono: 'pi pi-minus', descripcion: 'Comparación de objetivo vs actual', requiereEjes: true, soportaSeries: false },
+      { id: 'boxplot', nombre: 'BoxPlot', icono: 'pi pi-box', descripcion: 'Distribución estadística (cuartiles)', requiereEjes: true, soportaSeries: true },
+      { id: 'candlestick', nombre: 'Candlestick', icono: 'pi pi-chart-bar', descripcion: 'Apertura, cierre, máx, mín', requiereEjes: true, soportaSeries: false }
+    ]
+  },
+  {
+    id: 'especializadas',
+    nombre: 'Especializadas',
+    icono: 'pi pi-shield',
+    descripcion: 'Sunburst, Matriz de Riesgo, Correlación',
+    tipos: [
+      { id: 'sunburst', nombre: 'Sunburst', icono: 'pi pi-sun', descripcion: 'Jerarquía radial multinivel', requiereEjes: false, soportaSeries: false },
+      { id: 'riskMatrix', nombre: 'Matriz de Riesgo', icono: 'pi pi-th-large', descripcion: 'Probabilidad vs Impacto', requiereEjes: false, soportaSeries: false },
+      { id: 'correlationMatrix', nombre: 'Matriz Correlación', icono: 'pi pi-table', descripcion: 'Correlaciones entre variables', requiereEjes: false, soportaSeries: false }
+    ]
+  },
+  {
+    id: 'combinadas',
+    nombre: 'Combinadas',
+    icono: 'pi pi-clone',
+    descripcion: 'Combo, Dumbbell, Regresión',
+    tipos: [
+      { id: 'combo', nombre: 'Combo', icono: 'pi pi-clone', descripcion: 'Barras + Líneas combinadas', requiereEjes: true, soportaSeries: true },
+      { id: 'dumbbell', nombre: 'Dumbbell', icono: 'pi pi-arrows-h', descripcion: 'Comparación antes/después', requiereEjes: true, soportaSeries: false },
+      { id: 'regression', nombre: 'Regresión', icono: 'pi pi-chart-line', descripcion: 'Línea de tendencia ajustada', requiereEjes: true, soportaSeries: false }
+    ]
+  },
+  {
+    id: 'predictivo',
+    nombre: 'IA/Predictivo',
+    icono: 'pi pi-sparkles',
+    descripcion: 'Tendencias, Forecast, Range Area',
+    tipos: [
+      { id: 'trendline', nombre: 'Tendencia', icono: 'pi pi-chart-line', descripcion: 'Análisis de tendencia temporal', requiereEjes: true, soportaSeries: true },
+      { id: 'forecast', nombre: 'Forecast', icono: 'pi pi-forward', descripcion: 'Predicción con intervalos de confianza', requiereEjes: true, soportaSeries: false },
+      { id: 'rangeArea', nombre: 'Área de Rango', icono: 'pi pi-chart-line', descripcion: 'Área con valores mín/máx', requiereEjes: true, soportaSeries: false }
     ]
   }
 ];

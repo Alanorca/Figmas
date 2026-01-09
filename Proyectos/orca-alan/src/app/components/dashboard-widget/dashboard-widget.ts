@@ -49,7 +49,20 @@ import { DashboardService } from '../../services/dashboard.service';
               <i class="pi pi-spin pi-spinner"></i>
             }
 
+            <!-- Botón de configurar widget (siempre visible) -->
+            @if (widget.canEdit !== false) {
+              <p-button
+                icon="pi pi-cog"
+                [rounded]="true"
+                [text]="true"
+                size="small"
+                (onClick)="onEdit.emit(widget)"
+                pTooltip="Configurar widget">
+              </p-button>
+            }
+
             @if (modoEdicion()) {
+              <!-- Menú de opciones en modo edición -->
               <p-button
                 icon="pi pi-ellipsis-h"
                 [rounded]="true"
@@ -60,6 +73,7 @@ import { DashboardService } from '../../services/dashboard.service';
               </p-button>
               <p-menu #menu [model]="menuItems()" [popup]="true" appendTo="body"></p-menu>
             } @else {
+              <!-- Acciones adicionales fuera de modo edición -->
               <p-button
                 icon="pi pi-download"
                 [rounded]="true"
@@ -243,14 +257,36 @@ import { DashboardService } from '../../services/dashboard.service';
       align-items: center;
       gap: var(--spacing-1);
 
-      // Iconos de acción en gris - tokenizado
+      // Iconos de acción unificados
       :host ::ng-deep .p-button {
-        color: var(--text-color-secondary);
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+
+        .p-button-icon,
+        .pi {
+          font-size: 0.75rem;
+          color: var(--text-color-secondary);
+          transition: color 0.2s ease;
+        }
 
         &:hover {
-          color: var(--text-color);
           background: var(--surface-100);
+
+          .p-button-icon,
+          .pi {
+            color: var(--text-color);
+          }
         }
+      }
+    }
+
+    // Dark mode para header-right
+    :host-context(:root.dark-mode) .widget-header-right,
+    :host-context([data-theme="dark"]) .widget-header-right {
+      :host ::ng-deep .p-button:hover {
+        background: var(--surface-700);
       }
     }
 

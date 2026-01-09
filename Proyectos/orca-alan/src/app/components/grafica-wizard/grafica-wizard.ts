@@ -301,16 +301,6 @@ export class GraficaWizardComponent implements OnInit {
     this.updateState({ cruceSeleccionado: cruce });
   }
 
-  // Actualizar título
-  actualizarTitulo(titulo: string): void {
-    this.updateState({ titulo });
-  }
-
-  // Actualizar subtítulo
-  actualizarSubtitulo(subtitulo: string): void {
-    this.updateState({ subtitulo });
-  }
-
   // Seleccionar paleta
   seleccionarPaleta(paleta: string): void {
     this.updateState({ paleta });
@@ -366,7 +356,7 @@ export class GraficaWizardComponent implements OnInit {
         break;
 
       case 3: // Estilo y confirmación
-        if (!state.titulo.trim()) errores.push('El título es requerido');
+        // Título y subtítulo se configuran en el paso previo (pre-config)
         break;
     }
 

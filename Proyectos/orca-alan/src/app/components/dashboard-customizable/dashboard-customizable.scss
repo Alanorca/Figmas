@@ -7,6 +7,7 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  overflow: hidden; // El contenedor principal no scrollea, el grid sí
 }
 
 // ==================== TOOLBAR ====================
@@ -63,8 +64,10 @@
 
 .dashboard-grid {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: var(--surface-ground);
+  min-height: 0; // Importante para que flex funcione con overflow
 
   &.editing {
     background-image: radial-gradient(var(--surface-300) 1px, transparent 1px);
@@ -75,6 +78,8 @@
 :host ::ng-deep {
   gridster {
     background: transparent !important;
+    overflow: visible !important; // Permite que el contenido se extienda
+    min-height: auto !important;
   }
 
   .gridster-item {
@@ -925,6 +930,69 @@
       canvas {
         max-width: 100%;
         max-height: 100%;
+      }
+
+      // ApexCharts - dimensiones explícitas para redimensionamiento correcto
+      apx-chart {
+        flex: 1;
+        min-height: 150px;
+        width: 100%;
+        height: 100%;
+        display: block;
+
+        ::ng-deep {
+          .apexcharts-canvas {
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 150px;
+          }
+
+          svg {
+            width: 100%;
+            height: 100%;
+          }
+
+          // Fix para gráficas radiales (gauge, radialBar)
+          .apexcharts-radialbar,
+          .apexcharts-pie {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+        }
+      }
+    }
+  }
+
+  // ApexCharts Tooltips - Dark Mode Fix
+  ::ng-deep .apexcharts-tooltip {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+
+    &.apexcharts-theme-dark {
+      background: rgba(24, 24, 27, 0.95) !important;
+      border: 1px solid rgba(63, 63, 70, 0.8) !important;
+      color: #fafafa !important;
+
+      .apexcharts-tooltip-title {
+        background: rgba(39, 39, 42, 0.95) !important;
+        border-bottom: 1px solid rgba(63, 63, 70, 0.6) !important;
+        color: #fafafa !important;
+      }
+
+      .apexcharts-tooltip-text-y-label,
+      .apexcharts-tooltip-text-y-value,
+      .apexcharts-tooltip-text-goals-label,
+      .apexcharts-tooltip-text-goals-value,
+      .apexcharts-tooltip-text-z-label,
+      .apexcharts-tooltip-text-z-value,
+      .apexcharts-tooltip-marker + span {
+        color: #fafafa !important;
+      }
+
+      .apexcharts-tooltip-series-group {
+        background: transparent !important;
+        padding: 4px 8px !important;
       }
     }
   }
@@ -4894,4 +4962,400 @@
   gap: var(--spacing-3);
   padding-top: var(--spacing-4);
   border-top: 1px solid var(--surface-border);
+}
+
+// ==================== UNIFIED ICON BUTTON STYLES ====================
+// Estilos unificados para todos los botones de icono en el dashboard
+
+.dashboard-customizable {
+  // Botones de acción con iconos - estilo unificado
+  ::ng-deep .p-button.p-button-text.p-button-rounded {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    .p-button-icon,
+    .pi {
+      font-size: 0.875rem;
+      color: var(--text-color-secondary);
+      transition: color 0.2s ease;
+    }
+
+    &:hover {
+      background: var(--surface-100);
+
+      .p-button-icon,
+      .pi {
+        color: var(--text-color);
+      }
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 4px var(--primary-200);
+    }
+
+    // Variantes de severity
+    &.p-button-success {
+      .p-button-icon,
+      .pi {
+        color: var(--green-600);
+      }
+
+      &:hover {
+        background: var(--green-50);
+      }
+    }
+
+    &.p-button-danger {
+      .p-button-icon,
+      .pi {
+        color: var(--red-500);
+      }
+
+      &:hover {
+        background: var(--red-50);
+      }
+    }
+
+    &.p-button-warning {
+      .p-button-icon,
+      .pi {
+        color: var(--orange-500);
+      }
+
+      &:hover {
+        background: var(--orange-50);
+      }
+    }
+  }
+
+  // Dark mode adjustments
+  :root.dark-mode &,
+  [data-theme="dark"] & {
+    ::ng-deep .p-button.p-button-text.p-button-rounded {
+      &:hover {
+        background: var(--surface-700);
+      }
+
+      &:focus {
+        box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 4px rgba(var(--primary-400-rgb), 0.3);
+      }
+
+      &.p-button-success {
+        .p-button-icon,
+        .pi {
+          color: var(--green-400);
+        }
+
+        &:hover {
+          background: rgba(34, 197, 94, 0.15);
+        }
+      }
+
+      &.p-button-danger {
+        .p-button-icon,
+        .pi {
+          color: var(--red-400);
+        }
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.15);
+        }
+      }
+
+      &.p-button-warning {
+        .p-button-icon,
+        .pi {
+          color: var(--orange-400);
+        }
+
+        &:hover {
+          background: rgba(249, 115, 22, 0.15);
+        }
+      }
+    }
+  }
+
+  // Tamaño small para widgets compactos
+  ::ng-deep .p-button.p-button-text.p-button-rounded.p-button-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+
+    .p-button-icon,
+    .pi {
+      font-size: 0.75rem;
+    }
+  }
+
+  // ==================== CONFIGURACIÓN DE GRÁFICAS INTERACTIVAS ====================
+
+  // Estilos para tabs en el drawer de configuración de gráficas
+  .grafica-config-tabs {
+    ::ng-deep {
+      .p-tabs {
+        .p-tablist {
+          border-bottom: 1px solid var(--surface-200);
+          gap: 0;
+          background: transparent;
+
+          .p-tab {
+            padding: var(--spacing-3) var(--spacing-4);
+            font-size: var(--font-size-sm);
+            font-weight: var(--font-weight-medium);
+            color: var(--text-color-secondary);
+            border: none;
+            background: transparent;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+
+            i {
+              font-size: var(--font-size-sm);
+            }
+
+            &:hover {
+              color: var(--text-color);
+              background: var(--surface-50);
+            }
+
+            &[data-p-active="true"],
+            &.p-tab-active {
+              color: var(--primary-color);
+              border-bottom-color: var(--primary-color);
+              background: transparent;
+            }
+          }
+        }
+
+        .p-tabpanels {
+          .p-tabpanel {
+            padding: var(--spacing-4) 0;
+          }
+        }
+      }
+    }
+  }
+
+  // Los estilos del drawer se renderizan fuera del componente, usar ::ng-deep
+  ::ng-deep {
+    .tipo-actual-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--primary-100);
+      color: var(--primary-700);
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.875rem;
+
+      i {
+        font-size: 1rem;
+      }
+    }
+
+    .tipos-grid-config {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 350px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+
+      .categoria-group {
+        .categoria-label {
+          display: block;
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: var(--text-color-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.5rem;
+          padding-bottom: 0.25rem;
+          border-bottom: 1px solid var(--surface-200);
+        }
+
+        .tipos-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+      }
+    }
+
+    .tipo-chip-config {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.625rem;
+      background: var(--surface-100);
+      border: 1px solid var(--surface-200);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: var(--text-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      i {
+        font-size: 0.8rem;
+        color: var(--text-color-secondary);
+      }
+
+      span {
+        white-space: nowrap;
+      }
+
+      &:hover {
+        background: var(--surface-200);
+        border-color: var(--surface-300);
+      }
+
+      &.selected {
+        background: var(--primary-100);
+        border-color: var(--primary-400);
+        color: var(--primary-700);
+
+        i {
+          color: var(--primary-500);
+        }
+      }
+    }
+
+    .paletas-grid-config {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+
+    .paleta-option-config {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background: var(--surface-50);
+      border: 2px solid var(--surface-200);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      .paleta-colors {
+        display: flex;
+        gap: 3px;
+
+        .color-dot {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+        }
+      }
+
+      .paleta-nombre {
+        font-size: 0.7rem;
+        color: var(--text-color-secondary);
+      }
+
+      &:hover {
+        border-color: var(--surface-400);
+      }
+
+      &.selected {
+        border-color: var(--primary-500);
+        background: var(--primary-50);
+
+        .paleta-nombre {
+          color: var(--primary-700);
+          font-weight: 500;
+        }
+      }
+    }
+
+    .opciones-grid-config {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  } // Cierre de ::ng-deep
+
+  // Dark mode para configuración de gráficas
+  :host-context(:root.p-dark),
+  :host-context([data-theme="dark"]) {
+    .grafica-config-tabs {
+      ::ng-deep {
+        .p-tabs {
+          .p-tablist {
+            border-bottom-color: var(--surface-600);
+
+            .p-tab {
+              &:hover {
+                background: var(--surface-700);
+              }
+
+              &[data-p-active="true"],
+              &.p-tab-active {
+                color: var(--primary-400);
+                border-bottom-color: var(--primary-400);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    ::ng-deep {
+      .tipo-actual-badge {
+        background: rgba(var(--primary-500-rgb), 0.2);
+        color: var(--primary-300);
+      }
+
+      .tipo-chip-config {
+        background: var(--surface-700);
+        border-color: var(--surface-600);
+        color: var(--text-color);
+
+        i {
+          color: var(--text-color-secondary);
+        }
+
+        &:hover {
+          background: var(--surface-600);
+          border-color: var(--surface-500);
+        }
+
+        &.selected {
+          background: rgba(var(--primary-500-rgb), 0.2);
+          border-color: var(--primary-500);
+          color: var(--primary-300);
+
+          i {
+            color: var(--primary-400);
+          }
+        }
+      }
+
+      .paleta-option-config {
+        background: var(--surface-800);
+        border-color: var(--surface-600);
+
+        &:hover {
+          border-color: var(--surface-500);
+        }
+
+        &.selected {
+          border-color: var(--primary-500);
+          background: rgba(var(--primary-500-rgb), 0.1);
+
+          .paleta-nombre {
+            color: var(--primary-300);
+          }
+        }
+      }
+    }
+  }
 }

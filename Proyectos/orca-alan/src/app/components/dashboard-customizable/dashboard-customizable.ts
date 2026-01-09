@@ -95,7 +95,7 @@ import { esGraficaConfigurable } from '../../models/widget-chart.config';
 import { CalendarioWidgetComponent, CalendarioEvento } from '../calendario-widget/calendario-widget';
 import { GraficasGuardadasWidgetComponent, GraficaGuardada } from '../graficas-guardadas-widget/graficas-guardadas-widget';
 import { GraficaWizardComponent } from '../grafica-wizard/grafica-wizard';
-import { GraficaWizardResult } from '../../models/grafica-wizard.models';
+import { GraficaWizardResult, CATEGORIAS_GRAFICAS, PALETAS_COLORES, TipoGraficaWizard } from '../../models/grafica-wizard.models';
 import { AnalisisInteligenteWidgetComponent } from '../analisis-inteligente-widget/analisis-inteligente-widget';
 import { ResultadoAnalisis, TipoVisualizacion } from '../../models/analisis-inteligente.models';
 import { AnalisisInteligenteService } from '../../services/analisis-inteligente.service';
@@ -162,6 +162,11 @@ export class DashboardCustomizableComponent implements OnInit {
   // Widget Configurator avanzado (para tablas)
   showWidgetConfigurator = signal(false);
   configuratorCatalogItem = signal<WidgetCatalogItem | null>(null);
+
+  // Configuración de gráficas interactivas (tabs)
+  graficaConfigTab = signal<string>('general');
+  categoriasGraficas = CATEGORIAS_GRAFICAS;
+  paletasColores = PALETAS_COLORES;
 
   // Drawer Mis Dashboards
   showDashboardsDrawer = signal(false);
@@ -545,6 +550,10 @@ export class DashboardCustomizableComponent implements OnInit {
         // Cambiar agrupación del widget a un campo más detallado
         widget.config.graficaAgrupacion = event.campo;
         this.dashboardService.actualizarWidget(widget.id, { config: widget.config });
+        // Agregar el filtro a la cascada para mantener el contexto
+        if (event.filtro) {
+          this.agregarFiltroCascada(event.filtro.campo, event.filtro.valor);
+        }
         break;
       case 'filtro':
         // Aplicar filtro al widget
@@ -603,8 +612,17 @@ export class DashboardCustomizableComponent implements OnInit {
 
   // Método auxiliar para abrir drawer de drill-down con detalles
   private abrirDrillDownDetalles(categoria: string, campo: string, widget: DashboardWidget): void {
-    // Filtrar procesos por la categoría seleccionada
-    const registrosFiltrados = this.procesosResumen().filter(p => {
+    // Primero, aplicar los filtros en cascada para obtener el conjunto base
+    const filtrosCascada = this.graficaFiltrosCascada();
+    let procesosFiltrados = this.procesosResumen();
+
+    // Aplicar filtros en cascada si existen
+    filtrosCascada.forEach(filtro => {
+      procesosFiltrados = this.aplicarFiltroCascada(procesosFiltrados, filtro.campo, filtro.valor);
+    });
+
+    // Ahora filtrar por la categoría seleccionada
+    const registrosFiltrados = procesosFiltrados.filter(p => {
       const valorCampo = this.obtenerValorCampo(p, campo);
       return valorCampo === categoria;
     });
@@ -619,11 +637,31 @@ export class DashboardCustomizableComponent implements OnInit {
       });
       this.showDrillDownDrawer.set(true);
     } else {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Sin datos',
-        detail: `No se encontraron registros para "${categoria}"`
-      });
+      // Si no hay registros con el filtro específico, verificar si hay datos en el nivel actual
+      // Esto ocurre en el último nivel del drill-down
+      if (procesosFiltrados.length > 0) {
+        // Mostrar todos los datos del nivel actual como detalles
+        this.drillDownData.set({
+          categoria: `${campo}: ${categoria}`,
+          campo,
+          widget,
+          registros: procesosFiltrados
+        });
+        this.showDrillDownDrawer.set(true);
+      } else {
+        // Campos que no están directamente en procesos
+        const camposExternos = ['contenedorNombre', 'activo', 'servidor', 'aplicacion'];
+        const esCampoExterno = camposExternos.includes(campo);
+
+        this.messageService.add({
+          severity: 'info',
+          summary: esCampoExterno ? 'Navegación' : 'Sin datos',
+          detail: esCampoExterno
+            ? `Para ver detalles de "${categoria}", navega a la sección de Activos`
+            : `No se encontraron procesos con ${campo} = "${categoria}"`,
+          life: 4000
+        });
+      }
     }
   }
 
@@ -638,6 +676,7 @@ export class DashboardCustomizableComponent implements OnInit {
         if (cumpl >= 50) return '50-69%';
         return '<50%';
       case 'alertas':
+      case 'alertasActivas':
         const alertas = proceso.alertasActivas;
         if (alertas === 0) return 'Sin alertas';
         if (alertas <= 2) return '1-2 alertas';
@@ -646,13 +685,26 @@ export class DashboardCustomizableComponent implements OnInit {
       case 'tendencia':
         return proceso.tendencia === 'up' ? 'Mejorando' : proceso.tendencia === 'down' ? 'Declinando' : 'Estable';
       case 'objetivos':
+      case 'totalObjetivos':
         return `${proceso.totalObjetivos} objetivos`;
       case 'kpis':
+      case 'totalKPIs':
         const kpis = proceso.totalKPIs;
         if (kpis <= 5) return '1-5 KPIs';
         if (kpis <= 10) return '6-10 KPIs';
         return '>10 KPIs';
-      default: return proceso.procesoNombre || 'N/A';
+      case 'procesoNombre':
+      case 'nombre':
+        return proceso.procesoNombre || 'N/A';
+      case 'contenedorNombre':
+      case 'activo':
+        // Para activos, usar el nombre del proceso como contenedor por ahora
+        // TODO: Cuando se implemente relación proceso-activo, usar el campo correcto
+        return proceso.procesoNombre || 'N/A';
+      default:
+        // Intentar acceder al campo directamente si existe en el objeto
+        const valor = (proceso as any)[campo];
+        return valor !== undefined ? String(valor) : proceso.procesoNombre || 'N/A';
     }
   }
 
@@ -1753,9 +1805,6 @@ export class DashboardCustomizableComponent implements OnInit {
 
   // ==================== CONFIGURACIÓN DE GRÁFICAS INTERACTIVAS EN PRECONFIG ====================
 
-  // Tab activa en la configuración de gráficas
-  graficaConfigTab = signal<'tipo' | 'datos' | 'estilo' | 'ia'>('tipo');
-
   // Configuración de gráfica
   preConfigGraficaTipo = signal<string>('donut');
   preConfigGraficaPaleta = signal<string>('default');
@@ -2281,7 +2330,7 @@ export class DashboardCustomizableComponent implements OnInit {
     this.preConfigGraficaTipo.set(sugerencia.tipo);
     this.preConfigGraficaAgrupacion.set(sugerencia.campo);
     this.preConfigGraficaPaleta.set(sugerencia.paleta);
-    this.graficaConfigTab.set('tipo');
+    this.graficaConfigTab.set('general');
     this.respuestaAsistenteGrafica.set(`He configurado una gráfica de tipo "${sugerencia.tipo}" optimizada para el análisis seleccionado.`);
   }
 
@@ -2373,7 +2422,7 @@ export class DashboardCustomizableComponent implements OnInit {
         break;
       case 'graficas-interactivas':
         // Inicializar configuración de gráfica
-        this.graficaConfigTab.set('tipo');
+        this.graficaConfigTab.set('general');
         this.preConfigGraficaTipo.set('donut');
         this.preConfigGraficaFuenteDatos.set('procesos');
         this.preConfigGraficaAgrupacion.set('estado');
@@ -2491,18 +2540,22 @@ export class DashboardCustomizableComponent implements OnInit {
       graficaDatos: result.datos
     };
 
+    // Usar título/subtítulo del pre-config (no del wizard)
+    const titulo = this.preConfigTitulo() || catalogItem.nombre;
+    const subtitulo = this.preConfigSubtitulo() || '';
+
     // Agregar widget con configuración del wizard
     this.dashboardService.agregarWidgetConConfig(
       catalogItem,
-      result.estilo.titulo,
-      result.estilo.subtitulo,
+      titulo,
+      subtitulo,
       config
     );
 
     this.messageService.add({
       severity: 'success',
       summary: 'Widget agregado',
-      detail: `${result.estilo.titulo} agregado al dashboard`
+      detail: `${titulo} agregado al dashboard`
     });
 
     // Cerrar drawer y limpiar - usar setTimeout para asegurar cierre correcto
@@ -2635,20 +2688,6 @@ export class DashboardCustomizableComponent implements OnInit {
 
   // ==================== CONFIGURACIÓN DE WIDGET ====================
 
-  actualizarTituloWidget(titulo: string): void {
-    const widget = this.widgetSeleccionado();
-    if (widget) {
-      this.dashboardService.actualizarWidget(widget.id, { titulo });
-    }
-  }
-
-  actualizarSubtituloWidget(subtitulo: string): void {
-    const widget = this.widgetSeleccionado();
-    if (widget) {
-      this.dashboardService.actualizarWidget(widget.id, { subtitulo });
-    }
-  }
-
   actualizarKpiType(kpiType: string): void {
     const widget = this.widgetSeleccionado();
     if (widget) {
@@ -2683,6 +2722,84 @@ export class DashboardCustomizableComponent implements OnInit {
         config: { ...widget.config, listLimit: limit }
       });
     }
+  }
+
+  // ==================== CONFIGURACIÓN DE GRÁFICAS INTERACTIVAS ====================
+
+  actualizarGraficaTitulo(titulo: string): void {
+    const widget = this.widgetSeleccionado();
+    if (widget) {
+      this.dashboardService.actualizarWidget(widget.id, { titulo });
+    }
+  }
+
+  actualizarGraficaSubtitulo(subtitulo: string): void {
+    const widget = this.widgetSeleccionado();
+    if (widget) {
+      this.dashboardService.actualizarWidget(widget.id, { subtitulo });
+    }
+  }
+
+  actualizarGraficaTipo(tipo: TipoGraficaWizard): void {
+    const widget = this.widgetSeleccionado();
+    if (widget) {
+      this.dashboardService.actualizarWidget(widget.id, {
+        config: { ...widget.config, graficaTipo: tipo }
+      });
+    }
+  }
+
+  actualizarGraficaPaleta(paleta: string): void {
+    const widget = this.widgetSeleccionado();
+    if (widget) {
+      this.dashboardService.actualizarWidget(widget.id, {
+        config: { ...widget.config, graficaPaleta: paleta }
+      });
+    }
+  }
+
+  actualizarGraficaAgrupacion(campo: string): void {
+    const widget = this.widgetSeleccionado();
+    if (widget) {
+      this.dashboardService.actualizarWidget(widget.id, {
+        config: { ...widget.config, graficaAgrupacion: campo }
+      });
+    }
+  }
+
+  actualizarGraficaLeyenda(mostrar: boolean): void {
+    const widget = this.widgetSeleccionado();
+    if (widget) {
+      this.dashboardService.actualizarWidget(widget.id, {
+        config: { ...widget.config, graficaMostrarLeyenda: mostrar }
+      });
+    }
+  }
+
+  actualizarGraficaDataLabels(mostrar: boolean): void {
+    const widget = this.widgetSeleccionado();
+    if (widget) {
+      this.dashboardService.actualizarWidget(widget.id, {
+        config: { ...widget.config, graficaMostrarDataLabels: mostrar }
+      });
+    }
+  }
+
+  actualizarGraficaAnimaciones(mostrar: boolean): void {
+    const widget = this.widgetSeleccionado();
+    if (widget) {
+      this.dashboardService.actualizarWidget(widget.id, {
+        config: { ...widget.config, graficaAnimaciones: mostrar }
+      });
+    }
+  }
+
+  getTipoGraficaNombre(tipo: string): string {
+    for (const categoria of this.categoriasGraficas) {
+      const found = categoria.tipos.find(t => t.id === tipo);
+      if (found) return found.nombre;
+    }
+    return tipo;
   }
 
   // ==================== CONFIGURACIÓN DE LAYOUT ====================

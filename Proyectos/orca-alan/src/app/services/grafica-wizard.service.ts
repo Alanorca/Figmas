@@ -137,27 +137,132 @@ export class GraficaWizardService {
   }): DatosGraficaProcesados {
     const { datos, tipoGrafica, campoAgrupacion, tipoAgregacion, campoValor, campoEjeX, campoEjeY, campoSeries } = config;
 
-    // Gráficas circulares y similares (pie, doughnut, polarArea, funnel)
-    if (['pie', 'doughnut', 'polarArea', 'funnel'].includes(tipoGrafica)) {
+    // Tipos de gráficas circulares (sin ejes)
+    const tiposCirculares = [
+      'pie', 'donut', 'polarArea', 'radialBar', 'gauge',
+      'funnel', 'pyramid', 'sunburst', 'treemap'
+    ];
+
+    // Tipos de gráficas de ejes (barras y líneas)
+    const tiposEjes = [
+      // Barras
+      'bar', 'column', 'stackedBar', 'groupedBar', 'stackedBarHorizontal',
+      // Líneas
+      'line', 'area', 'stepline', 'spline', 'stackedArea',
+      // Estadísticas
+      'waterfall', 'bullet', 'boxplot', 'candlestick',
+      // Combinadas
+      'combo', 'dumbbell', 'regression',
+      // Predictivo
+      'trendline', 'forecast', 'rangeArea',
+      // Especializadas con ejes
+      'heatmap'
+    ];
+
+    // Tipos especiales
+    const tiposDispersion = ['scatter', 'bubble'];
+    const tiposRadar = ['radar'];
+    const tiposMatriz = ['riskMatrix', 'correlationMatrix'];
+    const tiposFlujo = ['sankey'];
+
+    // Gráficas circulares y similares
+    if (tiposCirculares.includes(tipoGrafica)) {
       return this.generarDatosCirculares(datos, campoAgrupacion!, tipoAgregacion, campoValor);
     }
 
-    // Gráficas de ejes (bar, line, etc.)
-    if (['bar', 'bar-horizontal', 'bar-stacked', 'line', 'line-area', 'line-stepped'].includes(tipoGrafica)) {
+    // Gráficas de ejes (barras, líneas, etc.)
+    if (tiposEjes.includes(tipoGrafica)) {
       return this.generarDatosEjes(datos, campoEjeX!, campoEjeY!, campoSeries, tipoAgregacion);
     }
 
     // Radar
-    if (tipoGrafica === 'radar') {
+    if (tiposRadar.includes(tipoGrafica)) {
       return this.generarDatosRadar(datos, campoAgrupacion!, tipoAgregacion, campoValor);
     }
 
     // Scatter/Bubble
-    if (['scatter', 'bubble'].includes(tipoGrafica)) {
+    if (tiposDispersion.includes(tipoGrafica)) {
       return this.generarDatosDispersion(datos, campoEjeX!, campoEjeY!);
     }
 
+    // Matrices (riesgo, correlación)
+    if (tiposMatriz.includes(tipoGrafica)) {
+      return this.generarDatosMatriz(datos, campoEjeX!, campoEjeY!);
+    }
+
+    // Sankey (flujos)
+    if (tiposFlujo.includes(tipoGrafica)) {
+      return this.generarDatosSankey(datos, campoAgrupacion!, campoEjeX!);
+    }
+
+    // Fallback: intentar generar como circular
+    if (campoAgrupacion) {
+      return this.generarDatosCirculares(datos, campoAgrupacion, tipoAgregacion, campoValor);
+    }
+
     return { labels: [], datasets: [] };
+  }
+
+  // Generar datos para matrices (riesgo, correlación)
+  private generarDatosMatriz(
+    datos: any[],
+    campoX: string,
+    campoY: string
+  ): DatosGraficaProcesados {
+    // Crear matriz de conteo
+    const matriz = new Map<string, Map<string, number>>();
+    const valoresX = new Set<string>();
+    const valoresY = new Set<string>();
+
+    datos.forEach(item => {
+      const x = String(item[campoX] || 'Sin definir');
+      const y = String(item[campoY] || 'Sin definir');
+      valoresX.add(x);
+      valoresY.add(y);
+
+      if (!matriz.has(y)) {
+        matriz.set(y, new Map());
+      }
+      const fila = matriz.get(y)!;
+      fila.set(x, (fila.get(x) || 0) + 1);
+    });
+
+    const labelsX = Array.from(valoresX).sort();
+    const labelsY = Array.from(valoresY).sort();
+
+    const datasets = labelsY.map(y => ({
+      label: y,
+      data: labelsX.map(x => matriz.get(y)?.get(x) || 0)
+    }));
+
+    return { labels: labelsX, datasets };
+  }
+
+  // Generar datos para Sankey
+  private generarDatosSankey(
+    datos: any[],
+    campoOrigen: string,
+    campoDestino: string
+  ): DatosGraficaProcesados {
+    const flujos = new Map<string, number>();
+
+    datos.forEach(item => {
+      const origen = String(item[campoOrigen] || 'Sin origen');
+      const destino = String(item[campoDestino] || 'Sin destino');
+      const key = `${origen} → ${destino}`;
+      flujos.set(key, (flujos.get(key) || 0) + 1);
+    });
+
+    const labels = Array.from(flujos.keys());
+    const values = Array.from(flujos.values());
+
+    return {
+      labels,
+      datasets: [{
+        label: 'Flujo',
+        data: values
+      }]
+    };
   }
 
   // Generar datos para gráficas circulares

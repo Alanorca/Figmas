@@ -399,6 +399,7 @@
                 <div class="widget-graficas-interactivas">
                   <app-graficas-interactivas
                     [modoWidget]="true"
+                    [widgetId]="widget.id"
                     [datos]="getGraficaDatosCacheados(widget.id)"
                     [campoInicial]="widget.config.graficaAgrupacion || 'estado'"
                     [titulo]="widget.titulo || 'Análisis'"
@@ -417,7 +418,8 @@
                     (filtroAplicado)="onGraficaInteractivaFiltroAplicado($event, widget)"
                     (drillDownEvent)="onGraficaInteractivaDrillDown($event, widget)"
                     (exportSegmentEvent)="onGraficaInteractivaExportSegment($event, widget)"
-                    (createAlertEvent)="onGraficaInteractivaCreateAlert($event, widget)">
+                    (createAlertEvent)="onGraficaInteractivaCreateAlert($event, widget)"
+                    (configClick)="editarWidget(widget)">
                   </app-graficas-interactivas>
                 </div>
               }
@@ -504,7 +506,6 @@
       <!-- Configuración básica -->
       <div class="preconfig-section">
         <h4 class="preconfig-section-title">
-          <i class="pi pi-tag"></i>
           Información
         </h4>
 
@@ -1003,22 +1004,27 @@
 </p-drawer>
 
 <!-- Drawer: Configuración de Widget -->
-<p-drawer [(visible)]="showConfigDrawer" position="right" [style]="{width: '50vw'}" header="Configurar Widget">
-  @if (widgetSeleccionado()) {
-    <div class="config-content">
-      <!-- Información básica -->
-      <div class="config-section">
-        <label class="config-label">Título</label>
-        <input type="text" pInputText class="w-full"
-               [ngModel]="widgetSeleccionado()!.titulo"
-               (ngModelChange)="actualizarTituloWidget($event)" />
-      </div>
+<p-drawer [(visible)]="showConfigDrawer" position="right" [style]="{width: '50vw'}" styleClass="widget-config-drawer">
+  <ng-template pTemplate="header">
+    <div class="preconfig-header">
+      <button class="preconfig-back" (click)="showConfigDrawer.set(false)">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <span>Configurar Widget</span>
+    </div>
+  </ng-template>
 
-      <div class="config-section">
-        <label class="config-label">Subtítulo (opcional)</label>
-        <input type="text" pInputText class="w-full"
-               [ngModel]="widgetSeleccionado()!.subtitulo || ''"
-               (ngModelChange)="actualizarSubtituloWidget($event)" />
+  @if (widgetSeleccionado()) {
+    <div class="preconfig-content">
+      <!-- Info del widget seleccionado -->
+      <div class="preconfig-widget-info">
+        <div class="preconfig-widget-icon">
+          <i [class]="getWidgetIcon(widgetSeleccionado()!.tipo)"></i>
+        </div>
+        <div class="preconfig-widget-details">
+          <span class="preconfig-widget-nombre">{{ widgetSeleccionado()!.titulo }}</span>
+          <span class="preconfig-widget-desc">{{ widgetSeleccionado()!.subtitulo || 'Sin descripción' }}</span>
+        </div>
       </div>
 
       <p-divider></p-divider>
@@ -1026,39 +1032,200 @@
       <!-- Configuración específica por tipo -->
       @switch (widgetSeleccionado()!.tipo) {
         @case ('kpi-card') {
-          <div class="config-section">
-            <label class="config-label">Tipo de KPI</label>
-            <p-select
-              [options]="kpiTypeOptions"
-              [ngModel]="widgetSeleccionado()!.config.kpiType || 'cumplimiento'"
-              (ngModelChange)="actualizarKpiType($event)"
-              optionLabel="label"
-              optionValue="value"
-              [style]="{width: '100%'}">
-            </p-select>
+          <div class="preconfig-section">
+            <h4 class="preconfig-section-title">
+              <i class="pi pi-cog"></i>
+              Configuración
+            </h4>
+            <div class="preconfig-field">
+              <label>Tipo de KPI</label>
+              <p-select
+                [options]="kpiTypeOptions"
+                [ngModel]="widgetSeleccionado()!.config.kpiType || 'cumplimiento'"
+                (ngModelChange)="actualizarKpiType($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}">
+              </p-select>
+            </div>
           </div>
         }
 
         @case ('table-mini') {
-          <div class="config-section">
-            <label class="config-label">Límite de filas</label>
-            <input type="number" pInputText class="w-full"
-                   [ngModel]="widgetSeleccionado()!.config.tableLimit || 5"
-                   (ngModelChange)="actualizarListLimit($event)"
-                   min="3" max="10" />
+          <div class="preconfig-section">
+            <h4 class="preconfig-section-title">
+              <i class="pi pi-cog"></i>
+              Configuración
+            </h4>
+            <div class="preconfig-field">
+              <label>Límite de filas</label>
+              <input type="number" pInputText class="w-full"
+                     [ngModel]="widgetSeleccionado()!.config.tableLimit || 5"
+                     (ngModelChange)="actualizarListLimit($event)"
+                     min="3" max="10" />
+            </div>
+            <div class="preconfig-info-box info">
+              <i class="pi pi-info-circle"></i>
+              <span>Haz click en una fila para ver el detalle del proceso</span>
+            </div>
           </div>
-          <div class="config-info-box">
-            <i class="pi pi-info-circle"></i>
-            <span>Haz click en una fila para ver el detalle del proceso</span>
+        }
+
+        @case ('graficas-interactivas') {
+          <!-- Configuración con Tabs para Gráficas Interactivas -->
+          <div class="grafica-config-tabs">
+            <p-tabs [(value)]="graficaConfigTab">
+              <p-tablist>
+                <p-tab value="general">
+                  <i class="pi pi-file-edit mr-2"></i>
+                  General
+                </p-tab>
+                <p-tab value="tipo">
+                  <i class="pi pi-chart-pie mr-2"></i>
+                  Tipo
+                </p-tab>
+                <p-tab value="estilo">
+                  <i class="pi pi-palette mr-2"></i>
+                  Estilo
+                </p-tab>
+              </p-tablist>
+
+              <p-tabpanels>
+                <!-- Tab General -->
+                <p-tabpanel value="general">
+                  <div class="preconfig-section">
+                    <div class="preconfig-field">
+                      <label>Título</label>
+                      <input type="text" pInputText class="w-full"
+                             [ngModel]="widgetSeleccionado()!.titulo"
+                             (ngModelChange)="actualizarGraficaTitulo($event)"
+                             placeholder="Título del widget" />
+                    </div>
+                    <div class="preconfig-field">
+                      <label>Subtítulo</label>
+                      <input type="text" pInputText class="w-full"
+                             [ngModel]="widgetSeleccionado()!.subtitulo || ''"
+                             (ngModelChange)="actualizarGraficaSubtitulo($event)"
+                             placeholder="Descripción breve (opcional)" />
+                    </div>
+                    <div class="preconfig-field">
+                      <label>Agrupar por</label>
+                      <p-select
+                        [options]="graficaInteractivaCamposDisponibles()"
+                        [ngModel]="widgetSeleccionado()!.config.graficaAgrupacion"
+                        (ngModelChange)="actualizarGraficaAgrupacion($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        [style]="{width: '100%'}"
+                        placeholder="Selecciona campo">
+                      </p-select>
+                    </div>
+                  </div>
+                </p-tabpanel>
+
+                <!-- Tab Tipo de Gráfica -->
+                <p-tabpanel value="tipo">
+                  <div class="preconfig-section">
+                    <div class="preconfig-field">
+                      <label>Tipo actual</label>
+                      <div class="tipo-actual-badge">
+                        <i class="pi pi-chart-pie"></i>
+                        <span>{{ getTipoGraficaNombre(widgetSeleccionado()!.config.graficaTipo || 'donut') }}</span>
+                      </div>
+                    </div>
+                    <div class="preconfig-field">
+                      <label>Cambiar tipo</label>
+                      <div class="tipos-grid-config">
+                        @for (categoria of categoriasGraficas; track categoria.id) {
+                          <div class="categoria-group">
+                            <span class="categoria-label">{{ categoria.nombre }}</span>
+                            <div class="tipos-chips">
+                              @for (tipo of categoria.tipos; track tipo.id) {
+                                <button
+                                  class="tipo-chip-config"
+                                  [class.selected]="widgetSeleccionado()!.config.graficaTipo === tipo.id"
+                                  (click)="actualizarGraficaTipo(tipo.id)"
+                                  [pTooltip]="tipo.descripcion"
+                                  tooltipPosition="top">
+                                  <i [class]="tipo.icono"></i>
+                                  <span>{{ tipo.nombre }}</span>
+                                </button>
+                              }
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </p-tabpanel>
+
+                <!-- Tab Estilo -->
+                <p-tabpanel value="estilo">
+                  <div class="preconfig-section">
+                    <div class="preconfig-field">
+                      <label>Paleta de colores</label>
+                      <div class="paletas-grid-config">
+                        @for (paleta of paletasColores; track paleta.id) {
+                          <div
+                            class="paleta-option-config"
+                            [class.selected]="widgetSeleccionado()!.config.graficaPaleta === paleta.id"
+                            (click)="actualizarGraficaPaleta(paleta.id)">
+                            <div class="paleta-colors">
+                              @for (color of paleta.colores.slice(0, 5); track color) {
+                                <span class="color-dot" [style.background-color]="color"></span>
+                              }
+                            </div>
+                            <span class="paleta-nombre">{{ paleta.nombre }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="preconfig-field">
+                      <label>Opciones de visualización</label>
+                      <div class="opciones-grid-config">
+                        <div class="preconfig-toggle">
+                          <label>Mostrar leyenda</label>
+                          <p-toggleSwitch
+                            [ngModel]="widgetSeleccionado()!.config.graficaMostrarLeyenda !== false"
+                            (ngModelChange)="actualizarGraficaLeyenda($event)">
+                          </p-toggleSwitch>
+                        </div>
+                        <div class="preconfig-toggle">
+                          <label>Mostrar etiquetas</label>
+                          <p-toggleSwitch
+                            [ngModel]="widgetSeleccionado()!.config.graficaMostrarDataLabels === true"
+                            (ngModelChange)="actualizarGraficaDataLabels($event)">
+                          </p-toggleSwitch>
+                        </div>
+                        <div class="preconfig-toggle">
+                          <label>Animaciones</label>
+                          <p-toggleSwitch
+                            [ngModel]="widgetSeleccionado()!.config.graficaAnimaciones !== false"
+                            (ngModelChange)="actualizarGraficaAnimaciones($event)">
+                          </p-toggleSwitch>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </p-tabpanel>
+              </p-tabpanels>
+            </p-tabs>
           </div>
         }
 
         @default {
-          <div class="config-section">
-            <label class="config-label">Tipo de Widget</label>
-            <div class="config-value">
-              <i [class]="getWidgetIcon(widgetSeleccionado()!.tipo)"></i>
-              {{ widgetSeleccionado()!.tipo }}
+          <div class="preconfig-section">
+            <h4 class="preconfig-section-title">
+              <i class="pi pi-info-circle"></i>
+              Información
+            </h4>
+            <div class="preconfig-field">
+              <label>Tipo de Widget</label>
+              <div class="tipo-actual-badge">
+                <i [class]="getWidgetIcon(widgetSeleccionado()!.tipo)"></i>
+                <span>{{ widgetSeleccionado()!.tipo }}</span>
+              </div>
             </div>
           </div>
         }
@@ -1067,12 +1234,15 @@
       <p-divider></p-divider>
 
       <!-- Dimensiones -->
-      <div class="config-section">
-        <label class="config-label">Dimensiones actuales</label>
-        <div class="config-dimensions">
+      <div class="preconfig-section">
+        <h4 class="preconfig-section-title">
+          <i class="pi pi-arrows-alt"></i>
+          Dimensiones
+        </h4>
+        <div class="preconfig-size-preview">
           <span>{{ widgetSeleccionado()!.cols }} columnas x {{ widgetSeleccionado()!.rows }} filas</span>
         </div>
-        <small class="config-hint">Arrastra los bordes del widget para redimensionar</small>
+        <small class="preconfig-hint">Arrastra los bordes del widget para redimensionar</small>
       </div>
     </div>
   }

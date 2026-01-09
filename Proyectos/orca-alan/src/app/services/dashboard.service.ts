@@ -15,6 +15,7 @@ import {
   WidgetCatalogItem,
   WIDGET_CATALOG,
   DEFAULT_DASHBOARD_CONFIG,
+  GALLERY_DASHBOARD_CONFIG,
   generateWidgetId,
   createWidgetFromCatalog,
   TipoWidget
@@ -128,7 +129,7 @@ export class DashboardService {
     const config = this.configActual();
 
     return {
-      gridType: GridType.Fit,
+      gridType: GridType.VerticalFixed,
       displayGrid: modoEdicion ? DisplayGrid.Always : DisplayGrid.None,
       compactType: CompactType.None,
 
@@ -285,6 +286,11 @@ export class DashboardService {
       // Si no hay configuraciones, usar la por defecto
       if (configuraciones.length === 0) {
         configuraciones = [{ ...DEFAULT_DASHBOARD_CONFIG }];
+      }
+
+      // Agregar dashboard de galería de gráficas si no existe (para pruebas)
+      if (!configuraciones.find(c => c.id === 'galeria-graficas')) {
+        configuraciones.push({ ...GALLERY_DASHBOARD_CONFIG });
       }
 
       // Cargar el estado guardado (última configuración usada)

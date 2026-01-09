@@ -555,7 +555,6 @@
   <div class="chart-area">
     <div class="chart-header">
       <div class="chart-info">
-        <p-tag [value]="getTipoLabel(tipoGrafica())" severity="info" styleClass="tipo-tag" />
         @if (filtroActivo()) {
           <p-tag
             [value]="'Filtro: ' + filtroActivo()!.valor"
@@ -573,15 +572,16 @@
         }
       </div>
       <div class="chart-actions">
-        <!-- Drill-down toggle -->
-        <p-button
-          icon="pi pi-sitemap"
-          [rounded]="true"
-          [text]="true"
-          [severity]="drillDownActivo() ? 'success' : 'secondary'"
-          (onClick)="toggleDrillDown()"
-          [pTooltip]="drillDownActivo() ? 'Desactivar drill-down' : 'Activar drill-down'"
-          tooltipPosition="top" />
+        <!-- Configurar widget (solo en modo widget) -->
+        @if (modoWidget) {
+          <p-button
+            icon="pi pi-cog"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="configClick.emit()"
+            pTooltip="Configurar gráfica"
+            tooltipPosition="top" />
+        }
         <!-- Anotaciones -->
         <p-button
           icon="pi pi-comments"
@@ -606,20 +606,15 @@
           (onClick)="resetZoom()"
           pTooltip="Resetear zoom"
           tooltipPosition="top" />
-        <p-button
-          icon="pi pi-image"
-          [rounded]="true"
-          [text]="true"
-          (onClick)="exportarPNG()"
-          pTooltip="Exportar PNG"
-          tooltipPosition="top" />
+        <!-- Exportar con menú contextual -->
         <p-button
           icon="pi pi-download"
           [rounded]="true"
           [text]="true"
-          (onClick)="exportarSVG()"
-          pTooltip="Exportar SVG"
+          (onClick)="exportMenu.toggle($event)"
+          pTooltip="Exportar gráfica"
           tooltipPosition="top" />
+        <p-menu #exportMenu [model]="exportMenuItems" [popup]="true" appendTo="body" />
       </div>
     </div>
 
@@ -641,7 +636,9 @@
       </div>
     }
 
-    <div class="chart-container" #chartContainer (contextmenu)="onChartContextMenu($event)">
+    <div class="chart-container" #chartContainer
+         (contextmenu)="onChartContextMenu($event)"
+         (mousedown)="onChartMouseDown($event)">
       @if (datosSignal().labels.length > 0) {
         <!-- Usar ApexCharts para gráficas avanzadas (Funnel, TreeMap, RadialBar, etc.) -->
         @if (usarApexCharts()) {

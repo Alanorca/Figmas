@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, inject, ElementRef, ViewChild, AfterViewInit, OnDestroy, NgZone, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, ElementRef, ViewChild, AfterViewInit, OnDestroy, NgZone, ChangeDetectorRef, HostListener, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChartModule } from 'primeng/chart';
@@ -14,10 +14,12 @@ import { CardModule } from 'primeng/card';
 import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
-import { ContextMenuModule } from 'primeng/contextmenu';
+import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
+import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { GroqService } from '../../services/groq.service';
+import { ThemeService } from '../../services/theme.service';
 
 // Importar tipos de ApexCharts
 import {
@@ -35,7 +37,8 @@ import {
   ApexTheme,
   ApexGrid,
   ApexYAxis,
-  ApexAnnotations
+  ApexAnnotations,
+  ApexMarkers
 } from 'ng-apexcharts';
 
 // Tipos de gráficas disponibles
@@ -192,6 +195,7 @@ export interface ApexChartOptions {
   colors?: string[];
   labels?: string[];
   annotations?: ApexAnnotations;
+  markers?: ApexMarkers;
 }
 
 @Component({
@@ -201,7 +205,7 @@ export interface ApexChartOptions {
     CommonModule, FormsModule, ChartModule,
     ButtonModule, SelectModule, ToggleButtonModule, TabsModule,
     DividerModule, InputTextModule, TooltipModule, TagModule, CardModule,
-    AccordionModule, DialogModule, TextareaModule, ContextMenuModule, NgApexchartsModule
+    AccordionModule, DialogModule, TextareaModule, ContextMenuModule, MenuModule, NgApexchartsModule
   ],
   templateUrl: './graficas-interactivas.html',
   styleUrl: './graficas-interactivas.scss'
@@ -212,6 +216,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
   private elementRef = inject(ElementRef);
+  private themeService = inject(ThemeService);
 
   // ==================== RESIZE OBSERVER ====================
 
@@ -220,6 +225,15 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   private resizeObserver: ResizeObserver | null = null;
   private resizeDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private themeObserver: MutationObserver | null = null;
+
+  // CSS Variables cacheadas para design tokens
+  private cssTokens = {
+    textColor: '',
+    textColorSecondary: '',
+    surfaceBorder: '',
+    surfaceCard: '',
+    primaryColor: ''
+  };
 
   // Signal para forzar actualización del chart
   private chartUpdateTrigger = signal(0);
@@ -249,6 +263,9 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
 
   // Modo widget: solo muestra la gráfica sin panel de configuración
   @Input() modoWidget = false;
+
+  // ID único del widget para almacenar anotaciones separadas
+  @Input() widgetId: string | null = null;
 
   // Inputs para configuración externa (con guards)
   private _lastTipo: TipoGraficaAvanzada | undefined;
@@ -289,9 +306,10 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
 
   private _lastTema: 'light' | 'dark' | undefined;
   @Input() set temaExterno(value: 'light' | 'dark' | undefined) {
+    // El tema ahora se sincroniza con ThemeService - el input externo actualiza el servicio si es necesario
     if (value && value !== this._lastTema) {
       this._lastTema = value;
-      this.tema.set(value);
+      this.themeService.setTheme(value);
     }
   }
 
@@ -308,7 +326,8 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   mostrarLeyenda = signal(true);
   mostrarDataLabels = signal(true);
   mostrarTooltip = signal(true);
-  tema = signal<'light' | 'dark'>('light');
+  // Usar el signal del ThemeService para tema unificado de la plataforma
+  tema = computed(() => this.themeService.currentTheme());
   paletaSeleccionada = signal('vibrant');
 
   // Paletas de colores predefinidas (estilo AmCharts)
@@ -358,12 +377,26 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   });
   mostrarDialogComparacion = signal(false);
 
-  // Drill-down
+  // Drill-down (siempre activo)
   drillDownStack = signal<{ campo: string; valor: string }[]>([]);
-  drillDownActivo = signal(false);
+  drillDownActivo = signal(true); // Siempre activo
+
+  // Menú de exportación
+  exportMenuItems: MenuItem[] = [
+    {
+      label: 'Exportar como PNG',
+      icon: 'pi pi-image',
+      command: () => this.exportarPNG()
+    },
+    {
+      label: 'Exportar como SVG',
+      icon: 'pi pi-file',
+      command: () => this.exportarSVG()
+    }
+  ];
 
   // Context menu para drill-down
-  @ViewChild('drillDownMenu') drillDownMenu: any;
+  @ViewChild('drillDownMenu') drillDownMenu!: ContextMenu;
   contextMenuItems = signal<MenuItem[]>([]);
   selectedDataPoint = signal<{ categoria: string; valor: number; indice: number } | null>(null);
   contextMenuVisible = signal(false);
@@ -417,6 +450,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   @Output() drillDownEvent = new EventEmitter<{ tipo: string; categoria: string; campo: string; filtro?: FiltroGrafica }>();
   @Output() exportSegmentEvent = new EventEmitter<{ categoria: string; valor: number }>();
   @Output() createAlertEvent = new EventEmitter<{ categoria: string; valor: number; campo: string }>();
+  @Output() configClick = new EventEmitter<void>();
 
   // Computed: Determinar si usar ApexCharts para el tipo actual
   usarApexCharts = computed(() => {
@@ -426,7 +460,8 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
       'funnel', 'pyramid', 'radialBar', 'treemap', 'heatmap',
       'bubble', 'waterfall', 'sankey', 'sunburst', 'gauge',
       'boxplot', 'bullet', 'dumbbell', 'riskMatrix', 'correlationMatrix',
-      'stackedBarHorizontal', 'stackedArea', 'combo', 'regression', 'rangeArea'
+      'stackedBarHorizontal', 'stackedArea', 'combo', 'regression', 'rangeArea',
+      'trendline', 'forecast'
     ];
     return apexTypes.includes(tipo);
   });
@@ -476,6 +511,20 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   constructor() {
     this.cargarConfiguracionesDesdeStorage();
     this.cargarAnotacionesDesdeStorage();
+
+    // Effect: Cuando cambia el drill-down stack o filtro, notificar resize para que ApexCharts recalcule
+    effect(() => {
+      // Leer los signals para establecer las dependencias
+      const stack = this.drillDownStack();
+      const filtro = this.filtroActivo();
+      const campo = this.campoEjeX();
+      // Solo en modo widget y después de un pequeño delay para que el DOM se actualice
+      if (this.modoWidget) {
+        setTimeout(() => {
+          window.dispatchEvent(new Event('resize'));
+        }, 100);
+      }
+    });
   }
 
   // ==================== LIFECYCLE HOOKS ====================
@@ -494,55 +543,43 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     this.destroyThemeObserver();
   }
 
-  // ==================== THEME AUTO-DETECTION ====================
+  // ==================== THEME & CSS TOKENS ====================
 
   private initThemeDetection(): void {
-    // Detectar tema inicial
-    this.detectCurrentTheme();
+    // Leer CSS tokens iniciales del sistema de diseño
+    this.updateCssTokens();
 
-    // Observar cambios en la clase del body/html para detectar cambios de tema
+    // Observar cambios en el tema para actualizar los tokens CSS
     this.themeObserver = new MutationObserver(() => {
       this.ngZone.run(() => {
-        this.detectCurrentTheme();
+        this.updateCssTokens();
       });
     });
 
-    // Observar cambios en el atributo class del html y body
     const htmlElement = document.documentElement;
-    const bodyElement = document.body;
-
     this.themeObserver.observe(htmlElement, {
-      attributes: true,
-      attributeFilter: ['class', 'data-theme']
-    });
-
-    this.themeObserver.observe(bodyElement, {
       attributes: true,
       attributeFilter: ['class', 'data-theme']
     });
   }
 
-  private detectCurrentTheme(): void {
-    const htmlElement = document.documentElement;
-    const bodyElement = document.body;
+  /** Lee los CSS variables del sistema de diseño */
+  private updateCssTokens(): void {
+    const styles = getComputedStyle(document.documentElement);
+    this.cssTokens = {
+      textColor: styles.getPropertyValue('--text-color').trim() || (this.tema() === 'dark' ? '#fafafa' : '#334155'),
+      textColorSecondary: styles.getPropertyValue('--text-color-secondary').trim() || (this.tema() === 'dark' ? '#a1a1aa' : '#64748b'),
+      surfaceBorder: styles.getPropertyValue('--surface-border').trim() || (this.tema() === 'dark' ? '#27272a' : '#e2e8f0'),
+      surfaceCard: styles.getPropertyValue('--surface-card').trim() || (this.tema() === 'dark' ? '#18181b' : '#ffffff'),
+      primaryColor: styles.getPropertyValue('--primary-color').trim() || '#10b981'
+    };
+  }
 
-    // Verificar múltiples formas de detectar el tema oscuro
-    const isDark =
-      htmlElement.classList.contains('dark') ||
-      htmlElement.classList.contains('dark-mode') ||
-      htmlElement.classList.contains('theme-dark') ||
-      bodyElement.classList.contains('dark') ||
-      bodyElement.classList.contains('dark-mode') ||
-      bodyElement.classList.contains('theme-dark') ||
-      htmlElement.getAttribute('data-theme') === 'dark' ||
-      bodyElement.getAttribute('data-theme') === 'dark' ||
-      // Verificar también la propiedad CSS de PrimeNG
-      getComputedStyle(bodyElement).getPropertyValue('--surface-ground').trim().toLowerCase().includes('09090b');
-
-    const newTheme = isDark ? 'dark' : 'light';
-    if (this.tema() !== newTheme) {
-      this.tema.set(newTheme);
-    }
+  /** Obtiene un token CSS con fallback */
+  private getCssToken(token: keyof typeof this.cssTokens, fallbackLight: string, fallbackDark: string): string {
+    const value = this.cssTokens[token];
+    if (value) return value;
+    return this.tema() === 'dark' ? fallbackDark : fallbackLight;
   }
 
   private destroyThemeObserver(): void {
@@ -834,11 +871,24 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     // Fallback a paleta 'vibrant' si la seleccionada no existe
     const paleta = this.paletas[this.paletaSeleccionada()] || this.paletas['vibrant'];
     const isDark = this.tema() === 'dark';
+    const comparacion = this.comparacionTemporal();
 
     // Validar que hay datos antes de procesar
     if (!datos || !datos.labels || !datos.series) {
       return { labels: [], datasets: [] };
     }
+
+    // Función para generar datos de comparación (periodo anterior simulado)
+    // Usa un seed basado en el valor para que sea consistente entre renders
+    const generarDatosComparacion = (valores: number[]): number[] => {
+      // Simular datos del periodo anterior con variación consistente
+      return valores.map((v, i) => {
+        // Usar el índice y valor como seed para variación consistente
+        const seed = (v * 7 + i * 13) % 100;
+        const variacion = 0.7 + (seed / 100) * 0.5; // Entre 0.7 y 1.2
+        return Math.round(v * variacion);
+      });
+    };
 
     if (this.isNonAxisChart(tipo)) {
       // Para gráficas circulares - minimalistas
@@ -849,61 +899,174 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
         values = (datos.series as { name: string; data: number[] }[])[0].data;
       }
 
-      return {
-        labels: datos.labels,
-        datasets: [{
-          data: values,
-          backgroundColor: paleta.slice(0, values.length).map(c => this.hexToRgba(c, 0.85)),
+      const datasets: any[] = [{
+        label: comparacion.habilitada ? comparacion.periodo1.label : undefined,
+        data: values,
+        backgroundColor: paleta.slice(0, values.length).map(c => this.hexToRgba(c, 0.85)),
+        borderColor: isDark ? '#1a1a2e' : '#ffffff',
+        borderWidth: 1,
+        hoverOffset: 4,
+        hoverBorderWidth: 2
+      }];
+
+      // Agregar dataset de comparación si está habilitada (ambos modos)
+      // Para gráficas circulares, overlay y sideBySide funcionan igual (anillos concéntricos en donut)
+      if (comparacion.habilitada) {
+        const valoresComparacion = generarDatosComparacion(values);
+        datasets.push({
+          label: comparacion.periodo2.label,
+          data: valoresComparacion,
+          backgroundColor: paleta.slice(0, values.length).map(c => this.hexToRgba(c, 0.45)),
           borderColor: isDark ? '#1a1a2e' : '#ffffff',
           borderWidth: 1,
           hoverOffset: 4,
-          hoverBorderWidth: 2
-        }]
+          hoverBorderWidth: 2,
+          // Para overlay en donut, hacer el segundo anillo más pequeño
+          weight: comparacion.modo === 'overlay' ? 0.7 : 1
+        });
+      }
+
+      return {
+        labels: datos.labels,
+        datasets
       };
     }
 
     // Para gráficas de ejes - minimalistas
     let datasets: any[] = [];
     const isLineType = ['line', 'area', 'spline', 'stepline'].includes(tipo);
+    const isRadar = tipo === 'radar';
+    const isScatter = tipo === 'scatter';
+    const isBubble = tipo === 'bubble';
 
     if (Array.isArray(datos.series) && datos.series.length > 0) {
       if (typeof datos.series[0] === 'number') {
+        // Para scatter, convertir datos a formato x,y
+        const scatterFormattedData = isScatter || isBubble
+          ? (datos.series as number[]).map((y, x) => ({ x, y, r: isBubble ? Math.max(5, y / 10) : undefined }))
+          : datos.series as number[];
+
         datasets = [{
           label: this.titulo,
-          data: datos.series as number[],
-          backgroundColor: isLineType
-            ? this.hexToRgba(paleta[0], 0.1)
-            : paleta.map(c => this.hexToRgba(c, 0.8)),
-          borderColor: isLineType ? paleta[0] : 'transparent',
-          borderWidth: isLineType ? 2 : 0,
-          fill: tipo === 'area',
+          data: scatterFormattedData,
+          backgroundColor: isScatter || isBubble
+            ? this.hexToRgba(paleta[0], 0.7) // Scatter/Bubble: puntos con buen contraste
+            : isRadar
+              ? this.hexToRgba(paleta[0], 0.35)
+              : isLineType
+                ? this.hexToRgba(paleta[0], 0.1)
+                : paleta.map(c => this.hexToRgba(c, 0.8)),
+          borderColor: isScatter || isBubble
+            ? paleta[0] // Scatter/Bubble: borde del color de la paleta
+            : isRadar || isLineType ? paleta[0] : 'transparent',
+          borderWidth: isScatter || isBubble ? 2 : isRadar ? 2 : isLineType ? 2 : 0,
+          fill: tipo === 'area' || isRadar,
           tension: tipo === 'spline' ? 0.4 : 0.1,
           stepped: tipo === 'stepline' ? 'before' : false,
-          pointRadius: isLineType ? 0 : 0, // Sin puntos para look limpio
-          pointHoverRadius: isLineType ? 4 : 0,
+          pointRadius: isScatter ? 8 : isBubble ? undefined : isRadar ? 4 : 0,
+          pointHoverRadius: isScatter ? 10 : isBubble ? undefined : isRadar ? 6 : isLineType ? 4 : 0,
           pointBackgroundColor: paleta[0],
-          pointBorderColor: isDark ? '#1a1a2e' : '#fff',
-          pointBorderWidth: 2
+          pointBorderColor: isDark ? '#18181b' : '#fff',
+          pointBorderWidth: 2,
+          pointStyle: isScatter ? 'circle' : undefined
         }];
       } else {
-        datasets = (datos.series as { name: string; data: number[] }[]).map((serie, index) => ({
-          label: serie.name,
-          data: serie.data,
-          backgroundColor: isLineType
-            ? this.hexToRgba(paleta[index % paleta.length], 0.1)
-            : this.hexToRgba(paleta[index % paleta.length], 0.8),
-          borderColor: isLineType ? paleta[index % paleta.length] : 'transparent',
-          borderWidth: isLineType ? 2 : 0,
-          fill: tipo === 'area',
-          tension: tipo === 'spline' ? 0.4 : 0.1,
-          stepped: tipo === 'stepline' ? 'before' : false,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          pointBackgroundColor: paleta[index % paleta.length],
-          pointBorderColor: isDark ? '#1a1a2e' : '#fff',
-          pointBorderWidth: 2
-        }));
+        datasets = (datos.series as { name: string; data: number[] }[]).map((serie, index) => {
+          // Para scatter, convertir datos a formato x,y
+          const scatterFormattedData = isScatter || isBubble
+            ? serie.data.map((y, x) => ({ x, y, r: isBubble ? Math.max(5, y / 10) : undefined }))
+            : serie.data;
+
+          return {
+            label: serie.name,
+            data: scatterFormattedData,
+            backgroundColor: isScatter || isBubble
+              ? this.hexToRgba(paleta[index % paleta.length], 0.7) // Scatter/Bubble: puntos visibles
+              : isRadar
+                ? this.hexToRgba(paleta[index % paleta.length], 0.35)
+                : isLineType
+                  ? this.hexToRgba(paleta[index % paleta.length], 0.1)
+                  : this.hexToRgba(paleta[index % paleta.length], 0.8),
+            borderColor: isScatter || isBubble
+              ? paleta[index % paleta.length]
+              : isRadar || isLineType ? paleta[index % paleta.length] : 'transparent',
+            borderWidth: isScatter || isBubble ? 2 : isRadar ? 2 : isLineType ? 2 : 0,
+            fill: tipo === 'area' || isRadar,
+            tension: tipo === 'spline' ? 0.4 : 0.1,
+            stepped: tipo === 'stepline' ? 'before' : false,
+            pointRadius: isScatter ? 8 : isBubble ? undefined : isRadar ? 4 : 0,
+            pointHoverRadius: isScatter ? 10 : isBubble ? undefined : isRadar ? 6 : 4,
+            pointBackgroundColor: paleta[index % paleta.length],
+            pointBorderColor: isDark ? '#18181b' : '#fff',
+            pointBorderWidth: 2,
+            pointStyle: isScatter ? 'circle' : undefined
+          };
+        });
       }
+    }
+
+    // Agregar dataset de comparación temporal si está habilitada (para gráficas de ejes)
+    if (comparacion.habilitada && datasets.length > 0) {
+      const isOverlay = comparacion.modo === 'overlay';
+      const isBar = ['bar', 'column', 'stackedBar', 'groupedBar'].includes(tipo);
+
+      const datasetsComparacion = datasets.map((ds, dsIndex) => {
+        const valoresOriginales = Array.isArray(ds.data) ? ds.data : [];
+        const valoresComparacion = valoresOriginales.map((v: any, i: number) => {
+          if (typeof v === 'number') {
+            // Usar seed consistente basado en valor e índice
+            const seed = (v * 7 + i * 13 + dsIndex * 17) % 100;
+            const variacion = 0.7 + (seed / 100) * 0.5;
+            return Math.round(v * variacion);
+          }
+          // Para scatter/bubble con formato {x, y}
+          if (v && typeof v === 'object' && 'y' in v) {
+            const seed = (v.y * 7 + i * 13 + dsIndex * 17) % 100;
+            const variacion = 0.7 + (seed / 100) * 0.5;
+            return { ...v, y: Math.round(v.y * variacion) };
+          }
+          return v;
+        });
+
+        // Color de comparación depende del modo
+        const colorPrincipal = paleta[dsIndex % paleta.length];
+        const colorAlternativo = paleta[(dsIndex + 2) % paleta.length]; // Color contrastante
+
+        // Overlay: mismo color pero más transparente
+        // Side by side: color diferente y más visible
+        const colorComparacion = isOverlay ? colorPrincipal : colorAlternativo;
+        const opacidadBg = isOverlay ? 0.25 : 0.7;
+        const opacidadBorder = isOverlay ? 0.5 : 1;
+
+        return {
+          ...ds,
+          label: `${ds.label || 'Serie'} (${comparacion.periodo2.label})`,
+          data: valoresComparacion,
+          backgroundColor: isLineType || isRadar
+            ? this.hexToRgba(colorComparacion, isOverlay ? 0.1 : 0.2)
+            : this.hexToRgba(colorComparacion, opacidadBg),
+          borderColor: this.hexToRgba(colorComparacion, opacidadBorder),
+          borderDash: isLineType ? [5, 5] : undefined,
+          borderWidth: isLineType || isRadar ? 2 : (isBar ? 1 : 0),
+          order: isOverlay ? 1 : 0, // En overlay, mostrar detrás
+          pointBackgroundColor: colorComparacion,
+          pointRadius: isLineType ? 3 : (ds.pointRadius || 0),
+          // Para barras en modo overlay, usar patrón diferente
+          ...(isBar && isOverlay ? {
+            borderWidth: 2,
+            borderColor: colorPrincipal
+          } : {})
+        };
+      });
+
+      // Actualizar labels de datasets originales
+      datasets.forEach((ds, index) => {
+        ds.label = `${ds.label || 'Serie'} (${comparacion.periodo1.label})`;
+        ds.order = isOverlay ? 0 : 0; // Mantener al frente en overlay
+      });
+
+      // Agregar datasets de comparación
+      datasets.push(...datasetsComparacion);
     }
 
     return {
@@ -917,6 +1080,13 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     const tipo = this.tipoGrafica();
     const isDark = this.tema() === 'dark';
     const isWidget = this.modoWidget;
+    const comparacionActiva = this.comparacionTemporal().habilitada;
+
+    // Usar CSS tokens del sistema de diseño
+    const textColor = this.getCssToken('textColor', '#334155', '#fafafa');
+    const textColorSecondary = this.getCssToken('textColorSecondary', '#64748b', '#a1a1aa');
+    const surfaceBorder = this.getCssToken('surfaceBorder', '#e2e8f0', '#27272a');
+    const surfaceCard = this.getCssToken('surfaceCard', '#ffffff', '#18181b');
 
     const baseOptions: any = {
       // Responsividad
@@ -930,14 +1100,15 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
       },
 
       plugins: {
-        // Leyenda minimalista
+        // Leyenda minimalista - usando CSS tokens
+        // Mostrar leyenda siempre que haya comparación temporal activa
         legend: {
-          display: this.mostrarLeyenda() && !isWidget, // Ocultar en widget para más espacio
+          display: comparacionActiva || (this.mostrarLeyenda() && !isWidget),
           position: 'bottom' as const,
           labels: {
-            color: isDark ? '#999' : '#666',
-            font: { size: 10, family: 'Inter, sans-serif' },
-            padding: 6,
+            color: textColorSecondary,
+            font: { size: isWidget ? 9 : 10, family: 'Inter, sans-serif' },
+            padding: isWidget ? 4 : 6,
             usePointStyle: true,
             pointStyle: 'circle',
             boxWidth: 6,
@@ -945,13 +1116,13 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
           }
         },
 
-        // Tooltip simple
+        // Tooltip - usando CSS tokens
         tooltip: {
           enabled: true,
-          backgroundColor: isDark ? 'rgba(30,30,40,0.9)' : 'rgba(255,255,255,0.95)',
-          titleColor: isDark ? '#fff' : '#333',
-          bodyColor: isDark ? '#ccc' : '#666',
-          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+          backgroundColor: isDark ? 'rgba(24,24,27,0.95)' : 'rgba(255,255,255,0.95)',
+          titleColor: textColor,
+          bodyColor: textColorSecondary,
+          borderColor: surfaceBorder,
           borderWidth: 1,
           cornerRadius: 4,
           padding: 8,
@@ -1039,15 +1210,46 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
       }
     };
 
+    // Colores de grid usando CSS tokens
+    const gridColor = isDark ? 'rgba(161,161,170,0.1)' : 'rgba(100,116,139,0.1)';
+
     // Configuración específica según el tipo
-    if (this.isNonAxisChart(tipo)) {
+    if (tipo === 'radar') {
+      // Configuración especial para radar - usar scales.r en lugar de x/y
+      baseOptions.plugins.legend.display = this.mostrarLeyenda();
+      baseOptions.plugins.legend.position = 'bottom';
+      baseOptions.scales = {
+        r: {
+          angleLines: {
+            display: true,
+            color: gridColor
+          },
+          grid: {
+            color: gridColor,
+            circular: true
+          },
+          pointLabels: {
+            // Labels en los vértices del radar - crítico para dark mode
+            color: textColor,
+            font: { size: 11, family: 'Inter, sans-serif' }
+          },
+          ticks: {
+            // Valores en el eje radial
+            color: textColorSecondary,
+            backdropColor: 'transparent',
+            font: { size: 9 }
+          },
+          beginAtZero: true
+        }
+      };
+    } else if (this.isNonAxisChart(tipo)) {
       // Gráficas circulares - minimalistas
       baseOptions.cutout = tipo === 'donut' ? '65%' : tipo === 'radialBar' ? '75%' : '0%';
-      baseOptions.plugins.legend.display = this.mostrarLeyenda(); // Mostrar leyenda en circulares
+      baseOptions.plugins.legend.display = this.mostrarLeyenda();
       baseOptions.plugins.legend.position = 'right';
       baseOptions.plugins.legend.labels.padding = 4;
     } else {
-      // Gráficas con ejes - minimalistas
+      // Gráficas con ejes - minimalistas (usando CSS tokens)
       baseOptions.indexAxis = tipo === 'bar' ? 'y' : 'x';
       baseOptions.scales = {
         x: {
@@ -1055,11 +1257,11 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
           border: { display: false },
           grid: {
             display: tipo !== 'bar',
-            color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+            color: gridColor,
             drawTicks: false
           },
           ticks: {
-            color: isDark ? '#888' : '#999',
+            color: textColorSecondary,
             font: { size: 9 },
             padding: 4,
             maxRotation: 45,
@@ -1073,11 +1275,11 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
           border: { display: false },
           grid: {
             display: tipo === 'bar',
-            color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+            color: gridColor,
             drawTicks: false
           },
           ticks: {
-            color: isDark ? '#888' : '#999',
+            color: textColorSecondary,
             font: { size: 9 },
             padding: 4,
             maxTicksLimit: isWidget ? 5 : 8,
@@ -1094,8 +1296,22 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
       // Barras con bordes redondeados sutiles
       if (['bar', 'column', 'stackedBar', 'groupedBar'].includes(tipo)) {
         baseOptions.borderRadius = 3;
-        baseOptions.barPercentage = 0.7;
-        baseOptions.categoryPercentage = 0.85;
+        // Ajustar el espacio de las barras según el modo de comparación
+        if (comparacionActiva) {
+          // Con comparación, hacer más espacio para las barras lado a lado
+          baseOptions.barPercentage = 0.9;
+          baseOptions.categoryPercentage = 0.9;
+        } else {
+          baseOptions.barPercentage = 0.7;
+          baseOptions.categoryPercentage = 0.85;
+        }
+      }
+
+      // Ajustes específicos para modo de comparación
+      if (comparacionActiva) {
+        // Forzar mostrar leyenda cuando hay comparación
+        baseOptions.plugins.legend.display = true;
+        baseOptions.plugins.legend.position = 'top';
       }
     }
 
@@ -1109,14 +1325,28 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     const datos = this.datosSignal();
     const paleta = this.paletas[this.paletaSeleccionada()] || this.paletas['vibrant'];
     const isDark = this.tema() === 'dark';
+    const comparacion = this.comparacionTemporal();
+
+    // CSS tokens del sistema de diseño para ApexCharts
+    const textColor = this.getCssToken('textColor', '#334155', '#fafafa');
+    const textColorSecondary = this.getCssToken('textColorSecondary', '#64748b', '#a1a1aa');
 
     // Validar datos
     if (!datos || !datos.labels || !datos.series) {
       return {
         series: [],
-        chart: { type: 'bar', height: 350 }
+        chart: { type: 'bar', height: '100%' }
       };
     }
+
+    // Función para generar datos de comparación (periodo anterior simulado)
+    const generarDatosComparacion = (valores: number[]): number[] => {
+      return valores.map((v, i) => {
+        const seed = (v * 7 + i * 13) % 100;
+        const variacion = 0.7 + (seed / 100) * 0.5;
+        return Math.round(v * variacion);
+      });
+    };
 
     // Obtener valores numéricos
     let values: number[] = [];
@@ -1138,8 +1368,8 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
 
     const baseChart: ApexChart = {
       type: this.getApexChartType(tipo) as any,
-      height: 400,
-      toolbar: { show: true, tools: { download: true, zoom: false, pan: false } },
+      height: '100%',
+      toolbar: { show: false }, // Desactivar toolbar - usamos nuestros propios botones de exportar
       animations: {
         enabled: this.animaciones(),
         speed: 800,
@@ -1168,7 +1398,6 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
           this.handleDrillDown(categoria, valor);
         },
         dataPointMouseEnter: (_event: any, _chartContext: any, config: any) => {
-          // Efecto hover visual
           const element = document.querySelector(`[data-index="${config.dataPointIndex}"]`);
           if (element) {
             (element as HTMLElement).style.transform = 'scale(1.05)';
@@ -1194,62 +1423,87 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
         position: 'bottom',
         fontFamily: 'Inter, sans-serif',
         fontSize: '11px',
-        labels: { colors: isDark ? '#999' : '#666' }
+        labels: { colors: textColorSecondary }
       },
       dataLabels: {
         enabled: this.mostrarDataLabels(),
-        style: { fontSize: '11px', fontFamily: 'Inter, sans-serif' }
+        style: { fontSize: '11px', fontFamily: 'Inter, sans-serif', colors: [textColor] }
       },
       tooltip: {
         enabled: true,
         theme: isDark ? 'dark' : 'light',
-        style: { fontSize: '11px', fontFamily: 'Inter, sans-serif' }
+        style: { fontSize: '11px', fontFamily: 'Inter, sans-serif' },
+        // Colores explícitos para asegurar visibilidad en dark mode
+        fillSeriesColor: false,
+        marker: { show: true },
+        x: { show: true },
+        y: {
+          formatter: (val: number) => val?.toLocaleString() || '0',
+          title: { formatter: (seriesName: string) => seriesName }
+        },
+        cssClass: isDark ? 'apexcharts-tooltip-dark' : 'apexcharts-tooltip-light'
       },
       responsive: [{
         breakpoint: 480,
-        options: { chart: { height: 300 }, legend: { position: 'bottom' } }
+        options: { legend: { position: 'bottom' } }
       }]
     };
 
     // Configuración específica por tipo
     switch (tipo) {
       case 'funnel':
-        baseOptions.series = sortedData.map(d => d.value);
-        baseOptions.labels = sortedData.map(d => d.label);
-        baseOptions.chart = { ...baseChart, type: 'bar', height: 400, stacked: true };
+        // Formato correcto para ApexCharts funnel: series con array de objetos data
+        baseOptions.series = [{
+          name: 'Funnel',
+          data: sortedData.map(d => d.value)
+        }];
+        baseOptions.chart = { ...baseChart, type: 'bar', height: '100%', stacked: true };
         baseOptions.plotOptions = {
           bar: {
             horizontal: true,
             barHeight: '80%',
             isFunnel: true,
-            borderRadius: 0
+            borderRadius: 0,
+            distributed: true
           }
         };
+        baseOptions.colors = paleta;
         baseOptions.dataLabels = {
           enabled: true,
-          formatter: (val: number, opts: any) => `${sortedData[opts.dataPointIndex].label}: ${val}`,
-          dropShadow: { enabled: false }
+          formatter: (val: number, opts: any) => `${sortedData[opts.dataPointIndex]?.label || ''}: ${val}`,
+          dropShadow: { enabled: false },
+          style: { colors: ['#fff'] }
         };
         baseOptions.xaxis = { categories: sortedData.map(d => d.label) };
+        baseOptions.legend = { show: false };
         break;
 
       case 'pyramid':
-        baseOptions.series = sortedData.map(d => d.value).reverse();
-        baseOptions.labels = sortedData.map(d => d.label).reverse();
-        baseOptions.chart = { ...baseChart, type: 'bar', height: 400, stacked: true };
+        // Formato correcto para ApexCharts pyramid (funnel invertido)
+        const pyramidData = [...sortedData].sort((a, b) => a.value - b.value);
+        baseOptions.series = [{
+          name: 'Pyramid',
+          data: pyramidData.map(d => d.value)
+        }];
+        baseOptions.chart = { ...baseChart, type: 'bar', height: '100%', stacked: true };
         baseOptions.plotOptions = {
           bar: {
             horizontal: true,
             barHeight: '80%',
             isFunnel: true,
-            borderRadius: 0
+            borderRadius: 0,
+            distributed: true
           }
         };
+        baseOptions.colors = paleta;
         baseOptions.dataLabels = {
           enabled: true,
-          formatter: (val: number, opts: any) => `${sortedData.reverse()[opts.dataPointIndex]?.label || ''}: ${val}`,
-          dropShadow: { enabled: false }
+          formatter: (val: number, opts: any) => `${pyramidData[opts.dataPointIndex]?.label || ''}: ${val}`,
+          dropShadow: { enabled: false },
+          style: { colors: ['#fff'] }
         };
+        baseOptions.xaxis = { categories: pyramidData.map(d => d.label) };
+        baseOptions.legend = { show: false };
         break;
 
       case 'radialBar':
@@ -1258,7 +1512,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
         const percentages = values.map(v => Math.round((v / maxValue) * 100));
         baseOptions.series = percentages;
         baseOptions.labels = datos.labels;
-        baseOptions.chart = { ...baseChart, type: 'radialBar', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'radialBar', height: '100%' };
         baseOptions.plotOptions = {
           radialBar: {
             offsetY: 0,
@@ -1287,7 +1541,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
             y: values[i] || 0
           }))
         }];
-        baseOptions.chart = { ...baseChart, type: 'treemap', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'treemap', height: '100%' };
         baseOptions.plotOptions = {
           treemap: {
             distributed: true,
@@ -1316,7 +1570,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
           name: label,
           data: [{ x: 'Valor', y: values[i] || 0 }]
         })) as any;
-        baseOptions.chart = { ...baseChart, type: 'heatmap', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'heatmap', height: '100%' };
         baseOptions.plotOptions = {
           heatmap: {
             shadeIntensity: 0.5,
@@ -1342,7 +1596,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
             z: Math.max(10, values[i] * 2) // Tamaño de burbuja proporcional
           }))
         }];
-        baseOptions.chart = { ...baseChart, type: 'bubble', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'bubble', height: '100%' };
         baseOptions.xaxis = {
           tickAmount: datos.labels.length,
           labels: {
@@ -1366,7 +1620,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
           y: i === 0 ? d.value : (i === sortedData.length - 1 ? d.value : d.value - (sortedData[i-1]?.value || 0))
         }));
         baseOptions.series = [{ name: 'Impacto', data: waterfallData }];
-        baseOptions.chart = { ...baseChart, type: 'bar', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'bar', height: '100%' };
         baseOptions.plotOptions = {
           bar: {
             horizontal: false,
@@ -1391,7 +1645,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
         const gaugeValue = values.length > 0 ? Math.round((values[0] / Math.max(...values)) * 100) : 0;
         baseOptions.series = [gaugeValue];
         baseOptions.labels = [datos.labels[0] || 'Valor'];
-        baseOptions.chart = { ...baseChart, type: 'radialBar', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'radialBar', height: '100%' };
         baseOptions.plotOptions = {
           radialBar: {
             startAngle: -135,
@@ -1430,7 +1684,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
         } else {
           baseOptions.series = [{ name: this.titulo, data: values }];
         }
-        baseOptions.chart = { ...baseChart, type: 'bar', height: 400, stacked: true };
+        baseOptions.chart = { ...baseChart, type: 'bar', height: '100%', stacked: true };
         baseOptions.plotOptions = {
           bar: {
             horizontal: true,
@@ -1448,7 +1702,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
         } else {
           baseOptions.series = [{ name: this.titulo, data: values }];
         }
-        baseOptions.chart = { ...baseChart, type: 'area', height: 400, stacked: true };
+        baseOptions.chart = { ...baseChart, type: 'area', height: '100%', stacked: true };
         baseOptions.stroke = { curve: 'smooth', width: 2 };
         baseOptions.fill = { type: 'gradient', gradient: { opacityFrom: 0.6, opacityTo: 0.1 } };
         baseOptions.xaxis = { categories: datos.labels };
@@ -1465,7 +1719,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
             return Math.round(slice.reduce((a, b) => a + b, 0) / slice.length);
           })}
         ];
-        baseOptions.chart = { ...baseChart, type: 'line', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'line', height: '100%' };
         baseOptions.stroke = { width: [0, 3], curve: 'smooth' };
         baseOptions.plotOptions = { bar: { columnWidth: '60%', borderRadius: 4 } };
         baseOptions.xaxis = { categories: datos.labels };
@@ -1484,7 +1738,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
           type: 'boxPlot',
           data: [{ x: this.titulo, y: [min, q1, median, q3, max] }]
         }];
-        baseOptions.chart = { ...baseChart, type: 'boxPlot', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'boxPlot', height: '100%' };
         baseOptions.plotOptions = {
           boxPlot: {
             colors: {
@@ -1505,7 +1759,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
             goals: [{ name: 'Meta', value: bulletTarget, strokeWidth: 3, strokeColor: paleta[0] }]
           }))
         }];
-        baseOptions.chart = { ...baseChart, type: 'bar', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'bar', height: '100%' };
         baseOptions.plotOptions = {
           bar: {
             horizontal: true,
@@ -1524,7 +1778,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
             y: [Math.min(values[i] || 0, (values[i] || 0) * 0.5), values[i] || 0]
           }))
         }];
-        baseOptions.chart = { ...baseChart, type: 'rangeBar', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'rangeBar', height: '100%' };
         baseOptions.plotOptions = {
           bar: {
             horizontal: true,
@@ -1550,7 +1804,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
           });
         });
         baseOptions.series = riskData as any;
-        baseOptions.chart = { ...baseChart, type: 'heatmap', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'heatmap', height: '100%' };
         baseOptions.plotOptions = {
           heatmap: {
             shadeIntensity: 0.5,
@@ -1583,7 +1837,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
           });
         });
         baseOptions.series = corrData as any;
-        baseOptions.chart = { ...baseChart, type: 'heatmap', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'heatmap', height: '100%' };
         baseOptions.plotOptions = {
           heatmap: {
             shadeIntensity: 0.5,
@@ -1611,7 +1865,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
             y: values[i] || 0
           }))
         }];
-        baseOptions.chart = { ...baseChart, type: 'treemap', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'treemap', height: '100%' };
         baseOptions.plotOptions = {
           treemap: {
             distributed: true,
@@ -1634,7 +1888,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
           y: values[i] || 0
         }));
         baseOptions.series = [{ data: sankeyData }];
-        baseOptions.chart = { ...baseChart, type: 'treemap', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'treemap', height: '100%' };
         baseOptions.plotOptions = {
           treemap: {
             distributed: true,
@@ -1649,30 +1903,212 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
         break;
 
       case 'regression':
-        // Línea con regresión
-        const n = values.length;
-        const sumX = values.reduce((acc, _, i) => acc + i, 0);
-        const sumY = values.reduce((acc, v) => acc + v, 0);
-        const sumXY = values.reduce((acc, v, i) => acc + i * v, 0);
-        const sumX2 = values.reduce((acc, _, i) => acc + i * i, 0);
-        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-        const intercept = (sumY - slope * sumX) / n;
-        const regressionLine = values.map((_, i) => Math.round(slope * i + intercept));
+        // Línea con regresión - cálculo de mínimos cuadrados
+        const regN = values.length;
+        const regSumX = values.reduce((acc, _, i) => acc + i, 0);
+        const regSumY = values.reduce((acc, v) => acc + v, 0);
+        const regSumXY = values.reduce((acc, v, i) => acc + i * v, 0);
+        const regSumX2 = values.reduce((acc, _, i) => acc + i * i, 0);
+        const regDenom = regN * regSumX2 - regSumX * regSumX;
+        const regSlope = regDenom !== 0 ? (regN * regSumXY - regSumX * regSumY) / regDenom : 0;
+        const regIntercept = (regSumY - regSlope * regSumX) / regN;
+
+        // Scatter para datos reales y línea para regresión
+        const scatterData = values.map((v, i) => ({ x: datos.labels[i] || `${i}`, y: v }));
+        const regressionLineData = values.map((_, i) => ({
+          x: datos.labels[i] || `${i}`,
+          y: Math.round(regSlope * i + regIntercept)
+        }));
 
         baseOptions.series = [
-          { name: 'Datos', type: 'scatter', data: values.map((v, i) => ({ x: i, y: v })) },
-          { name: 'Regresión', type: 'line', data: regressionLine }
+          { name: 'Datos', type: 'scatter', data: scatterData },
+          { name: 'Regresión', type: 'line', data: regressionLineData }
         ];
-        baseOptions.chart = { ...baseChart, type: 'line', height: 400 };
+        baseOptions.chart = { ...baseChart, type: 'line', height: '100%' };
         baseOptions.stroke = { width: [0, 3], curve: 'straight' };
+        baseOptions.markers = { size: [6, 0] };
+        baseOptions.colors = [paleta[0], paleta[1] || paleta[0]];
+        baseOptions.xaxis = {
+          type: 'category',
+          categories: datos.labels,
+          labels: { style: { colors: textColor } }
+        };
+        baseOptions.yaxis = { labels: { style: { colors: textColor } } };
+        baseOptions.dataLabels = { enabled: false };
+        baseOptions.legend = {
+          show: true,
+          labels: { colors: textColor }
+        };
+        break;
+
+      case 'rangeArea':
+        // Área con rango (min-max)
+        const rangeData = values.map((v, i) => ({
+          x: datos.labels[i],
+          y: [Math.max(0, v * 0.7), v * 1.3] // Rango simulado ±30%
+        }));
+        baseOptions.series = [{ name: 'Rango', data: rangeData }];
+        baseOptions.chart = { ...baseChart, type: 'rangeArea', height: '100%' };
+        baseOptions.stroke = { curve: 'smooth', width: 2 };
+        baseOptions.fill = { opacity: 0.4 };
         baseOptions.xaxis = { categories: datos.labels };
         baseOptions.dataLabels = { enabled: false };
+        break;
+
+      case 'trendline':
+        // Línea de tendencia con proyección IA
+        const trendN = values.length;
+        const trendSumX = values.reduce((acc, _, i) => acc + i, 0);
+        const trendSumY = values.reduce((acc, v) => acc + v, 0);
+        const trendSumXY = values.reduce((acc, v, i) => acc + i * v, 0);
+        const trendSumX2 = values.reduce((acc, _, i) => acc + i * i, 0);
+        const trendSlope = (trendN * trendSumXY - trendSumX * trendSumY) / (trendN * trendSumX2 - trendSumX * trendSumX);
+        const trendIntercept = (trendSumY - trendSlope * trendSumX) / trendN;
+        const trendLineData = values.map((_, i) => Math.round(trendSlope * i + trendIntercept));
+        // Proyección futura (3 puntos adicionales)
+        const futurePoints = [1, 2, 3].map(i => Math.round(trendSlope * (trendN + i - 1) + trendIntercept));
+        const extendedLabels = [...datos.labels, 'Proy. 1', 'Proy. 2', 'Proy. 3'];
+
+        baseOptions.series = [
+          { name: 'Datos', type: 'line', data: [...values, null, null, null] },
+          { name: 'Tendencia IA', type: 'line', data: [...trendLineData, ...futurePoints] }
+        ];
+        baseOptions.chart = { ...baseChart, type: 'line', height: '100%' };
+        baseOptions.stroke = { width: [3, 2], curve: 'smooth', dashArray: [0, 5] };
+        baseOptions.xaxis = { categories: extendedLabels };
+        baseOptions.annotations = {
+          xaxis: [{
+            x: datos.labels[datos.labels.length - 1],
+            borderColor: paleta[1],
+            label: { text: 'Proyección', style: { color: '#fff', background: paleta[1] } }
+          }]
+        };
+        break;
+
+      case 'forecast':
+        // Pronóstico con intervalos de confianza
+        const forecastN = values.length;
+        const forecastMean = values.reduce((a, b) => a + b, 0) / forecastN;
+        const forecastStd = Math.sqrt(values.reduce((acc, v) => acc + Math.pow(v - forecastMean, 2), 0) / forecastN);
+        const forecastLabels = [...datos.labels, 'F+1', 'F+2', 'F+3'];
+        const lastValue = values[values.length - 1];
+        const forecastValues = [lastValue, lastValue * 1.05, lastValue * 1.08];
+
+        baseOptions.series = [
+          { name: 'Histórico', type: 'line', data: [...values, null, null, null] },
+          { name: 'Pronóstico', type: 'line', data: [...Array(values.length).fill(null), ...forecastValues] },
+          { name: 'Límite sup.', type: 'line', data: [...Array(values.length).fill(null), ...forecastValues.map(v => v + forecastStd)] },
+          { name: 'Límite inf.', type: 'line', data: [...Array(values.length).fill(null), ...forecastValues.map(v => Math.max(0, v - forecastStd))] }
+        ];
+        baseOptions.chart = { ...baseChart, type: 'line', height: '100%' };
+        baseOptions.stroke = { width: [3, 3, 1, 1], curve: 'smooth', dashArray: [0, 5, 3, 3] };
+        baseOptions.colors = [paleta[0], paleta[1], paleta[2], paleta[2]];
+        baseOptions.xaxis = { categories: forecastLabels };
+        baseOptions.fill = { type: 'solid', opacity: [1, 1, 0.3, 0.3] };
         break;
 
       default:
         // Fallback para otros tipos
         baseOptions.series = [{ name: this.titulo, data: values }];
         baseOptions.xaxis = { categories: datos.labels };
+    }
+
+    // ==================== COMPARACIÓN TEMPORAL PARA APEXCHARTS ====================
+    // Agregar datos de comparación si está habilitada
+    if (comparacion.habilitada && baseOptions.series && Array.isArray(baseOptions.series)) {
+      const isOverlay = comparacion.modo === 'overlay';
+
+      // Tipos que soportan comparación (con series de datos numéricos)
+      const tiposSoportados = [
+        'bar', 'column', 'stackedBar', 'groupedBar', 'stackedBarHorizontal',
+        'line', 'area', 'stackedArea', 'spline', 'stepline',
+        'radar', 'bubble', 'scatter'
+      ];
+
+      // Para tipos con series de objetos {name, data}
+      if (tiposSoportados.includes(tipo) && baseOptions.series.length > 0) {
+        const seriesComparacion: any[] = [];
+        const coloresComparacion: string[] = [];
+
+        baseOptions.series.forEach((serie: any, index: number) => {
+          if (serie.data && Array.isArray(serie.data)) {
+            const datosComparacion = generarDatosComparacion(
+              serie.data.map((d: any) => typeof d === 'number' ? d : (d?.y || 0))
+            );
+
+            // Color de comparación
+            const colorPrincipal = paleta[index % paleta.length];
+            const colorAlternativo = paleta[(index + 2) % paleta.length];
+            const colorComp = isOverlay ? colorPrincipal : colorAlternativo;
+
+            seriesComparacion.push({
+              name: `${serie.name || 'Serie'} (${comparacion.periodo2.label})`,
+              data: datosComparacion,
+              type: serie.type || undefined
+            });
+            coloresComparacion.push(colorComp);
+
+            // Actualizar nombre de serie original
+            serie.name = `${serie.name || 'Serie'} (${comparacion.periodo1.label})`;
+          }
+        });
+
+        // Agregar series de comparación
+        if (seriesComparacion.length > 0) {
+          baseOptions.series = [...baseOptions.series, ...seriesComparacion];
+
+          // Actualizar colores
+          const coloresOriginales = paleta.slice(0, baseOptions.series.length - seriesComparacion.length);
+          baseOptions.colors = [...coloresOriginales, ...coloresComparacion.map(c =>
+            isOverlay ? this.hexToRgba(c, 0.4) : c
+          )];
+
+          // Mostrar leyenda cuando hay comparación
+          baseOptions.legend = {
+            ...baseOptions.legend,
+            show: true,
+            position: 'top'
+          };
+
+          // Para barras, ajustar el ancho
+          if (['bar', 'column', 'stackedBar', 'groupedBar'].includes(tipo)) {
+            baseOptions.plotOptions = {
+              ...baseOptions.plotOptions,
+              bar: {
+                ...(baseOptions.plotOptions?.bar || {}),
+                columnWidth: isOverlay ? '70%' : '85%'
+              }
+            };
+          }
+
+          // Para líneas en modo overlay, usar línea punteada para comparación
+          if (['line', 'area', 'spline', 'stepline'].includes(tipo) && isOverlay) {
+            const strokeWidth = baseOptions.stroke?.width;
+            const dashArray = Array(baseOptions.series.length - seriesComparacion.length).fill(0);
+            const dashArrayComp = Array(seriesComparacion.length).fill(5);
+            baseOptions.stroke = {
+              ...baseOptions.stroke,
+              width: typeof strokeWidth === 'number'
+                ? Array(baseOptions.series.length).fill(strokeWidth)
+                : (strokeWidth || [2]),
+              dashArray: [...dashArray, ...dashArrayComp]
+            };
+          }
+        }
+      }
+
+      // Para tipos circulares (radialBar, pie, donut) - mostrar en tooltip
+      if (['radialBar', 'gauge'].includes(tipo) && typeof baseOptions.series[0] === 'number') {
+        // Para radialBar, agregar valores de comparación como segunda serie
+        const valoresComparacion = generarDatosComparacion(baseOptions.series as number[]);
+
+        // Actualizar labels para mostrar ambos periodos
+        if (baseOptions.labels) {
+          baseOptions.labels = baseOptions.labels.map((label: string, i: number) =>
+            `${label}\n(Actual: ${baseOptions.series![i]}% | Anterior: ${valoresComparacion[i]}%)`
+          );
+        }
+      }
     }
 
     return baseOptions;
@@ -1719,7 +2155,10 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
       'sankey': 'treemap', // ApexCharts no tiene sankey nativo, usamos treemap como fallback
       'sunburst': 'treemap', // ApexCharts no tiene sunburst nativo, usamos treemap como fallback
       'riskMatrix': 'heatmap',
-      'correlationMatrix': 'heatmap'
+      'correlationMatrix': 'heatmap',
+      // IA/Predictivo
+      'trendline': 'line',
+      'forecast': 'line'
     };
     return mapping[tipo] || 'bar';
   }
@@ -1737,11 +2176,9 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  // Método legacy - drill-down siempre activo, solo limpia el stack
   toggleDrillDown(): void {
-    this.drillDownActivo.update(v => !v);
-    if (!this.drillDownActivo()) {
-      this.drillDownStack.set([]);
-    }
+    this.drillDownStack.set([]);
   }
 
   navegarDrillDown(index: number): void {
@@ -1814,9 +2251,17 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     this.anotacionEditando.set(null);
   }
 
+  private getAnotacionesStorageKey(): string {
+    // Usar widgetId para separar anotaciones por widget
+    return this.widgetId
+      ? `graficas-anotaciones-${this.widgetId}`
+      : 'graficas-anotaciones';
+  }
+
   private guardarAnotacionesEnStorage(): void {
     try {
-      localStorage.setItem('graficas-anotaciones', JSON.stringify(this.anotaciones()));
+      const key = this.getAnotacionesStorageKey();
+      localStorage.setItem(key, JSON.stringify(this.anotaciones()));
     } catch (e) {
       console.error('Error guardando anotaciones:', e);
     }
@@ -1824,7 +2269,8 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
 
   private cargarAnotacionesDesdeStorage(): void {
     try {
-      const stored = localStorage.getItem('graficas-anotaciones');
+      const key = this.getAnotacionesStorageKey();
+      const stored = localStorage.getItem(key);
       if (stored) {
         const anotaciones = JSON.parse(stored);
         anotaciones.forEach((a: any) => a.fecha = new Date(a.fecha));
@@ -1911,7 +2357,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   }
 
   toggleTema(): void {
-    this.tema.update(t => t === 'light' ? 'dark' : 'light');
+    this.themeService.toggleTheme();
   }
 
   exportarPNG(): void {
@@ -2036,7 +2482,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     this.animaciones.set(config.configuracion.animaciones);
     this.mostrarLeyenda.set(config.configuracion.mostrarLeyenda);
     this.mostrarDataLabels.set(config.configuracion.mostrarDataLabels);
-    this.tema.set(config.configuracion.tema);
+    this.themeService.setTheme(config.configuracion.tema);
     this.tabActivo.set('config');
   }
 
@@ -2151,7 +2597,7 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     if (config.animaciones !== undefined) this.animaciones.set(config.animaciones);
     if (config.mostrarLeyenda !== undefined) this.mostrarLeyenda.set(config.mostrarLeyenda);
     if (config.mostrarDataLabels !== undefined) this.mostrarDataLabels.set(config.mostrarDataLabels);
-    if (config.tema) this.tema.set(config.tema);
+    if (config.tema) this.themeService.setTheme(config.tema);
 
     // Manejar filtro
     if (config.filtro) {
@@ -2376,7 +2822,7 @@ EJEMPLOS de respuestas correctas:
     if (config?.animaciones !== undefined) this.animaciones.set(config.animaciones);
     if (config?.mostrarLeyenda !== undefined) this.mostrarLeyenda.set(config.mostrarLeyenda);
     if (config?.mostrarDataLabels !== undefined) this.mostrarDataLabels.set(config.mostrarDataLabels);
-    if (config?.tema) this.tema.set(config.tema);
+    if (config?.tema) this.themeService.setTheme(config.tema);
 
     // Manejar filtro
     if (quitarFiltro) {
@@ -2608,48 +3054,101 @@ EJEMPLOS de respuestas correctas:
    */
   onChartContextMenu(event: MouseEvent): void {
     event.preventDefault();
+    event.stopPropagation();
 
-    // Obtener información del punto más cercano al clic
+    const datos = this.datosSignal();
+    if (datos.labels.length === 0) return;
+
+    // Obtener el contenedor del chart
     const chartElement = this.chartContainerRef?.nativeElement;
     if (!chartElement) return;
 
-    // Para gráficas de Chart.js, intentar obtener el elemento del chart
+    // Buscar el elemento de gráfica (canvas para Chart.js, cualquier SVG para ApexCharts)
     const canvas = chartElement.querySelector('canvas');
+    const apexWrapper = chartElement.querySelector('.apexcharts-canvas');
+    const svg = apexWrapper?.querySelector('svg') || chartElement.querySelector('svg');
+
+    // Calcular rect para posicionamiento
+    let rect: DOMRect;
     if (canvas) {
-      // Calcular el índice aproximado basado en la posición del clic
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const datos = this.datosSignal();
+      rect = canvas.getBoundingClientRect();
+    } else if (svg) {
+      rect = svg.getBoundingClientRect();
+    } else if (apexWrapper) {
+      rect = (apexWrapper as HTMLElement).getBoundingClientRect();
+    } else {
+      rect = chartElement.getBoundingClientRect();
+    }
 
-      if (datos.labels.length > 0) {
-        // Calcular índice aproximado
-        const indice = Math.floor((x / rect.width) * datos.labels.length);
-        const indiceValido = Math.max(0, Math.min(indice, datos.labels.length - 1));
+    // Calcular posición relativa del clic
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
 
-        // Obtener valor
-        let valor = 0;
-        if (Array.isArray(datos.series) && typeof datos.series[0] === 'number') {
-          valor = (datos.series as number[])[indiceValido] || 0;
-        } else if (Array.isArray(datos.series) && datos.series.length > 0 && typeof datos.series[0] === 'object') {
-          valor = (datos.series as { name: string; data: number[] }[])[0].data[indiceValido] || 0;
-        }
+    // Calcular índice aproximado basado en la posición del clic y tipo de gráfica
+    const tipoGrafica = this.tipoGrafica();
+    let indiceValido: number;
 
-        // Establecer el datapoint seleccionado
-        this.selectedDataPoint.set({
-          categoria: datos.labels[indiceValido],
-          valor: valor,
-          indice: indiceValido
-        });
+    // Clasificar tipos de gráficas
+    const esCircular = ['pie', 'donut', 'radialBar', 'gauge', 'polarArea'].includes(tipoGrafica);
+    const esHorizontal = ['bar', 'stackedBarHorizontal', 'funnel', 'pyramid'].includes(tipoGrafica);
+    const esMatriz = ['heatmap', 'treemap', 'riskMatrix', 'correlationMatrix'].includes(tipoGrafica);
 
-        // Actualizar los items del menú contextual
-        this.contextMenuItems.set(this.drillDownOptions());
+    if (esCircular && rect.width > 0 && rect.height > 0) {
+      // Para gráficas circulares, calcular basado en ángulo desde el centro
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const dx = x - centerX;
+      const dy = y - centerY;
+      let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+      angle = (angle + 90 + 360) % 360;
+      indiceValido = Math.floor((angle / 360) * datos.labels.length);
+    } else if (esHorizontal && rect.height > 0) {
+      // Para gráficas horizontales, calcular basado en posición Y
+      const indice = Math.floor((y / rect.height) * datos.labels.length);
+      indiceValido = indice;
+    } else if (esMatriz && rect.width > 0 && rect.height > 0) {
+      // Para heatmaps y matrices, calcular basado en posición Y (filas)
+      const indice = Math.floor((y / rect.height) * datos.labels.length);
+      indiceValido = indice;
+    } else if (rect.width > 0) {
+      // Para gráficas verticales (columnas, líneas), calcular basado en posición X
+      const indice = Math.floor((x / rect.width) * datos.labels.length);
+      indiceValido = indice;
+    } else {
+      // Fallback: usar primer elemento
+      indiceValido = 0;
+    }
 
-        // Mostrar el menú contextual
-        if (this.drillDownMenu) {
-          this.drillDownMenu.show(event);
-        }
+    // Asegurar que el índice sea válido
+    indiceValido = Math.max(0, Math.min(indiceValido, datos.labels.length - 1));
+
+    // Obtener valor
+    let valor = 0;
+    if (Array.isArray(datos.series) && datos.series.length > 0) {
+      if (typeof datos.series[0] === 'number') {
+        valor = (datos.series as number[])[indiceValido] || 0;
+      } else if (typeof datos.series[0] === 'object' && 'data' in (datos.series[0] as any)) {
+        const seriesData = datos.series as { name: string; data: number[] }[];
+        valor = seriesData[0]?.data?.[indiceValido] || 0;
       }
     }
+
+    // Establecer el datapoint seleccionado
+    this.selectedDataPoint.set({
+      categoria: datos.labels[indiceValido],
+      valor: valor,
+      indice: indiceValido
+    });
+
+    // Actualizar los items del menú contextual
+    this.contextMenuItems.set(this.drillDownOptions());
+
+    // Mostrar el menú contextual
+    setTimeout(() => {
+      if (this.drillDownMenu) {
+        this.drillDownMenu.show(event);
+      }
+    }, 0);
   }
 
   /**
@@ -2673,5 +3172,85 @@ EJEMPLOS de respuestas correctas:
         indice: indice
       });
     }
+  }
+
+  /**
+   * Manejar mousedown para detectar clic derecho (button === 2)
+   * Esto funciona mejor que contextmenu para ApexCharts
+   */
+  onChartMouseDown(event: MouseEvent): void {
+    // Solo procesar clic derecho (button 2)
+    if (event.button !== 2) return;
+
+    // Prevenir comportamiento por defecto solo para clic derecho
+    event.preventDefault();
+
+    const datos = this.datosSignal();
+    if (datos.labels.length === 0) return;
+
+    const chartElement = this.chartContainerRef?.nativeElement;
+    if (!chartElement) return;
+
+    // Obtener rect del contenedor
+    const rect = chartElement.getBoundingClientRect();
+
+    // Calcular posición relativa
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Determinar tipo de gráfica y calcular índice
+    const tipoGrafica = this.tipoGrafica();
+    let indiceValido: number;
+
+    const esCircular = ['pie', 'donut', 'radialBar', 'gauge', 'polarArea'].includes(tipoGrafica);
+    const esHorizontal = ['bar', 'stackedBarHorizontal', 'funnel', 'pyramid'].includes(tipoGrafica);
+    const esMatriz = ['heatmap', 'treemap', 'riskMatrix', 'correlationMatrix'].includes(tipoGrafica);
+
+    if (esCircular && rect.width > 0 && rect.height > 0) {
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const dx = x - centerX;
+      const dy = y - centerY;
+      let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+      angle = (angle + 90 + 360) % 360;
+      indiceValido = Math.floor((angle / 360) * datos.labels.length);
+    } else if (esHorizontal && rect.height > 0) {
+      indiceValido = Math.floor((y / rect.height) * datos.labels.length);
+    } else if (esMatriz && rect.height > 0) {
+      indiceValido = Math.floor((y / rect.height) * datos.labels.length);
+    } else if (rect.width > 0) {
+      indiceValido = Math.floor((x / rect.width) * datos.labels.length);
+    } else {
+      indiceValido = 0;
+    }
+
+    indiceValido = Math.max(0, Math.min(indiceValido, datos.labels.length - 1));
+
+    // Obtener valor
+    let valor = 0;
+    if (Array.isArray(datos.series) && datos.series.length > 0) {
+      if (typeof datos.series[0] === 'number') {
+        valor = (datos.series as number[])[indiceValido] || 0;
+      } else if (typeof datos.series[0] === 'object' && 'data' in (datos.series[0] as any)) {
+        const seriesData = datos.series as { name: string; data: number[] }[];
+        valor = seriesData[0]?.data?.[indiceValido] || 0;
+      }
+    }
+
+    // Establecer datapoint seleccionado
+    this.selectedDataPoint.set({
+      categoria: datos.labels[indiceValido],
+      valor: valor,
+      indice: indiceValido
+    });
+
+    // Actualizar menú y mostrarlo
+    this.contextMenuItems.set(this.drillDownOptions());
+
+    setTimeout(() => {
+      if (this.drillDownMenu) {
+        this.drillDownMenu.show(event);
+      }
+    }, 0);
   }
 }

@@ -56,9 +56,16 @@
       }
 
       .chart-actions {
-        .p-button {
-          width: 28px;
-          height: 28px;
+        gap: 0.125rem;
+
+        :host ::ng-deep .p-button {
+          width: 26px;
+          height: 26px;
+          border-radius: 6px;
+
+          .pi {
+            font-size: 0.75rem;
+          }
         }
       }
     }
@@ -89,6 +96,29 @@
         }
       }
 
+      // ApexCharts en modo widget - crítico para redimensionamiento correcto
+      apx-chart {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+
+        ::ng-deep {
+          .apexcharts-canvas {
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 0 !important; // Permite reducir tamaño en widget pequeño
+          }
+
+          // Contenedor SVG responsivo
+          svg {
+            width: 100%;
+            height: 100%;
+          }
+        }
+      }
+
       canvas {
         max-width: 100%;
         max-height: 100%;
@@ -107,6 +137,39 @@
         .stat-label {
           font-size: 0.625rem;
         }
+      }
+    }
+
+    // Drill-down breadcrumbs en modo widget - compactos y sin afectar layout
+    .drilldown-breadcrumbs {
+      padding: 0.25rem 0.5rem;
+      margin-bottom: 0.25rem;
+      flex-shrink: 0; // No permitir que se encoja
+      font-size: 0.75rem;
+
+      .breadcrumb-item {
+        padding: 0.125rem 0.375rem;
+        font-size: 0.7rem;
+      }
+
+      .breadcrumb-back {
+        width: 20px;
+        height: 20px;
+
+        i {
+          font-size: 0.625rem;
+        }
+      }
+    }
+
+    // Chip de filtro activo en modo widget
+    .filtro-activo-chip {
+      flex-shrink: 0;
+      margin-bottom: 0.25rem;
+
+      ::ng-deep .p-chip {
+        font-size: 0.7rem;
+        padding: 0.125rem 0.375rem;
       }
     }
 
@@ -710,6 +773,63 @@
 .chart-actions {
   display: flex;
   gap: 0.25rem;
+  align-items: center;
+
+  // Estilos unificados para todos los botones de acción
+  :host ::ng-deep .p-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    // Iconos con estilo unificado
+    .pi {
+      font-size: 0.875rem;
+      color: var(--text-color-secondary);
+      transition: color 0.2s ease;
+    }
+
+    &:hover {
+      background: var(--surface-100);
+
+      .pi {
+        color: var(--text-color);
+      }
+    }
+
+    // Estado activo (severity="success")
+    &.p-button-success {
+      background: var(--green-50);
+
+      .pi {
+        color: var(--green-600);
+      }
+
+      &:hover {
+        background: var(--green-100);
+      }
+    }
+
+    // Dark mode
+    :root.dark-mode &,
+    [data-theme="dark"] & {
+      &:hover {
+        background: var(--surface-700);
+      }
+
+      &.p-button-success {
+        background: rgba(34, 197, 94, 0.15);
+
+        .pi {
+          color: var(--green-400);
+        }
+
+        &:hover {
+          background: rgba(34, 197, 94, 0.25);
+        }
+      }
+    }
+  }
 }
 
 .chart-container {
@@ -1650,18 +1770,52 @@
 }
 
 // ==================== APEX CHARTS CONTAINER ====================
-.chart-container {
-  // ApexCharts wrapper
+// NOTA: En modo widget, estos estilos son sobreescritos por .modo-widget .chart-container apx-chart
+.graficas-interactivas-container:not(.modo-widget) .chart-container {
+  // ApexCharts wrapper - responsivo con altura mínima (solo para modo normal, no widget)
   apx-chart {
     flex: 1;
-    min-height: 0;
+    min-height: 200px; // Altura mínima solo para modo normal
     width: 100%;
     height: 100%;
-    display: flex;
+    display: block;
 
-    ::ng-deep .apexcharts-canvas {
-      width: 100% !important;
-      height: 100% !important;
+    ::ng-deep {
+      // El contenedor principal de ApexCharts
+      > div {
+        width: 100%;
+        height: 100%;
+        min-height: 200px;
+      }
+
+      .apexcharts-canvas {
+        width: 100% !important;
+        min-height: 200px;
+        height: 100% !important;
+      }
+
+      // Asegurar que SVG también sea responsivo
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      // Fix específico para charts radiales que no se redimensionan
+      .apexcharts-radialbar-track,
+      .apexcharts-radialbar-hollow {
+        transform-origin: center center;
+      }
+
+      // Fix para heatmap y treemap
+      .apexcharts-heatmap-rect,
+      .apexcharts-treemap-rect {
+        transition: all 0.2s ease;
+      }
+
+      // Fix para sunburst
+      .apexcharts-pie-area {
+        transform-origin: center center;
+      }
     }
 
     // Animaciones avanzadas en hover para ApexCharts
@@ -1693,10 +1847,66 @@
         animation: chart-pulse 0.5s ease-out;
       }
 
-      // Tooltips con animación
+      // Tooltips con animación y colores explícitos
       .apexcharts-tooltip {
         animation: tooltip-fade-in 0.2s ease-out;
         backdrop-filter: blur(4px);
+        border-radius: 8px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+
+        // Dark mode tooltip styling
+        &.apexcharts-theme-dark,
+        &.apexcharts-tooltip-dark {
+          background: rgba(24, 24, 27, 0.95) !important;
+          border: 1px solid rgba(63, 63, 70, 0.8) !important;
+          color: #fafafa !important;
+
+          .apexcharts-tooltip-title {
+            background: rgba(39, 39, 42, 0.95) !important;
+            border-bottom: 1px solid rgba(63, 63, 70, 0.6) !important;
+            color: #fafafa !important;
+          }
+
+          .apexcharts-tooltip-text-y-label,
+          .apexcharts-tooltip-text-y-value,
+          .apexcharts-tooltip-text-goals-label,
+          .apexcharts-tooltip-text-goals-value,
+          .apexcharts-tooltip-text-z-label,
+          .apexcharts-tooltip-text-z-value {
+            color: #fafafa !important;
+          }
+
+          .apexcharts-tooltip-series-group {
+            background: transparent !important;
+          }
+        }
+
+        // Light mode tooltip styling
+        &.apexcharts-theme-light,
+        &.apexcharts-tooltip-light {
+          background: rgba(255, 255, 255, 0.98) !important;
+          border: 1px solid rgba(226, 232, 240, 0.8) !important;
+          color: #1e293b !important;
+
+          .apexcharts-tooltip-title {
+            background: rgba(248, 250, 252, 0.95) !important;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6) !important;
+            color: #1e293b !important;
+          }
+
+          .apexcharts-tooltip-text-y-label,
+          .apexcharts-tooltip-text-y-value {
+            color: #334155 !important;
+          }
+        }
+      }
+
+      // Tooltip para gráficas específicas (heatmap, treemap, etc.)
+      .apexcharts-tooltip-candlestick,
+      .apexcharts-tooltip-boxPlot {
+        .apexcharts-tooltip-text {
+          color: inherit !important;
+        }
       }
 
       // Sombras suaves en los elementos
@@ -1812,5 +2022,147 @@
     &.active {
       background: rgba(var(--primary-color-rgb), 0.2);
     }
+  }
+}
+
+// ==================== ESTILOS GLOBALES PARA APEXCHARTS TOOLTIPS ====================
+// Los tooltips de ApexCharts se renderizan en el body, fuera del componente,
+// por lo que necesitan estilos globales para funcionar correctamente.
+
+// Usar :host-context para detectar dark mode y aplicar estilos globales
+:host {
+  // Estilos globales para tooltips de ApexCharts (se renderizan fuera del componente)
+  &::ng-deep {
+    // Forzar estilos en el body para tooltips
+    body .apexcharts-tooltip,
+    .apexcharts-tooltip {
+      border-radius: 8px !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+      font-family: 'Inter', sans-serif !important;
+      font-size: 12px !important;
+      z-index: 10000 !important;
+
+      // Asegurar que el texto sea visible
+      * {
+        font-family: inherit !important;
+      }
+    }
+  }
+}
+
+// Estilos globales a nivel de documento para tooltips de ApexCharts
+// Estos se aplicarán independientemente del encapsulamiento del componente
+::ng-deep {
+  // Tooltip base
+  .apexcharts-tooltip {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+    backdrop-filter: blur(8px) !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+
+    // DARK MODE - Estilos específicos
+    &.apexcharts-theme-dark,
+    &.apexcharts-tooltip-dark {
+      background: rgba(24, 24, 27, 0.98) !important;
+      border: 1px solid rgba(63, 63, 70, 0.9) !important;
+      color: #fafafa !important;
+
+      .apexcharts-tooltip-title {
+        background: rgba(39, 39, 42, 0.98) !important;
+        border-bottom: 1px solid rgba(63, 63, 70, 0.7) !important;
+        color: #fafafa !important;
+        font-weight: 600 !important;
+        padding: 8px 12px !important;
+      }
+
+      // Todos los textos del tooltip en dark mode
+      .apexcharts-tooltip-text,
+      .apexcharts-tooltip-text-y-label,
+      .apexcharts-tooltip-text-y-value,
+      .apexcharts-tooltip-text-goals-label,
+      .apexcharts-tooltip-text-goals-value,
+      .apexcharts-tooltip-text-z-label,
+      .apexcharts-tooltip-text-z-value,
+      .apexcharts-tooltip-marker + span,
+      span {
+        color: #fafafa !important;
+      }
+
+      .apexcharts-tooltip-series-group {
+        background: transparent !important;
+        padding: 6px 12px !important;
+
+        &.apexcharts-active {
+          background: rgba(255, 255, 255, 0.05) !important;
+        }
+      }
+
+      // Marker del tooltip
+      .apexcharts-tooltip-marker {
+        margin-right: 8px !important;
+      }
+
+      // Tooltips específicos por tipo de gráfica
+      &.apexcharts-tooltip-candlestick,
+      &.apexcharts-tooltip-boxPlot {
+        .apexcharts-tooltip-text {
+          color: #fafafa !important;
+        }
+      }
+    }
+
+    // LIGHT MODE - Estilos específicos
+    &.apexcharts-theme-light,
+    &.apexcharts-tooltip-light {
+      background: rgba(255, 255, 255, 0.98) !important;
+      border: 1px solid rgba(226, 232, 240, 0.9) !important;
+      color: #1e293b !important;
+
+      .apexcharts-tooltip-title {
+        background: rgba(248, 250, 252, 0.98) !important;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.7) !important;
+        color: #1e293b !important;
+        font-weight: 600 !important;
+        padding: 8px 12px !important;
+      }
+
+      .apexcharts-tooltip-text,
+      .apexcharts-tooltip-text-y-label,
+      .apexcharts-tooltip-text-y-value,
+      span {
+        color: #334155 !important;
+      }
+
+      .apexcharts-tooltip-series-group {
+        background: transparent !important;
+        padding: 6px 12px !important;
+      }
+    }
+  }
+
+  // Tooltip para Heatmap
+  .apexcharts-heatmap-rect:hover + .apexcharts-tooltip,
+  .apexcharts-tooltip.apexcharts-theme-dark[data-series-index] {
+    background: rgba(24, 24, 27, 0.98) !important;
+    color: #fafafa !important;
+  }
+
+  // Tooltip para TreeMap
+  .apexcharts-treemap-rect:hover ~ .apexcharts-tooltip {
+    background: rgba(24, 24, 27, 0.98) !important;
+    color: #fafafa !important;
+  }
+
+  // Crosshairs y markers en dark mode
+  .apexcharts-xcrosshairs,
+  .apexcharts-ycrosshairs {
+    stroke: rgba(250, 250, 250, 0.3) !important;
+  }
+
+  // Data labels en dark mode para gráficas específicas
+  .apexcharts-datalabel,
+  .apexcharts-datalabel-label,
+  .apexcharts-datalabel-value {
+    fill: currentColor !important;
   }
 }

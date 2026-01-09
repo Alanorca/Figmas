@@ -350,36 +350,6 @@
           Personaliza y confirma
         </h3>
 
-        <!-- Título -->
-        <div class="config-section">
-          <label class="config-label required">
-            <i class="pi pi-tag"></i>
-            Título de la gráfica
-          </label>
-          <input
-            type="text"
-            pInputText
-            class="config-input"
-            [ngModel]="wizardState().titulo"
-            (ngModelChange)="actualizarTitulo($event)"
-            placeholder="Ej: Distribución de Riesgos por Estado" />
-        </div>
-
-        <!-- Subtítulo -->
-        <div class="config-section">
-          <label class="config-label">
-            <i class="pi pi-align-left"></i>
-            Subtítulo (opcional)
-          </label>
-          <input
-            type="text"
-            pInputText
-            class="config-input"
-            [ngModel]="wizardState().subtitulo"
-            (ngModelChange)="actualizarSubtitulo($event)"
-            placeholder="Descripción breve" />
-        </div>
-
         <!-- Paleta de colores -->
         <div class="config-section">
           <label class="config-label">

@@ -252,19 +252,54 @@
                   </p-columnFilter>
                 }
                 @case ('nivelRiesgo') {
-                  <p-columnFilter field="nivelRiesgo" matchMode="in" [showMenu]="false">
+                  <p-columnFilter field="nivelRiesgo" matchMode="in" display="menu" [showMenu]="true">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                      <p-multiSelect
-                        [ngModel]="value"
-                        (ngModelChange)="filter($event)"
-                        [options]="nivelRiesgoOptions"
-                        placeholder="Todos"
-                        appendTo="body"
-                        [showHeader]="false">
-                        <ng-template let-option pTemplate="item">
-                          <p-tag [value]="option.label" [severity]="option.severity" />
-                        </ng-template>
-                      </p-multiSelect>
+                      <div class="flex flex-column gap-3" style="min-width: 220px">
+                        <div class="flex align-items-center gap-2">
+                          <p-inputNumber
+                            [ngModel]="filtroNivelRiesgoRango()[0]"
+                            (ngModelChange)="onNivelRiesgoRangoChange(0, $event, filter)"
+                            [min]="1"
+                            [max]="25"
+                            [showButtons]="true"
+                            buttonLayout="horizontal"
+                            spinnerMode="horizontal"
+                            inputStyleClass="w-3rem text-center"
+                            decrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus" />
+                          <span class="text-secondary">a</span>
+                          <p-inputNumber
+                            [ngModel]="filtroNivelRiesgoRango()[1]"
+                            (ngModelChange)="onNivelRiesgoRangoChange(1, $event, filter)"
+                            [min]="1"
+                            [max]="25"
+                            [showButtons]="true"
+                            buttonLayout="horizontal"
+                            spinnerMode="horizontal"
+                            inputStyleClass="w-3rem text-center"
+                            decrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus" />
+                        </div>
+                        <p-slider
+                          [ngModel]="filtroNivelRiesgoRango()"
+                          (ngModelChange)="onNivelRiesgoSliderChange($event, filter)"
+                          [range]="true"
+                          [min]="1"
+                          [max]="25"
+                          [step]="1"
+                          styleClass="w-full" />
+                        <div class="flex justify-content-between text-xs text-secondary">
+                          <span>Bajo (1-4)</span>
+                          <span>Medio (5-9)</span>
+                          <span>Alto (10-14)</span>
+                          <span>Critico (15+)</span>
+                        </div>
+                        <small class="text-secondary text-center">Nivel de Riesgo: {{ filtroNivelRiesgoRango()[0] }} - {{ filtroNivelRiesgoRango()[1] }}</small>
+                      </div>
                     </ng-template>
                   </p-columnFilter>
                 }
@@ -283,24 +318,92 @@
                 @case ('probabilidad') {
                   <p-columnFilter type="numeric" field="probabilidad" display="menu" [showMenu]="true">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                      <p-inputNumber
-                        [ngModel]="value"
-                        (ngModelChange)="filter($event)"
-                        [min]="1"
-                        [max]="5"
-                        placeholder="1-5" />
+                      <div class="flex flex-column gap-2" style="min-width: 180px">
+                        <div class="flex align-items-center gap-2">
+                          <p-inputNumber
+                            [ngModel]="filtroProbabilidadRango()[0]"
+                            (ngModelChange)="onProbabilidadRangoChange(0, $event, filter)"
+                            [min]="1"
+                            [max]="5"
+                            [showButtons]="true"
+                            buttonLayout="horizontal"
+                            spinnerMode="horizontal"
+                            inputStyleClass="w-3rem text-center"
+                            decrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus" />
+                          <span class="text-secondary">a</span>
+                          <p-inputNumber
+                            [ngModel]="filtroProbabilidadRango()[1]"
+                            (ngModelChange)="onProbabilidadRangoChange(1, $event, filter)"
+                            [min]="1"
+                            [max]="5"
+                            [showButtons]="true"
+                            buttonLayout="horizontal"
+                            spinnerMode="horizontal"
+                            inputStyleClass="w-3rem text-center"
+                            decrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus" />
+                        </div>
+                        <p-slider
+                          [ngModel]="filtroProbabilidadRango()"
+                          (ngModelChange)="onProbabilidadSliderChange($event, filter)"
+                          [range]="true"
+                          [min]="1"
+                          [max]="5"
+                          [step]="1"
+                          styleClass="w-full" />
+                        <small class="text-secondary text-center">Probabilidad: {{ filtroProbabilidadRango()[0] }} - {{ filtroProbabilidadRango()[1] }}</small>
+                      </div>
                     </ng-template>
                   </p-columnFilter>
                 }
                 @case ('impacto') {
                   <p-columnFilter type="numeric" field="impacto" display="menu" [showMenu]="true">
                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                      <p-inputNumber
-                        [ngModel]="value"
-                        (ngModelChange)="filter($event)"
-                        [min]="1"
-                        [max]="5"
-                        placeholder="1-5" />
+                      <div class="flex flex-column gap-2" style="min-width: 180px">
+                        <div class="flex align-items-center gap-2">
+                          <p-inputNumber
+                            [ngModel]="filtroImpactoRango()[0]"
+                            (ngModelChange)="onImpactoRangoChange(0, $event, filter)"
+                            [min]="1"
+                            [max]="5"
+                            [showButtons]="true"
+                            buttonLayout="horizontal"
+                            spinnerMode="horizontal"
+                            inputStyleClass="w-3rem text-center"
+                            decrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus" />
+                          <span class="text-secondary">a</span>
+                          <p-inputNumber
+                            [ngModel]="filtroImpactoRango()[1]"
+                            (ngModelChange)="onImpactoRangoChange(1, $event, filter)"
+                            [min]="1"
+                            [max]="5"
+                            [showButtons]="true"
+                            buttonLayout="horizontal"
+                            spinnerMode="horizontal"
+                            inputStyleClass="w-3rem text-center"
+                            decrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonClass="p-button-secondary p-button-text"
+                            incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus" />
+                        </div>
+                        <p-slider
+                          [ngModel]="filtroImpactoRango()"
+                          (ngModelChange)="onImpactoSliderChange($event, filter)"
+                          [range]="true"
+                          [min]="1"
+                          [max]="5"
+                          [step]="1"
+                          styleClass="w-full" />
+                        <small class="text-secondary text-center">Impacto: {{ filtroImpactoRango()[0] }} - {{ filtroImpactoRango()[1] }}</small>
+                      </div>
                     </ng-template>
                   </p-columnFilter>
                 }
@@ -490,7 +593,7 @@
                         [value]="registro.tipoContenedor === 'activo' ? 'Activo' : 'Proceso'"
                         severity="info"
                         styleClass="contenedor-badge" />
-                      <span class="contenedor-nombre">{{ registro.contenedorNombre }}</span>
+                      <span class="contenedor-nombre" [innerHTML]="highlightText(registro.contenedorNombre)"></span>
                     </div>
                   }
                   @case ('estado') {
@@ -529,6 +632,20 @@
                   @case ('impacto') {
                     @if (registro.impacto) {
                       <span class="nivel-badge">{{ registro.impacto }}/5</span>
+                    } @else {
+                      <span class="text-secondary">-</span>
+                    }
+                  }
+                  @case ('responsable') {
+                    @if (registro.responsable) {
+                      <span [innerHTML]="highlightText(registro.responsable)"></span>
+                    } @else {
+                      <span class="text-secondary">-</span>
+                    }
+                  }
+                  @case ('descripcion') {
+                    @if (registro.descripcion) {
+                      <span class="descripcion-text" [innerHTML]="highlightText(registro.descripcion)"></span>
                     } @else {
                       <span class="text-secondary">-</span>
                     }

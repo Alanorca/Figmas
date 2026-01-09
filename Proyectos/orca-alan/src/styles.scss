@@ -37,6 +37,61 @@ html.light-mode * {
 }
 
 /* ===========================================
+   GLOBAL CONTEXT MENU - Z-Index Fix
+   =========================================== */
+.p-contextmenu {
+  z-index: 10000 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  min-width: 200px;
+
+  .p-menu-list {
+    padding: 0.5rem 0;
+  }
+
+  .p-menuitem {
+    .p-menuitem-content {
+      border-radius: 0;
+      transition: background-color 0.2s;
+
+      .p-menuitem-link {
+        padding: 0.625rem 1rem;
+
+        .p-menuitem-icon {
+          margin-right: 0.5rem;
+        }
+      }
+
+      &:hover {
+        background: var(--surface-hover);
+      }
+    }
+
+    &.p-menuitem-danger {
+      .p-menuitem-content {
+        .p-menuitem-link {
+          color: var(--red-500);
+        }
+
+        &:hover {
+          background: var(--red-50);
+        }
+      }
+    }
+  }
+
+  .p-submenu-icon {
+    margin-left: auto;
+  }
+
+  // Separador
+  .p-menu-separator {
+    margin: 0.25rem 0;
+    border-top: 1px solid var(--surface-border);
+  }
+}
+
+/* ===========================================
    DARK MODE - PrimeNG Components Override
    =========================================== */
 html.dark-mode {
@@ -667,6 +722,10 @@ html.dark-mode {
         background: var(--surface-hover) !important;
       }
     }
+  }
+
+  .p-contextmenu {
+    z-index: 10000 !important;
   }
 
   /* Tooltip */
@@ -2888,5 +2947,373 @@ html.dark-mode {
   &.info-red {
     background-color: rgba(239, 68, 68, 0.1) !important;
     border-color: rgba(239, 68, 68, 0.3);
+  }
+}
+
+// ============================================
+// ApexCharts Tooltips - Global Dark Mode Fix
+// Los tooltips se renderizan en el body, fuera de los componentes
+// ============================================
+
+// Estilos base para todos los tooltips de ApexCharts
+.apexcharts-tooltip {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(8px) !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-size: 12px !important;
+  z-index: 10000 !important;
+  overflow: hidden !important;
+}
+
+// DARK MODE - Tooltips de ApexCharts
+html.dark-mode .apexcharts-tooltip,
+:root.p-dark .apexcharts-tooltip,
+.apexcharts-tooltip.apexcharts-theme-dark,
+.apexcharts-tooltip.apexcharts-tooltip-dark {
+  background: rgba(24, 24, 27, 0.98) !important;
+  border: 1px solid rgba(63, 63, 70, 0.9) !important;
+  color: #fafafa !important;
+
+  .apexcharts-tooltip-title {
+    background: rgba(39, 39, 42, 0.98) !important;
+    border-bottom: 1px solid rgba(63, 63, 70, 0.7) !important;
+    color: #fafafa !important;
+    font-weight: 600 !important;
+    padding: 8px 12px !important;
+  }
+
+  // Todos los textos dentro del tooltip
+  .apexcharts-tooltip-text,
+  .apexcharts-tooltip-text-y-label,
+  .apexcharts-tooltip-text-y-value,
+  .apexcharts-tooltip-text-goals-label,
+  .apexcharts-tooltip-text-goals-value,
+  .apexcharts-tooltip-text-z-label,
+  .apexcharts-tooltip-text-z-value,
+  .apexcharts-tooltip-marker + span,
+  .apexcharts-tooltip-y-group,
+  span:not(.apexcharts-tooltip-marker) {
+    color: #fafafa !important;
+  }
+
+  .apexcharts-tooltip-series-group {
+    background: transparent !important;
+    padding: 6px 12px !important;
+
+    &.apexcharts-active,
+    &:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+    }
+  }
+
+  .apexcharts-tooltip-marker {
+    margin-right: 8px !important;
+    border-radius: 50% !important;
+  }
+}
+
+// LIGHT MODE - Tooltips de ApexCharts
+html:not(.dark-mode) .apexcharts-tooltip:not(.apexcharts-theme-dark):not(.apexcharts-tooltip-dark),
+.apexcharts-tooltip.apexcharts-theme-light,
+.apexcharts-tooltip.apexcharts-tooltip-light {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  color: #1e293b !important;
+
+  .apexcharts-tooltip-title {
+    background: rgba(248, 250, 252, 0.98) !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7) !important;
+    color: #1e293b !important;
+    font-weight: 600 !important;
+    padding: 8px 12px !important;
+  }
+
+  .apexcharts-tooltip-text,
+  .apexcharts-tooltip-text-y-label,
+  .apexcharts-tooltip-text-y-value,
+  span:not(.apexcharts-tooltip-marker) {
+    color: #334155 !important;
+  }
+
+  .apexcharts-tooltip-series-group {
+    background: transparent !important;
+    padding: 6px 12px !important;
+  }
+}
+
+// Tooltips específicos para ciertos tipos de gráficas en dark mode
+html.dark-mode,
+:root.p-dark {
+  // Heatmap tooltip
+  .apexcharts-heatmap-rect + .apexcharts-tooltip,
+  .apexcharts-tooltip[data-chart-type="heatmap"] {
+    background: rgba(24, 24, 27, 0.98) !important;
+    color: #fafafa !important;
+  }
+
+  // TreeMap tooltip
+  .apexcharts-treemap-rect + .apexcharts-tooltip,
+  .apexcharts-tooltip[data-chart-type="treemap"] {
+    background: rgba(24, 24, 27, 0.98) !important;
+    color: #fafafa !important;
+  }
+
+  // BoxPlot tooltip
+  .apexcharts-tooltip-boxPlot {
+    background: rgba(24, 24, 27, 0.98) !important;
+    color: #fafafa !important;
+
+    span {
+      color: #fafafa !important;
+    }
+  }
+
+  // Candlestick tooltip
+  .apexcharts-tooltip-candlestick {
+    background: rgba(24, 24, 27, 0.98) !important;
+
+    span {
+      color: #fafafa !important;
+    }
+  }
+
+  // Crosshairs
+  .apexcharts-xcrosshairs,
+  .apexcharts-ycrosshairs {
+    stroke: rgba(250, 250, 250, 0.4) !important;
+  }
+
+  // Grid lines
+  .apexcharts-gridlines-horizontal line,
+  .apexcharts-gridlines-vertical line {
+    stroke: rgba(63, 63, 70, 0.5) !important;
+  }
+
+  // Axis labels
+  .apexcharts-xaxis-label,
+  .apexcharts-yaxis-label {
+    fill: #a1a1aa !important;
+  }
+
+  // Legend
+  .apexcharts-legend-text {
+    color: #a1a1aa !important;
+  }
+}
+
+/* ===========================================
+   WIDGET CONFIG DRAWER - Estilos Globales
+   Para elementos que se renderizan fuera del componente
+   =========================================== */
+
+.widget-config-drawer {
+  // Tipo actual badge
+  .tipo-actual-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--primary-100);
+    color: var(--primary-700);
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.875rem;
+
+    i {
+      font-size: 1rem;
+    }
+  }
+
+  // Grid de tipos de gráfica
+  .tipos-grid-config {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 350px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+
+    .categoria-group {
+      .categoria-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-color-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.25rem;
+        border-bottom: 1px solid var(--surface-200);
+      }
+
+      .tipos-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+    }
+  }
+
+  // Chip de tipo de gráfica
+  .tipo-chip-config {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    background: var(--surface-100);
+    border: 1px solid var(--surface-200);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    i {
+      font-size: 0.8rem;
+      color: var(--text-color-secondary);
+    }
+
+    span {
+      white-space: nowrap;
+    }
+
+    &:hover {
+      background: var(--surface-200);
+      border-color: var(--surface-300);
+    }
+
+    &.selected {
+      background: var(--primary-100);
+      border-color: var(--primary-400);
+      color: var(--primary-700);
+
+      i {
+        color: var(--primary-500);
+      }
+    }
+  }
+
+  // Grid de paletas
+  .paletas-grid-config {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  // Opción de paleta
+  .paleta-option-config {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--surface-50);
+    border: 2px solid var(--surface-200);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    .paleta-colors {
+      display: flex;
+      gap: 3px;
+
+      .color-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+      }
+    }
+
+    .paleta-nombre {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-color-secondary);
+      text-transform: capitalize;
+    }
+
+    &:hover {
+      border-color: var(--primary-300);
+    }
+
+    &.selected {
+      border-color: var(--primary-500);
+      background: var(--primary-50);
+
+      .paleta-nombre {
+        color: var(--primary-700);
+        font-weight: 600;
+      }
+    }
+  }
+
+  // Grid de opciones (toggles)
+  .opciones-grid-config {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+// Dark mode para widget-config-drawer
+html.dark-mode,
+:root.p-dark,
+[data-theme="dark"] {
+  .widget-config-drawer {
+    .tipo-actual-badge {
+      background: rgba(var(--primary-500-rgb), 0.2);
+      color: var(--primary-300);
+    }
+
+    .tipos-grid-config {
+      .categoria-group {
+        .categoria-label {
+          border-bottom-color: var(--surface-600);
+        }
+      }
+    }
+
+    .tipo-chip-config {
+      background: var(--surface-700);
+      border-color: var(--surface-600);
+      color: var(--text-color);
+
+      i {
+        color: var(--text-color-secondary);
+      }
+
+      &:hover {
+        background: var(--surface-600);
+        border-color: var(--surface-500);
+      }
+
+      &.selected {
+        background: rgba(var(--primary-500-rgb), 0.2);
+        border-color: var(--primary-500);
+        color: var(--primary-300);
+
+        i {
+          color: var(--primary-400);
+        }
+      }
+    }
+
+    .paleta-option-config {
+      background: var(--surface-800);
+      border-color: var(--surface-600);
+
+      &:hover {
+        border-color: var(--surface-500);
+      }
+
+      &.selected {
+        border-color: var(--primary-500);
+        background: rgba(var(--primary-500-rgb), 0.1);
+
+        .paleta-nombre {
+          color: var(--primary-300);
+        }
+      }
+    }
   }
 }
