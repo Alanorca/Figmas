@@ -16,7 +16,7 @@ interface DBStore {
 })
 export class IndexedDBService {
   private dbName = 'OrcaDB';
-  private dbVersion = 1;
+  private dbVersion = 2; // Incrementado para agregar stores de integraciones
   private db: IDBDatabase | null = null;
 
   // Store definitions matching Prisma schema
@@ -74,6 +74,21 @@ export class IndexedDBService {
     { name: 'task_evidences', keyPath: 'id', indexes: [{ name: 'taskId', keyPath: 'taskId' }] },
     { name: 'task_history', keyPath: 'id', indexes: [{ name: 'taskId', keyPath: 'taskId' }] },
     { name: '_meta', keyPath: 'key' }, // For storing metadata like seeded flag
+    // Integraciones - Radios y Pulsos
+    { name: 'radios', keyPath: 'id', indexes: [
+      { name: 'connectorType', keyPath: 'connectorType' },
+      { name: 'status', keyPath: 'status' },
+      { name: 'category', keyPath: 'category' }
+    ]},
+    { name: 'pulses', keyPath: 'id', indexes: [
+      { name: 'radioId', keyPath: 'radioId' },
+      { name: 'status', keyPath: 'status' },
+      { name: 'receivedAt', keyPath: 'receivedAt' }
+    ]},
+    { name: 'radio_sync_logs', keyPath: 'id', indexes: [
+      { name: 'radioId', keyPath: 'radioId' },
+      { name: 'startedAt', keyPath: 'startedAt' }
+    ]},
   ];
 
   async init(): Promise<void> {

@@ -937,7 +937,8 @@ export class SidebarComponent implements OnDestroy {
       items: [
         { label: 'Usuarios y Roles', icon: 'pi pi-users', routerLink: '/usuarios-roles' },
         { label: 'Asignacion Roles', icon: 'pi pi-id-card', routerLink: '/asignacion-roles' },
-        { label: 'Organigrama', icon: 'pi pi-sitemap', routerLink: '/organigramas' }
+        { label: 'Organigrama', icon: 'pi pi-sitemap', routerLink: '/organigramas' },
+        { label: 'Integraciones', icon: 'pi pi-wifi', routerLink: '/integraciones' }
       ]
     }
   ];

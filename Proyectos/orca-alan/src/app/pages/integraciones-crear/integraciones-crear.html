@@ -1,0 +1,732 @@
+<p-toast />
+
+<div class="integraciones-crear-container">
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <h2>{{ isEditMode() ? 'Editar Radio' : 'Nuevo Radio' }}</h2>
+        <p class="text-color-secondary">{{ isEditMode() ? 'Modifica la configuración del radio' : 'Configura una nueva fuente de datos externa' }}</p>
+      </div>
+    </ng-template>
+
+    <p-stepper [(value)]="activeStep" [linear]="true">
+      <!-- Step Headers -->
+      <p-step-list>
+        <p-step [value]="0">
+          <ng-template #content let-activateCallback="activateCallback" let-value="value">
+            <button class="p-step-header" (click)="activateCallback()">
+              <span class="p-step-number">1</span>
+              <span class="p-step-title">Información Básica</span>
+            </button>
+          </ng-template>
+        </p-step>
+        <p-step [value]="1">
+          <ng-template #content let-activateCallback="activateCallback" let-value="value">
+            <button class="p-step-header" (click)="activateCallback()">
+              <span class="p-step-number">2</span>
+              <span class="p-step-title">Configuración del Conector</span>
+            </button>
+          </ng-template>
+        </p-step>
+        <p-step [value]="2">
+          <ng-template #content let-activateCallback="activateCallback" let-value="value">
+            <button class="p-step-header" (click)="activateCallback()">
+              <span class="p-step-number">3</span>
+              <span class="p-step-title">Mapeo de Datos</span>
+            </button>
+          </ng-template>
+        </p-step>
+        <p-step [value]="3">
+          <ng-template #content let-activateCallback="activateCallback" let-value="value">
+            <button class="p-step-header" (click)="activateCallback()">
+              <span class="p-step-number">4</span>
+              <span class="p-step-title">Programación y Resumen</span>
+            </button>
+          </ng-template>
+        </p-step>
+      </p-step-list>
+
+      <!-- Step Panels -->
+      <p-step-panels>
+        <!-- Step 1: Basic Info -->
+        <p-step-panel [value]="0">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-content">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="name">Nombre del Radio *</label>
+                  <input
+                    pInputText
+                    id="name"
+                    [ngModel]="name()"
+                    (ngModelChange)="name.set($event)"
+                    placeholder="Ej: Escáner de Vulnerabilidades Nessus"
+                    class="w-full"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="description">Descripción</label>
+                  <textarea
+                    pTextarea
+                    id="description"
+                    [ngModel]="description()"
+                    (ngModelChange)="description.set($event)"
+                    placeholder="Describe el propósito de este radio..."
+                    rows="3"
+                    class="w-full"
+                  ></textarea>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="category">Categoría *</label>
+                    <p-select
+                      id="category"
+                      [options]="categoryOptions"
+                      [ngModel]="category()"
+                      (ngModelChange)="category.set($event)"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Selecciona una categoría"
+                      class="w-full"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="entityType">Entidad Destino *</label>
+                    <p-select
+                      id="entityType"
+                      [options]="entityTypeOptions"
+                      [ngModel]="targetEntityType()"
+                      (ngModelChange)="targetEntityType.set($event)"
+                      optionLabel="label"
+                      optionValue="value"
+                      placeholder="Tipo de entidad a crear"
+                      class="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <p-button
+                  label="Cancelar"
+                  [text]="true"
+                  severity="secondary"
+                  (onClick)="cancel()"
+                />
+                <p-button
+                  label="Siguiente"
+                  icon="pi pi-arrow-right"
+                  iconPos="right"
+                  [disabled]="!isStep1Valid()"
+                  (onClick)="activateCallback(1)"
+                />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <!-- Step 2: Connector Type and Config -->
+        <p-step-panel [value]="1">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-content">
+              <!-- Connector Type Selection -->
+              <div class="connector-type-selection">
+                <label>Tipo de Conector *</label>
+                <div class="connector-cards">
+                  @for (type of connectorTypeOptions; track type.value) {
+                    <div
+                      class="connector-card"
+                      [class.selected]="connectorType() === type.value"
+                      (click)="connectorType.set(type.value); onConnectorTypeChange()"
+                    >
+                      <i [class]="type.icon" class="connector-icon"></i>
+                      <span class="connector-label">{{ type.label }}</span>
+                      <span class="connector-mode">{{ type.mode === 'push' ? 'Push' : 'Pull' }}</span>
+                      <p class="connector-desc">{{ type.description }}</p>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <p-divider />
+
+              <!-- Webhook Config -->
+              @if (isWebhook()) {
+                <div class="connector-config">
+                  <h4>Configuración de Webhook</h4>
+                  <p class="config-hint">El webhook será generado automáticamente. Comparte la URL y el token con el sistema externo.</p>
+
+                  <div class="form-group">
+                    <label>URL del Webhook</label>
+                    <div class="input-with-copy">
+                      <input
+                        pInputText
+                        [value]="webhookConfig().webhookUrl || 'Se generará al guardar'"
+                        readonly
+                        class="w-full"
+                      />
+                      @if (webhookConfig().webhookUrl) {
+                        <p-button
+                          icon="pi pi-copy"
+                          [rounded]="true"
+                          [text]="true"
+                          (onClick)="copyToClipboard(webhookConfig().webhookUrl)"
+                          pTooltip="Copiar URL"
+                        />
+                      }
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Token de Autenticación</label>
+                    <div class="input-with-copy">
+                      <input
+                        pInputText
+                        [value]="webhookConfig().webhookToken"
+                        readonly
+                        class="w-full"
+                      />
+                      <p-button
+                        icon="pi pi-copy"
+                        [rounded]="true"
+                        [text]="true"
+                        (onClick)="copyToClipboard(webhookConfig().webhookToken)"
+                        pTooltip="Copiar Token"
+                      />
+                      <p-button
+                        icon="pi pi-refresh"
+                        [rounded]="true"
+                        [text]="true"
+                        (onClick)="generateNewWebhookCredentials()"
+                        pTooltip="Regenerar credenciales"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <p-toggleswitch
+                      [ngModel]="webhookConfig().enableSignatureValidation"
+                      (ngModelChange)="updateWebhookSignatureValidation($event)"
+                    />
+                    <label class="inline-label">Habilitar validación de firma HMAC</label>
+                  </div>
+
+                  @if (webhookConfig().enableSignatureValidation) {
+                    <div class="form-group">
+                      <label>Secret para firma</label>
+                      <div class="input-with-copy">
+                        <input
+                          pInputText
+                          [value]="webhookConfig().webhookSecret"
+                          readonly
+                          class="w-full"
+                        />
+                        <p-button
+                          icon="pi pi-copy"
+                          [rounded]="true"
+                          [text]="true"
+                          (onClick)="copyToClipboard(webhookConfig().webhookSecret || '')"
+                          pTooltip="Copiar Secret"
+                        />
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- REST API Config -->
+              @if (isRestApi()) {
+                <div class="connector-config">
+                  <h4>Configuración de REST API</h4>
+
+                  <div class="form-row">
+                    <div class="form-group flex-2">
+                      <label for="baseUrl">URL Base *</label>
+                      <input
+                        pInputText
+                        id="baseUrl"
+                        [ngModel]="restApiConfig().baseUrl"
+                        (ngModelChange)="updateRestApiBaseUrl($event)"
+                        placeholder="https://api.example.com"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="form-group flex-1">
+                      <label for="endpoint">Endpoint *</label>
+                      <input
+                        pInputText
+                        id="endpoint"
+                        [ngModel]="restApiConfig().endpoint"
+                        (ngModelChange)="updateRestApiEndpoint($event)"
+                        placeholder="/v1/data"
+                        class="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="method">Método HTTP</label>
+                      <p-select
+                        id="method"
+                        [options]="httpMethodOptions"
+                        [ngModel]="restApiConfig().method"
+                        (ngModelChange)="updateRestApiMethod($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="authType">Tipo de Autenticación</label>
+                      <p-select
+                        id="authType"
+                        [options]="authTypeOptions"
+                        [ngModel]="restApiConfig().authType"
+                        (ngModelChange)="updateRestApiAuthType($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="timeout">Timeout (ms)</label>
+                      <p-inputNumber
+                        id="timeout"
+                        [ngModel]="restApiConfig().timeout"
+                        (ngModelChange)="updateRestApiTimeout($event)"
+                        [min]="1000"
+                        [max]="120000"
+                        [step]="1000"
+                        class="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  @if (restApiConfig().authType === 'api_key') {
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>Nombre del Header</label>
+                        <input
+                          pInputText
+                          [ngModel]="restApiConfig().authConfig.headerName"
+                          (ngModelChange)="updateRestApiAuthHeader($event)"
+                          placeholder="X-API-Key"
+                          class="w-full"
+                        />
+                      </div>
+                      <div class="form-group">
+                        <label>API Key</label>
+                        <p-password
+                          [ngModel]="restApiConfig().authConfig.apiKey"
+                          (ngModelChange)="updateRestApiAuthKey($event)"
+                          [feedback]="false"
+                          [toggleMask]="true"
+                          placeholder="Tu API Key"
+                          styleClass="w-full"
+                        />
+                      </div>
+                    </div>
+                  }
+
+                  @if (restApiConfig().authType === 'bearer') {
+                    <div class="form-group">
+                      <label>Bearer Token</label>
+                      <p-password
+                        [ngModel]="restApiConfig().authConfig.bearerToken"
+                        (ngModelChange)="updateRestApiAuthBearer($event)"
+                        [feedback]="false"
+                        [toggleMask]="true"
+                        placeholder="Tu Bearer Token"
+                        styleClass="w-full"
+                      />
+                    </div>
+                  }
+
+                  @if (restApiConfig().authType === 'basic') {
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>Usuario</label>
+                        <input
+                          pInputText
+                          [ngModel]="restApiConfig().authConfig.username"
+                          (ngModelChange)="updateRestApiAuthUsername($event)"
+                          placeholder="Usuario"
+                          class="w-full"
+                        />
+                      </div>
+                      <div class="form-group">
+                        <label>Contraseña</label>
+                        <p-password
+                          [ngModel]="restApiConfig().authConfig.password"
+                          (ngModelChange)="updateRestApiAuthPassword($event)"
+                          [feedback]="false"
+                          [toggleMask]="true"
+                          placeholder="Contraseña"
+                          styleClass="w-full"
+                        />
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Database Config -->
+              @if (isDatabase()) {
+                <div class="connector-config">
+                  <h4>Configuración de Base de Datos</h4>
+
+                  <div class="form-group">
+                    <label for="dbType">Tipo de Base de Datos *</label>
+                    <p-select
+                      id="dbType"
+                      [options]="databaseTypeOptions"
+                      [ngModel]="databaseConfig().dbType"
+                      (ngModelChange)="updateDatabaseType($event)"
+                      optionLabel="label"
+                      optionValue="value"
+                      class="w-full"
+                    />
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group flex-2">
+                      <label for="host">Host *</label>
+                      <input
+                        pInputText
+                        id="host"
+                        [ngModel]="databaseConfig().host"
+                        (ngModelChange)="updateDatabaseHost($event)"
+                        placeholder="localhost o IP"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="form-group flex-1">
+                      <label for="port">Puerto *</label>
+                      <p-inputNumber
+                        id="port"
+                        [ngModel]="databaseConfig().port"
+                        (ngModelChange)="updateDatabasePort($event)"
+                        [min]="1"
+                        [max]="65535"
+                        class="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="database">Nombre de la Base de Datos *</label>
+                    <input
+                      pInputText
+                      id="database"
+                      [ngModel]="databaseConfig().database"
+                      (ngModelChange)="updateDatabaseName($event)"
+                      placeholder="Nombre de la BD"
+                      class="w-full"
+                    />
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="dbUser">Usuario *</label>
+                      <input
+                        pInputText
+                        id="dbUser"
+                        [ngModel]="databaseConfig().username"
+                        (ngModelChange)="updateDatabaseUsername($event)"
+                        placeholder="Usuario de BD"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="dbPass">Contraseña</label>
+                      <p-password
+                        id="dbPass"
+                        [ngModel]="databaseConfig().password"
+                        (ngModelChange)="updateDatabasePassword($event)"
+                        [feedback]="false"
+                        [toggleMask]="true"
+                        placeholder="Contraseña"
+                        styleClass="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <p-toggleswitch
+                      [ngModel]="databaseConfig().ssl"
+                      (ngModelChange)="updateDatabaseSsl($event)"
+                    />
+                    <label class="inline-label">Usar conexión SSL</label>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="query">Consulta SQL *</label>
+                    <textarea
+                      pTextarea
+                      id="query"
+                      [ngModel]="databaseConfig().query"
+                      (ngModelChange)="updateDatabaseQuery($event)"
+                      placeholder="SELECT * FROM tabla WHERE ..."
+                      rows="4"
+                      class="w-full code-textarea"
+                    ></textarea>
+                  </div>
+                </div>
+              }
+
+              <!-- Folder Config -->
+              @if (isFolder()) {
+                <div class="connector-config">
+                  <h4>Configuración de Carpeta</h4>
+
+                  <div class="form-group">
+                    <label for="locationType">Tipo de Ubicación *</label>
+                    <p-select
+                      id="locationType"
+                      [options]="folderLocationOptions"
+                      [ngModel]="folderConfig().locationType"
+                      (ngModelChange)="updateFolderLocationType($event)"
+                      optionLabel="label"
+                      optionValue="value"
+                      class="w-full"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="path">Ruta *</label>
+                    <input
+                      pInputText
+                      id="path"
+                      [ngModel]="folderConfig().path"
+                      (ngModelChange)="updateFolderPath($event)"
+                      [placeholder]="folderConfig().locationType === 'smb' ? '\\\\server\\share\\folder' : 's3://bucket/prefix'"
+                      class="w-full"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="filePattern">Patrón de Archivos</label>
+                    <input
+                      pInputText
+                      id="filePattern"
+                      [ngModel]="folderConfig().filePattern"
+                      (ngModelChange)="updateFolderPattern($event)"
+                      placeholder="*.csv,*.json"
+                      class="w-full"
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <p-toggleswitch
+                      [ngModel]="folderConfig().includeSubdirs"
+                      (ngModelChange)="updateFolderSubdirs($event)"
+                    />
+                    <label class="inline-label">Incluir subdirectorios</label>
+                  </div>
+                </div>
+              }
+
+              <div class="step-actions">
+                <p-button
+                  label="Anterior"
+                  icon="pi pi-arrow-left"
+                  [text]="true"
+                  severity="secondary"
+                  (onClick)="activateCallback(0)"
+                />
+                <p-button
+                  label="Siguiente"
+                  icon="pi pi-arrow-right"
+                  iconPos="right"
+                  [disabled]="!isStep2Valid()"
+                  (onClick)="activateCallback(2)"
+                />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <!-- Step 3: Mapping Config -->
+        <p-step-panel [value]="2">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-content">
+              <div class="connector-config">
+                <h4>Configuración de Mapeo</h4>
+                <p class="config-hint">Define cómo transformar los datos recibidos al formato de ORCA SNS.</p>
+
+                <div class="form-group">
+                  <label for="sourceFormat">Formato de Origen</label>
+                  <p-select
+                    id="sourceFormat"
+                    [options]="sourceFormatOptions"
+                    [ngModel]="mappingConfig().sourceFormat"
+                    (ngModelChange)="updateMappingFormat($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    class="w-full"
+                  />
+                </div>
+
+                @if (mappingConfig().sourceFormat !== 'csv') {
+                  <div class="form-group">
+                    <label for="rootPath">Ruta Raíz de Datos</label>
+                    <input
+                      pInputText
+                      id="rootPath"
+                      [ngModel]="mappingConfig().rootPath"
+                      (ngModelChange)="updateMappingRootPath($event)"
+                      placeholder="data.items o $.results"
+                      class="w-full"
+                    />
+                    <small class="hint">Ruta JSONPath o XPath al array de registros</small>
+                  </div>
+                }
+
+                <p-divider />
+
+                <div class="mapping-placeholder">
+                  <i class="pi pi-map"></i>
+                  <h5>Mapeo de Campos</h5>
+                  <p>El mapeo detallado de campos se configurará después de crear el radio, cuando puedas probar con datos reales.</p>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <p-button
+                  label="Anterior"
+                  icon="pi pi-arrow-left"
+                  [text]="true"
+                  severity="secondary"
+                  (onClick)="activateCallback(1)"
+                />
+                <p-button
+                  label="Siguiente"
+                  icon="pi pi-arrow-right"
+                  iconPos="right"
+                  (onClick)="activateCallback(3)"
+                />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <!-- Step 4: Schedule and Review -->
+        <p-step-panel [value]="3">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-content">
+              <!-- Schedule Config (only for pull connectors) -->
+              @if (isPullConnector()) {
+                <div class="connector-config">
+                  <h4>Programación de Sincronización</h4>
+
+                  <div class="form-group">
+                    <p-toggleswitch
+                      [ngModel]="scheduleEnabled()"
+                      (ngModelChange)="scheduleEnabled.set($event)"
+                    />
+                    <label class="inline-label">Habilitar sincronización automática</label>
+                  </div>
+
+                  @if (scheduleEnabled()) {
+                    <div class="form-group">
+                      <label for="frequency">Frecuencia</label>
+                      <p-select
+                        id="frequency"
+                        [options]="scheduleFrequencyOptions"
+                        [ngModel]="scheduleConfig().frequency"
+                        (ngModelChange)="updateScheduleFrequency($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        class="w-full"
+                      />
+                    </div>
+
+                    @if (scheduleConfig().frequency === 'minutes' || scheduleConfig().frequency === 'hours') {
+                      <div class="form-group">
+                        <label for="interval">Intervalo</label>
+                        <p-inputNumber
+                          id="interval"
+                          [ngModel]="scheduleConfig().interval"
+                          (ngModelChange)="updateScheduleInterval($event)"
+                          [min]="1"
+                          [max]="scheduleConfig().frequency === 'minutes' ? 59 : 23"
+                          class="w-full"
+                        />
+                      </div>
+                    }
+
+                    @if (scheduleConfig().frequency === 'daily' || scheduleConfig().frequency === 'weekly') {
+                      <div class="form-group">
+                        <label for="time">Hora de ejecución</label>
+                        <input
+                          pInputText
+                          id="time"
+                          type="time"
+                          [ngModel]="scheduleConfig().time"
+                          (ngModelChange)="updateScheduleTime($event)"
+                          class="w-full"
+                        />
+                      </div>
+                    }
+                  }
+                </div>
+
+                <p-divider />
+              }
+
+              <!-- Summary -->
+              <div class="summary-section">
+                <h4>Resumen de Configuración</h4>
+
+                <div class="summary-grid">
+                  <div class="summary-item">
+                    <span class="summary-label">Nombre:</span>
+                    <span class="summary-value">{{ name() }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Categoría:</span>
+                    <span class="summary-value">{{ category() }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Tipo de Conector:</span>
+                    <span class="summary-value">{{ connectorType() | titlecase }}</span>
+                  </div>
+                  <div class="summary-item">
+                    <span class="summary-label">Entidad Destino:</span>
+                    <span class="summary-value">{{ targetEntityType() }}</span>
+                  </div>
+                  @if (isPullConnector() && scheduleEnabled()) {
+                    <div class="summary-item">
+                      <span class="summary-label">Sincronización:</span>
+                      <span class="summary-value">{{ scheduleConfig().frequency | titlecase }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <p-button
+                  label="Anterior"
+                  icon="pi pi-arrow-left"
+                  [text]="true"
+                  severity="secondary"
+                  (onClick)="activateCallback(2)"
+                />
+                <p-button
+                  [label]="isEditMode() ? 'Guardar Cambios' : 'Crear Radio'"
+                  icon="pi pi-check"
+                  [loading]="saving()"
+                  (onClick)="save()"
+                />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+      </p-step-panels>
+    </p-stepper>
+  </p-card>
+</div>

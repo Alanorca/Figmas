@@ -127,6 +127,22 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/proyecto-detalle/proyecto-detalle').then(m => m.ProyectoDetalleComponent)
   },
   {
+    path: 'integraciones',
+    loadComponent: () => import('./pages/integraciones/integraciones').then(m => m.IntegracionesComponent)
+  },
+  {
+    path: 'integraciones/crear',
+    loadComponent: () => import('./pages/integraciones-crear/integraciones-crear').then(m => m.IntegracionesCrearComponent)
+  },
+  {
+    path: 'integraciones/:id',
+    loadComponent: () => import('./pages/integraciones-detalle/integraciones-detalle').then(m => m.IntegracionesDetalleComponent)
+  },
+  {
+    path: 'integraciones/:id/editar',
+    loadComponent: () => import('./pages/integraciones-crear/integraciones-crear').then(m => m.IntegracionesCrearComponent)
+  },
+  {
     path: '**',
     redirectTo: 'dashboard'
   }
