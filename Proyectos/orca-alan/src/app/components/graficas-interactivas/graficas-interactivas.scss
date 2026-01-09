@@ -2166,3 +2166,193 @@
     fill: currentColor !important;
   }
 }
+
+// ============================================================================
+// DRAWER CREAR ALERTA - Estilos del drawer para crear alertas
+// ============================================================================
+
+.drawer-header-custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+.drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+
+  i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+  }
+}
+
+.drawer-header-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .toggle-label {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+.drawer-content {
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.preselected-info {
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 1rem;
+
+  .info-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-color);
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  .info-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-color);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+  }
+
+  .hint {
+    color: var(--text-color-secondary);
+    font-size: 0.75rem;
+  }
+}
+
+.form-section {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+
+  h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.checkbox-tags-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.checkbox-tag-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--surface-hover);
+    border-color: var(--primary-color);
+  }
+
+  &.active {
+    border-color: var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+  }
+}
+
+.drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+// PrimeNG Drawer overrides
+:host ::ng-deep {
+  .p-drawer {
+    .p-drawer-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .p-drawer-content {
+      padding: 1.5rem;
+    }
+
+    .p-drawer-footer {
+      padding: 1rem 1.5rem;
+    }
+  }
+
+  // Asegurar que los selects funcionen correctamente
+  .p-select,
+  .p-inputnumber {
+    width: 100%;
+  }
+
+  .p-select .p-select-label {
+    color: var(--text-color);
+  }
+}

@@ -27,6 +27,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/organigramas/organigramas').then(m => m.OrganigramasComponent)
   },
   {
+    path: 'organigramas/:id/objetivos-kpis',
+    loadComponent: () => import('./pages/objetivos-kpis/objetivos-kpis').then(m => m.ObjetivosKpisComponent)
+  },
+  {
     path: 'riesgos',
     loadComponent: () => import('./pages/riesgos/riesgos').then(m => m.RiesgosComponent)
   },

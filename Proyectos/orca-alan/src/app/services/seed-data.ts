@@ -323,18 +323,579 @@ export const asignaciones = [
 // Organigramas
 // ============================================================
 export const organigramas = [
-  { id: 'org-001', nombre: 'Organigrama Banco Global', descripcion: 'Estructura organizacional del banco', createdAt: new Date().toISOString() },
+  { id: 'org-001', nombre: 'Grupo Financiero Atlas', descripcion: 'Estructura organizacional integral del grupo financiero con enfoque en GRC', createdAt: new Date().toISOString() },
 ];
 
 export const nodosOrganigrama = [
-  { id: 'norg-001', organigramaId: 'org-001', nombre: 'Ricardo Salinas Pliego', cargo: 'Director General (CEO)', departamento: 'Dirección General', email: 'rsalinas@bancoglobal.mx', telefono: '+52 55 1234 0001', padreId: null },
-  { id: 'norg-002', organigramaId: 'org-001', nombre: 'María Elena Gutiérrez Vega', cargo: 'Directora de Riesgos (CRO)', departamento: 'Riesgos', email: 'mgutierrez@bancoglobal.mx', padreId: 'norg-001' },
-  { id: 'norg-003', organigramaId: 'org-001', nombre: 'Carlos Hernández Mora', cargo: 'Oficial de Cumplimiento (CCO)', departamento: 'Cumplimiento', email: 'chernandez@bancoglobal.mx', padreId: 'norg-001' },
-  { id: 'norg-004', organigramaId: 'org-001', nombre: 'Roberto Torres Ramírez', cargo: 'Oficial de Seguridad (CISO)', departamento: 'Seguridad de Información', email: 'rtorres@bancoglobal.mx', padreId: 'norg-001' },
-  { id: 'norg-005', organigramaId: 'org-001', nombre: 'Ana Patricia López García', cargo: 'Analista Senior de Riesgos', departamento: 'Riesgos', email: 'alopez@bancoglobal.mx', padreId: 'norg-002' },
-  { id: 'norg-006', organigramaId: 'org-001', nombre: 'Fernando Castillo Núñez', cargo: 'Analista de Cumplimiento', departamento: 'Cumplimiento', email: 'fcastillo@bancoglobal.mx', padreId: 'norg-003' },
-  { id: 'norg-007', organigramaId: 'org-001', nombre: 'Patricia Reyes Solís', cargo: 'Oficial PLD/AML', departamento: 'PLD/AML', email: 'preyes@bancoglobal.mx', padreId: 'norg-003' },
-  { id: 'norg-008', organigramaId: 'org-001', nombre: 'Laura Mendoza Díaz', cargo: 'Auditora Interna Senior', departamento: 'Auditoría', email: 'lmendoza@bancoglobal.mx', padreId: 'norg-001' },
+  // ============================================================
+  // NIVEL 1: ORGANIZATION (Raíz)
+  // ============================================================
+  {
+    id: 'norg-001',
+    organigramaId: 'org-001',
+    nombre: 'Grupo Financiero Atlas S.A. de C.V.',
+    descripcion: 'Holding financiero líder en servicios bancarios, inversiones y seguros con presencia en Latinoamérica. Comprometidos con la excelencia operativa, cumplimiento regulatorio y gestión integral de riesgos.',
+    cargo: 'Director General (CEO)',
+    departamento: 'Dirección General',
+    email: 'direccion@gfatlas.mx',
+    telefono: '+52 55 5000 0001',
+    padreId: null,
+    tipo: 'ORGANIZATION',
+    icono: 'pi pi-building',
+    responsable: { id: 'usr-001', nombre: 'Ricardo Salinas Pliego', email: 'rsalinas@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-001', nombre: 'RFC', tipo: 'TEXT', valor: 'GFA920101ABC', requerido: true },
+      { id: 'pc-002', nombre: 'Empleados totales', tipo: 'NUMBER', valor: 15000, requerido: false },
+      { id: 'pc-003', nombre: 'Activos totales (USD MM)', tipo: 'NUMBER', valor: 45000, requerido: true },
+      { id: 'pc-004', nombre: 'Fundación', tipo: 'TEXT', valor: '1992', requerido: false }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 2,
+      impacto: 3,
+      nivelTolerancia: 'moderado',
+      descripcion: 'Tolerancia moderada con enfoque en protección del capital y reputación institucional'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-org-001',
+        nombre: 'Excelencia en Gestión de Riesgos',
+        descripcion: 'Mantener un marco robusto de gestión de riesgos que proteja los activos y la reputación del grupo',
+        kpis: [
+          { id: 'kpi-001', nombre: 'Índice de Riesgo Operacional', valor: 2.8, meta: 2.0, unidad: 'índice', umbralMaximo: 3.5, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-002', nombre: 'Pérdidas Operacionales vs Ingresos', valor: 0.15, meta: 0.10, unidad: '%', umbralMaximo: 0.25, canales: ['in-app'], frecuencia: 'mensual' }
+        ]
+      },
+      {
+        id: 'obj-org-002',
+        nombre: 'Cumplimiento Regulatorio Integral',
+        descripcion: 'Asegurar adherencia total a regulaciones CNBV, Banxico, CONDUSEF y estándares internacionales',
+        kpis: [
+          { id: 'kpi-003', nombre: 'Cumplimiento Normativo General', valor: 94, meta: 100, unidad: '%', umbralMaximo: 85, canales: ['in-app', 'email'], frecuencia: 'mensual' },
+          { id: 'kpi-004', nombre: 'Observaciones Regulatorias Abiertas', valor: 3, meta: 0, unidad: 'cantidad', umbralMaximo: 10, canales: ['in-app', 'email', 'webhook'], frecuencia: 'semanal' }
+        ]
+      },
+      {
+        id: 'obj-org-003',
+        nombre: 'Ciberseguridad y Protección de Datos',
+        descripcion: 'Proteger los activos de información y datos de clientes contra amenazas cibernéticas',
+        kpis: [
+          { id: 'kpi-005', nombre: 'Incidentes de Seguridad Críticos', valor: 0, meta: 0, unidad: 'cantidad', umbralMaximo: 2, canales: ['in-app', 'email', 'webhook'], frecuencia: 'diaria' },
+          { id: 'kpi-006', nombre: 'Tiempo Medio de Respuesta (MTTR)', valor: 45, meta: 30, unidad: 'minutos', umbralMaximo: 60, canales: ['in-app'], frecuencia: 'semanal' }
+        ]
+      },
+      {
+        id: 'obj-org-004',
+        nombre: 'Eficiencia Operativa',
+        descripcion: 'Optimizar procesos para maximizar la productividad y reducir costos operacionales',
+        kpis: [
+          { id: 'kpi-007', nombre: 'Ratio de Eficiencia', valor: 52, meta: 45, unidad: '%', umbralMaximo: 60, canales: ['in-app'], frecuencia: 'mensual' },
+          { id: 'kpi-008', nombre: 'Automatización de Procesos', valor: 68, meta: 80, unidad: '%', umbralMaximo: 50, canales: ['in-app'], frecuencia: 'trimestral' }
+        ]
+      }
+    ]
+  },
+
+  // ============================================================
+  // NIVEL 2: ÁREAS (4 áreas principales)
+  // ============================================================
+
+  // ÁREA 1: Dirección de Riesgos
+  {
+    id: 'norg-002',
+    organigramaId: 'org-001',
+    nombre: 'Dirección de Riesgos',
+    descripcion: 'Área responsable de la identificación, evaluación, mitigación y monitoreo de todos los riesgos del grupo financiero incluyendo riesgos operacionales, crediticios, de mercado y de liquidez.',
+    cargo: 'Directora de Riesgos (CRO)',
+    departamento: 'Gestión de Riesgos',
+    email: 'riesgos@gfatlas.mx',
+    telefono: '+52 55 5000 0002',
+    padreId: 'norg-001',
+    tipo: 'AREA',
+    icono: 'pi pi-exclamation-triangle',
+    responsable: { id: 'usr-002', nombre: 'María Elena Gutiérrez Vega', email: 'mgutierrez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/2.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-005', nombre: 'Código de área', tipo: 'TEXT', valor: 'RISK-001', requerido: true },
+      { id: 'pc-006', nombre: 'Personal asignado', tipo: 'NUMBER', valor: 85, requerido: false },
+      { id: 'pc-007', nombre: 'Presupuesto anual (MXN)', tipo: 'NUMBER', valor: 45000000, requerido: true },
+      { id: 'pc-008', nombre: 'Metodología', tipo: 'TEXT', valor: 'COSO ERM / ISO 31000', requerido: true }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 2,
+      impacto: 2,
+      nivelTolerancia: 'bajo',
+      descripcion: 'Tolerancia baja - El área de riesgos debe mantener los más altos estándares de control'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-risk-001',
+        nombre: 'Reducción de Riesgo Operacional',
+        descripcion: 'Minimizar pérdidas por fallas en procesos, personas, sistemas o eventos externos',
+        kpis: [
+          { id: 'kpi-r001', nombre: 'Índice de Riesgo Operacional', valor: 2.5, meta: 2.0, unidad: 'índice', umbralMaximo: 3.0, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-r002', nombre: 'Eventos de Pérdida', valor: 12, meta: 5, unidad: 'cantidad', umbralMaximo: 20, canales: ['in-app'], frecuencia: 'mensual' }
+        ]
+      },
+      {
+        id: 'obj-risk-002',
+        nombre: 'Gestión de Riesgo Crediticio',
+        descripcion: 'Mantener la calidad de la cartera crediticia dentro de los límites establecidos',
+        kpis: [
+          { id: 'kpi-r003', nombre: 'Índice de Morosidad', valor: 2.8, meta: 2.0, unidad: '%', umbralMaximo: 4.0, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-r004', nombre: 'Cobertura de Provisiones', valor: 145, meta: 150, unidad: '%', umbralMaximo: 120, canales: ['in-app'], frecuencia: 'mensual' }
+        ]
+      }
+    ]
+  },
+
+  // ÁREA 2: Dirección de Cumplimiento
+  {
+    id: 'norg-003',
+    organigramaId: 'org-001',
+    nombre: 'Dirección de Cumplimiento',
+    descripcion: 'Área encargada de asegurar el cumplimiento de todas las regulaciones bancarias, prevención de lavado de dinero, protección al consumidor y normativas internacionales.',
+    cargo: 'Director de Cumplimiento (CCO)',
+    departamento: 'Cumplimiento Normativo',
+    email: 'cumplimiento@gfatlas.mx',
+    telefono: '+52 55 5000 0003',
+    padreId: 'norg-001',
+    tipo: 'AREA',
+    icono: 'pi pi-check-circle',
+    responsable: { id: 'usr-003', nombre: 'Carlos Hernández Mora', email: 'chernandez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/3.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-009', nombre: 'Código de área', tipo: 'TEXT', valor: 'COMP-001', requerido: true },
+      { id: 'pc-010', nombre: 'Personal asignado', tipo: 'NUMBER', valor: 62, requerido: false },
+      { id: 'pc-011', nombre: 'Reguladores supervisores', tipo: 'TEXT', valor: 'CNBV, Banxico, CONDUSEF, UIF', requerido: true }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 1,
+      impacto: 4,
+      nivelTolerancia: 'muy bajo',
+      descripcion: 'Cero tolerancia a incumplimientos regulatorios que afecten licencias o reputación'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-comp-001',
+        nombre: 'Cumplimiento Regulatorio CNBV',
+        descripcion: 'Asegurar adherencia total a disposiciones de la Comisión Nacional Bancaria',
+        kpis: [
+          { id: 'kpi-c001', nombre: '% Cumplimiento CNBV', valor: 96, meta: 100, unidad: '%', umbralMaximo: 90, canales: ['in-app', 'email'], frecuencia: 'mensual' },
+          { id: 'kpi-c002', nombre: 'Observaciones CNBV Abiertas', valor: 2, meta: 0, unidad: 'cantidad', umbralMaximo: 5, canales: ['in-app', 'email', 'webhook'], frecuencia: 'semanal' }
+        ]
+      },
+      {
+        id: 'obj-comp-002',
+        nombre: 'Prevención de Lavado de Dinero',
+        descripcion: 'Mantener controles efectivos para prevenir operaciones con recursos ilícitos',
+        kpis: [
+          { id: 'kpi-c003', nombre: 'Alertas PLD Procesadas', valor: 95, meta: 100, unidad: '%', umbralMaximo: 85, canales: ['in-app'], frecuencia: 'semanal' },
+          { id: 'kpi-c004', nombre: 'Tiempo Promedio de Análisis', valor: 48, meta: 24, unidad: 'horas', umbralMaximo: 72, canales: ['in-app'], frecuencia: 'semanal' }
+        ]
+      }
+    ]
+  },
+
+  // ÁREA 3: Dirección de Seguridad de la Información
+  {
+    id: 'norg-004',
+    organigramaId: 'org-001',
+    nombre: 'Dirección de Seguridad de la Información',
+    descripcion: 'Área responsable de la estrategia de ciberseguridad, protección de datos, respuesta a incidentes y continuidad del negocio tecnológico.',
+    cargo: 'Director de Seguridad (CISO)',
+    departamento: 'Seguridad de la Información',
+    email: 'seguridad@gfatlas.mx',
+    telefono: '+52 55 5000 0004',
+    padreId: 'norg-001',
+    tipo: 'AREA',
+    icono: 'pi pi-shield',
+    responsable: { id: 'usr-004', nombre: 'Roberto Torres Ramírez', email: 'rtorres@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/4.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-012', nombre: 'Código de área', tipo: 'TEXT', valor: 'SEC-001', requerido: true },
+      { id: 'pc-013', nombre: 'Personal asignado', tipo: 'NUMBER', valor: 78, requerido: false },
+      { id: 'pc-014', nombre: 'Certificaciones', tipo: 'TEXT', valor: 'ISO 27001, PCI-DSS, SOC2', requerido: true },
+      { id: 'pc-015', nombre: 'Presupuesto anual (MXN)', tipo: 'NUMBER', valor: 95000000, requerido: true }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 1,
+      impacto: 4,
+      nivelTolerancia: 'muy bajo',
+      descripcion: 'Tolerancia mínima a brechas de seguridad y exposición de datos sensibles'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-sec-001',
+        nombre: 'Protección contra Ciberataques',
+        descripcion: 'Prevenir, detectar y responder efectivamente a amenazas cibernéticas',
+        kpis: [
+          { id: 'kpi-s001', nombre: 'Incidentes Críticos', valor: 0, meta: 0, unidad: 'cantidad', umbralMaximo: 1, canales: ['in-app', 'email', 'webhook'], frecuencia: 'diaria' },
+          { id: 'kpi-s002', nombre: 'Tiempo de Detección (MTTD)', valor: 15, meta: 10, unidad: 'minutos', umbralMaximo: 30, canales: ['in-app'], frecuencia: 'semanal' }
+        ]
+      },
+      {
+        id: 'obj-sec-002',
+        nombre: 'Madurez de Seguridad',
+        descripcion: 'Elevar el nivel de madurez en controles de seguridad según NIST CSF',
+        kpis: [
+          { id: 'kpi-s003', nombre: 'Nivel de Madurez NIST', valor: 3.2, meta: 4.0, unidad: 'nivel', umbralMaximo: 2.5, canales: ['in-app'], frecuencia: 'trimestral' },
+          { id: 'kpi-s004', nombre: 'Vulnerabilidades Críticas Abiertas', valor: 5, meta: 0, unidad: 'cantidad', umbralMaximo: 10, canales: ['in-app', 'email'], frecuencia: 'semanal' }
+        ]
+      }
+    ]
+  },
+
+  // ÁREA 4: Dirección de Tecnología
+  {
+    id: 'norg-005',
+    organigramaId: 'org-001',
+    nombre: 'Dirección de Tecnología',
+    descripcion: 'Área responsable de la infraestructura tecnológica, desarrollo de sistemas, operaciones de TI y transformación digital del grupo financiero.',
+    cargo: 'Director de Tecnología (CTO)',
+    departamento: 'Tecnología de la Información',
+    email: 'tecnologia@gfatlas.mx',
+    telefono: '+52 55 5000 0005',
+    padreId: 'norg-001',
+    tipo: 'AREA',
+    icono: 'pi pi-server',
+    responsable: { id: 'usr-005', nombre: 'Jorge Méndez Fuentes', email: 'jmendez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/5.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-016', nombre: 'Código de área', tipo: 'TEXT', valor: 'TECH-001', requerido: true },
+      { id: 'pc-017', nombre: 'Personal asignado', tipo: 'NUMBER', valor: 245, requerido: false },
+      { id: 'pc-018', nombre: 'Presupuesto anual (MXN)', tipo: 'NUMBER', valor: 320000000, requerido: true },
+      { id: 'pc-019', nombre: 'Data Centers', tipo: 'NUMBER', valor: 3, requerido: false }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 2,
+      impacto: 3,
+      nivelTolerancia: 'moderado',
+      descripcion: 'Tolerancia moderada balanceando innovación con estabilidad operacional'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-tech-001',
+        nombre: 'Disponibilidad de Servicios',
+        descripcion: 'Garantizar alta disponibilidad de sistemas críticos bancarios',
+        kpis: [
+          { id: 'kpi-t001', nombre: 'Uptime Servicios Críticos', valor: 99.92, meta: 99.99, unidad: '%', umbralMaximo: 99.5, canales: ['in-app', 'email', 'webhook'], frecuencia: 'diaria' },
+          { id: 'kpi-t002', nombre: 'Incidentes P1', valor: 2, meta: 0, unidad: 'cantidad', umbralMaximo: 5, canales: ['in-app', 'email'], frecuencia: 'semanal' }
+        ]
+      },
+      {
+        id: 'obj-tech-002',
+        nombre: 'Transformación Digital',
+        descripcion: 'Acelerar la digitalización de procesos y servicios bancarios',
+        kpis: [
+          { id: 'kpi-t003', nombre: 'Procesos Digitalizados', valor: 72, meta: 85, unidad: '%', umbralMaximo: 60, canales: ['in-app'], frecuencia: 'mensual' },
+          { id: 'kpi-t004', nombre: 'Adopción Banca Digital', valor: 68, meta: 80, unidad: '%', umbralMaximo: 50, canales: ['in-app'], frecuencia: 'mensual' }
+        ]
+      }
+    ]
+  },
+
+  // ============================================================
+  // NIVEL 3: SUBÁREAS (8 subáreas - 2 por cada área)
+  // ============================================================
+
+  // SUBÁREAS de Riesgos (norg-002)
+  {
+    id: 'norg-006',
+    organigramaId: 'org-001',
+    nombre: 'Riesgos Operacionales',
+    descripcion: 'Subárea especializada en la identificación, medición y control de riesgos derivados de procesos, personas, sistemas y eventos externos.',
+    cargo: 'Gerente de Riesgos Operacionales',
+    departamento: 'Riesgo Operacional',
+    email: 'riesgo.operacional@gfatlas.mx',
+    telefono: '+52 55 5000 0006',
+    padreId: 'norg-002',
+    tipo: 'SUBAREA',
+    icono: 'pi pi-cog',
+    responsable: { id: 'usr-006', nombre: 'Ana Patricia López García', email: 'alopez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/6.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-020', nombre: 'Metodología', tipo: 'TEXT', valor: 'Basel III - AMA', requerido: true },
+      { id: 'pc-021', nombre: 'Analistas', tipo: 'NUMBER', valor: 18, requerido: false },
+      { id: 'pc-022', nombre: 'Procesos mapeados', tipo: 'NUMBER', valor: 450, requerido: false }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 2,
+      impacto: 2,
+      nivelTolerancia: 'bajo',
+      descripcion: 'Enfoque preventivo con tolerancia limitada a fallas operacionales'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-rop-001',
+        nombre: 'Control de Eventos de Pérdida',
+        descripcion: 'Reducir frecuencia e impacto de eventos de pérdida operacional',
+        kpis: [
+          { id: 'kpi-ro001', nombre: 'Eventos de Pérdida Mensuales', valor: 8, meta: 3, unidad: 'cantidad', umbralMaximo: 15, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-ro002', nombre: 'Pérdida Acumulada (MXN M)', valor: 2.5, meta: 1.0, unidad: 'millones', umbralMaximo: 5.0, canales: ['in-app', 'email'], frecuencia: 'mensual' }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: 'norg-007',
+    organigramaId: 'org-001',
+    nombre: 'Riesgos de Crédito',
+    descripcion: 'Subárea dedicada a la evaluación, seguimiento y control del riesgo crediticio en todas las líneas de negocio.',
+    cargo: 'Gerente de Riesgos de Crédito',
+    departamento: 'Riesgo de Crédito',
+    email: 'riesgo.credito@gfatlas.mx',
+    telefono: '+52 55 5000 0007',
+    padreId: 'norg-002',
+    tipo: 'SUBAREA',
+    icono: 'pi pi-credit-card',
+    responsable: { id: 'usr-007', nombre: 'Fernando Vega Soto', email: 'fvega@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/7.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-023', nombre: 'Cartera administrada (MXN MM)', tipo: 'NUMBER', valor: 85000, requerido: true },
+      { id: 'pc-024', nombre: 'Modelos de scoring', tipo: 'NUMBER', valor: 12, requerido: false },
+      { id: 'pc-025', nombre: 'Analistas de crédito', tipo: 'NUMBER', valor: 35, requerido: false }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 3,
+      impacto: 3,
+      nivelTolerancia: 'moderado',
+      descripcion: 'Balance entre crecimiento de cartera y calidad crediticia'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-rcr-001',
+        nombre: 'Calidad de Cartera',
+        descripcion: 'Mantener indicadores de morosidad dentro de límites aceptables',
+        kpis: [
+          { id: 'kpi-rc001', nombre: 'Índice de Morosidad 90+ días', valor: 2.8, meta: 2.0, unidad: '%', umbralMaximo: 4.0, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-rc002', nombre: 'Cobertura de Reservas', valor: 148, meta: 150, unidad: '%', umbralMaximo: 120, canales: ['in-app'], frecuencia: 'mensual' }
+        ]
+      }
+    ]
+  },
+
+  // SUBÁREAS de Cumplimiento (norg-003)
+  {
+    id: 'norg-008',
+    organigramaId: 'org-001',
+    nombre: 'Cumplimiento Regulatorio',
+    descripcion: 'Subárea responsable del seguimiento y cumplimiento de disposiciones regulatorias de CNBV, Banxico y otras autoridades.',
+    cargo: 'Gerente de Cumplimiento Regulatorio',
+    departamento: 'Regulación Bancaria',
+    email: 'regulatorio@gfatlas.mx',
+    telefono: '+52 55 5000 0008',
+    padreId: 'norg-003',
+    tipo: 'SUBAREA',
+    icono: 'pi pi-book',
+    responsable: { id: 'usr-008', nombre: 'Sofía Delgado Cruz', email: 'sdelgado@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/8.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-026', nombre: 'Regulaciones monitoreadas', tipo: 'NUMBER', valor: 85, requerido: false },
+      { id: 'pc-027', nombre: 'Reportes regulatorios mensuales', tipo: 'NUMBER', valor: 42, requerido: true },
+      { id: 'pc-028', nombre: 'Especialistas', tipo: 'NUMBER', valor: 22, requerido: false }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 1,
+      impacto: 4,
+      nivelTolerancia: 'muy bajo',
+      descripcion: 'Sin tolerancia a incumplimientos que generen sanciones regulatorias'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-creg-001',
+        nombre: 'Reportería Regulatoria',
+        descripcion: 'Entregar todos los reportes regulatorios en tiempo y forma',
+        kpis: [
+          { id: 'kpi-cr001', nombre: 'Reportes Entregados a Tiempo', valor: 98, meta: 100, unidad: '%', umbralMaximo: 95, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-cr002', nombre: 'Errores en Reportes', valor: 2, meta: 0, unidad: 'cantidad', umbralMaximo: 5, canales: ['in-app'], frecuencia: 'mensual' }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: 'norg-009',
+    organigramaId: 'org-001',
+    nombre: 'Prevención de Lavado de Dinero (PLD/AML)',
+    descripcion: 'Subárea especializada en prevención, detección y reporte de operaciones con recursos de procedencia ilícita.',
+    cargo: 'Oficial PLD/AML',
+    departamento: 'PLD/AML',
+    email: 'pld@gfatlas.mx',
+    telefono: '+52 55 5000 0009',
+    padreId: 'norg-003',
+    tipo: 'SUBAREA',
+    icono: 'pi pi-search',
+    responsable: { id: 'usr-009', nombre: 'Patricia Reyes Solís', email: 'preyes@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/9.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-029', nombre: 'Marco normativo', tipo: 'TEXT', valor: 'Ley Federal PLD / FATF', requerido: true },
+      { id: 'pc-030', nombre: 'Alertas mensuales promedio', tipo: 'NUMBER', valor: 2500, requerido: false },
+      { id: 'pc-031', nombre: 'Analistas PLD', tipo: 'NUMBER', valor: 28, requerido: false }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 1,
+      impacto: 4,
+      nivelTolerancia: 'muy bajo',
+      descripcion: 'Cero tolerancia a operaciones con recursos ilícitos'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-pld-001',
+        nombre: 'Efectividad en Detección',
+        descripcion: 'Mantener sistemas efectivos de detección de operaciones inusuales',
+        kpis: [
+          { id: 'kpi-pld001', nombre: 'Alertas Procesadas', valor: 96, meta: 100, unidad: '%', umbralMaximo: 90, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-pld002', nombre: 'Tiempo de Análisis Promedio', valor: 36, meta: 24, unidad: 'horas', umbralMaximo: 72, canales: ['in-app'], frecuencia: 'semanal' },
+          { id: 'kpi-pld003', nombre: 'ROIs Presentados', valor: 45, meta: 50, unidad: 'cantidad', umbralMaximo: 30, canales: ['in-app'], frecuencia: 'mensual' }
+        ]
+      }
+    ]
+  },
+
+  // SUBÁREAS de Seguridad (norg-004)
+  {
+    id: 'norg-010',
+    organigramaId: 'org-001',
+    nombre: 'Ciberseguridad',
+    descripcion: 'Subárea dedicada a la protección de infraestructura tecnológica y datos contra amenazas cibernéticas.',
+    cargo: 'Gerente de Ciberseguridad',
+    departamento: 'Ciberseguridad',
+    email: 'ciberseguridad@gfatlas.mx',
+    telefono: '+52 55 5000 0010',
+    padreId: 'norg-004',
+    tipo: 'SUBAREA',
+    icono: 'pi pi-lock',
+    responsable: { id: 'usr-010', nombre: 'Miguel Ángel Ruiz', email: 'maruiz@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/10.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-032', nombre: 'Certificaciones equipo', tipo: 'TEXT', valor: 'CISSP, CEH, OSCP', requerido: true },
+      { id: 'pc-033', nombre: 'Herramientas de seguridad', tipo: 'NUMBER', valor: 35, requerido: false },
+      { id: 'pc-034', nombre: 'Especialistas', tipo: 'NUMBER', valor: 32, requerido: false }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 1,
+      impacto: 4,
+      nivelTolerancia: 'muy bajo',
+      descripcion: 'Tolerancia mínima a brechas de seguridad y accesos no autorizados'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-cyber-001',
+        nombre: 'Prevención de Intrusiones',
+        descripcion: 'Prevenir accesos no autorizados y ataques cibernéticos exitosos',
+        kpis: [
+          { id: 'kpi-cy001', nombre: 'Intentos de Intrusión Bloqueados', valor: 99.8, meta: 100, unidad: '%', umbralMaximo: 99, canales: ['in-app', 'email'], frecuencia: 'diaria' },
+          { id: 'kpi-cy002', nombre: 'Vulnerabilidades Críticas', valor: 3, meta: 0, unidad: 'cantidad', umbralMaximo: 10, canales: ['in-app', 'email', 'webhook'], frecuencia: 'semanal' }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: 'norg-011',
+    organigramaId: 'org-001',
+    nombre: 'Centro de Operaciones de Seguridad (SOC)',
+    descripcion: 'Centro de monitoreo 24/7 para detección, análisis y respuesta a incidentes de seguridad.',
+    cargo: 'Gerente del SOC',
+    departamento: 'SOC',
+    email: 'soc@gfatlas.mx',
+    telefono: '+52 55 5000 0011',
+    padreId: 'norg-004',
+    tipo: 'SUBAREA',
+    icono: 'pi pi-eye',
+    responsable: { id: 'usr-011', nombre: 'Sandra Pérez Luna', email: 'sperez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/11.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-035', nombre: 'Operación', tipo: 'TEXT', valor: '24x7x365', requerido: true },
+      { id: 'pc-036', nombre: 'Alertas diarias promedio', tipo: 'NUMBER', valor: 15000, requerido: false },
+      { id: 'pc-037', nombre: 'Analistas por turno', tipo: 'NUMBER', valor: 8, requerido: true }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 2,
+      impacto: 3,
+      nivelTolerancia: 'bajo',
+      descripcion: 'Respuesta rápida y efectiva a todos los eventos de seguridad'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-soc-001',
+        nombre: 'Respuesta a Incidentes',
+        descripcion: 'Detectar y responder rápidamente a eventos de seguridad',
+        kpis: [
+          { id: 'kpi-soc001', nombre: 'MTTD (Tiempo de Detección)', valor: 12, meta: 5, unidad: 'minutos', umbralMaximo: 30, canales: ['in-app', 'email'], frecuencia: 'diaria' },
+          { id: 'kpi-soc002', nombre: 'MTTR (Tiempo de Respuesta)', valor: 45, meta: 30, unidad: 'minutos', umbralMaximo: 60, canales: ['in-app', 'email'], frecuencia: 'diaria' },
+          { id: 'kpi-soc003', nombre: 'Incidentes Contenidos en SLA', valor: 94, meta: 98, unidad: '%', umbralMaximo: 85, canales: ['in-app'], frecuencia: 'semanal' }
+        ]
+      }
+    ]
+  },
+
+  // SUBÁREAS de Tecnología (norg-005)
+  {
+    id: 'norg-012',
+    organigramaId: 'org-001',
+    nombre: 'Infraestructura y Operaciones TI',
+    descripcion: 'Subárea responsable de la gestión de data centers, servidores, redes y operaciones de TI.',
+    cargo: 'Gerente de Infraestructura',
+    departamento: 'Infraestructura TI',
+    email: 'infraestructura@gfatlas.mx',
+    telefono: '+52 55 5000 0012',
+    padreId: 'norg-005',
+    tipo: 'SUBAREA',
+    icono: 'pi pi-database',
+    responsable: { id: 'usr-012', nombre: 'Eduardo Sánchez Mora', email: 'esanchez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/12.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-038', nombre: 'Servidores físicos', tipo: 'NUMBER', valor: 450, requerido: false },
+      { id: 'pc-039', nombre: 'VMs activas', tipo: 'NUMBER', valor: 2800, requerido: false },
+      { id: 'pc-040', nombre: 'SLA Uptime', tipo: 'TEXT', valor: '99.99%', requerido: true }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 2,
+      impacto: 3,
+      nivelTolerancia: 'bajo',
+      descripcion: 'Prioridad máxima a disponibilidad y continuidad de servicios'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-infra-001',
+        nombre: 'Disponibilidad de Infraestructura',
+        descripcion: 'Garantizar operación continua de la infraestructura tecnológica',
+        kpis: [
+          { id: 'kpi-inf001', nombre: 'Uptime General', valor: 99.95, meta: 99.99, unidad: '%', umbralMaximo: 99.5, canales: ['in-app', 'email', 'webhook'], frecuencia: 'diaria' },
+          { id: 'kpi-inf002', nombre: 'Incidentes de Infraestructura P1', valor: 1, meta: 0, unidad: 'cantidad', umbralMaximo: 3, canales: ['in-app', 'email'], frecuencia: 'semanal' }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: 'norg-013',
+    organigramaId: 'org-001',
+    nombre: 'Desarrollo de Sistemas',
+    descripcion: 'Subárea de desarrollo de aplicaciones bancarias, APIs y sistemas de integración.',
+    cargo: 'Gerente de Desarrollo',
+    departamento: 'Desarrollo de Software',
+    email: 'desarrollo@gfatlas.mx',
+    telefono: '+52 55 5000 0013',
+    padreId: 'norg-005',
+    tipo: 'SUBAREA',
+    icono: 'pi pi-code',
+    responsable: { id: 'usr-013', nombre: 'Diana Torres Campos', email: 'dtorres@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/13.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-041', nombre: 'Desarrolladores', tipo: 'NUMBER', valor: 85, requerido: false },
+      { id: 'pc-042', nombre: 'Stack principal', tipo: 'TEXT', valor: 'Java, Angular, React Native', requerido: true },
+      { id: 'pc-043', nombre: 'Releases mensuales', tipo: 'NUMBER', valor: 12, requerido: false }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 3,
+      impacto: 2,
+      nivelTolerancia: 'moderado',
+      descripcion: 'Balance entre velocidad de desarrollo y calidad de código'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-dev-001',
+        nombre: 'Calidad de Software',
+        descripcion: 'Mantener altos estándares de calidad en el desarrollo de aplicaciones',
+        kpis: [
+          { id: 'kpi-dev001', nombre: 'Cobertura de Pruebas', valor: 78, meta: 85, unidad: '%', umbralMaximo: 70, canales: ['in-app'], frecuencia: 'semanal' },
+          { id: 'kpi-dev002', nombre: 'Defectos en Producción', valor: 5, meta: 2, unidad: 'cantidad', umbralMaximo: 10, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-dev003', nombre: 'Lead Time to Production', valor: 12, meta: 7, unidad: 'días', umbralMaximo: 21, canales: ['in-app'], frecuencia: 'mensual' }
+        ]
+      }
+    ]
+  }
 ];
 
 // ============================================================

@@ -17,6 +17,9 @@ import { TextareaModule } from 'primeng/textarea';
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
+import { DrawerModule } from 'primeng/drawer';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { CheckboxModule } from 'primeng/checkbox';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { GroqService } from '../../services/groq.service';
 import { ThemeService } from '../../services/theme.service';
@@ -205,7 +208,8 @@ export interface ApexChartOptions {
     CommonModule, FormsModule, ChartModule,
     ButtonModule, SelectModule, ToggleButtonModule, TabsModule,
     DividerModule, InputTextModule, TooltipModule, TagModule, CardModule,
-    AccordionModule, DialogModule, TextareaModule, ContextMenuModule, MenuModule, NgApexchartsModule
+    AccordionModule, DialogModule, TextareaModule, ContextMenuModule, MenuModule,
+    DrawerModule, InputNumberModule, CheckboxModule, NgApexchartsModule
   ],
   templateUrl: './graficas-interactivas.html',
   styleUrl: './graficas-interactivas.scss'
@@ -376,6 +380,53 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     modo: 'overlay'
   });
   mostrarDialogComparacion = signal(false);
+
+  // Drawer de creación de alerta
+  mostrarDrawerAlerta = signal(false);
+  alertaForm = signal<{
+    nombre: string;
+    descripcion: string;
+    metricaNombre: string;
+    operador: string;
+    valorUmbral: number;
+    severidad: string;
+    cooldownMinutos: number;
+    enviarInApp: boolean;
+    enviarEmail: boolean;
+    activo: boolean;
+    // Datos preseleccionados de la gráfica
+    categoriaSeleccionada: string;
+    campoSeleccionado: string;
+  }>({
+    nombre: '',
+    descripcion: '',
+    metricaNombre: '',
+    operador: 'GT',
+    valorUmbral: 0,
+    severidad: 'warning',
+    cooldownMinutos: 60,
+    enviarInApp: true,
+    enviarEmail: false,
+    activo: true,
+    categoriaSeleccionada: '',
+    campoSeleccionado: ''
+  });
+
+  // Opciones para el formulario de alerta
+  opcionesOperadorAlerta = [
+    { label: 'Mayor que (>)', value: 'GT' },
+    { label: 'Menor que (<)', value: 'LT' },
+    { label: 'Mayor o igual (>=)', value: 'GTE' },
+    { label: 'Menor o igual (<=)', value: 'LTE' },
+    { label: 'Igual (=)', value: 'EQ' },
+    { label: 'Diferente (!=)', value: 'NE' }
+  ];
+
+  opcionesSeveridadAlerta = [
+    { label: 'Información', value: 'info' },
+    { label: 'Advertencia', value: 'warning' },
+    { label: 'Crítico', value: 'critical' }
+  ];
 
   // Drill-down (siempre activo)
   drillDownStack = signal<{ campo: string; valor: string }[]>([]);
@@ -2527,7 +2578,15 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
     // Sumar todos los valores del primer dataset
     const firstDataset = data.datasets[0];
     if (firstDataset.data && Array.isArray(firstDataset.data)) {
-      return firstDataset.data.reduce((acc: number, val: number) => acc + (val || 0), 0);
+      return firstDataset.data.reduce((acc: number, val: any) => {
+        // Manejar tanto números como objetos (bubble/scatter charts)
+        if (typeof val === 'number') {
+          return acc + (val || 0);
+        } else if (val && typeof val === 'object' && typeof val.y === 'number') {
+          return acc + (val.y || 0);
+        }
+        return acc;
+      }, 0);
     }
 
     return data.datasets.length;
@@ -3029,13 +3088,73 @@ EJEMPLOS de respuestas correctas:
 
   /**
    * Crear una alerta basada en el valor de un datapoint
+   * Abre el drawer con los datos de la gráfica preseleccionados
    */
   crearAlertaParaValor(dataPoint: { categoria: string; valor: number; indice: number }): void {
-    this.createAlertEvent.emit({
-      categoria: dataPoint.categoria,
-      valor: dataPoint.valor,
-      campo: this.campoEjeX()
+    const campo = this.campoEjeX();
+    const campoInfo = this.camposDisponibles.find(c => c.value === campo);
+
+    // Pre-rellenar el formulario con datos de la gráfica
+    this.alertaForm.set({
+      nombre: `Alerta: ${dataPoint.categoria}`,
+      descripcion: `Alerta automática para ${campoInfo?.label || campo}: ${dataPoint.categoria}`,
+      metricaNombre: campo,
+      operador: 'GT',
+      valorUmbral: dataPoint.valor,
+      severidad: 'warning',
+      cooldownMinutos: 60,
+      enviarInApp: true,
+      enviarEmail: false,
+      activo: true,
+      categoriaSeleccionada: dataPoint.categoria,
+      campoSeleccionado: campo
     });
+
+    // Abrir el drawer
+    this.mostrarDrawerAlerta.set(true);
+  }
+
+  /**
+   * Actualizar un campo del formulario de alerta
+   */
+  updateAlertaForm(field: string, value: any): void {
+    this.alertaForm.update(form => ({
+      ...form,
+      [field]: value
+    }));
+  }
+
+  /**
+   * Cerrar el drawer de alerta
+   */
+  cerrarDrawerAlerta(): void {
+    this.mostrarDrawerAlerta.set(false);
+  }
+
+  /**
+   * Guardar la alerta y emitir el evento
+   */
+  guardarAlerta(): void {
+    const form = this.alertaForm();
+
+    // Emitir el evento con todos los datos de la alerta
+    this.createAlertEvent.emit({
+      categoria: form.categoriaSeleccionada,
+      valor: form.valorUmbral,
+      campo: form.campoSeleccionado,
+      // Datos adicionales del formulario
+      nombre: form.nombre,
+      descripcion: form.descripcion,
+      operador: form.operador,
+      severidad: form.severidad,
+      cooldownMinutos: form.cooldownMinutos,
+      enviarInApp: form.enviarInApp,
+      enviarEmail: form.enviarEmail,
+      activo: form.activo
+    } as any);
+
+    // Cerrar el drawer
+    this.cerrarDrawerAlerta();
   }
 
   /**

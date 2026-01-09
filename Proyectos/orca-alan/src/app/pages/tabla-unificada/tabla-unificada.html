@@ -66,6 +66,14 @@
 
     <ng-template pTemplate="end">
       <div class="flex gap-2 align-items-center">
+        <!-- Botón Ver Grafo / Ocultar Gráficos -->
+        <p-button
+          [label]="mostrarPanelVisualizacion() ? 'Ocultar Gráficos' : 'Ver Grafo'"
+          [icon]="mostrarPanelVisualizacion() ? 'pi pi-chart-bar' : 'pi pi-share-alt'"
+          [severity]="mostrarPanelVisualizacion() ? 'secondary' : 'primary'"
+          (onClick)="togglePanelVisualizacion()"
+          [disabled]="contadores().total === 0" />
+
         <!-- Botón de Ver Relaciones (solo con 1 registro seleccionado) -->
         @if (registrosSeleccionados().length === 1) {
           <p-button
@@ -78,14 +86,14 @@
             tooltipPosition="bottom" />
         }
 
-        <!-- Botón de Gráficas -->
+        <!-- Botón de Gráficas (modal completo) -->
         <p-button
           icon="pi pi-chart-bar"
           severity="secondary"
           [rounded]="true"
           [text]="true"
           (onClick)="abrirGraficas()"
-          pTooltip="Gráficas"
+          pTooltip="Gráficas avanzadas"
           tooltipPosition="bottom"
           [disabled]="contadores().total === 0" />
 
@@ -129,6 +137,162 @@
       </div>
     </ng-template>
   </p-toolbar>
+
+  <!-- Panel de Visualización (Sankey y otros gráficos) -->
+  @if (mostrarPanelVisualizacion()) {
+    <div class="panel-visualizacion">
+      <!-- Configuración -->
+      <div class="panel-configuracion">
+        <div class="panel-header">
+          <h3>Configuración</h3>
+          <div class="panel-header-actions">
+            <p-button
+              label="Asistente"
+              icon="pi pi-sparkles"
+              [text]="true"
+              size="small"
+              (onClick)="abrirGraficas()" />
+            <p-button
+              label="Biblioteca"
+              icon="pi pi-bookmark"
+              [text]="true"
+              size="small" />
+          </div>
+        </div>
+
+        <!-- Gráfico Guardado -->
+        <div class="config-section">
+          <label class="config-label">Gráfico Guardado</label>
+          <div class="grafico-guardado-selector">
+            <p-select
+              [options]="graficosGuardados()"
+              [ngModel]="graficoSeleccionadoId()"
+              (ngModelChange)="seleccionarGraficoGuardado($event)"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="Seleccionar gráfico guardado"
+              styleClass="w-full"
+              appendTo="body" />
+            <p-button
+              icon="pi pi-times"
+              severity="secondary"
+              [rounded]="true"
+              [text]="true"
+              size="small"
+              pTooltip="Limpiar selección" />
+            <p-button
+              icon="pi pi-plus"
+              severity="success"
+              [rounded]="true"
+              [text]="true"
+              size="small"
+              (onClick)="guardarNuevoGrafico()"
+              pTooltip="Guardar gráfico actual" />
+            <p-button
+              icon="pi pi-trash"
+              severity="danger"
+              [rounded]="true"
+              [text]="true"
+              size="small"
+              (onClick)="eliminarGraficoGuardado(graficoSeleccionadoId())"
+              pTooltip="Eliminar gráfico" />
+          </div>
+        </div>
+
+        <!-- Nombre del Gráfico -->
+        <div class="config-section">
+          <label class="config-label">Nombre del Gráfico</label>
+          <input
+            pInputText
+            [ngModel]="nombreGraficoVisualizacion()"
+            (ngModelChange)="nombreGraficoVisualizacion.set($event)"
+            placeholder="Nombre del gráfico"
+            class="w-full" />
+        </div>
+
+        <!-- Tipo de Gráfico -->
+        <div class="config-section">
+          <label class="config-label">Tipo de Gráfico</label>
+          <div class="tipos-grafico-grid">
+            @for (tipo of tiposGraficaVisualizacion; track tipo.tipo) {
+              <button
+                class="tipo-grafico-btn"
+                [class.active]="tipoGraficaVisualizacion() === tipo.tipo"
+                (click)="seleccionarTipoGrafico(tipo.tipo)"
+                [pTooltip]="tipo.nombre"
+                tooltipPosition="top">
+                <i [class]="tipo.icono"></i>
+                <span>{{ tipo.nombre }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Configurar Datos -->
+        <div class="config-section">
+          <p-button
+            label="Configurar Datos"
+            icon="pi pi-cog"
+            styleClass="w-full"
+            [outlined]="true"
+            (onClick)="abrirGraficas()" />
+        </div>
+
+        <!-- Período de Tiempo -->
+        <div class="config-section">
+          <label class="config-label">Período de Tiempo</label>
+          <p-select
+            [options]="[
+              { label: 'Todo', value: 'todo' },
+              { label: 'Hoy', value: 'hoy' },
+              { label: 'Esta semana', value: 'semana' },
+              { label: 'Este mes', value: 'mes' },
+              { label: 'Este trimestre', value: 'trimestre' },
+              { label: 'Este año', value: 'año' }
+            ]"
+            [ngModel]="periodoVisualizacion()"
+            (ngModelChange)="periodoVisualizacion.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            appendTo="body" />
+        </div>
+      </div>
+
+      <!-- Vista Previa -->
+      <div class="panel-preview">
+        <div class="preview-header">
+          <h3>Vista Previa</h3>
+          <div class="preview-title">{{ nombreGraficoVisualizacion() }}</div>
+          <p-button
+            icon="pi pi-external-link"
+            severity="secondary"
+            [rounded]="true"
+            [text]="true"
+            size="small"
+            pTooltip="Abrir en pantalla completa"
+            (onClick)="abrirGraficas()" />
+        </div>
+
+        <div class="preview-content">
+          <app-graficas-interactivas
+            [modoWidget]="true"
+            [tipoGraficaExterno]="tipoGraficaVisualizacion()"
+            [datos]="datosVisualizacion()"
+            [paletaExterna]="'vibrant'"
+            [animacionesExternas]="true"
+            [mostrarLeyendaExterna]="true" />
+        </div>
+
+        <div class="preview-footer">
+          <span class="stats-info">
+            {{ getEstadisticasVisualizacion().nodos }} nodos, {{ getEstadisticasVisualizacion().flujos }} flujos
+          </span>
+          <span class="stats-total">Total: {{ getEstadisticasVisualizacion().total | number }}</span>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- Tabla Principal -->
   <p-card styleClass="table-card">

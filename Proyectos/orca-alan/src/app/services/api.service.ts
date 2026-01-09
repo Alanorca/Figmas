@@ -914,9 +914,10 @@ export class ApiService {
     return from(this.db.getAll<any>('organigramas')).pipe(
       switchMap(async organigramas => {
         const nodos = await this.db.getAll<any>('nodos_organigrama');
+        // Devolver el array plano de nodos para que el componente construya el árbol
         return organigramas.map(o => ({
           ...o,
-          nodos: this.buildOrgTree(nodos.filter(n => n.organigramaId === o.id))
+          nodos: nodos.filter(n => n.organigramaId === o.id)
         }));
       })
     );
@@ -943,9 +944,10 @@ export class ApiService {
       switchMap(async organigrama => {
         if (!organigrama) return null;
         const nodos = await this.db.getAll<any>('nodos_organigrama');
+        // Devolver el array plano de nodos para que el componente construya el árbol
         return {
           ...organigrama,
-          nodos: this.buildOrgTree(nodos.filter(n => n.organigramaId === organigrama.id))
+          nodos: nodos.filter(n => n.organigramaId === organigrama.id)
         };
       })
     );
@@ -992,6 +994,29 @@ export class ApiService {
 
   deleteNodoOrganigrama(id: string): Observable<void> {
     return from(this.db.delete('nodos_organigrama', id));
+  }
+
+  resetOrganigramasData(): Observable<void> {
+    return from((async () => {
+      // Clear existing data
+      await this.db.clear('organigramas');
+      await this.db.clear('nodos_organigrama');
+
+      // Import fresh seed data
+      const seedData = await import('./seed-data');
+
+      // Re-seed organigramas
+      for (const org of seedData.organigramas) {
+        await this.db.add('organigramas', org);
+      }
+      console.log(`✓ ${seedData.organigramas.length} organigramas reseeded`);
+
+      // Re-seed nodos
+      for (const nodo of seedData.nodosOrganigrama) {
+        await this.db.add('nodos_organigrama', nodo);
+      }
+      console.log(`✓ ${seedData.nodosOrganigrama.length} nodos reseeded`);
+    })());
   }
 
   // ============================================================

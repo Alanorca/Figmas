@@ -856,3 +856,161 @@
       (onClick)="aplicarComparacionTemporal()" />
   </ng-template>
 </p-dialog>
+
+<!-- Drawer para crear alerta -->
+<p-drawer
+  [(visible)]="mostrarDrawerAlerta"
+  position="right"
+  [style]="{ width: '450px' }"
+  [modal]="true"
+  [showCloseIcon]="true"
+  (onHide)="cerrarDrawerAlerta()">
+  <ng-template pTemplate="header">
+    <div class="drawer-header-custom">
+      <div class="drawer-title">
+        <i class="pi pi-bell"></i>
+        <span>Crear Alerta por Umbral</span>
+      </div>
+      <div class="drawer-header-toggle">
+        <span class="toggle-label">Activa</span>
+        <p-tag [value]="alertaForm().activo ? 'Sí' : 'No'" [severity]="alertaForm().activo ? 'success' : 'secondary'" />
+        <p-checkbox [ngModel]="alertaForm().activo" (ngModelChange)="updateAlertaForm('activo', $event)" [binary]="true" />
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="drawer-content">
+    <!-- Info de la gráfica preseleccionada -->
+    <div class="preselected-info">
+      <div class="info-header">
+        <i class="pi pi-chart-bar"></i>
+        <span>Datos de la gráfica</span>
+      </div>
+      <div class="info-tags">
+        <p-tag [value]="alertaForm().campoSeleccionado" severity="info" icon="pi pi-database" />
+        <p-tag [value]="alertaForm().categoriaSeleccionada" severity="warn" icon="pi pi-tag" />
+        <p-tag [value]="'Valor: ' + alertaForm().valorUmbral" severity="success" icon="pi pi-hashtag" />
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <!-- Nombre -->
+      <div class="form-field full-width">
+        <label for="alerta-nombre">Nombre de la alerta *</label>
+        <input
+          pInputText
+          id="alerta-nombre"
+          [ngModel]="alertaForm().nombre"
+          (ngModelChange)="updateAlertaForm('nombre', $event)"
+          placeholder="Ej: Alerta de riesgo alto"
+          class="w-full" />
+      </div>
+
+      <!-- Descripción -->
+      <div class="form-field full-width">
+        <label for="alerta-descripcion">Descripción</label>
+        <textarea
+          pInputText
+          id="alerta-descripcion"
+          [ngModel]="alertaForm().descripcion"
+          (ngModelChange)="updateAlertaForm('descripcion', $event)"
+          rows="2"
+          placeholder="Descripción opcional de la alerta"
+          class="w-full"></textarea>
+      </div>
+
+      <!-- Condición -->
+      <div class="form-section full-width">
+        <h4><i class="pi pi-sliders-h mr-2"></i>Condición de activación</h4>
+      </div>
+
+      <!-- Operador -->
+      <div class="form-field">
+        <label for="alerta-operador">Operador *</label>
+        <p-select
+          id="alerta-operador"
+          [ngModel]="alertaForm().operador"
+          (ngModelChange)="updateAlertaForm('operador', $event)"
+          [options]="opcionesOperadorAlerta"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar"
+          appendTo="body"
+          styleClass="w-full" />
+      </div>
+
+      <!-- Valor Umbral -->
+      <div class="form-field">
+        <label for="alerta-umbral">Valor Umbral *</label>
+        <p-inputNumber
+          id="alerta-umbral"
+          [ngModel]="alertaForm().valorUmbral"
+          (ngModelChange)="updateAlertaForm('valorUmbral', $event)"
+          mode="decimal"
+          [minFractionDigits]="0"
+          [maxFractionDigits]="2"
+          styleClass="w-full" />
+      </div>
+
+      <!-- Severidad -->
+      <div class="form-field">
+        <label for="alerta-severidad">Severidad *</label>
+        <p-select
+          id="alerta-severidad"
+          [ngModel]="alertaForm().severidad"
+          (ngModelChange)="updateAlertaForm('severidad', $event)"
+          [options]="opcionesSeveridadAlerta"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar"
+          appendTo="body"
+          styleClass="w-full" />
+      </div>
+
+      <!-- Cooldown -->
+      <div class="form-field">
+        <label for="alerta-cooldown">Cooldown (minutos)</label>
+        <p-inputNumber
+          id="alerta-cooldown"
+          [ngModel]="alertaForm().cooldownMinutos"
+          (ngModelChange)="updateAlertaForm('cooldownMinutos', $event)"
+          [min]="1"
+          [max]="1440"
+          styleClass="w-full" />
+        <small class="hint">Tiempo mínimo entre alertas</small>
+      </div>
+
+      <!-- Canales de Notificación -->
+      <div class="form-section full-width">
+        <h4><i class="pi pi-send mr-2"></i>Canales de Notificación</h4>
+        <div class="checkbox-tags-group">
+          <div class="checkbox-tag-item" [class.active]="alertaForm().enviarInApp">
+            <p-checkbox [ngModel]="alertaForm().enviarInApp" (ngModelChange)="updateAlertaForm('enviarInApp', $event)" [binary]="true" />
+            <p-tag value="In-App" severity="info" icon="pi pi-desktop" />
+          </div>
+          <div class="checkbox-tag-item" [class.active]="alertaForm().enviarEmail">
+            <p-checkbox [ngModel]="alertaForm().enviarEmail" (ngModelChange)="updateAlertaForm('enviarEmail', $event)" [binary]="true" />
+            <p-tag value="Email" severity="warn" icon="pi pi-envelope" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="drawer-footer">
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        [text]="true"
+        severity="secondary"
+        (onClick)="cerrarDrawerAlerta()" />
+      <p-button
+        label="Crear Alerta"
+        icon="pi pi-check"
+        severity="success"
+        [disabled]="!alertaForm().nombre.trim()"
+        (onClick)="guardarAlerta()" />
+    </div>
+  </ng-template>
+</p-drawer>

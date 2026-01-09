@@ -41,7 +41,7 @@ import { StepsModule } from 'primeng/steps';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 // Componentes personalizados
-import { GraficasInteractivasComponent, DatosGrafica, FiltroGrafica } from '../../components/graficas-interactivas/graficas-interactivas';
+import { GraficasInteractivasComponent, DatosGrafica, FiltroGrafica, TipoGraficaAvanzada } from '../../components/graficas-interactivas/graficas-interactivas';
 
 // Services & Models
 import { TablaUnificadaService } from '../../services/tabla-unificada.service';
@@ -246,6 +246,77 @@ export class TablaUnificadaComponent implements OnInit {
   serieSecundariaColumna = signal('');
   serieSecundariaAgregacion = signal<'conteo' | 'suma' | 'promedio'>('conteo');
   mostrarEjeYSecundario = signal(true);
+
+  // ==================== PANEL DE VISUALIZACIÓN SANKEY ====================
+  mostrarPanelVisualizacion = signal(false);
+  tipoGraficaVisualizacion = signal<TipoGraficaAvanzada>('sankey');
+  nombreGraficoVisualizacion = signal('Flujo: Subtipo → Estado');
+
+  // Gráficos guardados
+  graficosGuardados = signal<{ id: string; nombre: string; tipo: string; config: any }[]>([
+    { id: '1', nombre: 'Matriz de Correlación de Variables de Riesgo', tipo: 'correlationMatrix', config: {} },
+    { id: '2', nombre: 'Flujo: Subtipo → Estado', tipo: 'sankey', config: {} },
+    { id: '3', nombre: 'Distribución por Severidad', tipo: 'donut', config: {} }
+  ]);
+  graficoSeleccionadoId = signal<string>('2');
+
+  // Período de tiempo para visualización
+  periodoVisualizacion = signal<'todo' | 'hoy' | 'semana' | 'mes' | 'trimestre' | 'año'>('todo');
+
+  // Tipos de gráfica disponibles para el panel
+  tiposGraficaVisualizacion: { tipo: TipoGraficaAvanzada; nombre: string; icono: string }[] = [
+    { tipo: 'line', nombre: 'Línea', icono: 'pi pi-chart-line' },
+    { tipo: 'bar', nombre: 'Barras', icono: 'pi pi-chart-bar' },
+    { tipo: 'column', nombre: 'Barras H.', icono: 'pi pi-align-left' },
+    { tipo: 'pie', nombre: 'Pastel', icono: 'pi pi-chart-pie' },
+    { tipo: 'donut', nombre: 'Dona', icono: 'pi pi-circle' },
+    { tipo: 'radar', nombre: 'Radar', icono: 'pi pi-compass' },
+    { tipo: 'riskMatrix', nombre: 'Mapa de Riesgos', icono: 'pi pi-th-large' },
+    { tipo: 'scatter', nombre: 'Dispersión', icono: 'pi pi-circle-fill' },
+    { tipo: 'bubble', nombre: 'Burbujas', icono: 'pi pi-circle' },
+    { tipo: 'correlationMatrix', nombre: 'Matriz Corr.', icono: 'pi pi-table' },
+    { tipo: 'gauge', nombre: 'Velocímetro', icono: 'pi pi-gauge' },
+    { tipo: 'stackedBar', nombre: 'Barras Apiladas', icono: 'pi pi-server' },
+    { tipo: 'stackedBarHorizontal', nombre: 'Barras H. Apiladas', icono: 'pi pi-align-justify' },
+    { tipo: 'area', nombre: 'Área', icono: 'pi pi-map' },
+    { tipo: 'stackedArea', nombre: 'Áreas Apiladas', icono: 'pi pi-chart-line' },
+    { tipo: 'combo', nombre: 'Barras + Línea', icono: 'pi pi-sliders-h' },
+    { tipo: 'heatmap', nombre: 'Heatmap Temporal', icono: 'pi pi-calendar' },
+    { tipo: 'boxplot', nombre: 'Boxplot', icono: 'pi pi-minus' },
+    { tipo: 'regression', nombre: 'Regresión', icono: 'pi pi-chart-line' },
+    { tipo: 'dumbbell', nombre: 'Dumbbell', icono: 'pi pi-arrows-h' },
+    { tipo: 'treemap', nombre: 'Treemap', icono: 'pi pi-objects-column' },
+    { tipo: 'sunburst', nombre: 'Sunburst', icono: 'pi pi-sun' },
+    { tipo: 'waterfall', nombre: 'Cascada', icono: 'pi pi-chart-bar' },
+    { tipo: 'bullet', nombre: 'Bullet', icono: 'pi pi-minus' },
+    { tipo: 'sankey', nombre: 'Sankey', icono: 'pi pi-share-alt' }
+  ];
+
+  // Configuración de datos para el gráfico
+  campoOrigenSankey = signal<string>('tipoEntidad');
+  campoDestinoSankey = signal<string>('estado');
+
+  // Computed: Datos para visualización según el tipo de gráfico
+  datosVisualizacion = computed<DatosGrafica>(() => {
+    const datos = this.datosFiltrados();
+    const tipo = this.tipoGraficaVisualizacion();
+
+    if (tipo === 'sankey') {
+      return this.generarDatosSankey(datos);
+    }
+
+    // Para otros tipos, agrupar por estado
+    const conteo: Record<string, number> = {};
+    datos.forEach(d => {
+      const key = d.estado || 'Sin estado';
+      conteo[key] = (conteo[key] || 0) + 1;
+    });
+
+    return {
+      labels: Object.keys(conteo),
+      series: [{ name: 'Cantidad', data: Object.values(conteo) }]
+    };
+  });
 
   // Drawer de relaciones/grafo
   showRelacionesDrawer = signal(false);
@@ -2552,5 +2623,142 @@ export class TablaUnificadaComponent implements OnInit {
     };
 
     this.exportacionesTabActivo = 'nueva';
+  }
+
+  // ==================== MÉTODOS PANEL VISUALIZACIÓN ====================
+
+  /**
+   * Toggle del panel de visualización
+   */
+  togglePanelVisualizacion(): void {
+    this.mostrarPanelVisualizacion.update(v => !v);
+  }
+
+  /**
+   * Seleccionar tipo de gráfico
+   */
+  seleccionarTipoGrafico(tipo: TipoGraficaAvanzada): void {
+    this.tipoGraficaVisualizacion.set(tipo);
+  }
+
+  /**
+   * Seleccionar gráfico guardado
+   */
+  seleccionarGraficoGuardado(id: string): void {
+    this.graficoSeleccionadoId.set(id);
+    const grafico = this.graficosGuardados().find(g => g.id === id);
+    if (grafico) {
+      this.tipoGraficaVisualizacion.set(grafico.tipo as TipoGraficaAvanzada);
+      this.nombreGraficoVisualizacion.set(grafico.nombre);
+    }
+  }
+
+  /**
+   * Guardar nuevo gráfico
+   */
+  guardarNuevoGrafico(): void {
+    const nuevoId = Date.now().toString();
+    const nuevoGrafico = {
+      id: nuevoId,
+      nombre: this.nombreGraficoVisualizacion(),
+      tipo: this.tipoGraficaVisualizacion(),
+      config: {
+        campoOrigen: this.campoOrigenSankey(),
+        campoDestino: this.campoDestinoSankey()
+      }
+    };
+    this.graficosGuardados.update(graficos => [...graficos, nuevoGrafico]);
+    this.graficoSeleccionadoId.set(nuevoId);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Gráfico guardado',
+      detail: `"${nuevoGrafico.nombre}" se ha guardado correctamente`
+    });
+  }
+
+  /**
+   * Eliminar gráfico guardado
+   */
+  eliminarGraficoGuardado(id: string): void {
+    this.graficosGuardados.update(graficos => graficos.filter(g => g.id !== id));
+    if (this.graficoSeleccionadoId() === id) {
+      const primero = this.graficosGuardados()[0];
+      if (primero) {
+        this.seleccionarGraficoGuardado(primero.id);
+      }
+    }
+  }
+
+  /**
+   * Generar datos para gráfico Sankey (flujo origen → destino)
+   */
+  generarDatosSankey(datos: RegistroUnificado[]): DatosGrafica {
+    const campoOrigen = this.campoOrigenSankey();
+    const campoDestino = this.campoDestinoSankey();
+
+    // Contar flujos entre origen y destino
+    const flujos: Record<string, Record<string, number>> = {};
+    const origenes = new Set<string>();
+    const destinos = new Set<string>();
+
+    datos.forEach(d => {
+      const origen = (d as any)[campoOrigen] || 'Sin clasificar';
+      const destino = (d as any)[campoDestino] || 'Sin estado';
+
+      origenes.add(origen);
+      destinos.add(destino);
+
+      if (!flujos[origen]) flujos[origen] = {};
+      flujos[origen][destino] = (flujos[origen][destino] || 0) + 1;
+    });
+
+    // Convertir a formato para el gráfico
+    const labels = [...Array.from(origenes), ...Array.from(destinos)];
+    const series: { name: string; data: number[] }[] = [];
+
+    // Crear series para cada origen
+    Array.from(origenes).forEach(origen => {
+      const valores = labels.map((_, i) => {
+        if (i < origenes.size) return 0; // Los orígenes no tienen valores directos
+        const destino = labels[i];
+        return flujos[origen]?.[destino] || 0;
+      });
+      series.push({ name: origen, data: valores });
+    });
+
+    // Para Sankey, usamos metadata adicional
+    return {
+      labels,
+      series,
+      metadata: {
+        tipo: 'sankey',
+        origenes: Array.from(origenes),
+        destinos: Array.from(destinos),
+        flujos,
+        totalNodos: origenes.size + destinos.size,
+        totalFlujos: Object.values(flujos).reduce((acc, dest) =>
+          acc + Object.values(dest).reduce((a, b) => a + b, 0), 0
+        )
+      }
+    } as DatosGrafica;
+  }
+
+  /**
+   * Obtener estadísticas del gráfico actual
+   */
+  getEstadisticasVisualizacion(): { nodos: number; flujos: number; total: number } {
+    const datos = this.datosVisualizacion() as any;
+    if (datos.metadata) {
+      return {
+        nodos: datos.metadata.totalNodos || 0,
+        flujos: datos.metadata.totalFlujos || 0,
+        total: this.datosFiltrados().length
+      };
+    }
+    return {
+      nodos: datos.labels.length,
+      flujos: 0,
+      total: this.datosFiltrados().length
+    };
   }
 }

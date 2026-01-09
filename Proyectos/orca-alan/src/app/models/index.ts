@@ -138,10 +138,43 @@ export interface Activo {
   riskAppetite?: RiskAppetite;
 }
 
+// Tipos de contenedor organizacional (jerarquía de 3 niveles)
+export type TipoContenedorOrganizacional = 'ORGANIZATION' | 'AREA' | 'SUBAREA';
+
+// Tipos de propiedad custom para contenedores organizacionales
+export type TipoPropiedadOrganizacion = 'TEXT' | 'NUMBER';
+
+// Propiedad personalizada de un contenedor organizacional
+export interface PropiedadOrganizacion {
+  id: string;
+  nombre: string;
+  tipo: TipoPropiedadOrganizacion;
+  valor: string | number;
+  requerido: boolean;
+}
+
+// Objetivo de negocio vinculado
+export interface ObjetivoNegocioVinculado {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  kpis?: { nombre: string; valor: number; meta: number }[];
+}
+
+// Usuario responsable
+export interface ResponsableContenedor {
+  id: string;
+  nombre: string;
+  email: string;
+  avatar?: string;
+}
+
 export interface NodoOrganigrama {
   id: string;
   nombre: string;
   descripcion?: string;
+  // Tipo de contenedor (ORGANIZATION, AREA, SUBAREA)
+  tipo: TipoContenedorOrganizacional;
   cargo: string;
   departamento: string;
   email: string;
@@ -150,6 +183,13 @@ export interface NodoOrganigrama {
   padreId?: string | null;
   organigramaId?: string;
   subordinados: NodoOrganigrama[];
+  // Nuevos campos según especificación
+  responsable?: ResponsableContenedor;
+  propiedadesCustom?: PropiedadOrganizacion[];
+  objetivosNegocio?: ObjetivoNegocioVinculado[];
+  // Campos de auditoría
+  fechaCreacion?: Date;
+  fechaActualizacion?: Date;
 }
 
 export interface Organigrama {
@@ -159,6 +199,27 @@ export interface Organigrama {
   fechaCreacion: Date;
   raiz: NodoOrganigrama;
 }
+
+// Constantes para iconos por tipo de contenedor
+export const ICONOS_CONTENEDOR: Record<TipoContenedorOrganizacional, string> = {
+  'ORGANIZATION': 'pi pi-building',
+  'AREA': 'pi pi-th-large',
+  'SUBAREA': 'pi pi-users'
+};
+
+// Constantes para colores por tipo de contenedor
+export const COLORES_CONTENEDOR: Record<TipoContenedorOrganizacional, string> = {
+  'ORGANIZATION': 'var(--primary-color)',
+  'AREA': 'var(--orange-500)',
+  'SUBAREA': 'var(--green-500)'
+};
+
+// Etiquetas para tipos de contenedor
+export const ETIQUETAS_CONTENEDOR: Record<TipoContenedorOrganizacional, string> = {
+  'ORGANIZATION': 'Organización',
+  'AREA': 'Área',
+  'SUBAREA': 'Subárea'
+};
 
 // Grafo de relaciones de activo
 export interface ActivoGraphNode {
