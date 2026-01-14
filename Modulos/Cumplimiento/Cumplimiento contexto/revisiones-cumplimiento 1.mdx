@@ -1,0 +1,1053 @@
+---
+title: "Revisiones de Cumplimiento Normativo"
+sidebar_label: "Revisiones de Cumplimiento"
+sidebar_position: 5
+---
+
+import ZoomableDiagram from '@site/src/components/ZoomableDiagram';
+
+# Historia de Usuario: Revisiones de Cumplimiento Normativo
+
+## 📋 Información General
+
+- **ID**: US-COMPLIANCE-001
+- **Módulo**: Gestión de Cumplimiento / Revisiones
+- **Prioridad**: Crítica
+- **Sprint**: Sprint 3-4
+
+## 👤 Historia de Usuario
+
+**Como** Usuario de ORCA SNS
+**Quiero** planificar, ejecutar y gestionar revisiones de cumplimiento normativo aplicando cuestionarios a **activos específicos o procesos de negocio** (pero no ambos en una misma revisión), invitando a usuarios internos y externos a responder, aprobando respuestas, y utilizando IA para identificar automáticamente riesgos, incidentes, deficiencias y controles
+**Quiero** configurar revisiones recurrentes (diarias, semanales, mensuales, trimestrales, anuales) para automatizar auditorías periódicas
+**Para** asegurar el cumplimiento continuo de normativas (ISO 27001, SOC 2, GDPR, etc.), detectar proactivamente brechas de cumplimiento, y mantener un registro auditable de evaluaciones con identificación automática de hallazgos críticos por IA.
+
+## ✅ Criterios de Aceptación
+
+### Feature: Selección de Tipo de Objetivo (Activos o Procesos)
+
+```gherkin
+Scenario: Usuario debe seleccionar tipo de objetivo antes de crear revisión
+  Given un "Director de Cumplimiento" está en el módulo de "Revisiones de Cumplimiento"
+  When selecciona "Nueva Revisión de Cumplimiento"
+  Then el sistema muestra un selector con dos opciones mutuamente excluyentes:
+    | Opción                     | Descripción                                      |
+    | Activos                    | Evaluar activos de información (servidores, bases de datos, aplicaciones, etc.) |
+    | Procesos                   | Evaluar procesos de negocio (gestión de cambios, respuesta a incidentes, etc.) |
+  And el usuario debe seleccionar una opción antes de continuar
+  And NO es posible seleccionar ambas opciones simultáneamente
+```
+
+```gherkin
+Scenario: Crear revisión orientada a activos
+  Given un "Usuario ORCA" seleccionó "Activos" como tipo de objetivo
+  When configura la revisión
+  Then el campo "Activos Objetivo" está habilitado y es obligatorio
+  And el campo "Procesos Objetivo" está deshabilitado y oculto
+  And el sistema solo permite seleccionar activos del catálogo de activos
+```
+
+```gherkin
+Scenario: Crear revisión orientada a procesos
+  Given un "Usuario ORCA" seleccionó "Procesos" como tipo de objetivo
+  When configura la revisión
+  Then el campo "Procesos Objetivo" está habilitado y es obligatorio
+  And el campo "Activos Objetivo" está deshabilitado y oculto
+  And el sistema solo permite seleccionar procesos del catálogo de procesos
+```
+
+```gherkin
+Scenario: Validación impide mezclar activos y procesos en una revisión
+  Given un usuario intenta crear una revisión vía API
+  When envía una solicitud con targetType: "assets" y processIds no vacío
+  Or envía una solicitud con targetType: "processes" y assetIds no vacío
+  Then el sistema rechaza la solicitud con error 400
+  And muestra mensaje: "Una revisión no puede evaluar activos y procesos simultáneamente. Seleccione un solo tipo de objetivo."
+```
+
+### Feature: Creación de Revisiones de Cumplimiento Internas (Activos)
+
+```gherkin
+Scenario: Crear revisión interna con usuarios de la organización para activos
+  Given un "usuario de ORCA" está en el módulo de "Revisiones de Cumplimiento"
+  And ha seleccionado "Activos" como tipo de objetivo
+  And existen los siguientes recursos:
+    | Tipo                      | Nombre                                    |
+    | Cuestionario              | "Evaluación ISO 27001 - Controles A.8"   |
+    | Activos objetivo          | "Servidor-Producción-01", "Base-Datos-Principal", "Firewall-Perimetral" |
+    | Usuarios internos         | "ana.lopez@empresa.com", "carlos.ruiz@empresa.com" |
+    | Aprobadores               | "director.ti@empresa.com"                |
+  When selecciona "Nueva Revisión de Cumplimiento"
+  And configura la revisión con los siguientes datos:
+    | Campo                      | Valor                                    |
+    | Título                     | Auditoría Trimestral ISO 27001 Q4 2025   |
+    | Tipo de Revisión           | Interna                                  |
+    | Tipo de Objetivo           | Activos                                  |
+    | Cuestionarios              | "Evaluación ISO 27001 - Controles A.8"   |
+    | Activos Objetivo           | "Servidor-Producción-01", "Base-Datos-Principal", "Firewall-Perimetral" |
+    | Usuarios Asignados         | "ana.lopez@empresa.com", "carlos.ruiz@empresa.com" |
+    | Aprobadores                | "director.ti@empresa.com"                |
+    | Fecha de Inicio            | 2025-12-01                               |
+    | Fecha de Vencimiento       | 2025-12-15                               |
+    | Estado                     | Pendiente                                |
+  And hace clic en "Crear Revisión"
+  Then el sistema crea la revisión con ID único y targetType: "assets"
+  And genera automáticamente respuestas individuales para cada combinación:
+    | Usuario                    | Activo                      | Cuestionario                           | Estado      |
+    | ana.lopez@empresa.com      | Servidor-Producción-01      | Evaluación ISO 27001 - Controles A.8   | Pendiente   |
+    | ana.lopez@empresa.com      | Base-Datos-Principal        | Evaluación ISO 27001 - Controles A.8   | Pendiente   |
+    | carlos.ruiz@empresa.com    | Firewall-Perimetral         | Evaluación ISO 27001 - Controles A.8   | Pendiente   |
+  And envía notificaciones internas a los usuarios asignados
+  And la revisión aparece en el dashboard con estado "Pendiente" y progreso "0% (0/3 respuestas)"
+```
+
+### Feature: Creación de Revisiones de Cumplimiento Internas (Procesos)
+
+```gherkin
+Scenario: Crear revisión interna para evaluar procesos de negocio
+  Given un "usuario de ORCA" está en el módulo de "Revisiones de Cumplimiento"
+  And ha seleccionado "Procesos" como tipo de objetivo
+  And existen los siguientes recursos:
+    | Tipo                      | Nombre                                              |
+    | Cuestionario              | "Evaluación de Madurez de Procesos ITIL"           |
+    | Procesos objetivo         | "Gestión de Cambios", "Gestión de Incidentes", "Gestión de Problemas" |
+    | Usuarios internos         | "gerente.ti@empresa.com", "analista.procesos@empresa.com" |
+    | Aprobadores               | "director.operaciones@empresa.com"                  |
+  When configura la revisión con los siguientes datos:
+    | Campo                      | Valor                                              |
+    | Título                     | Evaluación de Madurez ITIL Q4 2025                 |
+    | Tipo de Revisión           | Interna                                            |
+    | Tipo de Objetivo           | Procesos                                           |
+    | Cuestionarios              | "Evaluación de Madurez de Procesos ITIL"          |
+    | Procesos Objetivo          | "Gestión de Cambios", "Gestión de Incidentes", "Gestión de Problemas" |
+    | Usuarios Asignados         | "gerente.ti@empresa.com", "analista.procesos@empresa.com" |
+    | Aprobadores                | "director.operaciones@empresa.com"                  |
+    | Fecha de Inicio            | 2025-12-01                                         |
+    | Fecha de Vencimiento       | 2025-12-20                                         |
+  And hace clic en "Crear Revisión"
+  Then el sistema crea la revisión con ID único y targetType: "processes"
+  And genera automáticamente respuestas individuales para cada combinación proceso × usuario:
+    | Usuario                         | Proceso                   | Cuestionario                            | Estado      |
+    | gerente.ti@empresa.com          | Gestión de Cambios        | Evaluación de Madurez de Procesos ITIL  | Pendiente   |
+    | gerente.ti@empresa.com          | Gestión de Incidentes     | Evaluación de Madurez de Procesos ITIL  | Pendiente   |
+    | analista.procesos@empresa.com   | Gestión de Problemas      | Evaluación de Madurez de Procesos ITIL  | Pendiente   |
+  And envía notificaciones internas a los usuarios asignados
+```
+
+```gherkin
+Scenario: Usuario interno responde cuestionario de revisión para un proceso
+  Given existe una revisión "Evaluación de Madurez ITIL Q4 2025" con targetType: "processes"
+  And "gerente.ti@empresa.com" tiene asignada una respuesta para el proceso "Gestión de Cambios"
+  When "gerente.ti@empresa.com" accede a sus tareas pendientes
+  And selecciona "Responder Cuestionario: Gestión de Cambios"
+  And completa las respuestas:
+    | Pregunta                                          | Respuesta         | Evidencia                    | Comentarios                |
+    | ¿Existe procedimiento documentado?                | Sí                | procedimiento_cambios.pdf    | Versión 3.2 vigente        |
+    | Nivel de madurez del proceso (1-5)                | 4                 | -                            | Proceso optimizado         |
+    | ¿Se miden KPIs del proceso?                       | Sí                | dashboard_kpis.xlsx          | Revisión mensual           |
+  And sube archivos de evidencia
+  And hace clic en "Enviar Respuesta"
+  Then el sistema calcula el puntaje de cumplimiento automáticamente
+  And la respuesta cambia a estado "Enviado" con timestamp
+  And se notifica al aprobador "director.operaciones@empresa.com"
+```
+
+```gherkin
+Scenario: Usuario interno responde cuestionario de revisión para un activo
+  Given existe una revisión "Auditoría Trimestral ISO 27001 Q4 2025" con targetType: "assets"
+  And "ana.lopez@empresa.com" tiene asignada una respuesta para "Servidor-Producción-01"
+  When "ana.lopez@empresa.com" accede a sus tareas pendientes
+  And selecciona "Responder Cuestionario: Servidor-Producción-01"
+  And completa las respuestas:
+    | Pregunta                                          | Respuesta         | Evidencia                  | Comentarios              |
+    | ¿Existe inventario de activos actualizado?        | Sí                | inventario_q4.xlsx         | Actualizado mensualmente |
+    | Nivel de clasificación de información             | Confidencial      | -                          | -                        |
+    | Calidad del proceso de gestión (1-10)             | 8                 | -                          | Mejora continua aplicada |
+  And sube archivos de evidencia (3 archivos, 15MB total)
+  And hace clic en "Enviar Respuesta"
+  Then el sistema calcula el puntaje de cumplimiento automáticamente
+  And la respuesta cambia a estado "Enviado" con timestamp
+  And se notifica al aprobador "director.ti@empresa.com"
+  And el progreso de la revisión se actualiza: "33% (1/3 respuestas)"
+```
+
+### Feature: Creación de Revisiones de Cumplimiento Externas
+
+```gherkin
+Scenario: Crear revisión externa e invitar a proveedores por email (para activos)
+  Given un "Auditor" está en "Nueva Revisión de Cumplimiento"
+  And ha seleccionado "Activos" como tipo de objetivo
+  And existen cuestionarios de "Due Diligence de Proveedores"
+  And existen activos de tipo "Proveedor Crítico"
+  When selecciona "Tipo de Revisión: Externa"
+  And configura:
+    | Campo                      | Valor                                            |
+    | Título                     | Evaluación de Seguridad de Proveedores 2025      |
+    | Tipo de Objetivo           | Activos                                          |
+    | Cuestionarios              | "Cuestionario de Seguridad para Proveedores"     |
+    | Activos Objetivo           | "Proveedor-AWS", "Proveedor-Salesforce"          |
+    | Emails Externos            | proveedor1@aws.com, proveedor2@salesforce.com    |
+    | Contraseña de Acceso       | SecurePass2025!                                  |
+    | Aprobadores Internos       | auditor.interno@empresa.com                      |
+    | Fecha de Inicio            | 2025-12-05                                       |
+    | Fecha de Vencimiento       | 2025-12-20                                       |
+  And hace clic en "Crear y Enviar Invitaciones"
+  Then el sistema crea la revisión con reviewType: "external" y targetType: "assets"
+  And genera respuestas individuales para cada proveedor
+  And envía emails de invitación a los proveedores externos con:
+    | Elemento del Email          | Contenido                                        |
+    | Asunto                      | "Invitación: Evaluación de Seguridad de Proveedores 2025" |
+    | Cuerpo                      | Enlace único a formulario externo, contraseña de acceso |
+    | Enlace                      | https://app.ejemplo.com/compliance/external/[reviewId] |
+    | Fecha de Vencimiento        | 2025-12-20                                       |
+    | Instrucciones               | Cómo acceder y completar el cuestionario         |
+  And los proveedores NO requieren cuenta en el sistema
+  And los proveedores acceden con la contraseña proporcionada
+```
+
+```gherkin
+Scenario: Crear revisión externa para evaluar procesos de terceros
+  Given un "Auditor" está en "Nueva Revisión de Cumplimiento"
+  And ha seleccionado "Procesos" como tipo de objetivo
+  And existen cuestionarios de "Evaluación de Procesos de Terceros"
+  And existen procesos de tipo "Proceso Tercerizado"
+  When selecciona "Tipo de Revisión: Externa"
+  And configura:
+    | Campo                      | Valor                                            |
+    | Título                     | Evaluación de Procesos Tercerizados 2025         |
+    | Tipo de Objetivo           | Procesos                                         |
+    | Cuestionarios              | "Evaluación de Procesos de Terceros"             |
+    | Procesos Objetivo          | "Soporte Nivel 1 (Tercerizado)", "Mesa de Ayuda (Tercerizado)" |
+    | Emails Externos            | supervisor@tercero.com                           |
+    | Contraseña de Acceso       | ProcessEval2025!                                 |
+    | Aprobadores Internos       | auditor.interno@empresa.com                      |
+    | Fecha de Inicio            | 2025-12-05                                       |
+    | Fecha de Vencimiento       | 2025-12-20                                       |
+  And hace clic en "Crear y Enviar Invitaciones"
+  Then el sistema crea la revisión con reviewType: "external" y targetType: "processes"
+  And genera respuestas individuales para cada proceso × email externo
+```
+
+```gherkin
+Scenario: Usuario externo responde cuestionario sin autenticación
+  Given un proveedor recibe invitación para "Evaluación de Seguridad de Proveedores 2025"
+  When el proveedor abre el enlace del email
+  And ingresa la contraseña de acceso "SecurePass2025!"
+  And el sistema valida la contraseña
+  Then muestra el formulario de cuestionario externo con:
+    | Elemento                    | Estado                                           |
+    | Nombre de la Revisión       | "Evaluación de Seguridad de Proveedores 2025"    |
+    | Activo Asignado             | "Proveedor-AWS" (nombre visible)                 |
+    | Cuestionario                | "Cuestionario de Seguridad para Proveedores"     |
+    | Fecha de Vencimiento        | 2025-12-20                                       |
+  When el proveedor completa todas las preguntas obligatorias
+  And sube certificaciones de seguridad (PDFs de ISO 27001, SOC 2)
+  And hace clic en "Enviar Respuesta"
+  Then el sistema guarda la respuesta con estado "Enviado"
+  And notifica a los aprobadores internos
+  And muestra mensaje de confirmación al proveedor
+  And el proveedor NO puede editar la respuesta después de enviarla
+```
+
+### Feature: Aprobación y Rechazo de Respuestas
+
+```gherkin
+Scenario: Aprobador revisa y aprueba respuesta de cuestionario
+  Given existe una respuesta "Enviado" para "Servidor-Producción-01"
+  And el usuario actual es aprobador de la revisión
+  When el aprobador accede a "Respuestas Pendientes de Aprobación"
+  And selecciona la respuesta de "ana.lopez@empresa.com" para "Servidor-Producción-01"
+  Then el sistema muestra:
+    | Información                  | Detalle                                          |
+    | Usuario que respondió        | ana.lopez@empresa.com                            |
+    | Activo evaluado              | Servidor-Producción-01                           |
+    | Fecha de envío               | 2025-12-03 10:30 AM                              |
+    | Puntaje de cumplimiento      | 85% (Sobresaliente)                              |
+    | Respuestas completas         | 12/12                                            |
+    | Archivos de evidencia        | 3 archivos (inventario_q4.xlsx, procedimiento.pdf, captura.png) |
+  And el aprobador revisa cada respuesta y evidencia
+  And hace clic en "Aprobar Respuesta"
+  Then el sistema cambia el estado a "Aprobado"
+  And registra el timestamp de aprobación y el aprobador
+  And notifica al usuario que su respuesta fue aprobada
+  And el progreso de la revisión se actualiza
+```
+
+```gherkin
+Scenario: Aprobador revisa respuesta de evaluación de proceso
+  Given existe una respuesta "Enviado" para el proceso "Gestión de Cambios"
+  And la revisión tiene targetType: "processes"
+  And el usuario actual es aprobador de la revisión
+  When el aprobador accede a "Respuestas Pendientes de Aprobación"
+  And selecciona la respuesta para "Gestión de Cambios"
+  Then el sistema muestra:
+    | Información                  | Detalle                                          |
+    | Usuario que respondió        | gerente.ti@empresa.com                           |
+    | Proceso evaluado             | Gestión de Cambios                               |
+    | Fecha de envío               | 2025-12-05 14:00                                 |
+    | Puntaje de cumplimiento      | 80% (Sobresaliente)                              |
+    | Nivel de madurez             | 4 (Gestionado)                                   |
+  And el aprobador puede aprobar o rechazar la respuesta
+```
+
+```gherkin
+Scenario: Aprobador rechaza respuesta con comentarios
+  Given existe una respuesta "Enviado" con evidencia insuficiente
+  When el aprobador revisa la respuesta
+  And detecta que faltan evidencias críticas
+  And hace clic en "Rechazar Respuesta"
+  And proporciona razón de rechazo: "Falta evidencia de última actualización del inventario. Por favor, adjuntar documento actualizado de noviembre 2025."
+  And confirma el rechazo
+  Then el sistema cambia el estado a "Rechazado"
+  And almacena la razón de rechazo en rejectionReason
+  And notifica al usuario con la razón específica del rechazo
+  And la respuesta vuelve a estado "Pendiente" para que el usuario la corrija
+  And el usuario puede editar y reenviar la respuesta
+```
+
+### Feature: Análisis Automático con IA (Identificación de Riesgos, Incidentes, Deficiencias)
+
+```gherkin
+Scenario: IA identifica riesgos a partir de respuestas deficientes de cuestionario (Activos)
+  Given existe una revisión "Auditoría ISO 27001 Q4 2025" completada con targetType: "assets"
+  And una respuesta para "Servidor-Base-Datos-Principal" tiene las siguientes respuestas:
+    | Pregunta                                        | Respuesta         | Puntaje |
+    | ¿Existe política de control de acceso?          | No                | 0       |
+    | ¿Se realizan backups diarios?                   | No                | 0       |
+    | ¿Existe cifrado de datos en reposo?             | No                | 0       |
+    | Nivel de cumplimiento de parches de seguridad   | Bajo (1/10)       | 10      |
+  And el puntaje de cumplimiento calculado es 10% (Deficiente)
+  And el cuestionario tiene configurado autoAssetCreation para tipo "Riesgo"
+  When un aprobador aprueba la respuesta
+  And el sistema dispara el análisis de IA
+  Then la IA analiza las respuestas y el contexto del activo
+  And identifica que múltiples controles críticos están ausentes
+  And genera automáticamente los siguientes riesgos:
+    | Riesgo Identificado                                      | Probabilidad | Impacto | Activo Vinculado              |
+    | Riesgo de acceso no autorizado a base de datos          | Alta         | Crítico | Servidor-Base-Datos-Principal |
+    | Riesgo de pérdida de datos por falta de backups         | Alta         | Alto    | Servidor-Base-Datos-Principal |
+    | Riesgo de exfiltración de datos por falta de cifrado    | Media        | Crítico | Servidor-Base-Datos-Principal |
+  And crea activos de tipo "Riesgo" en el sistema con propiedades:
+    | Propiedad                  | Valor                                             |
+    | Nombre                     | "Riesgo de acceso no autorizado a base de datos"  |
+    | Descripción                | Generada por IA basada en respuestas del cuestionario |
+    | Causa Raíz                 | "Ausencia de política de control de acceso"       |
+    | Probabilidad               | Alta                                              |
+    | Impacto                    | Crítico                                           |
+    | Nivel de Riesgo Inherente  | Crítico                                           |
+    | Activo Vinculado           | Servidor-Base-Datos-Principal                     |
+    | Fuente                     | Revisión de Cumplimiento: "Auditoría ISO 27001 Q4 2025" |
+  And notifica al Gestor de Riesgos sobre los nuevos riesgos identificados
+  And vincula los riesgos creados a la respuesta del cuestionario
+```
+
+```gherkin
+Scenario: IA identifica riesgos a partir de respuestas deficientes de cuestionario (Procesos)
+  Given existe una revisión "Evaluación de Madurez ITIL Q4 2025" con targetType: "processes"
+  And una respuesta para el proceso "Gestión de Incidentes" tiene las siguientes respuestas:
+    | Pregunta                                              | Respuesta         | Puntaje |
+    | ¿Existe procedimiento documentado?                    | No                | 0       |
+    | ¿Se registran todos los incidentes?                   | Parcial           | 5       |
+    | ¿Existe escalamiento definido?                        | No                | 0       |
+    | Nivel de madurez del proceso (1-5)                    | 1                 | 20      |
+  And el puntaje de cumplimiento calculado es 25% (Deficiente)
+  When un aprobador aprueba la respuesta
+  And el sistema dispara el análisis de IA
+  Then la IA analiza las respuestas y el contexto del proceso
+  And genera automáticamente los siguientes riesgos:
+    | Riesgo Identificado                                          | Probabilidad | Impacto | Proceso Vinculado        |
+    | Riesgo de incidentes no gestionados adecuadamente           | Alta         | Alto    | Gestión de Incidentes    |
+    | Riesgo de escalamiento tardío por falta de procedimiento    | Alta         | Crítico | Gestión de Incidentes    |
+  And crea activos de tipo "Riesgo" vinculados al proceso evaluado
+  And notifica al Gestor de Riesgos sobre los nuevos riesgos identificados
+```
+
+```gherkin
+Scenario: IA identifica incidentes a partir de respuestas que reportan eventos de seguridad
+  Given existe un cuestionario de "Post-Mortem de Incidentes"
+  And una respuesta indica:
+    | Pregunta                                      | Respuesta                                         |
+    | ¿Ocurrió un incidente de seguridad?           | Sí                                                |
+    | Descripción del incidente                     | "Intento de acceso no autorizado detectado el 15/11/2025" |
+    | Impacto del incidente                         | Alto (interrupción de servicio por 2 horas)       |
+    | Tiempo de resolución                          | 2 horas                                           |
+  And el cuestionario tiene configurado autoAssetCreation para tipo "Incidente"
+  When la respuesta es aprobada
+  And el sistema ejecuta análisis de IA
+  Then la IA detecta que se reportó un incidente real
+  And crea automáticamente un activo de tipo "Incidente" con:
+    | Propiedad                  | Valor                                             |
+    | Título                     | "Incidente: Intento de acceso no autorizado"      |
+    | Descripción                | Extraída de las respuestas del cuestionario       |
+    | Severidad                  | Alta                                              |
+    | Impacto Calculado          | Alto                                              |
+    | Activo/Proceso Afectado    | Elemento evaluado en el cuestionario (según targetType) |
+    | Fecha del Incidente        | 15/11/2025                                        |
+    | Tiempo de Resolución       | 2 horas                                           |
+    | Estado                     | Resuelto                                          |
+    | Fuente                     | Revisión de Cumplimiento                          |
+  And notifica al Gestor de Incidentes
+```
+
+```gherkin
+Scenario: IA identifica deficiencias (hallazgos) a partir de cumplimiento parcial
+  Given existe una respuesta con puntaje de cumplimiento 55% (Aceptable, pero no Sobresaliente)
+  And el cuestionario tiene configurado autoAssetCreation para tipo "Hallazgo"
+  And las respuestas indican:
+    | Pregunta                                        | Respuesta           |
+    | ¿Existe documentación de procedimientos?        | Sí (pero desactualizada desde 2023) |
+    | ¿Se realizan auditorías internas?               | Sí (cada 2 años, debería ser anual) |
+    | ¿Hay programa de capacitación?                  | Parcial (solo para gerentes)        |
+  When la IA analiza las respuestas
+  Then identifica deficiencias (no críticas, pero requieren atención):
+    | Deficiencia Identificada                                  | Impacto  | Recomendación                              |
+    | Documentación de procedimientos desactualizada            | Medio    | Actualizar documentación al menos anualmente |
+    | Frecuencia de auditorías internas insuficiente            | Medio    | Implementar auditorías anuales              |
+    | Programa de capacitación incompleto                       | Bajo     | Extender capacitación a todos los niveles   |
+  And crea activos de tipo "Hallazgo/Deficiencia" con:
+    | Propiedad                  | Valor                                             |
+    | Nombre                     | "Documentación de procedimientos desactualizada"  |
+    | Clasificación              | Oportunidad de Mejora                             |
+    | Gravedad                   | Media                                             |
+    | Recomendación              | Generada por IA                                   |
+    | Activo/Proceso Vinculado   | Elemento evaluado (según targetType de la revisión) |
+    | Fuente                     | Revisión de Cumplimiento                          |
+```
+
+```gherkin
+Scenario: IA sugiere controles para mitigar riesgos identificados
+  Given la IA identificó el riesgo "Riesgo de acceso no autorizado a base de datos"
+  When el Gestor de Riesgos revisa el riesgo creado automáticamente
+  Then el riesgo incluye una sección "Controles Sugeridos por IA":
+    | Control Sugerido                                          | Tipo                 |
+    | Implementar autenticación multifactor para acceso a BD    | Control Preventivo   |
+    | Configurar auditoría de logs de acceso a base de datos    | Control Detectivo    |
+    | Política de revisión trimestral de permisos de acceso     | Control Correctivo   |
+  And el Gestor puede vincular controles existentes o crear nuevos basados en las sugerencias
+  And el sistema calcula el Nivel de Riesgo Residual al vincular controles
+```
+
+### Feature: Revisiones de Cumplimiento Recurrentes (Automatización)
+
+```gherkin
+Scenario: Configurar revisión trimestral recurrente para activos
+  Given un "Director de Cumplimiento" está creando una nueva revisión
+  And ha seleccionado "Activos" como tipo de objetivo
+  And configura los datos básicos de la revisión
+  When activa "Recurrencia" y configura:
+    | Parámetro                  | Valor                                            |
+    | Frecuencia                 | Trimestral (cada 3 meses)                        |
+    | Intervalo                  | 1 (cada trimestre)                               |
+    | Fecha de Fin de Recurrencia| 2026-12-31                                       |
+    | Máximo de Ocurrencias      | 4 (4 trimestres en 2026)                         |
+  And guarda la revisión
+  Then el sistema marca la revisión con recurrence.enabled = true
+  And calcula la próxima fecha de generación automática
+  And almacena la configuración de recurrencia:
+    | Campo                      | Valor                                            |
+    | frequency                  | quarterly                                        |
+    | interval                   | 1                                                |
+    | endDate                    | 2026-12-31                                       |
+    | maxOccurrences             | 4                                                |
+    | nextScheduledDate          | 2026-03-01 (3 meses después del inicio)          |
+```
+
+```gherkin
+Scenario: Configurar revisión mensual recurrente para procesos
+  Given un "Director de Cumplimiento" está creando una nueva revisión
+  And ha seleccionado "Procesos" como tipo de objetivo
+  And configura los datos básicos de la revisión para evaluar procesos críticos
+  When activa "Recurrencia" y configura:
+    | Parámetro                  | Valor                                            |
+    | Frecuencia                 | Mensual                                          |
+    | Intervalo                  | 1 (cada mes)                                     |
+    | Fecha de Fin de Recurrencia| 2026-06-30                                       |
+    | Máximo de Ocurrencias      | 6                                                |
+  And guarda la revisión
+  Then el sistema crea la revisión con targetType: "processes" y recurrence.enabled = true
+  And la recurrencia generará nuevas revisiones manteniendo el targetType: "processes"
+```
+
+```gherkin
+Scenario: Sistema genera automáticamente la siguiente revisión recurrente
+  Given existe una revisión "Auditoría ISO 27001 Q4 2025" con recurrencia trimestral
+  And la revisión tiene targetType: "assets"
+  And la revisión está en estado "Completado"
+  And la fecha actual es 2026-03-01 (nextScheduledDate)
+  When el sistema ejecuta el proceso de recurrencia programado (cron job o scheduler)
+  Then el sistema verifica que shouldGenerateNext() = true
+  And genera automáticamente una nueva revisión:
+    | Campo                      | Valor Original                                   | Valor Nueva Revisión                      |
+    | Título                     | Auditoría ISO 27001 Q4 2025                      | Auditoría ISO 27001 Q4 2025 (Recurrente)  |
+    | Tipo de Objetivo           | assets                                           | assets (se mantiene igual)                |
+    | Cuestionarios              | Mismo(s) cuestionario(s)                         | Mismo(s) cuestionario(s)                  |
+    | Activos Objetivo           | Mismos activos                                   | Mismos activos                            |
+    | Usuarios Asignados         | Mismos usuarios                                  | Mismos usuarios                           |
+    | Aprobadores                | Mismos aprobadores                               | Mismos aprobadores                        |
+    | Fecha de Inicio            | 2025-12-01                                       | 2026-03-01                                |
+    | Fecha de Vencimiento       | 2025-12-15 (duración: 14 días)                   | 2026-03-15 (misma duración: 14 días)      |
+    | Estado                     | Completado                                       | Pendiente                                 |
+  And actualiza la revisión original con:
+    | Campo                      | Valor Actualizado                                |
+    | lastGeneratedDate          | 2026-03-01                                       |
+    | nextScheduledDate          | 2026-06-01 (próximo trimestre)                   |
+  And envía notificaciones a los usuarios asignados de la nueva revisión
+  And el contador de ocurrencias se incrementa (1/4)
+```
+
+```gherkin
+Scenario: Revisión recurrente alcanza máximo de ocurrencias y se detiene
+  Given existe una revisión recurrente trimestral con maxOccurrences = 4
+  And se han generado automáticamente 3 revisiones (Q1, Q2, Q3 de 2026)
+  And la cuarta revisión (Q4 2026) acaba de completarse
+  When el sistema evalúa si debe generar la siguiente
+  Then verifica que se alcanzó maxOccurrences (4 de 4)
+  And shouldGenerateNext() retorna false
+  And NO genera una quinta revisión
+  And marca la recurrencia como "Completada"
+  And notifica al creador de la revisión que la serie recurrente finalizó
+```
+
+## 🔄 Flujo de Usuario
+
+<ZoomableDiagram
+  title="Flujo Completo de Revisiones de Cumplimiento"
+  height="1100px"
+  chart={`graph TD
+    subgraph "Creación de Revisión"
+        Start[Usuario selecciona<br/>Nueva Revisión] --> SelectTargetType{Seleccionar Tipo<br/>de Objetivo}
+        SelectTargetType -->|Activos| ConfigAssets[Configurar para Activos]
+        SelectTargetType -->|Procesos| ConfigProcesses[Configurar para Procesos]
+
+        ConfigAssets --> ReviewType{Tipo de<br/>Revisión}
+        ConfigProcesses --> ReviewType
+
+        ReviewType -->|Interna| ConfigInternal[Configurar Revisión Interna]
+        ReviewType -->|Externa| ConfigExternal[Configurar Revisión Externa]
+
+        ConfigInternal --> SelectQuestionnaires[Seleccionar Cuestionarios]
+        ConfigExternal --> SelectQuestionnaires
+        SelectQuestionnaires --> SelectTargets{Tipo de<br/>Objetivo?}
+        SelectTargets -->|Activos| SelectAssets[Seleccionar Activos Objetivo]
+        SelectTargets -->|Procesos| SelectProcesses[Seleccionar Procesos Objetivo]
+        SelectAssets --> ConfigUsers[Asignar Usuarios<br/>y Aprobadores]
+        SelectProcesses --> ConfigUsers
+        ConfigUsers --> SetDates[Definir Fechas Inicio/Vencimiento]
+        SetDates --> ConfigRecurrence{¿Configurar<br/>Recurrencia?}
+        ConfigRecurrence -->|Sí| SetRecurrence[Configurar Frecuencia,<br/>Intervalo, Fecha Fin]
+        ConfigRecurrence -->|No| ValidateTargetType{Validar que NO<br/>mezcle Activos<br/>y Procesos}
+        SetRecurrence --> ValidateTargetType
+        ValidateTargetType -->|Válido| CreateReview[Crear Revisión]
+        ValidateTargetType -->|Inválido| ShowError[Mostrar Error:<br/>No mezclar tipos]
+        ShowError --> SelectTargetType
+        CreateReview --> GenerateResponses[Generar Respuestas Individuales<br/>por cada Objetivo x Usuario]
+        GenerateResponses --> SendNotifications{Tipo}
+        SendNotifications -->|Interna| NotifyInternal[Notificar Usuarios Internos]
+        SendNotifications -->|Externa| SendEmails[Enviar Emails de Invitación<br/>con Enlace y Contraseña]
+    end
+
+    subgraph "Respuesta a Cuestionarios"
+        NotifyInternal --> UserAccess[Usuario accede a Tarea Pendiente]
+        SendEmails --> ExternalAccess[Usuario Externo abre Enlace]
+        ExternalAccess --> ValidatePassword[Validar Contraseña de Acceso]
+        ValidatePassword --> ShowQuestionnaire[Mostrar Formulario<br/>de Cuestionario]
+        UserAccess --> ShowQuestionnaire
+        ShowQuestionnaire --> ShowTarget{Mostrar Objetivo}
+        ShowTarget -->|Activos| ShowAsset[Mostrar Activo a Evaluar]
+        ShowTarget -->|Procesos| ShowProcess[Mostrar Proceso a Evaluar]
+        ShowAsset --> AnswerQuestions[Completar Respuestas]
+        ShowProcess --> AnswerQuestions
+        AnswerQuestions --> UploadEvidence[Subir Archivos de Evidencia<br/>Opcional]
+        UploadEvidence --> SubmitResponse[Enviar Respuesta]
+        SubmitResponse --> CalculateScore[Calcular Puntaje de<br/>Cumplimiento Automáticamente]
+        CalculateScore --> SetStatusSubmitted[Estado: Enviado]
+        SetStatusSubmitted --> NotifyApprovers[Notificar Aprobadores]
+    end
+
+    subgraph "Aprobación de Respuestas"
+        NotifyApprovers --> ApproverReview[Aprobador Revisa Respuesta]
+        ApproverReview --> ReviewEvidence[Revisar Respuestas<br/>y Evidencias]
+        ReviewEvidence --> ApprovalDecision{Decisión}
+        ApprovalDecision -->|Aprobar| ApproveResponse[Aprobar Respuesta]
+        ApprovalDecision -->|Rechazar| RejectResponse[Rechazar con Razón]
+        ApproveResponse --> TriggerAI[Disparar Análisis de IA]
+        RejectResponse --> NotifyUser[Notificar Usuario<br/>con Razón de Rechazo]
+        NotifyUser --> UserAccess
+    end
+
+    subgraph "Análisis Automático con IA"
+        TriggerAI --> AIAnalysis[IA Analiza Respuestas<br/>y Contexto del Objetivo]
+        AIAnalysis --> EvaluateCompliance{Evaluar<br/>Cumplimiento}
+        EvaluateCompliance -->|Deficiente<br/>0-30%| IdentifyRisks[Identificar Riesgos Críticos]
+        EvaluateCompliance -->|Aceptable<br/>31-70%| IdentifyFindings[Identificar Deficiencias<br/>y Oportunidades de Mejora]
+        EvaluateCompliance -->|Sobresaliente<br/>71-100%| NoIssues[No se generan hallazgos]
+        EvaluateCompliance -->|Incidente<br/>Reportado| IdentifyIncidents[Identificar y Crear Incidente]
+
+        IdentifyRisks --> LinkToTarget{Vincular a<br/>Objetivo}
+        IdentifyFindings --> LinkToTarget
+        IdentifyIncidents --> LinkToTarget
+        LinkToTarget -->|Activos| CreateAssetLinked[Crear Hallazgo<br/>vinculado a Activo]
+        LinkToTarget -->|Procesos| CreateProcessLinked[Crear Hallazgo<br/>vinculado a Proceso]
+
+        CreateAssetLinked --> SuggestControls[IA Sugiere Controles<br/>Mitigantes]
+        CreateProcessLinked --> SuggestControls
+        SuggestControls --> NotifyManagers[Notificar Gestores<br/>Correspondientes]
+    end
+
+    subgraph "Gestión de Recurrencia (Automatizada)"
+        CreateReview --> CheckRecurrence{¿Recurrencia<br/>Habilitada?}
+        CheckRecurrence -->|Sí| ScheduleNext[Programar Próxima<br/>Generación Automática]
+        CheckRecurrence -->|No| EndFlow[Fin]
+        ScheduleNext --> ReviewCompleted{Revisión<br/>Completada?}
+        ReviewCompleted -->|No| WaitCompletion[Esperar Completitud]
+        ReviewCompleted -->|Sí| CheckSchedule{Fecha<br/>nextScheduledDate<br/>alcanzada?}
+        CheckSchedule -->|No| WaitSchedule[Esperar Fecha]
+        CheckSchedule -->|Sí| ValidateRecurrence{Validar<br/>Condiciones}
+        ValidateRecurrence --> CheckEndDate{¿endDate<br/>alcanzado?}
+        ValidateRecurrence --> CheckMaxOccurrences{¿maxOccurrences<br/>alcanzado?}
+        CheckEndDate -->|Sí| StopRecurrence[Detener Recurrencia]
+        CheckMaxOccurrences -->|Sí| StopRecurrence
+        CheckEndDate -->|No| GenerateNextReview[Generar Nueva Revisión<br/>con mismo targetType]
+        CheckMaxOccurrences -->|No| GenerateNextReview
+        GenerateNextReview --> CopyConfiguration[Copiar Configuración<br/>Original incl. targetType]
+        CopyConfiguration --> CalculateNewDates[Calcular Nuevas Fechas<br/>Inicio/Vencimiento]
+        CalculateNewDates --> UpdateOriginal[Actualizar Revisión Original<br/>lastGeneratedDate, nextScheduledDate]
+        UpdateOriginal --> GenerateResponses
+        StopRecurrence --> NotifyCreator[Notificar Creador:<br/>Serie Recurrente Completada]
+    end
+
+    style Start stroke:#4caf50,stroke-width:2px
+    style SelectTargetType stroke:#ff5722,stroke-width:3px
+    style ValidateTargetType stroke:#ff5722,stroke-width:2px
+    style CreateReview stroke:#2196f3,stroke-width:3px
+    style AIAnalysis stroke:#9c27b0,stroke-width:3px,stroke-dasharray: 5 5
+    style LinkToTarget stroke:#673ab7,stroke-width:2px
+    style CreateAssetLinked stroke:#f44336,stroke-width:2px
+    style CreateProcessLinked stroke:#ff9800,stroke-width:2px
+    style GenerateNextReview stroke:#00bcd4,stroke-width:3px,stroke-dasharray: 5 5
+    style ApproveResponse stroke:#4caf50,stroke-width:2px
+    style RejectResponse stroke:#f44336,stroke-width:2px
+  `}
+/>
+
+## 🎨 Mockups / Diseños
+
+Diseños disponibles en Figma (Pendientes de revisión por UX/UI Designer: Alan Franco)
+
+## 📡 Documentación Técnica Relacionada
+
+### API Endpoints
+
+```typescript
+// Revisiones de Cumplimiento - CRUD
+POST   /api/compliance/reviews                    // Crear revisión (interna o externa)
+GET    /api/compliance/reviews                    // Listar todas las revisiones
+GET    /api/compliance/reviews/:id                // Obtener revisión por ID
+PUT    /api/compliance/reviews/:id                // Actualizar revisión
+DELETE /api/compliance/reviews/:id                // Eliminar revisión
+
+// Query params para filtrar por tipo de objetivo
+GET    /api/compliance/reviews?targetType=assets      // Solo revisiones de activos
+GET    /api/compliance/reviews?targetType=processes   // Solo revisiones de procesos
+
+// Respuestas Individuales de Objetivos (Activos o Procesos)
+POST   /api/compliance/individual-responses       // Crear/Actualizar respuesta de cuestionario
+GET    /api/compliance/individual-responses?reviewId=xxx&targetId=xxx&questionnaireTemplateId=xxx
+PUT    /api/compliance/individual-responses/:responseId
+POST   /api/compliance/individual-responses/:responseId/submit   // Enviar respuesta
+GET    /api/compliance/individual-responses/:responseId/progress // Progreso de respuesta
+
+// Aprobación/Rechazo de Respuestas
+POST   /api/asset-questionnaire-responses/:id/approve
+  Body: { targetId, targetType, questionnaireTemplateId }
+POST   /api/asset-questionnaire-responses/:id/reject
+  Body: { targetId, targetType, questionnaireTemplateId, reason }
+
+// Análisis con IA
+POST   /api/asset-questionnaire-responses/:id/ai-analysis
+  Body: { targetId, targetType, questionnaireTemplateId }
+  Response: {
+    risksIdentified: Risk[],
+    incidentsIdentified: Incident[],
+    findingsIdentified: Finding[],
+    controlsSuggested: Control[]
+  }
+
+// Revisiones Externas (Acceso Público)
+GET    /api/compliance/external/:reviewId/access
+  Query: { password }
+  Response: { authorized: boolean, reviewData }
+GET    /api/compliance/external/:reviewId/data
+  Response: { review, questionnaires, targets (assets o processes según targetType) }
+POST   /api/compliance/external/:reviewId/response/:responseId
+  Body: { answers, evidenceFiles }
+
+// Invitaciones Externas
+POST   /api/compliance/external/send-invitation
+  Body: {
+    reviewId,
+    reviewTitle,
+    dueDate,
+    accessPassword,
+    recipientEmail,
+    senderName,
+    companyName
+  }
+  Response: { success, messageId }
+
+// Recurrencia (Procesamiento Automático)
+POST   /api/compliance/reviews/process-recurrence  // Endpoint para cron job
+  Response: { created: ComplianceReview[], updated: ComplianceReview[] }
+
+// Validación de tipo de objetivo
+POST   /api/compliance/reviews/validate
+  Body: { targetType, targetAssetIds, targetProcessIds }
+  Response: { valid: boolean, error?: string }
+```
+
+### Reglas de Negocio
+
+1. **Tipo de Objetivo (NUEVA REGLA - CRÍTICA)**:
+   - Cada revisión debe tener un **único tipo de objetivo**: `assets` (activos) o `processes` (procesos)
+   - **NO es posible mezclar activos y procesos en una misma revisión**
+   - Si `targetType = 'assets'`:
+     - Solo se puede poblar `targetAssetIds` (array de IDs de activos)
+     - `targetProcessIds` debe estar vacío o no existir
+   - Si `targetType = 'processes'`:
+     - Solo se puede poblar `targetProcessIds` (array de IDs de procesos)
+     - `targetAssetIds` debe estar vacío o no existir
+   - El sistema debe validar esta restricción tanto en frontend como en backend
+   - Error de validación: "Una revisión no puede evaluar activos y procesos simultáneamente. Seleccione un solo tipo de objetivo."
+
+2. **Tipos de Revisiones**:
+   - **Interna**: Requiere usuarios internos asignados (assignedToUserIds)
+   - **Externa**: Requiere emails externos (externalEmails) y contraseña de acceso (accessPassword, mínimo 6 caracteres)
+   - Ambos tipos requieren al menos un aprobador (approverUserIds)
+   - Ambos tipos deben especificar un único targetType
+
+3. **Generación de Respuestas Individuales**:
+   - Por cada revisión creada, el sistema genera automáticamente respuestas individuales
+   - Fórmula para activos: `# Respuestas = # Cuestionarios × # Activos Objetivo × # Usuarios`
+   - Fórmula para procesos: `# Respuestas = # Cuestionarios × # Procesos Objetivo × # Usuarios`
+   - Ejemplo (activos): 2 cuestionarios × 3 activos × 2 usuarios = 12 respuestas individuales
+   - Ejemplo (procesos): 1 cuestionario × 4 procesos × 3 usuarios = 12 respuestas individuales
+   - Cada respuesta tiene su propio ciclo de vida independiente
+
+4. **Estados de Revisión (ReviewStatus)**:
+   - `PENDING`: Revisión creada, respuestas no completadas
+   - `IN_PROGRESS`: Al menos una respuesta enviada
+   - `COMPLETED`: Todas las respuestas aprobadas
+   - `OVERDUE`: Fecha de vencimiento pasada con respuestas pendientes
+
+5. **Estados de Respuesta (ResponseLifecycleStatus)**:
+   - `PENDING`: Respuesta generada, no completada
+   - `DRAFT`: Usuario guardó borrador (parcialmente completada)
+   - `SUBMITTED`: Usuario envió respuesta, pendiente de aprobación
+   - `APPROVED`: Aprobador aprobó la respuesta
+   - `REJECTED`: Aprobador rechazó, requiere corrección
+   - `REVISED`: Usuario reenvió después de rechazo
+
+6. **Cálculo de Cumplimiento**:
+   - El sistema calcula automáticamente el puntaje al enviar la respuesta
+   - Basado en scores de opciones de preguntas (para SINGLE_SELECT, MULTI_SELECT, etc.)
+   - Fórmula: `(Puntaje Obtenido / Puntaje Máximo Posible) × 100`
+   - Se asigna ComplianceStatus según umbrales:
+     - `DEFICIENT`: 0-30%
+     - `ACCEPTABLE`: 31-70%
+     - `OUTSTANDING`: 71-100%
+
+7. **Análisis de IA (Auto-Creación de Activos)**:
+   - Se ejecuta automáticamente al aprobar una respuesta
+   - Requiere que el cuestionario tenga configurado `autoAssetCreation.enabled = true`
+   - La IA evalúa según el tipo de activo a crear (assetTypeId):
+     - **Riesgos**: Identifica si hay deficiencias en controles, exposiciones no controladas, vulnerabilidades
+     - **Incidentes**: Identifica si se reportan eventos de seguridad, interrupciones, brechas
+     - **Hallazgos/Deficiencias**: Identifica oportunidades de mejora, cumplimiento parcial
+   - Solo crea activos si el análisis detecta hallazgos relevantes (no crea innecesariamente)
+   - Los activos creados se vinculan automáticamente al **activo o proceso evaluado** según el `targetType` de la revisión
+
+8. **Evidencias**:
+   - Usuarios pueden subir múltiples archivos de evidencia por pregunta
+   - Tipos soportados: PDF, Word, Excel, Imágenes, Texto
+   - Tamaño máximo por archivo: 50MB
+   - Almacenamiento: Firebase Storage
+   - Metadata: nombre original, tamaño, tipo, fecha de carga
+
+9. **Revisiones Externas**:
+   - No requieren autenticación de usuario
+   - Acceso mediante contraseña compartida por email
+   - El enlace es único por revisión
+   - Los usuarios externos NO pueden ver otras respuestas
+   - Una vez enviada, la respuesta externa no puede editarse (excepto si es rechazada)
+
+10. **Recurrencia**:
+    - Frecuencias soportadas: `daily`, `weekly`, `monthly`, `quarterly`, `yearly`
+    - Intervalo: Número de períodos entre ocurrencias (ej: interval=2, frequency=monthly = cada 2 meses)
+    - Condiciones de parada:
+      - `endDate`: Fecha límite para generación de nuevas revisiones
+      - `maxOccurrences`: Número máximo de ocurrencias (incluyendo la original)
+    - Solo se generan nuevas revisiones si la revisión anterior está en estado `COMPLETED`
+    - La duración entre fecha de inicio y vencimiento se mantiene constante en todas las ocurrencias
+    - **Las revisiones recurrentes mantienen el mismo `targetType` de la revisión original**
+
+11. **Permisos y Notificaciones**:
+    - Usuarios asignados reciben notificación al crear la revisión
+    - Aprobadores reciben notificación al enviar una respuesta
+    - Usuario recibe notificación al aprobar/rechazar su respuesta
+    - Gestores de Riesgos/Incidentes/Cumplimiento reciben notificación cuando IA crea activos automáticamente
+
+### Modelo de Datos
+
+```typescript
+// Firestore Collection: complianceReviews
+interface ComplianceReview {
+  id: string;
+  title: string;
+  questionnaireTemplateIds: string[];              // Array de IDs de cuestionarios
+
+  // NUEVO: Tipo de objetivo (mutuamente excluyente)
+  targetType: 'assets' | 'processes';              // REQUERIDO: Define si evalúa activos o procesos
+  targetAssetIds?: string[];                       // Solo si targetType = 'assets'. Array de IDs de activos
+  targetProcessIds?: string[];                     // Solo si targetType = 'processes'. Array de IDs de procesos
+
+  startDate: string;                               // ISO date
+  dueDate: string;                                 // ISO date
+  assignedToUserId?: string;                       // LEGACY: Usuario único (obsoleto)
+  assignedToUserIds?: string[];                    // NUEVO: Múltiples usuarios (revisiones internas)
+  approverUserIds: string[];                       // Aprobadores (requerido para ambos tipos)
+  status: ReviewStatus;                            // PENDING, IN_PROGRESS, COMPLETED, OVERDUE
+  createdAt: string;                               // ISO date
+  createdBy: string;                               // User UUID
+  updatedAt: string;                               // ISO date
+
+  // Campos para revisiones externas
+  reviewType: 'internal' | 'external';
+  externalEmails?: string[];                       // Emails de usuarios externos
+  accessPassword?: string;                         // Contraseña para acceso externo
+
+  // Recurrencia
+  recurrence?: RecurrenceConfig;
+}
+
+interface RecurrenceConfig {
+  enabled: boolean;
+  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  interval: number;                                // Ej: 1 = cada período, 2 = cada 2 períodos
+  endDate?: string;                                // ISO date - fecha límite de recurrencia
+  maxOccurrences?: number;                         // Número máximo de ocurrencias
+  lastGeneratedDate?: string;                      // ISO date - última vez que se generó automáticamente
+  nextScheduledDate?: string;                      // ISO date - próxima fecha de generación automática
+}
+
+// Firestore Collection: complianceReviewResponses (renombrado para mayor claridad)
+interface ComplianceReviewResponse {
+  id: string;
+  complianceReviewId: string;
+  questionnaireTemplateId: string;
+
+  // NUEVO: Referencia genérica al objetivo evaluado
+  targetType: 'asset' | 'process';                 // Tipo de objetivo de esta respuesta
+  targetId: string;                                // ID del activo o proceso siendo evaluado
+  // LEGACY (mantener por compatibilidad):
+  assetId?: string;                                // Deprecated: usar targetId + targetType
+
+  submittedAt: string | null;                      // ISO date - cuando se envió
+  answers: Answer[];
+  responseStatus: ResponseLifecycleStatus;         // PENDING, DRAFT, SUBMITTED, APPROVED, REJECTED, REVISED
+  rejectionReason?: string | null;                 // Razón si fue rechazada
+  achievedScore?: number | null;                   // Puntaje obtenido
+  maxPossibleScore?: number | null;                // Puntaje máximo posible
+  overallComplianceScore?: number | null;          // Porcentaje de cumplimiento (0-100)
+  complianceStatus?: ComplianceStatus | null;      // DEFICIENT, ACCEPTABLE, OUTSTANDING
+  reviewedAt?: string | null;                      // ISO date - cuando se aprobó/rechazó
+  reviewedBy?: string | null;                      // User UUID del aprobador
+
+  // Análisis de IA
+  aiAnalysisTriggered?: boolean;                   // Si se ejecutó el análisis de IA
+  aiAnalysisDate?: string | null;                  // ISO date - cuando se ejecutó el análisis
+  assetsCreatedByAI?: string[];                    // IDs de activos creados por IA (Riesgos, Incidentes, Hallazgos)
+}
+
+interface Answer {
+  questionId: string;
+  response: string | string[] | number | boolean | null;
+  comments?: string;
+
+  // Evidencia
+  evidenceUrl?: string;                            // LEGACY: URL única (obsoleto)
+  evidenceReference?: string;                      // Referencia externa (ticket, documento)
+  evidenceFiles?: EvidenceFile[];                  // Array de archivos de evidencia
+
+  // Cumplimiento
+  complianceStatus?: ComplianceStatus | null;
+  scoreAchieved?: number | null;
+  maxScorePossible?: number | null;
+}
+
+interface EvidenceFile {
+  id: string;
+  name: string;                                    // Nombre original del archivo
+  url: string;                                     // URL en Firebase Storage
+  size: number;                                    // Tamaño en bytes
+  type: string;                                    // MIME type
+  uploadedAt: string;                              // ISO date
+}
+
+// NUEVO: Interfaz para Proceso (referencia)
+interface Process {
+  id: string;
+  name: string;
+  description?: string;
+  owner?: string;                                  // Dueño del proceso
+  category?: string;                               // Categoría (ej: ITIL, ISO, Custom)
+  status: 'active' | 'inactive' | 'draft';
+  createdAt: string;
+  updatedAt: string;
+}
+
+enum ReviewStatus {
+  PENDING = 'Pending',
+  IN_PROGRESS = 'In Progress',
+  COMPLETED = 'Completed',
+  OVERDUE = 'Overdue'
+}
+
+enum ResponseLifecycleStatus {
+  PENDING = 'Pending',
+  DRAFT = 'Draft',
+  SUBMITTED = 'Submitted',
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
+  REVISED = 'Revised'
+}
+
+enum ComplianceStatus {
+  DEFICIENT = 'Deficient',
+  ACCEPTABLE = 'Acceptable',
+  OUTSTANDING = 'Outstanding'
+}
+
+// NUEVO: Tipo de objetivo
+enum TargetType {
+  ASSETS = 'assets',
+  PROCESSES = 'processes'
+}
+```
+
+### Validación de Tipo de Objetivo (Backend)
+
+```typescript
+// Ejemplo de validación en el servicio de creación de revisiones
+function validateTargetType(review: CreateComplianceReviewDTO): ValidationResult {
+  const { targetType, targetAssetIds, targetProcessIds } = review;
+
+  // Validar que targetType esté presente
+  if (!targetType || !['assets', 'processes'].includes(targetType)) {
+    return {
+      valid: false,
+      error: 'El tipo de objetivo es requerido. Debe ser "assets" o "processes".'
+    };
+  }
+
+  // Validar consistencia según targetType
+  if (targetType === 'assets') {
+    if (!targetAssetIds || targetAssetIds.length === 0) {
+      return {
+        valid: false,
+        error: 'Debe seleccionar al menos un activo cuando el tipo de objetivo es "assets".'
+      };
+    }
+    if (targetProcessIds && targetProcessIds.length > 0) {
+      return {
+        valid: false,
+        error: 'Una revisión no puede evaluar activos y procesos simultáneamente. Seleccione un solo tipo de objetivo.'
+      };
+    }
+  }
+
+  if (targetType === 'processes') {
+    if (!targetProcessIds || targetProcessIds.length === 0) {
+      return {
+        valid: false,
+        error: 'Debe seleccionar al menos un proceso cuando el tipo de objetivo es "processes".'
+      };
+    }
+    if (targetAssetIds && targetAssetIds.length > 0) {
+      return {
+        valid: false,
+        error: 'Una revisión no puede evaluar activos y procesos simultáneamente. Seleccione un solo tipo de objetivo.'
+      };
+    }
+  }
+
+  return { valid: true };
+}
+```
+
+## 📝 Notas Adicionales
+
+### Equipo
+
+- **Product Owner**: Francisco Puente
+- **UX/UI Designer**: Alan Franco
+- **Frontend Developers**: Cesar Gonzalez, Juan Martinez
+- **Backend Developer**: Josue Cardenas
+- **AI/ML Engineer**: (Nuevo rol requerido para análisis inteligente de respuestas)
+- **DevOps Engineer**: (Para configuración de cron jobs de recurrencia)
+- **QA Engineer**: Emmanuel Vazquez
+
+### Alcance
+
+#### ✅ Fase 1 incluye:
+
+- Funcionalidad CRUD completa de Revisiones de Cumplimiento
+- **Selección de tipo de objetivo: Activos O Procesos (mutuamente excluyentes)**
+- **Validación que impide mezclar activos y procesos en una revisión**
+- Creación de revisiones internas con múltiples usuarios asignados
+- Creación de revisiones externas con invitaciones por email
+- Generación automática de respuestas individuales (cuestionario × objetivo × usuario)
+- Interfaz de respuesta a cuestionarios con soporte de evidencias múltiples
+- Flujo completo de aprobación/rechazo de respuestas
+- Notificaciones por email para usuarios externos
+- Notificaciones internas para usuarios de la plataforma
+- Cálculo automático de puntajes de cumplimiento
+- Estados de ciclo de vida completos (Pending, Draft, Submitted, Approved, Rejected, Revised)
+- **Análisis Automático con IA**:
+  - Identificación de riesgos a partir de respuestas deficientes
+  - Identificación de incidentes reportados en cuestionarios
+  - Identificación de deficiencias/hallazgos de cumplimiento parcial
+  - Creación automática de activos (Riesgos, Incidentes, Hallazgos) vinculados al activo o proceso evaluado
+  - Sugerencias de controles mitigantes para riesgos
+  - Sugerencias de acciones correctivas para deficiencias
+- **Recurrencia Automatizada**:
+  - Configuración de revisiones recurrentes (diaria, semanal, mensual, trimestral, anual)
+  - Generación automática de revisiones en fechas programadas (manteniendo el targetType)
+  - Condiciones de parada (endDate, maxOccurrences)
+  - Servicio de procesamiento de recurrencias (RecurrenceService)
+- Portal externo sin autenticación para proveedores/terceros
+- Dashboard de progreso de revisiones en tiempo real
+
+#### ⏳ No incluye (Fase 2):
+
+- Generación automática de reportes de auditoría (PDF/Word)
+- Comparación de revisiones a lo largo del tiempo (trending de cumplimiento)
+- Análisis predictivo de cumplimiento futuro basado en histórico
+- Delegación de respuestas a otros usuarios
+- Sistema de comentarios y discusiones en respuestas
+- Exportación masiva de respuestas a Excel/CSV
+- Dashboard ejecutivo de KPIs de cumplimiento
+
+### Roadmap
+
+| Fase     | Fecha Estimada   | Estado        |
+|----------|------------------|---------------|
+| Fase 1   | 23/diciembre/2025    | En Desarrollo |
+| Fase 2   | 30/enero/2026         | Planificado   |
+
+## 🏷️ Etiquetas
+
+`compliance` `compliance-reviews` `questionnaires` `audit` `grc` `ai-analysis` `risk-management` `incident-management` `findings` `external-users` `email-invitations` `recurrence` `automation` `approval-workflow` `evidence-management` `assets` `processes` `target-type` `sprint-3` `sprint-4`
+
+---
+
+**Última actualización**: 24/12/2024

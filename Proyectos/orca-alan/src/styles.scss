@@ -1,0 +1,2144 @@
+/* PrimeFlex */
+@use 'primeflex/primeflex.scss';
+
+/* PrimeIcons */
+@use 'primeicons/primeicons.css';
+
+/* Design System Tokens */
+@use 'styles/design-tokens' as tokens;
+
+/* Global Styles */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Smooth transitions for theme switching */
+html.dark-mode *,
+html.light-mode * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Widget Configurator Drawer - 50% de pantalla */
+.configurator-drawer.p-drawer,
+.p-drawer.configurator-drawer {
+  width: 50vw !important;
+  min-width: 600px !important;
+  max-width: none !important;
+}
+
+/* ===========================================
+   DARK MODE - PrimeNG Components Override
+   =========================================== */
+html.dark-mode {
+  /* Drawer */
+  .p-drawer {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-drawer-header {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-drawer-content {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+  }
+
+  /* Panel */
+  .p-panel {
+    background: var(--surface-card);
+    border-color: var(--surface-border);
+
+    .p-panel-header {
+      background: var(--surface-50) !important;
+      border-color: var(--surface-border) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-panel-content {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+  }
+
+  /* Inputs */
+  .p-inputtext,
+  .p-textarea,
+  .p-password input {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    &::placeholder {
+      color: var(--text-color-secondary) !important;
+    }
+  }
+
+  /* Select / Dropdown */
+  .p-select,
+  .p-dropdown {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    .p-select-label,
+    .p-dropdown-label {
+      color: var(--text-color) !important;
+    }
+  }
+
+  .p-select-overlay,
+  .p-dropdown-panel {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-select-option,
+    .p-dropdown-item {
+      color: var(--text-color) !important;
+
+      &:hover {
+        background: var(--surface-hover) !important;
+      }
+
+      &.p-highlight {
+        background: var(--highlight-background) !important;
+        color: var(--highlight-color) !important;
+      }
+    }
+  }
+
+  /* TreeSelect y MultiSelect - UNIFICADOS */
+  .p-treeselect,
+  .p-multiselect {
+    background: var(--surface-overlay) !important;
+    border: 1px solid var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    .p-treeselect-label,
+    .p-multiselect-label {
+      color: var(--text-color) !important;
+    }
+
+    .p-treeselect-label.p-placeholder,
+    .p-multiselect-label.p-placeholder {
+      color: var(--text-color-secondary) !important;
+    }
+
+    .p-treeselect-dropdown,
+    .p-multiselect-dropdown {
+      color: var(--text-color-secondary) !important;
+    }
+  }
+
+  .p-treeselect-overlay,
+  .p-multiselect-overlay {
+    background: var(--surface-overlay) !important;
+    border: 1px solid var(--surface-border) !important;
+
+    /* Header con filtro */
+    .p-treeselect-header,
+    .p-multiselect-header {
+      background: var(--surface-overlay) !important;
+      padding: 0.75rem !important;
+      border-bottom: 1px solid var(--surface-border) !important;
+      gap: 0.5rem !important;
+
+      .p-checkbox {
+        .p-checkbox-box {
+          background: var(--surface-ground) !important;
+          border-color: var(--surface-border) !important;
+        }
+
+        // Estado checked
+        &.p-checkbox-checked .p-checkbox-box,
+        &[data-p-checked="true"] .p-checkbox-box,
+        .p-checkbox-box.p-highlight {
+          background: var(--primary-color) !important;
+          border-color: var(--primary-color) !important;
+        }
+      }
+
+      .p-treeselect-filter,
+      .p-multiselect-filter {
+        background: var(--surface-ground) !important;
+        border: 1px solid var(--surface-border) !important;
+        color: var(--text-color) !important;
+
+        &::placeholder {
+          color: var(--text-color-secondary) !important;
+        }
+      }
+
+      .p-treeselect-close,
+      .p-multiselect-close {
+        color: var(--text-color-secondary) !important;
+      }
+    }
+
+    /* Items wrapper */
+    .p-treeselect-items-wrapper,
+    .p-multiselect-items-wrapper {
+      background: var(--surface-overlay) !important;
+    }
+
+    /* Tree en TreeSelect */
+    .p-tree {
+      background: var(--surface-overlay) !important;
+      border: none !important;
+      padding: 0.5rem !important;
+
+      .p-tree-node {
+        padding: 0 !important;
+      }
+
+      .p-tree-node-content {
+        background: transparent !important;
+        padding: 0.5rem 0.75rem !important;
+        border-radius: 6px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.25rem !important;
+        cursor: pointer !important;
+
+        &:hover {
+          background: var(--surface-hover) !important;
+        }
+
+        .p-tree-toggler {
+          color: var(--text-color-secondary) !important;
+          width: 1.5rem !important;
+          height: 1.5rem !important;
+          min-width: 1.5rem !important;
+          flex-shrink: 0 !important;
+
+          &:hover {
+            background: var(--surface-hover) !important;
+          }
+        }
+
+        .p-tree-node-icon {
+          color: var(--text-color-secondary) !important;
+        }
+
+        .p-tree-node-label {
+          color: var(--text-color) !important;
+        }
+
+        .p-checkbox {
+          flex-shrink: 0 !important;
+
+          .p-checkbox-box {
+            background: var(--surface-ground) !important;
+            border-color: var(--surface-border) !important;
+          }
+
+          // Estado checked - PrimeNG v19+
+          &.p-checkbox-checked .p-checkbox-box,
+          &[data-p-checked="true"] .p-checkbox-box,
+          .p-checkbox-box.p-highlight {
+            background: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+          }
+        }
+      }
+    }
+
+    /* Items en MultiSelect */
+    .p-multiselect-items {
+      background: var(--surface-overlay) !important;
+      padding: 0.5rem !important;
+
+      .p-multiselect-item {
+        background: transparent !important;
+        color: var(--text-color) !important;
+        padding: 0.5rem 0.75rem !important;
+        border-radius: 6px !important;
+        margin: 0 !important;
+        gap: 0.5rem !important;
+
+        &:hover {
+          background: var(--surface-hover) !important;
+        }
+
+        &.p-highlight {
+          background: var(--surface-hover) !important;
+          color: var(--text-color) !important;
+        }
+
+        .p-checkbox {
+          margin-right: 0.5rem !important;
+
+          .p-checkbox-box {
+            background: var(--surface-ground) !important;
+            border-color: var(--surface-border) !important;
+          }
+
+          // Estado checked - PrimeNG v19+
+          &.p-checkbox-checked .p-checkbox-box,
+          &[data-p-checked="true"] .p-checkbox-box,
+          .p-checkbox-box.p-highlight {
+            background: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+          }
+        }
+      }
+
+      .p-multiselect-empty-message {
+        color: var(--text-color-secondary) !important;
+        padding: 0.5rem 0.75rem !important;
+      }
+    }
+  }
+
+  /* Buttons */
+  .p-button.p-button-secondary {
+    background: var(--surface-200) !important;
+    border-color: var(--surface-200) !important;
+    color: var(--text-color) !important;
+
+    &:hover {
+      background: var(--surface-300) !important;
+    }
+  }
+
+  .p-button.p-button-text {
+    color: var(--text-color) !important;
+
+    &:hover {
+      background: var(--surface-hover) !important;
+    }
+  }
+
+  /* DataTable - Dark Mode Complete Fix */
+  .p-datatable {
+    background: #18181b !important;
+
+    .p-datatable-header {
+      background: #27272a !important;
+      border-color: #3f3f46 !important;
+      color: #fafafa !important;
+    }
+
+    .p-datatable-thead > tr > th {
+      background: #27272a !important;
+      border-color: #3f3f46 !important;
+      color: #a1a1aa !important;
+    }
+
+    .p-datatable-tbody > tr {
+      background: #18181b !important;
+      color: #fafafa !important;
+
+      &:hover {
+        background: #27272a !important;
+      }
+
+      > td {
+        background: #18181b !important;
+        border-color: #3f3f46 !important;
+        color: #fafafa !important;
+      }
+
+      &.p-row-odd {
+        background: #1f1f23 !important;
+        > td {
+          background: #1f1f23 !important;
+        }
+      }
+    }
+
+    .p-datatable-footer {
+      background: #27272a !important;
+      border-color: #3f3f46 !important;
+      color: #a1a1aa !important;
+    }
+
+    // Paginador
+    .p-paginator {
+      background: #18181b !important;
+      border-color: #3f3f46 !important;
+      color: #a1a1aa !important;
+
+      .p-paginator-first,
+      .p-paginator-prev,
+      .p-paginator-next,
+      .p-paginator-last {
+        background: transparent !important;
+        color: #a1a1aa !important;
+        &:hover { background: #27272a !important; }
+      }
+
+      .p-paginator-page {
+        background: transparent !important;
+        color: #a1a1aa !important;
+        &:hover { background: #27272a !important; }
+        &.p-highlight {
+          background: var(--primary-500) !important;
+          color: white !important;
+        }
+      }
+
+      .p-paginator-current {
+        color: #a1a1aa !important;
+      }
+
+      .p-dropdown {
+        background: #27272a !important;
+        border-color: #3f3f46 !important;
+        color: #fafafa !important;
+      }
+    }
+
+    // Filtros
+    .p-datatable-filter-overlay {
+      background: #27272a !important;
+      border-color: #3f3f46 !important;
+    }
+
+    .p-column-filter-menu-button {
+      color: #a1a1aa !important;
+      &:hover { background: #3f3f46 !important; }
+    }
+
+    // Ordenamiento
+    .p-sortable-column {
+      &:hover {
+        background: #27272a !important;
+      }
+      .p-sortable-column-icon {
+        color: #a1a1aa !important;
+      }
+    }
+
+    // Selección de filas
+    .p-datatable-tbody > tr.p-highlight {
+      background: rgba(var(--primary-500-rgb), 0.16) !important;
+      color: var(--primary-400) !important;
+      > td {
+        background: rgba(var(--primary-500-rgb), 0.16) !important;
+      }
+    }
+
+    // Loading
+    .p-datatable-loading-overlay {
+      background: rgba(24, 24, 27, 0.8) !important;
+    }
+
+    // Empty message
+    .p-datatable-emptymessage td {
+      background: #18181b !important;
+      color: #71717a !important;
+    }
+  }
+
+  // Fix para tablas dentro de cards
+  .p-card .p-datatable,
+  .table-card .p-datatable {
+    .p-datatable-thead > tr > th,
+    .p-datatable-tbody > tr > td {
+      background: #18181b !important;
+    }
+    .p-datatable-tbody > tr.p-row-odd > td {
+      background: #1f1f23 !important;
+    }
+  }
+
+  /* Card */
+  .p-card {
+    background: #18181b !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
+
+    .p-card-header {
+      background: #18181b !important;
+      color: #fafafa !important;
+    }
+
+    .p-card-body {
+      background: #18181b !important;
+      color: #fafafa !important;
+    }
+
+    .p-card-content {
+      background: #18181b !important;
+    }
+  }
+
+  /* ===========================================
+     DATA TABLES - Páginas específicas
+     =========================================== */
+
+  // Tabla Unificada
+  .tabla-unificada-container,
+  .usuarios-roles-container,
+  .activos-container,
+  .riesgos-container,
+  .cumplimiento-container,
+  .procesos-lista-container {
+    .p-datatable {
+      background: #18181b !important;
+
+      .p-datatable-wrapper {
+        background: #18181b !important;
+      }
+
+      table {
+        background: #18181b !important;
+      }
+
+      .p-datatable-thead > tr > th {
+        background: #27272a !important;
+        border-color: #3f3f46 !important;
+        color: #a1a1aa !important;
+      }
+
+      .p-datatable-tbody > tr {
+        background: #18181b !important;
+
+        > td {
+          background: #18181b !important;
+          border-color: #3f3f46 !important;
+          color: #fafafa !important;
+        }
+
+        &:nth-child(even) > td {
+          background: #1f1f23 !important;
+        }
+
+        &:hover > td {
+          background: #27272a !important;
+        }
+      }
+    }
+
+    // Toolbar de tabla
+    .p-toolbar {
+      background: #18181b !important;
+      border-color: #3f3f46 !important;
+    }
+  }
+
+  // Fix global para wrappers de tabla
+  .p-datatable-wrapper,
+  .p-datatable-table-container {
+    background: #18181b !important;
+  }
+
+  // Fix para scrollable tables
+  .p-datatable-scrollable {
+    .p-datatable-thead,
+    .p-datatable-tbody,
+    .p-datatable-tfoot {
+      background: #18181b !important;
+    }
+
+    .p-datatable-scrollable-header,
+    .p-datatable-scrollable-footer {
+      background: #27272a !important;
+    }
+  }
+
+  // Fix para frozen columns
+  .p-datatable-frozen-tbody {
+    background: #18181b !important;
+  }
+
+  // Fix input de búsqueda en tablas
+  .p-datatable .p-inputtext,
+  .table-search input,
+  .p-datatable-filter input {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
+
+    &::placeholder {
+      color: #71717a !important;
+    }
+  }
+
+  // Fix checkboxes en tablas - PrimeNG v19+
+  .p-datatable .p-checkbox,
+  .p-datatable-thead .p-checkbox,
+  .p-datatable-tbody .p-checkbox {
+    // Estado no checked
+    .p-checkbox-box {
+      background: #27272a;
+      border-color: #3f3f46;
+    }
+
+    // Estado checked - PrimeNG v19 usa múltiples selectores
+    // 1. Clase en el contenedor p-checkbox
+    &.p-checkbox-checked .p-checkbox-box,
+    // 2. Atributo data-p-checked en el contenedor
+    &[data-p-checked="true"] .p-checkbox-box,
+    // 3. Clase p-highlight en el box (versiones anteriores)
+    .p-checkbox-box.p-highlight {
+      background: var(--p-primary-color, var(--primary-color)) !important;
+      border-color: var(--p-primary-color, var(--primary-color)) !important;
+
+      // Asegurar que el ícono check sea visible
+      .p-checkbox-icon {
+        color: white !important;
+      }
+    }
+  }
+
+  // Fix dropdown en tablas (rows per page)
+  .p-datatable .p-dropdown {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    .p-dropdown-label {
+      color: #fafafa !important;
+    }
+
+    .p-dropdown-trigger {
+      color: #a1a1aa !important;
+    }
+  }
+
+  // Dropdown panel
+  .p-dropdown-panel {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    .p-dropdown-items {
+      background: #27272a !important;
+
+      .p-dropdown-item {
+        color: #fafafa !important;
+
+        &:hover {
+          background: #3f3f46 !important;
+        }
+
+        &.p-highlight {
+          background: var(--primary-500) !important;
+          color: white !important;
+        }
+      }
+    }
+  }
+
+  /* Dialog */
+  .p-dialog {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-dialog-header {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-dialog-content {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-dialog-footer {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+    }
+  }
+
+  /* Menu / Context Menu */
+  .p-menu,
+  .p-contextmenu {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-menuitem-link {
+      color: var(--text-color) !important;
+
+      &:hover {
+        background: var(--surface-hover) !important;
+      }
+    }
+  }
+
+  /* Tooltip */
+  .p-tooltip {
+    .p-tooltip-text {
+      background: var(--surface-700) !important;
+      color: var(--surface-0) !important;
+    }
+  }
+
+  /* Tags */
+  .p-tag {
+    &.p-tag-secondary {
+      background: var(--surface-200) !important;
+      color: var(--text-color) !important;
+    }
+  }
+
+  /* Chips */
+  .p-chip {
+    background: var(--surface-200) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Scrollbar global */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--surface-100);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--surface-300);
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--surface-400);
+    }
+  }
+
+  /* Connection lines */
+  .vflow-edge-path,
+  .vflow-connection path,
+  vflow path.edge,
+  vflow g.edges path {
+    stroke: var(--surface-400) !important;
+  }
+
+  /* Editor Toolbar */
+  .editor-toolbar {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  .toolbar-icon-btn {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color-secondary) !important;
+
+    &:hover {
+      background: var(--surface-200) !important;
+      color: var(--text-color) !important;
+    }
+  }
+
+  .toolbar-btn {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Nodos Figma - Global Override */
+  .node-card-figma {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  .node-figma-header {
+    background: var(--surface-50) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  .node-figma-title {
+    color: var(--text-color) !important;
+  }
+
+  .node-figma-icon {
+    color: var(--text-color-secondary) !important;
+  }
+
+  .node-figma-action-btn {
+    color: var(--text-color-secondary) !important;
+  }
+
+  .node-figma-body {
+    background: var(--surface-card) !important;
+  }
+
+  .node-figma-description {
+    color: var(--text-color-secondary) !important;
+  }
+
+  /* Inputs, selects, textareas - reset completo sin background-image */
+  .node-figma-input,
+  .node-figma-select,
+  .node-figma-textarea,
+  input.node-figma-input,
+  select.node-figma-select,
+  textarea.node-figma-textarea {
+    background: var(--surface-100) !important;
+    background-color: var(--surface-100) !important;
+    background-image: none !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    &::placeholder {
+      color: var(--text-color-secondary) !important;
+    }
+  }
+
+  .node-figma-field label {
+    color: var(--text-color) !important;
+  }
+
+  /* Botones Choose/Upload/Cancel - Estado normal */
+  .figma-btn {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Botones activos mantienen su color */
+  .figma-btn.choose.active {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+  }
+
+  .figma-btn.upload.active {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: white !important;
+  }
+
+  .figma-btn.cancel.active {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: white !important;
+  }
+
+  .node-figma-dropzone {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+
+    span, i {
+      color: var(--text-color-secondary) !important;
+    }
+  }
+
+  .figma-btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600, #4f46e5) 100%) !important;
+  }
+
+  /* Panel derecho de configuración */
+  .props-panel-header,
+  .config-header {
+    background: var(--surface-50) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  .props-section {
+    .props-label,
+    label {
+      color: var(--text-color) !important;
+    }
+  }
+
+  .props-action-btn {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+
+    &.primary {
+      background: var(--primary-color) !important;
+      color: white !important;
+    }
+  }
+
+  /* Top Header Bar */
+  .top-header-bar {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  /* FAB Button */
+  .fab-open-sidebar {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+    color: var(--text-color) !important;
+  }
+
+  /* Minimap */
+  .minimap-container {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+  }
+
+  /* PrimeNG Tags */
+  .p-tag {
+    &.p-tag-secondary {
+      background: var(--surface-200) !important;
+      color: var(--text-color) !important;
+    }
+
+    &.p-tag-info {
+      background: rgba(59, 130, 246, 0.2) !important;
+      color: var(--blue-400) !important;
+    }
+
+    &.p-tag-success {
+      background: rgba(34, 197, 94, 0.2) !important;
+      color: var(--green-400) !important;
+    }
+
+    &.p-tag-warning {
+      background: rgba(234, 179, 8, 0.2) !important;
+      color: var(--yellow-400) !important;
+    }
+
+    &.p-tag-danger {
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: var(--red-400) !important;
+    }
+  }
+
+  /* Badges custom */
+  .counter-badge {
+    background: rgba(59, 130, 246, 0.2) !important;
+    color: var(--blue-400) !important;
+
+    &.selected {
+      background: rgba(34, 197, 94, 0.2) !important;
+      color: var(--green-400) !important;
+    }
+  }
+
+  .total-badge {
+    background: var(--surface-200) !important;
+    color: var(--text-color-secondary) !important;
+  }
+
+  .node-figma-badge-dev {
+    background: rgba(234, 179, 8, 0.2) !important;
+    color: var(--yellow-400) !important;
+  }
+
+  .criticidad-badge {
+    background: var(--surface-200) !important;
+  }
+
+  /* ===========================================
+     DASHBOARD WIDGETS - Dark Mode Fixes
+     =========================================== */
+
+  // Widget container backgrounds y borders
+  .widget-container {
+    background: var(--surface-800) !important;
+    border-color: var(--surface-700) !important;
+  }
+
+  // Widget titles - alto contraste
+  .widget-title {
+    color: var(--text-color) !important;
+  }
+
+  .widget-subtitle {
+    color: var(--text-color-secondary) !important;
+  }
+
+  // Chart titles
+  .chart-title {
+    color: var(--text-color) !important;
+  }
+
+  .chart-subtitle {
+    color: var(--text-color-secondary) !important;
+  }
+
+  // KPI Cards - Colores oscuros sólidos (NO pasteles claros)
+  .widget-kpi-card {
+    &.kpi-cyan {
+      background: #0e3a47 !important;
+      border-color: #155e75 !important;
+      .kpi-title { color: var(--cyan-200) !important; }
+      .kpi-value { color: var(--cyan-100) !important; }
+    }
+
+    &.kpi-orange {
+      background: #431407 !important;
+      border-color: #7c2d12 !important;
+      .kpi-title { color: var(--orange-200) !important; }
+      .kpi-value { color: var(--orange-100) !important; }
+    }
+
+    &.kpi-purple {
+      background: #2e1065 !important;
+      border-color: #4c1d95 !important;
+      .kpi-title { color: var(--purple-200) !important; }
+      .kpi-value { color: var(--purple-100) !important; }
+    }
+
+    &.kpi-emerald {
+      background: #064e3b !important;
+      border-color: #047857 !important;
+      .kpi-title { color: var(--emerald-200) !important; }
+      .kpi-value { color: var(--emerald-100) !important; }
+    }
+
+    &.kpi-amber {
+      background: #451a03 !important;
+      border-color: #78350f !important;
+      .kpi-title { color: var(--amber-200) !important; }
+      .kpi-value { color: var(--amber-100) !important; }
+    }
+
+    &.kpi-rose {
+      background: #4c0519 !important;
+      border-color: #881337 !important;
+      .kpi-title { color: var(--pink-200) !important; }
+      .kpi-value { color: var(--pink-100) !important; }
+    }
+
+    .kpi-trend {
+      background: rgba(255, 255, 255, 0.15) !important;
+      &.positive { color: var(--emerald-300) !important; }
+      &.negative { color: var(--red-300) !important; }
+    }
+  }
+
+
+  // Alertas list
+  .widget-alertas-list .alerta-item {
+    background: var(--surface-800) !important;
+    border-color: var(--surface-700) !important;
+    color: var(--text-color) !important;
+  }
+
+  // Actividades
+  .actividad-item {
+    background: var(--surface-800) !important;
+    border-color: var(--surface-700) !important;
+
+    .actividad-titulo,
+    .actividad-descripcion {
+      color: var(--text-color) !important;
+    }
+
+    .actividad-meta {
+      color: var(--text-color-secondary) !important;
+    }
+  }
+
+  // Calendar
+  .p-calendar,
+  .p-datepicker {
+    background: var(--surface-card) !important;
+
+    .p-datepicker-header {
+      background: var(--surface-card) !important;
+      color: var(--text-color) !important;
+    }
+
+    .p-datepicker-calendar td > span {
+      color: var(--text-color) !important;
+    }
+  }
+
+  // Drilldown stats
+  .drilldown-stats .stat-item {
+    .stat-value { color: var(--text-color) !important; }
+    .stat-label { color: var(--text-color-secondary) !important; }
+  }
+
+  /* ===========================================
+     FORZAR FONDOS OSCUROS EN TODOS LOS WIDGETS
+     Usando tokens del sistema de diseño (Zinc grays)
+     =========================================== */
+
+  // Forzar fondo oscuro en widget-content
+  .widget-content {
+    background: var(--surface-card) !important; // #18181b
+  }
+
+  // Forzar fondo oscuro en todos los contenedores de widgets
+  .widget-graficas-interactivas,
+  .widget-table-enhanced,
+  .widget-actividad-enhanced,
+  .widget-calendario,
+  .widget-kpi-grid,
+  .graficas-interactivas-container {
+    background: var(--surface-card) !important; // #18181b
+  }
+
+  /* ===========================================
+     CALENDARIO WIDGET - Dark Mode (Tokens Zinc)
+     =========================================== */
+  app-calendario-widget,
+  .calendario-widget,
+  .widget-calendario {
+    background: var(--surface-card) !important;
+
+    // Header del calendario
+    .calendario-header {
+      background: var(--surface-100) !important;
+      border-color: var(--surface-200) !important;
+    }
+
+    .calendario-titulo {
+      color: var(--text-color) !important;
+    }
+
+    .calendario-nav {
+      button,
+      .p-button {
+        color: var(--text-color) !important;
+      }
+    }
+
+    .calendario-acciones {
+      .p-button {
+        color: var(--text-color) !important;
+      }
+    }
+
+    // Leyenda
+    .calendario-leyenda {
+      .leyenda-item {
+        color: var(--text-color-secondary) !important;
+      }
+    }
+
+    // Resumen de eventos
+    .calendario-resumen {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-200) !important;
+    }
+
+    .resumen-titulo {
+      color: var(--text-color) !important;
+    }
+
+    .resumen-evento {
+      background: var(--surface-100) !important;
+
+      &:hover {
+        background: var(--surface-200) !important;
+      }
+
+      .evento-fecha {
+        color: var(--text-color) !important;
+      }
+
+      .evento-titulo {
+        color: var(--text-color) !important;
+      }
+
+      .evento-proceso {
+        color: var(--text-color-secondary) !important;
+      }
+    }
+
+    .resumen-vacio {
+      color: var(--text-muted-color) !important;
+    }
+
+    // FullCalendar completo
+    .fc {
+      background: var(--surface-card) !important;
+
+      .fc-toolbar-title {
+        color: var(--text-color) !important;
+      }
+
+      .fc-button {
+        background: var(--surface-200) !important;
+        border-color: var(--surface-300) !important;
+        color: var(--text-color) !important;
+
+        &:hover {
+          background: var(--surface-300) !important;
+        }
+      }
+
+      // Header de columnas (días de la semana)
+      .fc-col-header {
+        background: var(--surface-100) !important;
+      }
+
+      .fc-col-header-cell {
+        background: var(--surface-100) !important;
+        border-color: var(--surface-200) !important;
+
+        .fc-col-header-cell-cushion {
+          color: var(--text-color-secondary) !important;
+        }
+      }
+
+      // Celdas de días
+      .fc-daygrid-day {
+        background: var(--surface-card) !important;
+
+        .fc-daygrid-day-number {
+          color: var(--text-color) !important;
+        }
+
+        .fc-daygrid-day-top {
+          color: var(--text-color) !important;
+        }
+
+        &.fc-day-today {
+          background: var(--surface-100) !important;
+
+          .fc-daygrid-day-number {
+            color: var(--primary-400) !important;
+          }
+        }
+
+        &.fc-day-other {
+          .fc-daygrid-day-number {
+            color: var(--text-muted-color) !important;
+          }
+        }
+      }
+
+      // Bordes de la tabla
+      .fc-scrollgrid {
+        border-color: var(--surface-200) !important;
+      }
+
+      td, th {
+        border-color: var(--surface-200) !important;
+      }
+
+      .fc-theme-standard td,
+      .fc-theme-standard th {
+        border-color: var(--surface-200) !important;
+      }
+
+      // Eventos
+      .fc-daygrid-more-link {
+        color: var(--primary-400) !important;
+      }
+    }
+  }
+
+  /* ===========================================
+     GRÁFICAS - Dark Mode (Tokens Zinc)
+     =========================================== */
+  .graficas-interactivas-container,
+  .widget-graficas-interactivas,
+  .chart-area {
+    background: var(--surface-card) !important;
+
+    .chart-title {
+      color: var(--text-color) !important;
+    }
+
+    .chart-subtitle {
+      color: var(--text-color-secondary) !important;
+    }
+
+    // Chart container
+    .chart-container {
+      background: var(--surface-card) !important;
+    }
+
+    // Selector de tipo de gráfica
+    .chart-type-selector,
+    .tipo-grafica-selector {
+      background: var(--surface-100) !important;
+      border-color: var(--surface-200) !important;
+
+      .p-button,
+      button {
+        color: var(--text-color-secondary) !important;
+        background: transparent !important;
+
+        &:hover {
+          color: var(--text-color) !important;
+          background: var(--surface-200) !important;
+        }
+
+        &.p-button-outlined,
+        &.active {
+          background: var(--primary-500) !important;
+          color: white !important;
+        }
+      }
+    }
+
+    // Stats/Summary area
+    .chart-stats,
+    .chart-summary {
+      background: var(--surface-100) !important;
+
+      span, div {
+        color: var(--text-color) !important;
+      }
+    }
+  }
+
+  /* ===========================================
+     WIDGET HEADERS Y TÍTULOS - Dark Mode (Tokens Zinc)
+     =========================================== */
+  .widget-header {
+    background: var(--surface-card) !important;
+    border-color: var(--surface-200) !important;
+
+    .widget-title {
+      color: var(--text-color) !important;
+    }
+
+    .widget-subtitle {
+      color: var(--text-color-secondary) !important;
+    }
+
+    .widget-icon {
+      color: var(--text-color-secondary) !important;
+    }
+
+    // Botones de acción
+    .p-button {
+      color: var(--text-color-secondary) !important;
+
+      &:hover {
+        color: var(--text-color) !important;
+        background: var(--surface-200) !important;
+      }
+    }
+  }
+
+  /* ===========================================
+     TABLA MINI REFORZADA - Dark Mode (Tokens Zinc)
+     =========================================== */
+  .widget-table-enhanced,
+  .widget-table-mini {
+    background: var(--surface-card) !important;
+
+    .table-toolbar {
+      background: transparent !important;
+
+      .table-search {
+        background: var(--surface-100) !important;
+        border-color: var(--surface-200) !important;
+
+        input {
+          background: transparent !important;
+          color: var(--text-color) !important;
+
+          &::placeholder {
+            color: var(--text-muted-color) !important;
+          }
+        }
+
+        i {
+          color: var(--text-muted-color) !important;
+        }
+      }
+
+      .p-select {
+        background: var(--surface-100) !important;
+        border-color: var(--surface-200) !important;
+        color: var(--text-color) !important;
+      }
+    }
+
+    .table-footer {
+      color: var(--text-color-secondary) !important;
+    }
+  }
+
+  table.mini-table,
+  .mini-table {
+    background: var(--surface-card) !important;
+
+    thead tr th {
+      background: var(--surface-100) !important;
+      color: var(--text-color) !important;
+      border-color: var(--surface-200) !important;
+    }
+
+    tbody tr {
+      background: var(--surface-card) !important;
+
+      td {
+        color: var(--text-color) !important;
+        border-color: var(--surface-200) !important;
+      }
+
+      &:hover {
+        background: var(--surface-100) !important;
+      }
+    }
+
+    .proceso-nombre {
+      color: var(--text-color) !important;
+    }
+
+    .estado-badge {
+      background: var(--surface-200) !important;
+      color: var(--text-color) !important;
+
+      &.activo {
+        background: rgba(34, 197, 94, 0.2) !important;
+        color: var(--green-400) !important;
+      }
+
+      &.borrador {
+        background: rgba(234, 179, 8, 0.2) !important;
+        color: var(--yellow-400) !important;
+      }
+
+      &.inactivo {
+        background: rgba(239, 68, 68, 0.2) !important;
+        color: var(--red-400) !important;
+      }
+    }
+
+    .cumplimiento-valor {
+      color: var(--text-color) !important;
+    }
+
+    .cumplimiento-bar-mini {
+      background: var(--surface-200) !important;
+    }
+
+    .tabla-vacia {
+      color: var(--text-muted-color) !important;
+      background: var(--surface-card) !important;
+    }
+  }
+
+  /* ===========================================
+     ACTIVIDADES ENHANCED REFORZADA - Dark Mode (Tokens Zinc)
+     =========================================== */
+  .widget-actividad-enhanced {
+    background: var(--surface-card) !important;
+
+    .actividad-filtros {
+      background: transparent !important;
+
+      .filtros-tipo {
+        .filtro-tipo-btn {
+          background: var(--surface-100) !important;
+          border-color: var(--surface-200) !important;
+          color: var(--text-color-secondary) !important;
+
+          &:hover {
+            background: var(--surface-200) !important;
+            color: var(--text-color) !important;
+          }
+
+          &.active {
+            background: var(--primary-500) !important;
+            border-color: var(--primary-500) !important;
+            color: white !important;
+          }
+        }
+      }
+
+      .filtros-secundarios {
+        .p-select {
+          background: var(--surface-100) !important;
+          border-color: var(--surface-200) !important;
+          color: var(--text-color) !important;
+        }
+      }
+    }
+
+    .actividad-lista {
+      .actividad-item-enhanced {
+        background: var(--surface-100) !important;
+        border-color: var(--surface-200) !important;
+
+        .actividad-icono i {
+          opacity: 1 !important;
+        }
+
+        .actividad-contenido {
+          .actividad-texto {
+            color: var(--text-color) !important;
+          }
+
+          .actividad-detalle {
+            color: var(--text-color-secondary) !important;
+          }
+
+          .actividad-usuario {
+            color: var(--text-color-secondary) !important;
+          }
+        }
+
+        .actividad-meta {
+          color: var(--text-color-secondary) !important;
+
+          .actividad-tiempo {
+            color: var(--text-color-secondary) !important;
+          }
+
+          .actividad-arrow {
+            color: var(--text-muted-color) !important;
+          }
+        }
+
+        &:hover {
+          background: var(--surface-200) !important;
+        }
+      }
+    }
+
+    .actividad-vacia {
+      color: var(--text-muted-color) !important;
+    }
+
+    .actividad-footer {
+      border-color: var(--surface-200) !important;
+
+      .actividad-contador {
+        color: var(--text-color-secondary) !important;
+      }
+    }
+  }
+
+  /* ===========================================
+     DRILLDOWN DRAWERS - Dark Mode (Tokens Zinc)
+     =========================================== */
+  .drilldown-content {
+    background: var(--surface-card) !important;
+
+    .drilldown-header {
+      .drilldown-title {
+        color: var(--text-color) !important;
+      }
+    }
+
+    .drilldown-stats {
+      .stat-item {
+        background: var(--surface-100) !important;
+        border-color: var(--surface-200) !important;
+
+        .stat-value {
+          color: var(--text-color) !important;
+        }
+
+        .stat-label {
+          color: var(--text-color-secondary) !important;
+        }
+      }
+    }
+
+    .drilldown-item {
+      background: var(--surface-100) !important;
+      border-color: var(--surface-200) !important;
+
+      .drilldown-item-nombre {
+        color: var(--text-color) !important;
+      }
+
+      .drilldown-item-bar {
+        background: var(--surface-200) !important;
+      }
+    }
+  }
+
+  /* ===========================================
+     GRIDSTER ITEMS - Dark Mode (Tokens Zinc)
+     =========================================== */
+  gridster-item {
+    background: transparent !important;
+
+    .widget-container {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-200) !important;
+
+      &:hover {
+        border-color: var(--surface-300) !important;
+      }
+    }
+  }
+
+  /* Widgets especiales sin container visible */
+  gridster-item[data-widget-type="kpi-card"],
+  gridster-item[data-widget-type="kpi-grid"] {
+    .widget-container {
+      background: transparent !important;
+      border: none !important;
+    }
+  }
+
+  /* ===========================================
+     KPI CARDS - Dark Mode (Colores Sólidos Oscuros)
+     =========================================== */
+  .widget-kpi-card {
+    // Cyan - Dark mode
+    &.kpi-cyan {
+      background: #0e3a47 !important;
+      border-color: #155e75 !important;
+      .kpi-title { color: var(--cyan-200) !important; }
+      .kpi-value { color: var(--cyan-100) !important; }
+      .kpi-icon { background: var(--cyan-500) !important; }
+    }
+
+    // Orange - Dark mode
+    &.kpi-orange {
+      background: #431407 !important;
+      border-color: #7c2d12 !important;
+      .kpi-title { color: var(--orange-200) !important; }
+      .kpi-value { color: var(--orange-100) !important; }
+      .kpi-icon { background: var(--orange-500) !important; }
+    }
+
+    // Purple - Dark mode
+    &.kpi-purple {
+      background: #2e1065 !important;
+      border-color: #4c1d95 !important;
+      .kpi-title { color: var(--purple-200) !important; }
+      .kpi-value { color: var(--purple-100) !important; }
+      .kpi-icon { background: var(--purple-500) !important; }
+    }
+
+    // Emerald - Dark mode
+    &.kpi-emerald {
+      background: #064e3b !important;
+      border-color: #047857 !important;
+      .kpi-title { color: var(--emerald-200) !important; }
+      .kpi-value { color: var(--emerald-100) !important; }
+      .kpi-icon { background: var(--emerald-500) !important; }
+    }
+
+    // Rose/Pink - Dark mode
+    &.kpi-rose {
+      background: #4c0519 !important;
+      border-color: #881337 !important;
+      .kpi-title { color: var(--pink-200) !important; }
+      .kpi-value { color: var(--pink-100) !important; }
+      .kpi-icon { background: var(--pink-500) !important; }
+    }
+
+    // Amber - Dark mode
+    &.kpi-amber {
+      background: #451a03 !important;
+      border-color: #78350f !important;
+      .kpi-title { color: var(--amber-200) !important; }
+      .kpi-value { color: var(--amber-100) !important; }
+      .kpi-icon { background: var(--amber-500) !important; }
+    }
+
+    .kpi-trend {
+      background: rgba(255, 255, 255, 0.15) !important;
+      &.positive { color: var(--emerald-300) !important; }
+      &.negative { color: var(--red-300) !important; }
+    }
+  }
+
+  /* ===========================================
+     WIDGET TABLE MINI - Dark Mode
+     =========================================== */
+  .widget-table-mini,
+  .widget-table-enhanced {
+    background: var(--surface-card) !important;
+
+    .mini-table,
+    table {
+      background: var(--surface-card) !important;
+
+      thead {
+        background: var(--surface-100) !important;
+
+        tr th {
+          background: var(--surface-100) !important;
+          color: var(--text-color) !important;
+          border-color: var(--surface-200) !important;
+        }
+      }
+
+      tbody {
+        tr {
+          background: var(--surface-card) !important;
+
+          &:hover {
+            background: var(--surface-100) !important;
+          }
+
+          td {
+            color: var(--text-color) !important;
+            border-color: var(--surface-200) !important;
+          }
+        }
+      }
+
+      .proceso-nombre {
+        color: var(--text-color) !important;
+      }
+
+      .estado-badge {
+        &.activo {
+          background: rgba(34, 197, 94, 0.2) !important;
+          color: var(--green-400) !important;
+        }
+        &.borrador {
+          background: var(--surface-200) !important;
+          color: var(--text-color-secondary) !important;
+        }
+        &.inactivo {
+          background: rgba(239, 68, 68, 0.2) !important;
+          color: var(--red-400) !important;
+        }
+      }
+
+      .cumplimiento-valor {
+        color: var(--text-color) !important;
+      }
+
+      .cumplimiento-bar-mini {
+        background: var(--surface-200) !important;
+      }
+    }
+
+    .table-toolbar {
+      background: transparent !important;
+
+      .table-search {
+        background: var(--surface-100) !important;
+        border-color: var(--surface-200) !important;
+
+        input {
+          background: transparent !important;
+          color: var(--text-color) !important;
+          &::placeholder { color: var(--text-muted-color) !important; }
+        }
+      }
+    }
+
+    .table-footer,
+    .tabla-footer {
+      color: var(--text-color-secondary) !important;
+    }
+
+    .tabla-vacia {
+      color: var(--text-muted-color) !important;
+      background: var(--surface-card) !important;
+    }
+  }
+
+  /* ===========================================
+     WIDGET GRÁFICAS - Dark Mode
+     =========================================== */
+  .widget-graficas-interactivas,
+  .graficas-interactivas-container,
+  .widget-chart,
+  .chart-area {
+    background: var(--surface-card) !important;
+
+    .chart-title {
+      color: var(--text-color) !important;
+    }
+
+    .chart-subtitle {
+      color: var(--text-color-secondary) !important;
+    }
+
+    .chart-container {
+      background: var(--surface-card) !important;
+    }
+
+    // Selector de tipo de gráfica
+    .chart-type-selector,
+    .tipo-grafica-selector {
+      background: var(--surface-100) !important;
+      border-color: var(--surface-200) !important;
+
+      button,
+      .p-button {
+        color: var(--text-color-secondary) !important;
+        background: transparent !important;
+
+        &:hover {
+          color: var(--text-color) !important;
+          background: var(--surface-200) !important;
+        }
+
+        &.active,
+        &.p-button-outlined {
+          background: var(--primary-500) !important;
+          color: white !important;
+        }
+      }
+    }
+
+    // Stats dentro de gráficas
+    .chart-stats,
+    .chart-summary {
+      background: var(--surface-100) !important;
+      span, div { color: var(--text-color) !important; }
+    }
+
+    // Leyenda de gráficas
+    .chart-legend {
+      color: var(--text-color) !important;
+    }
+
+    // Estadísticas del drilldown
+    .drilldown-stats-row {
+      .stat-card {
+        background: var(--surface-100) !important;
+        border-color: var(--surface-200) !important;
+        .stat-value { color: var(--text-color) !important; }
+        .stat-label { color: var(--text-color-secondary) !important; }
+      }
+    }
+  }
+
+  /* ===========================================
+     WIDGET ACTIVIDADES ENHANCED - Dark Mode
+     =========================================== */
+  .widget-actividad,
+  .widget-actividad-enhanced {
+    background: var(--surface-card) !important;
+
+    .actividad-filtros {
+      .filtro-tipo-btn {
+        background: var(--surface-100) !important;
+        border-color: var(--surface-200) !important;
+        color: var(--text-color-secondary) !important;
+
+        &:hover {
+          background: var(--surface-200) !important;
+          color: var(--text-color) !important;
+        }
+
+        &.active {
+          background: var(--primary-500) !important;
+          border-color: var(--primary-500) !important;
+          color: white !important;
+        }
+      }
+    }
+
+    .actividad-item,
+    .actividad-item-enhanced {
+      background: var(--surface-100) !important;
+      border-color: var(--surface-200) !important;
+
+      .actividad-icono i {
+        opacity: 1 !important;
+      }
+
+      .actividad-texto,
+      .actividad-titulo {
+        color: var(--text-color) !important;
+      }
+
+      .actividad-detalle,
+      .actividad-descripcion {
+        color: var(--text-color-secondary) !important;
+      }
+
+      .actividad-usuario,
+      .actividad-meta,
+      .actividad-tiempo {
+        color: var(--text-color-secondary) !important;
+      }
+
+      &:hover {
+        background: var(--surface-200) !important;
+      }
+    }
+
+    .actividad-vacia {
+      color: var(--text-muted-color) !important;
+    }
+
+    .actividad-footer {
+      border-color: var(--surface-200) !important;
+      .actividad-contador {
+        color: var(--text-color-secondary) !important;
+      }
+    }
+  }
+
+  /* ===========================================
+     WIDGET CALENDARIO - Dark Mode
+     =========================================== */
+  .widget-calendario,
+  .calendario-widget,
+  app-calendario-widget {
+    background: var(--surface-card) !important;
+
+    .calendario-header {
+      background: var(--surface-100) !important;
+      border-color: var(--surface-200) !important;
+    }
+
+    .calendario-titulo {
+      color: var(--text-color) !important;
+    }
+
+    .calendario-nav button,
+    .calendario-acciones .p-button {
+      color: var(--text-color) !important;
+    }
+
+    .calendario-leyenda .leyenda-item {
+      color: var(--text-color-secondary) !important;
+    }
+
+    .calendario-resumen {
+      background: var(--surface-card) !important;
+      border-color: var(--surface-200) !important;
+    }
+
+    .resumen-titulo {
+      color: var(--text-color) !important;
+    }
+
+    .resumen-evento {
+      background: var(--surface-100) !important;
+      &:hover { background: var(--surface-200) !important; }
+      .evento-fecha, .evento-titulo { color: var(--text-color) !important; }
+      .evento-proceso { color: var(--text-color-secondary) !important; }
+    }
+
+    .resumen-vacio {
+      color: var(--text-muted-color) !important;
+    }
+
+    // FullCalendar
+    .fc {
+      background: var(--surface-card) !important;
+
+      .fc-toolbar-title {
+        color: var(--text-color) !important;
+      }
+
+      .fc-button {
+        background: var(--surface-200) !important;
+        border-color: var(--surface-300) !important;
+        color: var(--text-color) !important;
+        &:hover { background: var(--surface-300) !important; }
+      }
+
+      .fc-col-header {
+        background: var(--surface-100) !important;
+      }
+
+      .fc-col-header-cell {
+        background: var(--surface-100) !important;
+        border-color: var(--surface-200) !important;
+        .fc-col-header-cell-cushion { color: var(--text-color-secondary) !important; }
+      }
+
+      .fc-daygrid-day {
+        background: var(--surface-card) !important;
+        .fc-daygrid-day-number { color: var(--text-color) !important; }
+
+        &.fc-day-today {
+          background: var(--surface-100) !important;
+          .fc-daygrid-day-number { color: var(--primary-400) !important; }
+        }
+
+        &.fc-day-other .fc-daygrid-day-number {
+          color: var(--text-muted-color) !important;
+        }
+      }
+
+      .fc-scrollgrid,
+      td, th {
+        border-color: var(--surface-200) !important;
+      }
+
+      .fc-daygrid-more-link {
+        color: var(--primary-400) !important;
+      }
+    }
+  }
+
+  /* ===========================================
+     WIDGET ALERTAS - Dark Mode
+     =========================================== */
+  .widget-alertas-list .alerta-item {
+    background: var(--surface-100) !important;
+    border-color: var(--surface-200) !important;
+
+    .alerta-title {
+      color: var(--text-color) !important;
+    }
+
+    .alerta-subtitle {
+      color: var(--text-color-secondary) !important;
+    }
+  }
+
+  /* ===========================================
+     TENDENCIA BADGES - Dark Mode
+     =========================================== */
+  .tendencia-badge {
+    &.positive {
+      background: rgba(34, 197, 94, 0.2) !important;
+      color: var(--emerald-400) !important;
+    }
+    &.negative {
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: var(--red-400) !important;
+    }
+  }
+
+  .tendencia-arrow {
+    &.positive {
+      background: rgba(34, 197, 94, 0.2) !important;
+      color: var(--emerald-400) !important;
+    }
+    &.negative {
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: var(--red-400) !important;
+    }
+  }
+}
+
+// ============================================
+// Dark Mode Compatible Icon Backgrounds
+// ============================================
+.kpi-icon-bg {
+  transition: background-color 0.2s ease;
+
+  &.kpi-icon-blue {
+    background-color: rgba(59, 130, 246, 0.15);
+  }
+  &.kpi-icon-orange {
+    background-color: rgba(249, 115, 22, 0.15);
+  }
+  &.kpi-icon-red {
+    background-color: rgba(239, 68, 68, 0.15);
+  }
+  &.kpi-icon-purple {
+    background-color: rgba(168, 85, 247, 0.15);
+  }
+  &.kpi-icon-green {
+    background-color: rgba(34, 197, 94, 0.15);
+  }
+  &.kpi-icon-yellow {
+    background-color: rgba(234, 179, 8, 0.15);
+  }
+  &.kpi-icon-teal {
+    background-color: rgba(20, 184, 166, 0.15);
+  }
+}
+
+// Dark mode adjustments for icon backgrounds
+:root.p-dark .kpi-icon-bg {
+  &.kpi-icon-blue {
+    background-color: rgba(59, 130, 246, 0.25);
+  }
+  &.kpi-icon-orange {
+    background-color: rgba(249, 115, 22, 0.25);
+  }
+  &.kpi-icon-red {
+    background-color: rgba(239, 68, 68, 0.25);
+  }
+  &.kpi-icon-purple {
+    background-color: rgba(168, 85, 247, 0.25);
+  }
+  &.kpi-icon-green {
+    background-color: rgba(34, 197, 94, 0.25);
+  }
+  &.kpi-icon-yellow {
+    background-color: rgba(234, 179, 8, 0.25);
+  }
+  &.kpi-icon-teal {
+    background-color: rgba(20, 184, 166, 0.25);
+  }
+}
+
+// ============================================
+// Dark Mode Compatible Progress Bars
+// ============================================
+.progress-bar-track {
+  background-color: var(--surface-200);
+  border-radius: var(--border-radius);
+
+  .progress-bar-fill {
+    border-radius: var(--border-radius);
+    transition: width 0.3s ease;
+
+    &.progress-primary { background-color: var(--primary-color); }
+    &.progress-success { background-color: var(--green-500); }
+    &.progress-warning { background-color: var(--orange-500); }
+    &.progress-danger { background-color: var(--red-500); }
+  }
+}
+
+// ============================================
+// Dark Mode Surface Hover for List Items
+// ============================================
+.activo-item,
+.list-item-hover {
+  background-color: var(--surface-ground);
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: var(--surface-hover);
+  }
+}
+
+// ============================================
+// Fix for text-900/text-500 in dark mode
+// Use text-color and text-color-secondary instead
+// ============================================
+.text-color {
+  color: var(--text-color) !important;
+}
+
+.text-color-secondary {
+  color: var(--text-color-secondary) !important;
+}
+
+// ============================================
+// Method Selection Cards (Wizard)
+// ============================================
+.wizard-method-icon {
+  transition: background-color 0.2s ease;
+}
+
+.wizard-method-selected {
+  border: 2px solid var(--primary-color) !important;
+  background-color: var(--primary-50) !important;
+}
+
+:root.p-dark .wizard-method-selected {
+  background-color: rgba(var(--primary-500-rgb), 0.15) !important;
+}
+
+// ============================================
+// Info/Help Boxes compatible with dark mode
+// ============================================
+.info-box,
+.help-box,
+.formula-help {
+  background-color: var(--surface-100) !important;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+
+  &.info-blue {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+
+  &.info-yellow {
+    background-color: rgba(234, 179, 8, 0.1) !important;
+    border-color: rgba(234, 179, 8, 0.3);
+  }
+
+  &.info-green {
+    background-color: rgba(34, 197, 94, 0.1) !important;
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+
+  &.info-red {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+}

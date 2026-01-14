@@ -1,0 +1,663 @@
+```mdx
+---
+title: "Visualización de Resultados de Inteligencia (ResultsML)"
+sidebar_label: "Resultados ML"
+sidebar_position: 7
+---
+
+import ZoomableDiagram from '@site/src/components/ZoomableDiagram';
+
+# Historia de Usuario: Visualización de Resultados de Inteligencia (ResultsML)
+
+## 📋 Información General
+
+- **ID**: US-RESULTSML-UI-001
+- **Módulo**: ResultsML / Inteligencia de Datos
+- **Prioridad**: Alta
+- **Sprint**: Sprint 5 (Depende de US-ML-001)
+
+## 👤 Historia de Usuario
+
+**Como** Usuario del sistema
+**Quiero** visualizar los resultados del análisis de inteligencia (ResultsML) asociados a un activo o proceso específico, incluyendo tendencias detectadas, mitigaciones sugeridas y oportunidades identificadas, con la capacidad de proporcionar retroalimentación y contexto adicional
+**Para** poder tomar decisiones informadas basadas en insights de IA/ML, mejorar la precisión del modelo en iteraciones futuras mediante mi retroalimentación, y gestionar proactivamente riesgos y oportunidades de mejora identificados automáticamente.
+
+## ✅ Criterios de Aceptación
+
+### Feature: Selección y Búsqueda de Activo/Proceso
+
+```gherkin
+Scenario: Acceder al módulo de Resultados de Inteligencia
+  Given el usuario está autenticado en el sistema
+  When accede al módulo "Resultados de Inteligencia" desde el menú principal
+  Then visualiza una interfaz con:
+    | Elemento                    | Descripción                                      |
+    | Buscador principal          | Campo de búsqueda con autocompletado             |
+    | Selector de tipo            | Toggle o tabs: Activos / Procesos                |
+    | Lista de elementos recientes| Últimos activos/procesos consultados             |
+    | Indicadores globales        | Resumen de hallazgos pendientes de revisión      |
+
+Scenario: Buscar un activo por nombre o identificador
+  Given el usuario está en el módulo de Resultados de Inteligencia
+  And ha seleccionado el tipo "Activos"
+  When escribe un término de búsqueda en el buscador principal
+  Then el sistema muestra resultados de autocompletado con activos que coinciden
+  And cada resultado muestra:
+    | Elemento             | Descripción                                    |
+    | Nombre del activo    | Nombre completo del activo                     |
+    | Tipo de activo       | Categoría del activo                           |
+    | Indicador de insights| Badge con número de hallazgos pendientes       |
+  And al seleccionar un activo, navega a la vista de resultados de ese activo
+
+Scenario: Buscar un proceso por nombre
+  Given el usuario está en el módulo de Resultados de Inteligencia
+  And ha seleccionado el tipo "Procesos"
+  When escribe un término de búsqueda en el buscador principal
+  Then el sistema muestra procesos que coinciden con el término
+  And cada resultado muestra:
+    | Elemento              | Descripción                                   |
+    | Nombre del proceso    | Nombre completo del proceso                   |
+    | Área/Departamento     | Área responsable del proceso                  |
+    | Indicador de insights | Badge con número de hallazgos pendientes      |
+  And al seleccionar un proceso, navega a la vista de resultados de ese proceso
+
+Scenario: Acceder a resultados desde el detalle de un activo/proceso
+  Given el usuario está visualizando el detalle de un activo o proceso
+  And ese activo/proceso tiene resultados de ResultsML disponibles
+  When observa la sección de información del activo/proceso
+  Then visualiza un badge o indicador "Insights de IA disponibles" con contador
+  And al hacer clic en el indicador, navega a la vista de Resultados de Inteligencia
+  And la vista se abre con el activo/proceso preseleccionado
+```
+
+### Feature: Visualización de Resultados de Análisis
+
+```gherkin
+Scenario: Visualizar resumen de resultados para un activo
+  Given el usuario ha seleccionado un activo
+  When se carga la vista de Resultados de Inteligencia
+  Then visualiza un panel de resumen con:
+    | Elemento                       | Descripción                                         |
+    | Identificación del activo      | Nombre, tipo y área del activo                      |
+    | Fecha último análisis          | Fecha y hora del último procesamiento batch         |
+    | Estado del análisis            | Completado / En proceso / Error                     |
+    | Contadores de hallazgos        | Total de tendencias, mitigaciones, oportunidades    |
+    | Distribución por estado        | Pendientes / Aprobados / Descartados                |
+
+Scenario: Visualizar resumen de resultados para un proceso
+  Given el usuario ha seleccionado un proceso
+  When se carga la vista de Resultados de Inteligencia
+  Then visualiza un panel de resumen con:
+    | Elemento                       | Descripción                                         |
+    | Identificación del proceso     | Nombre, área y responsable del proceso              |
+    | Fecha último análisis          | Fecha y hora del último procesamiento batch         |
+    | Estado del análisis            | Completado / En proceso / Error                     |
+    | Contadores de hallazgos        | Total de tendencias, optimizaciones, alertas        |
+    | Distribución por estado        | Pendientes / Aprobados / Descartados                |
+
+Scenario: Navegar entre categorías de resultados
+  Given el usuario está visualizando resultados de un activo o proceso
+  When observa las pestañas o secciones de resultados
+  Then puede navegar entre:
+    | Categoría       | Descripción                                              |
+    | Tendencias      | Patrones y correlaciones detectadas en los datos         |
+    | Mitigaciones    | Acciones sugeridas para reducir riesgos identificados    |
+    | Oportunidades   | Mejoras y optimizaciones identificadas                   |
+  And cada categoría muestra el contador de elementos
+  And cada categoría indica cuántos están pendientes de revisión
+```
+
+### Feature: Visualización de Tendencias
+
+```gherkin
+Scenario: Visualizar lista de tendencias detectadas
+  Given el usuario está en la pestaña "Tendencias"
+  When se cargan los resultados
+  Then visualiza una lista de tendencias con:
+    | Elemento              | Descripción                                           |
+    | Título de tendencia   | Descripción corta del patrón identificado             |
+    | Tipo de tendencia     | Correlación / Anomalía / Patrón Temporal / Cluster    |
+    | Confianza             | Porcentaje de confianza del modelo (ej: 85%)          |
+    | Fuentes de datos      | Badges indicando fuentes (CSV, Incidentes, BAM, etc.) |
+    | Fecha de detección    | Cuándo se identificó la tendencia                     |
+    | Estado de revisión    | Pendiente / Confirmada / Descartada                   |
+  And puede ordenar por confianza, fecha o estado
+  And puede filtrar por tipo de tendencia o estado
+
+Scenario: Ver detalle de una tendencia de correlación
+  Given existe una tendencia de tipo "Correlación"
+  When el usuario hace clic en la tendencia
+  Then se expande o abre un panel de detalle mostrando:
+    | Sección               | Contenido                                             |
+    | Descripción completa  | Explicación detallada generada por el modelo          |
+    | Datos involucrados    | Datasets y campos que participan en la correlación    |
+    | Métricas estadísticas | Coeficiente de correlación, p-value, intervalo conf.  |
+    | Visualización         | Gráfica mostrando la correlación (scatter plot, etc.) |
+    | Período de análisis   | Rango de fechas de los datos analizados               |
+    | Impacto estimado      | Evaluación del impacto potencial si se ignora         |
+  And puede ver los registros/eventos que soportan la tendencia
+
+Scenario: Ver detalle de una tendencia de anomalía
+  Given existe una tendencia de tipo "Anomalía"
+  When el usuario hace clic en la tendencia
+  Then visualiza:
+    | Sección               | Contenido                                             |
+    | Descripción           | Explicación de la anomalía detectada                  |
+    | Valores normales      | Rango de valores esperados                            |
+    | Valores detectados    | Valores que dispararon la detección                   |
+    | Visualización         | Gráfica de serie temporal con anomalías marcadas      |
+    | Frecuencia            | Cuántas veces se ha detectado este patrón             |
+    | Activos relacionados  | Otros activos que podrían verse afectados             |
+```
+
+### Feature: Visualización de Mitigaciones Sugeridas
+
+```gherkin
+Scenario: Visualizar lista de mitigaciones sugeridas
+  Given el usuario está en la pestaña "Mitigaciones"
+  When se cargan los resultados
+  Then visualiza una lista de mitigaciones con:
+    | Elemento              | Descripción                                           |
+    | Título                | Nombre de la mitigación sugerida                      |
+    | Riesgo asociado       | Riesgo identificado que se busca mitigar              |
+    | Prioridad sugerida    | Alta / Media / Baja (calculada por el modelo)         |
+    | Confianza             | Nivel de confianza de la sugerencia                   |
+    | Tendencia origen      | Link a la tendencia que generó esta sugerencia        |
+    | Estado                | Pendiente / Aprobada / Descartada / Implementada      |
+  And puede filtrar por prioridad o estado
+  And puede ordenar por prioridad, confianza o fecha
+
+Scenario: Ver detalle de una mitigación sugerida
+  Given existe una mitigación en estado "Pendiente"
+  When el usuario hace clic en la mitigación
+  Then visualiza un panel de detalle con:
+    | Sección                   | Contenido                                           |
+    | Descripción completa      | Explicación detallada de la mitigación              |
+    | Justificación del modelo  | Por qué el modelo sugiere esta acción               |
+    | Riesgo que mitiga         | Descripción del riesgo identificado                 |
+    | Beneficio esperado        | Impacto positivo estimado                           |
+    | Esfuerzo estimado         | Complejidad de implementación (si disponible)       |
+    | Evidencia                 | Datos y tendencias que soportan la sugerencia       |
+    | Acciones disponibles      | Botones para Aprobar / Descartar / Solicitar más info|
+
+Scenario: Ver mitigación vinculada a riesgo existente
+  Given una mitigación está asociada a un riesgo ya registrado en el sistema
+  When el usuario visualiza el detalle de la mitigación
+  Then muestra un link al riesgo existente en el módulo de Gestión de Riesgos
+  And indica si el riesgo ya tiene controles o tratamientos asignados
+  And permite navegar directamente al riesgo
+```
+
+### Feature: Visualización de Oportunidades
+
+```gherkin
+Scenario: Visualizar lista de oportunidades identificadas
+  Given el usuario está en la pestaña "Oportunidades"
+  When se cargan los resultados
+  Then visualiza una lista de oportunidades con:
+    | Elemento              | Descripción                                           |
+    | Título                | Nombre de la oportunidad de mejora                    |
+    | Tipo                  | Optimización / Eficiencia / Reducción de costos       |
+    | Impacto estimado      | Beneficio potencial (cualitativo o cuantitativo)      |
+    | Confianza             | Nivel de confianza del modelo                         |
+    | Área de impacto       | Proceso, área o función que se beneficiaría           |
+    | Estado                | Pendiente / Aprobada / Descartada / En evaluación     |
+  And puede filtrar por tipo o estado
+  And puede ordenar por impacto, confianza o fecha
+
+Scenario: Ver detalle de una oportunidad de optimización
+  Given existe una oportunidad en estado "Pendiente"
+  When el usuario hace clic en la oportunidad
+  Then visualiza:
+    | Sección                   | Contenido                                           |
+    | Descripción completa      | Explicación de la mejora propuesta                  |
+    | Análisis del modelo       | Datos y patrones que sustentan la sugerencia        |
+    | Beneficio cuantificado    | Ahorro de tiempo, reducción de ciclo, etc.          |
+    | Proceso/Activo afectado   | Link al proceso o activo relacionado                |
+    | Elementos involucrados    | Actividades o componentes específicos               |
+    | Riesgos de implementación | Posibles efectos negativos a considerar             |
+    | Acciones disponibles      | Aprobar / Descartar / Solicitar análisis adicional  |
+```
+
+### Feature: Retroalimentación y Aprobación/Descarte
+
+```gherkin
+Scenario: Aprobar una mitigación sugerida
+  Given el usuario está visualizando una mitigación pendiente
+  When hace clic en "Aprobar"
+  Then el sistema muestra un diálogo de confirmación con:
+    | Elemento                   | Descripción                                        |
+    | Resumen de la mitigación   | Título y descripción breve                         |
+    | Opción crear riesgo        | Checkbox para crear riesgo en módulo de Riesgos    |
+    | Opción crear tarea         | Checkbox para crear tarea de seguimiento           |
+    | Campo de comentarios       | Notas adicionales del usuario                      |
+    | Botones                    | Confirmar / Cancelar                               |
+  And al confirmar:
+    | Acción                           | Resultado                                     |
+    | Actualizar estado                | La mitigación cambia a "Aprobada"             |
+    | Registrar aprobación             | Se guarda quién aprobó y cuándo               |
+    | Crear riesgo (si seleccionado)   | Se crea riesgo pre-llenado en módulo Riesgos  |
+    | Notificar al modelo              | Se marca como feedback positivo para ML       |
+  And el sistema muestra confirmación de la acción
+
+Scenario: Descartar una mitigación con justificación
+  Given el usuario está visualizando una mitigación que considera incorrecta
+  When hace clic en "Descartar"
+  Then el sistema muestra un diálogo solicitando:
+    | Elemento                   | Descripción                                        |
+    | Motivo de descarte         | Dropdown con opciones predefinidas                 |
+    | Justificación              | Campo de texto obligatorio                         |
+    | Impacto en modelo          | Info sobre cómo esto mejorará futuras predicciones |
+  And las opciones de motivo incluyen:
+    | Motivo                         |
+    | No aplica a este contexto      |
+    | Ya fue implementado            |
+    | Información incorrecta         |
+    | Prioridad muy baja             |
+    | Duplicado de otra sugerencia   |
+    | Otro (especificar)             |
+  And al confirmar con justificación:
+    | Acción                     | Resultado                                     |
+    | Actualizar estado          | La mitigación cambia a "Descartada"           |
+    | Registrar feedback         | Se guarda motivo, justificación, usuario, fecha|
+    | Entrenar modelo            | El feedback se usa en próxima iteración batch |
+
+Scenario: Aprobar una oportunidad y crear tarea
+  Given el usuario está visualizando una oportunidad pendiente
+  When hace clic en "Aprobar"
+  And selecciona "Crear tarea de evaluación"
+  And completa los campos requeridos:
+    | Campo              | Valor                                  |
+    | Responsable        | Usuario asignado                       |
+    | Fecha límite       | Fecha para evaluar la implementación   |
+    | Comentarios        | Notas adicionales                      |
+  And confirma la aprobación
+  Then la oportunidad cambia a estado "En evaluación"
+  And se crea una tarea vinculada en el sistema
+  And se registra como feedback positivo para el modelo
+
+Scenario: Descartar una tendencia como falso positivo
+  Given el usuario identifica que una tendencia es un falso positivo
+  When hace clic en "Descartar" en la tendencia
+  And selecciona motivo "Falso positivo"
+  And proporciona una justificación explicando por qué
+  Then la tendencia cambia a estado "Descartada"
+  And el sistema registra este feedback para mejorar el modelo
+  And las mitigaciones/oportunidades derivadas de esta tendencia se marcan para revisión
+```
+
+### Feature: Agregar Contexto para Mejora del Modelo
+
+```gherkin
+Scenario: Agregar contexto general al activo/proceso
+  Given el usuario está visualizando resultados de un activo o proceso
+  When hace clic en "Agregar Contexto" en el panel principal
+  Then se abre un formulario con:
+    | Campo                      | Descripción                                        |
+    | Tipo de contexto           | Dropdown: Evento planificado / Cambio reciente / Excepción conocida / Información de negocio / Otro |
+    | Título                     | Descripción breve del contexto                     |
+    | Descripción detallada      | Campo de texto largo                               |
+    | Período de aplicación      | Fecha inicio / Fecha fin (opcional)                |
+    | Relevancia                 | Alta / Media / Baja                                |
+    | Adjuntos                   | Opción de subir documentos de soporte              |
+  And al guardar el contexto:
+    | Acción                         | Resultado                                     |
+    | Almacenar contexto             | Se guarda asociado al activo/proceso          |
+    | Disponible para ML             | El contexto se incluye en próximo batch       |
+    | Visible en historial           | Aparece en la línea de tiempo del activo      |
+
+Scenario: Agregar contexto específico a una tendencia
+  Given el usuario está visualizando el detalle de una tendencia
+  And considera que falta información para interpretar correctamente
+  When hace clic en "Agregar contexto a esta tendencia"
+  Then puede ingresar:
+    | Campo                      | Descripción                                        |
+    | Información adicional      | Contexto que el modelo no tenía                    |
+    | Datos faltantes            | Información que debería considerarse               |
+    | Corrección de interpretación| Si el modelo malinterpretó algo                   |
+  And al guardar:
+    | Acción                     | Resultado                                         |
+    | Asociar a tendencia        | El contexto queda vinculado a esta tendencia      |
+    | Feedback para ML           | Se usa para refinar el análisis en próximo ciclo  |
+    | Notificación               | Opcionalmente notifica al equipo de datos         |
+
+Scenario: Indicar evento extraordinario que afecta análisis
+  Given el usuario sabe que ocurrió un evento que causó anomalías temporales
+  When accede a "Agregar Contexto" en el activo o proceso afectado
+  And selecciona tipo "Evento planificado"
+  And completa:
+    | Campo                  | Valor                                           |
+    | Título                 | Descripción del evento                          |
+    | Descripción            | Explicación detallada del impacto en los datos  |
+    | Período                | Fecha inicio - Fecha fin del evento             |
+    | Relevancia             | Alta                                            |
+  And guarda el contexto
+  Then el sistema registra el evento
+  And en el próximo ciclo batch, ResultsML:
+    | Comportamiento esperado                                              |
+    | Excluye o pondera diferente los datos del período indicado           |
+    | Evita generar alertas sobre anomalías ya explicadas                  |
+    | Considera este contexto al calcular tendencias                       |
+
+Scenario: Ver historial de contexto agregado
+  Given un activo o proceso tiene múltiples contextos registrados
+  When el usuario accede a la sección "Historial de Contexto"
+  Then visualiza una línea de tiempo con:
+    | Elemento              | Descripción                                    |
+    | Fecha de registro     | Cuándo se agregó el contexto                   |
+    | Usuario               | Quién lo agregó                                |
+    | Tipo                  | Categoría del contexto                         |
+    | Título y resumen      | Descripción breve                              |
+    | Período de aplicación | Si tiene fechas asociadas                      |
+    | Estado                | Activo / Expirado / Aplicado                   |
+  And puede expandir cada contexto para ver el detalle completo
+  And puede editar o eliminar contextos que haya creado
+```
+
+### Feature: Historial y Seguimiento
+
+```gherkin
+Scenario: Ver historial de resultados de análisis
+  Given el usuario quiere revisar la evolución de insights de un activo o proceso
+  When accede a la sección "Historial de Análisis"
+  Then visualiza:
+    | Elemento                    | Descripción                                    |
+    | Lista de ciclos de análisis | Fechas de cada procesamiento batch             |
+    | Comparativa                 | Número de hallazgos por ciclo                  |
+    | Tendencia general           | Gráfica de evolución de hallazgos              |
+  And puede seleccionar un ciclo anterior para ver sus resultados
+  And puede comparar resultados entre dos ciclos diferentes
+
+Scenario: Ver impacto del feedback proporcionado
+  Given el usuario ha proporcionado feedback (aprobaciones/descartes) previamente
+  When accede a la sección "Impacto de Retroalimentación"
+  Then visualiza métricas de:
+    | Métrica                      | Descripción                                   |
+    | Total feedback proporcionado | Número de aprobaciones y descartes            |
+    | Precisión percibida          | % de sugerencias que fueron aprobadas         |
+    | Mejora del modelo            | Comparativa de precisión entre ciclos         |
+
+Scenario: Recibir notificación de nuevos resultados
+  Given el usuario tiene configuradas notificaciones para un activo o proceso
+  And se ejecuta un nuevo ciclo de procesamiento batch
+  When ResultsML genera nuevos hallazgos
+  Then el usuario recibe notificación con:
+    | Elemento              | Descripción                                    |
+    | Asunto                | "Nuevos insights disponibles para [Entidad]"   |
+    | Resumen               | Conteo de tendencias, mitigaciones, oportunidades |
+    | Prioridad             | Si hay hallazgos de alta prioridad             |
+    | Link directo          | Acceso a la vista de resultados                |
+```
+
+### Feature: Filtros y Exportación
+
+```gherkin
+Scenario: Filtrar resultados por múltiples criterios
+  Given el usuario está visualizando resultados con muchos hallazgos
+  When aplica filtros:
+    | Filtro              | Valor                      |
+    | Estado              | Solo pendientes            |
+    | Confianza           | Mayor a 70%                |
+    | Fecha de detección  | Último mes                 |
+    | Tipo                | Selección de tipos         |
+  Then la lista se actualiza mostrando solo elementos que cumplen todos los criterios
+  And los contadores se actualizan reflejando los filtros
+
+Scenario: Exportar resultados a reporte
+  Given el usuario quiere compartir los hallazgos
+  When hace clic en "Exportar Reporte"
+  Then puede configurar:
+    | Opción                  | Descripción                                 |
+    | Formato                 | PDF / Excel                                 |
+    | Contenido               | Todas las categorías o selección específica |
+    | Incluir gráficas        | Sí / No                                     |
+    | Incluir evidencia       | Datos de soporte resumidos                  |
+    | Período                 | Rango de fechas de los análisis             |
+  And al generar, descarga el reporte con:
+    | Sección                 | Contenido                                   |
+    | Resumen ejecutivo       | Hallazgos principales y métricas            |
+    | Tendencias              | Lista con detalles relevantes               |
+    | Mitigaciones            | Sugerencias y su estado                     |
+    | Oportunidades           | Mejoras identificadas                       |
+    | Contexto agregado       | Información proporcionada por usuarios      |
+```
+
+## 🔄 Flujo de Usuario
+
+<ZoomableDiagram
+  title="Flujo de Visualización y Retroalimentación de ResultsML"
+  height="950px"
+  chart={`graph TD
+    subgraph "Acceso y Selección"
+        Start[Usuario accede a<br/>Resultados de Inteligencia] --> SearchSelect{Método de<br/>Acceso}
+        SearchSelect -->|Buscar| SearchEntity[Buscar Activo<br/>o Proceso]
+        SearchSelect -->|Recientes| SelectRecent[Seleccionar de<br/>Lista Reciente]
+        SearchSelect -->|Desde Detalle| FromDetail[Navegar desde<br/>Detalle de Entidad]
+        SearchEntity --> SelectEntity[Seleccionar<br/>Activo/Proceso]
+        SelectRecent --> SelectEntity
+        FromDetail --> SelectEntity
+        SelectEntity --> LoadResults[Cargar Resultados<br/>de ResultsML]
+    end
+
+    subgraph "Visualización de Resultados"
+        LoadResults --> ViewSummary[Ver Resumen<br/>General]
+        ViewSummary --> SelectCategory{Seleccionar<br/>Categoría}
+        SelectCategory -->|Tendencias| ViewTrends[Ver Lista de<br/>Tendencias]
+        SelectCategory -->|Mitigaciones| ViewMitigations[Ver Lista de<br/>Mitigaciones]
+        SelectCategory -->|Oportunidades| ViewOpportunities[Ver Lista de<br/>Oportunidades]
+        
+        ViewTrends --> SelectItem[Seleccionar<br/>Elemento]
+        ViewMitigations --> SelectItem
+        ViewOpportunities --> SelectItem
+        
+        SelectItem --> ViewDetail[Ver Detalle<br/>Completo]
+    end
+
+    subgraph "Retroalimentación"
+        ViewDetail --> UserAction{Acción del<br/>Usuario}
+        UserAction -->|Aprobar| ApproveFlow[Flujo de<br/>Aprobación]
+        UserAction -->|Descartar| DiscardFlow[Flujo de<br/>Descarte]
+        UserAction -->|Agregar Contexto| AddContext[Agregar<br/>Contexto]
+        
+        ApproveFlow --> ConfirmApprove[Confirmar y<br/>Opciones Adicionales]
+        ConfirmApprove --> CreateRisk{¿Crear<br/>Riesgo/Tarea?}
+        CreateRisk -->|Sí| CreateRecord[Crear Registro<br/>en Módulo GRC]
+        CreateRisk -->|No| SaveApproval[Guardar<br/>Aprobación]
+        CreateRecord --> SaveApproval
+        
+        DiscardFlow --> ProvideReason[Seleccionar Motivo<br/>y Justificación]
+        ProvideReason --> SaveDiscard[Guardar Descarte<br/>como Feedback]
+        
+        AddContext --> ContextForm[Completar<br/>Formulario de Contexto]
+        ContextForm --> SaveContext[Guardar Contexto<br/>para Próximo Batch]
+    end
+
+    subgraph "Ciclo de Mejora ML"
+        SaveApproval --> FeedbackPool[Pool de<br/>Retroalimentación]
+        SaveDiscard --> FeedbackPool
+        SaveContext --> ContextPool[Pool de<br/>Contexto]
+        
+        FeedbackPool --> NextBatch[Próximo Ciclo<br/>Batch de ResultsML]
+        ContextPool --> NextBatch
+        
+        NextBatch --> ImprovedResults[Resultados<br/>Mejorados]
+        ImprovedResults --> LoadResults
+    end
+
+    style Start fill:#4caf50,stroke:#333,stroke-width:2px
+    style ViewSummary fill:#2196f3,stroke:#333,stroke-width:2px
+    style ViewDetail fill:#ff9800,stroke:#333,stroke-width:2px
+    style FeedbackPool fill:#9c27b0,stroke:#333,stroke-width:2px
+    style ContextPool fill:#9c27b0,stroke:#333,stroke-width:2px
+    style NextBatch fill:#e91e63,stroke:#333,stroke-width:3px,stroke-dasharray: 5 5
+    style ImprovedResults fill:#4caf50,stroke:#333,stroke-width:2px
+  `}
+/>
+
+## 🎨 Mockups / Diseños
+
+Diseños disponibles en Figma (Pendientes de revisión por UX/UI Designer: Alan Franco)
+
+### Wireframes Sugeridos:
+
+1. **Vista Principal - Búsqueda y Selección**
+   - Barra de búsqueda con autocompletado
+   - Toggle Activos/Procesos
+   - Lista de elementos recientes
+   - Cards de resumen global de hallazgos pendientes
+
+2. **Vista de Resultados - Panel Principal**
+   - Header con identificación del activo/proceso seleccionado
+   - Resumen con contadores y estado del último análisis
+   - Tabs para Tendencias / Mitigaciones / Oportunidades
+   - Botón "Agregar Contexto" prominente
+
+3. **Lista de Hallazgos**
+   - Cards o filas con información resumida
+   - Indicadores visuales de confianza y estado
+   - Filtros laterales o en barra superior
+   - Ordenamiento por columnas clave
+
+4. **Panel de Detalle de Hallazgo**
+   - Vista expandida o modal con toda la información
+   - Gráficas y visualizaciones de soporte
+   - Sección de evidencia con datos fuente
+   - Botones de acción (Aprobar/Descartar) prominentes
+
+5. **Modal de Aprobación/Descarte**
+   - Formulario claro con opciones
+   - Campos de justificación
+   - Checkboxes para acciones adicionales (crear riesgo, tarea)
+
+6. **Formulario de Contexto**
+   - Campos estructurados por tipo de contexto
+   - Selector de período de aplicación
+   - Vista previa del impacto esperado
+
+## 📝 Notas Adicionales
+
+### Equipo
+
+- **Product Owner**: Francisco Puente
+- **UX/UI Designer**: Alan Franco
+- **Frontend Developers**: Cesar Gonzalez, Juan Martinez
+- **Backend Developer**: Josue Cardenas
+- **AI/ML Engineer**: Por definir
+- **QA Engineer**: Emmanuel Vazquez
+
+### Notas de Implementación
+
+:::info Integración con ResultsML
+Esta interfaz consume los resultados generados por el procesamiento batch de ResultsML (US-ML-001). La frecuencia de actualización de datos depende de la configuración del ciclo batch (típicamente nocturno).
+:::
+
+:::info Modelo de Feedback
+El feedback proporcionado por los usuarios (aprobaciones, descartes, contexto) se almacena y se utiliza como entrada para el próximo ciclo de procesamiento batch, permitiendo que el modelo aprenda y mejore sus predicciones iterativamente.
+:::
+
+:::info Tipos de Hallazgos
+Los tipos específicos de tendencias, mitigaciones y oportunidades que se mostrarán dependen de los análisis implementados en ResultsML según US-ML-001 (correlaciones, anomalías, cuellos de botella, riesgos ocultos, etc.).
+:::
+
+### Alcance
+
+#### ✅ Fase 1 (MVP) incluye:
+
+**Búsqueda y Selección**
+- Buscador de activos y procesos con autocompletado
+- Lista de elementos recientes
+- Acceso desde detalle de activo/proceso
+
+**Visualización de Resultados**
+- Panel de resumen con contadores y estado
+- Navegación por categorías (Tendencias, Mitigaciones, Oportunidades)
+- Lista de hallazgos con filtros básicos
+- Detalle de cada hallazgo con evidencia
+
+**Retroalimentación Básica**
+- Aprobar hallazgos con comentarios
+- Descartar hallazgos con motivo y justificación
+- Crear riesgo desde mitigación aprobada
+- Registro de feedback para el modelo
+
+**Contexto**
+- Agregar contexto general a activo/proceso
+- Agregar contexto específico a tendencia
+- Historial de contexto agregado
+
+**Exportación**
+- Exportar a PDF y Excel
+
+---
+
+#### ⏳ Fase 2 incluye:
+
+**Visualización Avanzada**
+- Comparativa entre ciclos de análisis
+- Métricas de impacto del feedback en el modelo
+- Dashboard consolidado de todos los activos/procesos
+- Gráficas interactivas con drill-down
+
+**Retroalimentación Avanzada**
+- Flujos de aprobación con múltiples niveles
+- Creación automática de tareas en sistemas externos
+- Integración con workflows de gestión de cambios
+
+**Notificaciones**
+- Alertas configurables por umbral de prioridad
+- Notificaciones en tiempo real de nuevos hallazgos
+- Resumen periódico por email
+
+**Colaboración**
+- Comentarios y discusión en hallazgos
+- Asignación de hallazgos a usuarios específicos
+- Historial de actividad colaborativa
+
+**Contexto Avanzado**
+- Importación masiva de contexto desde archivos
+- Contexto compartido entre activos relacionados
+- Sugerencias automáticas de contexto basadas en patrones
+
+**Análisis**
+- Métricas de precisión del modelo por categoría
+- Análisis de tendencias de feedback
+- Reportes de efectividad de mitigaciones implementadas
+
+### Roadmap
+
+| Fase   | Funcionalidad Principal                                    | Fecha Estimada    | Estado        |
+|--------|------------------------------------------------------------|-------------------|---------------|
+| Fase 1 | Visualización, Retroalimentación básica, Contexto          | 23/diciembre/2026     | Planificado   |
+| Fase 2 | Dashboards, Notificaciones, Colaboración, Análisis         | Q2 2026           | Backlog       |
+
+### Dependencias
+
+- **US-ML-001**: ResultsML - Análisis y Optimización (debe completarse primero)
+- Módulo de Gestión de Activos (completado)
+- Módulo de Gestión de Procesos (completado)
+- Módulo de Gestión de Riesgos (para creación de riesgos desde mitigaciones)
+
+### Consideraciones de UX
+
+1. **Claridad en la confianza**: Mostrar claramente el nivel de confianza del modelo para cada sugerencia
+2. **Incentivo al feedback**: Hacer evidente el valor del feedback del usuario para mejorar el sistema
+3. **Contexto accesible**: Facilitar al máximo la adición de contexto sin fricción
+4. **Trazabilidad**: Permitir ver siempre el origen de cada sugerencia (qué datos la generaron)
+5. **Estados claros**: Usar colores e iconos consistentes para los estados de los hallazgos
+
+### Métricas de Éxito
+
+- Tasa de revisión de hallazgos > 80% en los primeros 7 días
+- Ratio de aprobación/descarte que refleje mejora del modelo en el tiempo
+- Tiempo promedio de revisión de un hallazgo < 2 minutos
+- Cantidad de contexto agregado por usuario activo > 1 por semana
+- Reducción de falsos positivos en ciclos sucesivos > 20%
+
+## 🏷️ Etiquetas
+
+`resultsml` `ai` `ml` `visualization` `feedback` `context` `trends` `mitigations` `opportunities` `grc` `sprint-5`
+
+---
+
+**Última actualización**: 04/12/2025
+```

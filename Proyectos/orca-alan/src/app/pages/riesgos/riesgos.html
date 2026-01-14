@@ -1,0 +1,294 @@
+<div class="riesgos-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Gestión de Riesgos</h1>
+    <p class="page-subtitle">Identifica, evalúa y gestiona los riesgos de tus activos</p>
+  </div>
+
+  <!-- Toolbar -->
+  <p-toolbar>
+    <ng-template pTemplate="start">
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search" />
+        <input type="text" pInputText placeholder="Buscar riesgos..." #dtFilter
+               (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
+      </p-iconfield>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <div class="flex gap-2">
+        @if (riesgosSeleccionados().length > 0) {
+          <p-button
+            label="Acciones masivas"
+            icon="pi pi-check-square"
+            [badge]="riesgosSeleccionados().length.toString()"
+            badgeSeverity="contrast"
+            severity="success"
+            [outlined]="true"
+            styleClass="btn-acciones-masivas"
+            (onClick)="abrirAccionesMasivasDrawer()" />
+        }
+        <p-button label="Nuevo Riesgo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
+      </div>
+    </ng-template>
+  </p-toolbar>
+
+  <!-- Table Card -->
+  <p-card styleClass="table-card">
+    <p-table #dt [value]="riesgos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
+             [globalFilterFields]="['id', 'activoNombre', 'descripcion', 'estado', 'responsable']"
+             styleClass="p-datatable-striped"
+             [(selection)]="riesgosSeleccionados"
+             (selectionChange)="onSelectionChange($event)"
+             dataKey="id">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 3rem">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
+          <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+          <th pSortableColumn="activoNombre">Activo <p-sortIcon field="activoNombre"></p-sortIcon></th>
+          <th pSortableColumn="descripcion">Descripcion <p-sortIcon field="descripcion"></p-sortIcon></th>
+          <th pSortableColumn="probabilidad">Probabilidad <p-sortIcon field="probabilidad"></p-sortIcon></th>
+          <th pSortableColumn="impacto">Impacto <p-sortIcon field="impacto"></p-sortIcon></th>
+          <th>Nivel</th>
+          <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+          <th pSortableColumn="responsable">Responsable <p-sortIcon field="responsable"></p-sortIcon></th>
+          <th style="width: 100px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-riesgo>
+        <tr [class.row-editing]="estaEditando(riesgo.id)">
+          <td>
+            <p-tableCheckbox [value]="riesgo"></p-tableCheckbox>
+          </td>
+          <td class="font-mono text-sm">{{ riesgo.id }}</td>
+          <td class="font-medium">{{ riesgo.activoNombre }}</td>
+          <!-- Descripcion -->
+          <td>
+            @if (estaEditando(riesgo.id)) {
+              <input pInputText [ngModel]="getValorEdicion('descripcion')"
+                     (ngModelChange)="setValorEdicion('descripcion', $event)"
+                     class="w-full" />
+            } @else {
+              {{ riesgo.descripcion }}
+            }
+          </td>
+          <!-- Probabilidad -->
+          <td>
+            @if (estaEditando(riesgo.id)) {
+              <p-select [options]="[{label:'1',value:1},{label:'2',value:2},{label:'3',value:3},{label:'4',value:4},{label:'5',value:5}]"
+                        [ngModel]="getValorEdicion('probabilidad')"
+                        (ngModelChange)="setValorEdicion('probabilidad', $event)"
+                        [style]="{width: '70px'}" />
+            } @else {
+              <div class="flex align-items-center gap-2">
+                <div class="w-6rem progress-bar-track" style="height: 8px;">
+                  <div class="bg-primary border-round" [style.width.%]="riesgo.probabilidad * 20" style="height: 100%;"></div>
+                </div>
+                <span class="font-bold text-color">{{ riesgo.probabilidad }}</span>
+              </div>
+            }
+          </td>
+          <!-- Impacto -->
+          <td>
+            @if (estaEditando(riesgo.id)) {
+              <p-select [options]="[{label:'1',value:1},{label:'2',value:2},{label:'3',value:3},{label:'4',value:4},{label:'5',value:5}]"
+                        [ngModel]="getValorEdicion('impacto')"
+                        (ngModelChange)="setValorEdicion('impacto', $event)"
+                        [style]="{width: '70px'}" />
+            } @else {
+              <div class="flex align-items-center gap-2">
+                <div class="w-6rem progress-bar-track" style="height: 8px;">
+                  <div class="bg-orange-500 border-round" [style.width.%]="riesgo.impacto * 20" style="height: 100%;"></div>
+                </div>
+                <span class="font-bold text-color">{{ riesgo.impacto }}</span>
+              </div>
+            }
+          </td>
+          <!-- Nivel (calculado, solo lectura) -->
+          <td>
+            <p-tag [value]="getNivelLabel(getNivelRiesgo(riesgo.probabilidad, riesgo.impacto)) + ' (' + getNivelRiesgo(riesgo.probabilidad, riesgo.impacto) + ')'"
+                   [severity]="getNivelSeverity(getNivelRiesgo(riesgo.probabilidad, riesgo.impacto))"></p-tag>
+          </td>
+          <!-- Estado -->
+          <td>
+            @if (estaEditando(riesgo.id)) {
+              <p-select [options]="estadosRiesgo"
+                        [ngModel]="getValorEdicion('estado')"
+                        (ngModelChange)="setValorEdicion('estado', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <p-tag [value]="riesgo.estado" [severity]="getEstadoSeverity(riesgo.estado)"></p-tag>
+            }
+          </td>
+          <!-- Responsable -->
+          <td>
+            @if (estaEditando(riesgo.id)) {
+              <input pInputText [ngModel]="getValorEdicion('responsable')"
+                     (ngModelChange)="setValorEdicion('responsable', $event)"
+                     class="w-full" />
+            } @else {
+              {{ riesgo.responsable }}
+            }
+          </td>
+          <!-- Acciones -->
+          <td class="actions-cell">
+            @if (estaEditando(riesgo.id)) {
+              <div class="flex gap-1">
+                <p-button icon="pi pi-check" severity="success" [text]="true" size="small"
+                          pTooltip="Guardar" (onClick)="guardarEdicion(riesgo, $event)" />
+                <p-button icon="pi pi-times" severity="secondary" [text]="true" size="small"
+                          pTooltip="Cancelar" (onClick)="cancelarEdicion($event)" />
+              </div>
+            } @else {
+              <div class="flex justify-content-center">
+                <p-menu #menuRiesgo [model]="getMenuItemsRiesgo(riesgo)" [popup]="true" appendTo="body"></p-menu>
+                <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
+                          (onClick)="menuRiesgo.toggle($event)" />
+              </div>
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="text-center py-4">
+            <span class="text-color-secondary">No hay riesgos registrados</span>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Pie de tabla con totales por columna -->
+      <ng-template pTemplate="footer">
+        <tr class="font-semibold surface-ground">
+          <td></td>
+          <td>
+            <span class="text-color">Totales</span>
+          </td>
+          <td>
+            <span class="text-color-secondary">{{ riesgos().length }} riesgos</span>
+          </td>
+          <td></td>
+          <td>
+            <span class="text-primary">Promedio</span>
+          </td>
+          <td>
+            <span class="text-primary">{{ getPromedioNivel() | number:'1.1-1' }}</span>
+          </td>
+          <td>
+            <div class="flex gap-1">
+              <p-tag [value]="riesgosCriticos().toString()" severity="danger" styleClass="text-xs" pTooltip="Críticos" />
+              <p-tag [value]="riesgosAltos().toString()" severity="warn" styleClass="text-xs" pTooltip="Altos" />
+            </div>
+          </td>
+          <td>
+            <p-tag [value]="riesgosControlados().toString() + ' controlados'" severity="success" styleClass="text-xs" />
+          </td>
+          <td></td>
+          <td></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Dialog Nuevo Riesgo -->
+<p-dialog header="Nuevo Riesgo" [modal]="true" [(visible)]="showDialog" [style]="{width: '550px'}">
+  <div class="flex flex-column gap-4">
+    <div class="flex flex-column gap-2">
+      <label for="activo" class="font-medium">Activo Asociado *</label>
+      <p-select id="activo" [options]="activosOptions()" [(ngModel)]="nuevoRiesgo().activoId"
+                  placeholder="Seleccionar activo" [style]="{width: '100%'}"></p-select>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="descripcion" class="font-medium">Descripcion del Riesgo *</label>
+      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoRiesgo().descripcion" rows="3"
+                placeholder="Describe el riesgo identificado"></textarea>
+    </div>
+    <div class="grid">
+      <div class="col-6">
+        <div class="flex flex-column gap-2">
+          <label class="font-medium">Probabilidad: {{ nuevoRiesgo().probabilidad }}</label>
+          <p-slider [(ngModel)]="nuevoRiesgo().probabilidad" [min]="1" [max]="5" [step]="1"></p-slider>
+          <div class="flex justify-content-between text-xs text-color-secondary">
+            <span>Muy Baja</span>
+            <span>Muy Alta</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="flex flex-column gap-2">
+          <label class="font-medium">Impacto: {{ nuevoRiesgo().impacto }}</label>
+          <p-slider [(ngModel)]="nuevoRiesgo().impacto" [min]="1" [max]="5" [step]="1"></p-slider>
+          <div class="flex justify-content-between text-xs text-color-secondary">
+            <span>Muy Bajo</span>
+            <span>Muy Alto</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="p-3 surface-ground border-round text-center">
+      <p class="text-color-secondary text-sm m-0 mb-1">Nivel de Riesgo Calculado</p>
+      <p-tag [value]="getNivelLabel(nuevoRiesgo().probabilidad * nuevoRiesgo().impacto) + ' (' + (nuevoRiesgo().probabilidad * nuevoRiesgo().impacto) + ')'"
+             [severity]="getNivelSeverity(nuevoRiesgo().probabilidad * nuevoRiesgo().impacto)"
+             styleClass="text-lg"></p-tag>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="estado" class="font-medium">Estado</label>
+      <p-select id="estado" [options]="estadosRiesgo" [(ngModel)]="nuevoRiesgo().estado"
+                  [style]="{width: '100%'}"></p-select>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="responsable" class="font-medium">Responsable *</label>
+      <input pInputText id="responsable" [(ngModel)]="nuevoRiesgo().responsable" placeholder="Nombre del responsable" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showDialog.set(false)"></p-button>
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveRiesgo()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Drawer Acciones Masivas -->
+<p-drawer [(visible)]="showAccionesMasivasDrawer" position="right" [style]="{width: '400px'}" header="Acciones Masivas">
+  <div class="flex flex-column gap-4">
+    <p class="text-color-secondary m-0">Aplicar cambios a {{ riesgosSeleccionados().length }} riesgos seleccionados</p>
+
+    <!-- Probabilidad -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Probabilidad</label>
+      <p-select [options]="[{label:'1 - Muy Baja',value:1},{label:'2 - Baja',value:2},{label:'3 - Media',value:3},{label:'4 - Alta',value:4},{label:'5 - Muy Alta',value:5}]"
+                placeholder="Sin cambios" [showClear]="true" [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Impacto -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Impacto</label>
+      <p-select [options]="[{label:'1 - Muy Bajo',value:1},{label:'2 - Bajo',value:2},{label:'3 - Medio',value:3},{label:'4 - Alto',value:4},{label:'5 - Muy Alto',value:5}]"
+                placeholder="Sin cambios" [showClear]="true" [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Estado -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Estado</label>
+      <p-select [options]="estadosRiesgo" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Responsable -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Responsable</label>
+      <input pInputText placeholder="Sin cambios" class="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-content-end">
+      <p-button label="Cancelar" severity="secondary" [text]="true"
+                (onClick)="showAccionesMasivasDrawer.set(false)" />
+      <p-button label="Aplicar cambios" icon="pi pi-check"
+                (onClick)="aplicarAccionesMasivas()" />
+    </div>
+  </ng-template>
+</p-drawer>

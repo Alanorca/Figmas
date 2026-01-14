@@ -1,0 +1,252 @@
+<div class="incidentes-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Gestión de Incidentes</h1>
+    <p class="page-subtitle">Reporta y gestiona incidentes de seguridad</p>
+  </div>
+
+  <!-- Toolbar -->
+  <p-toolbar>
+    <ng-template pTemplate="start">
+      <div class="flex align-items-center gap-3">
+        @if (incidentesSeleccionados().length > 0) {
+          <p-button
+            label="Acciones masivas"
+            icon="pi pi-check-square"
+            [badge]="incidentesSeleccionados().length.toString()"
+            badgeSeverity="contrast"
+            severity="success"
+            [outlined]="true"
+            styleClass="btn-acciones-masivas"
+            (onClick)="abrirAccionesMasivasDrawer()" />
+        }
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input type="text" pInputText placeholder="Buscar incidentes..." #dtFilter
+                 (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
+        </p-iconfield>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Reportar Incidente" icon="pi pi-plus" severity="danger" (onClick)="openNewDialog()"></p-button>
+    </ng-template>
+  </p-toolbar>
+
+  <!-- Table Card -->
+  <p-card styleClass="table-card">
+    <p-table #dt [value]="incidentes()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} incidentes"
+             [globalFilterFields]="['id', 'titulo', 'activoNombre', 'severidad', 'estado', 'reportadoPor']"
+             styleClass="p-datatable-striped"
+             [(selection)]="incidentesSeleccionados"
+             (selectionChange)="onSelectionChange($event)"
+             dataKey="id">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 3rem">
+            <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+          </th>
+          <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+          <th pSortableColumn="titulo">Titulo <p-sortIcon field="titulo"></p-sortIcon></th>
+          <th pSortableColumn="activoNombre">Activo <p-sortIcon field="activoNombre"></p-sortIcon></th>
+          <th pSortableColumn="severidad">Severidad <p-sortIcon field="severidad"></p-sortIcon></th>
+          <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+          <th pSortableColumn="reportadoPor">Reportado Por <p-sortIcon field="reportadoPor"></p-sortIcon></th>
+          <th pSortableColumn="fechaReporte">Fecha <p-sortIcon field="fechaReporte"></p-sortIcon></th>
+          <th style="width: 100px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-incidente>
+        <tr [class.row-editing]="estaEditando(incidente.id)">
+          <td>
+            <p-tableCheckbox [value]="incidente"></p-tableCheckbox>
+          </td>
+          <td class="font-mono text-sm">{{ incidente.id }}</td>
+          <!-- Titulo -->
+          <td>
+            @if (estaEditando(incidente.id)) {
+              <input pInputText [ngModel]="getValorEdicion('titulo')"
+                     (ngModelChange)="setValorEdicion('titulo', $event)"
+                     class="w-full" />
+            } @else {
+              <div>
+                <p class="font-medium m-0">{{ incidente.titulo }}</p>
+                <p class="text-sm text-500 m-0 mt-1">{{ incidente.descripcion | slice:0:50 }}...</p>
+              </div>
+            }
+          </td>
+          <td class="font-medium">{{ incidente.activoNombre }}</td>
+          <!-- Severidad -->
+          <td>
+            @if (estaEditando(incidente.id)) {
+              <p-select [options]="severidades"
+                        [ngModel]="getValorEdicion('severidad')"
+                        (ngModelChange)="setValorEdicion('severidad', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <p-tag [value]="incidente.severidad" [severity]="getSeveridadSeverity(incidente.severidad)"></p-tag>
+            }
+          </td>
+          <!-- Estado -->
+          <td>
+            @if (estaEditando(incidente.id)) {
+              <p-select [options]="estados"
+                        [ngModel]="getValorEdicion('estado')"
+                        (ngModelChange)="setValorEdicion('estado', $event)"
+                        [style]="{width: '100%'}" />
+            } @else {
+              <p-tag [value]="incidente.estado" [severity]="getEstadoSeverity(incidente.estado)"
+                     [icon]="getEstadoIcon(incidente.estado)"></p-tag>
+            }
+          </td>
+          <!-- Reportado Por -->
+          <td>
+            @if (estaEditando(incidente.id)) {
+              <input pInputText [ngModel]="getValorEdicion('reportadoPor')"
+                     (ngModelChange)="setValorEdicion('reportadoPor', $event)"
+                     class="w-full" />
+            } @else {
+              {{ incidente.reportadoPor }}
+            }
+          </td>
+          <td>{{ incidente.fechaReporte | date:'dd/MM/yyyy' }}</td>
+          <!-- Acciones -->
+          <td class="actions-cell">
+            @if (estaEditando(incidente.id)) {
+              <div class="flex gap-1">
+                <p-button icon="pi pi-check" severity="success" [text]="true" size="small"
+                          pTooltip="Guardar" (onClick)="guardarEdicion(incidente, $event)" />
+                <p-button icon="pi pi-times" severity="secondary" [text]="true" size="small"
+                          pTooltip="Cancelar" (onClick)="cancelarEdicion($event)" />
+              </div>
+            } @else {
+              <div class="flex justify-content-center">
+                <p-menu #menuIncidente [model]="getMenuItemsIncidente(incidente)" [popup]="true" appendTo="body"></p-menu>
+                <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
+                          (onClick)="menuIncidente.toggle($event)" />
+              </div>
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center py-4">
+            <div class="flex flex-column align-items-center gap-2">
+              <span class="material-icons text-4xl text-green-500">verified</span>
+              <span class="text-500">No hay incidentes registrados</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Pie de tabla con totales por columna -->
+      <ng-template pTemplate="footer">
+        <tr class="font-semibold surface-100">
+          <td></td>
+          <td>
+            <span class="text-900">Totales</span>
+          </td>
+          <td>
+            <span class="text-600">{{ incidentes().length }} incidentes</span>
+          </td>
+          <td></td>
+          <td>
+            <p-tag [value]="getIncidentesCriticos().toString() + ' críticos'" severity="danger" styleClass="text-xs" />
+          </td>
+          <td>
+            <div class="flex gap-1">
+              <p-tag [value]="incidentesAbiertos().toString()" severity="danger" styleClass="text-xs" pTooltip="Abiertos" />
+              <p-tag [value]="incidentesEnProceso().toString()" severity="warn" styleClass="text-xs" pTooltip="En Proceso" />
+              <p-tag [value]="incidentesResueltos().toString()" severity="success" styleClass="text-xs" pTooltip="Resueltos" />
+              <p-tag [value]="incidentesCerrados().toString()" severity="secondary" styleClass="text-xs" pTooltip="Cerrados" />
+            </div>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Dialog Nuevo Incidente -->
+<p-dialog header="Reportar Incidente" [modal]="true" [(visible)]="showDialog" [style]="{width: '550px'}">
+  <div class="flex flex-column gap-3">
+    <div class="flex flex-column gap-2">
+      <label for="activo" class="font-medium">Activo Afectado *</label>
+      <p-select id="activo" [options]="activosOptions()" [(ngModel)]="nuevoIncidente().activoId"
+                  placeholder="Seleccionar activo" [style]="{width: '100%'}"></p-select>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="titulo" class="font-medium">Titulo del Incidente *</label>
+      <input pInputText id="titulo" [(ngModel)]="nuevoIncidente().titulo" placeholder="Titulo breve del incidente" />
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="descripcion" class="font-medium">Descripcion</label>
+      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoIncidente().descripcion" rows="4"
+                placeholder="Describe el incidente en detalle"></textarea>
+    </div>
+    <div class="grid">
+      <div class="col-6">
+        <div class="flex flex-column gap-2">
+          <label for="severidad" class="font-medium">Severidad *</label>
+          <p-select id="severidad" [options]="severidades" [(ngModel)]="nuevoIncidente().severidad"
+                      [style]="{width: '100%'}"></p-select>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="flex flex-column gap-2">
+          <label for="estado" class="font-medium">Estado</label>
+          <p-select id="estado" [options]="estados" [(ngModel)]="nuevoIncidente().estado"
+                      [style]="{width: '100%'}"></p-select>
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-column gap-2">
+      <label for="reportadoPor" class="font-medium">Reportado Por *</label>
+      <input pInputText id="reportadoPor" [(ngModel)]="nuevoIncidente().reportadoPor" placeholder="Nombre de quien reporta" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showDialog.set(false)"></p-button>
+    <p-button label="Reportar" icon="pi pi-send" severity="danger" (onClick)="saveIncidente()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Drawer Acciones Masivas -->
+<p-drawer [(visible)]="showAccionesMasivasDrawer" position="right" [style]="{width: '400px'}" header="Acciones Masivas">
+  <div class="flex flex-column gap-4">
+    <p class="text-600 m-0">Aplicar cambios a {{ incidentesSeleccionados().length }} incidentes seleccionados</p>
+
+    <!-- Severidad -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Severidad</label>
+      <p-select [options]="severidades" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Estado -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Estado</label>
+      <p-select [options]="estados" placeholder="Sin cambios" [showClear]="true"
+                [style]="{width: '100%'}" />
+    </div>
+
+    <!-- Reportado Por -->
+    <div class="flex flex-column gap-2">
+      <label class="font-medium">Reportado Por</label>
+      <input pInputText placeholder="Sin cambios" class="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-content-end">
+      <p-button label="Cancelar" severity="secondary" [text]="true"
+                (onClick)="showAccionesMasivasDrawer.set(false)" />
+      <p-button label="Aplicar cambios" icon="pi pi-check"
+                (onClick)="aplicarAccionesMasivas()" />
+    </div>
+  </ng-template>
+</p-drawer>

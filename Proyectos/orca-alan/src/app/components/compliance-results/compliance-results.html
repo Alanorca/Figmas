@@ -1,0 +1,125 @@
+<!-- Compliance Results Component -->
+@if (complianceResult()) {
+  <div class="compliance-results" [class.compact]="compact">
+
+    <!-- Sección Principal: Score Global -->
+    <div class="compliance-header">
+      <!-- Score Badge con Semáforo -->
+      <div class="score-badge-container">
+        <div class="score-badge" [style]="getScoreBadgeStyle()">
+          <span class="score-value">{{ globalScore() }}</span>
+          <span class="score-unit">%</span>
+        </div>
+        <div class="score-label">
+          <span class="level-text">{{ thresholdResult()?.label }}</span>
+          <i [class]="thresholdResult()?.icon" [style.color]="thresholdResult()?.color"></i>
+        </div>
+      </div>
+
+      <!-- Barra de Progreso de Completado -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Progreso de completado</span>
+          <span class="progress-value">{{ progressPercentage() }}%</span>
+        </div>
+        <p-progressBar
+          [value]="progressPercentage()"
+          [showValue]="false"
+          styleClass="h-2rem"
+          [style]="{'--p-progressbar-value-background': getProgressBarColor()}">
+        </p-progressBar>
+        <div class="progress-details">
+          <span class="detail-item">
+            <i class="pi pi-check-circle text-green-500"></i>
+            {{ answeredFields() }} de {{ totalFields() }} campos completados
+          </span>
+          <span class="detail-item">
+            <i class="pi pi-exclamation-circle text-orange-500"></i>
+            {{ requiredAnswered() }} de {{ requiredTotal() }} obligatorios
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Indicador de Progreso hacia Siguiente Nivel -->
+    @if (progressToNext().nextLevel) {
+      <div class="next-level-indicator">
+        <div class="next-level-header">
+          <span class="text-sm text-500">Progreso hacia nivel {{ progressToNext().nextLevel === 'aceptable' ? 'Aceptable' : 'Sobresaliente' }}</span>
+          <span class="text-sm font-medium">{{ progressToNext().progress }}%</span>
+        </div>
+        <div class="next-level-bar">
+          <div class="next-level-fill" [style.width.%]="progressToNext().progress"></div>
+        </div>
+      </div>
+    }
+
+    <!-- Desglose por Secciones -->
+    @if (showSectionBreakdown && sectionScores().length > 0) {
+      <p-divider />
+
+      <div class="sections-breakdown">
+        <h4 class="sections-title">
+          <i class="pi pi-list"></i>
+          Desglose por Secciones
+        </h4>
+
+        <div class="sections-list">
+          @for (section of sectionScores(); track section.sectionId) {
+            <div class="section-item">
+              <div class="section-header">
+                <span class="section-name">{{ section.sectionName }}</span>
+                <div class="section-badges">
+                  <p-tag
+                    [value]="section.score + '%'"
+                    [severity]="getSectionThreshold(section).severity"
+                    styleClass="text-xs">
+                  </p-tag>
+                  <span class="section-progress text-xs text-500">
+                    {{ section.fieldsAnswered }}/{{ section.fieldsTotal }}
+                  </span>
+                </div>
+              </div>
+              <div class="section-bar">
+                <div
+                  class="section-bar-fill"
+                  [style.width.%]="section.score"
+                  [style.backgroundColor]="getSectionThreshold(section).color">
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Leyenda de Niveles -->
+    @if (!compact) {
+      <p-divider />
+
+      <div class="threshold-legend">
+        <span class="legend-title">Niveles de Cumplimiento</span>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="legend-dot bg-red-500"></span>
+            <span class="legend-text">Deficiente (&lt; {{ umbrales.deficiente }}%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot bg-amber-500"></span>
+            <span class="legend-text">Aceptable ({{ umbrales.deficiente }}-{{ umbrales.sobresaliente }}%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot bg-green-500"></span>
+            <span class="legend-text">Sobresaliente (&gt; {{ umbrales.sobresaliente }}%)</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <!-- Estado vacío -->
+  <div class="compliance-empty">
+    <i class="pi pi-chart-bar text-4xl text-300"></i>
+    <p class="text-500 mt-2">No hay datos de compliance disponibles</p>
+  </div>
+}

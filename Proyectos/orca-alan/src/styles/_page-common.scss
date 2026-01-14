@@ -1,0 +1,125 @@
+// ============================================================================
+// ORCA DESIGN SYSTEM - ESTILOS COMUNES DE PÁGINA
+// ============================================================================
+// Importar en cada página: @use 'styles/page-common' as *;
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// HEADER DE PÁGINA (estandarizado)
+// ----------------------------------------------------------------------------
+
+.page-header {
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-color);
+    line-height: 1.3;
+  }
+
+  .page-subtitle {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.9rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CONTENEDOR DE PÁGINA CON TABLA
+// ----------------------------------------------------------------------------
+
+.page-container {
+  padding: 1.5rem;
+  max-width: 100%;
+}
+
+// ----------------------------------------------------------------------------
+// TOOLBAR PEGADO A TABLA
+// ----------------------------------------------------------------------------
+
+:host ::ng-deep .p-toolbar {
+  margin-bottom: 0 !important;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-bottom: none;
+  padding: 0.75rem 1rem;
+}
+
+// ----------------------------------------------------------------------------
+// CARD DE TABLA (sin padding, pegado al toolbar)
+// ----------------------------------------------------------------------------
+
+:host ::ng-deep .table-card {
+  .p-card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
+  .p-card-body {
+    padding: 0;
+  }
+
+  .p-card-content {
+    padding: 0;
+  }
+}
+
+// Alternativa: tabla en surface-card directamente
+.surface-card.border-round-lg {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
+// ----------------------------------------------------------------------------
+// BOTONES COMUNES
+// ----------------------------------------------------------------------------
+
+:host ::ng-deep .btn-acciones-masivas {
+  border-radius: 6px !important;
+
+  .p-button {
+    border-radius: 6px !important;
+  }
+}
+
+:host ::ng-deep .btn-edit {
+  border-radius: 6px !important;
+
+  .p-button {
+    border-radius: 6px !important;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// EDICIÓN IN-PLACE
+// ----------------------------------------------------------------------------
+
+.row-editing {
+  background: var(--primary-50) !important;
+
+  td {
+    padding: 0.5rem !important;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CELDAS COMUNES
+// ----------------------------------------------------------------------------
+
+.actions-cell {
+  white-space: nowrap;
+  width: 100px;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+// ID en monospace
+.font-mono {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace;
+}

@@ -1,0 +1,989 @@
+.tabla-unificada-container {
+  padding: 1.5rem;
+  max-width: 100%;
+}
+
+// Header
+.page-header {
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .page-subtitle {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.9rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+// KPI Cards
+.kpi-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+:host ::ng-deep .kpi-card {
+  .p-card-body {
+    padding: 1rem;
+  }
+}
+
+.kpi-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 1.5rem;
+  }
+}
+
+.kpi-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1;
+}
+
+.kpi-label {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  margin-top: 0.25rem;
+}
+
+// Toolbar
+:host ::ng-deep .toolbar-card {
+  margin-bottom: 0;
+
+  .p-card-body {
+    padding: 1rem;
+  }
+}
+
+// Quitar separación entre toolbar y tabla
+:host ::ng-deep .p-toolbar {
+  margin-bottom: 0 !important;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+:host ::ng-deep .table-card {
+  .p-card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toolbar-label {
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  white-space: nowrap;
+}
+
+.search-section {
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+}
+
+.toolbar-actions {
+  margin-left: auto;
+  gap: 0.5rem;
+}
+
+// Filtros activos
+.filtros-activos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+.filtros-label {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  display: flex;
+  align-items: center;
+}
+
+:host ::ng-deep .filtro-chip {
+  font-size: 0.8rem;
+}
+
+// Table Card
+:host ::ng-deep .table-card {
+  .p-card-body {
+    padding: 0;
+  }
+
+  .p-card-content {
+    padding: 0;
+  }
+}
+
+// Table Styles
+.column-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  // Icono de 6 puntos (grip handle) - dentro del column-header
+  .drag-handle-grip {
+    display: inline-block;
+    width: 10px;
+    height: 14px;
+    min-width: 10px;
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    flex-shrink: 0;
+    margin-right: 4px;
+
+    // Crear 6 puntos usando background con gradiente radial
+    background-image:
+      radial-gradient(circle, #9ca3af 1.5px, transparent 1.5px);
+    background-size: 5px 4px;
+    background-repeat: repeat;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &:hover {
+      opacity: 1 !important;
+      background-image:
+        radial-gradient(circle, var(--primary-color) 1.5px, transparent 1.5px);
+    }
+  }
+}
+
+// Mostrar grip en hover del th (con ng-deep para atravesar encapsulamiento)
+::ng-deep .p-datatable-thead > tr > th:hover {
+  .column-header .drag-handle-grip {
+    opacity: 0.7;
+  }
+}
+
+// Tabla con columnas reordenables
+:host ::ng-deep .p-datatable-reorderable {
+  .p-datatable-thead > tr > th {
+    &[pReorderableColumn] {
+      cursor: grab;
+      transition: background 0.2s;
+
+      &:active {
+        cursor: grabbing;
+      }
+    }
+
+    &.p-datatable-reorderablerow-handle {
+      cursor: grabbing;
+    }
+  }
+
+  // Indicador visual cuando se arrastra
+  .p-datatable-reorder-indicator-up,
+  .p-datatable-reorder-indicator-down {
+    display: block !important;
+  }
+}
+
+// Quitar líneas verticales de la tabla
+:host ::ng-deep .p-datatable {
+  .p-datatable-thead > tr > th,
+  .p-datatable-tbody > tr > td {
+    border-left: none;
+    border-right: none;
+  }
+}
+
+// Filtros en header de tabla
+:host ::ng-deep {
+  .p-datatable .p-datatable-thead > tr:nth-child(2) > th {
+    padding: 0.5rem;
+    background: var(--surface-50);
+    border-top: none;
+  }
+
+  .p-column-filter {
+    width: 100%;
+  }
+
+  .p-column-filter-menu-button,
+  .p-column-filter-clear-button {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  // Inputs y selects ocupan ancho completo
+  .p-datatable-thead .p-inputtext {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    width: 100%;
+  }
+
+  .p-datatable-thead .p-select,
+  .p-datatable-thead .p-multiselect {
+    width: 100% !important;
+    min-width: unset !important;
+
+    .p-select-label,
+    .p-multiselect-label {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .p-datatable-thead .p-datepicker {
+    width: 100%;
+
+    .p-inputtext {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      width: 100%;
+    }
+  }
+
+  .p-datatable-thead .p-inputnumber {
+    width: 100%;
+
+    .p-inputtext {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      width: 100%;
+    }
+  }
+
+  // Centrar botones de filtro en columnas
+  .p-datatable-thead > tr:nth-child(2) > th {
+    .p-button {
+      display: flex;
+      margin: 0 auto;
+    }
+  }
+}
+
+.filter-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  color: var(--text-color-secondary);
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--surface-hover);
+    color: var(--primary-color);
+  }
+}
+
+.row-clickable {
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--surface-hover) !important;
+  }
+}
+
+.contenedor-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+:host ::ng-deep .contenedor-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+}
+
+.contenedor-nombre {
+  font-weight: 500;
+}
+
+.nivel-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-100);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+// Columnas Config Drawer
+.columnas-drawer-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.columnas-search {
+  .p-iconfield {
+    width: 100%;
+  }
+}
+
+.columnas-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.columna-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  border: 1px solid var(--surface-200);
+  margin-bottom: 0.5rem;
+  background: var(--surface-card);
+  cursor: grab;
+
+  &:hover {
+    background: var(--surface-hover);
+    border-color: var(--primary-200);
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &.dragging {
+    opacity: 0.5;
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+    cursor: grabbing;
+  }
+
+  &.drop-target {
+    outline: 1px dashed var(--primary-color);
+    outline-offset: -2px;
+  }
+
+  label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+}
+
+.columna-item-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.drag-handle-config {
+  color: var(--text-color-secondary);
+  cursor: grab;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+
+  &:hover {
+    color: var(--primary-color);
+    background: var(--surface-100);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.columna-orden-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 4px;
+  background: var(--surface-200);
+  color: var(--text-color-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+// Filtro Config Dialog
+.filtro-config {
+  .field {
+    margin-bottom: 1rem;
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text-color);
+    }
+  }
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+// Gráficas Dialog
+.graficas-container {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 1.5rem;
+  height: 100%;
+}
+
+.graficas-config {
+  border-right: 1px solid var(--surface-border);
+  padding-right: 1.5rem;
+  overflow-y: auto;
+}
+
+.tipos-grafica-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.tipo-grafica-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  border: 2px solid var(--surface-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+
+  &:hover {
+    border-color: var(--primary-color);
+    background: var(--surface-hover);
+  }
+
+  &.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+  }
+
+  i {
+    color: var(--primary-color);
+  }
+}
+
+.tipo-nombre {
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.tipo-descripcion {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  margin-top: 0.25rem;
+}
+
+.datos-config,
+.personalizar-config {
+  .field {
+    margin-bottom: 1rem;
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+.graficas-preview {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.chart-container {
+  flex: 1;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  :host ::ng-deep p-chart {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.graficas-footer {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+// Drawer Detalle
+.detalle-content {
+  padding: 0.5rem;
+}
+
+.detalle-header {
+  h2 {
+    margin: 0.5rem 0 0.25rem;
+    font-size: 1.25rem;
+  }
+}
+
+.detalle-section {
+  margin: 1rem 0;
+
+  h4 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+}
+
+.detalle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.detalle-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detalle-label {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  font-weight: 500;
+}
+
+.contenedor-info {
+  display: flex;
+  align-items: center;
+}
+
+.descripcion-texto {
+  color: var(--text-color);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.detalle-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+// Utilidades
+.text-secondary {
+  color: var(--text-color-secondary);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.mr-1 {
+  margin-right: 0.25rem;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 0.75rem;
+}
+
+.py-6 {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+// Background colors
+.bg-blue-100 {
+  background-color: #DBEAFE;
+}
+
+.bg-orange-100 {
+  background-color: #FFEDD5;
+}
+
+.bg-red-100 {
+  background-color: #FEE2E2;
+}
+
+// Text colors
+.text-blue-600 {
+  color: #2563EB;
+}
+
+.text-orange-600 {
+  color: #EA580C;
+}
+
+.text-red-600 {
+  color: #DC2626;
+}
+
+.text-4xl {
+  font-size: 2.25rem;
+}
+
+// Gráficas Dialog
+:host ::ng-deep .graficas-dialog {
+  .p-dialog-content {
+    padding: 0 !important;
+    overflow: hidden;
+  }
+}
+
+.columna-selector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--surface-ground);
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.selector-label {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.registros-info {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+}
+
+// Drawer Acciones Masivas
+.acciones-masivas-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.acciones-masivas-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.acciones-masivas-fields {
+  flex: 1;
+  overflow-y: auto;
+  margin: 1rem 0;
+}
+
+.accion-masiva-item {
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  transition: all 0.2s;
+  background: var(--surface-ground);
+
+  &:hover {
+    border-color: var(--primary-color);
+  }
+
+  &.active {
+    border-color: var(--primary-color);
+    background: var(--highlight-bg);
+  }
+
+  .campo-nombre {
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .campo-tipo {
+    color: var(--text-color-secondary);
+    font-size: 0.75rem;
+    background: var(--surface-200);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+}
+
+.accion-masiva-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+
+  i {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+    transition: transform 0.2s;
+  }
+}
+
+.accion-masiva-control {
+  padding: 0 1rem 1rem;
+  animation: slideDown 0.2s ease-out;
+
+  .control-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.acciones-adicionales {
+  padding-top: 0.5rem;
+}
+
+// Botón de acciones masivas
+:host ::ng-deep .btn-acciones-masivas {
+  border-radius: 6px !important;
+
+  .p-button {
+    border-radius: 6px !important;
+  }
+}
+
+// Botón de editar
+:host ::ng-deep .btn-edit {
+  border-radius: 6px !important;
+
+  .p-button {
+    border-radius: 6px !important;
+  }
+}
+
+// Fila en modo edición
+.row-editing {
+  background: var(--primary-50) !important;
+
+  td {
+    padding: 0.5rem !important;
+  }
+}
+
+// Celda de acciones
+.actions-cell {
+  white-space: nowrap;
+  width: 100px;
+}
+
+// Inputs en modo edición
+:host ::ng-deep .row-editing {
+  .p-inputtext,
+  .p-select,
+  .p-datepicker,
+  .p-inputnumber {
+    font-size: 0.875rem;
+  }
+
+  .p-inputtext-sm {
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+// Historial Timeline
+.historial-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.historial-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  color: white;
+
+  i {
+    font-size: 0.875rem;
+  }
+}
+
+.historial-evento {
+  padding-bottom: var(--spacing-3);
+
+  .historial-evento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-1);
+  }
+
+  .historial-accion {
+    color: var(--text-color);
+    font-weight: 600;
+  }
+
+  .historial-fecha {
+    color: var(--text-color-secondary);
+  }
+
+  .historial-usuario {
+    color: var(--text-color);
+  }
+
+  .historial-detalles {
+    color: var(--text-color-secondary);
+  }
+}
+
+// Search Highlight - usa tokens que funcionan en ambos modos
+.search-highlight,
+mark.search-highlight {
+  background-color: var(--highlight-bg);
+  color: var(--highlight-text-color);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+// Detalle acciones mejoradas
+.detalle-acciones {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-actions {
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+
+  .graficas-container {
+    grid-template-columns: 1fr;
+  }
+
+  .graficas-config {
+    border-right: none;
+    border-bottom: 1px solid var(--surface-border);
+    padding-right: 0;
+    padding-bottom: 1rem;
+  }
+
+  .detalle-grid {
+    grid-template-columns: 1fr;
+  }
+}

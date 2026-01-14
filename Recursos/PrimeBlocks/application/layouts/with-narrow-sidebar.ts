@@ -1,0 +1,148 @@
+import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+import { ButtonModule } from 'primeng/button';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
+import { StyleClassModule } from 'primeng/styleclass';
+
+@Component({
+    selector: 'with-narrow-sidebar',
+    standalone: true,
+    imports: [CommonModule, ButtonModule, IconFieldModule, InputIconModule, InputTextModule, StyleClassModule],
+    template: `
+        <div class="resize-container-2 min-h-screen flex relative lg:static bg-surface-50 dark:bg-surface-950">
+            <div id="app-sidebar" class="h-full lg:h-auto hidden lg:block shrink-0 absolute lg:static left-0 top-0 z-10 border-r border-surface-200 dark:border-surface-700 w-full md:w-auto">
+                <div class="flex h-full">
+                    <div class="flex flex-col h-full bg-primary shrink-0 select-none w-[70px]">
+                        <div class="flex items-center justify-center shrink-0 bg-primary p-4">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    fill-rule="evenodd"
+                                    clip-rule="evenodd"
+                                    d="M6.84219 2.87829C5.69766 3.67858 4.6627 4.62478 3.76426 5.68992C7.4357 5.34906 12.1001 5.90564 17.5155 8.61335C23.2984 11.5047 27.955 11.6025 31.1958 10.9773C30.9017 10.087 30.5315 9.23135 30.093 8.41791C26.3832 8.80919 21.6272 8.29127 16.0845 5.51998C12.5648 3.76014 9.46221 3.03521 6.84219 2.87829ZM27.9259 5.33332C24.9962 2.06 20.7387 0 16 0C14.6084 0 13.2581 0.177686 11.9709 0.511584C13.7143 0.987269 15.5663 1.68319 17.5155 2.65781C21.5736 4.68682 25.0771 5.34013 27.9259 5.33332ZM31.8887 14.1025C27.9735 14.8756 22.567 14.7168 16.0845 11.4755C10.024 8.44527 5.20035 8.48343 1.94712 9.20639C1.7792 9.24367 1.61523 9.28287 1.45522 9.32367C1.0293 10.25 0.689308 11.2241 0.445362 12.2356C0.705909 12.166 0.975145 12.0998 1.25293 12.0381C5.19966 11.161 10.7761 11.1991 17.5155 14.5689C23.5761 17.5991 28.3997 17.561 31.6529 16.838C31.7644 16.8133 31.8742 16.7877 31.9822 16.7613C31.9941 16.509 32 16.2552 32 16C32 15.358 31.9622 14.7248 31.8887 14.1025ZM31.4598 20.1378C27.5826 20.8157 22.3336 20.5555 16.0845 17.431C10.024 14.4008 5.20035 14.439 1.94712 15.1619C1.225 15.3223 0.575392 15.5178 0.002344 15.7241C0.000781601 15.8158 0 15.9078 0 16C0 24.8366 7.16344 32 16 32C23.4057 32 29.6362 26.9687 31.4598 20.1378Z"
+                                    class="fill-primary-contrast"
+                                />
+                            </svg>
+                        </div>
+                        <div class="overflow-y-auto flex-1 px-2 py-4 flex flex-col items-center gap-2">
+                            <a
+                                class="flex items-center cursor-pointer p-3 justify-center hover:bg-primary-emphasis rounded-lg text-primary-contrast duration-150 transition-colors w-full"
+                                [ngClass]="{ 'bg-primary-emphasis': activeTab1 === 0 }"
+                                (click)="activeTab1 = 0"
+                            >
+                                <i class="pi pi-home text-xl! leading-normal!"></i>
+                            </a>
+                            <a
+                                class="flex items-center cursor-pointer p-3 justify-center hover:bg-primary-emphasis rounded-lg text-primary-contrast duration-150 transition-colors w-full"
+                                [ngClass]="{ 'bg-primary-emphasis': activeTab1 === 1 }"
+                                (click)="activeTab1 = 1"
+                            >
+                                <i class="pi pi-bookmark text-xl! leading-normal!"></i>
+                            </a>
+                            <a
+                                class="flex items-center cursor-pointer p-3 justify-center hover:bg-primary-emphasis rounded-lg text-primary-contrast duration-150 transition-colors w-full"
+                                [ngClass]="{ 'bg-primary-emphasis': activeTab1 === 2 }"
+                                (click)="activeTab1 = 2"
+                            >
+                                <i class="pi pi-users text-xl! leading-normal!"></i>
+                            </a>
+                            <a
+                                class="flex items-center cursor-pointer p-3 justify-center hover:bg-primary-emphasis rounded-lg text-primary-contrast duration-150 transition-colors w-full"
+                                [ngClass]="{ 'bg-primary-emphasis': activeTab1 === 3 }"
+                                (click)="activeTab1 = 3"
+                            >
+                                <i class="pi pi-comments text-xl! leading-normal!"></i>
+                            </a>
+                            <a
+                                class="flex items-center cursor-pointer p-3 justify-center hover:bg-primary-emphasis rounded-lg text-primary-contrast duration-150 transition-colors w-full"
+                                [ngClass]="{ 'bg-primary-emphasis': activeTab1 === 4 }"
+                                (click)="activeTab1 = 4"
+                            >
+                                <i class="pi pi-calendar text-xl! leading-normal!"></i>
+                            </a>
+                        </div>
+                        <div class="mt-auto px-4 pt-4 pb-6 flex flex-col items-center gap-4">
+                            <hr class="w-full border-t border-0 border-primary-400/20" />
+                            <a class="flex items-center justify-center">
+                                <img src="https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/avatar-amyels.png" class="w-8 h-8 rounded-full" />
+                            </a>
+                        </div>
+                    </div>
+                    <div class="flex flex-col bg-surface-0 dark:bg-surface-950 p-6 overflow-y-auto shrink-0 grow md:grow-0 w-84">
+                        <div class="justify-end mb-4 flex lg:hidden">
+                            <button pButton pStyleClass="#app-sidebar" leaveToClass="hidden" leaveActiveClass="animate-fadeoutleft" rounded text>
+                                <i pButtonIcon class="pi pi-times"></i>
+                            </button>
+                        </div>
+                        <div class="border-2 border-dashed border-surface-200 dark:border-surface-700 rounded-xl flex-auto bg-surface-0 dark:bg-surface-900"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="min-h-screen flex flex-col relative flex-auto">
+                <div class="flex justify-between items-center px-7 py-4 bg-surface-0 dark:bg-surface-950 border-b border-surface-200 dark:border-surface-700 relative lg:static min-h-[60px]">
+                    <div class="flex gap-4">
+                        <a
+                            pStyleClass="#app-sidebar"
+                            enterFromClass="hidden"
+                            enterActiveClass="animate-fadeinleft"
+                            leaveToClass="hidden"
+                            leaveActiveClass="animate-fadeoutleft"
+                            resizeSelector=".resize-container-2"
+                            [hideOnResize]="true"
+                            class="cursor-pointer block lg:hidden text-surface-700 dark:text-surface-100 flex items-center justify-center"
+                        >
+                            <i class="pi pi-bars text-xl! leading-normal!"></i>
+                        </a>
+                        <p-iconfield iconPosition="left">
+                            <p-inputicon class="pi pi-search"></p-inputicon>
+                            <input pInputText type="text" class="border-0! shadow-none! w-40 sm:w-80" placeholder="Search" />
+                        </p-iconfield>
+                    </div>
+                    <div class="flex items-center gap-7">
+                        <a
+                            pStyleClass="@next"
+                            enterFromClass="hidden"
+                            enterActiveClass="animate-fadein"
+                            leaveToClass="hidden"
+                            leaveActiveClass="animate-fadeout"
+                            [hideOnOutsideClick]="true"
+                            class="cursor-pointer block lg:hidden text-surface-700 dark:text-surface-100"
+                        >
+                            <i class="pi pi-ellipsis-v text-xl! leading-normal!"></i>
+                        </a>
+                        <ul
+                            class="list-none m-0 hidden lg:flex lg:items-center select-none lg:flex-row bg-surface-0 dark:bg-surface-950 border lg:border-0 border-surface-200 dark:border-surface-700 right-4 top-[calc(100%+1rem)] z-10 shadow lg:shadow-none absolute lg:static rounded-lg lg:rounded-none lg:p-0 p-2"
+                        >
+                            <li>
+                                <a
+                                    class="flex p-2 lg:px-4 lg:py-2 items-center text-surface-600 dark:text-surface-200 hover:text-surface-900 dark:hover:text-surface-0 lg:hover:bg-surface-0 dark:lg:hover:bg-surface-950 hover:bg-surface-50 dark:hover:bg-surface-800 font-medium cursor-pointer duration-150 transition-colors rounded-lg lg:rounded-none border border-transparent lg:border-0 hover:border-surface-200 dark:hover:border-surface-700"
+                                >
+                                    <i class="pi pi-bell text-xl! leading-normal! mr-2 lg:mr-0"></i>
+
+                                    <span class="block lg:hidden font-medium">Notifications</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    class="flex p-2 lg:px-4 lg:py-2 items-center hover:bg-surface-50 dark:hover:bg-surface-800 font-medium cursor-pointer duration-150 transition-colors rounded-lg lg:rounded-none border border-transparent lg:border-0 hover:border-surface-200 dark:hover:border-surface-700 lg:hover:bg-surface-0 dark:lg:hover:bg-surface-950"
+                                >
+                                    <img src="https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/avatar-amyels.png" class="w-8 h-8 rounded-full mr-2 lg:mr-0" />
+                                    <div class="block lg:hidden">
+                                        <div class="text-surface-900 dark:text-surface-0 font-medium">Josephine Lillard</div>
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="p-7 flex flex-col flex-auto">
+                    <div class="border-2 border-dashed rounded-xl border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 flex-auto"></div>
+                </div>
+            </div>
+        </div>
+    `
+})
+export class WithNarrowSidebar {
+    activeTab1: number = 0;
+}

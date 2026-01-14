@@ -1,0 +1,229 @@
+// Estilos específicos para cuestionarios
+
+:host {
+  display: block;
+}
+
+.cuestionarios-container {
+  padding: 1.5rem;
+}
+
+// Header
+.page-header {
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .page-subtitle {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.9rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+// Toolbar pegado a tabla
+:host ::ng-deep .p-toolbar {
+  margin-bottom: 0 !important;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+:host ::ng-deep .table-card {
+  .p-card {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+
+  .p-card-body {
+    padding: 0;
+  }
+
+  .p-card-content {
+    padding: 0;
+  }
+}
+
+// Drag & Drop visual feedback
+[pDraggable] {
+  &:hover {
+    transform: scale(1.02);
+  }
+}
+
+[pDroppable] {
+  transition: background-color 0.2s;
+
+  &.p-draggable-enter {
+    background-color: var(--primary-100);
+    border-color: var(--primary-500);
+  }
+}
+
+// Accordion customization
+::ng-deep .p-accordion-panel {
+  margin-bottom: 0.5rem;
+
+  .p-accordion-header-link {
+    border-radius: 0.5rem;
+  }
+}
+
+// Card hover effects
+::ng-deep .p-card {
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+}
+
+// Stats cards top border
+::ng-deep .border-top-3 {
+  border-top-width: 3px !important;
+  border-top-style: solid !important;
+}
+
+// Chip clickable
+::ng-deep .p-chip {
+  &.cursor-pointer:hover {
+    background-color: var(--primary-100);
+  }
+}
+
+// ==================== WIZARD STYLES ====================
+
+// Wizard step icon
+.wizard-step-icon {
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+// Wizard step line
+.wizard-step-line {
+  transition: background-color 0.3s ease;
+}
+
+// Wizard method cards
+.wizard-method-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+
+  &.wizard-method-selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 8px 25px -5px rgba(var(--primary-color-rgb), 0.3);
+  }
+}
+
+// Wizard method icon
+.wizard-method-icon {
+  transition: all 0.3s ease;
+}
+
+.wizard-method-card:hover .wizard-method-icon {
+  transform: scale(1.1);
+}
+
+// Upload zone
+.upload-zone {
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--purple-400) !important;
+    background-color: var(--purple-50);
+  }
+}
+
+// Fix para los material icons en el wizard
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  vertical-align: middle;
+}
+
+// ==================== LISTA SPLIT VIEW ====================
+
+// Items de cuestionario en la lista
+.cuestionario-item {
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background-color: var(--surface-50);
+  }
+
+  &.cuestionario-item-selected {
+    background-color: var(--surface-50);
+    border-left-color: var(--primary-color);
+  }
+}
+
+// Scrollbar personalizado para paneles
+.overflow-y-auto {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--surface-100);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--surface-300);
+    border-radius: 3px;
+
+    &:hover {
+      background: var(--surface-400);
+    }
+  }
+}
+
+// ==================== FORMULA EDITOR STYLES ====================
+
+.formula-editor {
+  .formula-textarea {
+    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+    background-color: var(--surface-50);
+    border: 1px solid var(--surface-300);
+    border-radius: 6px;
+    resize: vertical;
+    min-height: 80px;
+
+    &:focus {
+      background-color: var(--surface-0);
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px var(--primary-100);
+    }
+
+    &::placeholder {
+      color: var(--text-color-secondary);
+      font-style: italic;
+    }
+  }
+
+  .formula-help {
+    code {
+      background-color: var(--blue-100);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 0.75rem;
+    }
+  }
+}

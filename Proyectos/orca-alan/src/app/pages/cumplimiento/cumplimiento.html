@@ -1,0 +1,2431 @@
+<p-toast />
+<p-confirmDialog />
+
+<!-- ==================== VISTA: DASHBOARD DE CUMPLIMIENTO ==================== -->
+@if (vistaActual() === 'dashboard') {
+<div class="cumplimiento-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Cumplimiento</h1>
+    <p class="page-subtitle">Gestión de cumplimiento normativo</p>
+  </div>
+
+  <!-- Tabs: Revisiones y Gráficas -->
+  <p-tabs value="0">
+    <p-tablist>
+      <p-tab value="0"><i class="pi pi-table mr-2"></i>Revisiones</p-tab>
+      <p-tab value="1"><i class="pi pi-chart-bar mr-2"></i>Gráficas</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <!-- Tab Revisiones -->
+      <p-tabpanel value="0">
+        <!-- Toolbar -->
+        <p-toolbar>
+          <ng-template pTemplate="start">
+            <p-iconfield>
+              <p-inputicon styleClass="pi pi-search" />
+              <input type="text" pInputText placeholder="Buscar revisiones..." #dtFilterDashboard
+                     (input)="dtDashboard.filterGlobal(dtFilterDashboard.value, 'contains')" style="width: 280px" />
+            </p-iconfield>
+          </ng-template>
+          <ng-template pTemplate="end">
+            <div class="flex align-items-center gap-2">
+              <p-button icon="pi pi-list" severity="secondary" [outlined]="true" (onClick)="irACuestionarios()" pTooltip="Ir a Cuestionarios" tooltipPosition="bottom" />
+              <p-button icon="pi pi-book" severity="secondary" [text]="true" (onClick)="irAMarcos()" pTooltip="Marcos Normativos" tooltipPosition="bottom" />
+              <p-button icon="pi pi-file-export" severity="secondary" [text]="true" (onClick)="irAReportes()" pTooltip="Reportes" tooltipPosition="bottom" />
+              <p-button icon="pi pi-history" severity="secondary" [text]="true" (onClick)="irAHistorial()" pTooltip="Historial" tooltipPosition="bottom" />
+              <p-divider layout="vertical" />
+              <p-button label="Nueva Revisión" icon="pi pi-plus" (onClick)="abrirAsignarDialog()" />
+            </div>
+          </ng-template>
+        </p-toolbar>
+        <!-- Table Card -->
+        <p-card styleClass="table-card">
+          <p-table #dtDashboard [value]="asignaciones()" styleClass="p-datatable-sm" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
+                   [globalFilterFields]="['titulo', 'tipoRevision', 'estado']">
+              <ng-template #header>
+                <tr>
+                  <th>Titulo</th>
+                  <th>Cuestionario</th>
+                  <th>Tipo</th>
+                  <th>Asignados</th>
+                  <th>Procesos</th>
+                  <th>Fecha Inicio</th>
+                  <th>Vencimiento</th>
+                  <th>Progreso</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-asignacion>
+                <tr>
+                  <td>{{ asignacion.titulo }}</td>
+                  <td>{{ getCuestionario(asignacion.cuestionarioId)?.nombre }}</td>
+                  <td><p-tag [value]="asignacion.tipoRevision | titlecase" [severity]="asignacion.tipoRevision === 'externa' ? 'info' : 'secondary'" /></td>
+                  <td>
+                    <p-avatargroup>
+                      @for (nombre of asignacion.usuariosAsignadosNombres | slice:0:3; track nombre; let i = $index) {
+                        @if (asignacion.usuariosAsignadosImagenes?.[i]) {
+                          <p-avatar [image]="asignacion.usuariosAsignadosImagenes[i]" shape="circle" />
+                        } @else {
+                          <p-avatar [label]="getAvatarLabel(nombre)" shape="circle" styleClass="bg-primary" />
+                        }
+                      }
+                      @if (asignacion.emailsExternos.length > 0) {
+                        <p-avatar icon="pi pi-envelope" shape="circle" styleClass="bg-purple-500" />
+                      }
+                      @if (asignacion.usuariosAsignadosNombres.length > 3) {
+                        <p-avatar [label]="'+' + (asignacion.usuariosAsignadosNombres.length - 3)" shape="circle" styleClass="surface-100 text-900" />
+                      }
+                    </p-avatargroup>
+                  </td>
+                  <td>
+                    <div class="flex flex-wrap gap-1">
+                      @for (proceso of asignacion.procesosObjetivoNombres | slice:0:2; track proceso) {
+                        <p-tag [value]="$any(proceso)" severity="secondary" styleClass="text-xs" />
+                      }
+                      @if (asignacion.procesosObjetivoNombres && asignacion.procesosObjetivoNombres.length > 2) {
+                        <span class="text-500 text-xs">+{{ asignacion.procesosObjetivoNombres.length - 2 }}</span>
+                      }
+                      @if (!asignacion.procesosObjetivoNombres || asignacion.procesosObjetivoNombres.length === 0) {
+                        <span class="text-400 text-sm">-</span>
+                      }
+                    </div>
+                  </td>
+                  <td>{{ asignacion.fechaInicio | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ asignacion.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    <div class="flex align-items-center gap-2">
+                      <div class="w-5rem bg-gray-200 border-round" style="height: 4px;">
+                        <div class="bg-primary border-round" [style.width.%]="asignacion.progreso" style="height: 100%;"></div>
+                      </div>
+                      <span class="text-sm">{{ asignacion.progreso }}%</span>
+                    </div>
+                  </td>
+                  <td><p-tag [value]="asignacion.estado | titlecase" [severity]="getEstadoSeverity(asignacion.estado)" /></td>
+                  <td class="text-center">
+                    <p-menu #menuAsignacion [model]="getMenuItemsAsignacion(asignacion)" [popup]="true" appendTo="body"></p-menu>
+                    <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+                              (onClick)="menuAsignacion.toggle($event)"></p-button>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage>
+                <tr>
+                  <td colspan="10" class="text-center py-4">
+                    <i class="pi pi-inbox text-3xl text-300 mb-2"></i>
+                    <p class="text-500 m-0">No hay asignaciones</p>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <!-- Pie de tabla con totales por columna -->
+              <ng-template #footer>
+                <tr class="font-semibold surface-100">
+                  <td>
+                    <span class="text-900">Totales</span>
+                  </td>
+                  <td>
+                    <span class="text-600">{{ totalAsignaciones() }} asignaciones</span>
+                  </td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <p-tag [value]="asignacionesPendientes().toString() + ' pendientes'" severity="warn" styleClass="text-xs" />
+                  </td>
+                  <td>
+                    <div class="flex align-items-center gap-2">
+                      <div class="w-5rem bg-gray-200 border-round" style="height: 4px;">
+                        <div class="bg-primary border-round" [style.width.%]="promedioCompletado()" style="height: 100%;"></div>
+                      </div>
+                      <span class="text-sm">{{ promedioCompletado() }}%</span>
+                    </div>
+                  </td>
+                  <td>
+                    <p-tag [value]="alertasCriticas().toString() + ' alertas'" severity="danger" styleClass="text-xs" />
+                  </td>
+                  <td></td>
+                </tr>
+              </ng-template>
+          </p-table>
+        </p-card>
+      </p-tabpanel>
+
+      <!-- Tab Gráficas -->
+        <p-tabpanel value="1">
+          <div class="grid mt-3">
+            <!-- Grafico de barras -->
+            <div class="col-12 lg:col-6">
+              <div class="surface-card border-round-lg p-4 h-full">
+                <h3 class="text-lg font-semibold text-900 m-0 mb-4">Cumplimiento por Marco</h3>
+                <div style="height: 250px;">
+                  <p-chart type="bar" [data]="chartData()" [options]="chartOptions" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Grafico de pie -->
+            <div class="col-12 lg:col-6">
+              <div class="surface-card border-round-lg p-4 h-full">
+                <h3 class="text-lg font-semibold text-900 m-0 mb-4">Estado de Revisiones</h3>
+                <div style="height: 250px;">
+                  <p-chart type="pie" [data]="pieChartData()" [options]="pieChartOptions" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alertas activas -->
+          <div class="surface-card border-round-lg p-4 mt-4">
+            <div class="flex justify-content-between align-items-center mb-4">
+              <h3 class="text-lg font-semibold text-900 m-0">Alertas Activas</h3>
+              <span class="text-500 text-sm">{{ alertasActivas().length }} alertas</span>
+            </div>
+            <div class="flex flex-column gap-3">
+              @for (alerta of alertasActivas(); track alerta.id) {
+                <div class="flex align-items-center justify-content-between p-3 surface-100 border-round">
+                  <div class="flex align-items-center gap-3">
+                    <p-tag [value]="alerta.severidad | uppercase" [severity]="getSeveridadAlerta(alerta.severidad)" />
+                    <div>
+                      <span class="font-medium text-900">{{ alerta.titulo }}</span>
+                      <p class="text-500 text-sm m-0">{{ alerta.descripcion }}</p>
+                    </div>
+                  </div>
+                  <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success" (onClick)="atenderAlerta(alerta)" pTooltip="Marcar como atendida" />
+                </div>
+              } @empty {
+                <div class="text-center py-4">
+                  <i class="pi pi-check-circle text-3xl text-green-500 mb-2"></i>
+                  <p class="text-500 m-0">No hay alertas activas</p>
+                </div>
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+</div>
+}
+
+<!-- ==================== VISTA: ASIGNAR CUESTIONARIOS ==================== -->
+@if (vistaActual() === 'asignar') {
+<div class="surface-ground min-h-screen">
+  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
+    <div class="flex justify-content-between align-items-center">
+      <div class="flex align-items-center gap-3">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="irADashboard()" />
+        <div>
+          <h1 class="text-xl font-bold text-900 m-0">Asignaciones</h1>
+          <p class="text-500 text-sm m-0">Gestiona las asignaciones de cuestionarios</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-4">
+    <!-- Toolbar -->
+    <p-toolbar>
+      <ng-template pTemplate="start">
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input type="text" pInputText placeholder="Buscar revisiones..." #dtFilter
+                 (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
+        </p-iconfield>
+      </ng-template>
+      <ng-template pTemplate="end">
+        <div class="flex align-items-center gap-2">
+          <p-button icon="pi pi-list" severity="secondary" [outlined]="true" (onClick)="irACuestionarios()" pTooltip="Ir a Cuestionarios" tooltipPosition="bottom" />
+          <p-button icon="pi pi-book" severity="secondary" [text]="true" (onClick)="irAMarcos()" pTooltip="Marcos Normativos" tooltipPosition="bottom" />
+          <p-button icon="pi pi-file-export" severity="secondary" [text]="true" (onClick)="irAReportes()" pTooltip="Reportes" tooltipPosition="bottom" />
+          <p-button icon="pi pi-history" severity="secondary" [text]="true" (onClick)="irAHistorial()" pTooltip="Historial" tooltipPosition="bottom" />
+          <p-divider layout="vertical" />
+          <p-button label="Nueva Revisión" icon="pi pi-plus" (onClick)="abrirAsignarDialog()" />
+        </div>
+      </ng-template>
+    </p-toolbar>
+
+    <!-- Table Card -->
+    <p-card styleClass="table-card">
+      <p-table #dt [value]="asignaciones()" styleClass="p-datatable-striped" [paginator]="true" [rows]="10"
+               [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} revisiones"
+               [globalFilterFields]="['titulo', 'tipoRevision', 'estado']">
+        <ng-template #header>
+        <tr>
+          <th>Titulo</th>
+          <th>Cuestionario</th>
+          <th>Tipo</th>
+          <th>Asignados</th>
+          <th>Procesos</th>
+          <th>Fecha Inicio</th>
+          <th>Vencimiento</th>
+          <th>Progreso</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-asignacion>
+        <tr>
+          <td>{{ asignacion.titulo }}</td>
+          <td>{{ getCuestionario(asignacion.cuestionarioId)?.nombre }}</td>
+          <td><p-tag [value]="asignacion.tipoRevision | titlecase" [severity]="asignacion.tipoRevision === 'externa' ? 'info' : 'secondary'" /></td>
+          <td>
+            <p-avatargroup>
+              @for (nombre of asignacion.usuariosAsignadosNombres | slice:0:3; track nombre; let i = $index) {
+                @if (asignacion.usuariosAsignadosImagenes?.[i]) {
+                  <p-avatar [image]="asignacion.usuariosAsignadosImagenes[i]" shape="circle" />
+                } @else {
+                  <p-avatar [label]="getAvatarLabel(nombre)" shape="circle" styleClass="bg-primary" />
+                }
+              }
+              @if (asignacion.emailsExternos.length > 0) {
+                <p-avatar icon="pi pi-envelope" shape="circle" styleClass="bg-purple-500" />
+              }
+              @if (asignacion.usuariosAsignadosNombres.length > 3) {
+                <p-avatar [label]="'+' + (asignacion.usuariosAsignadosNombres.length - 3)" shape="circle" styleClass="surface-100 text-900" />
+              }
+            </p-avatargroup>
+          </td>
+          <td>
+            <div class="flex flex-wrap gap-1">
+              @for (proceso of asignacion.procesosObjetivoNombres | slice:0:2; track proceso) {
+                <p-tag [value]="$any(proceso)" severity="secondary" styleClass="text-xs" />
+              }
+              @if (asignacion.procesosObjetivoNombres && asignacion.procesosObjetivoNombres.length > 2) {
+                <span class="text-500 text-xs">+{{ asignacion.procesosObjetivoNombres.length - 2 }}</span>
+              }
+              @if (!asignacion.procesosObjetivoNombres || asignacion.procesosObjetivoNombres.length === 0) {
+                <span class="text-400 text-sm">-</span>
+              }
+            </div>
+          </td>
+          <td>{{ asignacion.fechaInicio | date:'dd/MM/yyyy' }}</td>
+          <td>{{ asignacion.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <div class="w-5rem bg-gray-200 border-round" style="height: 4px;">
+                <div class="bg-primary border-round" [style.width.%]="asignacion.progreso" style="height: 100%;"></div>
+              </div>
+              <span class="text-sm">{{ asignacion.progreso }}%</span>
+            </div>
+          </td>
+          <td><p-tag [value]="asignacion.estado | titlecase" [severity]="getEstadoSeverity(asignacion.estado)" /></td>
+          <td>
+            <div class="flex gap-1">
+              <p-button icon="pi pi-file-edit" [rounded]="true" [text]="true" severity="secondary" pTooltip="Responder" (onClick)="responderCuestionario(asignacion)" />
+              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" severity="info" pTooltip="Revisar" (onClick)="revisarCuestionario(asignacion)" />
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="warn" pTooltip="Editar" (onClick)="editarAsignacion(asignacion)" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="eliminarAsignacion(asignacion)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="10" class="text-center py-4">
+            <i class="pi pi-inbox text-3xl text-300 mb-2"></i>
+            <p class="text-500 m-0">No hay asignaciones</p>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Pie de tabla con totales por columna -->
+      <ng-template #footer>
+        <tr class="font-semibold surface-100">
+          <td>
+            <span class="text-900">Totales</span>
+          </td>
+          <td>
+            <span class="text-600">{{ totalAsignaciones() }} asignaciones</span>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td>
+            <p-tag [value]="asignacionesPendientes().toString() + ' pendientes'" severity="warn" styleClass="text-xs" />
+          </td>
+          <td>
+            <div class="flex align-items-center gap-2">
+              <div class="w-5rem bg-gray-200 border-round" style="height: 4px;">
+                <div class="bg-primary border-round" [style.width.%]="promedioCompletado()" style="height: 100%;"></div>
+              </div>
+              <span class="text-sm">{{ promedioCompletado() }}%</span>
+            </div>
+          </td>
+          <td>
+            <p-tag [value]="alertasCriticas().toString() + ' alertas'" severity="danger" styleClass="text-xs" />
+          </td>
+          <td></td>
+        </tr>
+      </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+</div>
+}
+
+<!-- ==================== VISTA: RESPONDER CUESTIONARIO ==================== -->
+@if (vistaActual() === 'responder' && asignacionSeleccionada() && cuestionarioSeleccionado()) {
+<div class="revisiones-container">
+  <!-- ========== PANEL IZQUIERDO: INFO + PERSONAS + CHAT (1/3 pantalla) ========== -->
+  <div class="revisiones-sidebar">
+    <!-- Header -->
+    <div class="sidebar-header">
+      <div class="flex align-items-center gap-2">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volverAAsignaciones()" />
+        <div>
+          <h2 class="m-0 text-lg font-bold">Responder</h2>
+          <span class="text-500 text-sm">{{ asignacionSeleccionada()!.titulo }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs: Info, Personas, Chat -->
+    <div class="sidebar-tabs-container flex-1">
+      <p-tabs [value]="sidebarTabActivo()" (valueChange)="cambiarSidebarTab($event)" styleClass="sidebar-tabs h-full">
+        <div class="sidebar-tablist-wrapper">
+          <p-tablist>
+            <p-tab value="navegacion">
+              <i class="pi pi-info-circle mr-1"></i>
+              <span>Info</span>
+            </p-tab>
+            <p-tab value="participantes">
+              <i class="pi pi-users mr-1"></i>
+              <span>Personas</span>
+            </p-tab>
+            <p-tab value="chat">
+              <i class="pi pi-comments mr-1"></i>
+              <span>Chat</span>
+              @if (getMensajesNoLeidos() > 0) {
+                <p-badge [value]="getMensajesNoLeidos() + ''" severity="danger" styleClass="ml-1" />
+              }
+            </p-tab>
+          </p-tablist>
+        </div>
+
+        <p-tabpanels class="flex-1 overflow-hidden">
+          <!-- Tab: Info (Solo lectura) -->
+          <p-tabpanel value="navegacion" class="h-full">
+            <div class="sidebar-tab-content navegacion-content">
+              <!-- Card de la Revisión (Solo Vista) -->
+              <div class="revision-card">
+                <div class="flex align-items-center justify-content-between mb-2">
+                  <span class="font-semibold text-900">{{ asignacionSeleccionada()!.titulo }}</span>
+                  <p-tag [value]="getEstadoAsignacionLabel(asignacionSeleccionada()!.estado)"
+                         [severity]="getEstadoAsignacionSeverity(asignacionSeleccionada()!.estado)" />
+                </div>
+                <p class="text-500 text-sm m-0 mb-2">{{ asignacionSeleccionada()!.descripcion || 'Sin descripción' }}</p>
+
+                <!-- Info compacta -->
+                <div class="revision-info-grid">
+                  <div class="info-item">
+                    <i class="pi pi-calendar text-primary"></i>
+                    <div>
+                      <span class="info-label">Período</span>
+                      <span class="info-value">{{ asignacionSeleccionada()!.fechaInicio | date:'dd/MM' }} - {{ asignacionSeleccionada()!.fechaVencimiento | date:'dd/MM/yy' }}</span>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <i class="pi pi-users text-blue-500"></i>
+                    <div>
+                      <span class="info-label">Asignados</span>
+                      <span class="info-value">{{ asignacionSeleccionada()!.usuariosAsignados?.length || 0 }}</span>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <i class="pi pi-verified text-green-500"></i>
+                    <div>
+                      <span class="info-label">Aprobadores</span>
+                      <span class="info-value">{{ asignacionSeleccionada()!.aprobadores?.length || 0 }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Info del Cuestionario -->
+              <div class="revision-card">
+                <div class="flex align-items-center gap-2 mb-2">
+                  <i class="pi pi-file text-primary"></i>
+                  <span class="font-semibold text-900">{{ cuestionarioSeleccionado()!.nombre }}</span>
+                </div>
+                <p class="text-500 text-sm m-0 mb-2">{{ cuestionarioSeleccionado()!.descripcion || 'Sin descripción' }}</p>
+                <div class="flex align-items-center gap-2">
+                  <p-tag [value]="cuestionarioSeleccionado()!.secciones.length + ' secciones'" severity="secondary" />
+                </div>
+              </div>
+
+              <!-- Progreso -->
+              <div class="revision-card">
+                <div class="flex align-items-center justify-content-between mb-2">
+                  <span class="font-semibold text-900">Tu progreso</span>
+                  <span class="text-primary font-bold">{{ getProgresoCuestionario() }}%</span>
+                </div>
+                <p-progressBar [value]="getProgresoCuestionario()" [showValue]="false" styleClass="h-0.5rem" />
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab: Participantes -->
+          <p-tabpanel value="participantes">
+            <div class="sidebar-tab-content">
+              <!-- Sección colapsable: Han contestado -->
+              <div class="collapsible-section">
+                <div class="collapsible-header" (click)="toggleSeccionRespuestas()">
+                  <div class="collapsible-title">
+                    <i class="pi pi-users text-blue-500"></i>
+                    <span>Han contestado</span>
+                    <p-badge [value]="getPersonasContestaron().length + ''" severity="info" styleClass="ml-auto mr-2" />
+                  </div>
+                  <i class="pi" [ngClass]="seccionRespuestasExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                </div>
+                @if (seccionRespuestasExpandida()) {
+                  <div class="collapsible-content">
+                    @for (persona of getPersonasContestaron(); track persona.id) {
+                      <div class="persona-mini persona-con-menu">
+                        <p-avatar [label]="persona.nombre.charAt(0)" shape="circle" size="normal"
+                                  [style]="{'background-color': persona.completado ? 'var(--green-100)' : 'var(--yellow-100)', 'color': persona.completado ? 'var(--green-600)' : 'var(--yellow-600)'}" />
+                        <div class="persona-mini-info flex-1">
+                          <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                        </div>
+                        <p-menu #menuPersonaHan [model]="getMenuPersonaExterna(persona)" [popup]="true" appendTo="body" />
+                        <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small" severity="secondary" (onClick)="menuPersonaHan.toggle($event)" />
+                      </div>
+                    } @empty {
+                      <div class="collapsible-empty">
+                        <i class="pi pi-inbox text-300"></i>
+                        <span class="text-500 text-sm">Sin respuestas aún</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Sección colapsable: Aprobadores -->
+              <div class="collapsible-section">
+                <div class="collapsible-header" (click)="toggleSeccionAprobadores()">
+                  <div class="collapsible-title">
+                    <i class="pi pi-verified text-green-500"></i>
+                    <span>Aprobadores</span>
+                    <p-badge [value]="getAprobadoresRevision().length + ''" severity="success" styleClass="ml-auto mr-2" />
+                  </div>
+                  <i class="pi" [ngClass]="seccionAprobadoresExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                </div>
+                @if (seccionAprobadoresExpandida()) {
+                  <div class="collapsible-content">
+                    @for (aprobador of getAprobadoresRevision(); track aprobador.id) {
+                      <div class="persona-mini">
+                        <p-avatar [label]="aprobador.nombre.charAt(0)" shape="circle" size="normal"
+                                  [style]="{'background-color': aprobador.aprobado ? 'var(--green-100)' : aprobador.rechazado ? 'var(--red-100)' : 'var(--surface-200)', 'color': aprobador.aprobado ? 'var(--green-600)' : aprobador.rechazado ? 'var(--red-600)' : 'var(--text-color-secondary)'}" />
+                        <div class="persona-mini-info">
+                          <span class="persona-mini-nombre">{{ aprobador.nombre }}</span>
+                          <p-tag [value]="aprobador.aprobado ? 'Aprobado' : aprobador.rechazado ? 'Rechazado' : 'Pendiente'"
+                                 [severity]="aprobador.aprobado ? 'success' : aprobador.rechazado ? 'danger' : 'secondary'"
+                                 styleClass="text-xs" />
+                        </div>
+                      </div>
+                    } @empty {
+                      <div class="collapsible-empty">
+                        <i class="pi pi-user-minus text-300"></i>
+                        <span class="text-500 text-sm">Sin aprobadores</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Sección colapsable: Evaluados Externos (solo para revisiones externas) -->
+              @if (asignacionSeleccionada()?.tipoRevision === 'externa' && asignacionSeleccionada()?.evaluadosExternos?.length) {
+                <div class="collapsible-section">
+                  <div class="collapsible-header" (click)="toggleSeccionEvaluadosExternos()">
+                    <div class="collapsible-title">
+                      <i class="pi pi-globe text-purple-500"></i>
+                      <span>Evaluados Externos</span>
+                      <p-badge [value]="asignacionSeleccionada()!.evaluadosExternos!.length + ''" severity="contrast" styleClass="ml-auto mr-2" />
+                    </div>
+                    <i class="pi" [ngClass]="seccionEvaluadosExternosExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                  </div>
+                  @if (seccionEvaluadosExternosExpandida()) {
+                    <div class="collapsible-content">
+                      @for (evaluado of asignacionSeleccionada()!.evaluadosExternos; track evaluado.id) {
+                        <div class="persona-mini persona-con-menu">
+                          <p-avatar [label]="evaluado.nombre.charAt(0)" shape="circle" size="normal"
+                                    [style]="{'background-color': evaluado.invitacionEnviada ? 'var(--green-100)' : 'var(--orange-100)', 'color': evaluado.invitacionEnviada ? 'var(--green-600)' : 'var(--orange-600)'}" />
+                          <div class="persona-mini-info flex-1">
+                            <span class="persona-mini-nombre">{{ evaluado.nombre }}</span>
+                            <span class="persona-mini-email text-xs text-500">{{ evaluado.email }}</span>
+                          </div>
+                          <!-- Menú de tres puntos -->
+                          <p-menu #menuEvaluado [model]="getMenuEvaluadoExterno(evaluado)" [popup]="true" appendTo="body" />
+                          <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small"
+                                    severity="secondary" (onClick)="menuEvaluado.toggle($event)" />
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab: Chat -->
+          <p-tabpanel value="chat">
+            <div class="sidebar-chat-tab">
+              <app-chat
+                [participantes]="participantesChat()"
+                [mensajes]="mensajesChat()"
+                [usuarioActualId]="usuarioActual().id"
+                [showParticipantes]="true"
+                (onEnviarMensaje)="enviarMensajeChat($event)"
+              />
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+  </div>
+
+  <!-- ========== PANEL PRINCIPAL: CUESTIONARIO ========== -->
+  <div class="revisiones-content">
+    <!-- Header del cuestionario -->
+    <div class="content-header">
+      <div class="flex align-items-center justify-content-between">
+        <div class="flex align-items-center gap-3">
+          <h2 class="m-0 text-xl font-bold">{{ cuestionarioSeleccionado()!.nombre }}</h2>
+          <p-tag value="Respondiendo" severity="info" />
+        </div>
+        <div class="flex gap-2">
+          <p-button label="Guardar borrador" icon="pi pi-save" severity="secondary" [outlined]="true" (onClick)="guardarRespuestaBorrador()" />
+          <p-button label="Enviar respuestas" icon="pi pi-send" (onClick)="enviarRespuesta()" />
+        </div>
+      </div>
+      <!-- Barra de progreso general -->
+      <div class="mt-3">
+        <div class="flex align-items-center justify-content-between mb-2">
+          <span class="text-sm text-500">Progreso general</span>
+          <span class="text-sm font-bold text-primary">{{ getProgresoCuestionario() }}%</span>
+        </div>
+        <p-progressBar [value]="getProgresoCuestionario()" [showValue]="false" styleClass="h-0.5rem" />
+      </div>
+    </div>
+
+    <!-- Contenido del cuestionario -->
+    <div class="content-body-layout">
+      <div class="content-body-main">
+        @for (seccion of cuestionarioSeleccionado()!.secciones; track seccion.id) {
+          <div class="surface-card border-round-lg p-4 mb-4">
+            <h3 class="text-lg font-semibold text-900 m-0 mb-2">{{ seccion.nombre }}</h3>
+            <p class="text-500 text-sm m-0 mb-4">{{ seccion.descripcion }}</p>
+
+            <div class="flex flex-column gap-4">
+              @for (pregunta of seccion.preguntas; track pregunta.id; let idx = $index) {
+                <div class="p-3 surface-50 border-round">
+                  <div class="flex align-items-start gap-2 mb-3">
+                    <span class="font-semibold text-primary">{{ idx + 1 }}.</span>
+                    <div class="flex-1">
+                      <span class="text-900">{{ pregunta.texto }}</span>
+                      @if (pregunta.requerida) {
+                        <span class="text-red-500 ml-1">*</span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Campo segun tipo de pregunta -->
+                  @switch (pregunta.tipo) {
+                    @case ('texto') {
+                      <input pInputText class="w-full" [placeholder]="pregunta.placeholder || 'Ingrese su respuesta'"
+                             [value]="getRespuestaPregunta(pregunta.id)?.valor || ''"
+                             (input)="actualizarRespuesta(pregunta.id, $any($event.target).value)" />
+                    }
+                    @case ('textoLargo') {
+                      <textarea pTextarea class="w-full" rows="3" [placeholder]="pregunta.placeholder || 'Ingrese su respuesta'"
+                                [value]="getRespuestaPregunta(pregunta.id)?.valor || ''"
+                                (input)="actualizarRespuesta(pregunta.id, $any($event.target).value)"></textarea>
+                    }
+                    @case ('siNoNa') {
+                      <div class="flex gap-3">
+                        <p-radioButton name="pregunta_{{pregunta.id}}" value="Si" label="Si"
+                                       [ngModel]="getRespuestaPregunta(pregunta.id)?.valor"
+                                       (ngModelChange)="actualizarRespuesta(pregunta.id, $event)" />
+                        <p-radioButton name="pregunta_{{pregunta.id}}" value="No" label="No"
+                                       [ngModel]="getRespuestaPregunta(pregunta.id)?.valor"
+                                       (ngModelChange)="actualizarRespuesta(pregunta.id, $event)" />
+                        <p-radioButton name="pregunta_{{pregunta.id}}" value="N/A" label="N/A"
+                                       [ngModel]="getRespuestaPregunta(pregunta.id)?.valor"
+                                       (ngModelChange)="actualizarRespuesta(pregunta.id, $event)" />
+                      </div>
+                    }
+                    @case ('seleccionUnica') {
+                      <p-select [options]="pregunta.opciones || []" styleClass="w-full" placeholder="Seleccione una opcion"
+                                [ngModel]="getRespuestaPregunta(pregunta.id)?.valor"
+                                (ngModelChange)="actualizarRespuesta(pregunta.id, $event)" />
+                    }
+                    @case ('escala') {
+                      <div class="flex align-items-center gap-3">
+                        <span class="text-500">{{ pregunta.escalaMin || 1 }}</span>
+                        <p-slider [min]="pregunta.escalaMin || 1" [max]="pregunta.escalaMax || 10" styleClass="flex-1"
+                                  [ngModel]="getRespuestaPregunta(pregunta.id)?.valor || pregunta.escalaMin || 1"
+                                  (ngModelChange)="actualizarRespuesta(pregunta.id, $event)" />
+                        <span class="text-500">{{ pregunta.escalaMax || 10 }}</span>
+                        <span class="font-semibold text-primary ml-2">{{ getRespuestaPregunta(pregunta.id)?.valor || pregunta.escalaMin || 1 }}</span>
+                      </div>
+                    }
+                    @case ('fecha') {
+                      <p-datePicker styleClass="w-full" placeholder="Seleccione fecha"
+                                    [ngModel]="getRespuestaPregunta(pregunta.id)?.valor"
+                                    (ngModelChange)="actualizarRespuesta(pregunta.id, $event)" />
+                    }
+                  }
+
+                  @if (pregunta.requiereEvidencia) {
+                    <div class="mt-3 p-2 bg-yellow-50 border-round">
+                      <span class="text-yellow-700 text-sm"><i class="pi pi-paperclip mr-1"></i> Esta pregunta requiere evidencia</span>
+                      <p-fileUpload mode="basic" chooseLabel="Adjuntar" accept="*/*" styleClass="mt-2" />
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ==================== VISTA: REVISAR CUESTIONARIO ==================== -->
+@if (vistaActual() === 'revisar' && asignacionSeleccionada()) {
+<div class="revisiones-container">
+  <!-- ========== PANEL DERECHO: NAVEGACIÓN + PERSONAS + CHAT (1/3 pantalla) ========== -->
+  <div class="revisiones-sidebar">
+    <!-- Header -->
+    <div class="sidebar-header">
+      <div class="flex align-items-center gap-2">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="irADashboard()" />
+        <div>
+          <h2 class="m-0 text-lg font-bold">Revisiones</h2>
+          <span class="text-500 text-sm">{{ asignacionSeleccionada()!.titulo }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs: Navegación, Personas, Chat -->
+    <div class="sidebar-tabs-container flex-1">
+      <p-tabs [value]="sidebarTabActivo()" (valueChange)="cambiarSidebarTab($event)" styleClass="sidebar-tabs h-full">
+        <div class="sidebar-tablist-wrapper">
+          <p-tablist>
+            <p-tab value="navegacion">
+              <i class="pi pi-sitemap mr-1"></i>
+              <span>Navegación</span>
+            </p-tab>
+            <p-tab value="participantes">
+              <i class="pi pi-users mr-1"></i>
+              <span>Personas</span>
+            </p-tab>
+            <p-tab value="chat">
+              <i class="pi pi-comments mr-1"></i>
+              <span>Chat</span>
+              @if (getMensajesNoLeidos() > 0) {
+                <p-badge [value]="getMensajesNoLeidos() + ''" severity="danger" styleClass="ml-1" />
+              }
+            </p-tab>
+          </p-tablist>
+          <div class="sidebar-tablist-actions">
+            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" (onClick)="abrirDialogEditarRevision()" pTooltip="Editar revisión" />
+            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger" (onClick)="eliminarAsignacionActual()" pTooltip="Eliminar revisión" />
+          </div>
+        </div>
+
+        <p-tabpanels class="flex-1 overflow-hidden">
+          <!-- Tab: Navegación -->
+          <p-tabpanel value="navegacion" class="h-full">
+            <div class="sidebar-tab-content navegacion-content">
+              <!-- Card de la Revisión Actual (Solo Vista) -->
+              <div class="revision-card">
+                <div class="flex align-items-center justify-content-between mb-2">
+                  <span class="font-semibold text-900">{{ asignacionSeleccionada()!.titulo }}</span>
+                  <p-tag [value]="getEstadoAsignacionLabel(asignacionSeleccionada()!.estado)"
+                         [severity]="getEstadoAsignacionSeverity(asignacionSeleccionada()!.estado)" />
+                </div>
+                <p class="text-500 text-sm m-0 mb-2">{{ asignacionSeleccionada()!.descripcion || 'Sin descripción' }}</p>
+
+                <!-- Info compacta -->
+                <div class="revision-info-grid">
+                  <div class="info-item">
+                    <i class="pi pi-calendar text-primary"></i>
+                    <div>
+                      <span class="info-label">Período</span>
+                      <span class="info-value">{{ asignacionSeleccionada()!.fechaInicio | date:'dd/MM' }} - {{ asignacionSeleccionada()!.fechaVencimiento | date:'dd/MM/yy' }}</span>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <i class="pi pi-users text-blue-500"></i>
+                    <div>
+                      <span class="info-label">Asignados</span>
+                      <span class="info-value">{{ asignacionSeleccionada()!.usuariosAsignados?.length || 0 }}</span>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <i class="pi pi-verified text-green-500"></i>
+                    <div>
+                      <span class="info-label">Aprobadores</span>
+                      <span class="info-value">{{ asignacionSeleccionada()!.aprobadores?.length || 0 }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Selector: Activo/Proceso -->
+              <div class="selector-group">
+                <label class="selector-label">Activo / Proceso</label>
+                <p-select
+                  [options]="activosProcesosEnRevision()"
+                  [ngModel]="activoProcesoSeleccionadoId()"
+                  (ngModelChange)="seleccionarActivoProceso($event)"
+                  optionLabel="nombre"
+                  optionValue="id"
+                  placeholder="Seleccionar activo/proceso"
+                  appendTo="body"
+                  [variant]="'filled'"
+                  styleClass="w-full" />
+              </div>
+
+              <!-- Selector: Revisión -->
+              <div class="selector-group">
+                <label class="selector-label">Revisión</label>
+                <p-select
+                  [options]="revisionesDisponibles()"
+                  [ngModel]="revisionSeleccionadaId()"
+                  (ngModelChange)="seleccionarRevision($event)"
+                  optionLabel="nombre"
+                  optionValue="id"
+                  placeholder="Seleccionar revisión"
+                  appendTo="body"
+                  [variant]="'filled'"
+                  styleClass="w-full" />
+              </div>
+
+              <!-- Selector: Cuestionario -->
+              <div class="selector-group">
+                <label class="selector-label">Cuestionario</label>
+                <p-select
+                  [options]="cuestionariosEnRevision()"
+                  [ngModel]="cuestionarioRevisionSeleccionadoId()"
+                  (ngModelChange)="seleccionarCuestionarioRevision($event)"
+                  optionLabel="nombre"
+                  optionValue="id"
+                  placeholder="Seleccionar cuestionario"
+                  appendTo="body"
+                  [variant]="'filled'"
+                  styleClass="w-full" />
+                <!-- Barra de progreso del cuestionario -->
+                @if (cuestionarioSeleccionado()) {
+                  <div class="progress-section">
+                    <p-progressBar [value]="getProgresoCuestionario()" [showValue]="false" styleClass="h-0.5rem" />
+                    <div class="flex justify-content-between mt-1">
+                      <span class="text-xs text-primary font-semibold">{{ getProgresoCuestionario() }}%</span>
+                      <span class="text-xs text-500">activo</span>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Selector: Sección -->
+              @if (cuestionarioSeleccionado()) {
+                <div class="selector-group">
+                  <label class="selector-label">Sección</label>
+                  <p-select
+                    [options]="cuestionarioSeleccionado()!.secciones"
+                    [ngModel]="seccionSeleccionadaId()"
+                    (ngModelChange)="seleccionarSeccion($event)"
+                    optionLabel="nombre"
+                    optionValue="id"
+                    placeholder="Seleccionar sección"
+                    appendTo="body"
+                    [variant]="'filled'"
+                    styleClass="w-full" />
+                  <!-- Barra de progreso de la sección -->
+                  @if (seccionSeleccionadaId()) {
+                    <div class="progress-section">
+                      <p-progressBar [value]="getProgresoSeccion()" [showValue]="false" styleClass="h-0.5rem" />
+                      <div class="flex justify-content-between mt-1">
+                        <span class="text-xs text-primary font-semibold">{{ getProgresoSeccion() }}%</span>
+                        <span class="text-xs text-500">completado</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab: Participantes -->
+          <p-tabpanel value="participantes">
+            <div class="sidebar-tab-content">
+              <!-- Sección colapsable: Han contestado -->
+              <div class="collapsible-section">
+                <div class="collapsible-header" (click)="toggleSeccionRespuestas()">
+                  <div class="collapsible-title">
+                    <i class="pi pi-users text-blue-500"></i>
+                    <span>Han contestado</span>
+                    <p-badge [value]="getPersonasContestaron().length + ''" severity="info" styleClass="ml-auto mr-2" />
+                  </div>
+                  <i class="pi" [ngClass]="seccionRespuestasExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                </div>
+                @if (seccionRespuestasExpandida()) {
+                  <div class="collapsible-content">
+                    @for (persona of getPersonasContestaron(); track persona.id) {
+                      <div class="persona-mini persona-con-menu">
+                        <p-avatar [label]="persona.nombre.charAt(0)" shape="circle" size="normal"
+                                  [style]="{'background-color': persona.completado ? 'var(--green-100)' : 'var(--yellow-100)', 'color': persona.completado ? 'var(--green-600)' : 'var(--yellow-600)'}" />
+                        <div class="persona-mini-info flex-1">
+                          <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                        </div>
+                        <p-menu #menuPersonaHan [model]="getMenuPersonaExterna(persona)" [popup]="true" appendTo="body" />
+                        <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" size="small" severity="secondary" (onClick)="menuPersonaHan.toggle($event)" />
+                      </div>
+                    } @empty {
+                      <div class="collapsible-empty">
+                        <i class="pi pi-inbox text-300"></i>
+                        <span class="text-500 text-sm">Sin respuestas aún</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Sección colapsable: Aprobadores -->
+              <div class="collapsible-section">
+                <div class="collapsible-header" (click)="toggleSeccionAprobadores()">
+                  <div class="collapsible-title">
+                    <i class="pi pi-verified text-green-500"></i>
+                    <span>Aprobadores</span>
+                    <p-badge [value]="getAprobadoresRevision().length + ''" severity="success" styleClass="ml-auto mr-2" />
+                  </div>
+                  <i class="pi" [ngClass]="seccionAprobadoresExpandida() ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                </div>
+                @if (seccionAprobadoresExpandida()) {
+                  <div class="collapsible-content">
+                    @for (aprobador of getAprobadoresRevision(); track aprobador.id) {
+                      <div class="persona-mini">
+                        <p-avatar [label]="aprobador.nombre.charAt(0)" shape="circle" size="normal"
+                                  [style]="{'background-color': aprobador.aprobado ? 'var(--green-100)' : aprobador.rechazado ? 'var(--red-100)' : 'var(--surface-200)', 'color': aprobador.aprobado ? 'var(--green-600)' : aprobador.rechazado ? 'var(--red-600)' : 'var(--text-color-secondary)'}" />
+                        <div class="persona-mini-info">
+                          <span class="persona-mini-nombre">{{ aprobador.nombre }}</span>
+                          <p-tag [value]="aprobador.aprobado ? 'Aprobado' : aprobador.rechazado ? 'Rechazado' : 'Pendiente'"
+                                 [severity]="aprobador.aprobado ? 'success' : aprobador.rechazado ? 'danger' : 'secondary'"
+                                 styleClass="text-xs" />
+                        </div>
+                      </div>
+                    } @empty {
+                      <div class="collapsible-empty">
+                        <i class="pi pi-user-minus text-300"></i>
+                        <span class="text-500 text-sm">Sin aprobadores</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </p-tabpanel>
+
+          <!-- Tab: Chat -->
+          <p-tabpanel value="chat">
+            <div class="sidebar-chat-tab">
+              <app-chat
+                [participantes]="participantesChat()"
+                [mensajes]="mensajesChat()"
+                [usuarioActualId]="usuarioActual().id"
+                [showParticipantes]="true"
+                (onEnviarMensaje)="enviarMensajeChat($event)"
+              />
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+  </div>
+
+  <!-- ========== PANEL CENTRAL: CUESTIONARIO ========== -->
+  <div class="revisiones-content">
+    @if (cuestionarioSeleccionado()) {
+      <!-- Header del cuestionario -->
+      <div class="content-header">
+        <div class="flex align-items-center gap-3">
+          <h2 class="m-0 text-xl font-bold">{{ cuestionarioSeleccionado()!.nombre }}</h2>
+          <p-tag value="Activo" severity="success" />
+        </div>
+
+        <!-- Barras de progreso -->
+        <div class="grid mt-3">
+          <!-- Progreso de contestación -->
+          <div class="col-12 md:col-6">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <span class="text-sm text-500">Contestación</span>
+              <span class="text-sm font-bold text-primary">{{ getProgresoCuestionario() }}%</span>
+            </div>
+            <p-progressBar [value]="getProgresoCuestionario()" [showValue]="false" styleClass="h-0.5rem" />
+          </div>
+          <!-- Calificación basada en umbrales -->
+          <div class="col-12 md:col-6">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <span class="text-sm text-500">Calificación</span>
+              <span class="text-sm font-bold" [ngClass]="{
+                'text-green-500': getCalificacionCumplimiento() >= 80,
+                'text-yellow-500': getCalificacionCumplimiento() >= 60 && getCalificacionCumplimiento() < 80,
+                'text-orange-500': getCalificacionCumplimiento() >= 40 && getCalificacionCumplimiento() < 60,
+                'text-red-500': getCalificacionCumplimiento() < 40
+              }">{{ getCalificacionCumplimiento() }}%</span>
+            </div>
+            <p-progressBar
+              [value]="getCalificacionCumplimiento()"
+              [showValue]="false"
+              styleClass="h-0.5rem"
+              [style]="{'--p-progressbar-value-background': getCalificacionCumplimiento() >= 80 ? 'var(--green-500)' : getCalificacionCumplimiento() >= 60 ? 'var(--yellow-500)' : getCalificacionCumplimiento() >= 40 ? 'var(--orange-500)' : 'var(--red-500)'}" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido con layout de 2 columnas -->
+      <div class="content-body-layout">
+        <!-- Panel Principal: Cuestionario -->
+        <div class="content-body-main">
+          <!-- Acciones de Aprobación -->
+          <div class="aprobacion-bar">
+            <div class="aprobacion-bar-actions">
+              <p-button label="Aprobar" icon="pi pi-check" severity="success" (onClick)="aprobarCuestionarioCompleto()" />
+              <p-button label="Rechazar" icon="pi pi-times" severity="danger" [outlined]="true" (onClick)="rechazarCuestionarioCompleto()" />
+              <p-button label="Solicitar Correcciones" icon="pi pi-replay" severity="warn" [outlined]="true" (onClick)="solicitarCorreccionesCuestionario()" />
+            </div>
+            <div class="aprobacion-bar-comentario">
+              <input pInputText class="w-full" [ngModel]="comentarioGeneralRevisor()"
+                     (ngModelChange)="comentarioGeneralRevisor.set($event)"
+                     [variant]="'filled'"
+                     placeholder="Comentarios del revisor..." />
+            </div>
+          </div>
+
+          <!-- Secciones colapsables con preguntas -->
+          <p-accordion [multiple]="true" [value]="seccionesExpandidas()">
+            @for (seccion of cuestionarioSeleccionado()!.secciones; track seccion.id) {
+              <p-accordionpanel [value]="seccion.id">
+                <p-accordionheader>
+                  <div class="seccion-header">
+                    <div class="flex align-items-center gap-2">
+                      <span class="seccion-nombre">{{ seccion.nombre }}</span>
+                      <p-tag [value]="seccion.requerida ? 'Obligatorio' : 'Opcional'"
+                             [severity]="seccion.requerida ? 'danger' : 'secondary'" />
+                    </div>
+                    <div class="seccion-progreso">
+                      <span class="text-sm text-500">{{ getProgresoSeccionById(seccion.id) }}%</span>
+                      <p-progressBar [value]="getProgresoSeccionById(seccion.id)" [showValue]="false" styleClass="w-5rem h-0.5rem" />
+                    </div>
+                  </div>
+                </p-accordionheader>
+                <p-accordioncontent>
+                  <div class="seccion-content">
+                    @for (pregunta of seccion.preguntas; track pregunta.id) {
+                      @let respuesta = getRespuestaRevisionPregunta(pregunta.id);
+                      <div class="pregunta-field-new">
+                        <div class="pregunta-label">
+                          <span>{{ pregunta.texto }}</span>
+                          @if (pregunta.requerida) {
+                            <span class="text-red-500 ml-1">*</span>
+                          }
+                        </div>
+                        <div class="pregunta-input">
+                          @switch (pregunta.tipo) {
+                            @case ('siNoNa') {
+                              <p-select [options]="[{label: 'Sí', value: 'Si'}, {label: 'No', value: 'No'}, {label: 'N/A', value: 'NA'}]"
+                                        [ngModel]="respuesta?.valor"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Seleccionar"
+                                        styleClass="w-full"
+                                        [variant]="'filled'"
+                                        appendTo="body" />
+                            }
+                            @case ('seleccionUnica') {
+                              <p-select [options]="pregunta.opciones || []"
+                                        [ngModel]="respuesta?.valor"
+                                        placeholder="Seleccionar opción"
+                                        styleClass="w-full"
+                                        [variant]="'filled'"
+                                        appendTo="body" />
+                            }
+                            @case ('fecha') {
+                              <p-datePicker [ngModel]="respuesta?.valor"
+                                            dateFormat="dd/mm/yy"
+                                            [showIcon]="true"
+                                            [variant]="'filled'"
+                                            styleClass="w-full"
+                                            appendTo="body" />
+                            }
+                            @case ('texto') {
+                              <input pInputText [ngModel]="respuesta?.valor" class="w-full" [variant]="'filled'" placeholder="Ingrese texto" />
+                            }
+                            @case ('textoLargo') {
+                              <textarea pTextarea [ngModel]="respuesta?.valor" class="w-full" rows="3" [variant]="'filled'" placeholder="Ingrese descripción"></textarea>
+                            }
+                            @case ('numero') {
+                              <p-inputNumber [ngModel]="respuesta?.valor" styleClass="w-full" [variant]="'filled'" placeholder="0" />
+                            }
+                            @default {
+                              <input pInputText [ngModel]="respuesta?.valor" class="w-full" [variant]="'filled'" placeholder="Ingrese valor" />
+                            }
+                          }
+                        </div>
+                        <!-- Archivos adjuntos si la pregunta lo requiere -->
+                        @if (pregunta.requiereEvidencia) {
+                          <div class="pregunta-archivos-section">
+                            <div class="flex align-items-center justify-content-between mb-2">
+                              <span class="text-sm font-medium text-500"><i class="pi pi-paperclip mr-1"></i>Archivos adjuntos</span>
+                              <p-button icon="pi pi-upload" label="Subir" size="small" [outlined]="true" />
+                            </div>
+                            @if (getArchivosParaPregunta(pregunta.id).length > 0) {
+                              <div class="archivos-pregunta-list">
+                                @for (archivo of getArchivosParaPregunta(pregunta.id); track archivo.id) {
+                                  <div class="archivo-item-inline">
+                                    <div class="archivo-item-icon">
+                                      @if (archivo.tipo === 'imagen') {
+                                        <img [src]="archivo.urlPreview" [alt]="archivo.nombre" class="archivo-thumb" />
+                                      } @else if (archivo.tipo === 'pdf') {
+                                        <i class="pi pi-file-pdf text-red-500 text-xl"></i>
+                                      } @else if (archivo.tipo === 'excel') {
+                                        <i class="pi pi-file-excel text-green-500 text-xl"></i>
+                                      } @else {
+                                        <i class="pi pi-file text-500 text-xl"></i>
+                                      }
+                                    </div>
+                                    <div class="archivo-item-info">
+                                      <span class="archivo-item-nombre">{{ archivo.nombre }}</span>
+                                      <span class="archivo-item-size">{{ archivo.tamanio }}</span>
+                                    </div>
+                                    <div class="archivo-item-actions">
+                                      <p-button icon="pi pi-eye" [rounded]="true" [text]="true" size="small" (onClick)="previsualizarArchivo(archivo)" />
+                                      <p-button icon="pi pi-download" [rounded]="true" [text]="true" size="small" (onClick)="descargarArchivo(archivo)" />
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            } @else {
+                              <div class="archivo-empty">
+                                <i class="pi pi-inbox text-300"></i>
+                                <span>Sin archivos</span>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </p-accordioncontent>
+              </p-accordionpanel>
+            }
+          </p-accordion>
+        </div>
+      </div>
+
+    } @else {
+      <!-- Estado vacío -->
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="pi pi-eye"></i>
+        </div>
+        <h3>Selecciona para revisar</h3>
+        <p>Selecciona un activo/proceso, revisión y cuestionario del panel izquierdo</p>
+      </div>
+    }
+  </div>
+
+</div>
+}
+
+<!-- Dialog: Editar Revisión con Tabs -->
+<p-dialog header="Editar Revisión" [(visible)]="showDialogEditarRevision" [modal]="true" [style]="{width: '700px'}" [draggable]="false" styleClass="dialog-editar-revision">
+  <p-tabs [value]="tabEdicionActivo()" (valueChange)="cambiarTabEdicion($event)">
+    <p-tablist>
+      <p-tab value="info">
+        <i class="pi pi-info-circle mr-2"></i>Información
+      </p-tab>
+      <p-tab value="usuarios">
+        <i class="pi pi-users mr-2"></i>Usuarios
+      </p-tab>
+      <p-tab value="alcance">
+        <i class="pi pi-sitemap mr-2"></i>Alcance
+      </p-tab>
+      <p-tab value="config">
+        <i class="pi pi-cog mr-2"></i>Configuración
+      </p-tab>
+    </p-tablist>
+
+    <p-tabpanels styleClass="pt-3">
+      <!-- Tab 1: Información General -->
+      <p-tabpanel value="info">
+        <div class="grid">
+          <div class="col-12">
+            <label class="block font-medium mb-2">Título *</label>
+            <input type="text" pInputText class="w-full"
+                   [ngModel]="edicionRevision().titulo"
+                   (ngModelChange)="actualizarEdicionRevisionCampo('titulo', $event)"
+                   placeholder="Título de la revisión" />
+          </div>
+          <div class="col-12">
+            <label class="block font-medium mb-2">Descripción</label>
+            <textarea pTextarea class="w-full" rows="2"
+                      [ngModel]="edicionRevision().descripcion"
+                      (ngModelChange)="actualizarEdicionRevisionCampo('descripcion', $event)"
+                      placeholder="Descripción de la revisión"></textarea>
+          </div>
+          <div class="col-12 md:col-6">
+            <label class="block font-medium mb-2">Tipo de Revisión</label>
+            <p-selectbutton [options]="[{label: 'Interna', value: 'interna'}, {label: 'Externa', value: 'externa'}]"
+                            [ngModel]="edicionRevision().tipoRevision"
+                            (ngModelChange)="actualizarEdicionRevisionCampo('tipoRevision', $event)"
+                            optionLabel="label" optionValue="value" />
+          </div>
+          <div class="col-12">
+            <label class="block font-medium mb-2">Cuestionarios *</label>
+            <p-multiselect [options]="cuestionariosOptions()" optionLabel="label" optionValue="value" styleClass="w-full"
+                           [ngModel]="edicionRevision().cuestionarioIds"
+                           (ngModelChange)="actualizarEdicionRevisionCampo('cuestionarioIds', $event)"
+                           placeholder="Seleccionar cuestionarios" [filter]="true" filterBy="label"
+                           display="chip" appendTo="body">
+              <ng-template #item let-option>
+                <div class="flex align-items-center gap-2">
+                  <span>{{ option.label }}</span>
+                  <p-tag [value]="option.marco" severity="secondary" styleClass="text-xs" />
+                </div>
+              </ng-template>
+            </p-multiselect>
+          </div>
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab 2: Usuarios -->
+      <p-tabpanel value="usuarios">
+        <div class="grid">
+          <div class="col-12">
+            <label class="block font-medium mb-2">Evaluadores</label>
+            <p-multiselect [options]="usuariosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                           [ngModel]="edicionRevision().usuariosAsignados"
+                           (ngModelChange)="actualizarEdicionRevisionCampo('usuariosAsignados', $event)"
+                           placeholder="Seleccionar evaluadores" [filter]="true" filterBy="label"
+                           display="chip" appendTo="body" />
+          </div>
+          <div class="col-12">
+            <label class="block font-medium mb-2">Aprobadores</label>
+            <p-multiselect [options]="usuariosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                           [ngModel]="edicionRevision().aprobadores"
+                           (ngModelChange)="actualizarEdicionRevisionCampo('aprobadores', $event)"
+                           placeholder="Seleccionar aprobadores" [filter]="true" filterBy="label"
+                           display="chip" appendTo="body" />
+          </div>
+
+          <!-- Evaluados externos (solo si es revisión externa) -->
+          @if (edicionRevision().tipoRevision === 'externa') {
+            <div class="col-12">
+              <p-divider />
+              <label class="block font-medium mb-2">Evaluados Externos</label>
+              @for (evaluado of edicionRevision().evaluadosExternos || []; track evaluado.id) {
+                <div class="flex align-items-center gap-2 mb-2 p-2 surface-100 border-round">
+                  <p-avatar [label]="evaluado.nombre.charAt(0)" shape="circle" size="normal"
+                            styleClass="bg-orange-100 text-orange-600" />
+                  <div class="flex-1">
+                    <div class="font-medium">{{ evaluado.nombre }}</div>
+                    <div class="text-sm text-500">{{ evaluado.email }}</div>
+                  </div>
+                  <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" size="small"
+                            (onClick)="eliminarEvaluadoExternoEdicion(evaluado.id)" />
+                </div>
+              } @empty {
+                <p class="text-500 text-sm">No hay evaluados externos</p>
+              }
+              <div class="grid mt-2">
+                <div class="col-5">
+                  <input type="text" pInputText class="w-full" placeholder="Nombre"
+                         [(ngModel)]="nuevoEvaluadoNombre" />
+                </div>
+                <div class="col-5">
+                  <input type="email" pInputText class="w-full" placeholder="Email"
+                         [(ngModel)]="nuevoEvaluadoEmail" />
+                </div>
+                <div class="col-2">
+                  <p-button icon="pi pi-plus" (onClick)="agregarEvaluadoExternoEdicion()"
+                            [disabled]="!nuevoEvaluadoNombre || !nuevoEvaluadoEmail" />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab 3: Alcance -->
+      <p-tabpanel value="alcance">
+        <div class="grid">
+          <div class="col-12">
+            <label class="block font-medium mb-2">Tipo de Alcance</label>
+            <p-selectbutton [options]="[{label: 'Activos', value: 'activos'}, {label: 'Procesos', value: 'procesos'}]"
+                            [ngModel]="edicionTipoAlcance()"
+                            (ngModelChange)="edicionTipoAlcance.set($event)"
+                            optionLabel="label" optionValue="value" />
+          </div>
+          @if (edicionTipoAlcance() === 'activos') {
+            <div class="col-12">
+              <label class="block font-medium mb-2">Activos Objetivo</label>
+              <p-multiselect [options]="activosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                             [ngModel]="edicionRevision().activosObjetivo"
+                             (ngModelChange)="actualizarEdicionRevisionCampo('activosObjetivo', $event)"
+                             placeholder="Seleccionar activos" [filter]="true" filterBy="label"
+                             display="chip" appendTo="body" />
+            </div>
+          } @else {
+            <div class="col-12">
+              <label class="block font-medium mb-2">Procesos Objetivo</label>
+              <p-multiselect [options]="procesosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                             [ngModel]="edicionRevision().procesosObjetivo"
+                             (ngModelChange)="actualizarEdicionRevisionCampo('procesosObjetivo', $event)"
+                             placeholder="Seleccionar procesos" [filter]="true" filterBy="label"
+                             display="chip" appendTo="body" />
+            </div>
+          }
+        </div>
+      </p-tabpanel>
+
+      <!-- Tab 4: Configuración -->
+      <p-tabpanel value="config">
+        <div class="grid">
+          <div class="col-12 md:col-6">
+            <label class="block font-medium mb-2">Fecha de Inicio *</label>
+            <p-datepicker [ngModel]="edicionRevision().fechaInicio"
+                          (ngModelChange)="actualizarEdicionRevisionCampo('fechaInicio', $event)"
+                          dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" appendTo="body" />
+          </div>
+          <div class="col-12 md:col-6">
+            <label class="block font-medium mb-2">Fecha de Vencimiento *</label>
+            <p-datepicker [ngModel]="edicionRevision().fechaVencimiento"
+                          (ngModelChange)="actualizarEdicionRevisionCampo('fechaVencimiento', $event)"
+                          dateFormat="dd/mm/yy" [showIcon]="true" styleClass="w-full" appendTo="body" />
+          </div>
+          <div class="col-12">
+            <label class="block font-medium mb-2">Instrucciones</label>
+            <textarea pTextarea class="w-full" rows="3"
+                      [ngModel]="edicionRevision().instrucciones"
+                      (ngModelChange)="actualizarEdicionRevisionCampo('instrucciones', $event)"
+                      placeholder="Instrucciones para los evaluadores"></textarea>
+          </div>
+          <div class="col-12">
+            <div class="flex align-items-center gap-2">
+              <p-checkbox [ngModel]="edicionRevision().recordatorios"
+                          (ngModelChange)="actualizarEdicionRevisionCampo('recordatorios', $event)"
+                          [binary]="true" inputId="recordatoriosEdit" />
+              <label for="recordatoriosEdit">Enviar recordatorios automáticos</label>
+            </div>
+          </div>
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <ng-template #footer>
+    <div class="flex justify-content-between w-full">
+      <p-button label="Eliminar" icon="pi pi-trash" severity="danger" [text]="true"
+                (onClick)="eliminarAsignacionActual(); showDialogEditarRevision.set(false)" />
+      <div class="flex gap-2">
+        <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cerrarDialogEditarRevision()" />
+        <p-button label="Guardar Cambios" icon="pi pi-check" (onClick)="guardarEdicionRevision()"
+                  [disabled]="!edicionRevision().titulo || !edicionRevision().cuestionarioIds?.length" />
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: Rechazo con comentario obligatorio -->
+<p-dialog header="Rechazar Respuesta" [(visible)]="showDialogRechazo" [modal]="true" [style]="{width: '500px'}" [draggable]="false">
+  <div class="flex flex-column gap-4">
+    <div class="p-3 bg-red-50 border-round">
+      <div class="flex align-items-center gap-2 text-red-700">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span class="font-medium">Comentario obligatorio</span>
+      </div>
+      <p class="text-red-600 text-sm m-0 mt-2">Debe proporcionar una justificacion para rechazar esta respuesta.</p>
+    </div>
+    <div>
+      <label class="block font-medium mb-2">Motivo del rechazo *</label>
+      <textarea pTextarea class="w-full" rows="4" [ngModel]="comentarioRechazo()"
+                (ngModelChange)="comentarioRechazo.set($event)"
+                placeholder="Explique por que se rechaza esta respuesta..."></textarea>
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cerrarDialogRechazo()" />
+    <p-button label="Confirmar Rechazo" icon="pi pi-times" severity="danger" (onClick)="confirmarRechazo()" [disabled]="!comentarioRechazo() || comentarioRechazo()!.trim().length === 0" />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: Aprobar/Rechazar todo -->
+<p-dialog [header]="accionMasivaAprobacion() ? 'Aprobar Todas las Respuestas' : 'Rechazar Todas las Respuestas'" [(visible)]="showDialogAccionMasiva" [modal]="true" [style]="{width: '500px'}" [draggable]="false">
+  <div class="flex flex-column gap-4">
+    @if (accionMasivaAprobacion()) {
+      <div class="p-3 bg-green-50 border-round">
+        <div class="flex align-items-center gap-2 text-green-700">
+          <i class="pi pi-check-circle"></i>
+          <span class="font-medium">Aprobar todas las respuestas pendientes</span>
+        </div>
+        <p class="text-green-600 text-sm m-0 mt-2">Se aprobaran {{ getRespuestasPendientesRevision() }} respuestas pendientes.</p>
+      </div>
+    } @else {
+      <div class="p-3 bg-red-50 border-round">
+        <div class="flex align-items-center gap-2 text-red-700">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span class="font-medium">Rechazar todas las respuestas pendientes</span>
+        </div>
+        <p class="text-red-600 text-sm m-0 mt-2">Se rechazaran {{ getRespuestasPendientesRevision() }} respuestas. El comentario es obligatorio.</p>
+      </div>
+    }
+    <div>
+      <label class="block font-medium mb-2">Comentario {{ accionMasivaAprobacion() ? '(opcional)' : '*' }}</label>
+      <textarea pTextarea class="w-full" rows="4" [ngModel]="comentarioAccionMasiva()"
+                (ngModelChange)="comentarioAccionMasiva.set($event)"
+                [placeholder]="accionMasivaAprobacion() ? 'Comentario opcional...' : 'Motivo del rechazo (obligatorio)...'"></textarea>
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cerrarDialogAccionMasiva()" />
+    @if (accionMasivaAprobacion()) {
+      <p-button label="Aprobar Todo" icon="pi pi-check" severity="success" (onClick)="confirmarAccionMasiva()" />
+    } @else {
+      <p-button label="Rechazar Todo" icon="pi pi-times" severity="danger" (onClick)="confirmarAccionMasiva()" [disabled]="!comentarioAccionMasiva() || comentarioAccionMasiva()!.trim().length === 0" />
+    }
+  </ng-template>
+</p-dialog>
+
+<!-- ==================== VISTA: MARCOS NORMATIVOS ==================== -->
+@if (vistaActual() === 'marcos') {
+<div class="surface-ground min-h-screen">
+  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
+    <div class="flex justify-content-between align-items-center">
+      <div class="flex align-items-center gap-3">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="irADashboard()" />
+        <div>
+          <h1 class="text-xl font-bold text-900 m-0">Marcos Normativos</h1>
+          <p class="text-500 text-sm m-0">Gestion de marcos de cumplimiento</p>
+        </div>
+      </div>
+      <p-button label="Nuevo Marco" icon="pi pi-plus" (onClick)="abrirMarcoDialog()" />
+    </div>
+  </div>
+
+  <div class="p-4">
+    <div class="grid">
+      @for (marco of marcosNormativos(); track marco.id) {
+        <div class="col-12 md:col-6 lg:col-4">
+          <div class="surface-card border-round-lg p-4 h-full">
+            <div class="flex justify-content-between align-items-start mb-3">
+              <div>
+                <h3 class="text-lg font-semibold text-900 m-0">{{ marco.acronimo }}</h3>
+                <p class="text-500 text-sm m-0">{{ marco.nombre }}</p>
+              </div>
+              <p-tag [value]="marco.activo ? 'Activo' : 'Inactivo'" [severity]="marco.activo ? 'success' : 'secondary'" />
+            </div>
+            <p class="text-600 text-sm mb-3">{{ marco.descripcion }}</p>
+            <div class="flex justify-content-between align-items-center text-sm text-500">
+              <span>Version: {{ marco.version }}</span>
+              <span>{{ marco.requisitos.length }} requisitos</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+}
+
+<!-- ==================== VISTA: REPORTES ==================== -->
+@if (vistaActual() === 'reportes') {
+<div class="surface-ground min-h-screen">
+  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
+    <div class="flex justify-content-between align-items-center">
+      <div class="flex align-items-center gap-3">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="irADashboard()" />
+        <div>
+          <h1 class="text-xl font-bold text-900 m-0">Reportes de Cumplimiento</h1>
+          <p class="text-500 text-sm m-0">Genera y descarga reportes</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-4">
+    <!-- Formulario de nuevo reporte -->
+    <div class="surface-card border-round-lg p-4 mb-4">
+      <h3 class="text-lg font-semibold text-900 m-0 mb-4">Generar Nuevo Reporte</h3>
+      <div class="grid">
+        <div class="col-12 md:col-4">
+          <label class="block text-sm font-medium mb-2">Nombre del Reporte</label>
+          <input pInputText class="w-full" [ngModel]="nuevoReporte().nombre"
+                 (ngModelChange)="actualizarReporteNombre($event)"
+                 placeholder="Ej: Reporte Q4 2024" />
+        </div>
+        <div class="col-12 md:col-4">
+          <label class="block text-sm font-medium mb-2">Tipo</label>
+          <p-select [options]="tiposReporte" optionLabel="label" optionValue="value" styleClass="w-full"
+                    [ngModel]="nuevoReporte().tipo"
+                    (ngModelChange)="actualizarReporteTipo($event)" />
+        </div>
+        <div class="col-12 md:col-4">
+          <label class="block text-sm font-medium mb-2">Formato</label>
+          <p-select [options]="formatosReporte" optionLabel="label" optionValue="value" styleClass="w-full"
+                    [ngModel]="nuevoReporte().formato"
+                    (ngModelChange)="actualizarReporteFormato($event)" />
+        </div>
+        <div class="col-12 md:col-4">
+          <label class="block text-sm font-medium mb-2">Marco Normativo</label>
+          <p-select [options]="marcosNormativos()" optionLabel="acronimo" optionValue="id" styleClass="w-full"
+                    [ngModel]="nuevoReporte().marcoNormativo"
+                    (ngModelChange)="actualizarReporteMarco($event)"
+                    placeholder="Todos los marcos" [showClear]="true" />
+        </div>
+        <div class="col-12 md:col-4">
+          <label class="block text-sm font-medium mb-2">Fecha Inicio</label>
+          <p-datePicker styleClass="w-full" [ngModel]="nuevoReporte().periodo?.inicio"
+                        (ngModelChange)="actualizarReportePeriodoInicio($event)" />
+        </div>
+        <div class="col-12 md:col-4">
+          <label class="block text-sm font-medium mb-2">Fecha Fin</label>
+          <p-datePicker styleClass="w-full" [ngModel]="nuevoReporte().periodo?.fin"
+                        (ngModelChange)="actualizarReportePeriodoFin($event)" />
+        </div>
+        <div class="col-12">
+          <p-button label="Generar Reporte" icon="pi pi-file" [loading]="reporteEnGeneracion()" (onClick)="generarReporte()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de reportes existentes -->
+    <div class="surface-card border-round-lg p-4">
+      <h3 class="text-lg font-semibold text-900 m-0 mb-4">Reportes Generados</h3>
+      <p-table [value]="reportes()" styleClass="p-datatable-sm">
+        <ng-template #header>
+          <tr>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Marco</th>
+            <th>Periodo</th>
+            <th>Fecha Generacion</th>
+            <th>Generado Por</th>
+            <th>Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-reporte>
+          <tr>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <i [class]="getFormatoIcon(reporte.formato)" class="text-500"></i>
+                <span>{{ reporte.nombre }}</span>
+              </div>
+            </td>
+            <td>{{ getTipoReporteLabel(reporte.tipo) }}</td>
+            <td>{{ getMarcoNombre(reporte.marcoNormativo) || 'Todos' }}</td>
+            <td>{{ reporte.periodo.inicio | date:'dd/MM/yy' }} - {{ reporte.periodo.fin | date:'dd/MM/yy' }}</td>
+            <td>{{ reporte.fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ reporte.generadoPor }}</td>
+            <td>
+              <div class="flex gap-1">
+                <p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="secondary" (onClick)="descargarReporte(reporte)" />
+                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="eliminarReporte(reporte)" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ==================== VISTA: HISTORIAL ==================== -->
+@if (vistaActual() === 'historial') {
+<div class="surface-ground min-h-screen">
+  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
+    <div class="flex justify-content-between align-items-center">
+      <div class="flex align-items-center gap-3">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="irADashboard()" />
+        <div>
+          <h1 class="text-xl font-bold text-900 m-0">Historial de Auditoria</h1>
+          <p class="text-500 text-sm m-0">Registro de todas las acciones</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-4">
+    <!-- Filtros -->
+    <div class="surface-card border-round-lg p-4 mb-4">
+      <div class="grid">
+        <div class="col-12 md:col-3">
+          <label class="block text-sm font-medium mb-2">Accion</label>
+          <p-select [options]="accionesHistorial" optionLabel="label" optionValue="value" styleClass="w-full"
+                    [(ngModel)]="filtroHistorialAccion" placeholder="Todas" />
+        </div>
+        <div class="col-12 md:col-3">
+          <label class="block text-sm font-medium mb-2">Entidad</label>
+          <p-select [options]="entidadesHistorial" optionLabel="label" optionValue="value" styleClass="w-full"
+                    [(ngModel)]="filtroHistorialEntidad" placeholder="Todas" />
+        </div>
+        <div class="col-12 md:col-3">
+          <label class="block text-sm font-medium mb-2">Desde</label>
+          <p-datePicker styleClass="w-full" [(ngModel)]="filtroHistorialFechaInicio" placeholder="Fecha inicio" />
+        </div>
+        <div class="col-12 md:col-3">
+          <label class="block text-sm font-medium mb-2">Hasta</label>
+          <p-datePicker styleClass="w-full" [(ngModel)]="filtroHistorialFechaFin" placeholder="Fecha fin" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="surface-card border-round-lg p-4">
+      <p-timeline [value]="historialFiltrado()">
+        <ng-template #content let-evento>
+          <div class="surface-card border-round p-3 mb-2">
+            <div class="flex justify-content-between align-items-start mb-2">
+              <div class="flex align-items-center gap-2">
+                <p-tag [value]="getAccionLabel(evento.accion)" [severity]="getAccionSeverity(evento.accion)" />
+                <span class="font-medium text-900">{{ evento.entidadNombre }}</span>
+              </div>
+              <span class="text-500 text-sm">{{ evento.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <p class="text-600 text-sm m-0 mb-2">{{ evento.detalles }}</p>
+            <div class="flex align-items-center gap-2 text-500 text-sm">
+              <i class="pi pi-user"></i>
+              <span>{{ evento.usuario }}</span>
+            </div>
+          </div>
+        </ng-template>
+      </p-timeline>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ==================== VISTA: MAPEO DE CONTROLES ==================== -->
+@if (vistaActual() === 'mapeo') {
+<div class="surface-ground min-h-screen">
+  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
+    <div class="flex justify-content-between align-items-center">
+      <div class="flex align-items-center gap-3">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="irADashboard()" />
+        <div>
+          <h1 class="text-xl font-bold text-900 m-0">Mapeo de Controles</h1>
+          <p class="text-500 text-sm m-0">Relacion entre requisitos y controles</p>
+        </div>
+      </div>
+      <p-button label="Detectar Gaps" icon="pi pi-search" severity="warn" (onClick)="detectarControlesFaltantes()" />
+    </div>
+  </div>
+
+  <div class="p-4">
+    <!-- Resumen -->
+    <div class="grid mb-4">
+      <div class="col-12 md:col-4">
+        <div class="surface-card border-round-lg p-4">
+          <div class="flex align-items-center gap-3">
+            <div class="flex align-items-center justify-content-center bg-green-100 border-round" style="width: 48px; height: 48px;">
+              <i class="pi pi-check-circle text-green-500 text-xl"></i>
+            </div>
+            <div>
+              <span class="text-500 text-sm block">Implementados</span>
+              <span class="text-2xl font-bold text-900">{{ totalControlesImplementados() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-4">
+        <div class="surface-card border-round-lg p-4">
+          <div class="flex align-items-center gap-3">
+            <div class="flex align-items-center justify-content-center bg-yellow-100 border-round" style="width: 48px; height: 48px;">
+              <i class="pi pi-exclamation-circle text-yellow-500 text-xl"></i>
+            </div>
+            <div>
+              <span class="text-500 text-sm block">Parciales</span>
+              <span class="text-2xl font-bold text-900">{{ totalControlesParciales() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 md:col-4">
+        <div class="surface-card border-round-lg p-4">
+          <div class="flex align-items-center gap-3">
+            <div class="flex align-items-center justify-content-center border-round" [class]="getEfectividadClass(promedioEfectividad())" style="width: 48px; height: 48px; background-color: var(--surface-100);">
+              <i class="pi pi-chart-bar text-xl"></i>
+            </div>
+            <div>
+              <span class="text-500 text-sm block">Efectividad Promedio</span>
+              <span class="text-2xl font-bold" [class]="getEfectividadClass(promedioEfectividad())">{{ promedioEfectividad() }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de mapeo -->
+    <div class="surface-card border-round-lg p-4 mb-4">
+      <h3 class="text-lg font-semibold text-900 m-0 mb-4">Controles Mapeados</h3>
+      <p-table [value]="mapeoControles()" styleClass="p-datatable-sm">
+        <ng-template #header>
+          <tr>
+            <th>Codigo</th>
+            <th>Requisito</th>
+            <th>Marco</th>
+            <th>Control</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Efectividad</th>
+            <th>Ultima Evaluacion</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-mapeo>
+          <tr>
+            <td class="font-medium">{{ mapeo.requisitoNormativoCodigo }}</td>
+            <td>{{ mapeo.requisitoNormativoNombre }}</td>
+            <td>{{ mapeo.marcoNormativo }}</td>
+            <td>{{ mapeo.controlNombre }}</td>
+            <td><p-tag [value]="getTipoControlLabel(mapeo.tipoControl)" [severity]="getTipoControlSeverity(mapeo.tipoControl)" /></td>
+            <td><p-tag [value]="getEstadoImplementacionLabel(mapeo.estadoImplementacion)" [severity]="getEstadoImplementacionSeverity(mapeo.estadoImplementacion)" /></td>
+            <td>
+              <span class="font-semibold" [class]="getEfectividadClass(mapeo.efectividad)">{{ mapeo.efectividad }}%</span>
+            </td>
+            <td>{{ mapeo.ultimaEvaluacion | date:'dd/MM/yyyy' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- Controles faltantes -->
+    @if (controlesFaltantes().length > 0) {
+      <div class="surface-card border-round-lg p-4 mb-4">
+        <h3 class="text-lg font-semibold text-900 m-0 mb-4">Controles Faltantes Detectados</h3>
+        <div class="flex flex-column gap-3">
+          @for (control of controlesFaltantes(); track control.id) {
+            <div class="p-3 border-1 surface-border border-round">
+              <div class="flex justify-content-between align-items-start mb-2">
+                <div>
+                  <span class="font-semibold text-900">{{ control.requisitoNormativoCodigo }} - {{ control.requisitoNormativoNombre }}</span>
+                  <p class="text-500 text-sm m-0">{{ control.marcoNormativo }}</p>
+                </div>
+                <div class="flex align-items-center gap-2">
+                  <p-tag [value]="getPrioridadControlLabel(control.prioridadImplementacion)" [severity]="getPrioridadControlSeverity(control.prioridadImplementacion)" />
+                  <p-tag [value]="getEstadoControlFaltanteLabel(control.estado)" [severity]="getEstadoControlFaltanteSeverity(control.estado)" />
+                </div>
+              </div>
+              <p class="text-600 text-sm mb-2"><strong>Control Sugerido:</strong> {{ control.controlSugerido }}</p>
+              <p class="text-500 text-sm mb-3">{{ control.descripcionControl }}</p>
+              <div class="flex justify-content-end gap-2">
+                <p-button label="Aceptar" icon="pi pi-check" size="small" severity="success" (onClick)="aceptarControlFaltante(control)" />
+                <p-button label="Rechazar" icon="pi pi-times" size="small" severity="danger" [outlined]="true" (onClick)="rechazarControlFaltante(control)" />
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Acciones correctivas -->
+    <div class="surface-card border-round-lg p-4">
+      <div class="flex justify-content-between align-items-center mb-4">
+        <h3 class="text-lg font-semibold text-900 m-0">Acciones Correctivas</h3>
+        <div class="flex gap-2">
+          <p-tag value="Pendientes" severity="warn">{{ accionesCorrectivasPendientes() }}</p-tag>
+          <p-tag value="En Progreso" severity="info">{{ accionesCorrectivasEnProgreso() }}</p-tag>
+          <p-tag value="Completadas" severity="success">{{ accionesCorrectivasCompletadas() }}</p-tag>
+        </div>
+      </div>
+      <p-table [value]="accionesCorrectivas()" styleClass="p-datatable-sm">
+        <ng-template #header>
+          <tr>
+            <th>Titulo</th>
+            <th>Tipo</th>
+            <th>Prioridad</th>
+            <th>Responsable</th>
+            <th>Vencimiento</th>
+            <th>Estado</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-accion>
+          <tr>
+            <td>{{ accion.titulo }}</td>
+            <td><p-tag [value]="getTipoAccionLabel(accion.tipoAccion)" [severity]="getTipoAccionSeverity(accion.tipoAccion)" /></td>
+            <td><p-tag [value]="accion.prioridad | uppercase" [severity]="getPrioridadControlSeverity(accion.prioridad)" /></td>
+            <td>{{ accion.responsable }}</td>
+            <td>{{ accion.fechaVencimiento | date:'dd/MM/yyyy' }}</td>
+            <td><p-tag [value]="getEstadoAccionLabel(accion.estado)" [severity]="getEstadoAccionSeverity(accion.estado)" /></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ==================== VISTA: EVIDENCIAS ==================== -->
+@if (vistaActual() === 'evidencias') {
+<div class="surface-ground min-h-screen">
+  <div class="surface-card px-4 py-3 border-bottom-1 surface-border">
+    <div class="flex justify-content-between align-items-center">
+      <div class="flex align-items-center gap-3">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="irADashboard()" />
+        <div>
+          <h1 class="text-xl font-bold text-900 m-0">Repositorio de Evidencias</h1>
+          <p class="text-500 text-sm m-0">Gestion de documentos de soporte</p>
+        </div>
+      </div>
+      <p-fileUpload mode="basic" chooseLabel="Subir Evidencia" (onUpload)="onUploadEvidencia($event)" />
+    </div>
+  </div>
+
+  <div class="p-4">
+    <div class="surface-card border-round-lg p-4">
+      <p-table [value]="evidencias()" styleClass="p-datatable-sm">
+        <ng-template #header>
+          <tr>
+            <th>Nombre</th>
+            <th>Descripcion</th>
+            <th>Tamano</th>
+            <th>Fecha Carga</th>
+            <th>Vigencia</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-evidencia>
+          <tr>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <i [class]="getTipoEvidenciaIcon(evidencia.tipo)" class="text-500"></i>
+                <span>{{ evidencia.nombre }}</span>
+              </div>
+            </td>
+            <td>{{ evidencia.descripcion || '-' }}</td>
+            <td>{{ formatFileSize(evidencia.tamano) }}</td>
+            <td>{{ evidencia.fechaCarga | date:'dd/MM/yyyy' }}</td>
+            <td>{{ evidencia.vigencia ? (evidencia.vigencia | date:'dd/MM/yyyy') : 'Sin vigencia' }}</td>
+            <td><p-tag [value]="getEstadoEvidenciaLabel(evidencia.estado)" [severity]="getEstadoEvidenciaSeverity(evidencia.estado)" /></td>
+            <td>
+              <div class="flex gap-1">
+                <p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="secondary" (onClick)="descargarEvidencia(evidencia)" />
+                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="eliminarEvidencia(evidencia)" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ==================== DIALOGS ==================== -->
+
+<!-- Dialog: Nueva/Editar Revisión con Stepper Multistep -->
+<p-dialog [header]="modoEdicionAsignacion() ? 'Editar Revisión' : 'Nueva Revisión'" [(visible)]="showAsignarDialog" [modal]="true" [style]="{width: '900px'}" [draggable]="false">
+  <p-stepper [(value)]="pasoAsignacion" [linear]="true">
+    <!-- Headers de los pasos -->
+    <p-step-list>
+      <p-step [value]="0">
+        <ng-template #content let-activateCallback="activateCallback" let-value="value">
+          <button class="p-step-header" (click)="activateCallback()">
+            <span class="p-step-number">1</span>
+            <span class="p-step-title">Tipo de Revisión</span>
+          </button>
+        </ng-template>
+      </p-step>
+      <p-step [value]="1">
+        <ng-template #content let-activateCallback="activateCallback" let-value="value">
+          <button class="p-step-header" (click)="activateCallback()">
+            <span class="p-step-number">2</span>
+            <span class="p-step-title">Información Básica</span>
+          </button>
+        </ng-template>
+      </p-step>
+      <p-step [value]="2">
+        <ng-template #content let-activateCallback="activateCallback" let-value="value">
+          <button class="p-step-header" (click)="activateCallback()">
+            <span class="p-step-number">3</span>
+            <span class="p-step-title">{{ nuevaAsignacion().tipoRevision === 'interna' ? 'Usuarios' : 'Evaluados' }}</span>
+          </button>
+        </ng-template>
+      </p-step>
+      <p-step [value]="3">
+        <ng-template #content let-activateCallback="activateCallback" let-value="value">
+          <button class="p-step-header" (click)="activateCallback()">
+            <span class="p-step-number">4</span>
+            <span class="p-step-title">Configuración</span>
+          </button>
+        </ng-template>
+      </p-step>
+      <p-step [value]="4">
+        <ng-template #content let-activateCallback="activateCallback" let-value="value">
+          <button class="p-step-header" [disabled]="!revisionCreada()">
+            <span class="p-step-number"><i class="pi pi-check"></i></span>
+            <span class="p-step-title">Completado</span>
+          </button>
+        </ng-template>
+      </p-step>
+    </p-step-list>
+
+    <!-- Contenido de los pasos -->
+    <p-step-panels>
+      <!-- ==================== PASO 1: TIPO DE REVISIÓN ==================== -->
+      <p-step-panel [value]="0">
+        <ng-template #content let-activateCallback="activateCallback">
+          <div class="flex flex-column gap-4 p-3">
+            <div class="text-center mb-2">
+              <h3 class="text-xl font-semibold text-900 m-0">¿Qué tipo de revisión deseas crear?</h3>
+              <p class="text-500 mt-2 mb-0">Selecciona el tipo de usuarios que realizarán la evaluación</p>
+            </div>
+
+            <div class="grid">
+              <!-- Opción Interna -->
+              <div class="col-12 md:col-6">
+                <div class="surface-100 border-round p-4 cursor-pointer transition-all transition-duration-200 hover:surface-200 border-2"
+                     [class.border-primary]="nuevaAsignacion().tipoRevision === 'interna'"
+                     [class.surface-border]="nuevaAsignacion().tipoRevision !== 'interna'"
+                     (click)="actualizarAsignacionTipoRevision('interna')">
+                  <div class="flex flex-column align-items-center text-center gap-3">
+                    <div class="flex align-items-center justify-content-center border-circle bg-blue-100" style="width: 64px; height: 64px;">
+                      <i class="pi pi-building text-blue-600 text-3xl"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-semibold text-900 m-0">Revisión Interna</h4>
+                      <p class="text-500 text-sm m-0 mt-2">Usuarios de la plataforma realizarán la evaluación. Selecciona empleados existentes.</p>
+                    </div>
+                    <div class="flex align-items-center gap-2">
+                      <p-radiobutton name="tipoRevision" value="interna"
+                                     [ngModel]="nuevaAsignacion().tipoRevision"
+                                     (ngModelChange)="actualizarAsignacionTipoRevision($event)" />
+                      <span class="text-sm font-medium">Seleccionar</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Opción Externa -->
+              <div class="col-12 md:col-6">
+                <div class="surface-100 border-round p-4 cursor-pointer transition-all transition-duration-200 hover:surface-200 border-2"
+                     [class.border-primary]="nuevaAsignacion().tipoRevision === 'externa'"
+                     [class.surface-border]="nuevaAsignacion().tipoRevision !== 'externa'"
+                     (click)="actualizarAsignacionTipoRevision('externa')">
+                  <div class="flex flex-column align-items-center text-center gap-3">
+                    <div class="flex align-items-center justify-content-center border-circle bg-purple-100" style="width: 64px; height: 64px;">
+                      <i class="pi pi-globe text-purple-600 text-3xl"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-semibold text-900 m-0">Revisión Externa</h4>
+                      <p class="text-500 text-sm m-0 mt-2">Evaluadores externos accederán vía portal. Ingresa nombre y correo de cada uno.</p>
+                    </div>
+                    <div class="flex align-items-center gap-2">
+                      <p-radiobutton name="tipoRevision" value="externa"
+                                     [ngModel]="nuevaAsignacion().tipoRevision"
+                                     (ngModelChange)="actualizarAsignacionTipoRevision($event)" />
+                      <span class="text-sm font-medium">Seleccionar</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-content-end pt-4 border-top-1 surface-border mt-4">
+            <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(1)" />
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ==================== PASO 2: INFORMACIÓN BÁSICA ==================== -->
+      <p-step-panel [value]="1">
+        <ng-template #content let-activateCallback="activateCallback">
+          <div class="flex flex-column gap-4 p-3">
+            <div class="surface-100 border-round p-3">
+              <h4 class="text-sm font-semibold text-primary m-0 mb-3">
+                <i class="pi pi-info-circle mr-2"></i>Datos de la Revisión
+              </h4>
+              <div class="grid">
+                <div class="col-12 md:col-6">
+                  <label class="block font-medium mb-2">Cuestionarios *</label>
+                  <p-multiselect [options]="cuestionariosOptions()" optionLabel="label" optionValue="value" styleClass="w-full"
+                            [ngModel]="nuevaAsignacion().cuestionarioIds"
+                            (ngModelChange)="actualizarAsignacionCuestionarios($event)"
+                            placeholder="Seleccionar cuestionarios" [filter]="true" filterBy="label"
+                            display="chip" [showClear]="true">
+                    <ng-template #item let-option>
+                      <div class="flex align-items-center justify-content-between w-full">
+                        <span>{{ option.label }}</span>
+                        <p-tag [value]="option.marco" styleClass="text-xs" />
+                      </div>
+                    </ng-template>
+                  </p-multiselect>
+                </div>
+                <div class="col-12 md:col-6">
+                  <label class="block font-medium mb-2">Título de la Revisión *</label>
+                  <input pInputText class="w-full" [ngModel]="nuevaAsignacion().titulo"
+                         (ngModelChange)="actualizarAsignacionTitulo($event)"
+                         [placeholder]="nuevaAsignacion().tipoRevision === 'interna' ? 'Ej: Evaluación Q4 2024' : 'Ej: Auditoría Externa Q4 2024'" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Aprobadores -->
+            <div class="surface-100 border-round p-3">
+              <h4 class="text-sm font-semibold text-primary m-0 mb-3">
+                <i class="pi pi-user-edit mr-2"></i>Aprobadores
+              </h4>
+              <div class="grid">
+                <div class="col-12">
+                  <label class="block font-medium mb-2">Aprobadores</label>
+                  <p-multiselect [options]="usuariosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                                 [ngModel]="nuevaAsignacion().aprobadores"
+                                 (ngModelChange)="actualizarAsignacionAprobadores($event)"
+                                 placeholder="Seleccionar aprobadores" [filter]="true" filterBy="label" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-content-between pt-4 border-top-1 surface-border mt-4">
+            <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="activateCallback(0)" />
+            <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(2)" />
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ==================== PASO 3: EVALUADOS ==================== -->
+      <p-step-panel [value]="2">
+        <ng-template #content let-activateCallback="activateCallback">
+          <div class="flex flex-column gap-4 p-3">
+            <!-- Indicador visual del tipo seleccionado -->
+            <div class="flex align-items-center gap-3 p-3 border-round"
+                 [class.bg-blue-50]="nuevaAsignacion().tipoRevision === 'interna'"
+                 [class.bg-purple-50]="nuevaAsignacion().tipoRevision === 'externa'">
+              <i class="text-xl"
+                 [class.pi]="true"
+                 [class.pi-building]="nuevaAsignacion().tipoRevision === 'interna'"
+                 [class.pi-globe]="nuevaAsignacion().tipoRevision === 'externa'"
+                 [class.text-blue-600]="nuevaAsignacion().tipoRevision === 'interna'"
+                 [class.text-purple-600]="nuevaAsignacion().tipoRevision === 'externa'"></i>
+              <span class="font-medium"
+                    [class.text-blue-700]="nuevaAsignacion().tipoRevision === 'interna'"
+                    [class.text-purple-700]="nuevaAsignacion().tipoRevision === 'externa'">
+                {{ nuevaAsignacion().tipoRevision === 'interna' ? 'Revisión Interna - Selecciona usuarios de la plataforma' : 'Revisión Externa - Ingresa los datos de evaluadores externos' }}
+              </span>
+            </div>
+
+            <!-- CONTENIDO PARA REVISION INTERNA -->
+            @if (nuevaAsignacion().tipoRevision === 'interna') {
+              <div class="surface-100 border-round p-3">
+                <h4 class="text-sm font-semibold text-primary m-0 mb-3">
+                  <i class="pi pi-users mr-2"></i>Usuarios Asignados
+                </h4>
+                <div class="grid">
+                  <div class="col-12">
+                    <label class="block font-medium mb-2">Usuarios que realizarán la evaluación</label>
+                    <p-multiselect [options]="usuariosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                                   [ngModel]="nuevaAsignacion().usuariosAsignados"
+                                   (ngModelChange)="actualizarAsignacionUsuarios($event)"
+                                   placeholder="Seleccionar usuarios" [filter]="true" filterBy="label" />
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- CONTENIDO PARA REVISION EXTERNA -->
+            @if (nuevaAsignacion().tipoRevision === 'externa') {
+              <div class="surface-100 border-round p-3">
+                <h4 class="text-sm font-semibold text-primary m-0 mb-3">
+                  <i class="pi pi-envelope mr-2"></i>Evaluadores Externos
+                </h4>
+                <div class="grid">
+                  <!-- Opción para descargar template de Excel -->
+                  <div class="col-12">
+                    <div class="flex align-items-center gap-3 p-3 bg-green-50 border-round mb-3">
+                      <i class="pi pi-file-excel text-green-600 text-xl"></i>
+                      <div class="flex-1">
+                        <span class="text-sm font-medium text-green-700">Carga masiva de evaluados</span>
+                        <p class="text-xs text-green-600 m-0 mt-1">Descarga el template, llénalo con los datos y súbelo</p>
+                      </div>
+                      <p-button label="Descargar Template" icon="pi pi-download" size="small" severity="success" [outlined]="true" (onClick)="descargarTemplateExcel()" />
+                      <p-fileUpload mode="basic" chooseLabel="Subir Archivo" accept=".xlsx,.xls,.csv" [auto]="true" (onSelect)="onUploadEvaluadosExcel($event)" styleClass="p-button-sm" />
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <label class="block font-medium mb-2">Agregar Evaluado Externo</label>
+                    <div class="flex gap-2">
+                      <input pInputText class="flex-1" [ngModel]="nuevoEvaluadoExterno().nombre"
+                             (ngModelChange)="actualizarNuevoEvaluadoNombre($event)"
+                             placeholder="Nombre completo" />
+                      <input pInputText class="flex-1" [ngModel]="nuevoEvaluadoExterno().email"
+                             (ngModelChange)="actualizarNuevoEvaluadoEmail($event)"
+                             placeholder="correo@ejemplo.com" />
+                      <p-button icon="pi pi-plus" label="Agregar" (onClick)="agregarEvaluadoExterno()" />
+                    </div>
+                  </div>
+
+                  @if (nuevaAsignacion().evaluadosExternos && nuevaAsignacion().evaluadosExternos!.length > 0) {
+                    <div class="col-12">
+                      <label class="block text-sm font-medium text-700 mb-2">Evaluados externos agregados:</label>
+                      <div class="flex flex-column gap-2">
+                        @for (evaluado of nuevaAsignacion().evaluadosExternos; track evaluado.id) {
+                          <div class="flex align-items-center gap-2 bg-surface-0 border-round px-3 py-2 border-1 surface-border">
+                            <p-avatar [label]="getAvatarLabel(evaluado.nombre)" shape="circle" styleClass="bg-purple-500 w-2rem h-2rem text-sm" />
+                            <div class="flex flex-column flex-1">
+                              <span class="text-sm font-medium">{{ evaluado.nombre }}</span>
+                              <span class="text-xs text-500">{{ evaluado.email }}</span>
+                            </div>
+                            <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small"
+                                      severity="danger" (onClick)="eliminarEvaluadoExterno(evaluado.id)" />
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="flex justify-content-between pt-4 border-top-1 surface-border mt-4">
+            <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="activateCallback(1)" />
+            <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(3)" />
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ==================== PASO 4: ALCANCE Y CONFIGURACIÓN ==================== -->
+      <p-step-panel [value]="3">
+        <ng-template #content let-activateCallback="activateCallback">
+          <div class="flex flex-column gap-4 p-3">
+            <!-- Alcance -->
+            <div class="surface-100 border-round p-3">
+              <h4 class="text-sm font-semibold text-primary m-0 mb-3">
+                <i class="pi pi-sitemap mr-2"></i>Alcance de la Evaluación
+              </h4>
+              <div class="grid">
+                <!-- Radio Button para seleccionar tipo de alcance -->
+                <div class="col-12">
+                  <label class="block font-medium mb-2">Tipo de Alcance</label>
+                  <div class="flex align-items-center gap-4">
+                    <div class="flex align-items-center gap-2">
+                      <p-radioButton name="tipoAlcance" value="activos"
+                                     [ngModel]="tipoAlcanceSeleccionado()"
+                                     (ngModelChange)="actualizarTipoAlcance($event)" />
+                      <label>Activos</label>
+                    </div>
+                    <div class="flex align-items-center gap-2">
+                      <p-radioButton name="tipoAlcance" value="objetivos"
+                                     [ngModel]="tipoAlcanceSeleccionado()"
+                                     (ngModelChange)="actualizarTipoAlcance($event)" />
+                      <label>Objetivos/Procesos</label>
+                    </div>
+                  </div>
+                </div>
+                <!-- Select de Activos (visible solo si tipo es 'activos') -->
+                @if (tipoAlcanceSeleccionado() === 'activos') {
+                  <div class="col-12">
+                    <label class="block font-medium mb-2">Activos Objetivo</label>
+                    <p-multiselect [options]="activosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                                   [ngModel]="nuevaAsignacion().activosObjetivo"
+                                   (ngModelChange)="actualizarAsignacionActivos($event)"
+                                   placeholder="Seleccionar activos" [filter]="true" filterBy="label" />
+                  </div>
+                }
+                <!-- Select de Procesos/Objetivos (visible solo si tipo es 'objetivos') -->
+                @if (tipoAlcanceSeleccionado() === 'objetivos') {
+                  <div class="col-12">
+                    <label class="block font-medium mb-2">Procesos Objetivo</label>
+                    <p-multiselect [options]="procesosDisponibles" optionLabel="label" optionValue="value" styleClass="w-full"
+                                   [ngModel]="nuevaAsignacion().procesosObjetivo"
+                                   (ngModelChange)="actualizarAsignacionProcesos($event)"
+                                   placeholder="Seleccionar procesos" [filter]="true" filterBy="label" />
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Configuración de fechas -->
+            <div class="surface-100 border-round p-3">
+              <h4 class="text-sm font-semibold text-primary m-0 mb-3">
+                <i class="pi pi-calendar mr-2"></i>Fechas
+              </h4>
+              <div class="grid">
+                <div class="col-12 md:col-6">
+                  <label class="block font-medium mb-2">Fecha Inicio</label>
+                  <p-datePicker styleClass="w-full" [ngModel]="nuevaAsignacion().fechaInicio"
+                                (ngModelChange)="actualizarAsignacionFechaInicio($event)" />
+                </div>
+                <div class="col-12 md:col-6">
+                  <label class="block font-medium mb-2">Fecha Vencimiento</label>
+                  <p-datePicker styleClass="w-full" [ngModel]="nuevaAsignacion().fechaVencimiento"
+                                (ngModelChange)="actualizarAsignacionFechaVencimiento($event)" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Instrucciones y opciones -->
+            <div class="surface-100 border-round p-3">
+              <h4 class="text-sm font-semibold text-primary m-0 mb-3">
+                <i class="pi pi-cog mr-2"></i>Configuración Adicional
+              </h4>
+              <div class="grid">
+                <div class="col-12">
+                  <label class="block font-medium mb-2">Instrucciones</label>
+                  <textarea pTextarea class="w-full" rows="2" [ngModel]="nuevaAsignacion().instrucciones"
+                            (ngModelChange)="actualizarAsignacionInstrucciones($event)"
+                            [placeholder]="nuevaAsignacion().tipoRevision === 'interna' ? 'Instrucciones para los asignados...' : 'Instrucciones para los evaluadores externos...'"></textarea>
+                </div>
+                <div class="col-12">
+                  <div class="flex align-items-center gap-4">
+                    <div class="flex align-items-center gap-2">
+                      <p-checkbox [ngModel]="nuevaAsignacion().recordatorios" [binary]="true"
+                                  (ngModelChange)="actualizarAsignacionRecordatorios($event)" />
+                      <span>Enviar recordatorios automáticos</span>
+                    </div>
+                    @if (nuevaAsignacion().tipoRevision === 'interna') {
+                      <div class="flex align-items-center gap-2">
+                        <p-checkbox [ngModel]="nuevaAsignacion().recurrencia?.habilitada" [binary]="true"
+                                    (ngModelChange)="actualizarAsignacionRecurrenciaHabilitada($event)" />
+                        <span>Recurrencia</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+                @if (nuevaAsignacion().tipoRevision === 'interna' && nuevaAsignacion().recurrencia?.habilitada) {
+                  <div class="col-12">
+                    <div class="grid">
+                      <div class="col-12 md:col-6">
+                        <label class="block text-sm mb-2">Frecuencia</label>
+                        <p-select [options]="frecuenciaOptions" optionLabel="label" optionValue="value" styleClass="w-full"
+                                  [ngModel]="nuevaAsignacion().recurrencia?.frecuencia"
+                                  (ngModelChange)="actualizarAsignacionRecurrenciaFrecuencia($event)" />
+                      </div>
+                      <div class="col-12 md:col-6">
+                        <label class="block text-sm mb-2">Repetir cada</label>
+                        <div class="flex align-items-center gap-2">
+                          <p-inputNumber [ngModel]="nuevaAsignacion().recurrencia?.intervalo"
+                                         (ngModelChange)="actualizarAsignacionRecurrenciaIntervalo($event)"
+                                         [min]="1" [max]="12" styleClass="w-6rem" />
+                          <span class="text-500">{{ nuevaAsignacion().recurrencia?.frecuencia === 'diaria' ? 'día(s)' : nuevaAsignacion().recurrencia?.frecuencia === 'semanal' ? 'semana(s)' : nuevaAsignacion().recurrencia?.frecuencia === 'mensual' ? 'mes(es)' : 'periodo(s)' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-content-between pt-4 border-top-1 surface-border mt-4">
+            <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [text]="true" (onClick)="activateCallback(2)" />
+            <p-button [label]="modoEdicionAsignacion() ? 'Guardar Cambios' : 'Crear Revisión'" icon="pi pi-check" (onClick)="crearRevisionYMostrarExito(activateCallback)" />
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ==================== PASO 5: ÉXITO ==================== -->
+      <p-step-panel [value]="4">
+        <ng-template #content let-activateCallback="activateCallback">
+          <div class="flex flex-column align-items-center p-4">
+            <!-- Icono de éxito -->
+            <div class="flex align-items-center justify-content-center bg-green-100 border-circle mb-4" style="width: 80px; height: 80px;">
+              <i class="pi pi-check-circle text-green-500 text-5xl"></i>
+            </div>
+
+            <h2 class="text-2xl font-bold text-900 m-0 mb-2">¡Revisión Creada Exitosamente!</h2>
+            <p class="text-500 text-center m-0 mb-4">
+              {{ nuevaAsignacion().tipoRevision === 'externa' ? 'La revisión externa ha sido configurada. Comparte el link con los evaluados.' : 'La revisión ha sido asignada a los usuarios seleccionados.' }}
+            </p>
+
+            <!-- Contenido específico para revisión externa -->
+            @if (nuevaAsignacion().tipoRevision === 'externa') {
+              <!-- Link de acceso -->
+              <div class="w-full surface-100 border-round p-4 mb-4">
+                <div class="flex align-items-center gap-2 mb-3">
+                  <i class="pi pi-link text-primary"></i>
+                  <span class="font-semibold text-900">Link de Acceso Externo</span>
+                </div>
+                <div class="flex align-items-center gap-2 bg-surface-0 border-round p-3 border-1 surface-border">
+                  <code class="flex-1 text-sm text-700 overflow-hidden text-overflow-ellipsis">{{ getLinkAccesoExterno() }}</code>
+                  <p-button icon="pi pi-copy" [rounded]="true" severity="secondary" pTooltip="Copiar link" (onClick)="copiarLinkAccesoExito()" />
+                </div>
+                <div class="flex gap-2 mt-3">
+                  <p-button label="Ir al Portal" icon="pi pi-external-link" severity="info" [outlined]="true" (onClick)="irAPortalExterno()" class="flex-1" />
+                </div>
+              </div>
+
+              <!-- Mensaje de envío de credenciales por correo -->
+              <div class="w-full surface-100 border-round p-4">
+                <div class="flex align-items-center gap-3">
+                  <div class="flex align-items-center justify-content-center bg-blue-100 border-circle" style="width: 48px; height: 48px;">
+                    <i class="pi pi-envelope text-blue-500 text-xl"></i>
+                  </div>
+                  <div class="flex-1">
+                    <span class="font-semibold text-900 block">Credenciales Enviadas</span>
+                    <p class="text-500 text-sm m-0 mt-1">
+                      Se ha enviado un correo electrónico a cada evaluado con sus credenciales de acceso al portal.
+                    </p>
+                  </div>
+                </div>
+                @if (nuevaAsignacion().evaluadosExternos && nuevaAsignacion().evaluadosExternos!.length > 0) {
+                  <div class="mt-3 pt-3 border-top-1 surface-border">
+                    <span class="text-sm text-700 font-medium">Evaluados notificados:</span>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                      @for (evaluado of nuevaAsignacion().evaluadosExternos; track evaluado.id) {
+                        <p-tag [value]="evaluado.nombre" icon="pi pi-user" styleClass="text-xs" />
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Contenido para revisión interna -->
+            @if (nuevaAsignacion().tipoRevision === 'interna') {
+              <div class="w-full surface-100 border-round p-4">
+                <div class="flex align-items-center gap-2 mb-3">
+                  <i class="pi pi-send text-primary"></i>
+                  <span class="font-semibold text-900">Notificaciones Enviadas</span>
+                </div>
+                <p class="text-500 m-0">
+                  Se ha notificado a los usuarios asignados sobre la nueva revisión. Pueden acceder desde su panel de tareas pendientes.
+                </p>
+              </div>
+            }
+          </div>
+
+          <div class="flex justify-content-center pt-4 border-top-1 surface-border mt-4">
+            <p-button label="Cerrar" icon="pi pi-times" severity="secondary" (onClick)="cerrarDialogoAsignacion()" />
+          </div>
+        </ng-template>
+      </p-step-panel>
+    </p-step-panels>
+  </p-stepper>
+</p-dialog>
+
+<!-- Dialog: Nuevo Marco -->
+<p-dialog header="Nuevo Marco Normativo" [(visible)]="showMarcoDialog" [modal]="true" [style]="{width: '500px'}" [draggable]="false">
+  <div class="flex flex-column gap-4">
+    <p class="text-500 m-0">Funcionalidad en desarrollo...</p>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="showMarcoDialog.set(false)" />
+  </ng-template>
+</p-dialog>
+
+<!-- ==================== VISTA: PORTAL EXTERNO ==================== -->
+@if (vistaActual() === 'portal-externo') {
+<div class="min-h-screen flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <div class="surface-card border-round-xl shadow-8 p-5" style="width: 100%; max-width: 450px;">
+    <!-- Header del Portal -->
+    <div class="text-center mb-5">
+      <div class="flex justify-content-center mb-3">
+        <div class="flex align-items-center justify-content-center bg-primary border-circle" style="width: 60px; height: 60px;">
+          <i class="pi pi-shield text-3xl text-white"></i>
+        </div>
+      </div>
+      <h1 class="text-2xl font-bold text-900 m-0">Portal de Evaluación</h1>
+      <p class="text-500 text-sm m-0 mt-2">Orca&#64;SecurityBy Design - Acceso Externo</p>
+    </div>
+
+    @if (!usuarioExternoAutenticado()) {
+      <!-- Formulario de Login -->
+      <div class="flex flex-column gap-4">
+        <div>
+          <label class="block text-sm font-medium text-700 mb-2">Correo electrónico</label>
+          <p-inputgroup>
+            <p-inputgroup-addon><i class="pi pi-envelope"></i></p-inputgroup-addon>
+            <input pInputText type="email" class="w-full" placeholder="tu@email.com"
+                   [ngModel]="loginExterno().email"
+                   (ngModelChange)="actualizarLoginEmail($event)" />
+          </p-inputgroup>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-700 mb-2">Contraseña</label>
+          <p-inputgroup>
+            <p-inputgroup-addon><i class="pi pi-lock"></i></p-inputgroup-addon>
+            <input pInputText type="password" class="w-full" placeholder="••••••••"
+                   [ngModel]="loginExterno().password"
+                   (ngModelChange)="actualizarLoginPassword($event)" />
+          </p-inputgroup>
+        </div>
+
+        <p-button label="Iniciar Sesión" icon="pi pi-sign-in" styleClass="w-full" (onClick)="loginUsuarioExterno()" />
+
+        <p-divider align="center">
+          <span class="text-500 text-sm">o</span>
+        </p-divider>
+
+        <p-button label="Volver al Dashboard" icon="pi pi-arrow-left" styleClass="w-full" severity="secondary" [outlined]="true" (onClick)="irADashboard()" />
+      </div>
+
+      <!-- Info de demo -->
+      <div class="mt-4 p-3 bg-blue-50 border-round">
+        <div class="flex align-items-center gap-2 text-blue-700">
+          <i class="pi pi-info-circle"></i>
+          <span class="text-sm font-medium">Modo Demo</span>
+        </div>
+        <p class="text-xs text-blue-600 m-0 mt-1">Para fines ilustrativos, puede ingresar con cualquier email y contraseña.</p>
+      </div>
+    } @else {
+      <!-- Usuario Autenticado - Vista de Cuestionarios -->
+      <div class="flex flex-column gap-4">
+        <!-- Bienvenida -->
+        <div class="flex align-items-center justify-content-between p-3 bg-green-50 border-round">
+          <div class="flex align-items-center gap-3">
+            <p-avatar [label]="getAvatarLabel(usuarioExternoAutenticado()!.nombre)" shape="circle" styleClass="bg-green-500" />
+            <div>
+              <span class="font-medium text-green-700">Bienvenido/a</span>
+              <p class="text-sm text-green-600 m-0">{{ usuarioExternoAutenticado()!.email }}</p>
+            </div>
+          </div>
+          <p-button icon="pi pi-sign-out" [rounded]="true" [text]="true" severity="danger" pTooltip="Cerrar sesión" (onClick)="logoutUsuarioExterno()" />
+        </div>
+
+        <!-- Lista de cuestionarios asignados -->
+        <h3 class="text-lg font-semibold text-900 m-0">Cuestionarios Asignados</h3>
+
+        @if (asignacionesParaUsuarioExterno().length > 0) {
+          <div class="flex flex-column gap-3">
+            @for (asignacion of asignacionesParaUsuarioExterno(); track asignacion.id) {
+              <div class="surface-100 border-round p-3 cursor-pointer hover:surface-200 transition-colors transition-duration-200" (click)="responderCuestionario(asignacion)">
+                <div class="flex justify-content-between align-items-start mb-2">
+                  <span class="font-medium text-900">{{ asignacion.titulo }}</span>
+                  <p-tag [value]="asignacion.estado | titlecase" [severity]="getEstadoSeverity(asignacion.estado)" />
+                </div>
+                <p class="text-sm text-500 m-0 mb-2">{{ getCuestionario(asignacion.cuestionarioId)?.nombre }}</p>
+                <div class="flex align-items-center gap-3 text-xs text-500">
+                  <span><i class="pi pi-calendar mr-1"></i>Vence: {{ asignacion.fechaVencimiento | date:'dd/MM/yyyy' }}</span>
+                  <span><i class="pi pi-chart-line mr-1"></i>{{ asignacion.progreso }}% completado</span>
+                </div>
+                <p-progressBar [value]="asignacion.progreso" [showValue]="false" styleClass="h-1rem mt-2" />
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="text-center py-5 surface-100 border-round">
+            <i class="pi pi-inbox text-4xl text-300 mb-3"></i>
+            <p class="text-500 m-0">No tiene cuestionarios asignados</p>
+            <p class="text-xs text-400 m-0 mt-1">Contacte al administrador si cree que debería tener acceso</p>
+          </div>
+        }
+
+        <p-divider />
+
+        <p-button label="Cerrar Sesión" icon="pi pi-sign-out" styleClass="w-full" severity="secondary" [outlined]="true" (onClick)="logoutUsuarioExterno()" />
+      </div>
+    }
+  </div>
+</div>
+}

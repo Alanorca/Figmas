@@ -1,0 +1,516 @@
+<div class="grafica-wizard">
+  <!-- Stepper -->
+  <div class="wizard-stepper">
+    @for (paso of pasos; track $index; let i = $index) {
+      <div
+        class="step-item"
+        [class.active]="i === pasoActual()"
+        [class.completed]="i < pasoActual()"
+        [class.clickable]="i < pasoActual()"
+        (click)="irAPaso(i)">
+        <div class="step-indicator">
+          <div class="step-icon">
+            @if (i < pasoActual()) {
+              <i class="pi pi-check"></i>
+            } @else {
+              <i [class]="paso.icon"></i>
+            }
+          </div>
+          @if (i < pasos.length - 1) {
+            <div class="step-line" [class.completed]="i < pasoActual()"></div>
+          }
+        </div>
+        <div class="step-content">
+          <span class="step-label">{{ paso.label }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Contenido del paso actual -->
+  <div class="wizard-content">
+    <!-- PASO 0: Tipo de Gráfica -->
+    @if (pasoActual() === 0) {
+      <div class="step-panel">
+        <h3 class="panel-title">
+          <i class="pi pi-chart-pie"></i>
+          Selecciona el tipo de gráfica
+        </h3>
+
+        <!-- Categorías -->
+        <div class="categorias-grid">
+          @for (categoria of categorias; track categoria.id) {
+            <div
+              class="categoria-card"
+              [class.selected]="wizardState().categoriaGrafica === categoria.id"
+              (click)="seleccionarCategoria(categoria.id)">
+              <div class="categoria-icon">
+                <i [class]="categoria.icono"></i>
+              </div>
+              <div class="categoria-info">
+                <span class="categoria-nombre">{{ categoria.nombre }}</span>
+                <span class="categoria-desc">{{ categoria.descripcion }}</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Tipos de la categoría seleccionada -->
+        @if (categoriaSeleccionada()) {
+          <div class="tipos-section">
+            <h4 class="section-subtitle">Tipo específico</h4>
+            <div class="tipos-grid">
+              @for (tipo of categoriaSeleccionada()!.tipos; track tipo.id) {
+                <div
+                  class="tipo-card"
+                  [class.selected]="wizardState().tipoGrafica === tipo.id"
+                  (click)="seleccionarTipoGrafica(tipo.id)">
+                  <i [class]="tipo.icono"></i>
+                  <span class="tipo-nombre">{{ tipo.nombre }}</span>
+                  <span class="tipo-desc">{{ tipo.descripcion }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Errores de validación -->
+        @if (!validacionPasoActual().valido && wizardState().categoriaGrafica) {
+          <div class="validation-errors">
+            @for (error of validacionPasoActual().errores; track error) {
+              <span class="error-item">
+                <i class="pi pi-exclamation-circle"></i>
+                {{ error }}
+              </span>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- PASO 1: Fuente de Datos -->
+    @if (pasoActual() === 1) {
+      <div class="step-panel">
+        <h3 class="panel-title">
+          <i class="pi pi-database"></i>
+          Selecciona la fuente de datos
+        </h3>
+
+        <div class="fuentes-grid">
+          @for (fuente of fuentesDatos; track fuente.id) {
+            <div
+              class="fuente-card"
+              [class.selected]="wizardState().fuenteDatos === fuente.id"
+              (click)="seleccionarFuenteDatos(fuente.id)">
+              <div class="fuente-icon">
+                <i [class]="fuente.icono"></i>
+              </div>
+              <div class="fuente-info">
+                <span class="fuente-nombre">{{ fuente.nombre }}</span>
+                <span class="fuente-desc">{{ fuente.descripcion }}</span>
+              </div>
+              @if (wizardState().fuenteDatos === fuente.id && wizardState().totalRegistros > 0) {
+                <div class="fuente-count">
+                  <span class="count-badge">{{ wizardState().totalRegistros }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Estado de carga -->
+        @if (wizardState().cargandoDatos) {
+          <div class="loading-state">
+            <p-progressSpinner strokeWidth="3" [style]="{width: '40px', height: '40px'}"></p-progressSpinner>
+            <span>Cargando datos...</span>
+          </div>
+        }
+
+        <!-- Resumen de datos -->
+        @if (wizardState().fuenteDatos && !wizardState().cargandoDatos && wizardState().totalRegistros > 0) {
+          <div class="datos-resumen">
+            <i class="pi pi-check-circle"></i>
+            <span>Se encontraron <strong>{{ wizardState().totalRegistros }}</strong> registros</span>
+          </div>
+        }
+
+        <!-- Error o sin datos -->
+        @if (wizardState().errorDatos) {
+          <div class="datos-error">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>{{ wizardState().errorDatos }}</span>
+          </div>
+        }
+
+        @if (wizardState().fuenteDatos && !wizardState().cargandoDatos && wizardState().totalRegistros === 0) {
+          <div class="datos-vacio">
+            <i class="pi pi-inbox"></i>
+            <span>No hay datos disponibles para esta entidad</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- PASO 2: Configuración de Campos -->
+    @if (pasoActual() === 2) {
+      <div class="step-panel">
+        <h3 class="panel-title">
+          <i class="pi pi-sliders-h"></i>
+          Configura los campos
+        </h3>
+
+        <!-- Configuración para gráficas circulares -->
+        @if (!requiereEjes()) {
+          <div class="config-section">
+            <label class="config-label">
+              <i class="pi pi-th-large"></i>
+              Agrupar por
+            </label>
+            <div class="campos-chips">
+              @for (campo of camposCategoria(); track campo.field) {
+                <button
+                  class="campo-chip"
+                  [class.selected]="wizardState().campoAgrupacion === campo.field"
+                  (click)="seleccionarCampoAgrupacion(campo.field)">
+                  {{ campo.label }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Configuración para gráficas de ejes -->
+        @if (requiereEjes()) {
+          <div class="config-section">
+            <label class="config-label">
+              <i class="pi pi-arrows-h"></i>
+              Eje X (Categorías)
+            </label>
+            <div class="campos-chips">
+              @for (campo of camposCategoria(); track campo.field) {
+                <button
+                  class="campo-chip"
+                  [class.selected]="wizardState().campoEjeX === campo.field"
+                  (click)="seleccionarEjeX(campo.field)">
+                  {{ campo.label }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="config-section">
+            <label class="config-label">
+              <i class="pi pi-arrows-v"></i>
+              Eje Y (Valores)
+            </label>
+            <div class="campos-chips">
+              @for (campo of camposDisponibles(); track campo.field) {
+                <button
+                  class="campo-chip"
+                  [class.selected]="wizardState().campoEjeY === campo.field"
+                  (click)="seleccionarEjeY(campo.field)">
+                  {{ campo.label }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Series (opcional) -->
+          @if (soportaSeries()) {
+            <div class="config-section">
+              <label class="config-label">
+                <i class="pi pi-chart-line"></i>
+                Series (opcional)
+              </label>
+              <div class="campos-chips">
+                <button
+                  class="campo-chip"
+                  [class.selected]="!wizardState().campoSeries"
+                  (click)="seleccionarSeries(null)">
+                  Sin series
+                </button>
+                @for (campo of camposCategoria(); track campo.field) {
+                  <button
+                    class="campo-chip"
+                    [class.selected]="wizardState().campoSeries === campo.field"
+                    (click)="seleccionarSeries(campo.field)">
+                    {{ campo.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        }
+
+        <!-- Tipo de agregación -->
+        <div class="config-section">
+          <label class="config-label">
+            <i class="pi pi-calculator"></i>
+            Tipo de cálculo
+          </label>
+          <div class="campos-chips">
+            @for (opcion of opcionesAgregacion; track opcion.value) {
+              <button
+                class="campo-chip"
+                [class.selected]="wizardState().tipoAgregacion === opcion.value"
+                (click)="seleccionarTipoAgregacion(opcion.value)">
+                {{ opcion.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Campo de valor (si no es conteo) -->
+        @if (wizardState().tipoAgregacion !== 'conteo') {
+          <div class="config-section">
+            <label class="config-label">
+              <i class="pi pi-hashtag"></i>
+              Campo numérico a calcular
+            </label>
+            <div class="campos-chips">
+              @for (campo of camposNumericos(); track campo.field) {
+                <button
+                  class="campo-chip"
+                  [class.selected]="wizardState().campoValor === campo.field"
+                  (click)="seleccionarCampoValor(campo.field)">
+                  {{ campo.label }}
+                </button>
+              }
+            </div>
+            @if (camposNumericos().length === 0) {
+              <div class="config-hint warning">
+                <i class="pi pi-info-circle"></i>
+                No hay campos numéricos disponibles. Usa "Conteo" como tipo de cálculo.
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Cruce de datos (si hay cruces disponibles) -->
+        @if (crucesDisponibles().length > 0) {
+          <p-divider></p-divider>
+          <div class="config-section">
+            <div class="cruce-toggle">
+              <label class="config-label">
+                <i class="pi pi-sitemap"></i>
+                Cruzar con otra entidad
+              </label>
+              <p-toggleSwitch
+                [ngModel]="wizardState().usarCruce"
+                (ngModelChange)="toggleCruce($event)">
+              </p-toggleSwitch>
+            </div>
+
+            @if (wizardState().usarCruce) {
+              <div class="cruces-list">
+                @for (cruce of crucesDisponibles(); track cruce.descripcion) {
+                  <div
+                    class="cruce-option"
+                    [class.selected]="wizardState().cruceSeleccionado === cruce"
+                    (click)="seleccionarCruce(cruce)">
+                    <i class="pi pi-link"></i>
+                    <span>{{ cruce.descripcion }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Preview mini -->
+        @if (previewResumen()) {
+          <div class="preview-mini">
+            <i class="pi pi-eye"></i>
+            <span>Vista previa: {{ previewResumen()!.categorias }} categorías, {{ previewResumen()!.series }} serie(s)</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- PASO 3: Estilo y Confirmación -->
+    @if (pasoActual() === 3) {
+      <div class="step-panel">
+        <h3 class="panel-title">
+          <i class="pi pi-palette"></i>
+          Personaliza y confirma
+        </h3>
+
+        <!-- Título -->
+        <div class="config-section">
+          <label class="config-label required">
+            <i class="pi pi-tag"></i>
+            Título de la gráfica
+          </label>
+          <input
+            type="text"
+            pInputText
+            class="config-input"
+            [ngModel]="wizardState().titulo"
+            (ngModelChange)="actualizarTitulo($event)"
+            placeholder="Ej: Distribución de Riesgos por Estado" />
+        </div>
+
+        <!-- Subtítulo -->
+        <div class="config-section">
+          <label class="config-label">
+            <i class="pi pi-align-left"></i>
+            Subtítulo (opcional)
+          </label>
+          <input
+            type="text"
+            pInputText
+            class="config-input"
+            [ngModel]="wizardState().subtitulo"
+            (ngModelChange)="actualizarSubtitulo($event)"
+            placeholder="Descripción breve" />
+        </div>
+
+        <!-- Paleta de colores -->
+        <div class="config-section">
+          <label class="config-label">
+            <i class="pi pi-palette"></i>
+            Paleta de colores
+          </label>
+          <div class="paletas-grid">
+            @for (paleta of paletas; track paleta.id) {
+              <div
+                class="paleta-option"
+                [class.selected]="wizardState().paleta === paleta.id"
+                (click)="seleccionarPaleta(paleta.id)">
+                <div class="paleta-colors">
+                  @for (color of paleta.colores.slice(0, 4); track color) {
+                    <span class="color-dot" [style.background-color]="color"></span>
+                  }
+                </div>
+                <span class="paleta-nombre">{{ paleta.nombre }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Opciones de visualización -->
+        <div class="config-section">
+          <label class="config-label">
+            <i class="pi pi-cog"></i>
+            Opciones de visualización
+          </label>
+          <div class="opciones-grid">
+            <div class="opcion-toggle">
+              <span>Mostrar leyenda</span>
+              <p-toggleSwitch
+                [ngModel]="wizardState().mostrarLeyenda"
+                (ngModelChange)="toggleLeyenda($event)">
+              </p-toggleSwitch>
+            </div>
+            <div class="opcion-toggle">
+              <span>Mostrar etiquetas</span>
+              <p-toggleSwitch
+                [ngModel]="wizardState().mostrarEtiquetas"
+                (ngModelChange)="toggleEtiquetas($event)">
+              </p-toggleSwitch>
+            </div>
+            <div class="opcion-toggle">
+              <span>Animaciones</span>
+              <p-toggleSwitch
+                [ngModel]="wizardState().mostrarAnimaciones"
+                (ngModelChange)="toggleAnimaciones($event)">
+              </p-toggleSwitch>
+            </div>
+            @if (requiereEjes()) {
+              <div class="opcion-toggle">
+                <span>Mostrar grid</span>
+                <p-toggleSwitch
+                  [ngModel]="wizardState().mostrarGrid"
+                  (ngModelChange)="toggleGrid($event)">
+                </p-toggleSwitch>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Resumen de configuración -->
+        <div class="config-resumen">
+          <h4>Resumen de configuración</h4>
+          <div class="resumen-items">
+            <div class="resumen-item">
+              <span class="resumen-label">Tipo:</span>
+              <span class="resumen-value">{{ tipoGraficaSeleccionado()?.nombre }}</span>
+            </div>
+            <div class="resumen-item">
+              <span class="resumen-label">Datos:</span>
+              <span class="resumen-value">{{ wizardState().totalRegistros }} registros de {{ wizardState().fuenteDatos }}</span>
+            </div>
+            @if (!requiereEjes() && wizardState().campoAgrupacion) {
+              <div class="resumen-item">
+                <span class="resumen-label">Agrupado por:</span>
+                <span class="resumen-value">{{ getCampoLabel(wizardState().campoAgrupacion!) }}</span>
+              </div>
+            }
+            @if (requiereEjes() && wizardState().campoEjeX) {
+              <div class="resumen-item">
+                <span class="resumen-label">Ejes:</span>
+                <span class="resumen-value">{{ getCampoLabel(wizardState().campoEjeX!) }} / {{ getCampoLabel(wizardState().campoEjeY!) }}</span>
+              </div>
+            }
+            <div class="resumen-item">
+              <span class="resumen-label">Cálculo:</span>
+              <span class="resumen-value">{{ wizardState().tipoAgregacion }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Errores de validación -->
+        @if (!validacionPasoActual().valido) {
+          <div class="validation-errors">
+            @for (error of validacionPasoActual().errores; track error) {
+              <span class="error-item">
+                <i class="pi pi-exclamation-circle"></i>
+                {{ error }}
+              </span>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Footer con botones de navegación -->
+  <div class="wizard-footer">
+    <div class="footer-left">
+      @if (pasoActual() > 0) {
+        <p-button
+          label="Anterior"
+          icon="pi pi-arrow-left"
+          [outlined]="true"
+          (onClick)="anterior()">
+        </p-button>
+      }
+    </div>
+
+    <div class="footer-right">
+      <p-button
+        label="Cancelar"
+        [text]="true"
+        severity="secondary"
+        (onClick)="cancelar()">
+      </p-button>
+
+      @if (pasoActual() < pasos.length - 1) {
+        <p-button
+          label="Siguiente"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          [disabled]="!puedeAvanzar()"
+          (onClick)="siguiente()">
+        </p-button>
+      } @else {
+        <p-button
+          label="Crear Gráfica"
+          icon="pi pi-check"
+          [disabled]="!puedeAvanzar()"
+          (onClick)="confirmar()">
+        </p-button>
+      }
+    </div>
+  </div>
+</div>

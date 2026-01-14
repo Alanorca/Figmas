@@ -1,0 +1,444 @@
+---
+title: "Gestión de Cuestionarios de Cumplimiento"
+sidebar_label: "Cuestionarios"
+sidebar_position: 4
+---
+
+import ZoomableDiagram from '@site/src/components/ZoomableDiagram';
+
+# Historia de Usuario: Gestión de Cuestionarios de Cumplimiento
+
+## 📋 Información General
+
+- **ID**: US-QUESTIONNAIRES-001
+- **Módulo**: Gestión de Cumplimiento / Cuestionarios
+- **Prioridad**: Alta
+- **Sprint**: Sprint 3
+
+## 👤 Historia de Usuario
+
+**Como** Gestor de Cumplimiento, Auditor o Coordinador de Calidad
+**Quiero** crear, gestionar y aplicar cuestionarios de evaluación de manera manual o asistida por IA, configurando diferentes tipos de preguntas, umbrales de cumplimiento y lógica condicional
+**Para** poder estandarizar procesos de evaluación, asegurar consistencia en auditorías, y generar cuestionarios especializados a partir de documentos normativos, políticas internas o estándares de la industria sin esfuerzo manual.
+
+## ✅ Criterios de Aceptación
+
+### Feature: Creación Manual de Cuestionarios
+
+```gherkin
+Scenario: Crear cuestionario manualmente con múltiples tipos de preguntas
+  Given un "Gestor de Cumplimiento" está en el módulo de "Cuestionarios"
+  When selecciona "Crear Nuevo Cuestionario"
+  And ingresa el título "Evaluación de Seguridad de la Información ISO 27001"
+  And ingresa la descripción del cuestionario
+  And define los umbrales de cumplimiento:
+    | Nivel           | Rango       |
+    | Deficiente      | 0-30%       |
+    | Aceptable       | 31-70%      |
+    | Sobresaliente   | 71-100%     |
+  And crea una sección "Gestión de Activos" con descripción
+  And agrega las siguientes preguntas a la sección:
+    | Tipo             | Texto de Pregunta                                  | Configuración                |
+    | YES_NO           | ¿Existe un inventario de activos de información?   | Obligatoria                 |
+    | SINGLE_SELECT    | Nivel de clasificación de la información           | Opciones: Pública/Interna/Confidencial/Secreta |
+    | STAR_RATING      | Calidad del proceso de gestión de activos          | 1-10 estrellas              |
+    | FREE_TEXT        | Describa el proceso de clasificación               | Permite evidencia y comentarios |
+  And hace clic en "Guardar Cuestionario"
+  Then el sistema crea el cuestionario con ID único
+  And el cuestionario aparece en la lista de plantillas disponibles
+  And muestra un resumen: "4 preguntas en 1 sección"
+```
+
+```gherkin
+Scenario: Configurar lógica condicional en preguntas
+  Given existe un cuestionario "Evaluación de Controles de Acceso"
+  When el "Auditor" edita el cuestionario
+  And agrega una pregunta P1: "¿Utiliza autenticación multifactor?" (YES_NO)
+  And agrega una pregunta P2: "¿Qué método de MFA utiliza?" (DROPDOWN)
+  And configura P2 con condición de visualización:
+    | Campo                      | Valor               |
+    | displayConditionQuestionId | ID de P1            |
+    | displayConditionAnswer     | "Sí"                |
+  And guarda el cuestionario
+  Then el sistema valida la lógica condicional
+  And P2 solo se mostrará cuando P1 sea respondida con "Sí"
+  And al previsualizar, P2 aparece/desaparece dinámicamente según P1
+```
+
+### Feature: Generación de Cuestionarios Asistida por IA
+
+```gherkin
+Scenario: Generar cuestionario a partir de documento PDF de normativa
+  Given un "Gestor de Cumplimiento" está en "Crear Cuestionario"
+  When selecciona "Generar con IA"
+  And sube un documento PDF "ISO-27001-2022-Controles.pdf" (150 páginas)
+  And selecciona las siguientes opciones:
+    | Parámetro          | Valor                                      |
+    | Tipo de Cuestionario | Auditoría de Seguridad                   |
+    | Complejidad        | Avanzado (6-8 secciones, 8-12 preguntas) |
+    | Áreas de Enfoque   | Gestión de Activos, Control de Acceso, Cifrado |
+    | Idioma             | Español                                   |
+  And hace clic en "Generar Cuestionario"
+  Then el sistema procesa el PDF extrayendo el texto completo
+  And la IA analiza el contenido del documento
+  And genera un cuestionario con la siguiente estructura:
+    | Elemento                | Validación                                    |
+    | Título                  | Máximo 80 caracteres, descriptivo            |
+    | Descripción             | 30-400 caracteres, basada en el documento    |
+    | Secciones               | 6-8 secciones temáticas                      |
+    | Preguntas por sección   | 8-12 preguntas relevantes                    |
+    | Tipos de pregunta       | Mix de YES_NO, SINGLE_SELECT, LIKERT_SCALE, FREE_TEXT |
+    | Umbrales                | Deficiente: 30, Aceptable: 70, Sobresaliente: 100 |
+  And el cuestionario generado aparece en modo "Previsualización"
+  And el usuario puede editar, ajustar o aprobar el cuestionario generado
+  And muestra metadata: tiempo de procesamiento, número total de preguntas, advertencias
+```
+
+```gherkin
+Scenario: IA sugiere mejoras a cuestionario existente
+  Given existe un cuestionario manual "Evaluación GDPR Básica" con 10 preguntas
+  When el "Auditor" selecciona "Mejorar con IA"
+  And sube un documento actualizado "GDPR-2024-Guidelines.pdf"
+  Then la IA analiza el cuestionario existente y el nuevo documento
+  And sugiere:
+    | Tipo de Sugerencia          | Detalle                                           |
+    | Nuevas preguntas            | 5 preguntas adicionales sobre nuevas cláusulas    |
+    | Preguntas a modificar       | 2 preguntas desactualizadas                       |
+    | Nuevas secciones            | 1 sección sobre "Transferencias Internacionales" |
+  And el usuario puede aceptar o rechazar cada sugerencia individualmente
+  And al aceptar, el cuestionario se actualiza automáticamente
+```
+
+### Feature: Validación y Gestión de Cuestionarios
+
+```gherkin
+Scenario: Validación estricta de estructura de cuestionario
+  Given un "Coordinador" intenta crear un cuestionario
+  When ingresa un título de 100 caracteres (excede límite de 80)
+  And crea una sección sin preguntas
+  And agrega una pregunta SINGLE_SELECT sin opciones
+  And define umbrales: Deficiente: 50, Aceptable: 40, Sobresaliente: 100
+  And hace clic en "Guardar"
+  Then el sistema muestra errores de validación:
+    | Error                                              |
+    | "El título debe tener máximo 80 caracteres"       |
+    | "Cada sección debe tener mínimo 1 pregunta"       |
+    | "SINGLE_SELECT debe tener al menos 2 opciones"    |
+    | "Los umbrales deben cumplir: deficient < acceptable < outstanding" |
+  And no permite guardar hasta que se corrijan los errores
+```
+
+```gherkin
+Scenario: Duplicar cuestionario existente para crear variante
+  Given existe un cuestionario "Auditoría Anual de TI 2024"
+  When el "Gestor" selecciona "Duplicar Cuestionario"
+  And modifica el título a "Auditoría Anual de TI 2025"
+  And ajusta 3 preguntas para reflejar nuevas normativas
+  And guarda el cuestionario duplicado
+  Then el sistema crea un nuevo cuestionario con ID diferente
+  And el cuestionario original permanece sin cambios
+  And el nuevo cuestionario hereda toda la estructura del original
+```
+
+## 🔄 Flujo de Usuario
+
+<ZoomableDiagram
+  title="Flujo Completo de Gestión de Cuestionarios"
+  height="900px"
+  chart={`graph TD
+    subgraph "Creación Manual"
+        StartManual[Gestor selecciona<br/>Crear Cuestionario] --> ConfigBasic[Ingresar Título,<br/>Descripción y Umbrales]
+        ConfigBasic --> AddSection[Crear Sección]
+        AddSection --> AddQuestion[Agregar Pregunta]
+        AddQuestion --> ConfigQuestion[Configurar Tipo,<br/>Opciones, Validaciones]
+        ConfigQuestion --> ConditionalLogic{¿Lógica<br/>Condicional?}
+        ConditionalLogic -->|Sí| SetCondition[Definir Condición<br/>de Visualización]
+        ConditionalLogic -->|No| MoreQuestions{¿Más<br/>Preguntas?}
+        SetCondition --> MoreQuestions
+        MoreQuestions -->|Sí| AddQuestion
+        MoreQuestions -->|No| MoreSections{¿Más<br/>Secciones?}
+        MoreSections -->|Sí| AddSection
+        MoreSections -->|No| ValidateManual[Validar Estructura]
+        ValidateManual --> SaveQuestionnaire[Guardar Cuestionario]
+    end
+
+    subgraph "Generación Asistida por IA"
+        StartAI[Gestor selecciona<br/>Generar con IA] --> UploadDoc[Subir Documento<br/>PDF/Word/Excel]
+        UploadDoc --> ConfigAI[Configurar Parámetros IA]
+        ConfigAI --> ConfigAIParams[Tipo, Complejidad,<br/>Áreas de Enfoque, Idioma]
+        ConfigAIParams --> ProcessDoc[Procesar Documento]
+        ProcessDoc --> ExtractText[Extraer Texto Completo<br/>OCR si es necesario]
+        ExtractText --> AIAnalysis[IA Analiza Contenido]
+        AIAnalysis --> GenerateStructure[IA Genera Estructura<br/>de Cuestionario]
+        GenerateStructure --> GenerateSections[IA Crea Secciones<br/>Temáticas]
+        GenerateSections --> GenerateQuestions[IA Genera Preguntas<br/>por Sección]
+        GenerateQuestions --> AssignTypes[IA Asigna Tipos<br/>de Pregunta Apropiados]
+        AssignTypes --> SetThresholds[IA Define Umbrales<br/>de Cumplimiento]
+        SetThresholds --> ValidateAI[Validación Automática<br/>de Estructura]
+        ValidateAI --> PreviewAI[Mostrar Preview<br/>con Metadata]
+        PreviewAI --> ReviewAI{Usuario<br/>Revisa}
+        ReviewAI -->|Editar| EditGenerated[Editar Cuestionario<br/>Generado]
+        ReviewAI -->|Regenerar| ConfigAI
+        ReviewAI -->|Aprobar| SaveQuestionnaire
+        EditGenerated --> SaveQuestionnaire
+    end
+
+    subgraph "Gestión de Cuestionarios"
+        SaveQuestionnaire --> QuestionnaireList[Lista de Cuestionarios<br/>Disponibles]
+        QuestionnaireList --> ManageActions{Acción}
+        ManageActions -->|Editar| EditExisting[Editar Cuestionario]
+        ManageActions -->|Duplicar| DuplicateQ[Duplicar y Modificar]
+        ManageActions -->|Mejorar con IA| ImproveWithAI[IA Sugiere Mejoras]
+        ManageActions -->|Eliminar| DeleteQ[Eliminar Cuestionario]
+        ManageActions -->|Aplicar| UseInReview[Usar en Revisión<br/>de Cumplimiento]
+        EditExisting --> ValidateManual
+        DuplicateQ --> EditExisting
+        ImproveWithAI --> ReviewSuggestions[Revisar y Aceptar<br/>Sugerencias]
+        ReviewSuggestions --> EditExisting
+    end
+
+    style StartManual stroke:#4caf50,stroke-width:2px
+    style StartAI stroke:#2196f3,stroke-width:2px
+    style ProcessDoc stroke:#ff9800,stroke-width:3px,stroke-dasharray: 5 5
+    style AIAnalysis stroke:#9c27b0,stroke-width:3px,stroke-dasharray: 5 5
+    style ValidateAI stroke:#e91e63,stroke-width:2px
+    style SaveQuestionnaire stroke:#4caf50,stroke-width:3px
+  `}
+/>
+
+## 🎨 Mockups / Diseños
+
+Diseños disponibles en Figma (Pendientes de revisión por UX/UI Designer: Alan Franco)
+
+## 📡 Documentación Técnica Relacionada
+
+### API Endpoints
+
+```typescript
+// Cuestionarios - CRUD Básico
+POST   /api/questionnaire-templates              // Crear cuestionario manual
+GET    /api/questionnaire-templates              // Listar todos los cuestionarios
+GET    /api/questionnaire-templates/:id          // Obtener cuestionario por ID
+PUT    /api/questionnaire-templates/:id          // Actualizar cuestionario
+DELETE /api/questionnaire-templates/:id          // Eliminar cuestionario
+
+// Generación Asistida por IA
+POST   /api/ai/generate-questionnaire             // Generar cuestionario con IA
+  Body: {
+    file: File,                                    // Documento fuente (PDF, Word, Excel, Imagen)
+    questionnaireType: string,                     // Tipo de cuestionario
+    complexity: 'basic' | 'intermediate' | 'advanced',
+    focusAreas: string[],                          // Áreas de enfoque (opcional)
+    language: 'es' | 'en'                          // Idioma
+  }
+  Response: {
+    title: string,
+    description: string,
+    sections: Section[],
+    complianceThresholds: { deficientUpperBoundary, acceptableUpperBoundary, outstandingUpperBoundary },
+    _metadata: { processingTimeMs, documentLength, totalQuestions, warnings }
+  }
+
+// Mejora de Cuestionario Existente con IA
+POST   /api/ai/improve-questionnaire              // Sugerir mejoras con IA
+  Body: {
+    questionnaireId: string,
+    newDocument: File                              // Documento actualizado
+  }
+  Response: {
+    suggestions: {
+      newQuestions: Question[],
+      questionsToModify: { questionId, suggestion }[],
+      newSections: Section[]
+    }
+  }
+
+// Validación y Preview
+POST   /api/questionnaire-templates/validate      // Validar estructura de cuestionario
+POST   /api/questionnaire-templates/:id/duplicate // Duplicar cuestionario
+```
+
+### Reglas de Negocio
+
+1. **Estructura de Cuestionario**:
+   - Título: 5-80 caracteres, obligatorio
+   - Descripción: 30-400 caracteres, obligatoria
+   - Mínimo 2 secciones por cuestionario
+   - Mínimo 1 pregunta por sección (recomendado: 2+)
+   - Máximo 120 preguntas por cuestionario (para UX óptimo)
+
+2. **Umbrales de Cumplimiento**:
+   - Tres niveles: Deficiente, Aceptable, Sobresaliente
+   - Rango: 0-100
+   - Debe cumplir: `deficientUpperBoundary < acceptableUpperBoundary < outstandingUpperBoundary`
+   - Diferencia mínima recomendada: 30 puntos entre umbrales
+
+3. **Tipos de Preguntas Soportados**:
+   - **FREE_TEXT**: Respuesta abierta, permite evidencia y comentarios
+   - **BOOLEAN**: Verdadero/Falso
+   - **NUMBER**: Campo numérico (requiere minValue, maxValue)
+   - **YES_NO**: Sí/No con radio buttons
+   - **SINGLE_SELECT**: Opción única (requiere 2+ opciones con text y score)
+   - **MULTI_SELECT**: Múltiple selección (requiere 2+ opciones)
+   - **DROPDOWN**: Lista desplegable para listas largas
+   - **STAR_RATING**: Calificación con estrellas (maxValue: 5 o 10)
+   - **LIKERT_SCALE**: Escala de acuerdo (exactamente 5 opciones)
+   - **NUMERIC_SCALE**: Slider numérico (requiere minValue, maxValue)
+   - **SEMANTIC_DIFFERENTIAL**: Escala entre opuestos (requiere leftAnchor, rightAnchor)
+   - **RANKING**: Ordenamiento por preferencia (3-6 opciones)
+
+4. **Lógica Condicional**:
+   - Preguntas pueden tener condiciones de visualización
+   - `displayConditionQuestionId`: ID de la pregunta condicionante
+   - `displayConditionAnswer`: Respuesta esperada para mostrar la pregunta
+   - Valida que la pregunta condicionante exista en el mismo cuestionario
+
+5. **Generación con IA**:
+   - Documentos soportados: PDF, Word (.doc, .docx), Excel (.xls, .xlsx), Texto plano, Imágenes (con OCR)
+   - Tamaño máximo: 200MB
+   - Timeout de procesamiento: 300 segundos (5 minutos)
+   - Timeout de generación IA: 240 segundos (4 minutos)
+   - Tokens máximos de respuesta: 12,000
+   - Contenido mínimo: 100 caracteres
+   - Temperatura IA: 0.1 (primera generación), 0.2 (reintentos)
+
+6. **Validación Automática**:
+   - El sistema valida estructura completa antes de guardar
+   - Reporta errores (bloquean guardado) y advertencias (no bloquean)
+   - Valida tipos de pregunta y sus configuraciones específicas
+   - Verifica que opciones de selección tengan text y score
+
+### Modelo de Datos
+
+```typescript
+// Firestore Collection: questionnaireTemplates
+interface QuestionnaireTemplate {
+  id: string;
+  title: string;                                   // 5-80 chars
+  description: string;                             // 30-400 chars
+  sections: QuestionnaireSection[];
+  complianceThresholds: ComplianceThresholds;
+  createdAt: string;                               // ISO date
+  updatedAt: string;                               // ISO date
+  createdBy?: string;                              // User UUID
+
+  // Opcional: Configuración para auto-creación de activos
+  autoAssetCreation?: {
+    enabled: boolean;
+    assetTypeId: string;                           // ID del AssetTemplate (Riesgos, Incidentes, Hallazgos)
+  };
+}
+
+interface QuestionnaireSection {
+  id: string;                                      // UUID
+  title: string;                                   // 5-80 chars
+  description?: string;                            // 30-250 chars
+  questions: Question[];
+}
+
+interface Question {
+  id: string;                                      // UUID
+  text: string;                                    // 10-200 chars
+  type: QuestionType;                              // Enum de tipos soportados
+  isRequired?: boolean;
+  allowsEvidence?: boolean;
+  allowsComments?: boolean;
+
+  // Campos para tipos numéricos
+  minValue?: number;
+  maxValue?: number;
+  stepValue?: number;
+
+  // Campos para SEMANTIC_DIFFERENTIAL
+  leftAnchor?: string;
+  rightAnchor?: string;
+
+  // Campos para tipos con opciones
+  options?: QuestionOption[];
+
+  // Lógica condicional
+  displayConditionQuestionId?: string;
+  displayConditionAnswer?: string;
+}
+
+interface QuestionOption {
+  text: string;
+  score: number;                                   // Puntaje para cálculo de compliance
+}
+
+interface ComplianceThresholds {
+  deficientUpperBoundary: number;                  // Ej: 30 (0-30 = Deficiente)
+  acceptableUpperBoundary: number;                 // Ej: 70 (31-70 = Aceptable)
+  outstandingUpperBoundary?: number;               // Ej: 100 (71-100 = Sobresaliente)
+}
+
+enum QuestionType {
+  FREE_TEXT = 'FREE_TEXT',
+  BOOLEAN = 'BOOLEAN',
+  NUMBER = 'NUMBER',
+  YES_NO = 'YES_NO',
+  SINGLE_SELECT = 'SINGLE_SELECT',
+  MULTI_SELECT = 'MULTI_SELECT',
+  DROPDOWN = 'DROPDOWN',
+  STAR_RATING = 'STAR_RATING',
+  LIKERT_SCALE = 'LIKERT_SCALE',
+  NUMERIC_SCALE = 'NUMERIC_SCALE',
+  SEMANTIC_DIFFERENTIAL = 'SEMANTIC_DIFFERENTIAL',
+  RANKING = 'RANKING'
+}
+```
+
+## 📝 Notas Adicionales
+
+### Equipo
+
+- **Product Owner**: Francisco Puente
+- **UX/UI Designer**: Alan Franco
+- **Frontend Developers**: Cesar Gonzalez, Juan Martinez
+- **Backend Developer**: Josue Cardenas
+- **AI/ML Engineer**: (Nuevo rol requerido para optimización de prompts)
+- **QA Engineer**: Emmanuel Vazquez
+
+### Alcance
+
+#### ✅ Fase 1 incluye:
+
+- Funcionalidad CRUD completa de Cuestionarios
+- Interfaz de creación manual con editor visual
+- Soporte completo para 12 tipos de preguntas
+- Lógica condicional de visualización de preguntas
+- Configuración de umbrales de cumplimiento personalizables
+- Generación asistida por IA desde documentos (PDF, Word, Excel, Imágenes)
+- Procesamiento OCR para imágenes
+- Validación estricta de estructura
+- Duplicación de cuestionarios
+- Sistema de sugerencias de mejora con IA
+- Previsualización de cuestionarios
+- Metadata y telemetría de generación IA
+
+#### ⏳ No incluye (Fase 2):
+
+- Biblioteca de cuestionarios pre-construidos (templates de industria)
+- Versionamiento de cuestionarios
+- Colaboración multi-usuario en tiempo real
+- Importación masiva de cuestionarios desde archivos estructurados
+- Análisis de efectividad de preguntas (tasas de respuesta, discriminación)
+- Traducción automática de cuestionarios a múltiples idiomas
+- Integración con frameworks de cumplimiento (SOC 2, ISO 27001, NIST)
+- Sistema de etiquetado y categorización avanzado
+- Búsqueda semántica de cuestionarios por contenido
+
+### Roadmap
+
+| Fase     | Fecha Estimada   | Estado        |
+|----------|------------------|---------------|
+| Fase 1   | 15/diciembre/2025| En Desarrollo |
+| Fase 2   | Q1 2026          | Planificado   |
+
+## 🏷️ Etiquetas
+
+`compliance` `questionnaires` `ai-generation` `ocr` `document-processing` `auditing` `quality-assurance` `conditional-logic` `validation` `genkit` `sprint-3` `grc`
+
+---
+
+**Última actualización**: 19/11/2025

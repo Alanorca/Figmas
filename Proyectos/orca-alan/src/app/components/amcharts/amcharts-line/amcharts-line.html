@@ -1,0 +1,68 @@
+<div class="amcharts-line-container">
+  @if (mostrarControles()) {
+    <div class="chart-controls">
+      <p-select
+        [options]="periodoOptions"
+        [ngModel]="periodoSeleccionado()"
+        (ngModelChange)="onPeriodoChange($event)"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Periodo"
+        [style]="{ width: '140px' }">
+        <ng-template let-option pTemplate="item">
+          <div class="periodo-option">
+            <i [class]="option.icon" class="mr-2"></i>
+            {{ option.label }}
+          </div>
+        </ng-template>
+      </p-select>
+
+      @if (mostrarRangoCustom()) {
+        <p-datepicker
+          [ngModel]="rangoCustom()"
+          (ngModelChange)="onRangoChange($event)"
+          selectionMode="range"
+          [readonlyInput]="true"
+          dateFormat="dd/mm/yy"
+          placeholder="Seleccionar rango"
+          [style]="{ width: '220px' }"
+          appendTo="body">
+        </p-datepicker>
+      }
+
+      <p-select
+        [options]="metricaOptions"
+        [ngModel]="metricaSeleccionada()"
+        (ngModelChange)="onMetricaChange($event)"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Metrica"
+        [style]="{ width: '160px' }">
+        <ng-template let-option pTemplate="item">
+          <div class="metrica-option">
+            <i [class]="option.icon" class="mr-2" [style.color]="option.color"></i>
+            <span>{{ option.label }}</span>
+          </div>
+        </ng-template>
+        <ng-template let-option pTemplate="selectedItem">
+          <div class="metrica-option">
+            <i [class]="option.icon" class="mr-2" [style.color]="option.color"></i>
+            {{ option.label }}
+          </div>
+        </ng-template>
+      </p-select>
+
+      <p-button
+        icon="pi pi-download"
+        severity="secondary"
+        [text]="true"
+        [rounded]="true"
+        pTooltip="Exportar"
+        tooltipPosition="top"
+        (onClick)="exportPNG()">
+      </p-button>
+    </div>
+  }
+
+  <div #chartDiv class="amchart-container" [style.height.px]="config().altura"></div>
+</div>

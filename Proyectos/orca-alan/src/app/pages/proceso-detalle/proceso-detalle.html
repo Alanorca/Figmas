@@ -1,0 +1,383 @@
+<div class="proceso-detalle-page">
+  @if (proceso(); as proc) {
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-row">
+        <div class="header-left">
+          <h1>Detalle del proceso</h1>
+          <p class="page-subtitle">Orca&#64;Securityby Design</p>
+        </div>
+        <div class="header-tabs">
+          <button
+            class="tab-btn"
+            [class.active]="tabActivo() === 'informacion'"
+            (click)="cambiarTab('informacion')">
+            <i class="pi pi-info-circle"></i>
+            Información general
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="tabActivo() === 'reglas'"
+            (click)="cambiarTab('reglas')">
+            <i class="pi pi-check-square"></i>
+            Reglas
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="tabActivo() === 'riesgos'"
+            (click)="cambiarTab('riesgos')">
+            <i class="pi pi-exclamation-triangle"></i>
+            Riesgos
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="tabActivo() === 'auditoria'"
+            (click)="cambiarTab('auditoria')">
+            <i class="pi pi-history"></i>
+            Auditoría
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+      <!-- Columna Izquierda: Información del Proceso -->
+      <div class="content-card info-card">
+        <div class="card-section proceso-header-section">
+          <h2 class="proceso-nombre">{{ proc.nombre }}</h2>
+          <p class="proceso-descripcion">
+            {{ proc.descripcion || 'El sistema GRC ACT-001 optimiza la gestión financiera mediante un enfoque integral que asegura la transparencia y el control en cada fase del proceso. Con herramientas avanzadas, permite a las organizaciones gestionar riesgos y cumplir con normativas de manera eficiente, garantizando así una administración financiera sólida y confiable.' }}
+          </p>
+          <button class="btn-contenido-activo" (click)="verContenidoActivo()">
+            Edición de Nodos
+          </button>
+        </div>
+
+        <div class="card-section info-grid">
+          <!-- Fila 1 -->
+          <div class="info-row">
+            <div class="info-field">
+              <label>Responsable</label>
+              <div class="field-value responsable-value">
+                <div class="avatar">{{ getInitials(proc.createdBy || 'Alice Johnson Smith') }}</div>
+                <span>{{ proc.createdBy || 'Alice Johnson Smith' }}</span>
+              </div>
+            </div>
+            <div class="info-field">
+              <label>Organización</label>
+              <div class="field-value org-path">
+                @for (org of organizaciones(); track org; let i = $index) {
+                  @if (i > 0) { <span class="org-dot">·</span> }
+                  <span>{{ org }}</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila 2 -->
+          <div class="info-row">
+            <div class="info-field">
+              <label>Última Revisión</label>
+              <div class="field-value">{{ formatDateShort(proc.updatedAt) }}</div>
+            </div>
+            <div class="info-field">
+              <label>Estado</label>
+              <div class="field-value">
+                <span class="status-badge" [class]="proc.estado">
+                  {{ getEstadoLabel(proc.estado) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila 3 -->
+          <div class="info-row">
+            <div class="info-field">
+              <label>Criticidad</label>
+              <div class="field-value">
+                <span class="criticidad-badge" [class]="criticidad().toLowerCase()">
+                  {{ criticidad() }}
+                </span>
+              </div>
+            </div>
+            <div class="info-field">
+              <label>Tipo de activo</label>
+              <div class="field-value">
+                <span class="chip-link">{{ tipoActivo() }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila 4 -->
+          <div class="info-row">
+            <div class="info-field">
+              <label>Activos relacionados</label>
+              <div class="field-value">
+                <span class="chip-link">{{ activosRelacionadosCount() }}</span>
+              </div>
+            </div>
+            <div class="info-field">
+              <label>Reglas de negocio asociadas</label>
+              <div class="field-value chips-list">
+                @for (regla of reglasNegocio(); track regla) {
+                  <span class="chip-link">{{ regla }}</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Fila 5: Procesos Relacionados -->
+          <div class="info-row full-width">
+            <div class="info-field">
+              <label>Procesos Relacionados</label>
+              <div class="field-value chips-list">
+                @for (proceso of procesosRelacionados(); track proceso) {
+                  <span class="chip-link">{{ proceso }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Derecha -->
+      <div class="right-column">
+        <!-- Mini Cards de Métricas -->
+        <div class="mini-metrics">
+          <div class="mini-card riesgos">
+            <div class="mini-icon">
+              <i class="pi pi-exclamation-triangle"></i>
+            </div>
+            <div class="mini-content">
+              <span class="mini-value">{{ riesgosData().cantidad }}</span>
+              <span class="mini-label">Riesgos</span>
+            </div>
+            <span class="mini-date">{{ riesgosData().fecha }}</span>
+          </div>
+          <div class="mini-card activos">
+            <div class="mini-icon">
+              <i class="pi pi-th-large"></i>
+            </div>
+            <div class="mini-content">
+              <span class="mini-value">{{ activosData().cantidad }}</span>
+              <span class="mini-label">Activos</span>
+            </div>
+            <span class="mini-date">{{ activosData().fecha }}</span>
+          </div>
+          <div class="mini-card respuestas">
+            <div class="mini-icon">
+              <i class="pi pi-folder"></i>
+            </div>
+            <div class="mini-content">
+              <span class="mini-value">{{ respuestasData().cantidad }}</span>
+              <span class="mini-label">Respuestas</span>
+            </div>
+            <span class="mini-date">{{ respuestasData().fecha }}</span>
+          </div>
+        </div>
+
+        <!-- Card con Tabs -->
+        <div class="content-card tabbed-card">
+          <!-- Tabs -->
+          <div class="inner-tabs">
+            <button
+              class="inner-tab"
+              [class.active]="tabDerecho() === 'mapa'"
+              (click)="tabDerecho.set('mapa')">
+              <i class="pi pi-th-large"></i>
+              Mapa de Calor
+            </button>
+            <button
+              class="inner-tab"
+              [class.active]="tabDerecho() === 'kpis'"
+              (click)="tabDerecho.set('kpis')">
+              <i class="pi pi-chart-bar"></i>
+              Objetivos y KPIs
+            </button>
+          </div>
+
+          <!-- Tab Content: Mapa de Calor -->
+          @if (tabDerecho() === 'mapa') {
+            <div class="tab-content">
+              <div class="risk-matrix-section">
+                <!-- Header con botón editar -->
+                <div class="matrix-header">
+                  @if (!editandoApetito()) {
+                    <button class="btn-edit-apetito" (click)="toggleEditarApetito()">
+                      <i class="pi pi-pencil"></i>
+                      Editar
+                    </button>
+                  } @else {
+                    <div class="edit-actions">
+                      <button class="btn-cancel-edit" (click)="cancelarEdicionApetito()">Cancelar</button>
+                      <button class="btn-save-edit" (click)="guardarApetito()">Guardar</button>
+                    </div>
+                  }
+                </div>
+
+                <!-- Mapa de calor con tamaño fijo -->
+                <div class="mapa-calor-container">
+                  <div class="matriz-fixed-wrapper" [style.--cols]="impacto()" [style.--rows]="probabilidad()">
+                    <div class="eje-y-titulo">Probabilidad</div>
+                    <div class="matriz-area">
+                      @for (prob of getProbabilidadArray(); track prob) {
+                        <div class="matriz-fila">
+                          <span class="label-y">{{ getProbabilidadLabel(prob) }}</span>
+                          @for (imp of getImpactoArray(); track imp) {
+                            <div
+                              class="matriz-cell"
+                              [class]="getCeldaNivelDinamico(prob, imp)"
+                              [class.selected]="isCeldaSeleccionada(prob, imp)"
+                              [class.dentro-apetito]="estaDentroApetitoDinamico(prob, imp)"
+                              [class.fuera-apetito]="!estaDentroApetitoDinamico(prob, imp)"
+                              [class.editable]="editandoApetito()"
+                              (click)="seleccionarCelda(prob, imp)">
+                              @if (isCeldaSeleccionada(prob, imp)) {
+                                <span class="cell-value">{{ apetitoRiesgo() }}%</span>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
+                      <div class="matriz-fila labels-x">
+                        <span class="label-y"></span>
+                        @for (imp of getImpactoArray(); track imp) {
+                          <span class="label-x">{{ getImpactoLabel(imp) }}</span>
+                        }
+                      </div>
+                    </div>
+                    <div class="eje-x-titulo">Impacto</div>
+                  </div>
+
+                  <!-- Leyenda compacta -->
+                  <div class="matriz-leyenda">
+                    <div class="leyenda-item"><span class="leyenda-color bajo"></span>Bajo</div>
+                    <div class="leyenda-item"><span class="leyenda-color medio"></span>Medio</div>
+                    <div class="leyenda-item"><span class="leyenda-color alto"></span>Alto</div>
+                    <div class="leyenda-item"><span class="leyenda-color critico"></span>Crítico</div>
+                  </div>
+                </div>
+
+                <!-- Panel de edición debajo del mapa -->
+                @if (editandoApetito()) {
+                  <div class="apetito-edit-panel">
+                    <div class="edit-inputs-row">
+                      <div class="edit-field">
+                        <label>Probabilidad <span class="field-hint">(Eje Y)</span></label>
+                        <div class="input-group">
+                          <input
+                            type="number"
+                            [ngModel]="probabilidad()"
+                            (ngModelChange)="actualizarProbabilidad($event)"
+                            min="1"
+                            max="10"
+                            class="number-input">
+                          <div class="input-controls">
+                            <button (click)="incrementarProbabilidad()"><i class="pi pi-chevron-up"></i></button>
+                            <button (click)="decrementarProbabilidad()"><i class="pi pi-chevron-down"></i></button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="edit-field">
+                        <label>Impacto <span class="field-hint">(Eje X)</span></label>
+                        <div class="input-group">
+                          <input
+                            type="number"
+                            [ngModel]="impacto()"
+                            (ngModelChange)="actualizarImpacto($event)"
+                            min="1"
+                            max="10"
+                            class="number-input">
+                          <div class="input-controls">
+                            <button (click)="incrementarImpacto()"><i class="pi pi-chevron-up"></i></button>
+                            <button (click)="decrementarImpacto()"><i class="pi pi-chevron-down"></i></button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="edit-field apetito-field">
+                        <label>Apetito de riesgo <span class="field-hint">(%)</span></label>
+                        <div class="input-group">
+                          <input
+                            type="number"
+                            [ngModel]="apetitoRiesgo()"
+                            (ngModelChange)="actualizarApetitoRiesgo($event)"
+                            min="0"
+                            max="100"
+                            class="number-input">
+                          <div class="input-controls">
+                            <button (click)="incrementarApetito()"><i class="pi pi-chevron-up"></i></button>
+                            <button (click)="decrementarApetito()"><i class="pi pi-chevron-down"></i></button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                <!-- Valores en modo lectura -->
+                @if (!editandoApetito()) {
+                  <div class="risk-values">
+                    <div class="risk-value-item">
+                      <span class="value-label">Apetito</span>
+                      <span class="value-number">{{ apetitoRiesgo() }}<small>%</small></span>
+                    </div>
+                    <div class="risk-value-item">
+                      <span class="value-label">Matriz</span>
+                      <span class="value-number">{{ probabilidad() }}x{{ impacto() }}</span>
+                    </div>
+                    <div class="risk-value-item">
+                      <span class="value-label">Posición</span>
+                      <span class="value-number">({{ celdaProbabilidad() }}, {{ celdaImpacto() }})</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Tab Content: Objetivos y KPIs -->
+          @if (tabDerecho() === 'kpis') {
+            <div class="tab-content">
+              <div class="kpis-header-actions">
+                <button class="btn-view-link" (click)="navegarObjetivosVer()">Ver todo</button>
+              </div>
+              <div class="kpis-list">
+                @for (kpi of objetivosKPIs(); track kpi.id) {
+                  <div class="kpi-item">
+                    <div class="kpi-header">
+                      <span class="kpi-nombre">{{ kpi.nombre }}</span>
+                      <div class="kpi-badges">
+                        <span class="kpi-tipo" [class]="kpi.tipo">
+                          {{ kpi.tipo === 'estrategico' ? 'Estratégico' : 'Específico' }}
+                        </span>
+                        <span class="kpi-count">{{ kpi.count }}</span>
+                        <i class="pi pi-chevron-right"></i>
+                      </div>
+                    </div>
+                    <p class="kpi-descripcion">{{ kpi.descripcion }}</p>
+                    @if (kpi.progreso !== undefined) {
+                      <div class="kpi-progress">
+                        <div class="progress-fill" [class]="kpi.tipo" [style.width.%]="kpi.progreso"></div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- Loading -->
+    <div class="loading-container">
+      <i class="pi pi-spin pi-spinner"></i>
+      <p>Cargando proceso...</p>
+    </div>
+  }
+</div>
+
+<p-toast />

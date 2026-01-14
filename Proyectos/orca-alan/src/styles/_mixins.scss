@@ -1,0 +1,864 @@
+// ============================================================================
+// ORCA DESIGN SYSTEM - MIXINS SCSS
+// ============================================================================
+// Mixins reutilizables para patrones de diseño comunes.
+// Importar en componentes: @use 'styles/mixins' as *;
+// ============================================================================
+
+@use 'design-tokens' as *;
+@use 'dark-mode' as dark;
+
+// ----------------------------------------------------------------------------
+// LAYOUT DE PÁGINA
+// ----------------------------------------------------------------------------
+
+/// Estilos base para contenedor de página (con soporte dark mode)
+@mixin page-container {
+  padding: $page-padding;
+  min-height: 100%;
+  background-color: var(--surface-ground);
+
+  .page-header {
+    margin-bottom: $spacing-6;
+
+    h1 {
+      font-size: $font-size-3xl;
+      font-weight: $font-weight-semibold;
+      color: var(--text-color);
+      margin: 0 0 $spacing-2 0;
+    }
+
+    .page-subtitle {
+      font-size: $font-size-base;
+      color: var(--text-color-secondary);
+      margin: 0;
+    }
+  }
+
+  // Dark mode automático
+  @include dark.dark-mode {
+    background-color: var(--surface-950);
+
+    .page-header {
+      h1 {
+        color: var(--surface-0);
+      }
+
+      .page-subtitle {
+        color: var(--surface-400);
+      }
+    }
+  }
+}
+
+/// Estilos para toolbar de página
+@mixin page-toolbar {
+  :host ::ng-deep {
+    .p-toolbar {
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin-bottom: $spacing-4;
+      gap: $spacing-4;
+
+      .p-toolbar-start,
+      .p-toolbar-end {
+        gap: $spacing-3;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// TABLAS
+// ----------------------------------------------------------------------------
+
+/// Estilos base para páginas con tabla
+@mixin table-page {
+  @include page-container;
+  @include page-toolbar;
+
+  .table-card {
+    :host ::ng-deep {
+      .p-card-body {
+        padding: 0;
+      }
+
+      .p-card-content {
+        padding: 0;
+      }
+    }
+  }
+}
+
+/// Estilos para tabla con edición in-place (con soporte dark mode)
+@mixin table-editable {
+  :host ::ng-deep {
+    .p-datatable {
+      .p-datatable-thead > tr > th {
+        background: var(--surface-100);
+        font-weight: $font-weight-semibold;
+        font-size: $font-size-sm;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        color: var(--text-color-secondary);
+        padding: $spacing-3 $spacing-4;
+        border-bottom: 1px solid var(--surface-border);
+      }
+
+      .p-datatable-tbody > tr {
+        transition: background $transition-fast;
+
+        > td {
+          padding: $spacing-3 $spacing-4;
+          border-bottom: 1px solid var(--surface-border);
+          vertical-align: middle;
+          color: var(--text-color);
+        }
+
+        &:hover {
+          background: var(--surface-hover);
+        }
+
+        // Fila en modo edición
+        &.editing-row {
+          background: var(--primary-50);
+
+          > td {
+            padding: $spacing-2 $spacing-3;
+          }
+        }
+      }
+
+      // Columna de checkbox
+      .checkbox-column {
+        width: $table-checkbox-width;
+        text-align: center;
+      }
+
+      // Columna de acciones
+      .actions-column {
+        width: $table-actions-width;
+        text-align: center;
+      }
+    }
+  }
+
+  // Dark mode automático
+  @include dark.dark-mode {
+    :host ::ng-deep {
+      .p-datatable {
+        .p-datatable-thead > tr > th {
+          background: var(--surface-800);
+          color: var(--surface-0);
+          border-color: var(--surface-700);
+        }
+
+        .p-datatable-tbody > tr {
+          > td {
+            border-color: var(--surface-700);
+            color: var(--surface-0);
+          }
+
+          &:hover {
+            background: var(--surface-800);
+          }
+
+          &.editing-row {
+            background: color-mix(in srgb, var(--primary-color) 20%, var(--surface-900));
+          }
+        }
+      }
+    }
+  }
+}
+
+/// Estilos para footer de tabla con totales
+@mixin table-footer {
+  :host ::ng-deep {
+    .p-datatable-footer {
+      background: $surface-50;
+      padding: $spacing-3 $spacing-4;
+      border-top: 1px solid $surface-200;
+      font-size: $font-size-sm;
+      color: $surface-600;
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// CARDS
+// ----------------------------------------------------------------------------
+
+/// Card estándar con borde superior
+@mixin card-with-accent($color: var(--primary-color)) {
+  border-top: 3px solid $color;
+  border-radius: $border-radius-lg;
+
+  :host ::ng-deep {
+    .p-card {
+      border-top: 3px solid $color;
+    }
+  }
+}
+
+/// Card de KPI para dashboards (con soporte dark mode)
+@mixin kpi-card {
+  .kpi-card {
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-4;
+    padding: $spacing-5;
+    background: var(--surface-card);
+    border-radius: $border-radius-lg;
+    border: 1px solid var(--surface-border);
+
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: $border-radius-full;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $font-size-xl;
+      flex-shrink: 0;
+    }
+
+    .kpi-content {
+      flex: 1;
+
+      .kpi-label {
+        font-size: $font-size-sm;
+        color: var(--text-color-secondary);
+        margin-bottom: $spacing-1;
+      }
+
+      .kpi-value {
+        font-size: $font-size-2xl;
+        font-weight: $font-weight-bold;
+        color: var(--text-color);
+        line-height: $line-height-tight;
+      }
+
+      .kpi-subtitle {
+        font-size: $font-size-xs;
+        color: var(--text-color-secondary);
+        margin-top: $spacing-1;
+      }
+    }
+  }
+
+  // Dark mode automático
+  @include dark.dark-mode {
+    .kpi-card {
+      background: var(--surface-900);
+      border-color: var(--surface-700);
+
+      .kpi-content {
+        .kpi-label {
+          color: var(--surface-400);
+        }
+
+        .kpi-value {
+          color: var(--surface-0);
+        }
+
+        .kpi-subtitle {
+          color: var(--surface-500);
+        }
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// DIALOGS Y DRAWERS
+// ----------------------------------------------------------------------------
+
+/// Estilos para dialog de formulario (con soporte dark mode)
+@mixin form-dialog {
+  :host ::ng-deep {
+    .p-dialog {
+      .p-dialog-header {
+        padding: $spacing-5 $spacing-6;
+        border-bottom: 1px solid var(--surface-border);
+        background: var(--surface-card);
+      }
+
+      .p-dialog-content {
+        padding: $spacing-6;
+        background: var(--surface-card);
+      }
+
+      .p-dialog-footer {
+        padding: $spacing-4 $spacing-6;
+        border-top: 1px solid var(--surface-border);
+        background: var(--surface-card);
+        gap: $spacing-3;
+      }
+    }
+  }
+
+  // Dark mode automático
+  @include dark.dark-mode {
+    :host ::ng-deep {
+      .p-dialog {
+        .p-dialog-header {
+          background: var(--surface-900);
+          border-color: var(--surface-700);
+          color: var(--surface-0);
+        }
+
+        .p-dialog-content {
+          background: var(--surface-900);
+        }
+
+        .p-dialog-footer {
+          background: var(--surface-900);
+          border-color: var(--surface-700);
+        }
+      }
+    }
+  }
+}
+
+/// Estilos para drawer lateral (con soporte dark mode)
+@mixin side-drawer {
+  :host ::ng-deep {
+    .p-drawer {
+      .p-drawer-header {
+        padding: $spacing-5 $spacing-6;
+        border-bottom: 1px solid var(--surface-border);
+        background: var(--surface-card);
+      }
+
+      .p-drawer-content {
+        padding: $spacing-6;
+        background: var(--surface-card);
+      }
+
+      .drawer-section {
+        margin-bottom: $spacing-6;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .section-title {
+          font-size: $font-size-sm;
+          font-weight: $font-weight-semibold;
+          color: var(--text-color-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: $spacing-3;
+        }
+      }
+    }
+  }
+
+  // Dark mode automático
+  @include dark.dark-mode {
+    :host ::ng-deep {
+      .p-drawer {
+        .p-drawer-header {
+          background: var(--surface-900);
+          border-color: var(--surface-700);
+          color: var(--surface-0);
+        }
+
+        .p-drawer-content {
+          background: var(--surface-900);
+        }
+
+        .drawer-section {
+          .section-title {
+            color: var(--surface-400);
+          }
+        }
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// FORMULARIOS
+// ----------------------------------------------------------------------------
+
+/// Layout de formulario con grid (con soporte dark mode)
+@mixin form-grid {
+  display: grid;
+  gap: $spacing-4;
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-4;
+
+    &.full-width {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+
+    label {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: var(--text-color);
+
+      .required {
+        color: var(--red-500);
+        margin-left: $spacing-1;
+      }
+    }
+
+    .field-hint {
+      font-size: $font-size-xs;
+      color: var(--text-color-secondary);
+    }
+
+    .field-error {
+      font-size: $font-size-xs;
+      color: var(--red-500);
+    }
+  }
+
+  // Dark mode automático
+  @include dark.dark-mode {
+    .form-field {
+      label {
+        color: var(--surface-0);
+      }
+
+      .field-hint {
+        color: var(--surface-400);
+      }
+    }
+  }
+}
+
+/// Campo de formulario individual (con soporte dark mode)
+@mixin form-field {
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+
+    label {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: var(--text-color);
+    }
+  }
+
+  // Dark mode automático
+  @include dark.dark-mode {
+    .form-field {
+      label {
+        color: var(--surface-0);
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// ESTADOS
+// ----------------------------------------------------------------------------
+
+/// Empty state centrado (con soporte dark mode)
+@mixin empty-state {
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-12 $spacing-6;
+    text-align: center;
+
+    .empty-icon {
+      font-size: 3rem;
+      color: var(--text-color-secondary);
+      margin-bottom: $spacing-4;
+    }
+
+    .empty-title {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: var(--text-color);
+      margin-bottom: $spacing-2;
+    }
+
+    .empty-message {
+      font-size: $font-size-base;
+      color: var(--text-color-secondary);
+      max-width: 400px;
+      margin-bottom: $spacing-6;
+    }
+
+    .empty-action {
+      margin-top: $spacing-4;
+    }
+  }
+
+  // Dark mode automático
+  @include dark.dark-mode {
+    .empty-state {
+      .empty-icon {
+        color: var(--surface-500);
+      }
+
+      .empty-title {
+        color: var(--surface-0);
+      }
+
+      .empty-message {
+        color: var(--surface-400);
+      }
+    }
+  }
+}
+
+/// Loading state con overlay (con soporte dark mode)
+@mixin loading-overlay {
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+
+    .loading-spinner {
+      font-size: 2rem;
+      color: var(--primary-color);
+    }
+  }
+
+  // Dark mode automático
+  @include dark.dark-mode {
+    .loading-overlay {
+      background: rgba(0, 0, 0, 0.7);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// UTILIDADES
+// ----------------------------------------------------------------------------
+
+/// Texto truncado con ellipsis
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/// Texto monospace para IDs y códigos (con soporte dark mode)
+@mixin text-mono {
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  background: var(--surface-100);
+  padding: $spacing-1 $spacing-2;
+  border-radius: $border-radius-sm;
+  color: var(--text-color);
+}
+
+// ----------------------------------------------------------------------------
+// CARDS SELECCIONABLES
+// ----------------------------------------------------------------------------
+
+/// Card seleccionable con hover y estado activo - WCAG 2.1 AA Compliant
+/// Uso: @include selectable-card; en el contenedor de la card
+/// El estado .selected usa color-mix() con texto blanco para contraste en dark mode
+@mixin selectable-card {
+  background: var(--surface-ground);
+  border: 2px solid var(--surface-border);
+  border-radius: $border-radius-lg;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-200);
+    background: var(--surface-hover);
+  }
+
+  &.selected,
+  &.active {
+    border-color: var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card));
+  }
+
+  &.disabled,
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  // Dark mode automático - WCAG 2.1 AA Compliant
+  @include dark.dark-mode {
+    & {
+      background: var(--surface-800);
+      border-color: var(--surface-700);
+
+      &:hover {
+        border-color: var(--primary-400);
+        background: var(--surface-700);
+      }
+
+      &.selected,
+      &.active {
+        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900));
+        border-color: var(--primary-color);
+
+        // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
+        [class*="-nombre"],
+        [class*="-title"],
+        .item-title,
+        .item-name {
+          color: #FFFFFF !important;
+          font-weight: 600;
+        }
+
+        [class*="-descripcion"],
+        [class*="-subtitle"],
+        .item-subtitle,
+        .item-description {
+          color: rgba(255, 255, 255, 0.85) !important;
+        }
+      }
+    }
+  }
+}
+
+/// Chip seleccionable (para tags, filtros, etc) con soporte dark mode
+/// Uso: .mi-chip { @include selectable-chip; }
+@mixin selectable-chip {
+  padding: $spacing-2 $spacing-3;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: $border-radius-full;
+  font-size: $font-size-sm;
+  color: var(--text-color);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--primary-200);
+    background: var(--surface-hover);
+  }
+
+  &.selected {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+  }
+
+  // Dark mode automático
+  @include dark.dark-mode {
+    & {
+      background: var(--surface-800);
+      border-color: var(--surface-700);
+
+      &:hover {
+        border-color: var(--primary-400);
+        background: var(--surface-700);
+      }
+
+      &.selected {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+      }
+    }
+  }
+}
+
+/// List item seleccionable (para listas de navegación, menús) - WCAG 2.1 AA Compliant
+/// Uso: .mi-item { @include selectable-list-item; }
+@mixin selectable-list-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  padding: $spacing-3 $spacing-4;
+  border-radius: $border-radius-md;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+
+  &.selected,
+  &.active {
+    background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-card));
+    border-color: var(--primary-color);
+  }
+
+  // Dark mode automático - WCAG 2.1 AA Compliant
+  @include dark.dark-mode {
+    &:hover {
+      background: var(--surface-800);
+    }
+
+    &.selected,
+    &.active {
+      background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900));
+      border-color: var(--primary-color);
+
+      // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
+      [class*="-nombre"],
+      [class*="-title"],
+      .item-title,
+      .item-name {
+        color: #FFFFFF !important;
+        font-weight: 600;
+      }
+
+      [class*="-descripcion"],
+      [class*="-subtitle"],
+      .item-subtitle,
+      .item-description {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+    }
+  }
+}
+
+/// Card de opción para wizards/selección - WCAG 2.1 AA Compliant
+@mixin option-card {
+  @include selectable-card;
+  padding: $spacing-4;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-3;
+
+  .option-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: $border-radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.25rem;
+      color: #fff;
+    }
+  }
+
+  .option-title {
+    font-weight: $font-weight-semibold;
+    color: var(--text-color);
+  }
+
+  .option-description {
+    font-size: $font-size-sm;
+    color: var(--text-color-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  // Dark mode automático - WCAG 2.1 AA Compliant
+  @include dark.dark-mode {
+    .option-title {
+      color: var(--surface-0);
+    }
+
+    .option-description {
+      color: var(--surface-400);
+    }
+
+    // Cuando está seleccionado, texto blanco para contraste
+    &.selected,
+    &.active {
+      .option-title {
+        color: #FFFFFF !important;
+      }
+
+      .option-description {
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+    }
+  }
+}
+
+/// Scrollbar personalizado
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $surface-100;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $surface-300;
+    border-radius: 3px;
+
+    &:hover {
+      background: $surface-400;
+    }
+  }
+}
+
+/// Efecto hover para elementos clickeables
+@mixin hover-lift {
+  transition: transform $transition-fast, box-shadow $transition-fast;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+/// Focus visible para accesibilidad
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// RESPONSIVE
+// ----------------------------------------------------------------------------
+
+/// Media query para móvil
+@mixin mobile {
+  @media (max-width: #{$breakpoint-md - 1px}) {
+    @content;
+  }
+}
+
+/// Media query para tablet
+@mixin tablet {
+  @media (min-width: $breakpoint-md) and (max-width: #{$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+/// Media query para desktop
+@mixin desktop {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+/// Media query para pantallas grandes
+@mixin large-desktop {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}
