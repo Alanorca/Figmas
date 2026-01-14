@@ -56,7 +56,7 @@ export const routes: Routes = [
   },
   {
     path: 'procesos/:id/detalle',
-    loadComponent: () => import('./pages/proceso-detalle/proceso-detalle').then(m => m.ProcesoDetalleComponent)
+    loadComponent: () => import('./pages/proceso-runner/proceso-runner').then(m => m.ProcesoRunnerComponent)
   },
   {
     path: 'procesos/:id/runner',

@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
@@ -15,6 +15,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
 import { TabsModule } from 'primeng/tabs';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { MessageService } from 'primeng/api';
 import { ProcessService, ExecutionVariable, ProcessExecution } from '../../services/process.service';
 import { Proceso, ProcessNode } from '../../models/process-nodes';
@@ -146,7 +148,9 @@ interface OutputVariableDefinition {
     InputTextModule,
     TextareaModule,
     ToastModule,
-    TabsModule
+    TabsModule,
+    IconFieldModule,
+    InputIconModule
   ],
   providers: [MessageService],
   templateUrl: './proceso-runner.html',
@@ -175,6 +179,33 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
   showContextDialog = signal(false);
   selectedExecution = signal<{ id: string; status: string; startTime?: Date; endTime?: Date } | null>(null);
 
+  // Master-detail selection signals
+  selectedVariableKey = signal<string | null>(null);
+  selectedExecutionId = signal<string | null>(null);
+
+  // Search filters
+  variableSearchTerm = signal('');
+  executionSearchTerm = signal('');
+  variableTypeFilter = signal<string | null>(null);
+  executionStatusFilter = signal<string | null>(null);
+
+  // Filter options
+  variableTypeFilterOptions = [
+    { label: 'Todos los tipos', value: null },
+    { label: 'Objeto', value: 'object' },
+    { label: 'Numero', value: 'number' },
+    { label: 'Texto', value: 'string' },
+    { label: 'Booleano', value: 'boolean' },
+    { label: 'Array', value: 'array' }
+  ];
+
+  executionStatusFilterOptions = [
+    { label: 'Todos', value: null },
+    { label: 'Completado', value: 'completed' },
+    { label: 'Fallido', value: 'failed' },
+    { label: 'En ejecucion', value: 'running' }
+  ];
+
   // Storage configuration
   outputVariableDefinitions = signal<OutputVariableDefinition[]>([]);
   storageConfigs = signal<OutputVariableStorageConfig[]>([]);
@@ -186,6 +217,25 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
 
   // Demo mode to show different states
   demoMode = signal(true);
+
+  // ========== ZOOM Y PAN DEL FLUJO ==========
+  zoom = signal<number>(1);
+  panX = signal<number>(0);
+  panY = signal<number>(0);
+  isPanning = signal<boolean>(false);
+  private lastPanPosition = { x: 0, y: 0 };
+
+  readonly MIN_ZOOM = 0.25;
+  readonly MAX_ZOOM = 2;
+  readonly ZOOM_STEP = 0.1;
+
+  // Transform computed para el canvas del flujo
+  flowTransform = computed(() => {
+    return `translate(${this.panX()}px, ${this.panY()}px) scale(${this.zoom()})`;
+  });
+
+  // Zoom percentage para mostrar en controles
+  zoomPercentage = computed(() => Math.round(this.zoom() * 100));
 
   // Computed from service
   currentExecution = computed(() => {
@@ -368,6 +418,84 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
   currentNode = computed(() => this.flowNodes().find(n => n.status === 'running') || null);
   failedNode = computed(() => this.flowNodes().find(n => n.status === 'failed') || null);
   canStartExecution = computed(() => !this.isExecuting() && this.nodes().length > 0);
+
+  // Computed: filtered variables for search
+  filteredVariables = computed(() => {
+    const term = this.variableSearchTerm().toLowerCase().trim();
+    const typeFilter = this.variableTypeFilter();
+    let variables = this.executionVariables();
+
+    // Filter by type
+    if (typeFilter) {
+      variables = variables.filter(v => v.type === typeFilter);
+    }
+
+    // Filter by search term
+    if (term) {
+      variables = variables.filter(v =>
+        v.key.toLowerCase().includes(term) ||
+        v.typeLabel.toLowerCase().includes(term) ||
+        (v.preview && v.preview.toLowerCase().includes(term))
+      );
+    }
+
+    return variables;
+  });
+
+  // Computed: filtered execution history for search
+  filteredExecutionHistory = computed(() => {
+    const term = this.executionSearchTerm().toLowerCase().trim();
+    const statusFilter = this.executionStatusFilter();
+    const allHistory = this.executionHistory();
+
+    return allHistory.filter(e => {
+      // Filter by status
+      if (statusFilter && e.status !== statusFilter) {
+        return false;
+      }
+
+      // Filter by search term
+      if (term) {
+        return e.id.toLowerCase().includes(term) ||
+               e.status.toLowerCase().includes(term);
+      }
+
+      return true;
+    });
+  });
+
+  // Computed for master-detail: selected variable detail
+  selectedVariableDetail = computed(() => {
+    const key = this.selectedVariableKey();
+    if (!key) return null;
+    return this.executionVariables().find(v => v.key === key) || null;
+  });
+
+  // Computed for master-detail: selected execution detail
+  selectedExecutionDetail = computed(() => {
+    const id = this.selectedExecutionId();
+    if (!id) return null;
+    return this.executionHistory().find(e => e.id === id) || null;
+  });
+
+  // Computed: context for selected execution in master-detail
+  selectedExecutionDetailContext = computed(() => {
+    const exec = this.selectedExecutionDetail();
+    if (!exec) return null;
+
+    if (this.demoMode()) {
+      return {
+        resultado_csv: { rows: 150, columns: 12, processed: true },
+        datos_transformados: { records: 148, errors: 2 },
+        score_ml: 0.87,
+        alerta_detectada: true,
+        timestamp: new Date().toISOString(),
+        proceso_id: this.processId(),
+        ejecucion_id: exec.id
+      };
+    }
+    return null;
+  });
 
   // Selected execution context for the detail dialog
   selectedExecutionContext = computed(() => {
@@ -769,6 +897,23 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
     this.showVariableDialog.set(true);
   }
 
+  // Master-detail selection methods
+  selectVariable(variable: ExecutionVariable): void {
+    this.selectedVariableKey.set(variable.key);
+  }
+
+  selectExecution(exec: { id: string; status: string; startTime?: Date; endTime?: Date }): void {
+    this.selectedExecutionId.set(exec.id);
+  }
+
+  clearVariableSelection(): void {
+    this.selectedVariableKey.set(null);
+  }
+
+  clearExecutionSelection(): void {
+    this.selectedExecutionId.set(null);
+  }
+
   showErrorDetails(): void {
     this.showErrorDialog.set(true);
   }
@@ -1003,6 +1148,111 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
         };
         this.entityCreationConfigs.set(configs);
       }
+    }
+  }
+
+  // ========== ZOOM Y PAN METHODS ==========
+
+  zoomIn(): void {
+    const newZoom = Math.min(this.zoom() + this.ZOOM_STEP, this.MAX_ZOOM);
+    this.zoom.set(Number(newZoom.toFixed(2)));
+  }
+
+  zoomOut(): void {
+    const newZoom = Math.max(this.zoom() - this.ZOOM_STEP, this.MIN_ZOOM);
+    this.zoom.set(Number(newZoom.toFixed(2)));
+  }
+
+  resetZoom(): void {
+    this.zoom.set(1);
+    this.panX.set(0);
+    this.panY.set(0);
+  }
+
+  fitToScreen(): void {
+    this.zoom.set(0.8);
+    this.panX.set(0);
+    this.panY.set(0);
+  }
+
+  // Mouse wheel zoom
+  onFlowWheel(event: WheelEvent): void {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? -this.ZOOM_STEP : this.ZOOM_STEP;
+    const newZoom = Math.max(this.MIN_ZOOM, Math.min(this.MAX_ZOOM, this.zoom() + delta));
+    this.zoom.set(Number(newZoom.toFixed(2)));
+  }
+
+  // Middle mouse button pan start
+  onFlowMouseDown(event: MouseEvent): void {
+    if (event.button === 1) {
+      event.preventDefault();
+      this.isPanning.set(true);
+      this.lastPanPosition = { x: event.clientX, y: event.clientY };
+    }
+  }
+
+  // Mouse move for panning
+  onFlowMouseMove(event: MouseEvent): void {
+    if (this.isPanning()) {
+      event.preventDefault();
+      const deltaX = event.clientX - this.lastPanPosition.x;
+      const deltaY = event.clientY - this.lastPanPosition.y;
+
+      this.panX.update(x => x + deltaX);
+      this.panY.update(y => y + deltaY);
+
+      this.lastPanPosition = { x: event.clientX, y: event.clientY };
+    }
+  }
+
+  // Mouse up to stop panning
+  onFlowMouseUp(event: MouseEvent): void {
+    if (event.button === 1) {
+      this.isPanning.set(false);
+    }
+  }
+
+  // Mouse leave to stop panning
+  onFlowMouseLeave(): void {
+    this.isPanning.set(false);
+  }
+
+  // Keyboard shortcuts for zoom
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+
+    // Ctrl/Cmd + Plus: Zoom in
+    if ((event.ctrlKey || event.metaKey) && (event.key === '+' || event.key === '=')) {
+      event.preventDefault();
+      this.zoomIn();
+    }
+    // Ctrl/Cmd + Minus: Zoom out
+    if ((event.ctrlKey || event.metaKey) && event.key === '-') {
+      event.preventDefault();
+      this.zoomOut();
+    }
+    // Ctrl/Cmd + 0: Reset zoom
+    if ((event.ctrlKey || event.metaKey) && event.key === '0') {
+      event.preventDefault();
+      this.resetZoom();
+    }
+    // Arrow keys for panning
+    const PAN_AMOUNT = 50;
+    if (event.key === 'ArrowUp' && !event.ctrlKey) {
+      this.panY.update(y => y + PAN_AMOUNT);
+    }
+    if (event.key === 'ArrowDown' && !event.ctrlKey) {
+      this.panY.update(y => y - PAN_AMOUNT);
+    }
+    if (event.key === 'ArrowLeft' && !event.ctrlKey) {
+      this.panX.update(x => x + PAN_AMOUNT);
+    }
+    if (event.key === 'ArrowRight' && !event.ctrlKey) {
+      this.panX.update(x => x - PAN_AMOUNT);
     }
   }
 }

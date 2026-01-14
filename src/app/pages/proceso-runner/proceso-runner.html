@@ -109,7 +109,33 @@
 
     <!-- Flow Visualization -->
     <p-card header="Flujo del Proceso" styleClass="flow-card">
-      <div class="flow-visualization">
+      <div class="flow-viewport"
+           (wheel)="onFlowWheel($event)"
+           (mousedown)="onFlowMouseDown($event)"
+           (mousemove)="onFlowMouseMove($event)"
+           (mouseup)="onFlowMouseUp($event)"
+           (mouseleave)="onFlowMouseLeave()"
+           [class.panning]="isPanning()">
+
+        <!-- Panel flotante de zoom -->
+        <div class="zoom-floating-panel">
+          <div class="zoom-controls">
+            <p-button icon="pi pi-minus" [rounded]="true" [text]="true" severity="secondary" size="small"
+                      (click)="zoomOut()" pTooltip="Alejar (Ctrl -)" [disabled]="zoom() <= MIN_ZOOM"></p-button>
+            <span class="zoom-percentage">{{ zoomPercentage() }}%</span>
+            <p-button icon="pi pi-plus" [rounded]="true" [text]="true" severity="secondary" size="small"
+                      (click)="zoomIn()" pTooltip="Acercar (Ctrl +)" [disabled]="zoom() >= MAX_ZOOM"></p-button>
+            <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" severity="secondary" size="small"
+                      (click)="resetZoom()" pTooltip="Restablecer (Ctrl 0)"></p-button>
+            <p-button icon="pi pi-arrows-alt" [rounded]="true" [text]="true" severity="secondary" size="small"
+                      (click)="fitToScreen()" pTooltip="Ajustar a pantalla"></p-button>
+          </div>
+          <div class="zoom-hint">
+            <i class="pi pi-mouse"></i>
+            <span>Rueda: zoom | Clic rueda: mover | Flechas: mover</span>
+          </div>
+        </div>
+
         @if (flowNodes().length === 0) {
           <div class="empty-flow">
             <i class="pi pi-sitemap text-5xl text-zinc-400"></i>
@@ -124,45 +150,48 @@
             />
           </div>
         } @else {
-          <div class="flow-graph">
-            @for (node of flowNodes(); track node.id; let isLast = $last) {
-              <!-- Node -->
-              <div
-                class="flow-node"
-                [class.node-pending]="node.status === 'pending'"
-                [class.node-running]="node.status === 'running'"
-                [class.node-completed]="node.status === 'completed'"
-                [class.node-failed]="node.status === 'failed'"
-                [class.has-output]="node.outputData"
-                (click)="showNodeOutput(node)"
-                [pTooltip]="getNodeTypeName(node.nodeType)"
-              >
-                <div class="node-icon">
-                  <i class="pi" [ngClass]="getNodeIcon(node.nodeType)"></i>
+          <!-- Canvas zoomeable -->
+          <div class="flow-canvas" [style.transform]="flowTransform()">
+            <div class="flow-graph">
+              @for (node of flowNodes(); track node.id; let isLast = $last) {
+                <!-- Node -->
+                <div
+                  class="flow-node"
+                  [class.node-pending]="node.status === 'pending'"
+                  [class.node-running]="node.status === 'running'"
+                  [class.node-completed]="node.status === 'completed'"
+                  [class.node-failed]="node.status === 'failed'"
+                  [class.has-output]="node.outputData"
+                  (click)="showNodeOutput(node)"
+                  [pTooltip]="getNodeTypeName(node.nodeType)"
+                >
+                  <div class="node-icon">
+                    <i class="pi" [ngClass]="getNodeIcon(node.nodeType)"></i>
+                  </div>
+                  <div class="node-info">
+                    <span class="node-name">{{ node.name }}</span>
+                    <span class="node-type">{{ getNodeTypeName(node.nodeType) }}</span>
+                  </div>
+                  <div class="node-status-indicator">
+                    @if (node.status === 'running') {
+                      <div class="pulse-dot"></div>
+                    } @else if (node.status === 'completed') {
+                      <i class="pi pi-check"></i>
+                    } @else if (node.status === 'failed') {
+                      <i class="pi pi-times"></i>
+                    } @else {
+                      <i class="pi pi-circle"></i>
+                    }
+                  </div>
                 </div>
-                <div class="node-info">
-                  <span class="node-name">{{ node.name }}</span>
-                  <span class="node-type">{{ getNodeTypeName(node.nodeType) }}</span>
-                </div>
-                <div class="node-status-indicator">
-                  @if (node.status === 'running') {
-                    <div class="pulse-dot"></div>
-                  } @else if (node.status === 'completed') {
-                    <i class="pi pi-check"></i>
-                  } @else if (node.status === 'failed') {
-                    <i class="pi pi-times"></i>
-                  } @else {
-                    <i class="pi pi-circle"></i>
-                  }
-                </div>
-              </div>
-              <!-- Arrow between nodes -->
-              @if (!isLast) {
-                <div class="flow-arrow" [class.arrow-completed]="node.status === 'completed'">
-                  <i class="pi pi-arrow-right"></i>
-                </div>
+                <!-- Arrow between nodes -->
+                @if (!isLast) {
+                  <div class="flow-arrow" [class.arrow-completed]="node.status === 'completed'">
+                    <i class="pi pi-arrow-right"></i>
+                  </div>
+                }
               }
-            }
+            </div>
           </div>
         }
       </div>
@@ -202,26 +231,86 @@
                   (onClick)="exportContext()"
                 />
               </div>
-              <div class="variables-grid">
-                @for (variable of executionVariables(); track variable.key) {
-                  <div class="variable-card" [class.has-data]="variable.value !== null && variable.value !== undefined">
-                    <div class="variable-header">
-                      <div class="variable-icon">
-                        <i class="pi" [ngClass]="getVariableIcon(variable.type)"></i>
-                      </div>
-                      <div class="variable-info">
-                        <span class="variable-name">{{ variable.key }}</span>
-                        <span class="variable-type">{{ variable.typeLabel }}</span>
-                      </div>
-                    </div>
-                    <div class="variable-preview">
-                      {{ variable.preview }}
-                    </div>
-                    <div class="variable-actions">
-                      <a class="detail-link" (click)="showVariableDetail(variable)">detalle</a>
-                    </div>
+              <div class="master-detail-layout">
+                <!-- Columna izquierda: Lista de variables -->
+                <div class="master-column">
+                  <div class="master-search">
+                    <p-iconfield>
+                      <p-inputicon styleClass="pi pi-search" />
+                      <input
+                        pInputText
+                        type="text"
+                        placeholder="Buscar variable..."
+                        [ngModel]="variableSearchTerm()"
+                        (ngModelChange)="variableSearchTerm.set($event)"
+                      />
+                    </p-iconfield>
+                    <p-select
+                      [options]="variableTypeFilterOptions"
+                      [ngModel]="variableTypeFilter()"
+                      (ngModelChange)="variableTypeFilter.set($event)"
+                      optionLabel="label"
+                      optionValue="value"
+                      styleClass="filter-select"
+                    />
                   </div>
-                }
+                  <div class="master-list">
+                    @for (variable of filteredVariables(); track variable.key) {
+                      <div
+                        class="variable-card"
+                        [class.has-data]="variable.value !== null && variable.value !== undefined"
+                        [class.selected]="selectedVariableKey() === variable.key"
+                        (click)="selectVariable(variable)"
+                      >
+                        <div class="variable-header">
+                          <div class="variable-icon">
+                            <i class="pi" [ngClass]="getVariableIcon(variable.type)"></i>
+                          </div>
+                          <div class="variable-info">
+                            <span class="variable-name">{{ variable.key }}</span>
+                            <span class="variable-type">{{ variable.typeLabel }}</span>
+                          </div>
+                        </div>
+                        <div class="variable-preview">
+                          {{ variable.preview }}
+                        </div>
+                      </div>
+                    } @empty {
+                      <div class="empty-search">
+                        <i class="pi pi-search text-2xl text-zinc-400"></i>
+                        <p class="text-zinc-500 mt-1">Sin resultados</p>
+                      </div>
+                    }
+                  </div>
+                </div>
+                <!-- Columna derecha: Detalle de variable seleccionada -->
+                <div class="detail-panel">
+                  @if (selectedVariableDetail(); as variable) {
+                    <div class="detail-header">
+                      <div class="detail-title">
+                        <i class="pi" [ngClass]="getVariableIcon(variable.type)"></i>
+                        <h3>{{ variable.key }}</h3>
+                      </div>
+                      <p-tag [value]="variable.typeLabel" severity="secondary" />
+                    </div>
+                    <div class="detail-content">
+                      @if (variable.type === 'array' || variable.type === 'object') {
+                        <div class="output-json">
+                          <pre>{{ getVariableAsObject(variable.value) | json }}</pre>
+                        </div>
+                      } @else {
+                        <div class="detail-value">
+                          {{ variable.value }}
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <div class="detail-empty">
+                      <i class="pi pi-arrow-left text-3xl text-zinc-400"></i>
+                      <p class="text-zinc-500 mt-2">Selecciona una variable para ver su detalle</p>
+                    </div>
+                  }
+                </div>
               </div>
             } @else {
               <div class="empty-output">
@@ -234,50 +323,122 @@
           <!-- Tab: Historial de Ejecuciones -->
           <p-tabpanel value="1">
             @if (executionHistory().length > 0) {
-              <div class="history-grid">
-                @for (exec of executionHistory().slice(0, 6); track exec.id) {
-                  <div class="history-item" [class]="'item-' + exec.status">
-                    <div class="history-item-header">
-                      <div class="history-status-icon" [class]="'status-' + exec.status">
-                        @if (exec.status === 'running') {
-                          <i class="pi pi-spin pi-spinner"></i>
-                        } @else if (exec.status === 'completed') {
-                          <i class="pi pi-check"></i>
-                        } @else if (exec.status === 'failed' || exec.status === 'cancelled') {
-                          <i class="pi pi-times"></i>
-                        } @else {
-                          <i class="pi pi-circle"></i>
-                        }
+              <div class="master-detail-layout">
+                <!-- Columna izquierda: Lista de ejecuciones -->
+                <div class="master-column">
+                  <div class="master-search">
+                    <p-iconfield>
+                      <p-inputicon styleClass="pi pi-search" />
+                      <input
+                        pInputText
+                        type="text"
+                        placeholder="Buscar ejecucion..."
+                        [ngModel]="executionSearchTerm()"
+                        (ngModelChange)="executionSearchTerm.set($event)"
+                      />
+                    </p-iconfield>
+                    <p-select
+                      [options]="executionStatusFilterOptions"
+                      [ngModel]="executionStatusFilter()"
+                      (ngModelChange)="executionStatusFilter.set($event)"
+                      optionLabel="label"
+                      optionValue="value"
+                      styleClass="filter-select"
+                    />
+                  </div>
+                  <div class="master-list">
+                    @for (exec of filteredExecutionHistory().slice(0, 10); track exec.id) {
+                      <div
+                        class="history-item"
+                        [class]="'item-' + exec.status"
+                        [class.selected]="selectedExecutionId() === exec.id"
+                        (click)="selectExecution(exec)"
+                      >
+                        <div class="history-item-header">
+                          <div class="history-status-icon" [class]="'status-' + exec.status">
+                            @if (exec.status === 'running') {
+                              <i class="pi pi-spin pi-spinner"></i>
+                            } @else if (exec.status === 'completed') {
+                              <i class="pi pi-check"></i>
+                            } @else if (exec.status === 'failed' || exec.status === 'cancelled') {
+                              <i class="pi pi-times"></i>
+                            } @else {
+                              <i class="pi pi-circle"></i>
+                            }
+                          </div>
+                          <div class="history-item-info">
+                            <span class="history-id">Ejecucion #{{ exec.id.slice(0, 8) }}</span>
+                            <p-tag
+                              [value]="getStatusLabel(exec.status)"
+                              [severity]="getStatusSeverity(exec.status)"
+                              styleClass="text-xs"
+                            />
+                          </div>
+                        </div>
+                        <div class="history-item-meta">
+                          <span><i class="pi pi-calendar"></i> {{ formatDate(exec.startTime) }}</span>
+                          @if (exec.endTime) {
+                            <span><i class="pi pi-clock"></i> {{ formatDuration(getExecutionDurationMs(exec)) }}</span>
+                          }
+                        </div>
                       </div>
-                      <div class="history-item-info">
-                        <span class="history-id">Ejecucion #{{ exec.id.slice(0, 8) }}</span>
-                        <p-tag
-                          [value]="getStatusLabel(exec.status)"
-                          [severity]="getStatusSeverity(exec.status)"
-                          styleClass="text-xs"
-                        />
+                    } @empty {
+                      <div class="empty-search">
+                        <i class="pi pi-search text-2xl text-zinc-400"></i>
+                        <p class="text-zinc-500 mt-1">Sin resultados</p>
                       </div>
+                    }
+                  </div>
+                </div>
+                <!-- Columna derecha: Detalle de ejecución seleccionada -->
+                <div class="detail-panel">
+                  @if (selectedExecutionDetail(); as exec) {
+                    <div class="detail-header">
+                      <div class="detail-title">
+                        <i class="pi pi-history"></i>
+                        <h3>Ejecucion #{{ exec.id.slice(0, 8) }}</h3>
+                      </div>
+                      <p-tag
+                        [value]="getStatusLabel(exec.status)"
+                        [severity]="getStatusSeverity(exec.status)"
+                      />
                     </div>
-                    <div class="history-item-meta">
+                    <div class="detail-meta">
                       <span><i class="pi pi-calendar"></i> {{ formatDate(exec.startTime) }}</span>
                       @if (exec.endTime) {
-                        <span><i class="pi pi-clock"></i> {{ formatDuration(getExecutionDurationMs(exec)) }}</span>
+                        <span><i class="pi pi-clock"></i> Duracion: {{ formatDuration(getExecutionDurationMs(exec)) }}</span>
                       }
                     </div>
-                    <div class="history-item-actions">
-                      <a class="detail-link" (click)="viewExecutionContext(exec)">ver contexto</a>
+                    <div class="detail-section">
+                      <h4>Variables del Contexto</h4>
+                      @if (selectedExecutionDetailContext(); as context) {
+                        <div class="output-json">
+                          <pre>{{ context | json }}</pre>
+                        </div>
+                      } @else {
+                        <div class="detail-empty-small">
+                          <i class="pi pi-inbox text-2xl text-zinc-400"></i>
+                          <p class="text-zinc-500 mt-1">Sin datos de contexto</p>
+                        </div>
+                      }
+                    </div>
+                    <div class="detail-actions">
                       <p-button
                         icon="pi pi-download"
+                        label="Descargar JSON"
                         severity="secondary"
-                        [text]="true"
-                        [rounded]="true"
+                        [outlined]="true"
                         size="small"
-                        pTooltip="Descargar contexto"
                         (onClick)="downloadExecutionContext(exec)"
                       />
                     </div>
-                  </div>
-                }
+                  } @else {
+                    <div class="detail-empty">
+                      <i class="pi pi-arrow-left text-3xl text-zinc-400"></i>
+                      <p class="text-zinc-500 mt-2">Selecciona una ejecucion para ver su detalle</p>
+                    </div>
+                  }
+                </div>
               </div>
             } @else {
               <div class="empty-output">
