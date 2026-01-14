@@ -1,0 +1,25 @@
+// ============================================
+// PROYECTO CREAR - Usa estilos de proceso-crear
+// ============================================
+
+// Importar estilos base de proceso-crear
+@use '../proceso-crear/proceso-crear.scss';
+
+// Estilos específicos para proyecto-crear (si los hay)
+.kpis-wizard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-6);
+
+  .panel-title {
+    margin: 0;
+  }
+}
+
+.objetivo-descripcion {
+  font-size: var(--font-size-xs);
+  color: var(--text-color-secondary);
+  margin: var(--spacing-2) 0 0 0;
+  line-height: 1.5;
+}

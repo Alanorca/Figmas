@@ -1,0 +1,1228 @@
+import { Injectable, inject, signal, computed } from '@angular/core';
+import { ApiService } from './api.service';
+import { Activo } from '../models';
+import {
+  RegistroUnificado,
+  TipoEntidad,
+  ColumnaConfig,
+  FiltroActivo,
+  EstadoTabla,
+  PresetFecha,
+  WidgetGrafica,
+  ExportacionProgramada,
+  AlertaFiltro,
+  VistaCompartida,
+  ConfiguracionGrafica
+} from '../models/tabla-unificada.models';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TablaUnificadaService {
+  private api = inject(ApiService);
+
+  // Data cargada desde API
+  private activosData = signal<Activo[]>([]);
+  private riesgosData = signal<any[]>([]);
+  private incidentesData = signal<any[]>([]);
+  private procesosData = signal<any[]>([]);
+  private defectosData = signal<any[]>([]);
+  private revisionesData = signal<any[]>([]);
+  private cumplimientoData = signal<any[]>([]);
+
+  // Storage keys
+  private readonly WIDGETS_KEY = 'tabla-unificada-widgets';
+  private readonly EXPORTS_KEY = 'tabla-unificada-exports';
+  private readonly ALERTS_KEY = 'tabla-unificada-alerts';
+  private readonly VIEWS_KEY = 'tabla-unificada-views';
+
+  // Signals para nuevas funcionalidades
+  widgets = signal<WidgetGrafica[]>([]);
+  exportacionesProgramadas = signal<ExportacionProgramada[]>([]);
+  alertas = signal<AlertaFiltro[]>([]);
+  vistasCompartidas = signal<VistaCompartida[]>([]);
+
+  constructor() {
+    this.cargarDatos();
+    this.cargarDatosLocales();
+  }
+
+  private cargarDatosLocales(): void {
+    try {
+      // Cargar widgets
+      const widgetsStr = localStorage.getItem(this.WIDGETS_KEY);
+      if (widgetsStr) {
+        const widgets = JSON.parse(widgetsStr);
+        widgets.forEach((w: any) => w.fechaCreacion = new Date(w.fechaCreacion));
+        this.widgets.set(widgets);
+      }
+
+      // Cargar exportaciones programadas
+      const exportsStr = localStorage.getItem(this.EXPORTS_KEY);
+      if (exportsStr) {
+        const exports = JSON.parse(exportsStr);
+        exports.forEach((e: any) => {
+          if (e.ultimaEjecucion) e.ultimaEjecucion = new Date(e.ultimaEjecucion);
+          if (e.proximaEjecucion) e.proximaEjecucion = new Date(e.proximaEjecucion);
+        });
+        this.exportacionesProgramadas.set(exports);
+      }
+
+      // Cargar alertas
+      const alertsStr = localStorage.getItem(this.ALERTS_KEY);
+      if (alertsStr) {
+        const alerts = JSON.parse(alertsStr);
+        alerts.forEach((a: any) => {
+          if (a.ultimaActivacion) a.ultimaActivacion = new Date(a.ultimaActivacion);
+        });
+        this.alertas.set(alerts);
+      }
+
+      // Cargar vistas compartidas
+      const viewsStr = localStorage.getItem(this.VIEWS_KEY);
+      if (viewsStr) {
+        const views = JSON.parse(viewsStr);
+        views.forEach((v: any) => {
+          v.fechaCreacion = new Date(v.fechaCreacion);
+          if (v.fechaExpiracion) v.fechaExpiracion = new Date(v.fechaExpiracion);
+          if (v.ultimoAcceso) v.ultimoAcceso = new Date(v.ultimoAcceso);
+        });
+        this.vistasCompartidas.set(views);
+      }
+    } catch (e) {
+      console.error('Error cargando datos locales:', e);
+    }
+  }
+
+  private cargarDatos(): void {
+    this.api.getActivos().subscribe({
+      next: (data) => {
+        console.log('Activos cargados:', data.length);
+        this.activosData.set(data);
+      },
+      error: (err) => console.error('Error cargando activos:', err)
+    });
+    this.api.getRiesgos().subscribe({
+      next: (data) => {
+        console.log('Riesgos cargados:', data.length);
+        this.riesgosData.set(data);
+      },
+      error: (err) => console.error('Error cargando riesgos:', err)
+    });
+    this.api.getIncidentes().subscribe({
+      next: (data) => {
+        console.log('Incidentes cargados:', data.length);
+        this.incidentesData.set(data);
+      },
+      error: (err) => console.error('Error cargando incidentes:', err)
+    });
+    this.api.getProcesos().subscribe({
+      next: (data) => {
+        console.log('Procesos cargados:', data.length);
+        this.procesosData.set(data);
+      },
+      error: (err) => console.error('Error cargando procesos:', err)
+    });
+    this.api.getDefectos().subscribe({
+      next: (data) => {
+        console.log('Defectos cargados:', data.length);
+        this.defectosData.set(data);
+      },
+      error: (err) => console.error('Error cargando defectos:', err)
+    });
+    this.api.getAsignacionesCuestionario().subscribe({
+      next: (data) => {
+        console.log('Revisiones cargadas:', data.length);
+        this.revisionesData.set(data);
+      },
+      error: (err) => console.error('Error cargando revisiones:', err)
+    });
+    this.api.getMarcosNormativos().subscribe({
+      next: (data) => {
+        console.log('Marcos normativos cargados:', data.length);
+        this.cumplimientoData.set(data);
+      },
+      error: (err) => console.error('Error cargando cumplimiento:', err)
+    });
+  }
+
+  // Estado de la tabla
+  private estado = signal<EstadoTabla>({
+    entidadesSeleccionadas: ['riesgo'],
+    filtrosActivos: [],
+    columnasVisibles: ['tipoEntidad', 'nombre', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable'],
+    ordenColumnas: ['tipoEntidad', 'nombre', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable'],
+    ordenamiento: null,
+    pagina: 0,
+    registrosPorPagina: 10
+  });
+
+  // Búsqueda global
+  busquedaGlobal = signal('');
+
+  // Configuración de columnas
+  columnasConfig = signal<ColumnaConfig[]>([
+    { field: 'tipoEntidad', header: 'Tipo', tipo: 'seleccion', visible: true, sortable: true, filterable: true, orden: 0, width: '100px', opciones: [{ label: 'Riesgo', value: 'riesgo' }, { label: 'Incidente', value: 'incidente' }, { label: 'Activo', value: 'activo' }, { label: 'Proceso', value: 'proceso' }, { label: 'Defecto', value: 'defecto' }, { label: 'Revisión', value: 'revision' }, { label: 'Cumplimiento', value: 'cumplimiento' }] },
+    { field: 'id', header: 'ID', tipo: 'texto', visible: false, sortable: true, filterable: true, orden: 1, width: '100px' },
+    { field: 'nombre', header: 'Nombre', tipo: 'texto', visible: true, sortable: true, filterable: true, orden: 2, width: '200px' },
+    { field: 'descripcion', header: 'Descripción', tipo: 'texto', visible: true, sortable: true, filterable: true, orden: 3, width: '250px' },
+    { field: 'contenedorNombre', header: 'Activo/Proceso', tipo: 'contenedor', visible: true, sortable: true, filterable: true, orden: 4, width: '180px' },
+    { field: 'estado', header: 'Estado', tipo: 'seleccion', visible: true, sortable: true, filterable: true, orden: 5, width: '130px', opciones: [] },
+    { field: 'fecha', header: 'Fecha', tipo: 'fecha', visible: true, sortable: true, filterable: true, orden: 6, width: '120px' },
+    { field: 'responsable', header: 'Responsable', tipo: 'texto', visible: true, sortable: true, filterable: true, orden: 7, width: '150px' },
+    { field: 'nivelRiesgo', header: 'Nivel Riesgo', tipo: 'numero', visible: false, sortable: true, filterable: true, orden: 8, width: '120px' },
+    { field: 'probabilidad', header: 'Probabilidad', tipo: 'numero', visible: false, sortable: true, filterable: true, orden: 9, width: '110px' },
+    { field: 'impacto', header: 'Impacto', tipo: 'numero', visible: false, sortable: true, filterable: true, orden: 10, width: '100px' },
+    { field: 'severidad', header: 'Severidad', tipo: 'seleccion', visible: false, sortable: true, filterable: true, orden: 11, width: '120px', opciones: [{ label: 'Crítica', value: 'critica' }, { label: 'Alta', value: 'alta' }, { label: 'Media', value: 'media' }, { label: 'Baja', value: 'baja' }] },
+    { field: 'criticidad', header: 'Criticidad', tipo: 'seleccion', visible: false, sortable: true, filterable: true, orden: 12, width: '120px', opciones: [{ label: 'Crítica', value: 'critica' }, { label: 'Alta', value: 'alta' }, { label: 'Media', value: 'media' }, { label: 'Baja', value: 'baja' }] },
+    { field: 'prioridad', header: 'Prioridad', tipo: 'seleccion', visible: false, sortable: true, filterable: true, orden: 13, width: '120px', opciones: [{ label: 'Crítica', value: 'critica' }, { label: 'Alta', value: 'alta' }, { label: 'Media', value: 'media' }, { label: 'Baja', value: 'baja' }] },
+    { field: 'departamento', header: 'Departamento', tipo: 'texto', visible: false, sortable: true, filterable: true, orden: 14, width: '150px' },
+    { field: 'tipo', header: 'Tipo Activo', tipo: 'texto', visible: false, sortable: true, filterable: true, orden: 15, width: '120px' },
+    { field: 'version', header: 'Versión', tipo: 'texto', visible: false, sortable: true, filterable: true, orden: 16, width: '100px' }
+  ]);
+
+  // Presets de fecha
+  presetsFecha: PresetFecha[] = [
+    {
+      label: 'Hoy',
+      value: 'hoy',
+      getFechas: () => {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const fin = new Date();
+        fin.setHours(23, 59, 59, 999);
+        return { desde: hoy, hasta: fin };
+      }
+    },
+    {
+      label: 'Últimos 7 días',
+      value: '7dias',
+      getFechas: () => {
+        const hasta = new Date();
+        const desde = new Date();
+        desde.setDate(desde.getDate() - 7);
+        return { desde, hasta };
+      }
+    },
+    {
+      label: 'Último mes',
+      value: 'mes',
+      getFechas: () => {
+        const hasta = new Date();
+        const desde = new Date();
+        desde.setMonth(desde.getMonth() - 1);
+        return { desde, hasta };
+      }
+    },
+    {
+      label: 'Último trimestre',
+      value: 'trimestre',
+      getFechas: () => {
+        const hasta = new Date();
+        const desde = new Date();
+        desde.setMonth(desde.getMonth() - 3);
+        return { desde, hasta };
+      }
+    },
+    {
+      label: 'Este año',
+      value: 'año',
+      getFechas: () => {
+        const hasta = new Date();
+        const desde = new Date(hasta.getFullYear(), 0, 1);
+        return { desde, hasta };
+      }
+    }
+  ];
+
+  // Computed: Datos unificados sin filtrar
+  datosUnificados = computed<RegistroUnificado[]>(() => {
+    const activos = this.activosData();
+    const riesgos = this.riesgosData();
+    const incidentes = this.incidentesData();
+    const procesos = this.procesosData();
+    const defectos = this.defectosData();
+    const revisiones = this.revisionesData();
+    const cumplimiento = this.cumplimientoData();
+    const entidades = this.estado().entidadesSeleccionadas;
+    const registros: RegistroUnificado[] = [];
+
+    // Agregar riesgos
+    if (entidades.includes('riesgo')) {
+      riesgos.forEach(riesgo => {
+        const activo = activos.find(a => a.id === riesgo.activoId);
+        registros.push({
+          id: riesgo.id,
+          tipoEntidad: 'riesgo',
+          contenedorId: riesgo.activoId,
+          contenedorNombre: activo?.nombre || 'Sin activo',
+          tipoContenedor: 'activo',
+          nombre: riesgo.descripcion?.substring(0, 50) + '...',
+          descripcion: riesgo.descripcion,
+          estado: riesgo.estado,
+          fecha: riesgo.fechaIdentificacion,
+          responsable: riesgo.responsable,
+          probabilidad: riesgo.probabilidad,
+          impacto: riesgo.impacto,
+          nivelRiesgo: riesgo.probabilidad * riesgo.impacto
+        });
+      });
+    }
+
+    // Agregar incidentes
+    if (entidades.includes('incidente')) {
+      incidentes.forEach(incidente => {
+        const activo = activos.find(a => a.id === incidente.activoId);
+        registros.push({
+          id: incidente.id,
+          tipoEntidad: 'incidente',
+          contenedorId: incidente.activoId,
+          contenedorNombre: activo?.nombre || 'Sin activo',
+          tipoContenedor: 'activo',
+          nombre: incidente.titulo,
+          descripcion: incidente.descripcion,
+          estado: incidente.estado,
+          fecha: incidente.fechaReporte,
+          responsable: incidente.reportadoPor,
+          titulo: incidente.titulo,
+          severidad: incidente.severidad,
+          reportadoPor: incidente.reportadoPor
+        });
+      });
+    }
+
+    // Agregar activos
+    if (entidades.includes('activo')) {
+      activos.forEach(activo => {
+        registros.push({
+          id: activo.id,
+          tipoEntidad: 'activo',
+          tipoContenedor: 'ninguno',
+          nombre: activo.nombre,
+          descripcion: activo.descripcion || '',
+          estado: activo.criticidad || 'media',
+          fecha: activo.fechaRegistro,
+          responsable: activo.responsable,
+          tipo: activo.tipo,
+          criticidad: activo.criticidad,
+          departamento: activo.departamento
+        });
+      });
+    }
+
+    // Agregar procesos
+    if (entidades.includes('proceso')) {
+      procesos.forEach(proceso => {
+        registros.push({
+          id: proceso.id,
+          tipoEntidad: 'proceso',
+          tipoContenedor: 'ninguno',
+          nombre: proceso.nombre,
+          descripcion: proceso.descripcion || '',
+          estado: proceso.estado || 'activo',
+          fecha: proceso.createdAt,
+          version: proceso.version
+        });
+      });
+    }
+
+    // Agregar defectos
+    if (entidades.includes('defecto')) {
+      defectos.forEach(defecto => {
+        const activo = activos.find(a => a.id === defecto.activoId);
+        registros.push({
+          id: defecto.id,
+          tipoEntidad: 'defecto',
+          contenedorId: defecto.activoId,
+          contenedorNombre: activo?.nombre || 'Sin activo',
+          tipoContenedor: 'activo',
+          nombre: defecto.titulo,
+          descripcion: defecto.descripcion || '',
+          estado: defecto.estado,
+          fecha: defecto.fechaDeteccion || defecto.createdAt,
+          responsable: defecto.detectadoPor,
+          prioridad: defecto.prioridad,
+          tipoDefecto: defecto.tipo,
+          detectadoPor: defecto.detectadoPor
+        });
+      });
+    }
+
+    // Agregar revisiones (asignaciones de cuestionarios)
+    if (entidades.includes('revision')) {
+      revisiones.forEach(revision => {
+        registros.push({
+          id: revision.id,
+          tipoEntidad: 'revision',
+          tipoContenedor: 'ninguno',
+          nombre: revision.titulo || 'Revisión sin título',
+          descripcion: revision.descripcion || revision.cuestionario?.nombre || '',
+          estado: revision.estado,
+          fecha: revision.fechaAsignacion,
+          responsable: revision.responsableNombre,
+          contenedorNombre: revision.areaNombre || 'Sin área'
+        });
+      });
+    }
+
+    // Agregar cumplimiento (marcos normativos)
+    if (entidades.includes('cumplimiento')) {
+      cumplimiento.forEach(marco => {
+        registros.push({
+          id: marco.id,
+          tipoEntidad: 'cumplimiento',
+          tipoContenedor: 'ninguno',
+          nombre: marco.nombre,
+          descripcion: marco.descripcion || '',
+          estado: marco.activo ? 'activo' : 'inactivo',
+          fecha: marco.fechaVigencia || marco.fechaCreacion,
+          version: marco.version
+        });
+      });
+    }
+
+    return registros;
+  });
+
+  // Computed: Datos filtrados
+  datosFiltrados = computed<RegistroUnificado[]>(() => {
+    let datos = this.datosUnificados();
+    const filtros = this.estado().filtrosActivos;
+    const busqueda = this.busquedaGlobal().toLowerCase();
+
+    // Aplicar filtros
+    filtros.forEach(filtro => {
+      datos = datos.filter(registro => this.aplicarFiltro(registro, filtro));
+    });
+
+    // Aplicar búsqueda global
+    if (busqueda) {
+      datos = datos.filter(registro =>
+        Object.values(registro).some(valor =>
+          valor?.toString().toLowerCase().includes(busqueda)
+        )
+      );
+    }
+
+    // Aplicar ordenamiento
+    const orden = this.estado().ordenamiento;
+    if (orden) {
+      datos = [...datos].sort((a, b) => {
+        const valorA = (a as any)[orden.campo];
+        const valorB = (b as any)[orden.campo];
+
+        if (valorA === undefined || valorA === null) return 1;
+        if (valorB === undefined || valorB === null) return -1;
+
+        let comparacion = 0;
+        if (valorA instanceof Date && valorB instanceof Date) {
+          comparacion = valorA.getTime() - valorB.getTime();
+        } else if (typeof valorA === 'number' && typeof valorB === 'number') {
+          comparacion = valorA - valorB;
+        } else {
+          comparacion = String(valorA).localeCompare(String(valorB));
+        }
+
+        return orden.direccion === 'asc' ? comparacion : -comparacion;
+      });
+    }
+
+    return datos;
+  });
+
+  // Computed: Datos paginados
+  datosPaginados = computed<RegistroUnificado[]>(() => {
+    const datos = this.datosFiltrados();
+    const { pagina, registrosPorPagina } = this.estado();
+    const inicio = pagina * registrosPorPagina;
+    return datos.slice(inicio, inicio + registrosPorPagina);
+  });
+
+  // Computed: Contadores
+  contadores = computed(() => {
+    const datos = this.datosFiltrados();
+    return {
+      total: datos.length,
+      riesgos: datos.filter(d => d.tipoEntidad === 'riesgo').length,
+      incidentes: datos.filter(d => d.tipoEntidad === 'incidente').length,
+      criticos: datos.filter(d =>
+        (d.tipoEntidad === 'riesgo' && d.nivelRiesgo && d.nivelRiesgo >= 15) ||
+        (d.tipoEntidad === 'incidente' && d.severidad === 'critica')
+      ).length,
+      controlados: datos.filter(d =>
+        d.estado === 'mitigado' || d.estado === 'aceptado' || d.estado === 'resuelto' || d.estado === 'cerrado'
+      ).length
+    };
+  });
+
+  // Computed: Opciones únicas para filtros de selección
+  opcionesEstado = computed(() => {
+    const datos = this.datosUnificados();
+    const estados = [...new Set(datos.map(d => d.estado))];
+    return estados.map(e => ({ label: this.formatearEstado(e), value: e }));
+  });
+
+  // Computed: Columnas visibles ordenadas
+  columnasVisibles = computed(() => {
+    const config = this.columnasConfig();
+    const orden = this.estado().ordenColumnas;
+    return config
+      .filter(c => c.visible)
+      .sort((a, b) => orden.indexOf(a.field) - orden.indexOf(b.field));
+  });
+
+  // Métodos públicos
+  getEstado() {
+    return this.estado;
+  }
+
+  getDatosUnificados(): RegistroUnificado[] {
+    return this.datosUnificados();
+  }
+
+  setEntidadesSeleccionadas(entidades: TipoEntidad[]): void {
+    this.estado.update(s => ({ ...s, entidadesSeleccionadas: entidades, pagina: 0 }));
+  }
+
+  agregarFiltro(filtro: FiltroActivo): void {
+    this.estado.update(s => ({
+      ...s,
+      filtrosActivos: [...s.filtrosActivos, filtro],
+      pagina: 0
+    }));
+  }
+
+  eliminarFiltro(index: number): void {
+    this.estado.update(s => ({
+      ...s,
+      filtrosActivos: s.filtrosActivos.filter((_, i) => i !== index),
+      pagina: 0
+    }));
+  }
+
+  limpiarFiltros(): void {
+    this.estado.update(s => ({ ...s, filtrosActivos: [], pagina: 0 }));
+    this.busquedaGlobal.set('');
+  }
+
+  toggleColumna(field: string): void {
+    this.columnasConfig.update(cols =>
+      cols.map(c => c.field === field ? { ...c, visible: !c.visible } : c)
+    );
+  }
+
+  reordenarColumnas(nuevoOrden: string[]): void {
+    // Obtener todas las columnas actuales
+    const todasLasColumnas = this.columnasConfig().map(c => c.field);
+
+    // Si el nuevo orden no incluye todas las columnas (por ejemplo, solo las visibles),
+    // necesitamos preservar las columnas faltantes en su posición relativa
+    const columnasEnNuevoOrden = new Set(nuevoOrden);
+    const columnasFaltantes = todasLasColumnas.filter(c => !columnasEnNuevoOrden.has(c));
+
+    // Combinar: columnas del nuevo orden + columnas faltantes al final
+    const ordenCompleto = [...nuevoOrden, ...columnasFaltantes];
+
+    this.estado.update(s => ({ ...s, ordenColumnas: ordenCompleto }));
+  }
+
+  // Reordenar columnas manteniendo el orden completo (para drag & drop del drawer)
+  reordenarColumnasCompleto(nuevoOrden: string[]): void {
+    this.estado.update(s => ({ ...s, ordenColumnas: nuevoOrden }));
+  }
+
+  setOrdenamiento(campo: string, direccion: 'asc' | 'desc'): void {
+    this.estado.update(s => ({ ...s, ordenamiento: { campo, direccion } }));
+  }
+
+  clearOrdenamiento(): void {
+    this.estado.update(s => ({ ...s, ordenamiento: null }));
+  }
+
+  setPagina(pagina: number): void {
+    this.estado.update(s => ({ ...s, pagina }));
+  }
+
+  setRegistrosPorPagina(cantidad: number): void {
+    this.estado.update(s => ({ ...s, registrosPorPagina: cantidad, pagina: 0 }));
+  }
+
+  restaurarColumnasDefecto(): void {
+    this.columnasConfig.update(cols =>
+      cols.map(c => ({
+        ...c,
+        visible: ['tipoEntidad', 'nombre', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable'].includes(c.field)
+      }))
+    );
+    this.estado.update(s => ({
+      ...s,
+      ordenColumnas: ['tipoEntidad', 'nombre', 'descripcion', 'contenedorNombre', 'estado', 'fecha', 'responsable']
+    }));
+  }
+
+  // Métodos privados
+  private aplicarFiltro(registro: RegistroUnificado, filtro: FiltroActivo): boolean {
+    const valor = (registro as any)[filtro.columna];
+
+    if (valor === undefined || valor === null) {
+      return false;
+    }
+
+    switch (filtro.tipo) {
+      case 'texto':
+        return this.filtrarTexto(String(valor), filtro.operador, filtro.valor);
+
+      case 'numero':
+        return this.filtrarNumero(Number(valor), filtro.operador, filtro.valor, filtro.valorHasta);
+
+      case 'fecha':
+        return this.filtrarFecha(new Date(valor), filtro.operador, filtro.valor, filtro.valorHasta);
+
+      case 'seleccion':
+        const valores = Array.isArray(filtro.valor) ? filtro.valor : [filtro.valor];
+        return valores.includes(valor);
+
+      case 'contenedor':
+        return String(valor).toLowerCase().includes(String(filtro.valor).toLowerCase());
+
+      default:
+        return true;
+    }
+  }
+
+  private filtrarTexto(valor: string, operador: string, busqueda: string): boolean {
+    const valorLower = valor.toLowerCase();
+    const busquedaLower = busqueda.toLowerCase();
+
+    switch (operador) {
+      case 'contiene': return valorLower.includes(busquedaLower);
+      case 'empieza_con': return valorLower.startsWith(busquedaLower);
+      case 'termina_con': return valorLower.endsWith(busquedaLower);
+      case 'igual': return valorLower === busquedaLower;
+      default: return true;
+    }
+  }
+
+  private filtrarNumero(valor: number, operador: string, min: number, max?: number): boolean {
+    switch (operador) {
+      case 'igual': return valor === min;
+      case 'mayor': return valor > min;
+      case 'menor': return valor < min;
+      case 'entre': return max !== undefined && valor >= min && valor <= max;
+      default: return true;
+    }
+  }
+
+  private filtrarFecha(valor: Date, operador: string, desde: Date, hasta?: Date): boolean {
+    const fechaValor = valor.getTime();
+    const fechaDesde = new Date(desde).getTime();
+    const fechaHasta = hasta ? new Date(hasta).getTime() : fechaDesde;
+
+    switch (operador) {
+      case 'igual': return fechaValor >= fechaDesde && fechaValor <= fechaHasta;
+      case 'antes': return fechaValor < fechaDesde;
+      case 'despues': return fechaValor > fechaDesde;
+      case 'entre': return fechaValor >= fechaDesde && fechaValor <= fechaHasta;
+      default: return true;
+    }
+  }
+
+  private formatearEstado(estado: string): string {
+    const mapeo: Record<string, string> = {
+      'identificado': 'Identificado',
+      'evaluado': 'Evaluado',
+      'mitigado': 'Mitigado',
+      'aceptado': 'Aceptado',
+      'abierto': 'Abierto',
+      'en_proceso': 'En Proceso',
+      'resuelto': 'Resuelto',
+      'cerrado': 'Cerrado'
+    };
+    return mapeo[estado] || estado;
+  }
+
+  // Método para exportar datos
+  exportarDatos(formato: 'csv' | 'excel' | 'pdf', soloVisibles: boolean = true): void {
+    const datos = this.datosFiltrados();
+    const columnas = soloVisibles
+      ? this.columnasVisibles()
+      : this.columnasConfig();
+
+    if (formato === 'csv') {
+      this.exportarCSV(datos, columnas);
+    } else if (formato === 'excel') {
+      this.exportarExcel(datos, columnas);
+    } else {
+      this.exportarPDF(datos, columnas);
+    }
+  }
+
+  private exportarCSV(datos: RegistroUnificado[], columnas: ColumnaConfig[]): void {
+    const headers = columnas.map(c => c.header).join(',');
+    const rows = datos.map(d =>
+      columnas.map(c => {
+        const valor = (d as any)[c.field];
+        if (valor instanceof Date) {
+          return valor.toLocaleDateString();
+        }
+        return `"${String(valor ?? '-').replace(/"/g, '""')}"`;
+      }).join(',')
+    );
+
+    const csv = [headers, ...rows].join('\n');
+    this.descargarArchivo(csv, 'tabla-unificada.csv', 'text/csv');
+  }
+
+  private exportarExcel(datos: RegistroUnificado[], columnas: ColumnaConfig[]): void {
+    // Crear contenido XML para Excel
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<?mso-application progid="Excel.Sheet"?>\n';
+    xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+    xml += '<Worksheet ss:Name="Datos"><Table>\n';
+
+    // Headers
+    xml += '<Row>\n';
+    columnas.forEach(c => {
+      xml += `<Cell><Data ss:Type="String">${c.header}</Data></Cell>\n`;
+    });
+    xml += '</Row>\n';
+
+    // Datos
+    datos.forEach(d => {
+      xml += '<Row>\n';
+      columnas.forEach(c => {
+        const valor = (d as any)[c.field];
+        let tipo = 'String';
+        let valorFormateado = String(valor ?? '-');
+
+        if (typeof valor === 'number') {
+          tipo = 'Number';
+        } else if (valor instanceof Date) {
+          valorFormateado = valor.toLocaleDateString();
+        }
+
+        xml += `<Cell><Data ss:Type="${tipo}">${valorFormateado}</Data></Cell>\n`;
+      });
+      xml += '</Row>\n';
+    });
+
+    xml += '</Table></Worksheet></Workbook>';
+    this.descargarArchivo(xml, 'tabla-unificada.xls', 'application/vnd.ms-excel');
+  }
+
+  private exportarPDF(datos: RegistroUnificado[], columnas: ColumnaConfig[]): void {
+    // Crear contenido HTML para imprimir como PDF
+    const tieneRiesgos = datos.some(d => d.tipoEntidad === 'riesgo');
+    const tieneIncidentes = datos.some(d => d.tipoEntidad === 'incidente');
+    const titulo = tieneRiesgos && tieneIncidentes ? 'Tabla Unificada - Reporte' :
+                   tieneRiesgos ? 'Reporte de Riesgos' :
+                   tieneIncidentes ? 'Reporte de Incidentes' :
+                   'Tabla Unificada - Reporte';
+
+    let html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>${titulo}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
+          h1 { text-align: center; color: #333; margin-bottom: 5px; }
+          .fecha { text-align: center; color: #666; margin-bottom: 20px; font-size: 11px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th { background-color: #6366f1; color: white; padding: 10px 8px; text-align: left; font-size: 11px; }
+          td { padding: 8px; border-bottom: 1px solid #ddd; font-size: 11px; }
+          tr:nth-child(even) { background-color: #f9f9f9; }
+          tr:hover { background-color: #f5f5f5; }
+          .total { margin-top: 15px; text-align: right; font-size: 11px; color: #666; }
+          @media print {
+            body { margin: 0; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${titulo}</h1>
+        <p class="fecha">Generado el: ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+        <table>
+          <thead>
+            <tr>
+    `;
+
+    // Headers
+    columnas.forEach(c => {
+      html += `<th>${c.header}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // Datos
+    datos.forEach(d => {
+      html += '<tr>';
+      columnas.forEach(c => {
+        const valor = (d as any)[c.field];
+        let valorFormateado = String(valor ?? '-');
+
+        if (valor instanceof Date) {
+          valorFormateado = valor.toLocaleDateString('es-ES');
+        }
+
+        html += `<td>${valorFormateado}</td>`;
+      });
+      html += '</tr>';
+    });
+
+    html += `
+          </tbody>
+        </table>
+        <p class="total">Total de registros: ${datos.length}</p>
+        <script>window.onload = function() { window.print(); }</script>
+      </body>
+      </html>
+    `;
+
+    // Abrir en nueva ventana para imprimir
+    const ventana = window.open('', '_blank');
+    if (ventana) {
+      ventana.document.write(html);
+      ventana.document.close();
+    }
+  }
+
+  private descargarArchivo(contenido: string, nombre: string, tipo: string): void {
+    const blob = new Blob([contenido], { type: tipo });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = nombre;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Método para exportar datos seleccionados
+  exportarDatosSeleccionados(datos: RegistroUnificado[], formato: 'csv' | 'excel' | 'pdf'): void {
+    const columnas = this.columnasVisibles();
+
+    if (formato === 'csv') {
+      this.exportarCSV(datos, columnas);
+    } else if (formato === 'excel') {
+      this.exportarExcel(datos, columnas);
+    } else {
+      this.exportarPDF(datos, columnas);
+    }
+  }
+
+  // Métodos para gráficas
+  obtenerDatosGrafica(columnaCategoria: string, agregacion: string, columnaValor?: string) {
+    const datos = this.datosFiltrados();
+    const agrupados = new Map<string, number>();
+
+    datos.forEach(d => {
+      const categoria = String((d as any)[columnaCategoria] ?? 'Sin definir');
+      const valorActual = agrupados.get(categoria) || 0;
+
+      switch (agregacion) {
+        case 'conteo':
+          agrupados.set(categoria, valorActual + 1);
+          break;
+        case 'suma':
+          if (columnaValor) {
+            const val = Number((d as any)[columnaValor]) || 0;
+            agrupados.set(categoria, valorActual + val);
+          }
+          break;
+        case 'promedio':
+          // Para promedio necesitamos contar también
+          break;
+      }
+    });
+
+    return {
+      labels: Array.from(agrupados.keys()),
+      valores: Array.from(agrupados.values())
+    };
+  }
+
+  obtenerDatosLineaTemporal(columnaFecha: string, agrupacion: string, agregacion: string) {
+    const datos = this.datosFiltrados();
+    const agrupados = new Map<string, number>();
+
+    datos.forEach(d => {
+      const fecha = new Date((d as any)[columnaFecha]);
+      let clave: string;
+
+      switch (agrupacion) {
+        case 'dia':
+          clave = fecha.toLocaleDateString();
+          break;
+        case 'semana':
+          const inicioSemana = new Date(fecha);
+          inicioSemana.setDate(fecha.getDate() - fecha.getDay());
+          clave = `Sem ${inicioSemana.toLocaleDateString()}`;
+          break;
+        case 'mes':
+          clave = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+          break;
+        case 'trimestre':
+          const trimestre = Math.floor(fecha.getMonth() / 3) + 1;
+          clave = `${fecha.getFullYear()} Q${trimestre}`;
+          break;
+        case 'año':
+          clave = String(fecha.getFullYear());
+          break;
+        default:
+          clave = fecha.toLocaleDateString();
+      }
+
+      agrupados.set(clave, (agrupados.get(clave) || 0) + 1);
+    });
+
+    // Ordenar por fecha
+    const ordenado = new Map([...agrupados.entries()].sort());
+
+    return {
+      labels: Array.from(ordenado.keys()),
+      valores: Array.from(ordenado.values())
+    };
+  }
+
+  // ==================== WIDGETS ====================
+  guardarWidget(widget: Omit<WidgetGrafica, 'id' | 'fechaCreacion'>): WidgetGrafica {
+    const nuevoWidget: WidgetGrafica = {
+      ...widget,
+      id: Date.now().toString(),
+      fechaCreacion: new Date()
+    };
+    this.widgets.update(list => [...list, nuevoWidget]);
+    this.guardarWidgetsEnStorage();
+    return nuevoWidget;
+  }
+
+  eliminarWidget(id: string): void {
+    this.widgets.update(list => list.filter(w => w.id !== id));
+    this.guardarWidgetsEnStorage();
+  }
+
+  actualizarWidget(id: string, cambios: Partial<WidgetGrafica>): void {
+    this.widgets.update(list =>
+      list.map(w => w.id === id ? { ...w, ...cambios } : w)
+    );
+    this.guardarWidgetsEnStorage();
+  }
+
+  private guardarWidgetsEnStorage(): void {
+    localStorage.setItem(this.WIDGETS_KEY, JSON.stringify(this.widgets()));
+  }
+
+  // ==================== EXPORTACIONES PROGRAMADAS ====================
+  crearExportacionProgramada(config: Omit<ExportacionProgramada, 'id' | 'ultimaEjecucion' | 'proximaEjecucion'>): ExportacionProgramada {
+    const nuevaExport: ExportacionProgramada = {
+      ...config,
+      id: Date.now().toString(),
+      proximaEjecucion: this.calcularProximaEjecucion(config)
+    };
+    this.exportacionesProgramadas.update(list => [...list, nuevaExport]);
+    this.guardarExportacionesEnStorage();
+    return nuevaExport;
+  }
+
+  eliminarExportacionProgramada(id: string): void {
+    this.exportacionesProgramadas.update(list => list.filter(e => e.id !== id));
+    this.guardarExportacionesEnStorage();
+  }
+
+  toggleExportacionProgramada(id: string): void {
+    this.exportacionesProgramadas.update(list =>
+      list.map(e => e.id === id ? { ...e, activa: !e.activa } : e)
+    );
+    this.guardarExportacionesEnStorage();
+  }
+
+  actualizarExportacionProgramada(id: string, cambios: Partial<ExportacionProgramada>): void {
+    this.exportacionesProgramadas.update(list =>
+      list.map(e => {
+        if (e.id === id) {
+          const actualizada = { ...e, ...cambios };
+          // Recalcular próxima ejecución si cambiaron frecuencia u hora
+          if (cambios.frecuencia || cambios.hora) {
+            actualizada.proximaEjecucion = this.calcularProximaEjecucion(actualizada);
+          }
+          return actualizada;
+        }
+        return e;
+      })
+    );
+    this.guardarExportacionesEnStorage();
+  }
+
+  private calcularProximaEjecucion(config: Partial<ExportacionProgramada>): Date {
+    const ahora = new Date();
+    const [horas, minutos] = (config.hora || '09:00').split(':').map(Number);
+    const proxima = new Date(ahora);
+    proxima.setHours(horas, minutos, 0, 0);
+
+    if (proxima <= ahora) {
+      switch (config.frecuencia) {
+        case 'diaria':
+          proxima.setDate(proxima.getDate() + 1);
+          break;
+        case 'semanal':
+          proxima.setDate(proxima.getDate() + 7);
+          break;
+        case 'mensual':
+          proxima.setMonth(proxima.getMonth() + 1);
+          break;
+      }
+    }
+    return proxima;
+  }
+
+  private guardarExportacionesEnStorage(): void {
+    localStorage.setItem(this.EXPORTS_KEY, JSON.stringify(this.exportacionesProgramadas()));
+  }
+
+  // ==================== ALERTAS ====================
+  crearAlerta(config: Omit<AlertaFiltro, 'id' | 'ultimaActivacion' | 'vecesActivada'>): AlertaFiltro {
+    const nuevaAlerta: AlertaFiltro = {
+      ...config,
+      id: Date.now().toString(),
+      vecesActivada: 0
+    };
+    this.alertas.update(list => [...list, nuevaAlerta]);
+    this.guardarAlertasEnStorage();
+    return nuevaAlerta;
+  }
+
+  eliminarAlerta(id: string): void {
+    this.alertas.update(list => list.filter(a => a.id !== id));
+    this.guardarAlertasEnStorage();
+  }
+
+  toggleAlerta(id: string): void {
+    this.alertas.update(list =>
+      list.map(a => a.id === id ? { ...a, activa: !a.activa } : a)
+    );
+    this.guardarAlertasEnStorage();
+  }
+
+  actualizarAlerta(id: string, cambios: Partial<AlertaFiltro>): void {
+    this.alertas.update(list =>
+      list.map(a => a.id === id ? { ...a, ...cambios } : a)
+    );
+    this.guardarAlertasEnStorage();
+  }
+
+  verificarAlertas(): AlertaFiltro[] {
+    const alertasActivadas: AlertaFiltro[] = [];
+    const alertasActivas = this.alertas().filter(a => a.activa);
+
+    alertasActivas.forEach(alerta => {
+      // Aplicar filtros de la alerta
+      let datos = this.datosUnificados().filter(d =>
+        alerta.entidades.includes(d.tipoEntidad)
+      );
+
+      alerta.condiciones.forEach(filtro => {
+        datos = datos.filter(registro => this.aplicarFiltroPublico(registro, filtro));
+      });
+
+      const cantidad = datos.length;
+      let activar = false;
+
+      switch (alerta.operadorUmbral) {
+        case 'mayor': activar = cantidad > alerta.umbral; break;
+        case 'menor': activar = cantidad < alerta.umbral; break;
+        case 'igual': activar = cantidad === alerta.umbral; break;
+        case 'diferente': activar = cantidad !== alerta.umbral; break;
+      }
+
+      if (activar) {
+        alertasActivadas.push(alerta);
+        this.alertas.update(list =>
+          list.map(a => a.id === alerta.id ? {
+            ...a,
+            ultimaActivacion: new Date(),
+            vecesActivada: a.vecesActivada + 1
+          } : a)
+        );
+      }
+    });
+
+    if (alertasActivadas.length > 0) {
+      this.guardarAlertasEnStorage();
+    }
+
+    return alertasActivadas;
+  }
+
+  private aplicarFiltroPublico(registro: RegistroUnificado, filtro: FiltroActivo): boolean {
+    const valor = (registro as any)[filtro.columna];
+    if (valor === undefined || valor === null) return false;
+
+    switch (filtro.tipo) {
+      case 'texto':
+        return String(valor).toLowerCase().includes(String(filtro.valor).toLowerCase());
+      case 'seleccion':
+        const valores = Array.isArray(filtro.valor) ? filtro.valor : [filtro.valor];
+        return valores.includes(valor);
+      default:
+        return true;
+    }
+  }
+
+  private guardarAlertasEnStorage(): void {
+    localStorage.setItem(this.ALERTS_KEY, JSON.stringify(this.alertas()));
+  }
+
+  // ==================== VISTAS COMPARTIDAS ====================
+  crearVistaCompartida(nombre: string, descripcion?: string): VistaCompartida {
+    const codigo = this.generarCodigoUnico();
+    const estado = this.estado();
+
+    const nuevaVista: VistaCompartida = {
+      id: Date.now().toString(),
+      codigo,
+      nombre,
+      descripcion,
+      creador: 'Usuario', // En producción vendría del servicio de auth
+      fechaCreacion: new Date(),
+      configuracion: {
+        entidades: estado.entidadesSeleccionadas,
+        filtros: estado.filtrosActivos,
+        columnasVisibles: estado.columnasVisibles,
+        ordenColumnas: estado.ordenColumnas,
+        ordenamiento: estado.ordenamiento || undefined
+      },
+      accesos: 0,
+      activa: true
+    };
+
+    this.vistasCompartidas.update(list => [...list, nuevaVista]);
+    this.guardarVistasEnStorage();
+    return nuevaVista;
+  }
+
+  crearVistaCompartidaConExpiracion(nombre: string, descripcion?: string, fechaExpiracion?: Date | null): VistaCompartida {
+    const codigo = this.generarCodigoUnico();
+    const estado = this.estado();
+
+    const nuevaVista: VistaCompartida = {
+      id: Date.now().toString(),
+      codigo,
+      nombre,
+      descripcion,
+      creador: 'Usuario',
+      fechaCreacion: new Date(),
+      fechaExpiracion: fechaExpiracion || undefined,
+      configuracion: {
+        entidades: estado.entidadesSeleccionadas,
+        filtros: estado.filtrosActivos,
+        columnasVisibles: estado.columnasVisibles,
+        ordenColumnas: estado.ordenColumnas,
+        ordenamiento: estado.ordenamiento || undefined
+      },
+      accesos: 0,
+      activa: true
+    };
+
+    this.vistasCompartidas.update(list => [...list, nuevaVista]);
+    this.guardarVistasEnStorage();
+    return nuevaVista;
+  }
+
+  actualizarVistaCompartida(id: string, cambios: Partial<VistaCompartida>): void {
+    this.vistasCompartidas.update(list =>
+      list.map(v => v.id === id ? { ...v, ...cambios } : v)
+    );
+    this.guardarVistasEnStorage();
+  }
+
+  obtenerVistaCompartida(codigo: string): VistaCompartida | undefined {
+    const vista = this.vistasCompartidas().find(v => v.codigo === codigo && v.activa);
+    if (vista) {
+      // Incrementar accesos
+      this.vistasCompartidas.update(list =>
+        list.map(v => v.codigo === codigo ? {
+          ...v,
+          accesos: v.accesos + 1,
+          ultimoAcceso: new Date()
+        } : v)
+      );
+      this.guardarVistasEnStorage();
+    }
+    return vista;
+  }
+
+  aplicarVistaCompartida(vista: VistaCompartida): void {
+    const config = vista.configuracion;
+    this.estado.update(s => ({
+      ...s,
+      entidadesSeleccionadas: config.entidades,
+      filtrosActivos: config.filtros,
+      columnasVisibles: config.columnasVisibles,
+      ordenColumnas: config.ordenColumnas,
+      ordenamiento: config.ordenamiento || null,
+      pagina: 0
+    }));
+  }
+
+  eliminarVistaCompartida(id: string): void {
+    this.vistasCompartidas.update(list => list.filter(v => v.id !== id));
+    this.guardarVistasEnStorage();
+  }
+
+  desactivarVistaCompartida(id: string): void {
+    this.vistasCompartidas.update(list =>
+      list.map(v => v.id === id ? { ...v, activa: false } : v)
+    );
+    this.guardarVistasEnStorage();
+  }
+
+  private generarCodigoUnico(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let codigo = '';
+    for (let i = 0; i < 8; i++) {
+      codigo += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return codigo;
+  }
+
+  obtenerUrlVistaCompartida(codigo: string): string {
+    return `${window.location.origin}/tabla-unificada?vista=${codigo}`;
+  }
+
+  private guardarVistasEnStorage(): void {
+    localStorage.setItem(this.VIEWS_KEY, JSON.stringify(this.vistasCompartidas()));
+  }
+
+  // ==================== EXPORT GRÁFICA A EXCEL ====================
+  exportarGraficaExcel(datosGrafica: { labels: string[]; valores: number[] }, titulo: string): void {
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<?mso-application progid="Excel.Sheet"?>\n';
+    xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+    xml += `<Worksheet ss:Name="${titulo.substring(0, 31)}"><Table>\n`;
+
+    // Headers
+    xml += '<Row>\n';
+    xml += '<Cell><Data ss:Type="String">Categoría</Data></Cell>\n';
+    xml += '<Cell><Data ss:Type="String">Valor</Data></Cell>\n';
+    xml += '</Row>\n';
+
+    // Datos
+    datosGrafica.labels.forEach((label, i) => {
+      xml += '<Row>\n';
+      xml += `<Cell><Data ss:Type="String">${label}</Data></Cell>\n`;
+      xml += `<Cell><Data ss:Type="Number">${datosGrafica.valores[i]}</Data></Cell>\n`;
+      xml += '</Row>\n';
+    });
+
+    // Total
+    xml += '<Row>\n';
+    xml += '<Cell><Data ss:Type="String">Total</Data></Cell>\n';
+    xml += `<Cell><Data ss:Type="Number">${datosGrafica.valores.reduce((a, b) => a + b, 0)}</Data></Cell>\n`;
+    xml += '</Row>\n';
+
+    xml += '</Table></Worksheet></Workbook>';
+    this.descargarArchivo(xml, `grafica-${titulo}-${Date.now()}.xls`, 'application/vnd.ms-excel');
+  }
+}

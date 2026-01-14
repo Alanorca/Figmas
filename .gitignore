@@ -1,3 +1,10 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Database
+*.db
+
 # Zone.Identifier files (Windows/WSL metadata)
 *:Zone.Identifier
 

@@ -1,0 +1,749 @@
+<p-toast />
+
+<div class="crear-proceso-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a routerLink="/integraciones">Integraciones</a>
+      <span class="separator">/</span>
+      <span>{{ isEditMode() ? 'Editar' : 'Nuevo' }}</span>
+    </div>
+    <h1>{{ isEditMode() ? 'Editar Radio' : 'Nuevo Radio' }}</h1>
+    <p class="page-subtitle">{{ isEditMode() ? 'Modifica la configuración del radio' : 'Configura una nueva fuente de datos externa para importar información a ORCA SNS' }}</p>
+  </div>
+
+  <!-- Stepper -->
+  <div class="stepper-container">
+    <div
+      class="step-item"
+      [class.active]="activeStep === 0"
+      [class.completed]="activeStep > 0"
+      [class.clickable]="activeStep > 0"
+      (click)="activeStep > 0 ? goToStep(0) : null"
+    >
+      <div class="step-indicator">
+        <div class="step-icon">
+          <i [class]="activeStep > 0 ? 'pi pi-check' : 'pi pi-info-circle'"></i>
+        </div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <span class="step-label">Información Básica</span>
+        <span class="step-description">Nombre, categoría y entidad destino</span>
+      </div>
+    </div>
+
+    <div
+      class="step-item"
+      [class.active]="activeStep === 1"
+      [class.completed]="activeStep > 1"
+      [class.clickable]="activeStep > 1"
+      (click)="activeStep > 1 ? goToStep(1) : null"
+    >
+      <div class="step-indicator">
+        <div class="step-icon">
+          <i [class]="activeStep > 1 ? 'pi pi-check' : 'pi pi-cog'"></i>
+        </div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <span class="step-label">Conector</span>
+        <span class="step-description">Tipo y configuración de la conexión</span>
+      </div>
+    </div>
+
+    <div
+      class="step-item"
+      [class.active]="activeStep === 2"
+      [class.completed]="activeStep > 2"
+      [class.clickable]="activeStep > 2"
+      (click)="activeStep > 2 ? goToStep(2) : null"
+    >
+      <div class="step-indicator">
+        <div class="step-icon">
+          <i [class]="activeStep > 2 ? 'pi pi-check' : 'pi pi-map'"></i>
+        </div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <span class="step-label">Mapeo</span>
+        <span class="step-description">Formato de datos de origen</span>
+      </div>
+    </div>
+
+    <div
+      class="step-item"
+      [class.active]="activeStep === 3"
+      [class.completed]="activeStep > 3"
+    >
+      <div class="step-indicator">
+        <div class="step-icon">
+          <i [class]="activeStep > 3 ? 'pi pi-check' : 'pi pi-check-circle'"></i>
+        </div>
+      </div>
+      <div class="step-content">
+        <span class="step-label">Programación</span>
+        <span class="step-description">Frecuencia y revisión final</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content-card">
+    <!-- Step 1: Basic Info -->
+    @if (activeStep === 0) {
+      <div class="step-panel panel-columna-izquierda">
+        <h3 class="panel-title">Información Básica</h3>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="field-label">Nombre del Radio *</label>
+            <input
+              type="text"
+              class="field-input"
+              [ngModel]="name()"
+              (ngModelChange)="name.set($event)"
+              placeholder="Ej: Escáner de Vulnerabilidades Nessus"
+            />
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Descripción</label>
+            <textarea
+              class="field-textarea"
+              [ngModel]="description()"
+              (ngModelChange)="description.set($event)"
+              placeholder="Describe el propósito de este radio..."
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="inline-form-row">
+            <div class="form-field flex-1">
+              <label class="field-label">Categoría *</label>
+              <div class="select-wrapper">
+                <select
+                  class="field-select"
+                  [ngModel]="category()"
+                  (ngModelChange)="category.set($event)"
+                >
+                  @for (opt of categoryOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+                <i class="pi pi-chevron-down select-icon"></i>
+              </div>
+            </div>
+
+            <div class="form-field flex-1">
+              <label class="field-label">Entidad Destino *</label>
+              <div class="select-wrapper">
+                <select
+                  class="field-select"
+                  [ngModel]="targetEntityType()"
+                  (ngModelChange)="targetEntityType.set($event)"
+                >
+                  @for (opt of entityTypeOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+                <i class="pi pi-chevron-down select-icon"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Connector Type and Config -->
+    @if (activeStep === 1) {
+      <div class="step-panel">
+        <h3 class="panel-title">Configuración del Conector</h3>
+
+        <!-- Connector Type Selection -->
+        <div class="connector-type-selection">
+          <label>Tipo de Conector *</label>
+          <div class="connector-cards">
+            @for (type of connectorTypeOptions; track type.value) {
+              <div
+                class="connector-card"
+                [class.selected]="connectorType() === type.value"
+                (click)="connectorType.set(type.value); onConnectorTypeChange()"
+              >
+                <i [class]="type.icon" class="connector-icon"></i>
+                <span class="connector-label">{{ type.label }}</span>
+                <span class="connector-mode">{{ type.mode === 'push' ? 'Push' : 'Pull' }}</span>
+                <p class="connector-desc">{{ type.description }}</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Webhook Config -->
+        @if (isWebhook()) {
+          <div class="connector-config">
+            <h4>Configuración de Webhook</h4>
+            <p class="config-hint">El webhook será generado automáticamente. Comparte la URL y el token con el sistema externo.</p>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="field-label">URL del Webhook</label>
+                <div class="input-with-copy">
+                  <input
+                    type="text"
+                    class="field-input"
+                    [value]="webhookConfig().webhookUrl || 'Se generará al guardar'"
+                    readonly
+                  />
+                  @if (webhookConfig().webhookUrl) {
+                    <button type="button" class="btn-icon" (click)="copyToClipboard(webhookConfig().webhookUrl)" title="Copiar URL">
+                      <i class="pi pi-copy"></i>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label class="field-label">Token de Autenticación</label>
+                <div class="input-with-copy">
+                  <input
+                    type="text"
+                    class="field-input"
+                    [value]="webhookConfig().webhookToken"
+                    readonly
+                  />
+                  <button type="button" class="btn-icon" (click)="copyToClipboard(webhookConfig().webhookToken)" title="Copiar Token">
+                    <i class="pi pi-copy"></i>
+                  </button>
+                  <button type="button" class="btn-icon" (click)="generateNewWebhookCredentials()" title="Regenerar credenciales">
+                    <i class="pi pi-refresh"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label class="channel-checkbox">
+                  <input
+                    type="checkbox"
+                    [checked]="webhookConfig().enableSignatureValidation"
+                    (change)="updateWebhookSignatureValidation($any($event.target).checked)"
+                  />
+                  Habilitar validación de firma HMAC
+                </label>
+              </div>
+
+              @if (webhookConfig().enableSignatureValidation) {
+                <div class="form-field">
+                  <label class="field-label">Secret para firma</label>
+                  <div class="input-with-copy">
+                    <input
+                      type="text"
+                      class="field-input"
+                      [value]="webhookConfig().webhookSecret"
+                      readonly
+                    />
+                    <button type="button" class="btn-icon" (click)="copyToClipboard(webhookConfig().webhookSecret || '')" title="Copiar Secret">
+                      <i class="pi pi-copy"></i>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- REST API Config -->
+        @if (isRestApi()) {
+          <div class="connector-config">
+            <h4>Configuración de REST API</h4>
+
+            <div class="form-grid">
+              <div class="inline-form-row">
+                <div class="form-field flex-2">
+                  <label class="field-label">URL Base *</label>
+                  <input
+                    type="text"
+                    class="field-input"
+                    [ngModel]="restApiConfig().baseUrl"
+                    (ngModelChange)="updateRestApiBaseUrl($event)"
+                    placeholder="https://api.example.com"
+                  />
+                </div>
+                <div class="form-field flex-1">
+                  <label class="field-label">Endpoint *</label>
+                  <input
+                    type="text"
+                    class="field-input"
+                    [ngModel]="restApiConfig().endpoint"
+                    (ngModelChange)="updateRestApiEndpoint($event)"
+                    placeholder="/v1/data"
+                  />
+                </div>
+              </div>
+
+              <div class="inline-form-row">
+                <div class="form-field">
+                  <label class="field-label">Método HTTP</label>
+                  <div class="select-wrapper">
+                    <select
+                      class="field-select"
+                      [ngModel]="restApiConfig().method"
+                      (ngModelChange)="updateRestApiMethod($event)"
+                    >
+                      @for (opt of httpMethodOptions; track opt.value) {
+                        <option [value]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                    <i class="pi pi-chevron-down select-icon"></i>
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label class="field-label">Tipo de Autenticación</label>
+                  <div class="select-wrapper">
+                    <select
+                      class="field-select"
+                      [ngModel]="restApiConfig().authType"
+                      (ngModelChange)="updateRestApiAuthType($event)"
+                    >
+                      @for (opt of authTypeOptions; track opt.value) {
+                        <option [value]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                    <i class="pi pi-chevron-down select-icon"></i>
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label class="field-label">Timeout (ms)</label>
+                  <input
+                    type="number"
+                    class="field-input"
+                    [ngModel]="restApiConfig().timeout"
+                    (ngModelChange)="updateRestApiTimeout($event)"
+                    [min]="1000"
+                    [max]="120000"
+                  />
+                </div>
+              </div>
+
+              @if (restApiConfig().authType === 'api_key') {
+                <div class="inline-form-row">
+                  <div class="form-field">
+                    <label class="field-label">Nombre del Header</label>
+                    <input
+                      type="text"
+                      class="field-input"
+                      [ngModel]="restApiConfig().authConfig.headerName"
+                      (ngModelChange)="updateRestApiAuthHeader($event)"
+                      placeholder="X-API-Key"
+                    />
+                  </div>
+                  <div class="form-field">
+                    <label class="field-label">API Key</label>
+                    <input
+                      type="password"
+                      class="field-input"
+                      [ngModel]="restApiConfig().authConfig.apiKey"
+                      (ngModelChange)="updateRestApiAuthKey($event)"
+                      placeholder="Tu API Key"
+                    />
+                  </div>
+                </div>
+              }
+
+              @if (restApiConfig().authType === 'bearer') {
+                <div class="form-field">
+                  <label class="field-label">Bearer Token</label>
+                  <input
+                    type="password"
+                    class="field-input"
+                    [ngModel]="restApiConfig().authConfig.bearerToken"
+                    (ngModelChange)="updateRestApiAuthBearer($event)"
+                    placeholder="Tu Bearer Token"
+                  />
+                </div>
+              }
+
+              @if (restApiConfig().authType === 'basic') {
+                <div class="inline-form-row">
+                  <div class="form-field">
+                    <label class="field-label">Usuario</label>
+                    <input
+                      type="text"
+                      class="field-input"
+                      [ngModel]="restApiConfig().authConfig.username"
+                      (ngModelChange)="updateRestApiAuthUsername($event)"
+                      placeholder="Usuario"
+                    />
+                  </div>
+                  <div class="form-field">
+                    <label class="field-label">Contraseña</label>
+                    <input
+                      type="password"
+                      class="field-input"
+                      [ngModel]="restApiConfig().authConfig.password"
+                      (ngModelChange)="updateRestApiAuthPassword($event)"
+                      placeholder="Contraseña"
+                    />
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Database Config -->
+        @if (isDatabase()) {
+          <div class="connector-config">
+            <h4>Configuración de Base de Datos</h4>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="field-label">Tipo de Base de Datos *</label>
+                <div class="select-wrapper">
+                  <select
+                    class="field-select"
+                    [ngModel]="databaseConfig().dbType"
+                    (ngModelChange)="updateDatabaseType($event)"
+                  >
+                    @for (opt of databaseTypeOptions; track opt.value) {
+                      <option [value]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                  <i class="pi pi-chevron-down select-icon"></i>
+                </div>
+              </div>
+
+              <div class="inline-form-row">
+                <div class="form-field flex-2">
+                  <label class="field-label">Host *</label>
+                  <input
+                    type="text"
+                    class="field-input"
+                    [ngModel]="databaseConfig().host"
+                    (ngModelChange)="updateDatabaseHost($event)"
+                    placeholder="localhost o IP"
+                  />
+                </div>
+                <div class="form-field flex-1">
+                  <label class="field-label">Puerto *</label>
+                  <input
+                    type="number"
+                    class="field-input"
+                    [ngModel]="databaseConfig().port"
+                    (ngModelChange)="updateDatabasePort($event)"
+                    [min]="1"
+                    [max]="65535"
+                  />
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label class="field-label">Nombre de la Base de Datos *</label>
+                <input
+                  type="text"
+                  class="field-input"
+                  [ngModel]="databaseConfig().database"
+                  (ngModelChange)="updateDatabaseName($event)"
+                  placeholder="Nombre de la BD"
+                />
+              </div>
+
+              <div class="inline-form-row">
+                <div class="form-field">
+                  <label class="field-label">Usuario *</label>
+                  <input
+                    type="text"
+                    class="field-input"
+                    [ngModel]="databaseConfig().username"
+                    (ngModelChange)="updateDatabaseUsername($event)"
+                    placeholder="Usuario de BD"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="field-label">Contraseña</label>
+                  <input
+                    type="password"
+                    class="field-input"
+                    [ngModel]="databaseConfig().password"
+                    (ngModelChange)="updateDatabasePassword($event)"
+                    placeholder="Contraseña"
+                  />
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label class="channel-checkbox">
+                  <input
+                    type="checkbox"
+                    [checked]="databaseConfig().ssl"
+                    (change)="updateDatabaseSsl($any($event.target).checked)"
+                  />
+                  Usar conexión SSL
+                </label>
+              </div>
+
+              <div class="form-field">
+                <label class="field-label">Consulta SQL *</label>
+                <textarea
+                  class="field-textarea code-textarea"
+                  [ngModel]="databaseConfig().query"
+                  (ngModelChange)="updateDatabaseQuery($event)"
+                  placeholder="SELECT * FROM tabla WHERE ..."
+                  rows="4"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Folder Config -->
+        @if (isFolder()) {
+          <div class="connector-config">
+            <h4>Configuración de Carpeta</h4>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="field-label">Tipo de Ubicación *</label>
+                <div class="select-wrapper">
+                  <select
+                    class="field-select"
+                    [ngModel]="folderConfig().locationType"
+                    (ngModelChange)="updateFolderLocationType($event)"
+                  >
+                    @for (opt of folderLocationOptions; track opt.value) {
+                      <option [value]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                  <i class="pi pi-chevron-down select-icon"></i>
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label class="field-label">Ruta *</label>
+                <input
+                  type="text"
+                  class="field-input"
+                  [ngModel]="folderConfig().path"
+                  (ngModelChange)="updateFolderPath($event)"
+                  [placeholder]="folderConfig().locationType === 'smb' ? '\\\\server\\share\\folder' : 's3://bucket/prefix'"
+                />
+              </div>
+
+              <div class="form-field">
+                <label class="field-label">Patrón de Archivos</label>
+                <input
+                  type="text"
+                  class="field-input"
+                  [ngModel]="folderConfig().filePattern"
+                  (ngModelChange)="updateFolderPattern($event)"
+                  placeholder="*.csv,*.json"
+                />
+              </div>
+
+              <div class="form-field">
+                <label class="channel-checkbox">
+                  <input
+                    type="checkbox"
+                    [checked]="folderConfig().includeSubdirs"
+                    (change)="updateFolderSubdirs($any($event.target).checked)"
+                  />
+                  Incluir subdirectorios
+                </label>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Step 3: Mapping Config -->
+    @if (activeStep === 2) {
+      <div class="step-panel panel-columna-izquierda">
+        <h3 class="panel-title">Configuración de Mapeo</h3>
+
+        <div class="connector-config">
+          <h4>Formato de Datos</h4>
+          <p class="config-hint">Define cómo transformar los datos recibidos al formato de ORCA SNS.</p>
+
+          <div class="form-grid">
+            <div class="form-field">
+              <label class="field-label">Formato de Origen</label>
+              <div class="select-wrapper">
+                <select
+                  class="field-select"
+                  [ngModel]="mappingConfig().sourceFormat"
+                  (ngModelChange)="updateMappingFormat($event)"
+                >
+                  @for (opt of sourceFormatOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+                <i class="pi pi-chevron-down select-icon"></i>
+              </div>
+            </div>
+
+            @if (mappingConfig().sourceFormat !== 'csv') {
+              <div class="form-field">
+                <label class="field-label">Ruta Raíz de Datos</label>
+                <input
+                  type="text"
+                  class="field-input"
+                  [ngModel]="mappingConfig().rootPath"
+                  (ngModelChange)="updateMappingRootPath($event)"
+                  placeholder="data.items o $.results"
+                />
+                <span class="hint">Ruta JSONPath o XPath al array de registros</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="mapping-placeholder">
+          <i class="pi pi-map"></i>
+          <h5>Mapeo de Campos</h5>
+          <p>El mapeo detallado de campos se configurará después de crear el radio, cuando puedas probar con datos reales.</p>
+        </div>
+      </div>
+    }
+
+    <!-- Step 4: Schedule and Review -->
+    @if (activeStep === 3) {
+      <div class="step-panel panel-columna-izquierda revision-panel">
+        <h3 class="panel-title">Programación y Resumen</h3>
+
+        <!-- Schedule Config (only for pull connectors) -->
+        @if (isPullConnector()) {
+          <div class="schedule-config">
+            <h4>Programación de Sincronización</h4>
+
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="channel-checkbox">
+                  <input
+                    type="checkbox"
+                    [checked]="scheduleEnabled()"
+                    (change)="scheduleEnabled.set($any($event.target).checked)"
+                  />
+                  Habilitar sincronización automática
+                </label>
+              </div>
+
+              @if (scheduleEnabled()) {
+                <div class="form-field">
+                  <label class="field-label">Frecuencia</label>
+                  <div class="select-wrapper">
+                    <select
+                      class="field-select"
+                      [ngModel]="scheduleConfig().frequency"
+                      (ngModelChange)="updateScheduleFrequency($event)"
+                    >
+                      @for (opt of scheduleFrequencyOptions; track opt.value) {
+                        <option [value]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                    <i class="pi pi-chevron-down select-icon"></i>
+                  </div>
+                </div>
+
+                @if (scheduleConfig().frequency === 'minutes' || scheduleConfig().frequency === 'hours') {
+                  <div class="form-field">
+                    <label class="field-label">Intervalo</label>
+                    <input
+                      type="number"
+                      class="field-input"
+                      [ngModel]="scheduleConfig().interval"
+                      (ngModelChange)="updateScheduleInterval($event)"
+                      [min]="1"
+                      [max]="scheduleConfig().frequency === 'minutes' ? 59 : 23"
+                    />
+                  </div>
+                }
+
+                @if (scheduleConfig().frequency === 'daily' || scheduleConfig().frequency === 'weekly') {
+                  <div class="form-field">
+                    <label class="field-label">Hora de ejecución</label>
+                    <input
+                      type="time"
+                      class="field-input"
+                      [ngModel]="scheduleConfig().time"
+                      (ngModelChange)="updateScheduleTime($event)"
+                    />
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Summary -->
+        <div class="summary-section">
+          <h4>Resumen de Configuración</h4>
+
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label">Nombre</span>
+              <span class="summary-value">{{ name() }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Categoría</span>
+              <span class="summary-value">{{ category() }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Tipo de Conector</span>
+              <span class="summary-value">{{ connectorType() | titlecase }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Entidad Destino</span>
+              <span class="summary-value">{{ targetEntityType() }}</span>
+            </div>
+            @if (isPullConnector() && scheduleEnabled()) {
+              <div class="summary-item">
+                <span class="summary-label">Sincronización</span>
+                <span class="summary-value">{{ scheduleConfig().frequency | titlecase }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Footer Fixed -->
+  <div class="page-footer-fixed">
+    <div class="footer-content">
+      @if (activeStep > 0) {
+        <button type="button" class="btn-atras" (click)="prevStep()">
+          <i class="pi pi-arrow-left"></i>
+          Atrás
+        </button>
+      } @else {
+        <button type="button" class="btn-atras" (click)="cancel()">
+          Cancelar
+        </button>
+      }
+
+      @if (activeStep < 3) {
+        <button
+          type="button"
+          class="btn-siguiente"
+          [disabled]="!canProceed()"
+          (click)="nextStep()"
+        >
+          Siguiente
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="btn-guardar"
+          [disabled]="saving()"
+          (click)="save()"
+        >
+          @if (saving()) {
+            <i class="pi pi-spinner pi-spin"></i>
+          }
+          {{ isEditMode() ? 'Guardar Cambios' : 'Crear Radio' }}
+        </button>
+      }
+    </div>
+  </div>
+</div>

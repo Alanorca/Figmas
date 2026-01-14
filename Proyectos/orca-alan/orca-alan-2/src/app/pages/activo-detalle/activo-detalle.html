@@ -1,0 +1,1003 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="activo-detalle-page">
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-container">
+      <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+      <p>Cargando activo...</p>
+    </div>
+  } @else if (activo()) {
+    <!-- Breadcrumb -->
+    <div class="page-breadcrumb">
+      <i class="pi pi-home breadcrumb-home" (click)="goBack()"></i>
+      @for (parent of parentAssets(); track parent.id) {
+        <i class="pi pi-chevron-right breadcrumb-separator"></i>
+        <span class="breadcrumb-item" (click)="navigateToActivo(parent.id)">
+          {{ parent.nombre }}
+        </span>
+      }
+      <i class="pi pi-chevron-right breadcrumb-separator"></i>
+      <span class="breadcrumb-current">{{ activo()!.nombre }}</span>
+    </div>
+
+    <!-- Header con titulo y navegacion principal -->
+    <div class="page-header">
+      <div class="header-left">
+        <div class="page-title-section">
+          <h1 class="page-title">Detalle del activo</h1>
+          <span class="page-subtitle">Visualiza y gestiona la informacion, riesgos, incidentes y estado de salud del activo seleccionado</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="main-nav-tabs">
+          <p-button
+            [label]="'Informacion general'"
+            [icon]="'pi pi-info-circle'"
+            [outlined]="mainTab() !== 'general'"
+            [severity]="mainTab() === 'general' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('general')"
+          />
+          <p-button
+            [label]="'Reglas'"
+            [icon]="'pi pi-check-square'"
+            [outlined]="mainTab() !== 'reglas'"
+            [severity]="mainTab() === 'reglas' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('reglas')"
+          />
+          <p-button
+            [label]="'Riesgos'"
+            [icon]="'pi pi-exclamation-triangle'"
+            [outlined]="mainTab() !== 'riesgos'"
+            [severity]="mainTab() === 'riesgos' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('riesgos')"
+          />
+          <p-button
+            [label]="'Incidentes'"
+            [icon]="'pi pi-bolt'"
+            [outlined]="mainTab() !== 'incidentes'"
+            [severity]="mainTab() === 'incidentes' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('incidentes')"
+          />
+          <p-button
+            [label]="'Auditoria'"
+            [icon]="'pi pi-history'"
+            [outlined]="mainTab() !== 'auditoria'"
+            [severity]="mainTab() === 'auditoria' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('auditoria')"
+          />
+        </div>
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- Layout Principal: Contenido + Sidebar -->
+    <div class="main-layout">
+      <!-- Contenido Principal -->
+      <div class="main-content">
+        <!-- Nombre del Activo + Estado de Salud -->
+        <div class="activo-header-row">
+          <!-- Info del activo -->
+          <div class="activo-header">
+            <h2 class="activo-nombre">{{ activo()!.nombre }} <span class="activo-codigo">ACT-001</span></h2>
+            <p class="activo-descripcion">{{ activo()!.descripcion }}</p>
+          </div>
+
+          <!-- Estado de Salud Card (Compact) -->
+          <div class="health-status-card compact"
+               [class.healthy]="activo()!.healthStatus === 'HEALTHY' || !activo()!.healthStatus"
+               [class.stressed]="activo()!.healthStatus === 'STRESSED'"
+               [class.critical]="activo()!.healthStatus === 'CRITICAL'">
+            <!-- Row 1: Header con titulo y badge -->
+            <div class="health-header">
+              <div class="health-title">
+                <i class="pi" [ngClass]="healthConfig().icon"></i>
+                <span>Salud del Activo</span>
+              </div>
+              <p-tag [value]="healthConfig().label" [severity]="healthConfig().severity" />
+            </div>
+            <!-- Row 2: Progress bar con contador -->
+            <div class="health-progress-row">
+              <div class="health-counter">
+                <span class="counter-label">Incidentes: {{ activo()!.currentIncidentCount || 0 }} / {{ activo()!.incidentToleranceThreshold || 5 }}</span>
+                <span class="counter-percentage">{{ healthPercentage() | number:'1.0-0' }}% usado</span>
+              </div>
+              <div class="health-progress-container">
+                <div class="health-progress-bar"
+                     [style.width.%]="healthPercentage()"
+                     [style.background-color]="healthConfig().color">
+                </div>
+              </div>
+            </div>
+            <!-- Row 3: Mensaje -->
+            <div class="health-message">
+              @if (activo()!.healthStatus === 'CRITICAL') {
+                <span>El activo ha superado el umbral de incidentes. Requiere atención inmediata.</span>
+              } @else if (activo()!.healthStatus === 'STRESSED') {
+                <span>El activo está acumulando incidentes. Se recomienda revisar los controles asociados.</span>
+              } @else {
+                <span>El activo se encuentra dentro de los parámetros normales de operación.</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Boton Contenido de Activo -->
+        <div class="content-header">
+          <div class="content-button-wrapper">
+            <button class="content-toggle-btn" (click)="showContent.set(!showContent())">
+              <span>Contenido de Activo</span>
+            </button>
+            <span class="content-indicator"></span>
+          </div>
+        </div>
+
+        <!-- Tabs Secundarios -->
+        <div class="secondary-tabs">
+          <button
+            class="tab-btn"
+            [class.active]="secondaryTab() === 'info'"
+            (click)="secondaryTab.set('info')"
+          >
+            <i class="pi pi-info-circle"></i>
+            informacion General
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="secondaryTab() === 'salud'"
+            (click)="secondaryTab.set('salud')"
+          >
+            <i class="pi pi-heart-fill"></i>
+            Estado de Salud
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="secondaryTab() === 'tolerancia'"
+            (click)="secondaryTab.set('tolerancia')"
+          >
+            <i class="pi pi-sliders-h"></i>
+            Configuracion de tolerancia
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="secondaryTab() === 'propiedades'"
+            (click)="secondaryTab.set('propiedades')"
+          >
+            <i class="pi pi-th-large"></i>
+            Propiedades del activo
+          </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+          <!-- Tab: Informacion General -->
+          @if (secondaryTab() === 'info') {
+            <div class="tab-panel info-general-panel">
+              <!-- Graficas de Riesgo -->
+              @if (activo()!.riskAppetite) {
+                <div class="risk-charts-row">
+                  <!-- Riesgo Inherente -->
+                  <div class="risk-chart-card">
+                    <div class="chart-header">
+                      <span class="chart-title">Promedio Riesgo Inherente</span>
+                    </div>
+                    <div class="chart-content">
+                      <div class="risk-bar-container">
+                        <span class="risk-label">Riesgo Inherente</span>
+                        <div class="risk-bar">
+                          <div class="risk-bar-fill inherente" [style.width.%]="activo()!.riskAppetite!.riesgoInherente">
+                            <div class="bar-segment bajo" style="width: 30%"></div>
+                            <div class="bar-segment medio" style="width: 30%"></div>
+                            <div class="bar-segment alto" style="width: 40%"></div>
+                          </div>
+                          <div class="risk-target-line" [style.left.%]="activo()!.riskAppetite!.apetitoRiesgo"></div>
+                        </div>
+                        <span class="risk-value">{{ activo()!.riskAppetite!.riesgoInherente | number:'1.1-1' }}</span>
+                      </div>
+                      <div class="chart-legend">
+                        <span class="legend-item"><span class="dot bajo"></span> Bajo</span>
+                        <span class="legend-item"><span class="dot medio"></span> Medio</span>
+                        <span class="legend-item"><span class="dot alto"></span> Alto</span>
+                        <span class="legend-item"><span class="line"></span> Meta</span>
+                      </div>
+                      <div class="chart-footer">
+                        <span class="progress-text">Progreso: {{ calculateProgress(activo()!.riskAppetite!.riesgoInherente, activo()!.riskAppetite!.apetitoRiesgo) | number:'1.1-1' }}%</span>
+                        <span class="status-text" [class.below]="activo()!.riskAppetite!.riesgoInherente > activo()!.riskAppetite!.apetitoRiesgo">
+                          {{ activo()!.riskAppetite!.riesgoInherente > activo()!.riskAppetite!.apetitoRiesgo ? 'Por debajo de la meta' : 'Dentro de la meta' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Riesgo Residual -->
+                  <div class="risk-chart-card">
+                    <div class="chart-header">
+                      <span class="chart-title">Promedio Riesgo Residual</span>
+                    </div>
+                    <div class="chart-content">
+                      <div class="risk-bar-container">
+                        <span class="risk-label">Riesgo Residual</span>
+                        <div class="risk-bar">
+                          <div class="risk-bar-fill residual" [style.width.%]="activo()!.riskAppetite!.riesgoResidual">
+                            <div class="bar-segment bajo" style="width: 40%"></div>
+                            <div class="bar-segment medio" style="width: 35%"></div>
+                            <div class="bar-segment alto" style="width: 25%"></div>
+                          </div>
+                          <div class="risk-target-line" [style.left.%]="activo()!.riskAppetite!.apetitoRiesgo"></div>
+                        </div>
+                        <span class="risk-value">{{ activo()!.riskAppetite!.riesgoResidual | number:'1.1-1' }}</span>
+                      </div>
+                      <div class="chart-legend">
+                        <span class="legend-item"><span class="dot bajo"></span> Bajo</span>
+                        <span class="legend-item"><span class="dot medio"></span> Medio</span>
+                        <span class="legend-item"><span class="dot alto"></span> Alto</span>
+                        <span class="legend-item"><span class="line"></span> Meta</span>
+                      </div>
+                      <div class="chart-footer">
+                        <span class="progress-text">Progreso: {{ calculateProgress(activo()!.riskAppetite!.riesgoResidual, activo()!.riskAppetite!.apetitoRiesgo) | number:'1.1-1' }}%</span>
+                        <span class="status-text" [class.below]="activo()!.riskAppetite!.riesgoResidual > activo()!.riskAppetite!.apetitoRiesgo">
+                          {{ activo()!.riskAppetite!.riesgoResidual > activo()!.riskAppetite!.apetitoRiesgo ? 'Por debajo de la meta' : 'Dentro de la meta' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Informacion del Activo en Grid -->
+              <div class="info-grid">
+                <!-- Responsable -->
+                <div class="info-item">
+                  <span class="info-label">Responsable</span>
+                  <div class="info-value with-avatar">
+                    <p-avatar
+                      [label]="getInitials(activo()!.responsable)"
+                      shape="circle"
+                      size="normal"
+                    />
+                    <span>{{ activo()!.responsable }}</span>
+                  </div>
+                </div>
+
+                <!-- Organizacion -->
+                <div class="info-item">
+                  <span class="info-label">Organizacion</span>
+                  <div class="info-value breadcrumb-value">
+                    <span>{{ activo()!.departamento || 'Empresa ABC' }}</span>
+                    <i class="pi pi-chevron-right"></i>
+                    <span>Operaciones</span>
+                    <i class="pi pi-chevron-right"></i>
+                    <span>Tecnologia</span>
+                  </div>
+                </div>
+
+                <!-- Ultima Revision -->
+                <div class="info-item">
+                  <span class="info-label">Ultima Revision</span>
+                  <span class="info-value">{{ formatDate(activo()!.fechaRegistro) }}</span>
+                </div>
+
+                <!-- Estado -->
+                <div class="info-item">
+                  <span class="info-label">Estado</span>
+                  <div class="info-value">
+                    <p-tag value="Activo" severity="success" />
+                  </div>
+                </div>
+
+                <!-- Ultima Revision (duplicado como en el diseño) -->
+                <div class="info-item">
+                  <span class="info-label">Ultima Revision</span>
+                  <span class="info-value">{{ formatDate(activo()!.fechaRegistro) }}</span>
+                </div>
+
+                <!-- Criticidad -->
+                <div class="info-item">
+                  <span class="info-label">Criticidad</span>
+                  <div class="info-value">
+                    <p-tag
+                      [value]="criticidadConfigComputed().label"
+                      [severity]="criticidadConfigComputed().severity"
+                    />
+                  </div>
+                </div>
+
+                <!-- Tipo de activo -->
+                <div class="info-item">
+                  <span class="info-label">Tipo de activo</span>
+                  <div class="info-value">
+                    <p-tag [value]="activo()!.tipo | titlecase" severity="secondary" />
+                  </div>
+                </div>
+
+                <!-- Activos relacionados -->
+                <div class="info-item">
+                  <span class="info-label">Activos relacionados</span>
+                  <div class="info-value">
+                    <p-tag [value]="(childAssets().length + parentAssets().length).toString()" severity="info" />
+                  </div>
+                </div>
+
+                <!-- Reglas de negocio asociadas -->
+                <div class="info-item full-width">
+                  <span class="info-label">Reglas de negocio asociadas</span>
+                  <div class="info-value tags-list">
+                    <p-tag value="Mantenimiento de Antivirus" severity="secondary" />
+                  </div>
+                </div>
+
+                <!-- Procesos Relacionados -->
+                <div class="info-item full-width">
+                  <span class="info-label">Procesos Relacionados</span>
+                  <div class="info-value tags-list">
+                    <p-tag value="Contratacion de Creditos bancarios" [style]="{background: 'var(--surface-100)', color: 'var(--text-color)'}" />
+                    <p-tag value="Contratacion de Tarjetas de Credito" [style]="{background: 'var(--surface-100)', color: 'var(--text-color)'}" />
+                    <p-tag value="Seguimiento de Cobranza" [style]="{background: 'var(--surface-100)', color: 'var(--text-color)'}" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Tab: Estado de Salud -->
+          @if (secondaryTab() === 'salud') {
+            <div class="tab-panel health-panel">
+              <div class="health-analysis-card">
+                <h3 class="section-title">Analisis de Salud del Activo</h3>
+                <div class="health-status-badge" [class]="'status-' + activo()!.healthStatus?.toLowerCase()">
+                  <i class="pi {{ healthConfig().icon }}"></i>
+                  <span>Estado {{ healthConfig().label }}</span>
+                </div>
+
+                <p class="health-summary">
+                  El activo "{{ activo()!.nombre }}" tiene {{ riesgosCount() }} riesgos, {{ incidentesCount() }} incidentes asociados.
+                </p>
+
+                <!-- Lista de incidentes que evidencian fallas -->
+                @if (activo()!.incidentes && activo()!.incidentes.length > 0) {
+                  <div class="incidents-evidence">
+                    @for (incidente of activo()!.incidentes.slice(0, 4); track incidente.id) {
+                      <div class="evidence-item">
+                        <i class="pi pi-bolt"></i>
+                        <span>El incidente "{{ incidente.titulo }}" EVIDENCIA FALLA DE el control y MATERIALIZA el riesgo asociado.</span>
+                      </div>
+                    }
+                  </div>
+                }
+
+                <!-- Controles con Fallas y Riesgos Materializados -->
+                <div class="health-details-grid">
+                  <div class="health-detail-card">
+                    <h4>Controles con Fallas</h4>
+                    <div class="detail-list">
+                      <div class="detail-item">
+                        <span class="dot danger"></span>
+                        <span>Control "Capacitacion para usuarios" ha fallado en 1 incidente</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="dot danger"></span>
+                        <span>Control "A.8.7 - Proteccion Contra Malware" ha fallado en 3 incidentes</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="health-detail-card">
+                    <h4>Riesgos Materializados</h4>
+                    <div class="detail-list">
+                      <div class="detail-item">
+                        <span class="dot warning"></span>
+                        <span>Riesgo "Compromiso de credenciales privilegiadas" se ha materializado 1 vez</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="dot warning"></span>
+                        <span>Riesgo "Propagacion de malware por correo electronico" se ha materializado 2 veces</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="dot warning"></span>
+                        <span>Riesgo "Posible compromiso de la informacion estrategica" se ha materializado 1 vez</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Resumen -->
+                <div class="health-summary-section">
+                  <h4>Resumen</h4>
+                  <div class="summary-list">
+                    @for (incidente of activo()!.incidentes?.slice(0, 4); track incidente.id) {
+                      <div class="summary-item">
+                        {{ incidente.titulo }} (afecto: {{ activo()!.nombre }})
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Alerta de recalibracion -->
+                @if (activo()!.healthStatus === 'CRITICAL' || activo()!.healthStatus === 'STRESSED') {
+                  <div class="recalibration-alert">
+                    <i class="pi pi-exclamation-triangle"></i>
+                    <span>Se recomienda recalibrar: La efectividad del control ha caido por debajo del umbral de tolerancia. La probabilidad de materializacion de los riesgos relacionados ha aumentado debido a la ineficacia sistemica del control.</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Tab: Configuracion de Tolerancia -->
+          @if (secondaryTab() === 'tolerancia') {
+            <div class="tab-panel tolerance-panel">
+              <div class="tolerance-header">
+                <i class="pi pi-heart"></i>
+                <h3>Configuracion de Tolerancia a Incidentes</h3>
+              </div>
+
+              <!-- Explicacion -->
+              <div class="tolerance-explanation">
+                <div class="explanation-header">
+                  <i class="pi pi-info-circle"></i>
+                  <span>Que es la Tolerancia a Incidentes?</span>
+                </div>
+                <p>
+                  La <strong>tolerancia</strong> mide cuanto "dolor" (incidentes) puede soportar un activo antes de volverse poco confiable.
+                  Es diferente del <em>estado operacional de controles</em> (calidad de defensa) - la salud del activo mide la <strong>resistencia del negocio</strong>.
+                </p>
+                <ul class="tolerance-points">
+                  <li><strong>Umbral de tolerancia:</strong> Numero maximo de incidentes tolerables antes de considerar el activo en estado critico.</li>
+                  <li><strong>Periodo de conteo:</strong> Dias tras los cuales el contador de incidentes se reinicia automaticamente.</li>
+                  <li><strong>Regla de doble impacto:</strong> Solo se cuentan incidentes que tengan AMBOS: controles fallidos Y riesgos materializados.</li>
+                </ul>
+              </div>
+
+              <!-- Cards de metricas -->
+              <div class="tolerance-metrics">
+                <div class="tolerance-metric-card">
+                  <span class="metric-label">UMBRAL DE TOLERANCIA</span>
+                  <span class="metric-value">{{ activo()!.incidentToleranceThreshold || 5 }} incidentes</span>
+                  <span class="metric-sublabel">Maximo tolerable antes de estado critico</span>
+                </div>
+
+                <div class="tolerance-metric-card highlight">
+                  <span class="metric-label">INCIDENTES ACTUALES</span>
+                  <div class="metric-value-row">
+                    <span class="metric-value">{{ activo()!.currentIncidentCount || 0 }}</span>
+                    <span class="metric-total">/ {{ activo()!.incidentToleranceThreshold || 5 }}</span>
+                  </div>
+                  <span class="metric-sublabel percentage">{{ healthPercentage() | number:'1.0-0' }}% de tolerancia usada</span>
+                </div>
+
+                <div class="tolerance-metric-card">
+                  <span class="metric-label">PERIODO DE CONTEO</span>
+                  <span class="metric-value">{{ activo()!.incidentCountResetDays || 365 }} dias</span>
+                  <span class="metric-sublabel">Dias para reinicio automatico del contador</span>
+                </div>
+              </div>
+
+              <!-- Boton de configuracion -->
+              <div class="tolerance-actions">
+                <p-button
+                  icon="pi pi-cog"
+                  label="Configurar Tolerancia"
+                  (onClick)="openToleranceConfig()"
+                />
+              </div>
+            </div>
+          }
+
+          <!-- Tab: Incidentes (Main Tab) -->
+          @if (mainTab() === 'incidentes') {
+            <div class="tab-panel">
+              <p-table
+                [value]="activo()!.incidentes"
+                [paginator]="true"
+                [rows]="10"
+                styleClass="p-datatable-sm p-datatable-striped"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Titulo</th>
+                    <th>Severidad</th>
+                    <th>Estado</th>
+                    <th>Reportado por</th>
+                    <th>Fecha</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-incidente>
+                  <tr class="clickable-row" (click)="navigateToIncidente(incidente)">
+                    <td>{{ incidente.titulo }}</td>
+                    <td>
+                      <p-tag [value]="incidente.severidad" [severity]="getSeveridadSeverity(incidente.severidad)" />
+                    </td>
+                    <td>
+                      <p-tag [value]="incidente.estado" [severity]="getEstadoSeverity(incidente.estado)" />
+                    </td>
+                    <td>{{ incidente.reportadoPor }}</td>
+                    <td>{{ formatDate(incidente.fechaReporte) }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="5" class="text-center">
+                      <div class="empty-state">
+                        <i class="pi pi-bolt"></i>
+                        <p>No hay incidentes registrados</p>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          }
+
+          <!-- Tab: Propiedades del activo -->
+          @if (secondaryTab() === 'propiedades') {
+            <div class="tab-panel properties-panel">
+              <!-- Secciones colapsables -->
+              <p-accordion [multiple]="true" [value]="['0', '1', '2']">
+                <!-- Información General -->
+                <p-accordion-panel value="0">
+                  <p-accordion-header>
+                    <div class="accordion-header-custom">
+                      <span>Información General</span>
+                      <span class="obligatorio-tag">Obligatorio</span>
+                    </div>
+                  </p-accordion-header>
+                  <p-accordion-content>
+                    <div class="grid">
+                      <div class="col-12">
+                        <label class="block font-medium mb-2">Nombre del Activo *</label>
+                        <div class="p-2 surface-100 border-round text-900">{{ activo()!.nombre }}</div>
+                      </div>
+                      <div class="col-12">
+                        <label class="block font-medium mb-2">Descripción</label>
+                        <div class="p-2 surface-100 border-round text-900" style="min-height: 60px;">{{ activo()!.descripcion }}</div>
+                      </div>
+                      <div class="col-12 md:col-6">
+                        <label class="block font-medium mb-2">Tipo de Activo *</label>
+                        <div class="p-2 surface-100 border-round text-900">{{ activo()!.tipo | titlecase }}</div>
+                      </div>
+                      <div class="col-12 md:col-6">
+                        <label class="block font-medium mb-2">Criticidad *</label>
+                        <div class="p-2 surface-100 border-round text-900">{{ criticidadConfigComputed().label }}</div>
+                      </div>
+                      <div class="col-12 md:col-6">
+                        <label class="block font-medium mb-2">Fecha de Registro</label>
+                        <div class="p-2 surface-100 border-round text-900">{{ activo()!.fechaRegistro | date:'dd/MM/yyyy' }}</div>
+                      </div>
+                      <div class="col-12 md:col-6">
+                        <label class="block font-medium mb-2">Estado</label>
+                        <div class="p-2 surface-100 border-round">
+                          <p-tag [value]="activo()!.isActive !== false ? 'Activo' : 'Inactivo'"
+                                 [severity]="activo()!.isActive !== false ? 'success' : 'secondary'" />
+                        </div>
+                      </div>
+                    </div>
+                  </p-accordion-content>
+                </p-accordion-panel>
+
+                <!-- Responsabilidad y Organización -->
+                <p-accordion-panel value="1">
+                  <p-accordion-header>
+                    <div class="accordion-header-custom">
+                      <span>Responsabilidad y Organización</span>
+                      <span class="obligatorio-tag">Obligatorio</span>
+                    </div>
+                  </p-accordion-header>
+                  <p-accordion-content>
+                    <div class="grid">
+                      <div class="col-12 md:col-6">
+                        <label class="block font-medium mb-2">Responsable *</label>
+                        <div class="flex align-items-center gap-2 p-2 surface-100 border-round">
+                          <p-avatar [label]="activo()!.responsable.charAt(0)" shape="circle" styleClass="bg-primary" />
+                          <span>{{ activo()!.responsable }}</span>
+                        </div>
+                      </div>
+                      <div class="col-12 md:col-6">
+                        <label class="block font-medium mb-2">Departamento *</label>
+                        <div class="p-2 surface-100 border-round text-900">{{ activo()!.departamento }}</div>
+                      </div>
+                      @if (activo()!.parentAsset) {
+                        <div class="col-12">
+                          <label class="block font-medium mb-2">Activo Padre</label>
+                          <div class="flex align-items-center gap-2 p-2 surface-100 border-round">
+                            <i class="pi pi-sitemap text-primary"></i>
+                            <span>{{ activo()!.parentAsset!.nombre }}</span>
+                            <p-tag [value]="activo()!.parentAsset!.tipo | titlecase" severity="secondary" styleClass="text-xs ml-auto" />
+                          </div>
+                        </div>
+                      }
+                      @if (activo()!.childAssets && activo()!.childAssets!.length > 0) {
+                        <div class="col-12">
+                          <label class="block font-medium mb-2">Activos Hijos ({{ activo()!.childAssets!.length }})</label>
+                          <div class="flex flex-wrap gap-2">
+                            @for (child of activo()!.childAssets; track child.id) {
+                              <p-tag [value]="child.nombre" severity="info" styleClass="text-xs" />
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </p-accordion-content>
+                </p-accordion-panel>
+
+                <!-- Valor y Configuración de Riesgo -->
+                <p-accordion-panel value="2">
+                  <p-accordion-header>
+                    <div class="accordion-header-custom">
+                      <span>Valor y Configuración de Riesgo</span>
+                    </div>
+                  </p-accordion-header>
+                  <p-accordion-content>
+                    <div class="grid">
+                      @if (activo()!.assetValue) {
+                        <div class="col-12 md:col-6">
+                          <label class="block font-medium mb-2">Valor del Activo</label>
+                          <div class="p-2 surface-100 border-round text-900">${{ activo()!.assetValue | number:'1.2-2' }}</div>
+                        </div>
+                      }
+                      @if (activo()!.riskAppetite) {
+                        <div class="col-12 md:col-6">
+                          <label class="block font-medium mb-2">Apetito de Riesgo</label>
+                          <div class="p-2 surface-100 border-round text-900">{{ activo()!.riskAppetite!.nombre }}</div>
+                        </div>
+                      }
+                      <div class="col-12 md:col-6">
+                        <label class="block font-medium mb-2">Umbral de Tolerancia (Incidentes)</label>
+                        <div class="p-2 surface-100 border-round text-900">{{ activo()!.incidentToleranceThreshold || 5 }}</div>
+                      </div>
+                      <div class="col-12 md:col-6">
+                        <label class="block font-medium mb-2">Días para Reset de Conteo</label>
+                        <div class="p-2 surface-100 border-round text-900">{{ activo()!.incidentCountResetDays || 30 }}</div>
+                      </div>
+                    </div>
+                  </p-accordion-content>
+                </p-accordion-panel>
+
+                <!-- Propiedades Custom -->
+                @if (activo()!.propiedadesCustom && activo()!.propiedadesCustom!.length > 0) {
+                  <p-accordion-panel value="3">
+                    <p-accordion-header>
+                      <div class="accordion-header-custom">
+                        <span>Propiedades Adicionales</span>
+                        <p-tag [value]="activo()!.propiedadesCustom!.length + ' campos'" severity="info" styleClass="text-xs" />
+                      </div>
+                    </p-accordion-header>
+                    <p-accordion-content>
+                      <div class="grid">
+                        @for (prop of activo()!.propiedadesCustom; track prop.propiedadId) {
+                          <div class="col-12 md:col-6">
+                            <label class="block font-medium mb-2">{{ prop.campo }}</label>
+                            <div class="p-2 surface-100 border-round text-900">{{ prop.valor }}</div>
+                          </div>
+                        }
+                      </div>
+                    </p-accordion-content>
+                  </p-accordion-panel>
+                }
+                  </p-accordion>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Sidebar Derecho -->
+      <div class="sidebar">
+        <!-- Stats Cards -->
+        <div class="stats-section">
+          <!-- Riesgos + Nivel Criticidad -->
+          <div class="stat-row">
+            <div class="stat-card">
+              <div class="stat-indicator riesgos"></div>
+              <div class="stat-content">
+                <span class="stat-label">Riesgos</span>
+                <span class="stat-value">{{ riesgosCount() }}</span>
+                <span class="stat-sublabel">Asociados</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-indicator nivel" [class]="activo()!.criticidad"></div>
+              <div class="stat-content">
+                <span class="stat-label">Nivel</span>
+                <span class="stat-value">{{ criticidadConfigComputed().label }}</span>
+                <span class="stat-sublabel">Criticidad</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Incidentes + Valor -->
+          <div class="stat-row">
+            <div class="stat-card">
+              <div class="stat-indicator incidentes"></div>
+              <div class="stat-content">
+                <span class="stat-label">Incidentes</span>
+                <span class="stat-value">{{ incidentesCount() }}</span>
+                <span class="stat-sublabel">Asociados</span>
+              </div>
+            </div>
+            <div class="stat-card valor-card">
+              <div class="stat-indicator valor"></div>
+              <div class="stat-content">
+                <span class="stat-label">Valor</span>
+                <span class="stat-value valor-amount">{{ activo()!.assetValue ? ('$' + (activo()!.assetValue | number:'1.2-2')) : 'N/A' }}</span>
+                <span class="stat-sublabel">del activo</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Defectos + Propiedades -->
+          <div class="stat-row">
+            <div class="stat-card">
+              <div class="stat-indicator defectos"></div>
+              <div class="stat-content">
+                <span class="stat-label">Defectos</span>
+                <span class="stat-value">{{ defectosCount() }}</span>
+                <span class="stat-sublabel">Asociados</span>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-content">
+                <span class="stat-label">Propiedades</span>
+                <span class="stat-value">{{ activo()!.propiedadesCustom?.length || 5 }}</span>
+                <span class="stat-sublabel">Total</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grafo de Relaciones -->
+        <div class="graph-section">
+          <div class="graph-header">
+            <span class="graph-title">{{ activo()!.nombre }}</span>
+            <button class="expand-btn" pTooltip="Expandir" (click)="openGraphDialog()">
+              <i class="pi pi-expand"></i>
+            </button>
+          </div>
+
+          <div class="graph-visual">
+            <!-- Visualizacion de burbujas tipo cluster -->
+            <div class="bubble-cluster">
+              @if (graphData() && graphData()!.nodes.length > 1) {
+                <!-- Nodo central grande -->
+                <div class="bubble main-bubble">
+                  <span>{{ getShortName(activo()!.nombre) }}</span>
+                </div>
+
+                <!-- Burbujas satelite -->
+                @for (node of graphData()!.nodes.slice(0, 8); track node.id; let i = $index) {
+                  @if (node.type !== 'activo') {
+                    <div
+                      class="bubble satellite-bubble"
+                      [class]="'bubble-' + node.type"
+                      [style.--angle]="(i * 45) + 'deg'"
+                      [style.--distance]="'80px'"
+                      (click)="onNodeClick(node)"
+                      [pTooltip]="node.label"
+                    >
+                      <span>{{ getShortName(node.label) }}</span>
+                    </div>
+                  }
+                }
+              } @else {
+                <div class="no-relations">
+                  <p>Sin relaciones</p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Leyenda del grafo -->
+          <div class="graph-legend">
+            <div class="legend-item">
+              <span class="legend-dot incidentes"></span>
+              <span>Incidentes ({{ incidentesCount() }})</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot riesgos"></span>
+              <span>Riesgos ({{ riesgosCount() }})</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot activos"></span>
+              <span>Activos ({{ childAssets().length + parentAssets().length }})</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot contenedores"></span>
+              <span>Contenedores (2)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot controles"></span>
+              <span>Controles (1)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="not-found">
+      <i class="pi pi-exclamation-circle"></i>
+      <h2>Activo no encontrado</h2>
+      <p>El activo solicitado no existe o no tienes permisos para verlo.</p>
+      <p-button label="Volver a la lista" icon="pi pi-arrow-left" (onClick)="goBack()" />
+    </div>
+  }
+</div>
+
+<!-- Dialog de Visualizacion de Relaciones -->
+<p-dialog
+  [(visible)]="showGraphDialog"
+  [modal]="true"
+  [style]="{width: '90vw', maxWidth: '1200px'}"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="graph-dialog"
+>
+  <ng-template pTemplate="header">
+    <div class="graph-dialog-header">
+      <div class="header-left-actions">
+        <p-button icon="pi pi-arrow-left" [text]="true" [rounded]="true" (onClick)="showGraphDialog.set(false)" />
+        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" />
+      </div>
+      <span class="dialog-title">Visualizacion de Relaciones</span>
+      <div class="header-right-actions">
+        <p-button icon="pi pi-window-maximize" [text]="true" [rounded]="true" />
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="graph-dialog-content">
+    <!-- Toolbar -->
+    <div class="graph-toolbar">
+      <div class="toolbar-left">
+        <div class="analyzing-info">
+          <i class="pi pi-chart-line"></i>
+          <span>Analizando: <strong>{{ activo()?.nombre }}</strong></span>
+        </div>
+        <p-button label="Cambiar nodo" icon="pi pi-sync" [outlined]="true" size="small" />
+      </div>
+      <div class="toolbar-right">
+        <p-select
+          [(ngModel)]="graphLayout"
+          [options]="layoutOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar layout"
+          [style]="{width: '180px'}"
+        />
+        <div class="zoom-controls">
+          <p-button icon="pi pi-search-plus" [text]="true" [rounded]="true" (onClick)="zoomIn()" />
+          <p-button icon="pi pi-search-minus" [text]="true" [rounded]="true" (onClick)="zoomOut()" />
+          <p-button icon="pi pi-arrows-alt" [text]="true" [rounded]="true" (onClick)="resetZoom()" pTooltip="Ajustar" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Graph Area -->
+    <div class="graph-dialog-body">
+      <div
+        class="graph-area"
+        [class.dragging]="isDragging()"
+        [style.transform]="'scale(' + graphZoom() + ') translate(' + graphPanX() + 'px, ' + graphPanY() + 'px)'"
+        (wheel)="onGraphWheel($event)"
+        (mousedown)="onGraphMouseDown($event)"
+        (mousemove)="onGraphMouseMove($event)"
+        (mouseup)="onGraphMouseUp()"
+        (mouseleave)="onGraphMouseUp()"
+        (contextmenu)="$event.preventDefault()">
+        <div class="expanded-bubble-cluster">
+          @if (graphData() && graphData()!.nodes.length > 0) {
+            <!-- Nodo central grande -->
+            <div class="bubble main-bubble expanded">
+              <span>{{ getShortName(activo()!.nombre) }}</span>
+            </div>
+
+            <!-- Burbujas satelite organizadas -->
+            @for (node of graphData()!.nodes; track node.id; let i = $index) {
+              @if (node.type !== 'activo') {
+                <div
+                  class="bubble satellite-bubble expanded"
+                  [class]="'bubble-' + node.type"
+                  [style.--index]="i"
+                  [style.--total]="graphData()!.nodes.length"
+                  (click)="onNodeClick(node)"
+                >
+                  <span>{{ getShortName(node.label) }}</span>
+                </div>
+              }
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Sidebar con distribucion -->
+      <div class="graph-sidebar">
+        <div class="distribution-card">
+          <div class="distribution-header">
+            <i class="pi pi-chart-pie"></i>
+            <span>Distribucion por tipo</span>
+          </div>
+          <div class="distribution-chart">
+            <!-- Pie chart simple con CSS -->
+            <div class="pie-chart">
+              <div class="pie-segment incidentes" [style.--percentage]="getTypePercentage('incidente')"></div>
+              <div class="pie-segment riesgos" [style.--percentage]="getTypePercentage('riesgo')"></div>
+              <div class="pie-segment activos" [style.--percentage]="getTypePercentage('activo')"></div>
+            </div>
+          </div>
+          <div class="distribution-legend">
+            <div class="legend-row">
+              <span class="legend-dot incidentes"></span>
+              <span>Incidentes ({{ incidentesCount() }})</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-dot riesgos"></span>
+              <span>Riesgos ({{ riesgosCount() }})</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-dot activos"></span>
+              <span>Activos ({{ childAssets().length + parentAssets().length }})</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-dot contenedores"></span>
+              <span>Contenedores (2)</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-dot controles"></span>
+              <span>Controles (1)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="graph-dialog-footer">
+      <span class="graph-stats-text">
+        {{ graphData()?.nodes?.length || 0 }} nodos, {{ graphData()?.edges?.length || 0 }} relaciones
+      </span>
+      <a href="javascript:void(0)" class="drill-down-link">(Drill-down activo)</a>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Drawer de Configuracion de Tolerancia -->
+<p-drawer [(visible)]="showToleranceDrawer" header="Configuracion de Tolerancia" position="right" [style]="{width: '400px'}">
+  <div class="tolerance-form">
+    <div class="form-field">
+      <label for="threshold">Umbral de Incidentes</label>
+      <p-inputNumber
+        id="threshold"
+        [(ngModel)]="toleranceForm().incidentToleranceThreshold"
+        [min]="1"
+        [max]="100"
+        [showButtons]="true"
+      />
+      <small>Numero de incidentes antes de pasar a estado Critico</small>
+    </div>
+
+    <div class="form-field">
+      <label for="resetDays">Dias para Reset Automatico</label>
+      <p-inputNumber
+        id="resetDays"
+        [(ngModel)]="toleranceForm().incidentCountResetDays"
+        [min]="1"
+        [max]="730"
+        [showButtons]="true"
+      />
+      <small>Dias sin incidentes para resetear el contador automaticamente</small>
+    </div>
+
+    <div class="form-actions">
+      <p-button
+        label="Cancelar"
+        [outlined]="true"
+        (onClick)="showToleranceDrawer.set(false)"
+      />
+      <p-button
+        label="Guardar"
+        icon="pi pi-check"
+        (onClick)="saveToleranceConfig()"
+      />
+    </div>
+  </div>
+</p-drawer>

@@ -1,0 +1,680 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="integraciones-detalle-container">
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <p-progressSpinner strokeWidth="4" />
+      <span>Cargando radio...</span>
+    </div>
+  }
+
+  @if (!loading() && radio()) {
+    <!-- Header -->
+    <div class="detail-header">
+      <div class="header-left">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="navigateBack()"
+          pTooltip="Volver al listado"
+        />
+        <div class="header-info">
+          <div class="header-title">
+            <i [class]="getConnectorTypeIcon(radio()!.connectorType)" class="connector-icon"></i>
+            <h1>{{ radio()!.name }}</h1>
+            <p-tag
+              [value]="getRadioStatusLabel(radio()!.status)"
+              [severity]="getRadioStatusSeverity(radio()!.status)"
+            />
+            <p-tag
+              [value]="getHealthLabel()"
+              [severity]="getHealthSeverity()"
+              [rounded]="true"
+            />
+          </div>
+          @if (radio()!.description) {
+            <p class="header-description">{{ radio()!.description }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <p-button
+          icon="pi pi-sync"
+          label="Sincronizar"
+          severity="info"
+          [outlined]="true"
+          [disabled]="radio()!.status !== 'active'"
+          (onClick)="triggerSync()"
+          pTooltip="Ejecutar sincronización manual"
+        />
+        <p-button
+          [icon]="radio()!.status === 'active' ? 'pi pi-pause' : 'pi pi-play'"
+          [label]="radio()!.status === 'active' ? 'Desactivar' : 'Activar'"
+          [severity]="radio()!.status === 'active' ? 'warn' : 'success'"
+          [outlined]="true"
+          (onClick)="toggleStatus()"
+        />
+        <p-button
+          icon="pi pi-pencil"
+          label="Editar"
+          [outlined]="true"
+          (onClick)="navigateToEdit()"
+        />
+        <p-button
+          icon="pi pi-trash"
+          severity="danger"
+          [text]="true"
+          (onClick)="confirmDelete()"
+          pTooltip="Eliminar radio"
+        />
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-value">{{ radio()!.stats.totalPulses }}</span>
+        <span class="stat-label">Total Pulsos</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ radio()!.stats.pulsesLast24h }}</span>
+        <span class="stat-label">Pulsos 24h</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ radio()!.stats.errorCount }}</span>
+        <span class="stat-label">Errores</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ formatDate(radio()!.stats.lastSyncAt) }}</span>
+        <span class="stat-label">Última Sync</span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <p-tabs [value]="activeTab()" (valueChange)="$event !== undefined && activeTab.set(+$event)">
+      <p-tablist>
+        <p-tab [value]="0">Configuración</p-tab>
+        <p-tab [value]="1">
+          Mapeo de Campos
+          @if (fieldMappings().length > 0) {
+            <p-badge [value]="fieldMappings().length.toString()" severity="info" class="ml-2" />
+          } @else {
+            <p-badge value="!" severity="warn" class="ml-2" />
+          }
+        </p-tab>
+        <p-tab [value]="2">
+          Pulsos
+          <p-badge [value]="integracionesService.pulses().length.toString()" class="ml-2" />
+        </p-tab>
+        <p-tab [value]="3">
+          Logs
+          <p-badge [value]="integracionesService.syncLogs().length.toString()" severity="secondary" class="ml-2" />
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Tab: Configuration -->
+        <p-tabpanel [value]="0">
+          <div class="tab-content">
+            <!-- General Info -->
+            <p-card header="Información General">
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Tipo de Conector</span>
+                  <span class="info-value">
+                    <i [class]="getConnectorTypeIcon(radio()!.connectorType)"></i>
+                    {{ getConnectorTypeLabel(radio()!.connectorType) }}
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Categoría</span>
+                  <span class="info-value">{{ radio()!.category }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Entidad Destino</span>
+                  <span class="info-value">{{ radio()!.targetEntityType }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Creado</span>
+                  <span class="info-value">{{ formatDate(radio()!.createdAt) }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Actualizado</span>
+                  <span class="info-value">{{ formatDate(radio()!.updatedAt) }}</span>
+                </div>
+              </div>
+            </p-card>
+
+            <!-- Connector Config -->
+            <p-card header="Configuración del Conector">
+              @if (isWebhook()) {
+                <div class="config-section">
+                  <div class="config-item">
+                    <span class="config-label">URL del Webhook</span>
+                    <div class="config-value-with-copy">
+                      <code>{{ connectorConfig()?.['webhookUrl'] || 'No configurado' }}</code>
+                      @if (connectorConfig()?.['webhookUrl']) {
+                        <p-button
+                          icon="pi pi-copy"
+                          [rounded]="true"
+                          [text]="true"
+                          size="small"
+                          (onClick)="copyToClipboard(connectorConfig()?.['webhookUrl'])"
+                        />
+                      }
+                    </div>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Token de Autenticación</span>
+                    <div class="config-value-with-copy">
+                      <code class="masked">{{ connectorConfig()?.['webhookToken']?.substring(0, 20) }}...</code>
+                      <p-button
+                        icon="pi pi-copy"
+                        [rounded]="true"
+                        [text]="true"
+                        size="small"
+                        (onClick)="copyToClipboard(connectorConfig()?.['webhookToken'])"
+                      />
+                    </div>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Validación de Firma</span>
+                    <span class="config-value">{{ connectorConfig()?.['enableSignatureValidation'] ? 'Habilitada' : 'Deshabilitada' }}</span>
+                  </div>
+                </div>
+              }
+
+              @if (isRestApi()) {
+                <div class="config-section">
+                  <div class="config-item">
+                    <span class="config-label">URL Base</span>
+                    <code>{{ connectorConfig()?.['baseUrl'] }}</code>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Endpoint</span>
+                    <code>{{ connectorConfig()?.['endpoint'] }}</code>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Método</span>
+                    <span class="config-value">{{ connectorConfig()?.['method'] }}</span>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Autenticación</span>
+                    <span class="config-value">{{ connectorConfig()?.['authType'] | titlecase }}</span>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Timeout</span>
+                    <span class="config-value">{{ connectorConfig()?.['timeout'] }}ms</span>
+                  </div>
+                </div>
+              }
+
+              @if (isDatabase()) {
+                <div class="config-section">
+                  <div class="config-item">
+                    <span class="config-label">Tipo de BD</span>
+                    <span class="config-value">{{ connectorConfig()?.['dbType'] | uppercase }}</span>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Host</span>
+                    <code>{{ connectorConfig()?.['host'] }}:{{ connectorConfig()?.['port'] }}</code>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Base de Datos</span>
+                    <span class="config-value">{{ connectorConfig()?.['database'] }}</span>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Usuario</span>
+                    <span class="config-value">{{ connectorConfig()?.['username'] }}</span>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">SSL</span>
+                    <span class="config-value">{{ connectorConfig()?.['ssl'] ? 'Habilitado' : 'Deshabilitado' }}</span>
+                  </div>
+                  <div class="config-item full-width">
+                    <span class="config-label">Consulta SQL</span>
+                    <pre class="sql-query">{{ connectorConfig()?.['query'] }}</pre>
+                  </div>
+                </div>
+              }
+
+              @if (isFolder()) {
+                <div class="config-section">
+                  <div class="config-item">
+                    <span class="config-label">Tipo de Ubicación</span>
+                    <span class="config-value">{{ connectorConfig()?.['locationType'] | uppercase }}</span>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Ruta</span>
+                    <code>{{ connectorConfig()?.['path'] }}</code>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Patrón de Archivos</span>
+                    <span class="config-value">{{ connectorConfig()?.['filePattern'] }}</span>
+                  </div>
+                  <div class="config-item">
+                    <span class="config-label">Subdirectorios</span>
+                    <span class="config-value">{{ connectorConfig()?.['includeSubdirs'] ? 'Incluidos' : 'Excluidos' }}</span>
+                  </div>
+                </div>
+              }
+            </p-card>
+
+            <!-- Schedule Config -->
+            @if (radio()!.schedule) {
+              <p-card header="Programación">
+                <div class="config-section">
+                  <div class="config-item">
+                    <span class="config-label">Frecuencia</span>
+                    <span class="config-value">{{ radio()!.schedule!.frequency | titlecase }}</span>
+                  </div>
+                  @if (radio()!.schedule!.interval) {
+                    <div class="config-item">
+                      <span class="config-label">Intervalo</span>
+                      <span class="config-value">{{ radio()!.schedule!.interval }}</span>
+                    </div>
+                  }
+                  @if (radio()!.schedule!.time) {
+                    <div class="config-item">
+                      <span class="config-label">Hora</span>
+                      <span class="config-value">{{ radio()!.schedule!.time }}</span>
+                    </div>
+                  }
+                  <div class="config-item">
+                    <span class="config-label">Zona Horaria</span>
+                    <span class="config-value">{{ radio()!.schedule!.timezone }}</span>
+                  </div>
+                </div>
+              </p-card>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab: Mapeo de Campos -->
+        <p-tabpanel [value]="1">
+          <div class="tab-content">
+            <!-- Step 1: Test Connection -->
+            <p-card header="Paso 1: Obtener datos de muestra">
+              <div class="mapping-step">
+                <p class="step-description">
+                  Prueba la conexión con la fuente de datos para detectar automáticamente los campos disponibles.
+                </p>
+                <div class="step-actions">
+                  <p-button
+                    label="Probar Conexión"
+                    icon="pi pi-link"
+                    (onClick)="testConnection()"
+                    [loading]="testingConnection()"
+                    [disabled]="testingConnection()"
+                  />
+                  @if (detectedFields().length > 0) {
+                    <span class="fields-detected">
+                      <i class="pi pi-check-circle text-green-500"></i>
+                      {{ detectedFields().length }} campos detectados
+                    </span>
+                  }
+                </div>
+
+                <!-- Sample Data Preview -->
+                @if (sampleData() && sampleData()!.length > 0) {
+                  <div class="sample-data-section">
+                    <h5>Vista previa de datos ({{ sampleData()!.length }} registros)</h5>
+                    <div class="sample-data-scroll">
+                      <pre>{{ formatJson(sampleData()![0]) }}</pre>
+                    </div>
+                  </div>
+                }
+              </div>
+            </p-card>
+
+            <!-- Step 2: Configure Mappings -->
+            <p-card header="Paso 2: Configurar mapeo de campos">
+              <div class="mapping-step">
+                <p class="step-description">
+                  Define cómo los campos del origen se transforman en campos de la entidad destino
+                  ({{ radio()!.targetEntityType | titlecase }}).
+                </p>
+
+                @if (detectedFields().length === 0) {
+                  <div class="mapping-hint">
+                    <i class="pi pi-info-circle"></i>
+                    Primero prueba la conexión para detectar los campos disponibles
+                  </div>
+                } @else {
+                  <div class="mapping-header">
+                    <div class="mapping-completeness">
+                      <span>Completitud de campos requeridos: </span>
+                      <p-badge
+                        [value]="getMappingCompleteness() + '%'"
+                        [severity]="getMappingCompleteness() === 100 ? 'success' : getMappingCompleteness() >= 50 ? 'warn' : 'danger'"
+                      />
+                    </div>
+                    <p-button
+                      label="Agregar Mapeo"
+                      icon="pi pi-plus"
+                      [outlined]="true"
+                      size="small"
+                      (onClick)="addFieldMapping()"
+                    />
+                  </div>
+
+                  @if (fieldMappings().length === 0) {
+                    <div class="empty-mappings">
+                      <i class="pi pi-arrows-h"></i>
+                      <p>No hay mapeos configurados. Agrega mapeos para definir cómo se transforman los datos.</p>
+                    </div>
+                  } @else {
+                    <div class="mappings-table">
+                      <div class="mapping-row header">
+                        <div class="mapping-col source">Campo Origen</div>
+                        <div class="mapping-col arrow"></div>
+                        <div class="mapping-col target">Campo Destino</div>
+                        <div class="mapping-col required">Requerido</div>
+                        <div class="mapping-col actions"></div>
+                      </div>
+                      @for (mapping of fieldMappings(); track mapping.id) {
+                        <div class="mapping-row">
+                          <div class="mapping-col source">
+                            <p-select
+                              [options]="getSourceFieldOptions()"
+                              [ngModel]="mapping.sourceField"
+                              (ngModelChange)="updateMappingSource(mapping.id, $event)"
+                              optionLabel="label"
+                              optionValue="value"
+                              placeholder="Seleccionar campo origen"
+                              [filter]="true"
+                              appendTo="body"
+                              styleClass="w-full"
+                            />
+                          </div>
+                          <div class="mapping-col arrow">
+                            <i class="pi pi-arrow-right"></i>
+                          </div>
+                          <div class="mapping-col target">
+                            <p-select
+                              [options]="getTargetFieldOptions()"
+                              [ngModel]="mapping.targetField"
+                              (ngModelChange)="updateMappingTarget(mapping.id, $event)"
+                              optionLabel="label"
+                              optionValue="value"
+                              placeholder="Seleccionar campo destino"
+                              appendTo="body"
+                              styleClass="w-full"
+                            />
+                          </div>
+                          <div class="mapping-col required">
+                            @if (isTargetFieldRequired(mapping.targetField)) {
+                              <p-tag value="Requerido" severity="warn" />
+                            } @else {
+                              <span class="text-color-secondary">Opcional</span>
+                            }
+                          </div>
+                          <div class="mapping-col actions">
+                            <p-button
+                              icon="pi pi-trash"
+                              severity="danger"
+                              [text]="true"
+                              [rounded]="true"
+                              (onClick)="removeFieldMapping(mapping.id)"
+                              pTooltip="Eliminar mapeo"
+                            />
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <div class="mapping-actions">
+                    <p-button
+                      label="Guardar Mapeos"
+                      icon="pi pi-save"
+                      (onClick)="saveMappings()"
+                      [loading]="savingMappings()"
+                      [disabled]="savingMappings() || fieldMappings().length === 0"
+                    />
+                    @if (mappingChanged()) {
+                      <span class="unsaved-changes">
+                        <i class="pi pi-exclamation-circle"></i>
+                        Cambios sin guardar
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+            </p-card>
+
+            <!-- Target Fields Reference -->
+            <p-panel header="Campos disponibles en destino" [toggleable]="true" [collapsed]="true">
+              <div class="target-fields-reference">
+                <p class="reference-description">
+                  Campos disponibles para la entidad {{ radio()!.targetEntityType | titlecase }}:
+                </p>
+                <div class="fields-grid">
+                  @for (field of targetFields(); track field.field) {
+                    <div class="field-item" [class.required]="field.required">
+                      <span class="field-name">{{ field.label }}</span>
+                      @if (field.required) {
+                        <span class="required-badge">Requerido</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </p-panel>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab: Pulses -->
+        <p-tabpanel [value]="2">
+          <div class="tab-content">
+            <div class="table-header">
+              <p-select
+                [options]="pulseStatusOptions"
+                [ngModel]="pulseStatusFilter()"
+                (ngModelChange)="pulseStatusFilter.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Filtrar por estado"
+                styleClass="filter-select"
+              />
+            </div>
+
+            @if (filteredPulses().length === 0) {
+              <div class="empty-state">
+                <i class="pi pi-inbox"></i>
+                <h4>No hay pulsos</h4>
+                <p>Este radio aún no ha recibido datos</p>
+              </div>
+            } @else {
+              <p-table
+                [value]="filteredPulses()"
+                [paginator]="true"
+                [rows]="10"
+                [rowsPerPageOptions]="[10, 25, 50]"
+                styleClass="p-datatable-sm"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>ID</th>
+                    <th>Estado</th>
+                    <th>Recibido</th>
+                    <th>Procesado</th>
+                    <th>Acción</th>
+                    <th style="width: 5rem"></th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-pulse>
+                  <tr class="cursor-pointer" (click)="showPulseDetail(pulse)">
+                    <td>
+                      <code class="pulse-id">{{ pulse.id.substring(0, 16) }}...</code>
+                    </td>
+                    <td>
+                      <p-tag
+                        [value]="getPulseStatusLabel(pulse.status)"
+                        [severity]="getPulseStatusSeverity(pulse.status)"
+                      />
+                    </td>
+                    <td>{{ formatDate(pulse.receivedAt) }}</td>
+                    <td>{{ formatDate(pulse.processedAt) }}</td>
+                    <td>
+                      @if (pulse.integrationAction) {
+                        <span class="integration-action">{{ pulse.integrationAction | titlecase }}</span>
+                      } @else {
+                        <span class="text-color-secondary">-</span>
+                      }
+                    </td>
+                    <td>
+                      <p-button
+                        icon="pi pi-eye"
+                        [rounded]="true"
+                        [text]="true"
+                        (onClick)="showPulseDetail(pulse); $event.stopPropagation()"
+                      />
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab: Logs -->
+        <p-tabpanel [value]="3">
+          <div class="tab-content">
+            @if (integracionesService.syncLogs().length === 0) {
+              <div class="empty-state">
+                <i class="pi pi-history"></i>
+                <h4>No hay logs</h4>
+                <p>No se han ejecutado sincronizaciones aún</p>
+              </div>
+            } @else {
+              <p-table
+                [value]="integracionesService.syncLogs()"
+                [paginator]="true"
+                [rows]="10"
+                styleClass="p-datatable-sm"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Inicio</th>
+                    <th>Duración</th>
+                    <th>Estado</th>
+                    <th>Creados</th>
+                    <th>Integrados</th>
+                    <th>Rechazados</th>
+                    <th>Errores</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-log>
+                  <tr>
+                    <td>{{ formatDate(log.startedAt) }}</td>
+                    <td>{{ formatDuration(log.duration) }}</td>
+                    <td>
+                      <p-tag
+                        [value]="log.status | titlecase"
+                        [severity]="log.status === 'success' ? 'success' : log.status === 'partial' ? 'warn' : log.status === 'failed' ? 'danger' : 'info'"
+                      />
+                    </td>
+                    <td>{{ log.pulsesCreated }}</td>
+                    <td>
+                      <span class="text-green-600">{{ log.pulsesIntegrated }}</span>
+                    </td>
+                    <td>
+                      <span [class.text-orange-600]="log.pulsesRejected > 0">{{ log.pulsesRejected }}</span>
+                    </td>
+                    <td>
+                      <span [class.text-red-600]="log.pulsesError > 0">{{ log.pulsesError }}</span>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  }
+</div>
+
+<!-- Pulse Detail Drawer -->
+<p-drawer
+  [visible]="showPulseDrawer()"
+  (visibleChange)="showPulseDrawer.set($event)"
+  [header]="'Detalle del Pulso'"
+  position="right"
+  [style]="{ width: '500px' }"
+>
+  @if (selectedPulse()) {
+    <div class="pulse-detail">
+      <div class="pulse-header">
+        <p-tag
+          [value]="getPulseStatusLabel(selectedPulse()!.status)"
+          [severity]="getPulseStatusSeverity(selectedPulse()!.status)"
+        />
+        <code>{{ selectedPulse()!.id }}</code>
+      </div>
+
+      <div class="pulse-info">
+        <div class="info-row">
+          <span class="label">Recibido:</span>
+          <span>{{ formatDate(selectedPulse()!.receivedAt) }}</span>
+        </div>
+        @if (selectedPulse()!.processedAt) {
+          <div class="info-row">
+            <span class="label">Procesado:</span>
+            <span>{{ formatDate(selectedPulse()!.processedAt) }}</span>
+          </div>
+        }
+        @if (selectedPulse()!.integratedAt) {
+          <div class="info-row">
+            <span class="label">Integrado:</span>
+            <span>{{ formatDate(selectedPulse()!.integratedAt) }}</span>
+          </div>
+        }
+      </div>
+
+      @if (selectedPulse()!.errors && selectedPulse()!.errors!.length > 0) {
+        <div class="pulse-errors">
+          <h5>Errores</h5>
+          @for (error of selectedPulse()!.errors; track error.field) {
+            <div class="error-item">
+              <strong>{{ error.field }}:</strong> {{ error.message }}
+            </div>
+          }
+        </div>
+      }
+
+      <div class="pulse-data">
+        <h5>Datos Crudos</h5>
+        <pre>{{ formatJson(selectedPulse()!.rawData) }}</pre>
+      </div>
+
+      @if (selectedPulse()!.transformedData) {
+        <div class="pulse-data">
+          <h5>Datos Transformados</h5>
+          <pre>{{ formatJson(selectedPulse()!.transformedData) }}</pre>
+        </div>
+      }
+
+      <div class="pulse-actions">
+        @if (selectedPulse()!.status === 'error' || selectedPulse()!.status === 'rejected') {
+          <p-button
+            label="Reprocesar"
+            icon="pi pi-refresh"
+            (onClick)="reprocessPulse(selectedPulse()!)"
+          />
+        }
+        <p-button
+          label="Cerrar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="closePulseDrawer()"
+        />
+      </div>
+    </div>
+  }
+</p-drawer>

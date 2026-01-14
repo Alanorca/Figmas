@@ -1,0 +1,1548 @@
+<div class="organigramas-container h-full">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a routerLink="/dashboard">Inicio</a>
+      <span class="separator">/</span>
+      <span>Organigrama</span>
+    </div>
+    <h1>Organigrama</h1>
+    <p class="page-subtitle">{{ organigrama()?.nombre || 'Cargando...' }} - {{ organigrama()?.descripcion || '' }}</p>
+  </div>
+
+  <!-- Layout principal con Splitter -->
+  <p-splitter [style]="{'height': 'calc(100vh - 180px)'}" [panelSizes]="[25, 75]" [minSizes]="[20, 50]">
+    <!-- Panel Izquierdo Fijo - Detalle del Nodo -->
+    <ng-template pTemplate>
+      <div class="left-panel h-full flex flex-column">
+        @if (selectedNode(); as nodo) {
+          <!-- Header del panel con info del nodo -->
+          <div class="panel-header p-3 border-bottom-1 surface-border">
+            <div class="flex align-items-center gap-3">
+              <p-avatar [icon]="getIconoTipo(nodo.tipo)" size="xlarge" shape="circle"
+                        [style]="{ 'background-color': getColorTipo(nodo.tipo), 'color': 'white' }">
+              </p-avatar>
+              <div class="flex-grow-1">
+                <div class="flex align-items-center gap-2 mb-1">
+                  <h3 class="text-xl font-bold text-color m-0">{{ nodo.nombre }}</h3>
+                  <p-tag [value]="getEtiquetaTipo(nodo.tipo)" [severity]="getSeverityTipo(nodo.tipo)" [rounded]="true"></p-tag>
+                </div>
+                <p class="text-primary m-0">{{ nodo.cargo }}</p>
+                <p class="text-color-secondary text-sm m-0">{{ nodo.departamento || '-' }}</p>
+              </div>
+              <div class="flex gap-1">
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary"
+                          (click)="abrirEditar(nodo)" pTooltip="Editar"></p-button>
+                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                          (click)="confirmarEliminar(nodo)" pTooltip="Eliminar"></p-button>
+              </div>
+            </div>
+            @if (nodo.descripcion) {
+              <p class="text-color-secondary text-sm mt-2 mb-0">{{ nodo.descripcion }}</p>
+            }
+            @if (nodo.responsable) {
+              <div class="flex align-items-center gap-2 mt-2 p-2 surface-ground border-round">
+                <i class="pi pi-user text-color-secondary"></i>
+                <span class="text-sm">Responsable: <strong>{{ nodo.responsable.nombre }}</strong></span>
+              </div>
+            }
+          </div>
+
+          <!-- Contenido scrolleable -->
+          <div class="left-panel-content flex-grow-1 overflow-auto">
+            <!-- Breadcrumb de navegación -->
+            <div class="px-3 py-2 surface-ground" *ngIf="breadcrumbItems().length > 0">
+              <p-breadcrumb [model]="breadcrumbItems()" [home]="breadcrumbHome" styleClass="border-none bg-transparent p-0">
+              </p-breadcrumb>
+            </div>
+
+            <!-- Información de contacto -->
+            <div class="p-3 flex flex-column gap-2">
+            <div class="flex align-items-center gap-2 p-2 surface-ground border-round">
+              <i class="pi pi-envelope text-color-secondary"></i>
+              <div>
+                <span class="text-color-secondary text-xs block">Email</span>
+                <span class="text-sm">{{ nodo.email || 'No especificado' }}</span>
+              </div>
+            </div>
+            <div class="flex align-items-center gap-2 p-2 surface-ground border-round">
+              <i class="pi pi-phone text-color-secondary"></i>
+              <div>
+                <span class="text-color-secondary text-xs block">Teléfono</span>
+                <span class="text-sm">{{ nodo.telefono || 'No especificado' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Propiedades Custom -->
+          @if (nodo.propiedadesCustom && nodo.propiedadesCustom.length > 0) {
+            <p-divider></p-divider>
+            <div class="px-3">
+              <div class="flex align-items-center justify-content-between mb-2">
+                <span class="font-bold text-sm">
+                  <i class="pi pi-list mr-2"></i>Propiedades Personalizadas
+                </span>
+              </div>
+              <div class="flex flex-column gap-2">
+                @for (prop of nodo.propiedadesCustom; track prop.id) {
+                  <div class="p-2 surface-ground border-round">
+                    <span class="text-color-secondary text-xs block">{{ prop.nombre }}</span>
+                    <span class="text-sm font-medium">{{ prop.valor }}</span>
+                    <p-tag [value]="prop.tipo" size="small" severity="secondary" class="ml-2"></p-tag>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Objetivos de Negocio y Progreso -->
+          @if (puedeVerObjetivos(nodo)) {
+            <p-divider></p-divider>
+            <div class="px-3">
+              <!-- Header con título -->
+              <div class="flex align-items-center justify-content-between mb-2">
+                <span class="font-bold text-sm">
+                  <i class="pi pi-bullseye mr-2"></i>Objetivos y KPIs
+                </span>
+              </div>
+
+              <!-- Barra de progreso -->
+              <div class="mb-2">
+                <div class="flex justify-content-between align-items-center mb-1">
+                  <span class="text-xs text-color-secondary">Cumplimiento</span>
+                  <span class="text-sm font-bold" [class]="'text-' + progresoColor()">
+                    {{ progresoObjetivosNodo().progreso }}%
+                  </span>
+                </div>
+                <p-progressBar [value]="progresoObjetivosNodo().progreso"
+                               [showValue]="false"
+                               [style]="{'height': '6px'}"
+                               [styleClass]="'progress-' + progresoColor()">
+                </p-progressBar>
+                <div class="flex justify-content-between mt-1">
+                  <span class="text-xs text-color-secondary">
+                    {{ progresoObjetivosNodo().completados }}/{{ progresoObjetivosNodo().total }} KPIs
+                  </span>
+                  <span class="text-xs text-color-secondary">
+                    {{ nodo.objetivosNegocio?.length || 0 }} obj.
+                  </span>
+                </div>
+              </div>
+
+              <!-- Botón Ver Todos -->
+              <p-button label="Ver todos" icon="pi pi-external-link" [text]="true" size="small"
+                        class="w-full" (click)="verObjetivosKPIs()"></p-button>
+            </div>
+          }
+
+          <!-- Acordeón Mapa de Calor / Apetito de Riesgo -->
+          @if (puedeVerObjetivos(nodo)) {
+            <div class="px-3 mt-3">
+              <p-accordion [multiple]="true">
+                <p-accordionpanel>
+                  <p-accordionheader>
+                    <div class="flex align-items-center gap-2">
+                      <i class="pi pi-th-large text-orange-500"></i>
+                      <span class="font-medium text-sm">Mapa de Calor</span>
+                    </div>
+                  </p-accordionheader>
+                  <p-accordioncontent>
+                    <div class="pt-2">
+                      @if ($any(nodo).apetitoRiesgo) {
+                        <!-- Resumen del apetito -->
+                        <div class="flex justify-content-between mb-2">
+                          <span class="text-sm text-color-secondary">Apetito de Riesgo:</span>
+                          <span class="text-sm font-bold">{{ $any(nodo).apetitoRiesgo.apetito || 20 }}%</span>
+                        </div>
+
+                        <!-- Mini mapa de calor -->
+                        <div class="mini-heatmap surface-ground border-round p-2">
+                          <div class="matriz-mini">
+                            @for (prob of getMiniProbabilidadArray(nodo); track prob) {
+                              <div class="matriz-mini-row">
+                                @for (imp of getMiniImpactoArray(nodo); track imp) {
+                                  <div class="matriz-mini-cell"
+                                       [class]="getMiniCeldaNivel(prob, imp, nodo)"
+                                       [class.selected]="isMiniCeldaSeleccionada(prob, imp, nodo)">
+                                  </div>
+                                }
+                              </div>
+                            }
+                          </div>
+                          <div class="flex justify-content-between mt-2">
+                            <span class="text-xs text-color-secondary">Prob: {{ $any(nodo).apetitoRiesgo.probabilidad || 5 }}</span>
+                            <span class="text-xs text-color-secondary">Imp: {{ $any(nodo).apetitoRiesgo.impacto || 5 }}</span>
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="text-center p-2">
+                          <i class="pi pi-th-large text-2xl text-color-secondary mb-2 block"></i>
+                          <p class="text-xs text-color-secondary m-0">Sin mapa de calor configurado</p>
+                          <p-button label="Configurar" [text]="true" size="small" icon="pi pi-cog" class="mt-2"
+                                    (click)="abrirEditar(nodo)"></p-button>
+                        </div>
+                      }
+                    </div>
+                  </p-accordioncontent>
+                </p-accordionpanel>
+              </p-accordion>
+            </div>
+          }
+
+          <p-divider></p-divider>
+
+          <!-- Sección Inferiores -->
+          <div class="flex-grow-1 flex flex-column overflow-hidden px-3">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <span class="font-bold">Inferiores</span>
+              <span class="text-color-secondary text-sm">{{ nodo.subordinados?.length || 0 }}</span>
+            </div>
+
+            <!-- Búsqueda de subordinados -->
+            <div class="p-inputgroup mb-3">
+              <span class="p-inputgroup-addon">
+                <i class="pi pi-search"></i>
+              </span>
+              <input pInputText placeholder="Buscar inferior..."
+                     [ngModel]="searchSubordinadosQuery()"
+                     (ngModelChange)="searchSubordinadosQuery.set($event)" />
+            </div>
+
+            <!-- Lista de subordinados -->
+            <div class="flex-grow-1 overflow-auto">
+              @if (subordinadosFiltrados().length > 0) {
+                <div class="flex flex-column gap-2">
+                  @for (sub of subordinadosFiltrados(); track sub.id) {
+                    <div class="flex align-items-center gap-2 p-2 surface-ground border-round cursor-pointer list-item-hover"
+                         (click)="seleccionarSubordinado(sub)">
+                      <p-avatar icon="pi pi-user" shape="circle" size="normal"
+                                [style]="{ 'background-color': 'var(--surface-400)', 'color': 'white' }">
+                      </p-avatar>
+                      <div class="flex-grow-1 min-w-0">
+                        <p class="font-medium m-0 text-overflow-ellipsis overflow-hidden white-space-nowrap">{{ sub.nombre }}</p>
+                        <p class="text-color-secondary text-xs m-0">{{ sub.cargo }}</p>
+                      </div>
+                      <i class="pi pi-chevron-right text-color-secondary"></i>
+                    </div>
+                  }
+                </div>
+              } @else if (nodo.subordinados?.length === 0) {
+                <div class="text-center p-3 text-color-secondary">
+                  <i class="pi pi-users text-2xl mb-2 block"></i>
+                  <p class="m-0 text-sm">No tiene subordinados</p>
+                </div>
+              } @else {
+                <div class="text-center p-3 text-color-secondary">
+                  <p class="m-0 text-sm">No se encontraron resultados</p>
+                </div>
+              }
+            </div>
+          </div>
+          </div> <!-- Cierre de left-panel-content -->
+
+          <!-- Botón agregar inferior (solo si no es SUBAREA) -->
+          <div class="p-3 border-top-1 surface-border">
+            @if (puedeAgregarHijo(nodo)) {
+              <p-button label="Agregar Inferior" icon="pi pi-plus" severity="primary" class="w-full"
+                        (click)="abrirCrearHijo(nodo)">
+              </p-button>
+            } @else {
+              <div class="text-center p-2 text-color-secondary">
+                <i class="pi pi-info-circle mr-2"></i>
+                <span class="text-sm">Las subáreas no pueden tener subordinados</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- Estado cuando no hay nodo seleccionado -->
+          <div class="flex flex-column align-items-center justify-content-center h-full p-4 text-center">
+            <i class="pi pi-user text-5xl text-color-secondary mb-3"></i>
+            <h3 class="text-color-secondary m-0 mb-2">Selecciona un nodo</h3>
+            <p class="text-color-secondary text-sm m-0">Haz clic en un nodo del organigrama para ver sus detalles</p>
+          </div>
+        }
+      </div>
+    </ng-template>
+
+    <!-- Panel Derecho - Organigrama -->
+    <ng-template pTemplate>
+      <div class="right-panel h-full flex flex-column">
+        <!-- Toolbar simplificado -->
+        <p-toolbar styleClass="border-noround-left border-noround-top py-2">
+          <ng-template pTemplate="start">
+            <span class="font-semibold text-sm">Vista del Organigrama</span>
+          </ng-template>
+          <ng-template pTemplate="end">
+            <div class="flex gap-2">
+              <p-button label="Agregar Raíz" icon="pi pi-plus" severity="secondary" size="small"
+                        (click)="abrirCrearRaiz()" [disabled]="orgChartData().length > 0">
+              </p-button>
+              <p-button icon="pi pi-download" severity="secondary" [outlined]="true" size="small" pTooltip="Exportar"></p-button>
+            </div>
+          </ng-template>
+        </p-toolbar>
+
+        <!-- Contenedor del organigrama con zoom -->
+        <div class="chart-viewport flex-grow-1 overflow-hidden surface-ground"
+             #chartContainer
+             (wheel)="onChartWheel($event)"
+             (mousedown)="onChartMouseDown($event)"
+             (mousemove)="onChartMouseMove($event)"
+             (mouseup)="onChartMouseUp($event)"
+             (mouseleave)="onChartMouseLeave()"
+             [class.panning]="isPanning()"
+             [class.can-pan]="!isPanning()">
+
+          <!-- Panel flotante de zoom -->
+          <div class="zoom-floating-panel">
+            <div class="zoom-controls">
+              <p-button icon="pi pi-minus" [rounded]="true" [text]="true" severity="secondary" size="small"
+                        (click)="zoomOut()" pTooltip="Alejar (Ctrl -)" [disabled]="zoom() <= MIN_ZOOM"></p-button>
+              <span class="zoom-percentage">{{ zoomPercentage() }}%</span>
+              <p-button icon="pi pi-plus" [rounded]="true" [text]="true" severity="secondary" size="small"
+                        (click)="zoomIn()" pTooltip="Acercar (Ctrl +)" [disabled]="zoom() >= MAX_ZOOM"></p-button>
+              <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" severity="secondary" size="small"
+                        (click)="resetZoom()" pTooltip="Restablecer (Ctrl 0)"></p-button>
+              <p-button icon="pi pi-arrows-alt" [rounded]="true" [text]="true" severity="secondary" size="small"
+                        (click)="fitToScreen()" pTooltip="Ajustar a pantalla"></p-button>
+            </div>
+            <div class="zoom-hint">
+              <i class="pi pi-mouse"></i>
+              <span>Rueda: zoom | Clic rueda: mover | Flechas: mover</span>
+            </div>
+          </div>
+
+          @if (orgChartData().length === 0) {
+            <div class="flex flex-column align-items-center justify-content-center h-full text-center">
+              <i class="pi pi-sitemap text-6xl text-color-secondary mb-3"></i>
+              <h3 class="text-color-secondary m-0 mb-2">No hay nodos en el organigrama</h3>
+              <p class="text-color-secondary m-0 mb-4">Comience creando el primer nodo raiz</p>
+              <p-button label="Crear Nodo Raiz" icon="pi pi-plus" (click)="abrirCrearRaiz()"></p-button>
+            </div>
+          } @else {
+            <!-- Canvas zoomeable -->
+            <div class="chart-canvas" [style.transform]="chartTransform()">
+              <p-organizationChart [value]="orgChartData()" selectionMode="single" (onNodeSelect)="onNodeSelect($event)">
+                <ng-template let-node pTemplate="person">
+                  <div class="org-node-content p-3 surface-card border-round shadow-2 cursor-pointer text-center"
+                       style="min-width: 200px; position: relative;">
+                  <!-- Tag de tipo en esquina superior -->
+                  <div class="tipo-badge">
+                    <p-tag [value]="getEtiquetaTipo(node.data.tipo)" [severity]="getSeverityTipo(node.data.tipo)" size="small"></p-tag>
+                  </div>
+                  <p-avatar [icon]="getIconoTipo(node.data.tipo)" size="large" shape="circle"
+                            [style]="{ 'background-color': getColorTipo(node.data.tipo), 'color': 'white' }"></p-avatar>
+                  <p class="font-bold text-color m-0 mt-2">{{ node.data.nombre }}</p>
+                  <p class="text-primary text-sm m-0">{{ node.data.cargo }}</p>
+                  <p class="text-color-secondary text-xs m-0 mt-1">{{ node.data.departamento }}</p>
+                  @if (node.data.responsable) {
+                    <div class="flex align-items-center justify-content-center gap-1 mt-2">
+                      <i class="pi pi-user text-xs text-color-secondary"></i>
+                      <span class="text-xs text-color-secondary">{{ node.data.responsable.nombre }}</span>
+                    </div>
+                  }
+                  @if (puedeAgregarHijo(node.data)) {
+                    <p-button icon="pi pi-plus" [rounded]="true" [text]="true" size="small"
+                              class="add-child-btn"
+                              (click)="abrirCrearHijo(node.data); $event.stopPropagation()"
+                              pTooltip="Agregar subordinado" tooltipPosition="top">
+                    </p-button>
+                  }
+                </div>
+              </ng-template>
+              </p-organizationChart>
+            </div>
+          }
+        </div>
+
+        <!-- Estadísticas compactas -->
+        <div class="stats-bar">
+          <div class="stat-item">
+            <i class="pi pi-users text-primary"></i>
+            <span class="stat-value">{{ totalEmpleados() }}</span>
+            <span>empleados</span>
+          </div>
+          <div class="stat-item">
+            <i class="pi pi-th-large text-orange-500"></i>
+            <span class="stat-value">{{ departamentosUnicos() }}</span>
+            <span>dptos</span>
+          </div>
+          <div class="stat-item">
+            <i class="pi pi-sitemap text-green-500"></i>
+            <span class="stat-value">{{ nivelesJerarquicos() }}</span>
+            <span>niveles</span>
+          </div>
+          <div class="stat-item">
+            <i class="pi pi-building text-purple-500"></i>
+            <span class="stat-value">{{ direccionesGenerales() }}</span>
+            <span>raíces</span>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </p-splitter>
+</div>
+
+<!-- Toast para notificaciones -->
+<p-toast></p-toast>
+
+<!-- Dialog de confirmación -->
+<p-confirmDialog></p-confirmDialog>
+
+<!-- ========== WIZARD DE CREACIÓN (Fullscreen como proyecto-crear) ========== -->
+@if (showWizard()) {
+  <div class="crear-proceso-page wizard-overlay">
+    <!-- Header -->
+    <div class="page-header">
+      <h1>{{ getWizardTitle() }}</h1>
+      <p class="page-subtitle">{{ wizardSteps[wizardPasoActual()].description }}</p>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper-container">
+      @for (step of wizardSteps; track $index; let i = $index) {
+        <div
+          class="step-item"
+          [class.active]="i === wizardPasoActual()"
+          [class.completed]="i < wizardPasoActual()"
+          [class.clickable]="i < wizardPasoActual()"
+          (click)="wizardIrAPaso(i)">
+          <div class="step-indicator">
+            <div class="step-icon">
+              @if (i < wizardPasoActual()) {
+                <i class="pi pi-check"></i>
+              } @else {
+                <i [class]="step.icon"></i>
+              }
+            </div>
+            @if (i < wizardSteps.length - 1) {
+              <div class="step-line" [class.completed]="i < wizardPasoActual()"></div>
+            }
+          </div>
+          <div class="step-content">
+            <span class="step-label">{{ step.label }}</span>
+            <span class="step-description">{{ step.description }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Content Card -->
+    <div class="content-card">
+      <!-- PASO 0: Información Básica -->
+      @if (wizardPasoActual() === 0) {
+        <div class="step-panel panel-columna-izquierda">
+          <h2 class="panel-title">Información Básica</h2>
+
+          <div class="form-field">
+            <label class="field-label">Nombre del Contenedor *</label>
+            <input type="text" class="field-input" [(ngModel)]="wizardNombre"
+                   placeholder="Nombre del contenedor organizacional">
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Cargo *</label>
+            <input type="text" class="field-input" [(ngModel)]="wizardCargo"
+                   placeholder="Cargo o puesto principal">
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Descripción</label>
+            <textarea class="field-textarea" [(ngModel)]="wizardDescripcion" rows="3"
+                      placeholder="Descripción del contenedor organizacional"></textarea>
+          </div>
+
+          <div class="inline-form-row">
+            <div class="form-field flex-1">
+              <label class="field-label">Departamento</label>
+              <input type="text" class="field-input" [(ngModel)]="wizardDepartamento"
+                     placeholder="Departamento o área">
+            </div>
+            <div class="form-field flex-1">
+              <label class="field-label">Email</label>
+              <input type="email" class="field-input" [(ngModel)]="wizardEmail"
+                     placeholder="correo@ejemplo.com">
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Teléfono</label>
+            <input type="text" class="field-input" [(ngModel)]="wizardTelefono"
+                   placeholder="Número de teléfono">
+          </div>
+
+          <!-- Imagen o Icono -->
+          <div class="form-field">
+            <label class="field-label">Imagen o Icono</label>
+            <div class="flex gap-2 mb-3">
+              <p-button [label]="'Icono'" [outlined]="modoImagen() !== 'icono'"
+                        icon="pi pi-star" size="small" (click)="modoImagen.set('icono')"></p-button>
+              <p-button [label]="'Imagen'" [outlined]="modoImagen() !== 'imagen'"
+                        icon="pi pi-image" size="small" (click)="modoImagen.set('imagen')"></p-button>
+            </div>
+
+            <!-- Selector de Icono -->
+            @if (modoImagen() === 'icono') {
+              <div class="icon-selector-grid">
+                @for (icono of iconosDisponibles; track icono) {
+                  <div class="icon-option" [class.selected]="wizardIcono() === icono"
+                       (click)="seleccionarIcono(icono)">
+                    <i [class]="icono"></i>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Subir Imagen -->
+            @if (modoImagen() === 'imagen') {
+              @if (wizardImagen()) {
+                <div class="image-upload-area has-image">
+                  <img [src]="wizardImagen()" alt="Preview" style="max-width: 100%; max-height: 150px; border-radius: var(--border-radius);">
+                  <p-button icon="pi pi-times" [rounded]="true" severity="danger" size="small"
+                            class="mt-2" (click)="eliminarImagen()" pTooltip="Eliminar imagen"></p-button>
+                </div>
+              } @else {
+                <label class="image-upload-area">
+                  <input type="file" accept="image/*" style="display: none" (change)="onFileSelected($event)">
+                  <i class="pi pi-cloud-upload text-3xl text-color-secondary mb-2 block"></i>
+                  <p class="m-0 text-color-secondary">Click para subir imagen</p>
+                  <p class="m-0 text-xs text-color-secondary mt-1">Máximo 2MB (JPG, PNG)</p>
+                </label>
+              }
+            }
+          </div>
+        </div>
+      }
+
+      <!-- PASO 1: Responsable -->
+      @if (wizardPasoActual() === 1) {
+        <div class="step-panel panel-columna-izquierda">
+          <h2 class="panel-title">Responsable</h2>
+
+          <div class="form-field">
+            <label class="field-label">Asignar Responsable</label>
+            <div class="select-wrapper">
+              <select class="field-select" [(ngModel)]="responsableSeleccionado">
+                <option [ngValue]="null">Seleccione un responsable</option>
+                @for (user of usuariosDisponibles(); track user.id) {
+                  <option [ngValue]="user.id">{{ user.nombre }} - {{ user.email }}</option>
+                }
+              </select>
+              <i class="pi pi-chevron-down select-icon"></i>
+            </div>
+          </div>
+
+          @if (responsableSeleccionado()) {
+            <div class="apetito-resumen mt-4">
+              <div class="apetito-valores">
+                @for (user of usuariosDisponibles(); track user.id) {
+                  @if (user.id === responsableSeleccionado()) {
+                    <div class="flex align-items-center gap-3">
+                      <p-avatar icon="pi pi-user" size="large" shape="circle"
+                                [style]="{'background-color': 'var(--primary-color)', 'color': 'white'}"></p-avatar>
+                      <div>
+                        <div class="font-bold text-lg">{{ user.nombre }}</div>
+                        <div class="text-color-secondary">{{ user.email }}</div>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- PASO 2: Propiedades Personalizadas -->
+      @if (wizardPasoActual() === 2) {
+        <div class="step-panel panel-columna-izquierda">
+          <h2 class="panel-title">Propiedades Personalizadas</h2>
+
+          <!-- Formulario para agregar -->
+          <div class="inline-form objetivo-form-inline mb-4">
+            <div class="inline-form-header">
+              <h4>Agregar propiedad</h4>
+            </div>
+            <div class="inline-form-body">
+              <div class="form-field">
+                <label class="field-label">Nombre</label>
+                <input type="text" class="field-input" [ngModel]="nuevaPropiedad().nombre"
+                       (ngModelChange)="updateNuevaPropiedadNombre($event)" placeholder="Nombre de la propiedad">
+              </div>
+              <div class="inline-form-row">
+                <div class="form-field flex-1">
+                  <label class="field-label">Tipo</label>
+                  <div class="select-wrapper">
+                    <select class="field-select" [ngModel]="nuevaPropiedad().tipo"
+                            (ngModelChange)="updateNuevaPropiedadTipo($event)">
+                      @for (tipo of tiposPropiedadCustom; track tipo.value) {
+                        <option [value]="tipo.value">{{ tipo.label }}</option>
+                      }
+                    </select>
+                    <i class="pi pi-chevron-down select-icon"></i>
+                  </div>
+                </div>
+                <div class="form-field flex-1">
+                  <label class="field-label">Requerido</label>
+                  <div class="select-wrapper">
+                    <select class="field-select" [ngModel]="nuevaPropiedad().requerido"
+                            (ngModelChange)="updateNuevaPropiedadRequerido($event)">
+                      <option [ngValue]="true">Requerido</option>
+                      <option [ngValue]="false">Opcional</option>
+                    </select>
+                    <i class="pi pi-chevron-down select-icon"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="inline-form-actions">
+              <button class="btn-guardar-sm" (click)="agregarPropiedadCustom()">
+                <i class="pi pi-plus mr-2"></i> Agregar
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista de propiedades -->
+          @if (propiedadesCustom().length > 0) {
+            <div class="objetivos-lista">
+              @for (prop of propiedadesCustom(); track prop.id) {
+                <div class="objetivo-card">
+                  <div class="objetivo-header">
+                    <div class="objetivo-info">
+                      <h3 class="objetivo-titulo">{{ prop.nombre }}</h3>
+                    </div>
+                    <div class="objetivo-actions-top">
+                      <span class="objetivo-tag">{{ prop.tipo }}</span>
+                      <button class="btn-icon-x" (click)="eliminarPropiedadCustom(prop.id)">
+                        <i class="pi pi-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="kpis-section">
+                    @if (prop.tipo === 'TEXT') {
+                      <input type="text" class="field-input" [ngModel]="prop.valor"
+                             (ngModelChange)="actualizarValorPropiedad(prop.id, $event)" placeholder="Valor">
+                    } @else {
+                      <input type="number" class="field-input" [ngModel]="prop.valor"
+                             (ngModelChange)="actualizarValorPropiedad(prop.id, $event)" placeholder="Valor numérico">
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-state">
+              <i class="pi pi-list"></i>
+              <p>Sin propiedades personalizadas</p>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- PASO 3: Apetito de Riesgo (Mapa de Calor) -->
+      @if (wizardPasoActual() === 3) {
+        <div class="step-panel panel-columna-izquierda apetito-panel">
+          <h2 class="panel-title">Apetito de Riesgo</h2>
+
+          <!-- Layout: Inputs izquierda | Mapa derecha -->
+          <div class="apetito-layout">
+            <!-- Columna izquierda: Inputs apilados -->
+            <div class="apetito-inputs-columna">
+              <div class="input-row">
+                <label>Eje Y - Probabilidad</label>
+                <div class="input-group">
+                  <input type="number" [ngModel]="probabilidadInput()"
+                         (ngModelChange)="actualizarProbabilidad($event)" min="1" max="10" class="number-input">
+                  <div class="input-controls">
+                    <button (click)="actualizarProbabilidad(probabilidadInput() + 1)"><i class="pi pi-chevron-up"></i></button>
+                    <button (click)="actualizarProbabilidad(probabilidadInput() - 1)"><i class="pi pi-chevron-down"></i></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="input-row">
+                <label>Eje X - Impacto</label>
+                <div class="input-group">
+                  <input type="number" [ngModel]="impactoInput()"
+                         (ngModelChange)="actualizarImpacto($event)" min="1" max="10" class="number-input">
+                  <div class="input-controls">
+                    <button (click)="actualizarImpacto(impactoInput() + 1)"><i class="pi pi-chevron-up"></i></button>
+                    <button (click)="actualizarImpacto(impactoInput() - 1)"><i class="pi pi-chevron-down"></i></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="input-row">
+                <label>Apetito de riesgo</label>
+                <div class="input-group">
+                  <input type="number" [ngModel]="apetitoRiesgo()"
+                         (ngModelChange)="apetitoRiesgo.set($event)" min="0" max="100" class="number-input">
+                  <div class="input-controls">
+                    <button (click)="incrementarApetito()"><i class="pi pi-chevron-up"></i></button>
+                    <button (click)="decrementarApetito()"><i class="pi pi-chevron-down"></i></button>
+                  </div>
+                </div>
+                <span class="input-hint">%</span>
+              </div>
+            </div>
+
+            <!-- Columna derecha: Mapa de calor -->
+            <div class="apetito-mapa-columna">
+              <div class="matriz-tabla-wrapper">
+                <div class="matriz-tabla-container">
+                  <div class="eje-y-titulo">Probabilidad</div>
+                  <table class="matriz-tabla">
+                    <tbody>
+                      @for (prob of getProbabilidadArray(); track prob) {
+                        <tr>
+                          <td class="label-y">{{ prob }}</td>
+                          @for (imp of getImpactoArray(); track imp) {
+                            <td>
+                              <div class="matriz-cell"
+                                   [class]="getCeldaNivelDinamico(prob, imp)"
+                                   [class.selected]="isCeldaSeleccionadaDinamica(prob, imp)"
+                                   [class.dentro-apetito]="estaDentroApetitoDinamico(prob, imp)"
+                                   (click)="seleccionarCeldaDirecta(prob, imp)">
+                                @if (isCeldaSeleccionadaDinamica(prob, imp)) {
+                                  <div class="cell-marker-apetito"><span>{{ apetitoRiesgo() }}%</span></div>
+                                }
+                              </div>
+                            </td>
+                          }
+                        </tr>
+                      }
+                      <tr class="fila-labels-x">
+                        <td></td>
+                        @for (i of getImpactoArray(); track i) {
+                          <td class="label-x">{{ i }}</td>
+                        }
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="eje-x-titulo">Impacto</div>
+              </div>
+
+              <!-- Leyenda -->
+              <div class="matriz-leyenda">
+                <div class="leyenda-item"><span class="leyenda-color bajo"></span><span>Bajo</span></div>
+                <div class="leyenda-item"><span class="leyenda-color medio"></span><span>Medio</span></div>
+                <div class="leyenda-item"><span class="leyenda-color alto"></span><span>Alto</span></div>
+                <div class="leyenda-item"><span class="leyenda-color critico"></span><span>Crítico</span></div>
+                <div class="leyenda-item apetito-legend"><span class="leyenda-dentro"></span><span>Dentro del apetito</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- PASO 4: Objetivos y KPIs -->
+      @if (wizardPasoActual() === 4) {
+        <div class="step-panel panel-columna-izquierda">
+          <h2 class="panel-title">Objetivos y KPIs</h2>
+
+          <!-- Tabs -->
+          <div class="tabs-container">
+            <button class="tab-btn" [class.active]="modoObjetivos() === 'seleccionar'" (click)="modoObjetivos.set('seleccionar')">
+              <i class="pi pi-search"></i> Seleccionar
+            </button>
+            <button class="tab-btn" [class.active]="modoObjetivos() === 'crear'" (click)="modoObjetivos.set('crear')">
+              <i class="pi pi-plus"></i> Crear nuevos
+            </button>
+            @if (modoObjetivos() === 'crear') {
+              <button class="btn-agregar-objetivo" (click)="abrirFormObjetivo()">
+                <i class="pi pi-plus"></i> Agregar objetivo
+              </button>
+            }
+          </div>
+
+          <!-- Modo Seleccionar -->
+          @if (modoObjetivos() === 'seleccionar') {
+            <div class="objetivos-existentes mt-3">
+              @for (obj of objetivosExistentes(); track obj.id) {
+                <div class="objetivo-existente-card" (click)="seleccionarObjetivoExistente(obj)">
+                  <div class="flex justify-content-between align-items-start">
+                    <div>
+                      <span class="font-medium">{{ obj.nombre }}</span>
+                      <p class="text-color-secondary text-sm m-0 mt-1">{{ obj.descripcion }}</p>
+                    </div>
+                    <span class="objetivo-tag">{{ getTipoLabel(obj.tipo) }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Modo Crear -->
+          @if (modoObjetivos() === 'crear') {
+            <!-- Form inline para nuevo objetivo -->
+            @if (mostrarFormObjetivoInline()) {
+              <div class="inline-form objetivo-form-inline mt-3">
+                <div class="inline-form-header"><h4>{{ objetivoEditandoId() ? 'Editar' : 'Nuevo' }} Objetivo</h4></div>
+                <div class="inline-form-body">
+                  <div class="form-field">
+                    <label class="field-label">Nombre *</label>
+                    <input type="text" class="field-input" [ngModel]="nuevoObjetivoNombre()" (ngModelChange)="nuevoObjetivoNombre.set($event)" placeholder="Nombre del objetivo">
+                  </div>
+                  <div class="form-field">
+                    <label class="field-label">Descripción</label>
+                    <textarea class="field-textarea" [ngModel]="nuevoObjetivoDescripcion()" (ngModelChange)="nuevoObjetivoDescripcion.set($event)" rows="2" placeholder="Descripción"></textarea>
+                  </div>
+                  <div class="form-field">
+                    <label class="field-label">Tipo</label>
+                    <div class="select-wrapper">
+                      <select class="field-select" [ngModel]="nuevoObjetivoTipo()" (ngModelChange)="nuevoObjetivoTipo.set($event)">
+                        @for (tipo of tipoObjetivoOptions; track tipo.value) {
+                          <option [value]="tipo.value">{{ tipo.label }}</option>
+                        }
+                      </select>
+                      <i class="pi pi-chevron-down select-icon"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="inline-form-actions">
+                  <button class="btn-cancelar-sm" (click)="cerrarFormObjetivo()">Cancelar</button>
+                  <button class="btn-guardar-sm" (click)="guardarObjetivo()">Guardar</button>
+                </div>
+              </div>
+            }
+
+            <!-- Lista de objetivos creados -->
+            <div class="objetivos-lista mt-3">
+              @for (obj of objetivos(); track obj.id) {
+                <div class="objetivo-card">
+                  <div class="objetivo-header">
+                    <div class="objetivo-info">
+                      <h3 class="objetivo-titulo">{{ obj.nombre }}</h3>
+                      <p class="objetivo-desc">{{ obj.descripcion }}</p>
+                    </div>
+                    <div class="objetivo-actions-top">
+                      <span class="objetivo-tag">{{ getTipoLabel(obj.tipo) }}</span>
+                      <button class="btn-icon-edit" (click)="abrirFormObjetivo(obj)"><i class="pi pi-pencil"></i></button>
+                      <button class="btn-icon-x" (click)="eliminarObjetivo(obj.id)"><i class="pi pi-times"></i></button>
+                    </div>
+                  </div>
+
+                  <!-- KPIs del objetivo -->
+                  <div class="kpis-section">
+                    <div class="kpis-header">
+                      <span class="kpis-count">{{ obj.kpis.length }} KPIs</span>
+                      <button class="btn-add-kpi" (click)="abrirFormKPI(obj.id)"><i class="pi pi-plus"></i> Agregar KPI</button>
+                    </div>
+
+                    <!-- Form inline KPI -->
+                    @if (isFormKPIVisible(obj.id)) {
+                      <div class="kpi-form-inline">
+                        <div class="kpi-form-grid">
+                          <!-- Fila 1: Nombre y Escala -->
+                          <div class="form-field">
+                            <label class="field-label">Nombre KPI *</label>
+                            <input type="text" class="field-input" [ngModel]="nuevoKPINombre()" (ngModelChange)="nuevoKPINombre.set($event)" placeholder="Nombre del KPI">
+                          </div>
+                          <div class="form-field">
+                            <label class="field-label">Escala</label>
+                            <div class="select-wrapper">
+                              <select class="field-select" [ngModel]="nuevoKPIEscala()" (ngModelChange)="nuevoKPIEscala.set($event)">
+                                @for (e of escalasOptions; track e.value) {
+                                  <option [value]="e.value">{{ e.label }}</option>
+                                }
+                              </select>
+                              <i class="pi pi-chevron-down select-icon"></i>
+                            </div>
+                          </div>
+                          <!-- Fila 2: Meta, Actual, Dirección -->
+                          <div class="form-field">
+                            <label class="field-label">Meta</label>
+                            <input type="number" class="field-input" [ngModel]="nuevoKPIMeta()" (ngModelChange)="nuevoKPIMeta.set($event)">
+                          </div>
+                          <div class="form-field">
+                            <label class="field-label">Actual</label>
+                            <input type="number" class="field-input" [ngModel]="nuevoKPIActual()" (ngModelChange)="nuevoKPIActual.set($event)">
+                          </div>
+                          <div class="form-field">
+                            <label class="field-label">Dirección</label>
+                            <div class="select-wrapper">
+                              <select class="field-select" [ngModel]="nuevoKPIDireccion()" (ngModelChange)="nuevoKPIDireccion.set($event)">
+                                @for (d of direccionOptions; track d.value) {
+                                  <option [value]="d.value">{{ d.label }}</option>
+                                }
+                              </select>
+                              <i class="pi pi-chevron-down select-icon"></i>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Sección de Alertas -->
+                        <div class="kpi-alertas-section mt-3">
+                          <h5 class="mb-2"><i class="pi pi-bell mr-2"></i>Configuración de Alertas</h5>
+                          <div class="kpi-form-grid">
+                            <div class="form-field">
+                              <label class="field-label">Umbral de Alerta</label>
+                              <input type="number" class="field-input" [ngModel]="nuevoKPIUmbralAlerta()" (ngModelChange)="nuevoKPIUmbralAlerta.set($event)" placeholder="Valor mínimo para alerta">
+                            </div>
+                            <div class="form-field">
+                              <label class="field-label">Umbral Máximo</label>
+                              <input type="number" class="field-input" [ngModel]="nuevoKPIUmbralMaximo()" (ngModelChange)="nuevoKPIUmbralMaximo.set($event)" placeholder="Opcional">
+                            </div>
+                            <div class="form-field">
+                              <label class="field-label">Severidad</label>
+                              <div class="select-wrapper">
+                                <select class="field-select" [ngModel]="nuevoKPISeveridad()" (ngModelChange)="nuevoKPISeveridad.set($event)">
+                                  @for (s of severidadOptions; track s.value) {
+                                    <option [value]="s.value">{{ s.label }}</option>
+                                  }
+                                </select>
+                                <i class="pi pi-chevron-down select-icon"></i>
+                              </div>
+                            </div>
+                            <div class="form-field">
+                              <label class="field-label">Frecuencia Evaluación</label>
+                              <div class="select-wrapper">
+                                <select class="field-select" [ngModel]="nuevoKPIFrecuencia()" (ngModelChange)="nuevoKPIFrecuencia.set($event)">
+                                  @for (f of frecuenciaOptions; track f.value) {
+                                    <option [value]="f.value">{{ f.label }}</option>
+                                  }
+                                </select>
+                                <i class="pi pi-chevron-down select-icon"></i>
+                              </div>
+                            </div>
+                          </div>
+                          <!-- Canales de notificación -->
+                          <div class="form-field mt-2">
+                            <label class="field-label">Canales de Notificación</label>
+                            <div class="flex gap-3 mt-1">
+                              @for (canal of canalesOptions; track canal.value) {
+                                <label class="canal-checkbox">
+                                  <input type="checkbox"
+                                         [checked]="isCanalSelected(canal.value)"
+                                         (change)="toggleCanal(canal.value)">
+                                  <i [class]="canal.icon + ' ml-1'"></i>
+                                  <span class="ml-1">{{ canal.label }}</span>
+                                </label>
+                              }
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="kpi-form-actions">
+                          <button class="btn-cancelar-sm" (click)="cerrarFormKPI()">Cancelar</button>
+                          <button class="btn-guardar-sm" (click)="guardarKPI()">Guardar KPI</button>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Lista de KPIs -->
+                    @for (kpi of obj.kpis; track kpi.id) {
+                      <div class="kpi-item">
+                        <div class="kpi-info">
+                          <div class="flex align-items-center gap-2">
+                            <span class="kpi-nombre">{{ kpi.nombre }}</span>
+                            <i [class]="getSeveridadIcon(kpi.severidad)" [style]="{'color': getSeveridadColor(kpi.severidad)}" pTooltip="Severidad: {{ getSeveridadLabel(kpi.severidad) }}"></i>
+                          </div>
+                          <div class="kpi-meta">
+                            <span>{{ kpi.actual }}/{{ kpi.meta }} {{ kpi.escala }}</span>
+                            <span class="text-color-secondary ml-2">| Alerta: {{ kpi.umbralAlerta }}</span>
+                            <span class="text-color-secondary ml-2">| {{ getFrecuenciaLabel(kpi.frecuenciaEvaluacion) }}</span>
+                          </div>
+                          <div class="kpi-canales text-xs text-color-secondary mt-1">
+                            <i class="pi pi-bell mr-1"></i>{{ getCanalesLabel(kpi.canalesNotificacion) }}
+                          </div>
+                        </div>
+                        <div class="kpi-actions">
+                          <button class="btn-icon-edit" (click)="abrirFormKPI(obj.id, kpi)"><i class="pi pi-pencil"></i></button>
+                          <button class="btn-icon-x" (click)="eliminarKPI(obj.id, kpi.id)"><i class="pi pi-times"></i></button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (objetivos().length === 0 && !mostrarFormObjetivoInline()) {
+                <div class="empty-state">
+                  <i class="pi pi-bullseye"></i>
+                  <p>No hay objetivos definidos</p>
+                  <button class="btn-agregar-objetivo" (click)="abrirFormObjetivo()">
+                    <i class="pi pi-plus"></i> Crear primer objetivo
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- PASO 5: Revisión -->
+      @if (wizardPasoActual() === 5) {
+        <div class="step-panel panel-columna-izquierda revision-panel">
+          <h2 class="panel-title">Revisión Final</h2>
+
+          <div class="revision-grid">
+            <!-- Info básica -->
+            <div class="revision-section">
+              <label><i class="pi pi-info-circle mr-2"></i>Información Básica</label>
+              <div class="revision-content">
+                <p><strong>Nombre:</strong> {{ wizardNombre() }}</p>
+                <p><strong>Cargo:</strong> {{ wizardCargo() }}</p>
+                <p><strong>Tipo:</strong> {{ getEtiquetaTipo(tipoContenedorActual()) }}</p>
+                @if (wizardDescripcion()) {
+                  <p><strong>Descripción:</strong> {{ wizardDescripcion() }}</p>
+                }
+              </div>
+            </div>
+
+            <!-- Responsable -->
+            @if (responsableSeleccionado()) {
+              <div class="revision-section">
+                <label><i class="pi pi-user mr-2"></i>Responsable</label>
+                <div class="revision-content">
+                  @for (user of usuariosDisponibles(); track user.id) {
+                    @if (user.id === responsableSeleccionado()) {
+                      <p><strong>{{ user.nombre }}</strong> - {{ user.email }}</p>
+                    }
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Apetito de Riesgo -->
+            @if (celdaSeleccionada()) {
+              <div class="revision-section">
+                <label><i class="pi pi-th-large mr-2"></i>Apetito de Riesgo</label>
+                <div class="revision-content">
+                  <p><strong>Probabilidad:</strong> {{ celdaSeleccionada()?.probabilidad }}/{{ probabilidadInput() }}</p>
+                  <p><strong>Impacto:</strong> {{ celdaSeleccionada()?.impacto }}/{{ impactoInput() }}</p>
+                  <p><strong>Apetito:</strong> {{ apetitoRiesgo() }}%</p>
+                </div>
+              </div>
+            }
+
+            <!-- Objetivos -->
+            @if (objetivos().length > 0) {
+              <div class="revision-section">
+                <label><i class="pi pi-bullseye mr-2"></i>Objetivos y KPIs</label>
+                <div class="revision-content">
+                  <p><strong>{{ objetivos().length }}</strong> objetivo(s), <strong>{{ totalKPIs() }}</strong> KPI(s)</p>
+                  @for (obj of objetivos(); track obj.id) {
+                    <div class="revision-objetivo">
+                      <span>{{ obj.nombre }}</span>
+                      <span class="text-color-secondary text-sm"> ({{ obj.kpis.length }} KPIs)</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Propiedades Custom -->
+            @if (propiedadesCustom().length > 0) {
+              <div class="revision-section">
+                <label><i class="pi pi-list mr-2"></i>Propiedades Personalizadas</label>
+                <div class="revision-content">
+                  @for (prop of propiedadesCustom(); track prop.id) {
+                    <p><strong>{{ prop.nombre }}:</strong> {{ prop.valor }}</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Footer Fixed -->
+    <div class="page-footer-fixed">
+      <div class="footer-content">
+        @if (wizardPasoActual() > 0) {
+          <button class="btn-atras" (click)="wizardAnterior()">
+            <i class="pi pi-arrow-left"></i>
+            Atrás
+          </button>
+        } @else {
+          <button class="btn-atras" (click)="cancelarWizard()">Cancelar</button>
+        }
+
+        @if (wizardPasoActual() < 5) {
+          <button class="btn-siguiente" (click)="wizardSiguiente()">Siguiente</button>
+        } @else {
+          <button class="btn-guardar" (click)="guardarDesdeWizard()">
+            Crear Contenedor
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ========== DRAWER DE EDICIÓN ========== -->
+<p-drawer [(visible)]="showEditDrawer" position="right" [style]="{width: '550px'}" styleClass="edit-drawer">
+  <ng-template pTemplate="header">
+    <div class="flex align-items-center gap-3 w-full">
+      <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (click)="cerrarEditDrawer()"></p-button>
+      <div class="flex-grow-1">
+        <h3 class="m-0">{{ getEditDrawerTitle() }}</h3>
+        @if (editingNode(); as node) {
+          <div class="flex align-items-center gap-2 mt-1">
+            <i [class]="getIconoTipo(node.tipo)" [style]="{'color': getColorTipo(node.tipo)}"></i>
+            <p-tag [value]="getEtiquetaTipo(node.tipo)" [severity]="getSeverityTipo(node.tipo)" size="small"></p-tag>
+          </div>
+        }
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Tabs de edición -->
+  <p-tabs [(value)]="editTabActiva">
+    <p-tablist>
+      <p-tab value="0"><i class="pi pi-info-circle mr-2"></i>Info</p-tab>
+      <p-tab value="1"><i class="pi pi-user mr-2"></i>Responsable</p-tab>
+      <p-tab value="2"><i class="pi pi-list mr-2"></i>Propiedades</p-tab>
+      <p-tab value="3"><i class="pi pi-th-large mr-2"></i>Apetito</p-tab>
+      <p-tab value="4"><i class="pi pi-bullseye mr-2"></i>Objetivos</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <!-- Tab: Info -->
+      <p-tabpanel value="0">
+        <div class="flex flex-column gap-3 pt-3">
+          <div class="field">
+            <label class="block font-medium mb-2">Nombre *</label>
+            <input pInputText [(ngModel)]="wizardNombre" class="w-full" />
+          </div>
+          <div class="field">
+            <label class="block font-medium mb-2">Cargo *</label>
+            <input pInputText [(ngModel)]="wizardCargo" class="w-full" />
+          </div>
+          <div class="field">
+            <label class="block font-medium mb-2">Descripción</label>
+            <textarea pTextarea [(ngModel)]="wizardDescripcion" class="w-full" rows="2"></textarea>
+          </div>
+          <div class="grid">
+            <div class="col-6">
+              <div class="field">
+                <label class="block font-medium mb-2">Departamento</label>
+                <input pInputText [(ngModel)]="wizardDepartamento" class="w-full" />
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="field">
+                <label class="block font-medium mb-2">Email</label>
+                <input pInputText [(ngModel)]="wizardEmail" class="w-full" type="email" />
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="block font-medium mb-2">Teléfono</label>
+            <input pInputText [(ngModel)]="wizardTelefono" class="w-full" />
+          </div>
+
+          <!-- Imagen o Icono -->
+          <div class="field">
+            <label class="block font-medium mb-2">Imagen o Icono</label>
+            <div class="flex gap-2 mb-2">
+              <p-button [label]="'Icono'" [outlined]="modoImagen() !== 'icono'"
+                        icon="pi pi-star" size="small" (click)="modoImagen.set('icono')"></p-button>
+              <p-button [label]="'Imagen'" [outlined]="modoImagen() !== 'imagen'"
+                        icon="pi pi-image" size="small" (click)="modoImagen.set('imagen')"></p-button>
+            </div>
+
+            @if (modoImagen() === 'icono') {
+              <div class="icon-selector-grid">
+                @for (icono of iconosDisponibles; track icono) {
+                  <div class="icon-option" [class.selected]="wizardIcono() === icono"
+                       (click)="seleccionarIcono(icono)">
+                    <i [class]="icono"></i>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (modoImagen() === 'imagen') {
+              @if (wizardImagen()) {
+                <div class="image-upload-area has-image">
+                  <img [src]="wizardImagen()" alt="Preview" style="max-width: 100%; max-height: 120px; border-radius: var(--border-radius);">
+                  <p-button icon="pi pi-times" [rounded]="true" severity="danger" size="small"
+                            class="mt-2" (click)="eliminarImagen()" pTooltip="Eliminar"></p-button>
+                </div>
+              } @else {
+                <label class="image-upload-area">
+                  <input type="file" accept="image/*" style="display: none" (change)="onFileSelected($event)">
+                  <i class="pi pi-cloud-upload text-2xl text-color-secondary mb-1 block"></i>
+                  <p class="m-0 text-sm text-color-secondary">Click para subir</p>
+                </label>
+              }
+            }
+          </div>
+        </div>
+      </p-tabpanel>
+      <!-- Tab: Responsable -->
+      <p-tabpanel value="1">
+        <div class="pt-3">
+          <p-select [options]="usuariosDisponibles()" [(ngModel)]="responsableSeleccionado"
+                    optionLabel="nombre" optionValue="id" placeholder="Seleccione responsable"
+                    [showClear]="true" class="w-full">
+            <ng-template let-user pTemplate="item">
+              <div class="flex align-items-center gap-2">
+                <p-avatar icon="pi pi-user" size="normal" shape="circle"></p-avatar>
+                <div>
+                  <div class="font-medium">{{ user.nombre }}</div>
+                  <div class="text-xs text-color-secondary">{{ user.email }}</div>
+                </div>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+      </p-tabpanel>
+      <!-- Tab: Propiedades -->
+      <p-tabpanel value="2">
+        <div class="pt-3">
+          <div class="p-3 surface-ground border-round mb-3">
+            <div class="flex gap-2 mb-2">
+              <input pInputText [ngModel]="nuevaPropiedad().nombre" (ngModelChange)="updateNuevaPropiedadNombre($event)"
+                     class="flex-grow-1" placeholder="Nombre" />
+              <p-select [options]="tiposPropiedadCustom" [ngModel]="nuevaPropiedad().tipo"
+                        (ngModelChange)="updateNuevaPropiedadTipo($event)" optionLabel="label" optionValue="value"
+                        [style]="{width: '100px'}"></p-select>
+              <p-button icon="pi pi-plus" (click)="agregarPropiedadCustom()"></p-button>
+            </div>
+          </div>
+          @if (propiedadesCustom().length > 0) {
+            <div class="flex flex-column gap-2">
+              @for (prop of propiedadesCustom(); track prop.id) {
+                <div class="flex align-items-center gap-2 p-2 surface-card border-round border-1 surface-border">
+                  <div class="flex-grow-1">
+                    <div class="text-sm font-medium mb-1">{{ prop.nombre }}</div>
+                    @if (prop.tipo === 'TEXT') {
+                      <input pInputText [ngModel]="prop.valor" (ngModelChange)="actualizarValorPropiedad(prop.id, $event)" class="w-full" />
+                    } @else {
+                      <p-inputNumber [ngModel]="prop.valor" (ngModelChange)="actualizarValorPropiedad(prop.id, $event)" class="w-full"></p-inputNumber>
+                    }
+                  </div>
+                  <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+                            (click)="eliminarPropiedadCustom(prop.id)"></p-button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </p-tabpanel>
+      <!-- Tab: Apetito de Riesgo -->
+      <p-tabpanel value="3">
+        <div class="pt-3">
+          <!-- Configuración de ejes -->
+          <div class="grid mb-3">
+            <div class="col-4">
+              <div class="field">
+                <label class="block font-medium mb-2">Probabilidad (Y)</label>
+                <p-inputNumber [(ngModel)]="probabilidadInput" [min]="1" [max]="10" [showButtons]="true" class="w-full"></p-inputNumber>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="field">
+                <label class="block font-medium mb-2">Impacto (X)</label>
+                <p-inputNumber [(ngModel)]="impactoInput" [min]="1" [max]="10" [showButtons]="true" class="w-full"></p-inputNumber>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="field">
+                <label class="block font-medium mb-2">Apetito %</label>
+                <p-inputNumber [(ngModel)]="apetitoRiesgo" [min]="0" [max]="100" suffix="%" [showButtons]="true" class="w-full"></p-inputNumber>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mapa de calor compacto -->
+          <div class="surface-ground border-round p-3">
+            <div class="text-center mb-2">
+              <span class="text-sm font-medium">Mapa de Calor</span>
+            </div>
+            <div class="matriz-tabla-wrapper" style="transform: scale(0.85); transform-origin: top center;">
+              <div class="matriz-tabla-container">
+                <div class="eje-y-titulo" style="font-size: 0.7rem;">Prob.</div>
+                <table class="matriz-tabla">
+                  <tbody>
+                    @for (prob of getProbabilidadArray(); track prob) {
+                      <tr>
+                        <td class="label-y" style="font-size: 0.65rem; padding: 2px;">{{ prob }}</td>
+                        @for (imp of getImpactoArray(); track imp) {
+                          <td style="padding: 1px;">
+                            <div class="matriz-cell"
+                                 [class]="getCeldaNivelDinamico(prob, imp)"
+                                 [class.selected]="isCeldaSeleccionadaDinamica(prob, imp)"
+                                 [class.dentro-apetito]="estaDentroApetitoDinamico(prob, imp)"
+                                 (click)="seleccionarCeldaDirecta(prob, imp)"
+                                 style="width: 28px; height: 28px; font-size: 0.6rem;">
+                              @if (isCeldaSeleccionadaDinamica(prob, imp)) {
+                                <span style="font-size: 0.55rem;">{{ apetitoRiesgo() }}%</span>
+                              }
+                            </div>
+                          </td>
+                        }
+                      </tr>
+                    }
+                    <tr class="fila-labels-x">
+                      <td></td>
+                      @for (i of getImpactoArray(); track i) {
+                        <td class="label-x" style="font-size: 0.65rem; padding: 2px;">{{ i }}</td>
+                      }
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="eje-x-titulo" style="font-size: 0.7rem;">Impacto</div>
+            </div>
+
+            <!-- Leyenda compacta -->
+            <div class="flex justify-content-center gap-2 mt-2 flex-wrap">
+              <div class="flex align-items-center gap-1">
+                <span class="leyenda-color bajo" style="width: 12px; height: 12px;"></span>
+                <span style="font-size: 0.7rem;">Bajo</span>
+              </div>
+              <div class="flex align-items-center gap-1">
+                <span class="leyenda-color medio" style="width: 12px; height: 12px;"></span>
+                <span style="font-size: 0.7rem;">Medio</span>
+              </div>
+              <div class="flex align-items-center gap-1">
+                <span class="leyenda-color alto" style="width: 12px; height: 12px;"></span>
+                <span style="font-size: 0.7rem;">Alto</span>
+              </div>
+              <div class="flex align-items-center gap-1">
+                <span class="leyenda-color critico" style="width: 12px; height: 12px;"></span>
+                <span style="font-size: 0.7rem;">Crítico</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resumen de selección -->
+          @if (celdaSeleccionada()) {
+            <div class="p-3 surface-card border-round border-1 surface-border mt-3">
+              <div class="flex justify-content-between align-items-center">
+                <span class="font-medium">Celda seleccionada:</span>
+                <span>P: {{ celdaSeleccionada()?.probabilidad }} / I: {{ celdaSeleccionada()?.impacto }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </p-tabpanel>
+      <!-- Tab: Objetivos y KPIs -->
+      <p-tabpanel value="4">
+        <div class="pt-3">
+          <!-- Tabs internos: Seleccionar / Crear -->
+          <div class="flex gap-2 mb-3">
+            <p-button [label]="'Seleccionar'" [outlined]="modoObjetivos() !== 'seleccionar'"
+                      icon="pi pi-search" size="small" (click)="modoObjetivos.set('seleccionar')"></p-button>
+            <p-button [label]="'Crear'" [outlined]="modoObjetivos() !== 'crear'"
+                      icon="pi pi-plus" size="small" (click)="modoObjetivos.set('crear')"></p-button>
+          </div>
+
+          <!-- Modo Seleccionar -->
+          @if (modoObjetivos() === 'seleccionar') {
+            <p-multiSelect [options]="objetivosDisponibles()" [(ngModel)]="objetivosSeleccionados"
+                           optionLabel="nombre" optionValue="id" placeholder="Seleccione objetivos"
+                           class="w-full" display="chip"></p-multiSelect>
+            @if (getObjetivosVinculados().length > 0) {
+              <div class="flex flex-column gap-2 mt-3">
+                @for (obj of getObjetivosVinculados(); track obj.id) {
+                  <div class="p-2 surface-ground border-round">
+                    <div class="font-medium">{{ obj.nombre }}</div>
+                    <div class="text-sm text-color-secondary">{{ obj.descripcion }}</div>
+                    @if (obj.kpis && obj.kpis.length > 0) {
+                      <div class="flex flex-wrap gap-1 mt-2">
+                        @for (kpi of obj.kpis; track kpi.nombre) {
+                          <p-chip [label]="kpi.nombre + ': ' + kpi.valor + '/' + kpi.meta" styleClass="text-xs"></p-chip>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
+
+          <!-- Modo Crear -->
+          @if (modoObjetivos() === 'crear') {
+            <!-- Botón agregar objetivo -->
+            <p-button label="Agregar Objetivo" icon="pi pi-plus" size="small" class="mb-3"
+                      (click)="abrirFormObjetivo()"></p-button>
+
+            <!-- Form inline para nuevo objetivo -->
+            @if (mostrarFormObjetivoInline()) {
+              <div class="p-3 surface-ground border-round mb-3">
+                <h4 class="mt-0 mb-3">{{ objetivoEditandoId() ? 'Editar' : 'Nuevo' }} Objetivo</h4>
+                <div class="flex flex-column gap-2">
+                  <input pInputText [(ngModel)]="nuevoObjetivoNombre" placeholder="Nombre *" class="w-full" />
+                  <textarea pTextarea [(ngModel)]="nuevoObjetivoDescripcion" rows="2" placeholder="Descripción" class="w-full"></textarea>
+                  <p-select [options]="tipoObjetivoOptions" [(ngModel)]="nuevoObjetivoTipo"
+                            optionLabel="label" optionValue="value" placeholder="Tipo" class="w-full"></p-select>
+                </div>
+                <div class="flex justify-content-end gap-2 mt-3">
+                  <p-button label="Cancelar" [text]="true" size="small" (click)="cerrarFormObjetivo()"></p-button>
+                  <p-button label="Guardar" size="small" (click)="guardarObjetivo()"></p-button>
+                </div>
+              </div>
+            }
+
+            <!-- Lista de objetivos creados -->
+            @for (obj of objetivos(); track obj.id) {
+              <div class="p-3 surface-card border-round border-1 surface-border mb-2">
+                <div class="flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <div class="font-medium">{{ obj.nombre }}</div>
+                    <div class="text-sm text-color-secondary">{{ obj.descripcion }}</div>
+                  </div>
+                  <div class="flex gap-1">
+                    <p-tag [value]="getTipoLabel(obj.tipo)" size="small"></p-tag>
+                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
+                              (click)="abrirFormObjetivo(obj)"></p-button>
+                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+                              (click)="eliminarObjetivo(obj.id)"></p-button>
+                  </div>
+                </div>
+
+                <!-- KPIs del objetivo -->
+                <div class="border-top-1 surface-border pt-2 mt-2">
+                  <div class="flex justify-content-between align-items-center mb-2">
+                    <span class="text-sm text-color-secondary">{{ obj.kpis.length }} KPIs</span>
+                    <p-button icon="pi pi-plus" label="KPI" size="small" [text]="true"
+                              (click)="abrirFormKPI(obj.id)"></p-button>
+                  </div>
+
+                  <!-- Form inline KPI -->
+                  @if (isFormKPIVisible(obj.id)) {
+                    <div class="p-3 surface-card border-round border-1 surface-border mb-2">
+                      <!-- Información básica del KPI -->
+                      <div class="flex flex-column gap-3">
+                        <div class="field m-0">
+                          <label class="block text-sm font-medium mb-1">Nombre del KPI *</label>
+                          <input pInputText [(ngModel)]="nuevoKPINombre" placeholder="Ej: Tasa de cumplimiento" class="w-full" />
+                        </div>
+
+                        <div class="flex gap-2">
+                          <div class="field m-0 flex-1">
+                            <label class="block text-sm font-medium mb-1">Meta</label>
+                            <p-inputNumber [(ngModel)]="nuevoKPIMeta" class="w-full" [showButtons]="true" buttonLayout="horizontal"
+                                           incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"></p-inputNumber>
+                          </div>
+                          <div class="field m-0 flex-1">
+                            <label class="block text-sm font-medium mb-1">Actual</label>
+                            <p-inputNumber [(ngModel)]="nuevoKPIActual" class="w-full" [showButtons]="true" buttonLayout="horizontal"
+                                           incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"></p-inputNumber>
+                          </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                          <div class="field m-0 flex-1">
+                            <label class="block text-sm font-medium mb-1">Escala</label>
+                            <p-select [options]="escalasOptions" [(ngModel)]="nuevoKPIEscala"
+                                      optionLabel="label" optionValue="value" class="w-full"></p-select>
+                          </div>
+                          <div class="field m-0 flex-1">
+                            <label class="block text-sm font-medium mb-1">Dirección</label>
+                            <p-select [options]="direccionOptions" [(ngModel)]="nuevoKPIDireccion"
+                                      optionLabel="label" optionValue="value" class="w-full"></p-select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Configuración de Alertas -->
+                      <p-divider></p-divider>
+                      <div class="flex align-items-center gap-2 mb-3">
+                        <i class="pi pi-bell text-yellow-500"></i>
+                        <span class="font-medium">Configuración de Alertas</span>
+                      </div>
+
+                      <div class="flex flex-column gap-3">
+                        <div class="flex gap-2">
+                          <div class="field m-0 flex-1">
+                            <label class="block text-sm font-medium mb-1">Umbral Alerta</label>
+                            <p-inputNumber [(ngModel)]="nuevoKPIUmbralAlerta" class="w-full"></p-inputNumber>
+                          </div>
+                          <div class="field m-0 flex-1">
+                            <label class="block text-sm font-medium mb-1">Umbral Máximo</label>
+                            <p-inputNumber [(ngModel)]="nuevoKPIUmbralMaximo" class="w-full" placeholder="Opcional"></p-inputNumber>
+                          </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                          <div class="field m-0 flex-1">
+                            <label class="block text-sm font-medium mb-1">Severidad</label>
+                            <p-select [options]="severidadOptions" [(ngModel)]="nuevoKPISeveridad"
+                                      optionLabel="label" optionValue="value" class="w-full"></p-select>
+                          </div>
+                          <div class="field m-0 flex-1">
+                            <label class="block text-sm font-medium mb-1">Frecuencia</label>
+                            <p-select [options]="frecuenciaOptions" [(ngModel)]="nuevoKPIFrecuencia"
+                                      optionLabel="label" optionValue="value" class="w-full"></p-select>
+                          </div>
+                        </div>
+
+                        <div class="field m-0">
+                          <label class="block text-sm font-medium mb-2">Canales de Notificación</label>
+                          <div class="flex gap-3">
+                            @for (canal of canalesOptions; track canal.value) {
+                              <p-button [icon]="canal.icon"
+                                        [label]="canal.label"
+                                        [outlined]="!isCanalSelected(canal.value)"
+                                        [severity]="isCanalSelected(canal.value) ? 'primary' : 'secondary'"
+                                        size="small"
+                                        (click)="toggleCanal(canal.value)">
+                              </p-button>
+                            }
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="flex justify-content-end gap-2 mt-4 pt-3 border-top-1 surface-border">
+                        <p-button label="Cancelar" [text]="true" (click)="cerrarFormKPI()"></p-button>
+                        <p-button label="Guardar KPI" icon="pi pi-check" (click)="guardarKPI()"></p-button>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Lista de KPIs -->
+                  @for (kpi of obj.kpis; track kpi.id) {
+                    <div class="p-2 surface-ground border-round mb-1">
+                      <div class="flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                          <div class="flex align-items-center gap-2">
+                            <span class="text-sm font-medium">{{ kpi.nombre }}</span>
+                            <i [class]="getSeveridadIcon(kpi.severidad)" [style]="{'color': getSeveridadColor(kpi.severidad), 'font-size': '0.8rem'}"
+                               pTooltip="Severidad: {{ getSeveridadLabel(kpi.severidad) }}"></i>
+                          </div>
+                          <div class="text-xs text-color-secondary mt-1">
+                            {{ kpi.actual }}/{{ kpi.meta }} {{ kpi.escala }} | Alerta: {{ kpi.umbralAlerta }} | {{ getFrecuenciaLabel(kpi.frecuenciaEvaluacion) }}
+                          </div>
+                          <div class="text-xs text-color-secondary mt-1">
+                            <i class="pi pi-bell" style="font-size: 0.7rem;"></i> {{ getCanalesLabel(kpi.canalesNotificacion) }}
+                          </div>
+                        </div>
+                        <div class="flex gap-1">
+                          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small"
+                                    (click)="abrirFormKPI(obj.id, kpi)"></p-button>
+                          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+                                    (click)="eliminarKPI(obj.id, kpi.id)"></p-button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (objetivos().length === 0 && !mostrarFormObjetivoInline()) {
+              <div class="text-center p-4 text-color-secondary">
+                <i class="pi pi-bullseye text-3xl mb-2 block"></i>
+                <p class="m-0">No hay objetivos creados</p>
+              </div>
+            }
+          }
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-between w-full">
+      <p-button label="Cancelar" [text]="true" (click)="cerrarEditDrawer()"></p-button>
+      <p-button label="Guardar Cambios" icon="pi pi-check" (click)="guardarEdicion()"></p-button>
+    </div>
+  </ng-template>
+</p-drawer>

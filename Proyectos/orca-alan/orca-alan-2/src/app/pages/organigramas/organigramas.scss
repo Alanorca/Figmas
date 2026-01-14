@@ -1,0 +1,535 @@
+// Importar estilos base de proceso-crear para el wizard
+@use '../proceso-crear/proceso-crear.scss';
+
+.organigramas-container {
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+// ========== WIZARD FULLSCREEN OVERLAY ==========
+.wizard-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+// Header
+.page-header {
+  margin-bottom: 1rem;
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    color: var(--text-color-secondary);
+    margin-bottom: var(--spacing-3);
+
+    a {
+      color: var(--text-color-secondary);
+      text-decoration: none;
+      &:hover { color: var(--primary-color); }
+    }
+
+    .separator { color: var(--surface-300); }
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .page-subtitle {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+// Splitter panels
+:host ::ng-deep .p-splitter {
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.left-panel {
+  background: var(--surface-card);
+  border-right: 1px solid var(--surface-border);
+
+  .left-panel-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--surface-ground);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--surface-300);
+      border-radius: 3px;
+
+      &:hover {
+        background: var(--surface-400);
+      }
+    }
+  }
+}
+
+.right-panel {
+  background: var(--surface-ground);
+}
+
+// ========== ZOOM CONTROLS ==========
+.chart-viewport {
+  position: relative;
+
+  &.panning {
+    cursor: grabbing;
+    user-select: none;
+  }
+}
+
+.chart-canvas {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 100%;
+  min-height: 100%;
+  padding: 2rem;
+  transform-origin: center top;
+}
+
+// Floating zoom panel
+.zoom-floating-panel {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 100;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+
+  .zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .zoom-percentage {
+    min-width: 3rem;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .zoom-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--surface-border);
+    font-size: 0.7rem;
+    color: var(--text-color-secondary);
+
+    i {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+// Compact stats bar
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  background: var(--surface-50);
+  border-top: 1px solid var(--surface-border);
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--text-color-secondary);
+
+    .stat-value {
+      font-weight: 600;
+      color: var(--text-color);
+    }
+  }
+}
+
+// Panel header
+.panel-header {
+  background: var(--surface-card);
+}
+
+// Organization chart styles - disable all animations to prevent flickering
+:host ::ng-deep {
+  .p-organizationchart {
+    // Disable all transitions and animations
+    *, *::before, *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+
+    .p-organizationchart-lines {
+      color: var(--surface-300);
+    }
+
+    .p-organizationchart-line-down {
+      background-color: var(--primary-color);
+    }
+
+    .p-organizationchart-line-left,
+    .p-organizationchart-line-right {
+      border-color: var(--primary-color);
+    }
+
+    .p-organizationchart-node-content {
+      transition: none !important;
+    }
+
+    .p-organizationchart-table {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+  }
+}
+
+.org-node-content {
+  // No hover transform to prevent flickering
+  &:hover {
+    .add-child-btn {
+      opacity: 1;
+    }
+  }
+
+  // Badge de tipo en esquina superior
+  .tipo-badge {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+
+  .add-child-btn {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+    background: var(--primary-color) !important;
+    color: white !important;
+    width: 24px !important;
+    height: 24px !important;
+
+    &:hover {
+      background: var(--primary-600) !important;
+    }
+  }
+}
+
+// Dialog tabs styles
+:host ::ng-deep {
+  .p-dialog {
+    .p-tablist {
+      background: transparent;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .p-tabpanel {
+      padding: 0;
+    }
+  }
+}
+
+// List item hover effect
+.list-item-hover {
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--surface-100) !important;
+  }
+}
+
+// Toolbar overrides
+:host ::ng-deep .p-toolbar {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+// Breadcrumb compact
+:host ::ng-deep .p-breadcrumb {
+  padding: 0;
+
+  .p-breadcrumb-list {
+    flex-wrap: wrap;
+  }
+}
+
+// Scrollbar styling
+.overflow-auto {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--surface-ground);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--surface-300);
+    border-radius: 3px;
+
+    &:hover {
+      background: var(--surface-400);
+    }
+  }
+}
+
+// Nota: Los estilos del wizard fullscreen vienen de proceso-crear.scss importado arriba
+
+// ========== DRAWER DE EDICIÓN ==========
+:host ::ng-deep {
+  .edit-drawer {
+    .p-drawer-content {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .p-tablist {
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--surface-border);
+      padding: 0 1rem;
+    }
+
+    .p-tabpanel {
+      padding: 1.5rem;
+      flex: 1;
+      overflow-y: auto;
+    }
+  }
+}
+
+.edit-drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--surface-border);
+  background: var(--surface-card);
+}
+
+// Propiedades custom list
+.propiedad-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface-50);
+  border-radius: var(--border-radius);
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: var(--surface-100);
+  }
+}
+
+// Objetivos list
+.objetivo-item {
+  padding: 0.75rem;
+  background: var(--surface-50);
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--primary-color);
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--surface-100);
+    transform: translateX(2px);
+  }
+}
+
+// KPI Alertas section
+.kpi-alertas-section {
+  padding: 1rem;
+  background: var(--surface-50);
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--yellow-500);
+
+  h5 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 0.9rem;
+  }
+}
+
+// Canal checkbox styling
+.canal-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius);
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: var(--surface-100);
+  }
+
+  input[type="checkbox"] {
+    cursor: pointer;
+  }
+}
+
+// KPI canales display
+.kpi-canales {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+// Progress bar colors
+:host ::ng-deep {
+  .progress-success .p-progressbar-value {
+    background: var(--green-500) !important;
+  }
+  .progress-warning .p-progressbar-value {
+    background: var(--yellow-500) !important;
+  }
+  .progress-info .p-progressbar-value {
+    background: var(--blue-500) !important;
+  }
+  .progress-danger .p-progressbar-value {
+    background: var(--red-500) !important;
+  }
+}
+
+// Text colors for progress
+.text-success { color: var(--green-500) !important; }
+.text-warning { color: var(--yellow-600) !important; }
+.text-info { color: var(--blue-500) !important; }
+.text-danger { color: var(--red-500) !important; }
+
+// Mini Heatmap for accordion
+.mini-heatmap {
+  .matriz-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+
+    .matriz-mini-row {
+      display: flex;
+      gap: 2px;
+    }
+
+    .matriz-mini-cell {
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      transition: transform 0.2s;
+
+      &.bajo { background: var(--green-400); }
+      &.medio { background: var(--yellow-400); }
+      &.alto { background: var(--orange-400); }
+      &.critico { background: var(--red-400); }
+
+      &.selected {
+        border: 2px solid var(--primary-color);
+        box-shadow: 0 0 4px var(--primary-color);
+      }
+    }
+  }
+}
+
+// Accordion compact styling
+:host ::ng-deep {
+  .p-accordionpanel {
+    .p-accordionheader {
+      padding: 0.5rem 0.75rem;
+      background: var(--surface-ground);
+    }
+    .p-accordioncontent-content {
+      padding: 0.5rem 0.75rem;
+    }
+  }
+}
+
+// Icon selector grid
+.icon-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+
+  .icon-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius);
+    background: var(--surface-ground);
+    cursor: pointer;
+    transition: all 0.2s;
+
+    i {
+      font-size: 1.25rem;
+      color: var(--text-color-secondary);
+    }
+
+    &:hover {
+      background: var(--surface-200);
+      i { color: var(--primary-color); }
+    }
+
+    &.selected {
+      background: var(--primary-color);
+      i { color: white; }
+    }
+  }
+}
+
+// Image upload area
+.image-upload-area {
+  border: 2px dashed var(--surface-300);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: var(--primary-color);
+    background: var(--surface-50);
+  }
+
+  &.has-image {
+    border-style: solid;
+    border-color: var(--primary-color);
+  }
+}

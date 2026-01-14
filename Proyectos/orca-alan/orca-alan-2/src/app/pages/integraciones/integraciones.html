@@ -1,0 +1,307 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="integraciones-container">
+  <!-- Header Stats Cards -->
+  <div class="stats-cards">
+    <p-card styleClass="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon total">
+          <i class="pi pi-wifi"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ integracionesService.radios().length }}</span>
+          <span class="stat-label">Total Radios</span>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card styleClass="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon active">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ integracionesService.activeRadiosCount() }}</span>
+          <span class="stat-label">Activos</span>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card styleClass="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon error">
+          <i class="pi pi-exclamation-triangle"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ integracionesService.errorRadiosCount() }}</span>
+          <span class="stat-label">Con Error</span>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card styleClass="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon pulses">
+          <i class="pi pi-bolt"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ integracionesService.pulsesLast24hCount() }}</span>
+          <span class="stat-label">Pulsos 24h</span>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Main Content Card -->
+  <p-card>
+    <!-- Toolbar -->
+    <p-toolbar styleClass="mb-4">
+      <ng-template #start>
+        <span class="text-xl font-semibold">Radios de Integración</span>
+      </ng-template>
+
+      <ng-template #end>
+        <p-button
+          label="Nuevo Radio"
+          icon="pi pi-plus"
+          (onClick)="navigateToCreate()"
+        />
+      </ng-template>
+    </p-toolbar>
+
+    <!-- Loading State -->
+    @if (integracionesService.loading()) {
+      <div class="loading-container">
+        <p-progressSpinner strokeWidth="4" />
+        <span>Cargando radios...</span>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!integracionesService.loading() && integracionesService.radios().length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-wifi empty-icon"></i>
+        <h3>No hay radios configurados</h3>
+        <p>Crea tu primer radio para comenzar a recibir datos de fuentes externas</p>
+        <p-button
+          label="Crear Radio"
+          icon="pi pi-plus"
+          (onClick)="navigateToCreate()"
+        />
+      </div>
+    }
+
+    <!-- Table -->
+    @if (!integracionesService.loading() && integracionesService.radios().length > 0) {
+      <p-table
+        #dt
+        [value]="integracionesService.radios()"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} radios"
+        [globalFilterFields]="['name', 'description', 'category']"
+        styleClass="p-datatable-striped"
+        [selectionMode]="'single'"
+        (onRowSelect)="onRowSelect($event)"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 3rem"></th>
+            <th pSortableColumn="name">
+              Nombre
+              <p-sortIcon field="name" />
+            </th>
+            <th pSortableColumn="connectorType">
+              Tipo
+              <p-sortIcon field="connectorType" />
+            </th>
+            <th pSortableColumn="category">
+              Categoria
+              <p-sortIcon field="category" />
+            </th>
+            <th pSortableColumn="status">
+              Estado
+              <p-sortIcon field="status" />
+            </th>
+            <th>Salud</th>
+            <th pSortableColumn="stats.lastSyncAt">
+              Ultima Sync
+              <p-sortIcon field="stats.lastSyncAt" />
+            </th>
+            <th>Pulsos 24h</th>
+            <th style="width: 8rem">Acciones</th>
+          </tr>
+          <!-- Filter Row -->
+          <tr>
+            <th></th>
+            <th>
+              <p-columnFilter type="text" field="name" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <input
+                    pInputText
+                    type="text"
+                    [ngModel]="value"
+                    (ngModelChange)="filter($event)"
+                    placeholder="Buscar..."
+                    class="w-full"
+                  />
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter field="connectorType" matchMode="in" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-multiSelect
+                    [ngModel]="value"
+                    (ngModelChange)="filter($event)"
+                    [options]="connectorTypeFilterOptions"
+                    placeholder="Todos"
+                    appendTo="body"
+                    [showHeader]="false"
+                    [style]="{'min-width': '120px'}"
+                  >
+                    <ng-template let-option pTemplate="item">
+                      <span>{{ option.label }}</span>
+                    </ng-template>
+                  </p-multiSelect>
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter field="category" matchMode="in" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-multiSelect
+                    [ngModel]="value"
+                    (ngModelChange)="filter($event)"
+                    [options]="categoryFilterOptions"
+                    placeholder="Todas"
+                    appendTo="body"
+                    [showHeader]="false"
+                    [style]="{'min-width': '120px'}"
+                  >
+                    <ng-template let-option pTemplate="item">
+                      <span>{{ option.label }}</span>
+                    </ng-template>
+                  </p-multiSelect>
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th>
+              <p-columnFilter field="status" matchMode="in" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-multiSelect
+                    [ngModel]="value"
+                    (ngModelChange)="filter($event)"
+                    [options]="statusFilterOptions"
+                    placeholder="Todos"
+                    appendTo="body"
+                    [showHeader]="false"
+                    [style]="{'min-width': '120px'}"
+                  >
+                    <ng-template let-option pTemplate="item">
+                      <span>{{ option.label }}</span>
+                    </ng-template>
+                  </p-multiSelect>
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-radio>
+          <tr [pSelectableRow]="radio" class="cursor-pointer">
+            <td>
+              <i [class]="getConnectorTypeIcon(radio.connectorType)" class="connector-icon"></i>
+            </td>
+            <td>
+              <div class="radio-name-cell">
+                <span class="radio-name">{{ radio.name }}</span>
+                @if (radio.description) {
+                  <span class="radio-description">{{ radio.description }}</span>
+                }
+              </div>
+            </td>
+            <td>
+              <div class="connector-type-cell">
+                <span>{{ getConnectorTypeLabel(radio.connectorType) }}</span>
+                <span class="connector-mode">{{ getConnectorMode(radio.connectorType) }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="category-badge">{{ radio.category }}</span>
+            </td>
+            <td>
+              <p-tag
+                [value]="getRadioStatusLabel(radio.status)"
+                [severity]="getRadioStatusSeverity(radio.status)"
+              />
+            </td>
+            <td>
+              <p-tag
+                [value]="getHealthLabel(radio)"
+                [severity]="getHealthSeverity(radio)"
+                [rounded]="true"
+              />
+            </td>
+            <td>
+              <span class="sync-date">{{ formatDate(radio.stats.lastSyncAt) }}</span>
+            </td>
+            <td>
+              <p-badge
+                [value]="radio.stats.pulsesLast24h.toString()"
+                [severity]="radio.stats.pulsesLast24h > 0 ? 'info' : 'secondary'"
+              />
+            </td>
+            <td>
+              <div class="action-buttons">
+                <p-button
+                  icon="pi pi-sync"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="info"
+                  pTooltip="Sincronizar"
+                  tooltipPosition="top"
+                  (onClick)="triggerSync(radio, $event)"
+                  [disabled]="radio.status !== 'active'"
+                />
+                <p-button
+                  [icon]="radio.status === 'active' ? 'pi pi-pause' : 'pi pi-play'"
+                  [rounded]="true"
+                  [text]="true"
+                  [severity]="radio.status === 'active' ? 'warn' : 'success'"
+                  [pTooltip]="radio.status === 'active' ? 'Desactivar' : 'Activar'"
+                  tooltipPosition="top"
+                  (onClick)="toggleStatus(radio, $event)"
+                />
+                <p-button
+                  icon="pi pi-ellipsis-v"
+                  [rounded]="true"
+                  [text]="true"
+                  (onClick)="showMenu(radio, menu, $event)"
+                />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9" class="text-center p-4">
+              No se encontraron radios con los filtros aplicados
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </p-card>
+</div>
+
+<!-- Context Menu -->
+<p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />

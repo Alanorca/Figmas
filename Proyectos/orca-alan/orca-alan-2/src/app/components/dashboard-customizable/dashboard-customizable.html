@@ -1,0 +1,1954 @@
+<!-- ============================================================================
+     DASHBOARD CUSTOMIZABLE - TEMPLATE
+     Con gráficas interactivas, drilldown y configuración de widgets
+     ============================================================================ -->
+
+<div class="dashboard-customizable">
+  <!-- Toolbar -->
+  <div class="dashboard-toolbar">
+    <div class="toolbar-left">
+      <h2 class="dashboard-title">
+        <i class="pi pi-th-large"></i>
+        {{ configActual()?.nombre || 'Dashboard' }}
+      </h2>
+      @if (hasUnsavedChanges()) {
+        <span class="unsaved-indicator">
+          <i class="pi pi-circle-fill"></i>
+          Sin guardar
+        </span>
+      }
+    </div>
+
+    <div class="toolbar-right">
+      <!-- Botón Mis Dashboards -->
+      <p-button
+        icon="pi pi-folder"
+        label="Mis Dashboards"
+        [outlined]="true"
+        size="small"
+        (onClick)="showDashboardsDrawer.set(true)"
+        pTooltip="Gestionar dashboards guardados">
+      </p-button>
+
+      <!-- Botones de exportación (siempre visibles) -->
+      <p-button
+        icon="pi pi-download"
+        label="Exportar"
+        [outlined]="true"
+        size="small"
+        [loading]="exportingCanvas()"
+        (onClick)="exportarDashboardCompleto('pdf')"
+        pTooltip="Exportar dashboard como PDF">
+      </p-button>
+
+      @if (modoEdicion()) {
+        <!-- Acciones modo edición -->
+        <p-divider layout="vertical"></p-divider>
+
+        <p-button
+          icon="pi pi-plus"
+          label="Agregar Widget"
+          [outlined]="true"
+          size="small"
+          (onClick)="abrirCatalogo()">
+        </p-button>
+
+        <p-button
+          icon="pi pi-cog"
+          label="Layout"
+          [outlined]="true"
+          size="small"
+          (onClick)="abrirLayoutConfig()">
+        </p-button>
+
+        <p-divider layout="vertical"></p-divider>
+
+        @if (hasUnsavedChanges()) {
+          <p-button
+            icon="pi pi-times"
+            label="Descartar"
+            severity="secondary"
+            [text]="true"
+            size="small"
+            (onClick)="descartarCambios()">
+          </p-button>
+        }
+
+        <p-button
+          icon="pi pi-check"
+          label="Guardar"
+          size="small"
+          (onClick)="guardarCambios()">
+        </p-button>
+
+        <p-button
+          icon="pi pi-times"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          pTooltip="Salir de edición"
+          (onClick)="toggleModoEdicion()">
+        </p-button>
+      } @else {
+        <!-- Acciones modo visualización -->
+        <p-button
+          icon="pi pi-pencil"
+          label="Personalizar"
+          [outlined]="true"
+          size="small"
+          (onClick)="toggleModoEdicion()">
+        </p-button>
+      }
+    </div>
+  </div>
+
+  <!-- Grid de Widgets (Gridster) -->
+  <div class="dashboard-grid" [class.editing]="modoEdicion()">
+    <gridster [options]="gridsterOptions()">
+      @for (widget of widgets(); track trackByWidgetId($index, widget)) {
+        <gridster-item [item]="widget" (click)="onWidgetClick(widget)" [attr.data-widget-id]="widget.id" [attr.data-widget-type]="widget.tipo">
+          <app-dashboard-widget
+            [widget]="widget"
+            (onEdit)="editarWidget($event)"
+            (onRemove)="eliminarWidget($event)"
+            (onDuplicate)="duplicarWidget($event)"
+            (onExport)="abrirExportModal($event)">
+
+            <!-- Contenido del widget según tipo -->
+            @switch (widget.tipo) {
+              @case ('kpi-card') {
+                <div class="widget-kpi-card" [ngClass]="getKPIColorClass(widget.config.kpiType || 'cumplimiento')">
+                  <!-- Header: Icono + Tendencia + Menú -->
+                  <div class="kpi-header">
+                    <div class="kpi-icon">
+                      <i [class]="widget.config.kpiConfig?.icono || 'pi pi-chart-line'"></i>
+                    </div>
+                    <div class="kpi-header-right">
+                      @if (widget.config.kpiConfig?.mostrarTendencia !== false) {
+                        @let trend = getKPITrend(widget.config.kpiType || 'cumplimiento');
+                        <div class="kpi-trend" [class.positive]="trend.isPositive" [class.negative]="!trend.isPositive">
+                          <i class="pi" [class.pi-arrow-up]="trend.direction === 'up'" [class.pi-arrow-down]="trend.direction === 'down'" [class.pi-minus]="trend.direction === 'neutral'"></i>
+                          {{ trend.value }}
+                        </div>
+                      }
+                      <button class="kpi-menu-btn" (click)="toggleKpiMenu($event, widget); $event.stopPropagation()">
+                        <i class="pi pi-ellipsis-v"></i>
+                      </button>
+                      <p-menu #kpiMenu [model]="getKpiMenuItems(widget)" [popup]="true" appendTo="body"></p-menu>
+                    </div>
+                  </div>
+
+                  <!-- Footer: Título + Valor -->
+                  <div class="kpi-footer">
+                    <div class="kpi-title">{{ widget.titulo }}</div>
+                    <div class="kpi-value">
+                      {{ getKPIValue(widget.config.kpiType || 'cumplimiento') }}{{ widget.config.kpiConfig?.unidad || '%' }}
+                    </div>
+                  </div>
+                </div>
+              }
+
+              @case ('kpi-grid') {
+                <div class="widget-kpi-grid-container">
+                  <div class="kpi-grid-header">
+                    <span class="kpi-grid-title">{{ widget.titulo }}</span>
+                    <button class="kpi-menu-btn" (click)="toggleKpiMenu($event, widget); $event.stopPropagation()">
+                      <i class="pi pi-ellipsis-v"></i>
+                    </button>
+                    <p-menu #kpiGridMenu [model]="getKpiMenuItems(widget)" [popup]="true" appendTo="body"></p-menu>
+                  </div>
+                  <div class="widget-kpi-grid">
+                    @for (metric of getKPIGridMetrics(); track metric.label) {
+                      <div class="kpi-mini-card">
+                        <span class="value">{{ metric.value }}</span>
+                        <span class="label">{{ metric.label }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              @case ('table-mini') {
+                <div class="widget-table-enhanced">
+                  <!-- Barra de filtros y ordenamiento -->
+                  <div class="table-toolbar">
+                    <div class="table-search">
+                      <i class="pi pi-search"></i>
+                      <input
+                        type="text"
+                        placeholder="Buscar..."
+                        [ngModel]="tablaFiltroTexto()"
+                        (ngModelChange)="tablaFiltroTexto.set($event)" />
+                    </div>
+                    <div class="table-filters">
+                      <p-select
+                        [options]="tablaEstadoOptions"
+                        [ngModel]="tablaFiltroEstado()"
+                        (ngModelChange)="tablaFiltroEstado.set($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Estado"
+                        [style]="{width: '120px'}"
+                        size="small">
+                      </p-select>
+                    </div>
+                    <p-button
+                      icon="pi pi-download"
+                      [rounded]="true"
+                      [text]="true"
+                      size="small"
+                      (onClick)="exportarTabla(widget)"
+                      pTooltip="Exportar CSV">
+                    </p-button>
+                  </div>
+
+                  <!-- Tabla con ordenamiento -->
+                  <table class="mini-table sortable">
+                    <thead>
+                      <tr>
+                        <th class="sortable-header" (click)="ordenarTabla('nombre')">
+                          Proceso
+                          <i class="pi" [class.pi-sort-alt]="tablaOrdenCampo() !== 'nombre'"
+                             [class.pi-sort-amount-up]="tablaOrdenCampo() === 'nombre' && tablaOrdenDir() === 'asc'"
+                             [class.pi-sort-amount-down]="tablaOrdenCampo() === 'nombre' && tablaOrdenDir() === 'desc'"></i>
+                        </th>
+                        <th class="sortable-header" (click)="ordenarTabla('estado')">
+                          Estado
+                          <i class="pi" [class.pi-sort-alt]="tablaOrdenCampo() !== 'estado'"
+                             [class.pi-sort-amount-up]="tablaOrdenCampo() === 'estado' && tablaOrdenDir() === 'asc'"
+                             [class.pi-sort-amount-down]="tablaOrdenCampo() === 'estado' && tablaOrdenDir() === 'desc'"></i>
+                        </th>
+                        <th class="sortable-header" (click)="ordenarTabla('cumplimiento')">
+                          Cumplimiento
+                          <i class="pi" [class.pi-sort-alt]="tablaOrdenCampo() !== 'cumplimiento'"
+                             [class.pi-sort-amount-up]="tablaOrdenCampo() === 'cumplimiento' && tablaOrdenDir() === 'asc'"
+                             [class.pi-sort-amount-down]="tablaOrdenCampo() === 'cumplimiento' && tablaOrdenDir() === 'desc'"></i>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (proc of getTablaFiltradaOrdenada(); track proc.procesoId) {
+                        <tr class="clickable" (click)="abrirProcesoDrilldown(proc)">
+                          <td class="proceso-nombre">{{ proc.procesoNombre.length > 25 ? proc.procesoNombre.substring(0, 25) + '...' : proc.procesoNombre }}</td>
+                          <td>
+                            <span class="estado-badge" [class.activo]="proc.estado === 'activo'" [class.borrador]="proc.estado === 'borrador'">
+                              {{ proc.estado }}
+                            </span>
+                          </td>
+                          <td class="cumplimiento-cell">
+                            <div class="cumplimiento-mini">
+                              <span class="cumplimiento-valor">{{ proc.cumplimientoPromedio }}%</span>
+                              <div class="cumplimiento-bar-mini">
+                                <div class="fill" [style.width.%]="proc.cumplimientoPromedio"></div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="3" class="tabla-vacia">
+                            <i class="pi pi-inbox"></i>
+                            <span>Sin resultados</span>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+
+                  <!-- Footer con contador -->
+                  <div class="table-footer">
+                    <span class="table-count">{{ getTablaFiltradaOrdenada().length }} registros</span>
+                  </div>
+                </div>
+              }
+
+              @case ('actividad-reciente') {
+                <div class="widget-actividad-enhanced">
+                  <!-- Filtros de actividad -->
+                  <div class="actividad-filtros">
+                    <div class="filtros-tipo">
+                      <button
+                        class="filtro-tipo-btn"
+                        [class.active]="filtroActividadTipo() === 'todos'"
+                        (click)="filtroActividadTipo.set('todos')"
+                        pTooltip="Todas">
+                        <i class="pi pi-list"></i>
+                      </button>
+                      <button
+                        class="filtro-tipo-btn"
+                        [class.active]="filtroActividadTipo() === 'cambios'"
+                        (click)="filtroActividadTipo.set('cambios')"
+                        pTooltip="Cambios">
+                        <i class="pi pi-pencil"></i>
+                      </button>
+                      <button
+                        class="filtro-tipo-btn"
+                        [class.active]="filtroActividadTipo() === 'alertas'"
+                        (click)="filtroActividadTipo.set('alertas')"
+                        pTooltip="Alertas">
+                        <i class="pi pi-exclamation-triangle"></i>
+                      </button>
+                      <button
+                        class="filtro-tipo-btn"
+                        [class.active]="filtroActividadTipo() === 'nuevos'"
+                        (click)="filtroActividadTipo.set('nuevos')"
+                        pTooltip="Nuevos">
+                        <i class="pi pi-plus-circle"></i>
+                      </button>
+                    </div>
+                    <div class="filtros-secundarios">
+                      <p-select
+                        [options]="opcionesUsuarioActividad"
+                        [ngModel]="filtroActividadUsuario()"
+                        (ngModelChange)="filtroActividadUsuario.set($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Usuario"
+                        [style]="{width: '130px'}"
+                        size="small">
+                      </p-select>
+                      <p-select
+                        [options]="opcionesPeriodoActividad"
+                        [ngModel]="filtroActividadPeriodo()"
+                        (ngModelChange)="filtroActividadPeriodo.set($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        [style]="{width: '110px'}"
+                        size="small">
+                      </p-select>
+                    </div>
+                  </div>
+
+                  <!-- Lista de actividades filtrada con drilldown -->
+                  <div class="actividad-lista">
+                    @for (actividad of getActividadRecienteFiltrada(); track actividad.id || actividad.texto) {
+                      <div
+                        class="actividad-item-enhanced clickable"
+                        [class]="'tipo-' + actividad.tipo"
+                        (click)="abrirActividadDrilldown(actividad)">
+                        <div class="actividad-icono">
+                          <i [class]="actividad.icono + ' ' + actividad.color"></i>
+                        </div>
+                        <div class="actividad-contenido">
+                          <span class="actividad-texto">{{ actividad.texto }}</span>
+                          @if (actividad.detalle) {
+                            <span class="actividad-detalle">{{ actividad.detalle }}</span>
+                          }
+                          @if (actividad.usuario) {
+                            <span class="actividad-usuario">
+                              <i class="pi pi-user"></i>
+                              {{ actividad.usuario }}
+                            </span>
+                          }
+                        </div>
+                        <div class="actividad-meta">
+                          <small class="actividad-tiempo">{{ actividad.tiempo }}</small>
+                          <i class="pi pi-chevron-right actividad-arrow"></i>
+                        </div>
+                      </div>
+                    } @empty {
+                      <div class="actividad-vacia">
+                        <i class="pi pi-inbox"></i>
+                        <span>Sin actividades</span>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Contador -->
+                  <div class="actividad-footer">
+                    <span class="actividad-contador">
+                      {{ getActividadRecienteFiltrada().length }} actividades
+                    </span>
+                    <p-button
+                      icon="pi pi-download"
+                      [rounded]="true"
+                      [text]="true"
+                      size="small"
+                      (onClick)="exportarActividades()"
+                      pTooltip="Exportar">
+                    </p-button>
+                  </div>
+                </div>
+              }
+
+              @case ('calendario') {
+                <div class="widget-calendario">
+                  <app-calendario-widget
+                    [eventos]="eventosCalendario()"
+                    [modo]="widget.cols < 3 ? 'compact' : 'full'"
+                    [mostrarLeyenda]="widget.rows >= 3"
+                    [mostrarResumen]="widget.rows >= 3"
+                    (eventoClick)="onCalendarioEventoClick($event)"
+                    (fechaClick)="onCalendarioFechaClick($event)">
+                  </app-calendario-widget>
+                </div>
+              }
+
+              @case ('graficas-guardadas') {
+                <div class="widget-graficas-guardadas">
+                  <app-graficas-guardadas-widget
+                    [modo]="widget.cols < 3 ? 'compact' : 'full'"
+                    [limite]="widget.config.listLimit || 10"
+                    (graficaSeleccionadaEvt)="onGraficaGuardadaSeleccionada($event)"
+                    (cargarGraficaEvt)="onCargarGraficaGuardada($event)">
+                  </app-graficas-guardadas-widget>
+                </div>
+              }
+
+              @case ('graficas-interactivas') {
+                <div class="widget-graficas-interactivas">
+                  <app-graficas-interactivas
+                    [modoWidget]="true"
+                    [widgetId]="widget.id"
+                    [datos]="getGraficaDatosCacheados(widget.id)"
+                    [campoInicial]="widget.config.graficaAgrupacion || 'estado'"
+                    [titulo]="widget.titulo || 'Análisis'"
+                    [subtitulo]="widget.subtitulo || ''"
+                    [camposDisponibles]="graficaInteractivaCamposDisponibles()"
+                    [valoresFiltrado]="graficaInteractivaValoresFiltrado()"
+                    [tipoGraficaExterno]="$any(widget.config.graficaTipo || 'donut')"
+                    [paletaExterna]="widget.config.graficaPaleta || 'vibrant'"
+                    [animacionesExternas]="widget.config.graficaAnimaciones !== false"
+                    [mostrarLeyendaExterna]="widget.config.graficaMostrarLeyenda !== false"
+                    [mostrarDataLabelsExterna]="widget.config.graficaMostrarDataLabels === true"
+                    [temaExterno]="widget.config.graficaTema || temaActual()"
+                    (campoSeleccionado)="onGraficaInteractivaCampoChange($event)"
+                    (dataPointClick)="onGraficaInteractivaDataPointClick($event, widget)"
+                    (legendClick)="onGraficaInteractivaLegendClick($event, widget)"
+                    (filtroAplicado)="onGraficaInteractivaFiltroAplicado($event, widget)"
+                    (drillDownEvent)="onGraficaInteractivaDrillDown($event, widget)"
+                    (exportSegmentEvent)="onGraficaInteractivaExportSegment($event, widget)"
+                    (createAlertEvent)="onGraficaInteractivaCreateAlert($event, widget)"
+                    (configClick)="editarWidget(widget)">
+                  </app-graficas-interactivas>
+                </div>
+              }
+
+              @case ('analisis-inteligente') {
+                <div class="widget-analisis-inteligente">
+                  <app-analisis-inteligente-widget
+                    [modoWidget]="true"
+                    [config]="$any(widget.config)"
+                    (onGuardar)="onAnalisisInteligenteGuardar($event)"
+                    (onCerrar)="eliminarWidget(widget)">
+                  </app-analisis-inteligente-widget>
+                </div>
+              }
+
+              @default {
+                <div class="widget-placeholder">
+                  <i class="pi pi-box"></i>
+                  <span>Widget: {{ widget.tipo }}</span>
+                </div>
+              }
+            }
+          </app-dashboard-widget>
+        </gridster-item>
+      }
+    </gridster>
+  </div>
+</div>
+
+<!-- ==================== DRAWERS ==================== -->
+
+<!-- Drawer: Catálogo de Widgets -->
+<p-drawer [(visible)]="showCatalogoDrawer" position="right" [style]="{width: '50vw'}" header="Agregar Widget">
+  <div class="catalogo-content">
+    <!-- Lista de Widgets -->
+    <div class="catalogo-lista">
+      @for (widget of catalogoFiltrado(); track widget.tipo) {
+        <div class="catalogo-item" (click)="agregarWidget(widget)">
+          <div class="catalogo-item-icon">
+            <i [class]="widget.icono"></i>
+          </div>
+          <div class="catalogo-item-info">
+            <span class="catalogo-item-nombre">{{ widget.nombre }}</span>
+            <span class="catalogo-item-desc">{{ widget.descripcion }}</span>
+          </div>
+          <i class="pi pi-plus catalogo-item-add"></i>
+        </div>
+      } @empty {
+        <div class="catalogo-empty">
+          <i class="pi pi-inbox"></i>
+          <span>No se encontraron widgets</span>
+        </div>
+      }
+    </div>
+  </div>
+</p-drawer>
+
+<!-- Drawer: Pre-Configuración de Widget (antes de agregar) -->
+<p-drawer [(visible)]="showPreConfigDrawer" position="right" [style]="{width: '50vw'}">
+  <ng-template pTemplate="header">
+    <div class="preconfig-header">
+      <button class="preconfig-back" (click)="cancelarPreConfig()">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <span>Configurar Widget</span>
+    </div>
+  </ng-template>
+
+  @if (widgetPreConfig()) {
+    <div class="preconfig-content">
+      <!-- Info del widget seleccionado -->
+      <div class="preconfig-widget-info">
+        <div class="preconfig-widget-icon">
+          <i [class]="widgetPreConfig()!.icono"></i>
+        </div>
+        <div class="preconfig-widget-details">
+          <span class="preconfig-widget-nombre">{{ widgetPreConfig()!.nombre }}</span>
+          <span class="preconfig-widget-desc">{{ widgetPreConfig()!.descripcion }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Configuración básica -->
+      <div class="preconfig-section">
+        <h4 class="preconfig-section-title">
+          Información
+        </h4>
+
+        <div class="preconfig-field">
+          <label>Título del widget</label>
+          <input type="text" pInputText class="w-full"
+                 [ngModel]="preConfigTitulo()"
+                 (ngModelChange)="preConfigTitulo.set($event)"
+                 placeholder="Ingresa un título..." />
+        </div>
+
+        <div class="preconfig-field">
+          <label>Subtítulo (opcional)</label>
+          <input type="text" pInputText class="w-full"
+                 [ngModel]="preConfigSubtitulo()"
+                 (ngModelChange)="preConfigSubtitulo.set($event)"
+                 placeholder="Descripción breve..." />
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Configuración específica según tipo -->
+      <div class="preconfig-section">
+        <h4 class="preconfig-section-title">
+          <i class="pi pi-cog"></i>
+          Configuración
+        </h4>
+
+        @switch (widgetPreConfig()!.tipo) {
+          <!-- KPI Card -->
+          @case ('kpi-card') {
+            <div class="preconfig-field">
+              <label>Tipo de KPI</label>
+              <p-select
+                [options]="kpiTypeOptions"
+                [ngModel]="preConfigKpiType()"
+                (ngModelChange)="preConfigKpiType.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}"
+                placeholder="Selecciona el tipo de KPI">
+              </p-select>
+              <small class="preconfig-hint">
+                @switch (preConfigKpiType()) {
+                  @case ('cumplimiento') { Muestra el porcentaje de cumplimiento general }
+                  @case ('procesos') { Muestra la cantidad de procesos activos }
+                  @case ('alertas') { Muestra el número de alertas activas }
+                  @case ('objetivos') { Muestra KPIs en riesgo o bajo umbral }
+                }
+              </small>
+            </div>
+          }
+
+          @case ('actividad-reciente') {
+            <div class="preconfig-field">
+              <label>Número de actividades a mostrar</label>
+              <p-select
+                [options]="[
+                  {label: '5 actividades', value: 5},
+                  {label: '10 actividades', value: 10},
+                  {label: '15 actividades', value: 15}
+                ]"
+                [ngModel]="preConfigListLimit()"
+                (ngModelChange)="preConfigListLimit.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}">
+              </p-select>
+              <small class="preconfig-hint">Últimas acciones y cambios en el sistema</small>
+            </div>
+          }
+
+          <!-- Tabla -->
+          @case ('table-mini') {
+            <div class="preconfig-field">
+              <label>Fuente de datos</label>
+              <p-select
+                [options]="tableDataSourceOptions"
+                [ngModel]="preConfigTableDataSource()"
+                (ngModelChange)="preConfigTableDataSource.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}"
+                placeholder="Selecciona qué datos mostrar">
+              </p-select>
+              <small class="preconfig-hint">
+                @switch (preConfigTableDataSource()) {
+                  @case ('procesos') { Lista de procesos con cumplimiento y estado }
+                  @case ('riesgos') { Riesgos identificados y su estado actual }
+                  @case ('results-ml') { Predicciones y resultados de modelos ML }
+                  @case ('activos') { Inventario de activos de información }
+                  @case ('alertas') { Alertas generadas por el sistema }
+                  @case ('incidentes') { Incidentes de seguridad registrados }
+                  @case ('kpis') { Indicadores clave de rendimiento }
+                  @case ('objetivos') { Objetivos y su progreso actual }
+                }
+              </small>
+            </div>
+
+            <div class="preconfig-field">
+              <label>Número de filas a mostrar</label>
+              <p-select
+                [options]="[
+                  {label: '3 filas', value: 3},
+                  {label: '5 filas', value: 5},
+                  {label: '7 filas', value: 7},
+                  {label: '10 filas', value: 10}
+                ]"
+                [ngModel]="preConfigTableLimit()"
+                (ngModelChange)="preConfigTableLimit.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}">
+              </p-select>
+            </div>
+          }
+
+          <!-- Gráficas Interactivas - Wizard -->
+          @case ('graficas-interactivas') {
+            <app-grafica-wizard
+              (onConfirm)="onWizardConfirm($event)"
+              (onCancel)="onWizardCancel()">
+            </app-grafica-wizard>
+          }
+
+          <!-- Análisis Inteligente - Wizard Multistep -->
+          @case ('analisis-inteligente') {
+            <div class="ai-wizard-container">
+              <!-- Stepper Visual -->
+              <div class="ai-wizard-stepper">
+                @for (paso of aiPasosConfig; track paso.id; let i = $index) {
+                  <div
+                    class="ai-stepper-item"
+                    [class.active]="i === aiWizardPaso()"
+                    [class.completed]="i < aiWizardPaso()"
+                    [class.clickable]="i < aiWizardPaso()"
+                    (click)="aiWizardIrAPaso(i)">
+                    <div class="ai-stepper-indicator">
+                      <div class="ai-stepper-icon">
+                        @if (i < aiWizardPaso()) {
+                          <i class="pi pi-check"></i>
+                        } @else {
+                          <i [class]="paso.icon"></i>
+                        }
+                      </div>
+                      @if (i < aiPasosConfig.length - 1) {
+                        <div class="ai-stepper-line" [class.completed]="i < aiWizardPaso()"></div>
+                      }
+                    </div>
+                    <span class="ai-stepper-label">{{ paso.label }}</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Error Message -->
+              @if (aiWizardError()) {
+                <p-message severity="error" [text]="aiWizardError()!" styleClass="mb-3 w-full" />
+              }
+
+              <!-- PASO 1: CONSULTA -->
+              @if (aiWizardPaso() === 0) {
+                <div class="ai-step-content">
+                  <div class="ai-step-section">
+                    <label class="ai-section-label">
+                      <i class="pi pi-question-circle"></i>
+                      ¿Qué deseas analizar?
+                    </label>
+                    <p-iconField>
+                      <p-inputIcon styleClass="pi pi-search" />
+                      <input
+                        type="text"
+                        pInputText
+                        class="w-full"
+                        [ngModel]="aiWizardConsulta()"
+                        (ngModelChange)="aiWizardConsulta.set($event)"
+                        placeholder="Ej: Tendencia de incidentes críticos por área..." />
+                    </p-iconField>
+                  </div>
+
+                  <div class="ai-step-section">
+                    <label class="ai-section-label">Tipo de análisis</label>
+                    <div class="ai-type-cards">
+                      @for (tipo of aiTiposAnalisisOptions; track tipo.value) {
+                        <p-card
+                          styleClass="ai-type-card"
+                          [ngClass]="{'selected': aiWizardTipoAnalisis() === tipo.value}"
+                          (click)="aiSetTipoAnalisis(tipo.value)">
+                          <div class="ai-type-card-content">
+                            <i [class]="tipo.icon"></i>
+                            <span class="ai-type-label">{{ tipo.label }}</span>
+                            <span class="ai-type-desc">{{ tipo.descripcion }}</span>
+                          </div>
+                        </p-card>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="ai-step-section">
+                    <label class="ai-section-label">
+                      <i class="pi pi-lightbulb"></i>
+                      Ejemplos de consultas
+                    </label>
+                    <div class="ai-examples-grid">
+                      @for (ejemplo of aiEjemplosConsultas; track ejemplo.texto) {
+                        <p-button
+                          [label]="ejemplo.texto"
+                          [text]="true"
+                          severity="secondary"
+                          size="small"
+                          styleClass="ai-example-btn"
+                          (onClick)="aiUsarEjemplo(ejemplo.texto)" />
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- PASO 2: CONFIGURAR -->
+              @if (aiWizardPaso() === 1) {
+                <div class="ai-step-content">
+                  @if (aiWizardInterpretacion(); as interp) {
+                    <!-- Resumen de interpretación -->
+                    <div class="ai-interp-summary">
+                      <div class="ai-interp-header">
+                        <i class="pi pi-check-circle"></i>
+                        <span>Interpretación de tu consulta</span>
+                        <p-tag
+                          [value]="'Confianza: ' + interp.confianzaInterpretacion + '%'"
+                          [severity]="interp.confianzaInterpretacion >= 80 ? 'success' : interp.confianzaInterpretacion >= 50 ? 'warn' : 'danger'"
+                          size="small">
+                        </p-tag>
+                      </div>
+                      <p class="ai-interp-query">"{{ interp.consultaOriginal }}"</p>
+                    </div>
+
+                    <!-- Entidades detectadas -->
+                    <div class="ai-step-section">
+                      <label class="ai-section-label">Entidades detectadas</label>
+                      <div class="ai-entities-row">
+                        @for (entidad of aiWizardEntidades(); track entidad) {
+                          <p-chip
+                            [label]="aiGetEntidadLabel(entidad)"
+                            [removable]="aiWizardEntidades().length > 1"
+                            (onRemove)="aiEliminarEntidad(entidad)"
+                            styleClass="ai-entity-chip">
+                            <ng-template pTemplate="content">
+                              <i [class]="aiGetEntidadIcon(entidad)" class="mr-2"></i>
+                              <span>{{ aiGetEntidadLabel(entidad) }}</span>
+                            </ng-template>
+                          </p-chip>
+                        }
+                        @if (aiWizardEntidades().length < 4) {
+                          <p-menu #aiAddEntityMenu [model]="aiGetEntidadesMenu()" [popup]="true" appendTo="body"></p-menu>
+                          <p-button
+                            icon="pi pi-plus"
+                            [rounded]="true"
+                            [text]="true"
+                            size="small"
+                            (onClick)="aiAddEntityMenu.toggle($event)"
+                            pTooltip="Agregar entidad">
+                          </p-button>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Filtros detectados -->
+                    @if (interp.filtrosImplicitos?.length > 0) {
+                      <div class="ai-step-section">
+                        <label class="ai-section-label">Filtros detectados</label>
+                        <div class="ai-filters-row">
+                          @for (filtro of interp.filtrosImplicitos; track filtro.campo) {
+                            <p-chip [label]="filtro.etiqueta" styleClass="ai-filter-chip" />
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Opciones de predicción -->
+                    @if (aiWizardTipoAnalisis() === 'predictivo') {
+                      <div class="ai-step-section ai-prediction-options">
+                        <label class="ai-section-label">Opciones de predicción</label>
+                        <div class="ai-options-row">
+                          <div class="ai-option-field">
+                            <label>Horizonte</label>
+                            <p-select
+                              [options]="aiHorizonteOptions"
+                              [ngModel]="aiWizardHorizonte()"
+                              (ngModelChange)="aiWizardHorizonte.set($event)"
+                              optionLabel="label"
+                              optionValue="value"
+                              [style]="{ width: '140px' }">
+                            </p-select>
+                          </div>
+                          <div class="ai-option-field">
+                            <label>Intervalo de confianza</label>
+                            <p-toggleSwitch
+                              [ngModel]="aiWizardIntervaloConfianza()"
+                              (ngModelChange)="aiWizardIntervaloConfianza.set($event)">
+                            </p-toggleSwitch>
+                          </div>
+                        </div>
+                      </div>
+                    }
+
+                    <p-divider />
+
+                    <!-- Selección de visualización -->
+                    <div class="ai-step-section">
+                      <label class="ai-section-label">Tipo de visualización</label>
+                      <div class="ai-visualization-grid">
+                        @for (vis of aiWizardVisualizaciones(); track vis.tipo) {
+                          <p-card
+                            styleClass="ai-vis-card"
+                            [ngClass]="{'selected': aiWizardVisualizacionSeleccionada() === vis.tipo, 'recommended': vis.recomendado}"
+                            (click)="aiWizardVisualizacionSeleccionada.set(vis.tipo)">
+                            <div class="ai-vis-card-content">
+                              <i [class]="aiGetVisualizacionIcon(vis.tipo)"></i>
+                              <span class="ai-vis-name">{{ vis.nombre }}</span>
+                              @if (vis.recomendado) {
+                                <p-tag value="Recomendado" severity="success" [rounded]="true" styleClass="ai-vis-badge" />
+                              }
+                            </div>
+                          </p-card>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- PASO 3: PREVIEW -->
+              @if (aiWizardPaso() === 2) {
+                <div class="ai-step-content ai-preview-step">
+                  @if (aiWizardResultadoPreview(); as preview) {
+                    <div class="ai-preview-header">
+                      <h4>Vista Previa</h4>
+                      <span class="ai-preview-hint">Así se verá el widget en el dashboard</span>
+                    </div>
+
+                    <p-card styleClass="ai-preview-container">
+                      <div class="ai-preview-widget-mock">
+                        <div class="ai-preview-widget-header">
+                          <i class="pi pi-sparkles"></i>
+                          <span>{{ preview.configuracionVisualizacion.titulo }}</span>
+                        </div>
+                        <div class="ai-preview-chart-placeholder">
+                          <i [class]="aiGetVisualizacionIcon(preview.configuracionVisualizacion.tipo)"></i>
+                          <span>{{ preview.configuracionVisualizacion.tipo | titlecase }}</span>
+                        </div>
+                      </div>
+                    </p-card>
+
+                    <div class="ai-config-summary">
+                      <h5>Resumen de Configuración</h5>
+                      <ul>
+                        <li>
+                          <i class="pi pi-chart-bar"></i>
+                          <span>Tipo: <strong>{{ aiWizardTipoAnalisis() | titlecase }}</strong></span>
+                        </li>
+                        <li>
+                          <i [class]="aiGetVisualizacionIcon(aiWizardVisualizacionSeleccionada()!)"></i>
+                          <span>Visualización: <strong>{{ preview.configuracionVisualizacion.tipo | titlecase }}</strong></span>
+                        </li>
+                        <li>
+                          <i class="pi pi-box"></i>
+                          <span>Entidades: <strong>{{ aiWizardEntidades().length }}</strong></span>
+                        </li>
+                        @if (aiWizardTipoAnalisis() === 'predictivo') {
+                          <li>
+                            <i class="pi pi-calendar"></i>
+                            <span>Horizonte: <strong>{{ aiWizardHorizonte() }} meses</strong></span>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+
+                    @if (preview.tipoAnalisis === 'predictivo' && preview.datosPredictivos) {
+                      <div class="ai-preview-info-box">
+                        <i class="pi pi-info-circle"></i>
+                        <div>
+                          <strong>{{ preview.datosPredictivos.tendencia | titlecase }}</strong>
+                          <p>{{ preview.datosPredictivos.resumenTexto }}</p>
+                        </div>
+                      </div>
+                    }
+                  } @else {
+                    <div class="ai-preview-loading">
+                      <p-progressSpinner strokeWidth="3" styleClass="ai-preview-spinner" />
+                      <span>Generando vista previa...</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Footer del wizard -->
+              <div class="ai-wizard-footer">
+                @if (aiWizardPaso() > 0) {
+                  <p-button
+                    label="Atrás"
+                    icon="pi pi-arrow-left"
+                    severity="secondary"
+                    [text]="true"
+                    (onClick)="aiWizardPasoAnterior()">
+                  </p-button>
+                } @else {
+                  <span></span>
+                }
+
+                <div class="ai-footer-right">
+                  @if (aiWizardPaso() < aiPasosConfig.length - 1) {
+                    <p-button
+                      [label]="aiWizardPaso() === 0 ? 'Analizar' : 'Siguiente'"
+                      [icon]="aiWizardPaso() === 0 ? 'pi pi-sparkles' : 'pi pi-arrow-right'"
+                      iconPos="right"
+                      (onClick)="aiWizardSiguientePaso()"
+                      [disabled]="!aiWizardPuedeAvanzar() || aiWizardIsProcessing()"
+                      [loading]="aiWizardIsProcessing()">
+                    </p-button>
+                  } @else {
+                    <p-button
+                      label="Agregar al Dashboard"
+                      icon="pi pi-check"
+                      severity="success"
+                      (onClick)="aiWizardConfirmar()"
+                      [disabled]="!aiWizardResultadoPreview()">
+                    </p-button>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Widgets sin configuración específica -->
+          @default {
+            <div class="preconfig-info-box info">
+              <i class="pi pi-info-circle"></i>
+              <span>Este widget no requiere configuración adicional.</span>
+            </div>
+          }
+        }
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Opciones adicionales -->
+      <div class="preconfig-section">
+        <h4 class="preconfig-section-title">
+          <i class="pi pi-sliders-h"></i>
+          Opciones
+        </h4>
+
+        <div class="preconfig-toggle">
+          <label>Mostrar encabezado del widget</label>
+          <p-togglebutton
+            [ngModel]="preConfigShowHeader()"
+            (ngModelChange)="preConfigShowHeader.set($event)"
+            onLabel="Sí"
+            offLabel="No"
+            [style]="{width: '80px'}">
+          </p-togglebutton>
+        </div>
+      </div>
+
+      <!-- Vista previa del tamaño -->
+      <div class="preconfig-size-preview">
+        <span class="size-label">Tamaño inicial:</span>
+        <span class="size-value">
+          {{ widgetPreConfig()!.tamanoDefault | titlecase }}
+          ({{ widgetPreConfig()!.minCols }}x{{ widgetPreConfig()!.minRows }} celdas)
+        </span>
+      </div>
+    </div>
+  }
+
+  <!-- Footer con botones (oculto para graficas-interactivas y analisis-inteligente ya que tienen su propio footer) -->
+  <ng-template pTemplate="footer">
+    @if (widgetPreConfig() && widgetPreConfig()!.tipo !== 'graficas-interactivas' && widgetPreConfig()!.tipo !== 'analisis-inteligente') {
+      <div class="preconfig-footer">
+        <p-button
+          label="Cancelar"
+          icon="pi pi-times"
+          severity="secondary"
+          [text]="true"
+          (onClick)="cancelarPreConfig()">
+        </p-button>
+        <p-button
+          label="Agregar al Dashboard"
+          icon="pi pi-plus"
+          severity="success"
+          (onClick)="confirmarYAgregarWidget()">
+        </p-button>
+      </div>
+    }
+  </ng-template>
+</p-drawer>
+
+<!-- Drawer: Configuración de Widget -->
+<p-drawer [(visible)]="showConfigDrawer" position="right" [style]="{width: '50vw'}" styleClass="widget-config-drawer">
+  <ng-template pTemplate="header">
+    <div class="preconfig-header">
+      <button class="preconfig-back" (click)="showConfigDrawer.set(false)">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <span>Configurar Widget</span>
+    </div>
+  </ng-template>
+
+  @if (widgetSeleccionado()) {
+    <div class="preconfig-content">
+      <!-- Info del widget seleccionado -->
+      <div class="preconfig-widget-info">
+        <div class="preconfig-widget-icon">
+          <i [class]="getWidgetIcon(widgetSeleccionado()!.tipo)"></i>
+        </div>
+        <div class="preconfig-widget-details">
+          <span class="preconfig-widget-nombre">{{ widgetSeleccionado()!.titulo }}</span>
+          <span class="preconfig-widget-desc">{{ widgetSeleccionado()!.subtitulo || 'Sin descripción' }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Configuración específica por tipo -->
+      @switch (widgetSeleccionado()!.tipo) {
+        @case ('kpi-card') {
+          <div class="preconfig-section">
+            <h4 class="preconfig-section-title">
+              <i class="pi pi-cog"></i>
+              Configuración
+            </h4>
+            <div class="preconfig-field">
+              <label>Tipo de KPI</label>
+              <p-select
+                [options]="kpiTypeOptions"
+                [ngModel]="widgetSeleccionado()!.config.kpiType || 'cumplimiento'"
+                (ngModelChange)="actualizarKpiType($event)"
+                optionLabel="label"
+                optionValue="value"
+                [style]="{width: '100%'}">
+              </p-select>
+            </div>
+          </div>
+        }
+
+        @case ('table-mini') {
+          <div class="preconfig-section">
+            <h4 class="preconfig-section-title">
+              <i class="pi pi-cog"></i>
+              Configuración
+            </h4>
+            <div class="preconfig-field">
+              <label>Límite de filas</label>
+              <input type="number" pInputText class="w-full"
+                     [ngModel]="widgetSeleccionado()!.config.tableLimit || 5"
+                     (ngModelChange)="actualizarListLimit($event)"
+                     min="3" max="10" />
+            </div>
+            <div class="preconfig-info-box info">
+              <i class="pi pi-info-circle"></i>
+              <span>Haz click en una fila para ver el detalle del proceso</span>
+            </div>
+          </div>
+        }
+
+        @case ('graficas-interactivas') {
+          <!-- Configuración con Tabs para Gráficas Interactivas -->
+          <div class="grafica-config-tabs">
+            <p-tabs [(value)]="graficaConfigTab">
+              <p-tablist>
+                <p-tab value="general">
+                  <i class="pi pi-file-edit mr-2"></i>
+                  General
+                </p-tab>
+                <p-tab value="tipo">
+                  <i class="pi pi-chart-pie mr-2"></i>
+                  Tipo
+                </p-tab>
+                <p-tab value="estilo">
+                  <i class="pi pi-palette mr-2"></i>
+                  Estilo
+                </p-tab>
+              </p-tablist>
+
+              <p-tabpanels>
+                <!-- Tab General -->
+                <p-tabpanel value="general">
+                  <div class="preconfig-section">
+                    <div class="preconfig-field">
+                      <label>Título</label>
+                      <input type="text" pInputText class="w-full"
+                             [ngModel]="widgetSeleccionado()!.titulo"
+                             (ngModelChange)="actualizarGraficaTitulo($event)"
+                             placeholder="Título del widget" />
+                    </div>
+                    <div class="preconfig-field">
+                      <label>Subtítulo</label>
+                      <input type="text" pInputText class="w-full"
+                             [ngModel]="widgetSeleccionado()!.subtitulo || ''"
+                             (ngModelChange)="actualizarGraficaSubtitulo($event)"
+                             placeholder="Descripción breve (opcional)" />
+                    </div>
+                    <div class="preconfig-field">
+                      <label>Agrupar por</label>
+                      <p-select
+                        [options]="graficaInteractivaCamposDisponibles()"
+                        [ngModel]="widgetSeleccionado()!.config.graficaAgrupacion"
+                        (ngModelChange)="actualizarGraficaAgrupacion($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        [style]="{width: '100%'}"
+                        placeholder="Selecciona campo">
+                      </p-select>
+                    </div>
+                  </div>
+                </p-tabpanel>
+
+                <!-- Tab Tipo de Gráfica -->
+                <p-tabpanel value="tipo">
+                  <div class="preconfig-section">
+                    <div class="preconfig-field">
+                      <label>Tipo actual</label>
+                      <div class="tipo-actual-badge">
+                        <i class="pi pi-chart-pie"></i>
+                        <span>{{ getTipoGraficaNombre(widgetSeleccionado()!.config.graficaTipo || 'donut') }}</span>
+                      </div>
+                    </div>
+                    <div class="preconfig-field">
+                      <label>Cambiar tipo</label>
+                      <div class="tipos-grid-config">
+                        @for (categoria of categoriasGraficas; track categoria.id) {
+                          <div class="categoria-group">
+                            <span class="categoria-label">{{ categoria.nombre }}</span>
+                            <div class="tipos-chips">
+                              @for (tipo of categoria.tipos; track tipo.id) {
+                                <button
+                                  class="tipo-chip-config"
+                                  [class.selected]="widgetSeleccionado()!.config.graficaTipo === tipo.id"
+                                  (click)="actualizarGraficaTipo(tipo.id)"
+                                  [pTooltip]="tipo.descripcion"
+                                  tooltipPosition="top">
+                                  <i [class]="tipo.icono"></i>
+                                  <span>{{ tipo.nombre }}</span>
+                                </button>
+                              }
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </p-tabpanel>
+
+                <!-- Tab Estilo -->
+                <p-tabpanel value="estilo">
+                  <div class="preconfig-section">
+                    <div class="preconfig-field">
+                      <label>Paleta de colores</label>
+                      <div class="paletas-grid-config">
+                        @for (paleta of paletasColores; track paleta.id) {
+                          <div
+                            class="paleta-option-config"
+                            [class.selected]="widgetSeleccionado()!.config.graficaPaleta === paleta.id"
+                            (click)="actualizarGraficaPaleta(paleta.id)">
+                            <div class="paleta-colors">
+                              @for (color of paleta.colores.slice(0, 5); track color) {
+                                <span class="color-dot" [style.background-color]="color"></span>
+                              }
+                            </div>
+                            <span class="paleta-nombre">{{ paleta.nombre }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="preconfig-field">
+                      <label>Opciones de visualización</label>
+                      <div class="opciones-grid-config">
+                        <div class="preconfig-toggle">
+                          <label>Mostrar leyenda</label>
+                          <p-toggleSwitch
+                            [ngModel]="widgetSeleccionado()!.config.graficaMostrarLeyenda !== false"
+                            (ngModelChange)="actualizarGraficaLeyenda($event)">
+                          </p-toggleSwitch>
+                        </div>
+                        <div class="preconfig-toggle">
+                          <label>Mostrar etiquetas</label>
+                          <p-toggleSwitch
+                            [ngModel]="widgetSeleccionado()!.config.graficaMostrarDataLabels === true"
+                            (ngModelChange)="actualizarGraficaDataLabels($event)">
+                          </p-toggleSwitch>
+                        </div>
+                        <div class="preconfig-toggle">
+                          <label>Animaciones</label>
+                          <p-toggleSwitch
+                            [ngModel]="widgetSeleccionado()!.config.graficaAnimaciones !== false"
+                            (ngModelChange)="actualizarGraficaAnimaciones($event)">
+                          </p-toggleSwitch>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </p-tabpanel>
+              </p-tabpanels>
+            </p-tabs>
+          </div>
+        }
+
+        @default {
+          <div class="preconfig-section">
+            <h4 class="preconfig-section-title">
+              <i class="pi pi-info-circle"></i>
+              Información
+            </h4>
+            <div class="preconfig-field">
+              <label>Tipo de Widget</label>
+              <div class="tipo-actual-badge">
+                <i [class]="getWidgetIcon(widgetSeleccionado()!.tipo)"></i>
+                <span>{{ widgetSeleccionado()!.tipo }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      }
+
+      <p-divider></p-divider>
+
+      <!-- Dimensiones -->
+      <div class="preconfig-section">
+        <h4 class="preconfig-section-title">
+          <i class="pi pi-arrows-alt"></i>
+          Dimensiones
+        </h4>
+        <div class="preconfig-size-preview">
+          <span>{{ widgetSeleccionado()!.cols }} columnas x {{ widgetSeleccionado()!.rows }} filas</span>
+        </div>
+        <small class="preconfig-hint">Arrastra los bordes del widget para redimensionar</small>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Drawer: Configuración de Layout -->
+<p-drawer [(visible)]="showLayoutDrawer" position="right" [style]="{width: '50vw'}" header="Configuración de Layout">
+  <div class="layout-content">
+    <div class="config-section">
+      <label class="config-label">Columnas</label>
+      <p-select
+        [options]="columnasOptions"
+        [ngModel]="configActual()?.columns"
+        (ngModelChange)="actualizarColumnas($event)"
+        optionLabel="label"
+        optionValue="value"
+        [style]="{width: '100%'}">
+      </p-select>
+    </div>
+
+    <div class="config-section">
+      <label class="config-label">Altura de fila (px)</label>
+      <input type="number" pInputText class="w-full"
+             [ngModel]="configActual()?.rowHeight"
+             (ngModelChange)="actualizarRowHeight($event)"
+             min="80" max="200" step="10" />
+    </div>
+
+    <div class="config-section">
+      <label class="config-label">Espaciado (px)</label>
+      <input type="number" pInputText class="w-full"
+             [ngModel]="configActual()?.gap"
+             (ngModelChange)="actualizarGap($event)"
+             min="8" max="32" step="4" />
+    </div>
+
+    <p-divider></p-divider>
+
+    <div class="config-actions">
+      <p-button
+        label="Restaurar por defecto"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="restaurarDefecto()"
+        [style]="{width: '100%'}">
+      </p-button>
+    </div>
+  </div>
+</p-drawer>
+
+<!-- ==================== DRILLDOWN DRAWERS ==================== -->
+
+<!-- Drawer: Drilldown de Proceso -->
+<p-drawer [(visible)]="showProcesoDrilldown" position="right" [style]="{width: '50vw'}" header="Detalle de Proceso">
+  @if (procesoSeleccionado()) {
+    <div class="drilldown-content">
+      <!-- Header del proceso -->
+      <div class="drilldown-header">
+        <div class="drilldown-title-section">
+          <h3 class="drilldown-title">{{ procesoSeleccionado()!.procesoNombre }}</h3>
+          <p-tag [value]="procesoSeleccionado()!.estado" [severity]="procesoSeleccionado()!.estado === 'activo' ? 'success' : 'secondary'"></p-tag>
+        </div>
+        <div class="drilldown-stats">
+          <div class="stat-item">
+            <span class="stat-value">{{ procesoSeleccionado()!.cumplimientoPromedio }}%</span>
+            <span class="stat-label">Cumplimiento</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ procesoSeleccionado()!.totalObjetivos }}</span>
+            <span class="stat-label">Objetivos</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">{{ procesoSeleccionado()!.totalKPIs }}</span>
+            <span class="stat-label">KPIs</span>
+          </div>
+          <div class="stat-item" [class.alert]="procesoSeleccionado()!.alertasActivas > 0">
+            <span class="stat-value">{{ procesoSeleccionado()!.alertasActivas }}</span>
+            <span class="stat-label">Alertas</span>
+          </div>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Selector de vista -->
+      <div class="drilldown-vista">
+        <label class="config-label">Ver desglose por:</label>
+        <p-select
+          [options]="desgloseOptions"
+          [ngModel]="drilldownVistaDesglose()"
+          (ngModelChange)="drilldownVistaDesglose.set($event)"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{width: '100%'}">
+        </p-select>
+      </div>
+
+      <!-- Lista de KPIs/Objetivos -->
+      <div class="drilldown-lista">
+        @for (item of drilldownKPIsData(); track item.id) {
+          <div class="drilldown-item">
+            <div class="drilldown-item-info">
+              <span class="drilldown-item-nombre">{{ item.nombre }}</span>
+              <div class="drilldown-item-bar">
+                <div class="drilldown-item-fill" [style.width.%]="item.valor" [style.background]="item.color"></div>
+              </div>
+            </div>
+            <span class="drilldown-item-valor" [style.color]="item.color">{{ item.valor }}%</span>
+          </div>
+        }
+      </div>
+
+      <!-- Tendencia -->
+      <p-divider></p-divider>
+      <div class="drilldown-tendencia">
+        <div class="tendencia-header">
+          <span class="tendencia-title">Tendencia</span>
+          <div class="tendencia-badge" [class.positive]="procesoSeleccionado()!.tendencia === 'up'" [class.negative]="procesoSeleccionado()!.tendencia === 'down'">
+            <i [class]="getTendenciaIcon(procesoSeleccionado()!.tendencia)"></i>
+            <span>{{ procesoSeleccionado()!.cumplimientoPromedio - procesoSeleccionado()!.cumplimientoAnterior }}%</span>
+          </div>
+        </div>
+        <span class="tendencia-desc">vs período anterior</span>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Drawer: Drilldown de Alerta -->
+<p-drawer [(visible)]="showAlertaDrilldown" position="right" [style]="{width: '50vw'}" header="Detalle de Alerta">
+  @if (alertaSeleccionada()) {
+    <div class="drilldown-content">
+      <!-- Severidad -->
+      <div class="alerta-drilldown-header">
+        <p-tag [value]="alertaSeleccionada()!.severity === 'critical' ? 'CRÍTICA' : alertaSeleccionada()!.severity === 'warning' ? 'ADVERTENCIA' : 'INFO'" [severity]="getSeverityColor(alertaSeleccionada()!.severity)"></p-tag>
+        <span class="alerta-fecha">{{ alertaSeleccionada()!.diasAbierto }} días abierta</span>
+      </div>
+
+      <!-- Mensaje -->
+      <div class="alerta-mensaje">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ alertaSeleccionada()!.mensaje }}</span>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Detalles -->
+      <div class="alerta-detalles">
+        <div class="detalle-item">
+          <span class="detalle-label">Proceso</span>
+          <span class="detalle-value">{{ alertaSeleccionada()!.procesoNombre }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">Objetivo</span>
+          <span class="detalle-value">{{ alertaSeleccionada()!.objetivoNombre }}</span>
+        </div>
+        <div class="detalle-item">
+          <span class="detalle-label">KPI</span>
+          <span class="detalle-value">{{ alertaSeleccionada()!.kpiNombre }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Valores -->
+      <div class="alerta-valores">
+        <div class="valor-card">
+          <span class="valor-label">Valor Actual</span>
+          <span class="valor-number critical">{{ alertaSeleccionada()!.valorActual }}%</span>
+        </div>
+        <div class="valor-separator">
+          <i class="pi pi-arrow-right"></i>
+        </div>
+        <div class="valor-card">
+          <span class="valor-label">Umbral</span>
+          <span class="valor-number">{{ alertaSeleccionada()!.valorUmbral }}%</span>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="alerta-acciones">
+        <p-button label="Marcar como atendida" icon="pi pi-check" [outlined]="true" [style]="{width: '100%'}"></p-button>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Drawer: Drilldown de Tendencia -->
+<p-drawer [(visible)]="showTendenciaDrilldown" position="right" [style]="{width: '50vw'}" header="Análisis de Tendencia">
+  @if (tendenciaProcesoSeleccionado()) {
+    <div class="drilldown-content">
+      <!-- Header -->
+      <div class="tendencia-drilldown-header">
+        <h3>{{ tendenciaProcesoSeleccionado()!.procesoNombre }}</h3>
+        <div class="tendencia-badge large" [class.positive]="tendenciaProcesoSeleccionado()!.tendencia === 'up'" [class.negative]="tendenciaProcesoSeleccionado()!.tendencia === 'down'">
+          <i [class]="getTendenciaIcon(tendenciaProcesoSeleccionado()!.tendencia)"></i>
+          <span>{{ tendenciaProcesoSeleccionado()!.tendencia === 'up' ? 'Mejorando' : tendenciaProcesoSeleccionado()!.tendencia === 'down' ? 'Declinando' : 'Estable' }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Comparación -->
+      <div class="tendencia-comparacion">
+        <div class="periodo-card">
+          <span class="periodo-label">Período Anterior</span>
+          <span class="periodo-valor">{{ tendenciaProcesoSeleccionado()!.cumplimientoAnterior }}%</span>
+        </div>
+        <div class="periodo-arrow">
+          <i class="pi pi-arrow-right"></i>
+        </div>
+        <div class="periodo-card actual">
+          <span class="periodo-label">Actual</span>
+          <span class="periodo-valor">{{ tendenciaProcesoSeleccionado()!.cumplimientoPromedio }}%</span>
+        </div>
+      </div>
+
+      <!-- Variación -->
+      <div class="tendencia-variacion">
+        <span class="variacion-label">Variación</span>
+        <span class="variacion-valor" [class.positive]="tendenciaProcesoSeleccionado()!.tendencia === 'up'" [class.negative]="tendenciaProcesoSeleccionado()!.tendencia === 'down'">
+          {{ tendenciaProcesoSeleccionado()!.tendencia === 'up' ? '+' : '' }}{{ tendenciaProcesoSeleccionado()!.cumplimientoPromedio - tendenciaProcesoSeleccionado()!.cumplimientoAnterior }}%
+        </span>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Métricas adicionales -->
+      <div class="tendencia-metricas">
+        <div class="metrica-item">
+          <i class="pi pi-bullseye"></i>
+          <div class="metrica-info">
+            <span class="metrica-label">Objetivos</span>
+            <span class="metrica-valor">{{ tendenciaProcesoSeleccionado()!.totalObjetivos }}</span>
+          </div>
+        </div>
+        <div class="metrica-item">
+          <i class="pi pi-chart-line"></i>
+          <div class="metrica-info">
+            <span class="metrica-label">KPIs monitoreados</span>
+            <span class="metrica-valor">{{ tendenciaProcesoSeleccionado()!.totalKPIs }}</span>
+          </div>
+        </div>
+        <div class="metrica-item" [class.alert]="tendenciaProcesoSeleccionado()!.alertasActivas > 0">
+          <i class="pi pi-bell"></i>
+          <div class="metrica-info">
+            <span class="metrica-label">Alertas activas</span>
+            <span class="metrica-valor">{{ tendenciaProcesoSeleccionado()!.alertasActivas }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</p-drawer>
+
+<!-- Widget Configurator Avanzado (para tablas) -->
+<app-widget-configurator
+  [visible]="showWidgetConfigurator()"
+  [catalogItem]="configuratorCatalogItem()"
+  (visibleChange)="showWidgetConfigurator.set($event)"
+  (onConfirm)="onWidgetConfigured($event)"
+  (onCancel)="onWidgetConfiguratorCancel()">
+</app-widget-configurator>
+
+<!-- Modal de Exportación -->
+<p-dialog
+  header="Exportar Widget"
+  [(visible)]="showExportModal"
+  [modal]="true"
+  [style]="{width: '400px'}"
+  [draggable]="false"
+  [resizable]="false">
+
+  @if (exportModalWidget()) {
+    <div class="export-modal-content">
+      <div class="export-widget-preview">
+        <i [class]="getWidgetIcon(exportModalWidget()!.tipo)"></i>
+        <span>{{ exportModalWidget()!.titulo }}</span>
+      </div>
+
+      <p-divider></p-divider>
+
+      <div class="export-format-section">
+        <label class="export-label">Selecciona el formato de exportación:</label>
+        <div class="export-options">
+          @for (option of getExportOptions(exportModalWidget()!); track option.value) {
+            <div class="export-option">
+              <p-radiobutton
+                [inputId]="option.value"
+                name="exportFormat"
+                [value]="option.value"
+                [ngModel]="exportFormat()"
+                (ngModelChange)="exportFormat.set($event)">
+              </p-radiobutton>
+              <label [for]="option.value" class="export-option-label">
+                <i [class]="option.icon"></i>
+                <span>{{ option.label }}</span>
+              </label>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="export-modal-footer">
+        <p-button
+          label="Cancelar"
+          icon="pi pi-times"
+          [text]="true"
+          severity="secondary"
+          (onClick)="showExportModal.set(false)">
+        </p-button>
+        <p-button
+          label="Exportar"
+          icon="pi pi-download"
+          (onClick)="exportarWidget()">
+        </p-button>
+      </div>
+    </ng-template>
+  }
+</p-dialog>
+
+<!-- Drawer: Drilldown de Actividad -->
+<p-drawer [(visible)]="showActividadDrilldown" position="right" [style]="{width: '50vw'}" header="Detalle de Actividad">
+  @if (actividadSeleccionada()) {
+    <div class="drilldown-content">
+      <!-- Header con tipo -->
+      <div class="actividad-drilldown-header">
+        <div class="actividad-tipo-badge" [class]="'tipo-' + actividadSeleccionada()!.tipo">
+          <i [class]="actividadSeleccionada()!.icono"></i>
+          <span>{{ getLabelTipoActividad(actividadSeleccionada()!.tipo || 'cambios') }}</span>
+        </div>
+        <span class="actividad-fecha-detalle">{{ actividadSeleccionada()!.tiempo }}</span>
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="actividad-drilldown-main">
+        <h3 class="actividad-titulo-detalle">{{ actividadSeleccionada()!.texto }}</h3>
+        @if (actividadSeleccionada()!.detalle) {
+          <p class="actividad-descripcion-detalle">{{ actividadSeleccionada()!.detalle }}</p>
+        }
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Información adicional -->
+      <div class="actividad-info-grid">
+        @if (actividadSeleccionada()!.usuario) {
+          <div class="info-item">
+            <i class="pi pi-user"></i>
+            <div class="info-content">
+              <span class="info-label">Usuario</span>
+              <span class="info-value">{{ actividadSeleccionada()!.usuario }}</span>
+            </div>
+          </div>
+        }
+
+        @if (actividadSeleccionada()!.proceso) {
+          <div class="info-item">
+            <i class="pi pi-sitemap"></i>
+            <div class="info-content">
+              <span class="info-label">Proceso</span>
+              <span class="info-value">{{ actividadSeleccionada()!.proceso }}</span>
+            </div>
+          </div>
+        }
+
+        @if (actividadSeleccionada()!.entidad) {
+          <div class="info-item">
+            <i class="pi pi-tag"></i>
+            <div class="info-content">
+              <span class="info-label">Entidad</span>
+              <span class="info-value">{{ actividadSeleccionada()!.entidad }}</span>
+            </div>
+          </div>
+        }
+
+        @if (actividadSeleccionada()!.fechaCompleta) {
+          <div class="info-item">
+            <i class="pi pi-calendar"></i>
+            <div class="info-content">
+              <span class="info-label">Fecha y hora</span>
+              <span class="info-value">{{ actividadSeleccionada()!.fechaCompleta }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (actividadSeleccionada()!.cambios && actividadSeleccionada()!.cambios!.length > 0) {
+        <p-divider></p-divider>
+        <div class="actividad-cambios">
+          <h4 class="cambios-titulo">
+            <i class="pi pi-history"></i>
+            Cambios realizados
+          </h4>
+          <div class="cambios-lista">
+            @for (cambio of actividadSeleccionada()!.cambios; track $index) {
+              <div class="cambio-item">
+                <span class="cambio-campo">{{ cambio.campo }}</span>
+                <div class="cambio-valores">
+                  <span class="valor-anterior">{{ cambio.valorAnterior || '—' }}</span>
+                  <i class="pi pi-arrow-right"></i>
+                  <span class="valor-nuevo">{{ cambio.valorNuevo }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="actividad-drilldown-footer">
+        <p-button
+          label="Cerrar"
+          [text]="true"
+          severity="secondary"
+          (onClick)="showActividadDrilldown.set(false)">
+        </p-button>
+        @if (actividadSeleccionada()!.proceso) {
+          <p-button
+            label="Ver Proceso"
+            icon="pi pi-external-link"
+            (onClick)="navegarAProcesoDesdeActividad()">
+          </p-button>
+        }
+      </div>
+    </ng-template>
+  }
+</p-drawer>
+
+<!-- Drawer: Seleccionar Gráfica Guardada -->
+<p-drawer
+  [(visible)]="showGraficasGuardadasDrawer"
+  position="right"
+  [style]="{ width: '400px' }"
+  header="Seleccionar Gráfica Guardada">
+  <div class="graficas-guardadas-selector">
+    <p class="selector-description">
+      Selecciona una gráfica guardada para agregar al dashboard:
+    </p>
+
+    <div class="graficas-lista-selector">
+      @for (grafica of graficasGuardadas(); track grafica.id) {
+        <div
+          class="grafica-item-selector"
+          (click)="seleccionarGraficaGuardadaParaDashboard(grafica)">
+          <div class="grafica-preview-mini">
+            <i [class]="getIconoTipoGrafica(grafica.tipo)"></i>
+          </div>
+          <div class="grafica-item-info">
+            <div class="grafica-item-nombre">
+              @if (grafica.favorito) {
+                <i class="pi pi-star-fill star-icon"></i>
+              }
+              {{ grafica.nombre }}
+            </div>
+            @if (grafica.descripcion) {
+              <div class="grafica-item-descripcion">{{ grafica.descripcion }}</div>
+            }
+            <div class="grafica-item-meta">
+              <span class="grafica-tipo-badge">{{ grafica.tipo }}</span>
+              <span class="grafica-fecha">{{ formatFechaRelativa(grafica.fechaModificacion) }}</span>
+            </div>
+          </div>
+          <div class="grafica-item-action">
+            <i class="pi pi-plus-circle"></i>
+          </div>
+        </div>
+      } @empty {
+        <div class="graficas-vacio-selector">
+          <i class="pi pi-chart-bar"></i>
+          <span>No hay gráficas guardadas</span>
+          <small>Guarda gráficas desde la tabla unificada para verlas aquí</small>
+        </div>
+      }
+    </div>
+
+    <div class="selector-footer">
+      <p-button
+        label="Cancelar"
+        [text]="true"
+        severity="secondary"
+        (onClick)="cancelarSeleccionGraficaGuardada()">
+      </p-button>
+    </div>
+  </div>
+</p-drawer>
+
+<!-- Drawer: Mis Dashboards -->
+<p-drawer
+  [(visible)]="showDashboardsDrawer"
+  position="right"
+  [style]="{ width: '380px' }"
+  header="Mis Dashboards">
+  <div class="dashboards-drawer-content">
+    <p-tabs [(value)]="dashboardsDrawerTab">
+      <p-tablist>
+        <p-tab value="seleccionar">
+          <i class="pi pi-list mr-2"></i>
+          Guardados ({{ configuraciones().length }})
+        </p-tab>
+        <p-tab value="crear">
+          <i class="pi pi-plus mr-2"></i>
+          Crear nuevo
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Tab: Seleccionar dashboards guardados -->
+        <p-tabpanel value="seleccionar">
+          <div class="dashboards-lista">
+            <div class="dashboards-cards">
+              @for (config of configuraciones(); track config.id) {
+                <div
+                  class="dashboard-card compact"
+                  [class.activo]="config.id === configActual()?.id"
+                  [class.editando]="dashboardEditandoId() === config.id"
+                  (click)="config.id !== configActual()?.id && dashboardEditandoId() !== config.id ? cargarDashboard(config.id) : null">
+                  <!-- Header compacto -->
+                  <div class="dashboard-card-row">
+                    <div class="dashboard-info">
+                      @if (dashboardEditandoId() !== config.id) {
+                        <span class="dashboard-nombre">
+                          @if (config.isDefault) {
+                            <i class="pi pi-star-fill" pTooltip="Dashboard por defecto"></i>
+                          }
+                          {{ config.nombre }}
+                        </span>
+                        @if (config.id === configActual()?.id) {
+                          <p-tag value="Activo" severity="success" [rounded]="true" styleClass="tag-small"></p-tag>
+                        }
+                      } @else {
+                        <input
+                          type="text"
+                          pInputText
+                          class="dashboard-nombre-input"
+                          [(ngModel)]="dashboardNombreEditando"
+                          (keydown.enter)="guardarNombreDashboard(config.id)"
+                          (keydown.escape)="cancelarEdicionNombre()"
+                          (click)="$event.stopPropagation()" />
+                      }
+                    </div>
+                    <div class="dashboard-acciones" (click)="$event.stopPropagation()">
+                      @if (dashboardEditandoId() !== config.id) {
+                        <p-button
+                          icon="pi pi-pencil"
+                          [rounded]="true"
+                          [text]="true"
+                          size="small"
+                          (onClick)="iniciarEdicionNombre(config)"
+                          pTooltip="Renombrar">
+                        </p-button>
+                        <p-button
+                          icon="pi pi-trash"
+                          [rounded]="true"
+                          [text]="true"
+                          size="small"
+                          severity="danger"
+                          (onClick)="confirmarEliminarDashboard(config)"
+                          [disabled]="config.isDefault || configuraciones().length <= 1"
+                          pTooltip="Eliminar">
+                        </p-button>
+                      } @else {
+                        <p-button
+                          icon="pi pi-check"
+                          [rounded]="true"
+                          [text]="true"
+                          size="small"
+                          severity="success"
+                          (onClick)="guardarNombreDashboard(config.id)"
+                          pTooltip="Guardar">
+                        </p-button>
+                        <p-button
+                          icon="pi pi-times"
+                          [rounded]="true"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                          (onClick)="cancelarEdicionNombre()"
+                          pTooltip="Cancelar">
+                        </p-button>
+                      }
+                    </div>
+                  </div>
+                  <!-- Meta compacto -->
+                  <div class="dashboard-meta-row">
+                    <span><i class="pi pi-th-large"></i> {{ config.widgets.length }} widgets</span>
+                    <span><i class="pi pi-calendar"></i> {{ formatDate(config.updatedAt) }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="dashboards-empty">
+                  <i class="pi pi-inbox"></i>
+                  <span>No hay dashboards guardados</span>
+                  <small>Crea tu primer dashboard en la pestaña "Crear nuevo"</small>
+                </div>
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab: Crear nuevo dashboard -->
+        <p-tabpanel value="crear">
+          <div class="crear-dashboard-form">
+            <div class="field">
+              <label for="nuevoDashboardNombre">Nombre del dashboard</label>
+              <input
+                id="nuevoDashboardNombre"
+                type="text"
+                pInputText
+                class="w-full"
+                [(ngModel)]="nuevoDashboardNombre"
+                placeholder="Ej: Dashboard de Riesgos" />
+            </div>
+            <div class="field">
+              <label for="nuevoDashboardDesc">Descripción (opcional)</label>
+              <textarea
+                id="nuevoDashboardDesc"
+                pTextarea
+                class="w-full"
+                [(ngModel)]="nuevoDashboardDescripcion"
+                placeholder="Descripción breve del dashboard..."
+                rows="2">
+              </textarea>
+            </div>
+            <p-button
+              icon="pi pi-plus"
+              label="Crear Dashboard"
+              [style]="{ width: '100%' }"
+              (onClick)="crearNuevoDashboard()"
+              [disabled]="!nuevoDashboardNombre.trim()">
+            </p-button>
+            <p-message
+              severity="info"
+              styleClass="mt-3 w-full"
+              text="El nuevo dashboard se creará vacío. Podrás agregar widgets desde el catálogo.">
+            </p-message>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</p-drawer>
+
+<!-- Drawer de Drill-Down para Gráficas Interactivas -->
+<p-drawer [(visible)]="showDrillDownDrawer" position="right" [style]="{width: '50vw'}" [header]="drillDownData()?.categoria || 'Detalles'">
+  <div class="drilldown-drawer-content">
+    @if (drillDownData()) {
+      <div class="drilldown-header">
+        <p-tag [value]="'Campo: ' + drillDownData()!.campo" severity="info"></p-tag>
+        <span class="drilldown-count">{{ drillDownData()!.registros.length }} registros</span>
+      </div>
+
+      <div class="drilldown-table">
+        <table class="w-full">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Estado</th>
+              <th>Cumplimiento</th>
+              <th>Objetivos</th>
+              <th>KPIs</th>
+              <th>Alertas</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (registro of drillDownData()!.registros; track registro.procesoId) {
+              <tr>
+                <td>{{ registro.procesoNombre }}</td>
+                <td>
+                  <p-tag [value]="registro.estado" [severity]="registro.estado === 'activo' ? 'success' : 'secondary'"></p-tag>
+                </td>
+                <td>
+                  <div class="cumplimiento-cell">
+                    <span>{{ registro.cumplimientoPromedio }}%</span>
+                    <div class="cumplimiento-bar">
+                      <div class="cumplimiento-fill" [style.width.%]="registro.cumplimientoPromedio"
+                           [style.background]="registro.cumplimientoPromedio >= 80 ? '#22c55e' : registro.cumplimientoPromedio >= 50 ? '#f59e0b' : '#ef4444'">
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ registro.totalObjetivos }}</td>
+                <td>{{ registro.totalKPIs }}</td>
+                <td>
+                  <p-tag [value]="registro.alertasActivas + ''" [severity]="registro.alertasActivas > 0 ? 'danger' : 'success'"></p-tag>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="drilldown-actions">
+        <p-button label="Exportar a Excel" icon="pi pi-file-excel" severity="success"
+                  (click)="exportarDrillDownData()"></p-button>
+        <p-button label="Cerrar" icon="pi pi-times" severity="secondary"
+                  (click)="showDrillDownDrawer.set(false)"></p-button>
+      </div>
+    }
+  </div>
+</p-drawer>
+
+<!-- Dialogs -->
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>
