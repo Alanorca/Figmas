@@ -1,0 +1,786 @@
+<p-toast />
+
+<div class="runner-header">
+  <div class="header-left">
+    <p-button
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [text]="true"
+      [rounded]="true"
+      (onClick)="goBack()"
+      pTooltip="Volver a la lista"
+    />
+    <div class="header-title">
+      <h1>{{ process()?.nombre ?? 'Ejecutar Proceso' }}</h1>
+      @if (process()?.descripcion) {
+        <p>{{ process()!.descripcion }}</p>
+      }
+    </div>
+  </div>
+  <div class="header-actions">
+    @if (isExecutionActive()) {
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        severity="danger"
+        [outlined]="true"
+        (onClick)="cancelExecution()"
+      />
+    }
+    <p-button
+      label="Detalle"
+      icon="pi pi-info-circle"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="goToDetail()"
+      pTooltip="Ver detalle del proceso"
+    />
+    <p-button
+      label="Disenador"
+      icon="pi pi-sitemap"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="goToDesigner()"
+      pTooltip="Ver/editar nodos del proceso"
+    />
+    <p-button
+      label="Guardado de resultados"
+      icon="pi pi-cog"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="showConfigModal.set(true)"
+      pTooltip="Configurar guardado automatico de resultados"
+      [badge]="getConfiguredItemsCount()"
+      badgeSeverity="info"
+    />
+    <p-button
+      label="Ejecutar"
+      icon="pi pi-play"
+      [disabled]="!canStartExecution()"
+      [loading]="isExecuting()"
+      (onClick)="startExecution()"
+    />
+  </div>
+</div>
+
+<div class="process-runner-container">
+  @if (isLoading()) {
+    <div class="loading-container">
+      <i class="pi pi-spin pi-spinner text-4xl"></i>
+      <p>Cargando proceso...</p>
+    </div>
+  } @else {
+    <!-- Execution Status Banner -->
+    @if (currentExecution()) {
+      <div class="status-banner" [class]="'status-' + (currentExecution()!.status || 'pending').toLowerCase()">
+        <div class="status-info">
+          <p-tag
+            [value]="getStatusLabel(currentExecution()!.status || 'pending')"
+            [severity]="getStatusSeverity(currentExecution()!.status || 'pending')"
+          />
+          <span class="execution-id">Ejecucion #{{ currentExecution()!.id }}</span>
+          <span class="execution-time">
+            @if (currentExecution()!.startTime) {
+              Iniciado: {{ formatDate(currentExecution()!.startTime) }}
+            }
+          </span>
+        </div>
+        <div class="progress-container">
+          <p-progressbar
+            [value]="progressPercentage()"
+            [showValue]="true"
+            styleClass="h-2"
+          />
+        </div>
+        @if (failedNode()) {
+          <div class="error-action">
+            <p-button
+              label="Ver detalles del error"
+              icon="pi pi-exclamation-triangle"
+              severity="danger"
+              [outlined]="true"
+              size="small"
+              (onClick)="showErrorDetails()"
+            />
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Flow Visualization -->
+    <p-card header="Flujo del Proceso" styleClass="flow-card">
+      <div class="flow-visualization">
+        @if (flowNodes().length === 0) {
+          <div class="empty-flow">
+            <i class="pi pi-sitemap text-5xl text-zinc-400"></i>
+            <p class="text-zinc-500 mt-2">Este proceso no tiene nodos configurados</p>
+            <p-button
+              label="Ir al Disenador"
+              icon="pi pi-pencil"
+              severity="secondary"
+              [outlined]="true"
+              (onClick)="goToDesigner()"
+              class="mt-4"
+            />
+          </div>
+        } @else {
+          <div class="flow-graph">
+            @for (node of flowNodes(); track node.id; let isLast = $last) {
+              <!-- Node -->
+              <div
+                class="flow-node"
+                [class.node-pending]="node.status === 'pending'"
+                [class.node-running]="node.status === 'running'"
+                [class.node-completed]="node.status === 'completed'"
+                [class.node-failed]="node.status === 'failed'"
+                [class.has-output]="node.outputData"
+                (click)="showNodeOutput(node)"
+                [pTooltip]="getNodeTypeName(node.nodeType)"
+              >
+                <div class="node-icon">
+                  <i class="pi" [ngClass]="getNodeIcon(node.nodeType)"></i>
+                </div>
+                <div class="node-info">
+                  <span class="node-name">{{ node.name }}</span>
+                  <span class="node-type">{{ getNodeTypeName(node.nodeType) }}</span>
+                </div>
+                <div class="node-status-indicator">
+                  @if (node.status === 'running') {
+                    <div class="pulse-dot"></div>
+                  } @else if (node.status === 'completed') {
+                    <i class="pi pi-check"></i>
+                  } @else if (node.status === 'failed') {
+                    <i class="pi pi-times"></i>
+                  } @else {
+                    <i class="pi pi-circle"></i>
+                  }
+                </div>
+              </div>
+              <!-- Arrow between nodes -->
+              @if (!isLast) {
+                <div class="flow-arrow" [class.arrow-completed]="node.status === 'completed'">
+                  <i class="pi pi-arrow-right"></i>
+                </div>
+              }
+            }
+          </div>
+        }
+      </div>
+    </p-card>
+
+    <!-- Results and History Tabs -->
+    <p-card styleClass="results-history-card">
+      <p-tabs value="0">
+        <p-tablist>
+          <p-tab value="0">
+            <i class="pi pi-box mr-2"></i>
+            Resultado Actual
+            @if (executionVariables().length > 0) {
+              <p-tag [value]="executionVariables().length.toString()" severity="secondary" styleClass="ml-2" />
+            }
+          </p-tab>
+          <p-tab value="1">
+            <i class="pi pi-history mr-2"></i>
+            Historial de Ejecuciones
+            @if (executionHistory().length > 0) {
+              <p-tag [value]="executionHistory().length.toString()" severity="secondary" styleClass="ml-2" />
+            }
+          </p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+          <!-- Tab: Resultado Actual -->
+          <p-tabpanel value="0">
+            @if (executionVariables().length > 0) {
+              <div class="output-toolbar">
+                <p-button
+                  icon="pi pi-download"
+                  label="Exportar"
+                  severity="secondary"
+                  [outlined]="true"
+                  size="small"
+                  (onClick)="exportContext()"
+                />
+              </div>
+              <div class="variables-grid">
+                @for (variable of executionVariables(); track variable.key) {
+                  <div class="variable-card" [class.has-data]="variable.value !== null && variable.value !== undefined">
+                    <div class="variable-header">
+                      <div class="variable-icon">
+                        <i class="pi" [ngClass]="getVariableIcon(variable.type)"></i>
+                      </div>
+                      <div class="variable-info">
+                        <span class="variable-name">{{ variable.key }}</span>
+                        <span class="variable-type">{{ variable.typeLabel }}</span>
+                      </div>
+                    </div>
+                    <div class="variable-preview">
+                      {{ variable.preview }}
+                    </div>
+                    <div class="variable-actions">
+                      <a class="detail-link" (click)="showVariableDetail(variable)">detalle</a>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="empty-output">
+                <i class="pi pi-inbox text-4xl text-zinc-400"></i>
+                <p class="mt-2 text-zinc-500">Sin datos de salida</p>
+              </div>
+            }
+          </p-tabpanel>
+
+          <!-- Tab: Historial de Ejecuciones -->
+          <p-tabpanel value="1">
+            @if (executionHistory().length > 0) {
+              <div class="history-grid">
+                @for (exec of executionHistory().slice(0, 6); track exec.id) {
+                  <div class="history-item" [class]="'item-' + exec.status">
+                    <div class="history-item-header">
+                      <div class="history-status-icon" [class]="'status-' + exec.status">
+                        @if (exec.status === 'running') {
+                          <i class="pi pi-spin pi-spinner"></i>
+                        } @else if (exec.status === 'completed') {
+                          <i class="pi pi-check"></i>
+                        } @else if (exec.status === 'failed' || exec.status === 'cancelled') {
+                          <i class="pi pi-times"></i>
+                        } @else {
+                          <i class="pi pi-circle"></i>
+                        }
+                      </div>
+                      <div class="history-item-info">
+                        <span class="history-id">Ejecucion #{{ exec.id.slice(0, 8) }}</span>
+                        <p-tag
+                          [value]="getStatusLabel(exec.status)"
+                          [severity]="getStatusSeverity(exec.status)"
+                          styleClass="text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div class="history-item-meta">
+                      <span><i class="pi pi-calendar"></i> {{ formatDate(exec.startTime) }}</span>
+                      @if (exec.endTime) {
+                        <span><i class="pi pi-clock"></i> {{ formatDuration(getExecutionDurationMs(exec)) }}</span>
+                      }
+                    </div>
+                    <div class="history-item-actions">
+                      <a class="detail-link" (click)="viewExecutionContext(exec)">ver contexto</a>
+                      <p-button
+                        icon="pi pi-download"
+                        severity="secondary"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        pTooltip="Descargar contexto"
+                        (onClick)="downloadExecutionContext(exec)"
+                      />
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="empty-output">
+                <i class="pi pi-history text-4xl text-zinc-400"></i>
+                <p class="mt-2 text-zinc-500">Sin historial de ejecuciones</p>
+              </div>
+            }
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </p-card>
+  }
+</div>
+
+<!-- Node Output Dialog -->
+<p-dialog
+  header="Datos del Nodo"
+  [(visible)]="showOutputDialog"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '600px', maxHeight: '80vh' }"
+  [dismissableMask]="true"
+>
+  @if (selectedNodeOutput()) {
+    <div class="output-json">
+      <pre>{{ selectedNodeOutput() | json }}</pre>
+    </div>
+  }
+</p-dialog>
+
+<!-- Variable Detail Dialog -->
+<p-dialog
+  [header]="selectedVariable()?.key ?? 'Variable'"
+  [(visible)]="showVariableDialog"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '600px', maxHeight: '80vh' }"
+  [dismissableMask]="true"
+>
+  @if (selectedVariable()) {
+    <div class="variable-detail">
+      <div class="variable-detail-header">
+        <p-tag [value]="selectedVariable()!.typeLabel" severity="secondary" />
+      </div>
+      @if (selectedVariable()!.type === 'array' || selectedVariable()!.type === 'object') {
+        <div class="output-json">
+          <pre>{{ getVariableAsObject(selectedVariable()!.value) | json }}</pre>
+        </div>
+      } @else {
+        <div class="variable-detail-value">
+          {{ selectedVariable()!.value }}
+        </div>
+      }
+    </div>
+  }
+</p-dialog>
+
+<!-- Error Details Dialog -->
+<p-dialog
+  header="Detalles del Error"
+  [(visible)]="showErrorDialog"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '600px', maxHeight: '80vh' }"
+  [dismissableMask]="true"
+>
+  @if (failedNode()) {
+    <div class="error-detail">
+      <div class="error-node-info">
+        <div class="error-node-icon">
+          <i class="pi" [ngClass]="getNodeIcon(failedNode()!.nodeType)"></i>
+        </div>
+        <div class="error-node-text">
+          <h4>{{ failedNode()!.name }}</h4>
+          <span class="error-node-type">{{ getNodeTypeName(failedNode()!.nodeType) }}</span>
+        </div>
+      </div>
+
+      @if (failedNode()!.errorMessage) {
+        <div class="error-content">
+          <div class="error-field">
+            <label>Mensaje</label>
+            <div class="error-message">
+              {{ failedNode()!.errorMessage }}
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="error-no-details">
+          <i class="pi pi-info-circle"></i>
+          <span>No hay detalles adicionales del error disponibles.</span>
+        </div>
+      }
+    </div>
+  }
+</p-dialog>
+
+<!-- Execution Context Dialog -->
+<p-dialog
+  [header]="'Contexto de Ejecucion #' + (selectedExecution()?.id?.slice(0, 8) ?? '')"
+  [(visible)]="showContextDialog"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '700px', maxWidth: '95vw' }"
+  [contentStyle]="{ maxHeight: '80vh', overflow: 'auto' }"
+  [dismissableMask]="true"
+>
+  @if (selectedExecution()) {
+    <div class="context-detail">
+      <div class="context-header">
+        <div class="context-status">
+          <p-tag
+            [value]="getStatusLabel(selectedExecution()!.status)"
+            [severity]="getStatusSeverity(selectedExecution()!.status)"
+          />
+        </div>
+        <div class="context-meta">
+          <span><i class="pi pi-calendar"></i> {{ formatDate(selectedExecution()!.startTime) }}</span>
+          @if (selectedExecution()!.endTime) {
+            <span><i class="pi pi-clock"></i> {{ formatDuration(getExecutionDurationMs(selectedExecution()!)) }}</span>
+          }
+        </div>
+      </div>
+      <div class="context-section">
+        <h4>Variables del Contexto</h4>
+        @if (selectedExecutionContext(); as context) {
+          <div class="output-json">
+            <pre>{{ context | json }}</pre>
+          </div>
+        } @else {
+          <div class="empty-context">
+            <i class="pi pi-inbox text-3xl text-zinc-400"></i>
+            <p class="text-zinc-500 mt-2">Sin datos de contexto</p>
+          </div>
+        }
+      </div>
+      <div class="context-actions">
+        <p-button
+          icon="pi pi-download"
+          label="Descargar JSON"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="downloadExecutionContext(selectedExecution()!)"
+        />
+      </div>
+    </div>
+  }
+</p-dialog>
+
+<!-- Configuration Modal -->
+<p-dialog
+  header="Configuracion de guardado"
+  [(visible)]="showConfigModal"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '900px', maxWidth: '95vw' }"
+  [contentStyle]="{ maxHeight: '80vh', overflow: 'auto' }"
+  [dismissableMask]="true"
+  [baseZIndex]="10000"
+>
+  <p-tabs value="0">
+    <!-- Tab: Variables de Salida -->
+    <p-tablist>
+      <p-tab value="0">
+        <i class="pi pi-sliders-h mr-2"></i>
+        Variables de Salida
+        @if (outputVariableDefinitions().length > 0) {
+          <p-tag [value]="outputVariableDefinitions().length.toString()" severity="secondary" styleClass="ml-2" />
+        }
+      </p-tab>
+      <p-tab value="1">
+        <i class="pi pi-plus-circle mr-2"></i>
+        Crear Entidades al Finalizar
+        @if (entityCreationConfigs().length > 0) {
+          <p-tag [value]="entityCreationConfigs().length.toString()" severity="secondary" styleClass="ml-2" />
+        }
+      </p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <!-- Panel: Variables de Salida -->
+      <p-tabpanel value="0">
+        <div class="tab-panel-header">
+          <p-button icon="pi pi-save" label="Guardar" severity="secondary" [outlined]="true" size="small" (onClick)="saveStorageConfig()" pTooltip="Guardar en navegador" />
+        </div>
+        @if (outputVariableDefinitions().length > 0) {
+          <div class="config-variables-list">
+            @for (varDef of outputVariableDefinitions(); track varDef.key) {
+              @let config = getVariableConfig(varDef.key);
+              <div class="config-variable-row">
+                <div class="variable-source">
+                  <div class="variable-key">
+                    <i class="pi" [ngClass]="getNodeIcon(varDef.nodeTypeCode)"></i>
+                    <span class="key-name">{{ varDef.key }}</span>
+                  </div>
+                  <span class="node-source">{{ varDef.nodeName }}</span>
+                </div>
+                <div class="variable-destination">
+                  <p-select
+                    [options]="destinationOptions"
+                    [ngModel]="config?.destination ?? 'none'"
+                    (ngModelChange)="updateVariableConfig(varDef.key, { destination: $event })"
+                    placeholder="Destino"
+                    styleClass="destination-dropdown"
+                    appendTo="body"
+                  />
+                  @if (config?.destination !== 'none') {
+                    <p-selectButton
+                      [options]="sourceTypeOptions"
+                      [ngModel]="config?.sourceType ?? 'variable'"
+                      (ngModelChange)="updateVariableConfig(varDef.key, { sourceType: $event, manualValue: undefined })"
+                      optionLabel="label"
+                      optionValue="value"
+                      styleClass="source-type-buttons"
+                    />
+                    @if (config?.sourceType === 'manual') {
+                      <input
+                        pInputText
+                        [ngModel]="config?.manualValue ?? ''"
+                        (ngModelChange)="updateVariableConfig(varDef.key, { manualValue: $event })"
+                        placeholder="Valor fijo"
+                        class="manual-value-input"
+                      />
+                    }
+                  }
+                  @if (config?.destination === 'process') {
+                    <p-select
+                      [options]="processPropertyOptions"
+                      optionLabel="label"
+                      optionValue="key"
+                      [ngModel]="config?.processPropertyKey"
+                      (ngModelChange)="updateVariableConfig(varDef.key, { processPropertyKey: $event })"
+                      placeholder="Propiedad"
+                      styleClass="property-dropdown"
+                      appendTo="body"
+                    />
+                  }
+                  @if (config?.destination === 'risk_appetite') {
+                    <p-select
+                      [options]="riskAppetitePropertyOptions"
+                      optionLabel="label"
+                      optionValue="key"
+                      [ngModel]="config?.riskAppetiteProperty"
+                      (ngModelChange)="updateVariableConfig(varDef.key, { riskAppetiteProperty: $event })"
+                      placeholder="Propiedad"
+                      styleClass="property-dropdown"
+                      appendTo="body"
+                    />
+                  }
+                  @if (config?.destination === 'objective') {
+                    @if (processObjectives().length > 0) {
+                      <p-select
+                        [options]="processObjectives()"
+                        optionLabel="label"
+                        optionValue="id"
+                        [ngModel]="config?.objectiveId"
+                        (ngModelChange)="updateVariableConfig(varDef.key, { objectiveId: $event })"
+                        placeholder="Objetivo"
+                        styleClass="property-dropdown"
+                        appendTo="body"
+                      />
+                      @if (config?.objectiveId) {
+                        <p-select
+                          [options]="objectivePropertyOptions"
+                          optionLabel="label"
+                          optionValue="key"
+                          [ngModel]="config?.objectiveProperty"
+                          (ngModelChange)="updateVariableConfig(varDef.key, { objectiveProperty: $event })"
+                          placeholder="Propiedad"
+                          styleClass="property-dropdown"
+                          appendTo="body"
+                        />
+                      }
+                    } @else {
+                      <span class="no-items-inline">Sin objetivos</span>
+                    }
+                  }
+                  @if (config?.destination === 'kpi') {
+                    @if (processObjectives().length > 0) {
+                      <p-select
+                        [options]="processObjectives()"
+                        optionLabel="label"
+                        optionValue="id"
+                        [ngModel]="config?.kpiObjectiveId"
+                        (ngModelChange)="updateVariableConfig(varDef.key, { kpiObjectiveId: $event, kpiId: undefined, kpiProperty: undefined })"
+                        placeholder="Objetivo"
+                        styleClass="property-dropdown"
+                        appendTo="body"
+                      />
+                      @if (config?.kpiObjectiveId) {
+                        <p-select
+                          [options]="kpiPropertyOptions"
+                          optionLabel="label"
+                          optionValue="key"
+                          [ngModel]="config?.kpiProperty"
+                          (ngModelChange)="updateVariableConfig(varDef.key, { kpiProperty: $event })"
+                          placeholder="Propiedad"
+                          styleClass="property-dropdown"
+                          appendTo="body"
+                        />
+                      }
+                    } @else {
+                      <span class="no-items-inline">Sin objetivos</span>
+                    }
+                  }
+                  @if (config?.destination !== 'none') {
+                    <p-selectButton
+                      [options]="modeOptions"
+                      [ngModel]="config?.mode ?? 'replace'"
+                      (ngModelChange)="updateVariableConfig(varDef.key, { mode: $event })"
+                      optionLabel="label"
+                      optionValue="value"
+                      styleClass="mode-buttons"
+                    />
+                  }
+                </div>
+                @if (config?.destination !== 'none') {
+                  <div class="condition-section">
+                    <div class="condition-toggle">
+                      <p-checkbox
+                        [ngModel]="config?.condition?.enabled ?? false"
+                        (ngModelChange)="updateVariableConfig(varDef.key, { condition: { enabled: $event, operator: config?.condition?.operator ?? 'always', compareValue: config?.condition?.compareValue } })"
+                        [binary]="true"
+                        [inputId]="'modal-condition-' + varDef.key"
+                      />
+                      <label [for]="'modal-condition-' + varDef.key" class="condition-label">Condicional</label>
+                    </div>
+                    @if (config?.condition?.enabled) {
+                      <div class="condition-config">
+                        <p-select
+                          [options]="conditionOperatorOptions"
+                          [ngModel]="config?.condition?.operator ?? 'always'"
+                          (ngModelChange)="updateVariableConfig(varDef.key, { condition: { enabled: true, operator: $event, compareValue: config?.condition?.compareValue } })"
+                          placeholder="Operador"
+                          styleClass="condition-dropdown"
+                          appendTo="body"
+                        />
+                        @if (config?.condition?.operator && !['is_empty', 'is_not_empty', 'always'].includes(config!.condition!.operator)) {
+                          <input
+                            pInputText
+                            [ngModel]="config?.condition?.compareValue ?? ''"
+                            (ngModelChange)="updateVariableConfig(varDef.key, { condition: { enabled: true, operator: config?.condition?.operator ?? 'always', compareValue: $event } })"
+                            placeholder="Valor"
+                            class="condition-value-input"
+                          />
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-tab-content">
+            <i class="pi pi-info-circle text-3xl text-zinc-400"></i>
+            <p class="text-zinc-500 mt-2">No hay variables de salida configuradas</p>
+          </div>
+        }
+      </p-tabpanel>
+
+      <!-- Panel: Crear Entidades -->
+      <p-tabpanel value="1">
+        <div class="tab-panel-header">
+          <p-button icon="pi pi-plus" label="Agregar" severity="success" [outlined]="true" size="small" (onClick)="addEntityCreationConfig()" />
+          <p-button icon="pi pi-save" label="Guardar" severity="secondary" [outlined]="true" size="small" (onClick)="saveEntityCreationConfig()" pTooltip="Guardar en navegador" />
+        </div>
+        <div class="entity-creation-list">
+          @if (entityCreationConfigs().length === 0) {
+            <div class="empty-tab-content">
+              <i class="pi pi-info-circle text-3xl text-zinc-400"></i>
+              <p class="text-zinc-500 mt-2">No hay entidades configuradas</p>
+              <p class="text-zinc-400 text-sm">Clic en "Agregar" para crear riesgos, incidentes o defectos</p>
+            </div>
+          } @else {
+            @for (entityConfig of entityCreationConfigs(); track $index; let i = $index) {
+              <div class="entity-config-card" [class.disabled]="!entityConfig.enabled">
+                <div class="entity-config-header">
+                  <div class="entity-config-toggle">
+                    <p-checkbox [ngModel]="entityConfig.enabled" (ngModelChange)="updateEntityCreationConfig(i, { enabled: $event })" [binary]="true" />
+                    <p-select [options]="entityTypeOptions" [ngModel]="entityConfig.entityType" (ngModelChange)="updateEntityCreationConfig(i, { entityType: $event })" styleClass="entity-type-dropdown" appendTo="body" />
+                  </div>
+                  <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" size="small" (onClick)="removeEntityCreationConfig(i)" pTooltip="Eliminar" />
+                </div>
+                @if (entityConfig.enabled) {
+                  <div class="entity-condition-section">
+                    <div class="condition-toggle">
+                      <p-checkbox
+                        [ngModel]="entityConfig.condition.enabled"
+                        (ngModelChange)="updateEntityCreationConfig(i, { condition: { enabled: $event, operator: entityConfig.condition.operator, compareValue: entityConfig.condition.compareValue, variableKey: entityConfig.condition.variableKey } })"
+                        [binary]="true"
+                        [inputId]="'modal-entity-condition-' + i"
+                      />
+                      <label [for]="'modal-entity-condition-' + i" class="condition-label">Crear condicionalmente</label>
+                    </div>
+                    @if (entityConfig.condition.enabled) {
+                      <div class="condition-config">
+                        <p-select
+                          [options]="outputVariableDefinitions()"
+                          optionLabel="key"
+                          optionValue="key"
+                          [ngModel]="entityConfig.condition.variableKey"
+                          (ngModelChange)="updateEntityCreationConfig(i, { condition: { enabled: true, operator: entityConfig.condition.operator, compareValue: entityConfig.condition.compareValue, variableKey: $event } })"
+                          placeholder="Variable"
+                          styleClass="condition-variable-dropdown"
+                          appendTo="body"
+                        />
+                        <p-select
+                          [options]="conditionOperatorOptions"
+                          [ngModel]="entityConfig.condition.operator"
+                          (ngModelChange)="updateEntityCreationConfig(i, { condition: { enabled: true, operator: $event, compareValue: entityConfig.condition.compareValue, variableKey: entityConfig.condition.variableKey } })"
+                          placeholder="Operador"
+                          styleClass="condition-dropdown"
+                          appendTo="body"
+                        />
+                        @if (!['is_empty', 'is_not_empty', 'always'].includes(entityConfig.condition.operator)) {
+                          <input
+                            pInputText
+                            [ngModel]="entityConfig.condition.compareValue ?? ''"
+                            (ngModelChange)="updateEntityCreationConfig(i, { condition: { enabled: true, operator: entityConfig.condition.operator, compareValue: $event, variableKey: entityConfig.condition.variableKey } })"
+                            placeholder="Valor"
+                            class="condition-value-input"
+                          />
+                        }
+                      </div>
+                    }
+                  </div>
+                  <div class="entity-catalogs-section">
+                    <div class="catalog-row">
+                      <label>Subtipo</label>
+                      <p-select [options]="getSubTypesForEntityType(entityConfig.entityType)" optionLabel="name" optionValue="id" [ngModel]="entityConfig.eventSubTypeId" (ngModelChange)="onSubTypeChange(i, $event)" placeholder="Subtipo (opcional)" styleClass="catalog-dropdown" [showClear]="true" appendTo="body" />
+                    </div>
+                    <div class="catalog-row">
+                      <label>Estado</label>
+                      <p-select [options]="getFilteredEventStatuses(entityConfig.entityType)" optionLabel="name" optionValue="id" [ngModel]="entityConfig.eventStatusId" (ngModelChange)="updateEntityCreationConfig(i, { eventStatusId: $event })" placeholder="Estado" styleClass="catalog-dropdown" appendTo="body" />
+                    </div>
+                    <div class="catalog-row">
+                      <label>Severidad</label>
+                      <p-select [options]="severityLevels()" optionLabel="name" optionValue="id" [ngModel]="entityConfig.initialSeverityId" (ngModelChange)="updateEntityCreationConfig(i, { initialSeverityId: $event })" placeholder="Severidad" styleClass="catalog-dropdown" appendTo="body" />
+                    </div>
+                    <div class="catalog-row">
+                      <label>Propagacion</label>
+                      <p-select [options]="propagationLevels()" optionLabel="name" optionValue="id" [ngModel]="entityConfig.propagationLevelId" (ngModelChange)="updateEntityCreationConfig(i, { propagationLevelId: $event })" placeholder="Propagacion" styleClass="catalog-dropdown" appendTo="body" />
+                    </div>
+                    @if (entityConfig.entityType === 'risk') {
+                      <div class="catalog-row">
+                        <label>Probabilidad</label>
+                        <p-select [options]="probabilityLevels()" optionLabel="name" optionValue="id" [ngModel]="entityConfig.probabilityLevelId" (ngModelChange)="updateEntityCreationConfig(i, { probabilityLevelId: $event })" placeholder="Probabilidad" styleClass="catalog-dropdown" appendTo="body" />
+                      </div>
+                      <div class="catalog-row">
+                        <label>Impacto</label>
+                        <p-select [options]="impactLevels()" optionLabel="name" optionValue="id" [ngModel]="entityConfig.impactLevelId" (ngModelChange)="updateEntityCreationConfig(i, { impactLevelId: $event })" placeholder="Impacto" styleClass="catalog-dropdown" appendTo="body" />
+                      </div>
+                    }
+                  </div>
+                  <div class="entity-templates-section">
+                    <div class="template-row">
+                      <label>Titulo</label>
+                      <input pInputText [ngModel]="entityConfig.titleTemplate ?? ''" (ngModelChange)="updateEntityCreationConfig(i, { titleTemplate: $event })" placeholder="Ej: Riesgo detectado" class="template-input" [id]="'modal-title-input-' + i" />
+                      <div class="variable-chips">
+                        <span class="chips-label">Variables:</span>
+                        @for (varDef of outputVariableDefinitions(); track varDef.key) {
+                          <span class="variable-chip" (click)="insertVariableIntoTemplate(i, 'title', varDef.key)">{{ varDef.key }}</span>
+                        }
+                      </div>
+                    </div>
+                    <div class="template-row">
+                      <label>Descripcion</label>
+                      <textarea pInputTextarea [ngModel]="entityConfig.descriptionTemplate ?? ''" (ngModelChange)="updateEntityCreationConfig(i, { descriptionTemplate: $event })" placeholder="Descripcion del evento" [rows]="2" class="template-input" [id]="'modal-desc-input-' + i"></textarea>
+                      <div class="variable-chips">
+                        <span class="chips-label">Variables:</span>
+                        @for (varDef of outputVariableDefinitions(); track varDef.key) {
+                          <span class="variable-chip" (click)="insertVariableIntoTemplate(i, 'description', varDef.key)">{{ varDef.key }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <div class="entity-mappings-section">
+                    <div class="mappings-header">
+                      <span class="mappings-title">Campos adicionales</span>
+                      <p-button icon="pi pi-plus" label="Campo" severity="secondary" [text]="true" size="small" (onClick)="addFieldMapping(i)" />
+                    </div>
+                    @for (mapping of entityConfig.fieldMappings; track $index; let j = $index) {
+                      @if (mapping.targetField !== 'title' && mapping.targetField !== 'description') {
+                        <div class="mapping-row">
+                          <p-select [options]="entityFieldOptions" optionLabel="label" optionValue="value" [ngModel]="mapping.targetField" (ngModelChange)="updateFieldMapping(i, j, { targetField: $event })" placeholder="Campo" styleClass="mapping-field-dropdown" appendTo="body" />
+                          <p-selectButton [options]="sourceTypeOptions" [ngModel]="mapping.sourceType" (ngModelChange)="updateFieldMapping(i, j, { sourceType: $event })" optionLabel="label" optionValue="value" styleClass="source-type-buttons" />
+                          @if (mapping.sourceType === 'variable') {
+                            <p-select [options]="outputVariableDefinitions()" optionLabel="key" optionValue="key" [ngModel]="mapping.variableKey" (ngModelChange)="updateFieldMapping(i, j, { variableKey: $event })" placeholder="Variable" styleClass="mapping-variable-dropdown" appendTo="body" />
+                          } @else {
+                            <input pInputText [ngModel]="mapping.manualValue ?? ''" (ngModelChange)="updateFieldMapping(i, j, { manualValue: $event })" placeholder="Valor" class="mapping-manual-input" />
+                          }
+                          <p-button icon="pi pi-times" severity="danger" [text]="true" [rounded]="true" size="small" (onClick)="removeFieldMapping(i, j)" />
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</p-dialog>
