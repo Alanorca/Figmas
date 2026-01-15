@@ -461,3 +461,272 @@ export const DEFAULT_ACTIVO_NODE_CONFIG: ActivoNodeConfig = {
   exponerDefectos: false,
   variablesSalida: []
 };
+
+// ==================== Tipos de Ejecución de Procesos ====================
+
+// Estados de ejecución
+export type ProcessExecutionStatus =
+  | 'NOT_STARTED'
+  | 'PENDING'
+  | 'RUNNING'
+  | 'PAUSED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'TIMED_OUT';
+
+// Mapeo de status a nombre legible
+export const EXECUTION_STATUS_NAMES: Record<ProcessExecutionStatus, string> = {
+  NOT_STARTED: 'No iniciado',
+  PENDING: 'Pendiente',
+  RUNNING: 'En ejecución',
+  PAUSED: 'Pausado',
+  COMPLETED: 'Completado',
+  FAILED: 'Fallido',
+  CANCELLED: 'Cancelado',
+  TIMED_OUT: 'Tiempo agotado'
+};
+
+// Métricas de ejecución
+export interface ProcessExecutionMetrics {
+  totalNodes: number;
+  completedNodes: number;
+  failedNodes: number;
+  skippedNodes: number;
+  percentage: number;
+}
+
+// Resultado de ejecución de nodo individual
+export interface NodeExecutionResult {
+  nodeId: string;
+  nodeName: string;
+  nodeType: ProcessNodeType;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+  executionOrder: number;
+  startTime?: Date;
+  endTime?: Date;
+  duration?: number;
+  output?: unknown;
+  outputKey?: string;
+  error?: { message: string; type: string };
+}
+
+// Ejecución completa con métricas
+export interface ProcessExecutionFull {
+  id: string;
+  procesoId: string;
+  procesoNombre: string;
+  statusCode: ProcessExecutionStatus;
+  statusName: string;
+  startTime: Date;
+  endTime?: Date;
+  duration?: number;
+  metrics: ProcessExecutionMetrics;
+  nodes: NodeExecutionResult[];
+  context: Record<string, unknown>;
+  inputData?: Record<string, unknown>;
+  createdBy: string;
+}
+
+// Variable de salida extraída
+export interface OutputVariable {
+  key: string;
+  value: unknown;
+  type: 'string' | 'number' | 'boolean' | 'array' | 'object' | 'null';
+  typeLabel: string;
+  preview: string;
+  nodeId: string;
+  nodeName: string;
+}
+
+// Tipo de label para variables
+export const OUTPUT_VARIABLE_TYPE_LABELS: Record<OutputVariable['type'], string> = {
+  string: 'Texto',
+  number: 'Número',
+  boolean: 'Booleano',
+  array: 'Lista',
+  object: 'Objeto',
+  null: 'Nulo'
+};
+
+// ==================== Configuración de Guardado de Resultados ====================
+
+// Condición para aplicar guardado/creación
+export interface StorageCondition {
+  enabled: boolean;
+  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' |
+            'greater_equal' | 'less_equal' | 'contains' | 'not_contains' |
+            'is_empty' | 'is_not_empty' | 'always';
+  variableKey?: string;
+  compareValue?: string | number | boolean;
+}
+
+// Configuración de guardado de una variable
+export interface OutputStorageConfig {
+  id: string;
+  variableKey: string;
+  destination: 'none' | 'asset' | 'kpi' | 'risk_appetite' | 'objective';
+  condition: StorageCondition;
+  // Para asset
+  assetId?: string;
+  assetProperty?: string;
+  assetPropertyType?: 'standard' | 'custom';
+  // Para KPI
+  kpiId?: string;
+  kpiProperty?: 'valorActual' | 'meta';
+  // Para objetivo
+  objetivoId?: string;
+  objetivoProperty?: 'progreso';
+  // Para risk appetite
+  riskAppetiteProperty?: 'porcentaje' | 'probabilidad' | 'impacto';
+  // Modo de guardado
+  mode: 'replace' | 'append' | 'increment';
+}
+
+// ==================== Configuración de Creación de Entidades ====================
+
+// Mapeo de campo de entidad
+export interface EntityFieldMapping {
+  fieldName: string;
+  fieldLabel: string;
+  sourceType: 'variable' | 'manual' | 'catalog';
+  variableKey?: string;
+  manualValue?: string | number | boolean;
+  catalogId?: string;
+}
+
+// Configuración para crear entidad desde ejecución
+export interface EntityCreationConfig {
+  id: string;
+  enabled: boolean;
+  entityType: 'risk' | 'incident' | 'defect';
+  createConditionally: boolean;
+  condition?: StorageCondition;
+  // Catálogos
+  subtipoId?: string;
+  estadoId?: string;
+  severidadId?: string;
+  propagacionId?: string;
+  probabilidadId?: string;
+  impactoId?: string;
+  // Templates con variables {{var}}
+  titleTemplate: string;
+  descriptionTemplate: string;
+  // Campos adicionales mapeados
+  customFields: EntityFieldMapping[];
+}
+
+// Catálogos disponibles para entidades
+export const ENTITY_CATALOGS = {
+  risk: {
+    subtipos: [
+      { id: 'op', label: 'Riesgo Operativo' },
+      { id: 'fin', label: 'Riesgo Financiero' },
+      { id: 'tec', label: 'Riesgo Tecnológico' },
+      { id: 'reg', label: 'Riesgo Regulatorio' },
+      { id: 'rep', label: 'Riesgo Reputacional' }
+    ],
+    estados: [
+      { id: 'identificado', label: 'Identificado' },
+      { id: 'evaluado', label: 'Evaluado' },
+      { id: 'en_tratamiento', label: 'En tratamiento' },
+      { id: 'mitigado', label: 'Mitigado' },
+      { id: 'aceptado', label: 'Aceptado' }
+    ],
+    severidades: [
+      { id: 'critica', label: 'Crítica' },
+      { id: 'alta', label: 'Alta' },
+      { id: 'media', label: 'Media' },
+      { id: 'baja', label: 'Baja' }
+    ],
+    probabilidades: [
+      { id: '1', label: 'Muy baja (1)' },
+      { id: '2', label: 'Baja (2)' },
+      { id: '3', label: 'Media (3)' },
+      { id: '4', label: 'Alta (4)' },
+      { id: '5', label: 'Muy alta (5)' }
+    ],
+    impactos: [
+      { id: '1', label: 'Muy bajo (1)' },
+      { id: '2', label: 'Bajo (2)' },
+      { id: '3', label: 'Medio (3)' },
+      { id: '4', label: 'Alto (4)' },
+      { id: '5', label: 'Muy alto (5)' }
+    ],
+    propagaciones: [
+      { id: 'local', label: 'Local' },
+      { id: 'departamental', label: 'Departamental' },
+      { id: 'organizacional', label: 'Organizacional' },
+      { id: 'externo', label: 'Externo' }
+    ]
+  },
+  incident: {
+    subtipos: [
+      { id: 'seg', label: 'Incidente de Seguridad' },
+      { id: 'op', label: 'Incidente Operativo' },
+      { id: 'tec', label: 'Incidente Técnico' },
+      { id: 'com', label: 'Incidente de Compliance' }
+    ],
+    estados: [
+      { id: 'reportado', label: 'Reportado' },
+      { id: 'en_investigacion', label: 'En investigación' },
+      { id: 'en_resolucion', label: 'En resolución' },
+      { id: 'resuelto', label: 'Resuelto' },
+      { id: 'cerrado', label: 'Cerrado' }
+    ],
+    severidades: [
+      { id: 'critica', label: 'Crítica' },
+      { id: 'alta', label: 'Alta' },
+      { id: 'media', label: 'Media' },
+      { id: 'baja', label: 'Baja' }
+    ]
+  },
+  defect: {
+    subtipos: [
+      { id: 'func', label: 'Defecto Funcional' },
+      { id: 'seg', label: 'Defecto de Seguridad' },
+      { id: 'rend', label: 'Defecto de Rendimiento' },
+      { id: 'ui', label: 'Defecto de UI/UX' },
+      { id: 'data', label: 'Defecto de Datos' }
+    ],
+    estados: [
+      { id: 'nuevo', label: 'Nuevo' },
+      { id: 'confirmado', label: 'Confirmado' },
+      { id: 'en_correccion', label: 'En corrección' },
+      { id: 'corregido', label: 'Corregido' },
+      { id: 'verificado', label: 'Verificado' },
+      { id: 'cerrado', label: 'Cerrado' }
+    ],
+    severidades: [
+      { id: 'critica', label: 'Crítica' },
+      { id: 'alta', label: 'Alta' },
+      { id: 'media', label: 'Media' },
+      { id: 'baja', label: 'Baja' }
+    ]
+  }
+};
+
+// ==================== Configuración Completa del Runner ====================
+
+// Configuración completa del runner de un proceso
+export interface ProcessRunnerConfig {
+  procesoId: string;
+  storageConfigs: OutputStorageConfig[];
+  entityConfigs: EntityCreationConfig[];
+  lastUpdated: Date;
+}
+
+// Configuración por defecto de condición
+export const DEFAULT_STORAGE_CONDITION: StorageCondition = {
+  enabled: false,
+  operator: 'always'
+};
+
+// Configuración por defecto de creación de entidad
+export const DEFAULT_ENTITY_CREATION_CONFIG: Partial<EntityCreationConfig> = {
+  enabled: true,
+  createConditionally: false,
+  titleTemplate: '',
+  descriptionTemplate: '',
+  customFields: []
+};

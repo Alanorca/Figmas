@@ -1,0 +1,731 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="proceso-runner">
+  <!-- Header -->
+  <div class="runner-header">
+    <div class="header-content">
+      <div class="header-left">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          (onClick)="goBack()"
+          pTooltip="Volver a lista"
+        />
+        <div class="header-info">
+          <h1 class="header-title">
+            {{ proceso()?.nombre || 'Cargando...' }}
+          </h1>
+          <p class="header-description">
+            {{ proceso()?.descripcion }}
+          </p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <p-button
+          label="Detalle"
+          icon="pi pi-info-circle"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="openDetail()"
+        />
+        <p-button
+          label="Disenador"
+          icon="pi pi-sitemap"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="openDesigner()"
+        />
+        <p-button
+          label="Guardado de resultados"
+          icon="pi pi-cog"
+          [outlined]="true"
+          severity="secondary"
+          [badge]="storageConfigCount() > 0 ? storageConfigCount().toString() : ''"
+          badgeSeverity="info"
+          (onClick)="openSaveConfigModal()"
+        />
+        <p-button
+          label="Ejecutar"
+          icon="pi pi-play"
+          severity="success"
+          [loading]="isExecuting()"
+          (onClick)="executeProcess()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Execution Status Banner -->
+  @if (currentExecution()) {
+    <div class="execution-banner mx-6 mt-4"
+         [class.status-failed]="currentExecution()!.statusCode === 'FAILED'"
+         [class.status-completed]="currentExecution()!.statusCode === 'COMPLETED'"
+         [class.status-running]="currentExecution()!.statusCode === 'RUNNING' || currentExecution()!.statusCode === 'PENDING'">
+      <div class="banner-header">
+        <div class="banner-info">
+          <p-tag
+            [value]="currentExecution()!.statusName"
+            [severity]="getStatusSeverity(currentExecution()!.statusCode)"
+          />
+          <span class="execution-id">
+            Ejecucion #{{ currentExecution()!.id | slice:0:20 }}
+          </span>
+          <span class="execution-meta">
+            <i class="pi pi-calendar"></i>
+            Iniciado: {{ formatDate(currentExecution()!.startTime) }}
+          </span>
+        </div>
+        @if (currentExecution()!.duration) {
+          <span class="execution-meta">
+            <i class="pi pi-clock"></i>
+            Duracion: {{ formatDuration(currentExecution()!.duration) }}
+          </span>
+        }
+      </div>
+      <div class="banner-progress">
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" [style.width.%]="progressPercentage()"></div>
+          <span class="progress-label">{{ progressPercentage() }}%</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Flow Visualization -->
+  <div class="flow-section mx-6 mt-4">
+    <div class="flow-header">
+      <h3 class="flow-title">Flujo del Proceso</h3>
+      <!-- Zoom Controls -->
+      <div class="zoom-controls">
+        <p-button
+          icon="pi pi-minus"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          size="small"
+          (onClick)="zoomOut()"
+          [disabled]="zoom() <= MIN_ZOOM"
+          pTooltip="Alejar"
+        />
+        <span class="zoom-percentage">{{ zoomPercentage() }}%</span>
+        <p-button
+          icon="pi pi-plus"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          size="small"
+          (onClick)="zoomIn()"
+          [disabled]="zoom() >= MAX_ZOOM"
+          pTooltip="Acercar"
+        />
+        <div class="zoom-divider"></div>
+        <p-button
+          icon="pi pi-refresh"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          size="small"
+          (onClick)="resetZoom()"
+          pTooltip="Restablecer zoom"
+        />
+        <p-button
+          icon="pi pi-arrows-alt"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          size="small"
+          (onClick)="fitToScreen()"
+          pTooltip="Ajustar a pantalla"
+        />
+      </div>
+    </div>
+    <div class="flow-viewport"
+         (wheel)="onFlowWheel($event)"
+         (mousedown)="onFlowMouseDown($event)"
+         (mousemove)="onFlowMouseMove($event)"
+         (mouseup)="onFlowMouseUp()"
+         (mouseleave)="onFlowMouseLeave()"
+         [class.panning]="isPanning()">
+      <div class="flow-container" [style.transform]="flowTransform()">
+        @for (node of flowNodes(); track node.id; let i = $index; let last = $last) {
+          <div class="flow-node" [class]="getNodeStatusClass(node.status)">
+            <div class="node-status-indicator"
+                 [class.status-pending]="node.status === 'pending'"
+                 [class.status-running]="node.status === 'running'"
+                 [class.status-completed]="node.status === 'completed'"
+                 [class.status-failed]="node.status === 'failed'"
+                 [class.status-skipped]="node.status === 'skipped'">
+            </div>
+            <div class="node-card"
+                 [pTooltip]="node.name">
+              <div class="node-icon-wrapper">
+                <span class="material-icons" [style.color]="node.iconColor">
+                  {{ node.icon }}
+                </span>
+              </div>
+              <div class="node-name">{{ node.name }}</div>
+              <div class="node-type">{{ node.typeName }}</div>
+            </div>
+            @if (node.duration) {
+              <div class="node-duration">{{ formatDuration(node.duration) }}</div>
+            }
+          </div>
+          @if (!last) {
+            <div class="flow-connector">
+              <span class="connector-line"></span>
+              <i class="pi pi-arrow-right"></i>
+              <span class="connector-line"></span>
+            </div>
+          }
+        }
+      </div>
+    </div>
+    <div class="zoom-hint">
+      <i class="pi pi-info-circle"></i>
+      <span>Rueda: zoom | Shift+Clic: mover</span>
+    </div>
+  </div>
+
+  <!-- Tabs: Resultado Actual / Historial -->
+  <div class="tabs-section mx-6 mt-4 mb-6">
+    <p-tabs [(value)]="activeTabIndex" [scrollable]="true">
+      <p-tablist>
+        <p-tab [value]="0">
+          <span class="tab-content">
+            <i class="pi pi-check-circle tab-icon success"></i>
+            <span>Resultado Actual</span>
+            @if (outputVariables().length > 0) {
+              <span class="tab-badge">{{ outputVariables().length }}</span>
+            }
+          </span>
+        </p-tab>
+        <p-tab [value]="1">
+          <span class="tab-content">
+            <i class="pi pi-history tab-icon"></i>
+            <span>Historial de Ejecuciones</span>
+            @if (executionHistory().length > 0) {
+              <span class="tab-badge secondary">{{ executionHistory().length }}</span>
+            }
+          </span>
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- Tab: Resultado Actual -->
+        <p-tabpanel [value]="0">
+          <div class="results-panel">
+            <!-- Panel Header con Exportar -->
+            <div class="panel-toolbar">
+              <p-button
+                icon="pi pi-download"
+                label="Exportar"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                [disabled]="outputVariables().length === 0"
+                (onClick)="exportCurrentResults()"
+              />
+            </div>
+
+            <div class="results-grid">
+              <!-- Lista de Variables -->
+              <div class="variables-panel">
+                <!-- Filtros -->
+                <div class="variables-filters">
+                  <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input
+                      type="text"
+                      pInputText
+                      placeholder="Buscar variable..."
+                      [ngModel]="searchTerm()"
+                      (ngModelChange)="searchTerm.set($event)"
+                    />
+                  </p-iconfield>
+                  <p-select
+                    [options]="typeOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Todos los tipos"
+                    [ngModel]="selectedTypeFilter()"
+                    (ngModelChange)="selectedTypeFilter.set($event)"
+                    styleClass="type-filter"
+                  />
+                </div>
+
+                <!-- Lista -->
+                <div class="variables-list">
+                  @if (filteredVariables().length === 0) {
+                    <div class="empty-state">
+                      <i class="pi pi-inbox"></i>
+                      <p class="empty-title">No hay variables de salida</p>
+                      <p class="empty-subtitle">Ejecuta el proceso para ver resultados</p>
+                    </div>
+                  }
+                  @for (variable of filteredVariables(); track variable.key) {
+                    <div
+                      class="variable-card"
+                      [class.selected]="selectedVariable()?.key === variable.key"
+                      (click)="selectVariable(variable)"
+                    >
+                      <div class="variable-icon" [class]="'type-' + variable.type">
+                        <i [class]="getVariableIcon(variable.type)"></i>
+                      </div>
+                      <div class="variable-content">
+                        <div class="variable-header">
+                          <span class="variable-name">{{ variable.key }}</span>
+                          <span class="variable-type-badge">{{ variable.typeLabel }}</span>
+                        </div>
+                        <div class="variable-preview">{{ variable.preview }}</div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Detalle de Variable -->
+              <div class="variable-detail-panel">
+                @if (selectedVariable()) {
+                  <div class="detail-header">
+                    <div class="detail-title">
+                      <i class="pi pi-code"></i>
+                      <span>{{ selectedVariable()!.key }}</span>
+                    </div>
+                    <span class="detail-type-badge">{{ selectedVariable()!.typeLabel }}</span>
+                  </div>
+                  <div class="detail-content">
+                    <pre>{{ formatValue(selectedVariable()!.value) }}</pre>
+                  </div>
+                  <div class="detail-footer">
+                    <p-button
+                      icon="pi pi-download"
+                      label="Descargar JSON"
+                      [text]="true"
+                      severity="secondary"
+                      size="small"
+                      (onClick)="downloadVariableJson(selectedVariable()!)"
+                    />
+                  </div>
+                } @else {
+                  <div class="empty-state">
+                    <i class="pi pi-arrow-left"></i>
+                    <p class="empty-title">Selecciona una variable</p>
+                    <p class="empty-subtitle">para ver su valor</p>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- Tab: Historial de Ejecuciones -->
+        <p-tabpanel [value]="1">
+          <div class="history-panel">
+            <div class="history-grid">
+              <!-- Lista de Ejecuciones -->
+              <div class="executions-panel">
+                <div class="executions-filters">
+                  <p-iconfield>
+                    <p-inputicon styleClass="pi pi-search" />
+                    <input
+                      type="text"
+                      pInputText
+                      placeholder="Buscar ejecucion..."
+                      [ngModel]="historySearchTerm()"
+                      (ngModelChange)="historySearchTerm.set($event)"
+                    />
+                  </p-iconfield>
+                  <p-select
+                    [options]="statusOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Todos"
+                    [ngModel]="selectedStatusFilter()"
+                    (ngModelChange)="selectedStatusFilter.set($event)"
+                    styleClass="status-filter"
+                  />
+                </div>
+
+                <div class="executions-list">
+                  @if (filteredHistory().length === 0) {
+                    <div class="empty-state">
+                      <i class="pi pi-history"></i>
+                      <p class="empty-title">No hay ejecuciones registradas</p>
+                    </div>
+                  }
+                  @for (exec of filteredHistory(); track exec.id) {
+                    <div
+                      class="execution-card"
+                      [class.selected]="currentExecution()?.id === exec.id"
+                      [class.status-completed]="exec.statusCode === 'COMPLETED'"
+                      [class.status-failed]="exec.statusCode === 'FAILED'"
+                      (click)="selectExecution(exec)"
+                    >
+                      <div class="execution-status-icon">
+                        @if (exec.statusCode === 'COMPLETED') {
+                          <i class="pi pi-check-circle"></i>
+                        } @else if (exec.statusCode === 'FAILED') {
+                          <i class="pi pi-times-circle"></i>
+                        } @else {
+                          <i class="pi pi-circle"></i>
+                        }
+                      </div>
+                      <div class="execution-info">
+                        <span class="execution-id">Ejecucion #{{ exec.id | slice:5:20 }}</span>
+                        <div class="execution-meta">
+                          <i class="pi pi-calendar"></i>
+                          {{ formatDate(exec.startTime) }}
+                          @if (exec.duration) {
+                            <span class="meta-separator">|</span>
+                            <i class="pi pi-clock"></i>
+                            {{ formatDuration(exec.duration) }}
+                          }
+                        </div>
+                      </div>
+                      <p-tag
+                        [value]="exec.statusName"
+                        [severity]="getStatusSeverity(exec.statusCode)"
+                        [rounded]="true"
+                        styleClass="execution-tag"
+                      />
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Detalle de Ejecucion / Variables del Contexto -->
+              <div class="context-detail-panel">
+                @if (currentExecution()) {
+                  <div class="detail-header">
+                    <div class="detail-title">
+                      <i class="pi pi-history"></i>
+                      <span>Ejecucion #{{ currentExecution()!.id | slice:5:20 }}</span>
+                    </div>
+                    <p-tag
+                      [value]="currentExecution()!.statusName"
+                      [severity]="getStatusSeverity(currentExecution()!.statusCode)"
+                    />
+                  </div>
+                  <div class="detail-meta">
+                    <span><i class="pi pi-calendar"></i> {{ formatDate(currentExecution()!.startTime) }}</span>
+                    @if (currentExecution()!.duration) {
+                      <span><i class="pi pi-clock"></i> Duracion: {{ formatDuration(currentExecution()!.duration) }}</span>
+                    }
+                  </div>
+                  <div class="detail-section-title">VARIABLES DEL CONTEXTO</div>
+                  <div class="detail-content">
+                    <pre>{{ formatValue(currentExecution()!.context) }}</pre>
+                  </div>
+                  <div class="detail-footer">
+                    <p-button
+                      icon="pi pi-download"
+                      label="Descargar JSON"
+                      [text]="true"
+                      severity="secondary"
+                      size="small"
+                      (onClick)="downloadExecutionJson(currentExecution()!)"
+                    />
+                  </div>
+                } @else {
+                  <div class="empty-state">
+                    <i class="pi pi-arrow-left"></i>
+                    <p class="empty-title">Selecciona una ejecucion</p>
+                    <p class="empty-subtitle">para ver el contexto</p>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<!-- Modal: Configuracion de Guardado -->
+<p-dialog
+  header="Configuracion de guardado"
+  [(visible)]="showSaveConfigModal"
+  [modal]="true"
+  [style]="{ width: '900px', maxHeight: '90vh' }"
+  [contentStyle]="{ overflow: 'auto' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <p-tabs [(value)]="saveConfigActiveTab">
+    <p-tablist>
+      <p-tab [value]="0">
+        <i class="pi pi-table mr-2"></i>
+        Variables de Salida
+        @if (outputVariables().length > 0) {
+          <p-badge [value]="outputVariables().length.toString()" severity="info" class="ml-2" />
+        }
+      </p-tab>
+      <p-tab [value]="1">
+        <i class="pi pi-plus-circle mr-2"></i>
+        Crear Entidades al Finalizar
+        @if (entityConfigs().length > 0) {
+          <p-badge [value]="entityConfigs().length.toString()" severity="info" class="ml-2" />
+        }
+      </p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+      <!-- Variables de Salida -->
+      <p-tabpanel [value]="0">
+        <div class="py-4">
+          <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+            Variables de salida disponibles del proceso. Puedes usarlas en los templates de entidades.
+          </p>
+
+          @if (outputVariables().length === 0) {
+            <div class="text-center py-8 text-zinc-500 dark:text-zinc-400">
+              <i class="pi pi-cog text-4xl mb-2"></i>
+              <p>Ejecuta el proceso primero para ver las variables disponibles</p>
+            </div>
+          } @else {
+            <div class="grid grid-cols-2 gap-4">
+              @for (variable of outputVariables(); track variable.key) {
+                <div class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <i [class]="getVariableIcon(variable.type)" class="text-emerald-600 dark:text-emerald-400"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium text-zinc-800 dark:text-white text-sm">{{ variable.key }}</div>
+                    <div class="text-xs text-zinc-500 dark:text-zinc-400 truncate">{{ variable.preview }}</div>
+                  </div>
+                  <p-tag [value]="variable.typeLabel" severity="secondary" [rounded]="true" styleClass="text-xs" />
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </p-tabpanel>
+
+      <!-- Crear Entidades -->
+      <p-tabpanel [value]="1">
+        <div class="py-4">
+          <div class="flex items-center justify-between mb-4">
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">
+              Configura entidades que se crearan automaticamente al finalizar la ejecucion.
+            </p>
+            <p-button
+              icon="pi pi-plus"
+              label="Agregar"
+              severity="success"
+              size="small"
+              (onClick)="addEntityConfig()"
+            />
+          </div>
+
+          @if (entityConfigs().length === 0) {
+            <div class="text-center py-8 text-zinc-500 dark:text-zinc-400 border-2 border-dashed border-zinc-300 dark:border-zinc-600 rounded-lg">
+              <i class="pi pi-box text-4xl mb-2"></i>
+              <p>No hay entidades configuradas</p>
+              <p class="text-sm">Haz clic en "Agregar" para configurar una entidad</p>
+            </div>
+          }
+
+          @for (config of entityConfigs(); track config.id) {
+            <div class="entity-config-card border border-zinc-200 dark:border-zinc-600 rounded-lg p-4 mb-4">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <p-checkbox
+                    [(ngModel)]="config.enabled"
+                    [binary]="true"
+                  />
+                  <p-select
+                    [options]="[
+                      { label: 'Riesgo', value: 'risk' },
+                      { label: 'Incidente', value: 'incident' },
+                      { label: 'Defecto', value: 'defect' }
+                    ]"
+                    optionLabel="label"
+                    optionValue="value"
+                    [(ngModel)]="config.entityType"
+                    [style]="{ width: '150px' }"
+                  />
+                </div>
+                <p-button
+                  icon="pi pi-trash"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="danger"
+                  (onClick)="removeEntityConfig(config.id)"
+                />
+              </div>
+
+              <div class="flex items-center gap-2 mb-4">
+                <p-checkbox
+                  [(ngModel)]="config.createConditionally"
+                  [binary]="true"
+                />
+                <label class="text-sm text-zinc-600 dark:text-zinc-400">
+                  Crear condicionalmente
+                </label>
+              </div>
+
+              <div class="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Subtipo</label>
+                  <p-select
+                    [options]="getEntityCatalogs(config.entityType).subtipos"
+                    optionLabel="label"
+                    optionValue="id"
+                    [(ngModel)]="config.subtipoId"
+                    placeholder="Subtipo (opcional)"
+                    [style]="{ width: '100%' }"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Estado</label>
+                  <p-select
+                    [options]="getEntityCatalogs(config.entityType).estados"
+                    optionLabel="label"
+                    optionValue="id"
+                    [(ngModel)]="config.estadoId"
+                    placeholder="Estado"
+                    [style]="{ width: '100%' }"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Severidad</label>
+                  <p-select
+                    [options]="getEntityCatalogs(config.entityType).severidades"
+                    optionLabel="label"
+                    optionValue="id"
+                    [(ngModel)]="config.severidadId"
+                    placeholder="Severidad"
+                    [style]="{ width: '100%' }"
+                  />
+                </div>
+              </div>
+
+              @if (config.entityType === 'risk') {
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Propagacion</label>
+                    <p-select
+                      [options]="getRiskCatalogs().propagaciones"
+                      optionLabel="label"
+                      optionValue="id"
+                      [(ngModel)]="config.propagacionId"
+                      placeholder="Propagacion"
+                      [style]="{ width: '100%' }"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Probabilidad</label>
+                    <p-select
+                      [options]="getRiskCatalogs().probabilidades"
+                      optionLabel="label"
+                      optionValue="id"
+                      [(ngModel)]="config.probabilidadId"
+                      placeholder="Probabilidad"
+                      [style]="{ width: '100%' }"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Impacto</label>
+                    <p-select
+                      [options]="getRiskCatalogs().impactos"
+                      optionLabel="label"
+                      optionValue="id"
+                      [(ngModel)]="config.impactoId"
+                      placeholder="Impacto"
+                      [style]="{ width: '100%' }"
+                    />
+                  </div>
+                </div>
+              }
+
+              <!-- Titulo con variables clicables -->
+              <div class="mb-4">
+                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                  Titulo
+                </label>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="config.titleTemplate"
+                  placeholder="Ej: Riesgo detectado"
+                  class="w-full mb-2"
+                />
+                <div class="flex flex-wrap gap-1">
+                  <span class="text-xs text-zinc-500 dark:text-zinc-400 mr-1">Variables:</span>
+                  @for (variable of availableVariables(); track variable.key) {
+                    <p-chip
+                      [label]="variable.key"
+                      styleClass="text-xs cursor-pointer bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-800/50"
+                      (click)="insertVariableInTitle(config, variable.key)"
+                    />
+                  }
+                </div>
+              </div>
+
+              <!-- Descripcion con variables clicables -->
+              <div class="mb-4">
+                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
+                  Descripcion
+                </label>
+                <textarea
+                  pTextarea
+                  [(ngModel)]="config.descriptionTemplate"
+                  placeholder="Descripcion del evento..."
+                  class="w-full mb-2"
+                  rows="3"
+                ></textarea>
+                <div class="flex flex-wrap gap-1">
+                  <span class="text-xs text-zinc-500 dark:text-zinc-400 mr-1">Variables:</span>
+                  @for (variable of availableVariables(); track variable.key) {
+                    <p-chip
+                      [label]="variable.key"
+                      styleClass="text-xs cursor-pointer bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-800/50"
+                      (click)="insertVariableInDescription(config, variable.key)"
+                    />
+                  }
+                </div>
+              </div>
+
+              <!-- Campos adicionales -->
+              <div class="border-t border-zinc-200 dark:border-zinc-600 pt-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                    Campos adicionales
+                  </span>
+                  <p-button
+                    icon="pi pi-plus"
+                    label="Campo"
+                    [text]="true"
+                    size="small"
+                    severity="secondary"
+                  />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button
+        label="Cancelar"
+        [outlined]="true"
+        severity="secondary"
+        (onClick)="closeSaveConfigModal()"
+      />
+      <p-button
+        label="Guardar"
+        icon="pi pi-save"
+        severity="success"
+        (onClick)="saveConfig()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

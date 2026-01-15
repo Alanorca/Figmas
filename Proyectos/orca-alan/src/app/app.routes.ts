@@ -59,6 +59,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/proceso-detalle/proceso-detalle').then(m => m.ProcesoDetalleComponent)
   },
   {
+    path: 'procesos/:id/runner',
+    loadComponent: () => import('./pages/proceso-runner/proceso-runner').then(m => m.ProcesoRunnerComponent)
+  },
+  {
     path: 'procesos/:id/objetivos-kpis',
     loadComponent: () => import('./pages/objetivos-kpis/objetivos-kpis').then(m => m.ObjetivosKpisComponent)
   },

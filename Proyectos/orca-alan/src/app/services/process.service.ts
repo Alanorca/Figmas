@@ -15,7 +15,18 @@ import {
   MlNodeConfig,
   KpiNodeConfig,
   ObjetivoProceso,
-  KpiProceso
+  KpiProceso,
+  ProcessExecutionFull,
+  ProcessExecutionStatus,
+  ProcessExecutionMetrics,
+  NodeExecutionResult,
+  OutputVariable,
+  OutputStorageConfig,
+  EntityCreationConfig,
+  ProcessRunnerConfig,
+  StorageCondition,
+  EXECUTION_STATUS_NAMES,
+  OUTPUT_VARIABLE_TYPE_LABELS
 } from '../models/process-nodes';
 import { GroqService } from './groq.service';
 
@@ -41,6 +52,8 @@ export interface ProcessExecution {
 
 const STORAGE_KEY = 'orca_procesos';
 const EXECUTIONS_KEY = 'orca_executions';
+const RUNNER_CONFIG_KEY = 'orca_runner_config';
+const FULL_EXECUTIONS_KEY = 'orca_full_executions';
 
 @Injectable({
   providedIn: 'root'
@@ -1855,5 +1868,638 @@ export class ProcessService {
     this._edges.set([]);
     this._selectedNode.set(null);
     this.autoSave();
+  }
+
+  // =============== EJECUCIÓN MEJORADA CON TRACKING ===============
+
+  /**
+   * Ejecuta un proceso con tracking detallado y simulación de tiempos realistas
+   * @param procesoId ID del proceso a ejecutar
+   * @param inputData Datos de entrada opcionales
+   * @param onProgress Callback para reportar progreso en tiempo real
+   */
+  async executeProcessWithTracking(
+    procesoId: string,
+    inputData?: Record<string, unknown>,
+    onProgress?: (execution: ProcessExecutionFull) => void
+  ): Promise<ProcessExecutionFull> {
+    // Cargar el proceso si no está cargado
+    const proceso = this._procesos().find(p => p.id === procesoId);
+    if (!proceso) {
+      throw new Error(`Proceso ${procesoId} no encontrado`);
+    }
+
+    // Cargar nodos y edges del proceso
+    const nodes = proceso.nodes || [];
+    const edges = proceso.edges || [];
+
+    if (nodes.length === 0) {
+      throw new Error('El proceso no tiene nodos');
+    }
+
+    // Crear la ejecución inicial
+    const executionId = `exec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const sortedNodes = this.topologicalSort(nodes, edges);
+
+    const execution: ProcessExecutionFull = {
+      id: executionId,
+      procesoId: procesoId,
+      procesoNombre: proceso.nombre,
+      statusCode: 'RUNNING',
+      statusName: EXECUTION_STATUS_NAMES['RUNNING'],
+      startTime: new Date(),
+      metrics: {
+        totalNodes: sortedNodes.length,
+        completedNodes: 0,
+        failedNodes: 0,
+        skippedNodes: 0,
+        percentage: 0
+      },
+      nodes: sortedNodes.map((node, index) => ({
+        nodeId: node.id,
+        nodeName: node.label,
+        nodeType: node.type,
+        status: 'pending' as const,
+        executionOrder: index + 1
+      })),
+      context: inputData ? { ...inputData } : {},
+      inputData,
+      createdBy: 'usuario_actual'
+    };
+
+    this._isExecuting.set(true);
+    onProgress?.(execution);
+
+    try {
+      // Ejecutar cada nodo con delay simulado
+      for (let i = 0; i < sortedNodes.length; i++) {
+        const node = sortedNodes[i];
+        const nodeResult = execution.nodes[i];
+
+        // Marcar nodo como running
+        nodeResult.status = 'running';
+        nodeResult.startTime = new Date();
+        execution.statusName = `Ejecutando: ${node.label}`;
+        onProgress?.(this.cloneExecution(execution));
+
+        // Simular tiempo de ejecución (1-3 segundos)
+        const delay = 1000 + Math.random() * 2000;
+        await this.sleep(delay);
+
+        try {
+          // Ejecutar el nodo
+          const result = await this.executeNode(node, execution.context);
+
+          // Actualizar resultado
+          nodeResult.status = 'completed';
+          nodeResult.endTime = new Date();
+          nodeResult.duration = nodeResult.endTime.getTime() - nodeResult.startTime!.getTime();
+          nodeResult.output = result;
+          nodeResult.outputKey = `${node.type}_output`;
+
+          // Agregar al contexto
+          execution.context[`${node.type}_output`] = result;
+          if (node.type === 'matematico') {
+            const config = node.config as MatematicoNodeConfig;
+            execution.context[config.variablesSalida || 'resultado'] = result;
+          }
+
+          // Actualizar métricas
+          execution.metrics.completedNodes++;
+          execution.metrics.percentage =
+            (execution.metrics.completedNodes + execution.metrics.failedNodes) /
+            execution.metrics.totalNodes;
+
+        } catch (error) {
+          // Nodo falló
+          nodeResult.status = 'failed';
+          nodeResult.endTime = new Date();
+          nodeResult.duration = nodeResult.endTime.getTime() - nodeResult.startTime!.getTime();
+          nodeResult.error = {
+            message: error instanceof Error ? error.message : 'Error desconocido',
+            type: 'ExecutionError'
+          };
+          execution.metrics.failedNodes++;
+          execution.metrics.percentage =
+            (execution.metrics.completedNodes + execution.metrics.failedNodes) /
+            execution.metrics.totalNodes;
+        }
+
+        onProgress?.(this.cloneExecution(execution));
+      }
+
+      // Determinar estado final
+      if (execution.metrics.failedNodes > 0) {
+        execution.statusCode = 'FAILED';
+        execution.statusName = EXECUTION_STATUS_NAMES['FAILED'];
+      } else {
+        execution.statusCode = 'COMPLETED';
+        execution.statusName = EXECUTION_STATUS_NAMES['COMPLETED'];
+      }
+      execution.endTime = new Date();
+      execution.duration = execution.endTime.getTime() - execution.startTime.getTime();
+      execution.metrics.percentage = 1;
+
+    } catch (error) {
+      execution.statusCode = 'FAILED';
+      execution.statusName = EXECUTION_STATUS_NAMES['FAILED'];
+      execution.endTime = new Date();
+      execution.duration = execution.endTime.getTime() - execution.startTime.getTime();
+    }
+
+    this._isExecuting.set(false);
+
+    // Guardar ejecución en historial
+    this.saveFullExecution(execution);
+
+    onProgress?.(execution);
+    return execution;
+  }
+
+  private cloneExecution(execution: ProcessExecutionFull): ProcessExecutionFull {
+    return JSON.parse(JSON.stringify(execution));
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // =============== HISTORIAL DE EJECUCIONES POR PROCESO ===============
+
+  /**
+   * Obtiene el historial de ejecuciones de un proceso específico
+   */
+  getFullExecutionHistory(procesoId: string): ProcessExecutionFull[] {
+    try {
+      const stored = localStorage.getItem(FULL_EXECUTIONS_KEY);
+      const all: ProcessExecutionFull[] = stored ? JSON.parse(stored) : [];
+      return all
+        .filter(e => e.procesoId === procesoId)
+        .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Obtiene una ejecución específica por ID
+   */
+  getExecutionById(executionId: string): ProcessExecutionFull | null {
+    try {
+      const stored = localStorage.getItem(FULL_EXECUTIONS_KEY);
+      const all: ProcessExecutionFull[] = stored ? JSON.parse(stored) : [];
+      return all.find(e => e.id === executionId) || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private saveFullExecution(execution: ProcessExecutionFull): void {
+    try {
+      const stored = localStorage.getItem(FULL_EXECUTIONS_KEY);
+      const executions: ProcessExecutionFull[] = stored ? JSON.parse(stored) : [];
+      executions.unshift(execution);
+      // Mantener solo las últimas 100 ejecuciones
+      const trimmed = executions.slice(0, 100);
+      localStorage.setItem(FULL_EXECUTIONS_KEY, JSON.stringify(trimmed));
+    } catch (e) {
+      console.error('Error saving full execution:', e);
+    }
+  }
+
+  /**
+   * Genera datos de prueba para el historial de ejecuciones de un proceso
+   */
+  seedDemoExecutionHistory(procesoId: string): void {
+    const proceso = this.procesos().find(p => p.id === procesoId);
+    if (!proceso) return;
+
+    // Verificar si ya hay historial para este proceso
+    const existing = this.getFullExecutionHistory(procesoId);
+    if (existing.length > 0) return; // Ya hay datos
+
+    const now = new Date();
+    const demoExecutions: ProcessExecutionFull[] = [];
+
+    // Crear 8 ejecuciones de prueba con diferentes estados y fechas
+    const statuses: Array<{ code: ProcessExecutionStatus; name: string }> = [
+      { code: 'COMPLETED', name: 'Completado' },
+      { code: 'COMPLETED', name: 'Completado' },
+      { code: 'FAILED', name: 'Fallido' },
+      { code: 'COMPLETED', name: 'Completado' },
+      { code: 'COMPLETED', name: 'Completado' },
+      { code: 'FAILED', name: 'Fallido' },
+      { code: 'COMPLETED', name: 'Completado' },
+      { code: 'COMPLETED', name: 'Completado' },
+    ];
+
+    for (let i = 0; i < statuses.length; i++) {
+      const status = statuses[i];
+      const startTime = new Date(now.getTime() - (i * 3600000 * (2 + Math.random() * 4))); // 2-6 horas entre ejecuciones
+      const duration = Math.floor(1500 + Math.random() * 8000); // 1.5s - 9.5s
+      const endTime = new Date(startTime.getTime() + duration);
+
+      const nodeResults: NodeExecutionResult[] = proceso.nodes.map((node, nodeIndex) => {
+        const nodeStatus = status.code === 'FAILED' && nodeIndex === proceso.nodes.length - 1
+          ? 'failed'
+          : 'completed';
+
+        const nodeOutput = this.generateDemoOutput(node.type);
+
+        return {
+          nodeId: node.id,
+          nodeName: node.label,
+          nodeType: node.type,
+          status: nodeStatus as 'pending' | 'running' | 'completed' | 'failed' | 'skipped',
+          startTime: new Date(startTime.getTime() + (nodeIndex * (duration / proceso.nodes.length))),
+          endTime: new Date(startTime.getTime() + ((nodeIndex + 1) * (duration / proceso.nodes.length))),
+          duration: Math.floor(duration / proceso.nodes.length),
+          output: nodeOutput,
+          outputKey: `${node.type}_output`,
+          executionOrder: nodeIndex + 1,
+          error: nodeStatus === 'failed' ? { message: 'Error de conexión al servicio externo', type: 'ConnectionError' } : undefined
+        };
+      });
+
+      const execution: ProcessExecutionFull = {
+        id: `exec-${procesoId}-${Date.now()}-${i}`,
+        procesoId: procesoId,
+        procesoNombre: proceso.nombre,
+        statusCode: status.code,
+        statusName: status.name,
+        startTime: startTime,
+        endTime: endTime,
+        duration: duration,
+        metrics: {
+          totalNodes: proceso.nodes.length,
+          completedNodes: status.code === 'COMPLETED' ? proceso.nodes.length : proceso.nodes.length - 1,
+          failedNodes: status.code === 'FAILED' ? 1 : 0,
+          skippedNodes: 0,
+          percentage: status.code === 'COMPLETED' ? 1 : ((proceso.nodes.length - 1) / proceso.nodes.length)
+        },
+        nodes: nodeResults,
+        context: this.generateDemoContext(proceso.nodes),
+        createdBy: 'sistema'
+      };
+
+      demoExecutions.push(execution);
+    }
+
+    // Guardar todas las ejecuciones demo
+    try {
+      const stored = localStorage.getItem(FULL_EXECUTIONS_KEY);
+      const allExecutions: ProcessExecutionFull[] = stored ? JSON.parse(stored) : [];
+      const combined = [...demoExecutions, ...allExecutions].slice(0, 100);
+      localStorage.setItem(FULL_EXECUTIONS_KEY, JSON.stringify(combined));
+    } catch (e) {
+      console.error('Error seeding demo executions:', e);
+    }
+  }
+
+  private generateDemoOutput(nodeType: string): unknown {
+    switch (nodeType) {
+      case 'csv':
+        return [
+          { id: 1, nombre: 'Servidor Principal', estado: 'activo', riesgo: 0.15 },
+          { id: 2, nombre: 'Base de Datos', estado: 'activo', riesgo: 0.08 },
+          { id: 3, nombre: 'Firewall', estado: 'warning', riesgo: 0.32 },
+          { id: 4, nombre: 'API Gateway', estado: 'activo', riesgo: 0.12 }
+        ];
+      case 'transformacion':
+        return {
+          total_registros: 4,
+          activos: 3,
+          en_riesgo: 1,
+          promedio_riesgo: 0.1675
+        };
+      case 'llm':
+        return {
+          analisis: 'El análisis de los activos muestra un nivel de riesgo moderado. Se recomienda revisar el Firewall que presenta un nivel de riesgo elevado (32%).',
+          recomendaciones: ['Actualizar firmware del Firewall', 'Implementar monitoreo adicional', 'Revisar políticas de acceso'],
+          nivel_urgencia: 'medio'
+        };
+      case 'matematico':
+        return {
+          resultado: 0.1675,
+          operacion: 'promedio',
+          valores_procesados: 4
+        };
+      case 'condicional':
+        return {
+          condicion_evaluada: 'riesgo_promedio > 0.15',
+          resultado: true,
+          rama_ejecutada: 'alerta'
+        };
+      case 'kpi':
+        return {
+          kpi_id: 'kpi-riesgo-activos',
+          valor_actual: 16.75,
+          umbral: 20,
+          estado: 'normal'
+        };
+      default:
+        return { processed: true, timestamp: new Date().toISOString() };
+    }
+  }
+
+  private generateDemoContext(nodes: Proceso['nodes']): Record<string, unknown> {
+    const context: Record<string, unknown> = {};
+    for (const node of nodes) {
+      context[`${node.type}_output`] = this.generateDemoOutput(node.type);
+    }
+    context['execution_timestamp'] = new Date().toISOString();
+    context['total_nodes_executed'] = nodes.length;
+    return context;
+  }
+
+  // =============== EXTRACCIÓN DE VARIABLES DE SALIDA ===============
+
+  /**
+   * Extrae las variables de salida de una ejecución
+   */
+  extractOutputVariables(execution: ProcessExecutionFull): OutputVariable[] {
+    const variables: OutputVariable[] = [];
+
+    for (const nodeResult of execution.nodes) {
+      if (nodeResult.status === 'completed' && nodeResult.output !== undefined) {
+        const output = nodeResult.output;
+        const outputType = this.getValueType(output);
+
+        // Variable principal del nodo
+        variables.push({
+          key: nodeResult.outputKey || `${nodeResult.nodeType}_output`,
+          value: output,
+          type: outputType,
+          typeLabel: OUTPUT_VARIABLE_TYPE_LABELS[outputType],
+          preview: this.getValuePreview(output),
+          nodeId: nodeResult.nodeId,
+          nodeName: nodeResult.nodeName
+        });
+
+        // Si es un objeto, extraer sus propiedades como variables individuales
+        if (outputType === 'object' && output !== null && typeof output === 'object') {
+          for (const [key, value] of Object.entries(output as Record<string, unknown>)) {
+            const valueType = this.getValueType(value);
+            variables.push({
+              key: `${nodeResult.outputKey || nodeResult.nodeType}_${key}`,
+              value: value,
+              type: valueType,
+              typeLabel: OUTPUT_VARIABLE_TYPE_LABELS[valueType],
+              preview: this.getValuePreview(value),
+              nodeId: nodeResult.nodeId,
+              nodeName: nodeResult.nodeName
+            });
+          }
+        }
+      }
+    }
+
+    return variables;
+  }
+
+  private getValueType(value: unknown): OutputVariable['type'] {
+    if (value === null) return 'null';
+    if (Array.isArray(value)) return 'array';
+    switch (typeof value) {
+      case 'string': return 'string';
+      case 'number': return 'number';
+      case 'boolean': return 'boolean';
+      case 'object': return 'object';
+      default: return 'null';
+    }
+  }
+
+  private getValuePreview(value: unknown, maxLength = 50): string {
+    if (value === null) return 'null';
+    if (value === undefined) return 'undefined';
+
+    if (Array.isArray(value)) {
+      return `[${value.length} elementos]`;
+    }
+
+    if (typeof value === 'object') {
+      const keys = Object.keys(value as object);
+      return `{ ${keys.slice(0, 3).join(', ')}${keys.length > 3 ? '...' : ''} }`;
+    }
+
+    const str = String(value);
+    return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
+  }
+
+  // =============== CONFIGURACIÓN DEL RUNNER ===============
+
+  /**
+   * Guarda la configuración del runner para un proceso
+   */
+  saveRunnerConfig(procesoId: string, storageConfigs: OutputStorageConfig[], entityConfigs: EntityCreationConfig[]): void {
+    try {
+      const stored = localStorage.getItem(RUNNER_CONFIG_KEY);
+      const allConfigs: Record<string, ProcessRunnerConfig> = stored ? JSON.parse(stored) : {};
+
+      allConfigs[procesoId] = {
+        procesoId,
+        storageConfigs,
+        entityConfigs,
+        lastUpdated: new Date()
+      };
+
+      localStorage.setItem(RUNNER_CONFIG_KEY, JSON.stringify(allConfigs));
+    } catch (e) {
+      console.error('Error saving runner config:', e);
+    }
+  }
+
+  /**
+   * Obtiene la configuración del runner para un proceso
+   */
+  getRunnerConfig(procesoId: string): ProcessRunnerConfig | null {
+    try {
+      const stored = localStorage.getItem(RUNNER_CONFIG_KEY);
+      const allConfigs: Record<string, ProcessRunnerConfig> = stored ? JSON.parse(stored) : {};
+      return allConfigs[procesoId] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // =============== CREACIÓN DE ENTIDADES ===============
+
+  /**
+   * Crea entidades basándose en la configuración y los resultados de ejecución
+   */
+  createEntitiesFromExecution(
+    execution: ProcessExecutionFull,
+    entityConfigs: EntityCreationConfig[]
+  ): { entityType: string; title: string; created: boolean; error?: string }[] {
+    const results: { entityType: string; title: string; created: boolean; error?: string }[] = [];
+
+    for (const config of entityConfigs) {
+      if (!config.enabled) continue;
+
+      // Evaluar condición si aplica
+      if (config.createConditionally && config.condition) {
+        const conditionMet = this.evaluateCondition(config.condition, execution.context);
+        if (!conditionMet) {
+          results.push({
+            entityType: config.entityType,
+            title: config.titleTemplate,
+            created: false,
+            error: 'Condición no cumplida'
+          });
+          continue;
+        }
+      }
+
+      try {
+        // Reemplazar variables en templates
+        const title = this.replaceTemplateVariables(config.titleTemplate, execution.context);
+        const description = this.replaceTemplateVariables(config.descriptionTemplate, execution.context);
+
+        // Simular creación de entidad (en un sistema real, esto llamaría a un servicio)
+        const entity = {
+          id: `${config.entityType}-${Date.now()}`,
+          type: config.entityType,
+          title,
+          description,
+          subtipo: config.subtipoId,
+          estado: config.estadoId,
+          severidad: config.severidadId,
+          propagacion: config.propagacionId,
+          probabilidad: config.probabilidadId,
+          impacto: config.impactoId,
+          createdAt: new Date(),
+          createdFromExecution: execution.id
+        };
+
+        // Guardar entidad en localStorage (simulado)
+        this.saveCreatedEntity(config.entityType, entity);
+
+        results.push({
+          entityType: config.entityType,
+          title,
+          created: true
+        });
+      } catch (error) {
+        results.push({
+          entityType: config.entityType,
+          title: config.titleTemplate,
+          created: false,
+          error: error instanceof Error ? error.message : 'Error desconocido'
+        });
+      }
+    }
+
+    return results;
+  }
+
+  private evaluateCondition(condition: StorageCondition, context: Record<string, unknown>): boolean {
+    if (!condition.enabled || condition.operator === 'always') return true;
+
+    const value = condition.variableKey ? context[condition.variableKey] : null;
+    const compareValue = condition.compareValue;
+
+    switch (condition.operator) {
+      case 'equals':
+        return value === compareValue;
+      case 'not_equals':
+        return value !== compareValue;
+      case 'greater_than':
+        return typeof value === 'number' && typeof compareValue === 'number' && value > compareValue;
+      case 'less_than':
+        return typeof value === 'number' && typeof compareValue === 'number' && value < compareValue;
+      case 'greater_equal':
+        return typeof value === 'number' && typeof compareValue === 'number' && value >= compareValue;
+      case 'less_equal':
+        return typeof value === 'number' && typeof compareValue === 'number' && value <= compareValue;
+      case 'contains':
+        return typeof value === 'string' && typeof compareValue === 'string' && value.includes(compareValue);
+      case 'not_contains':
+        return typeof value === 'string' && typeof compareValue === 'string' && !value.includes(compareValue);
+      case 'is_empty':
+        return value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0);
+      case 'is_not_empty':
+        return value !== null && value !== undefined && value !== '' && (!Array.isArray(value) || value.length > 0);
+      default:
+        return true;
+    }
+  }
+
+  private replaceTemplateVariables(template: string, context: Record<string, unknown>): string {
+    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+      const value = context[key];
+      if (value === undefined || value === null) return '';
+      if (typeof value === 'object') return JSON.stringify(value);
+      return String(value);
+    });
+  }
+
+  private saveCreatedEntity(entityType: string, entity: Record<string, unknown>): void {
+    try {
+      const key = `orca_created_${entityType}s`;
+      const stored = localStorage.getItem(key);
+      const entities: Record<string, unknown>[] = stored ? JSON.parse(stored) : [];
+      entities.unshift(entity);
+      localStorage.setItem(key, JSON.stringify(entities.slice(0, 100)));
+    } catch (e) {
+      console.error(`Error saving created ${entityType}:`, e);
+    }
+  }
+
+  // =============== EXPORTACIÓN DE RESULTADOS ===============
+
+  /**
+   * Exporta el contexto de una ejecución como JSON descargable
+   */
+  exportExecutionAsJson(execution: ProcessExecutionFull): void {
+    const data = {
+      id: execution.id,
+      proceso: execution.procesoNombre,
+      estado: execution.statusName,
+      fechaInicio: execution.startTime,
+      fechaFin: execution.endTime,
+      duracion: execution.duration,
+      metricas: execution.metrics,
+      contexto: execution.context,
+      nodos: execution.nodes.map(n => ({
+        nombre: n.nodeName,
+        tipo: n.nodeType,
+        estado: n.status,
+        duracion: n.duration,
+        salida: n.output,
+        error: n.error
+      }))
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ejecucion-${execution.id}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Exporta las variables de una ejecución como JSON descargable
+   */
+  exportVariablesAsJson(execution: ProcessExecutionFull): void {
+    const variables = this.extractOutputVariables(execution);
+
+    const data = variables.reduce((acc, v) => {
+      acc[v.key] = v.value;
+      return acc;
+    }, {} as Record<string, unknown>);
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `variables-${execution.id}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 }
