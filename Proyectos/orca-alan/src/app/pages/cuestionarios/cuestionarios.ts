@@ -1039,25 +1039,7 @@ export class CuestionariosComponent {
   // MÉTODOS - CUESTIONARIOS (WIZARD)
   // =============================================
   crearNuevoCuestionario() {
-    this.wizardPaso.set(0);
-    this.metodoCreacion.set(null);
-    this.promptIA.set('');
-    this.wizardDatosGenerales.set({
-      nombre: '',
-      descripcion: '',
-      marcoNormativo: '',
-      tipoEvaluacion: 'autoevaluacion',
-      periodicidad: 'anual',
-      areasObjetivo: []
-    });
-    this.wizardUmbrales.set({
-      deficiente: 50,
-      aceptable: 70,
-      sobresaliente: 90
-    });
-    this.wizardIAMetodo.set('prompt');
-    this.wizardDocumento.set(null);
-    this.vistaActual.set('wizard');
+    this.router.navigate(['/cuestionarios/crear']);
   }
 
   seleccionarMetodoCreacion(metodo: 'manual' | 'ia') {
@@ -1080,27 +1062,27 @@ export class CuestionariosComponent {
         this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'El nombre del cuestionario es requerido' });
         return;
       }
-      this.wizardPaso.set(2);
-      return;
-    }
-
-    if (paso === 2) {
-      if (metodo === 'manual') {
-        this.finalizarWizardManual();
+      // Si es IA, saltar umbrales e ir directo al paso de configuración IA
+      if (metodo === 'ia') {
+        this.wizardPaso.set(2); // Paso 2 ahora es configuración IA
       } else {
-        this.wizardPaso.set(3);
+        this.finalizarWizardManual(); // Manual va directo al editor
       }
       return;
     }
+
+    // Paso 2 ahora es configuración IA (antes era umbrales)
+    // La generación se maneja en generarConIAWizard()
   }
 
   puedeAvanzarWizard(): boolean {
     const paso = this.wizardPaso();
+    const metodo = this.metodoCreacion();
 
-    if (paso === 0) return !!this.metodoCreacion();
+    if (paso === 0) return !!metodo;
     if (paso === 1) return !!this.wizardDatosGenerales().nombre.trim();
-    if (paso === 2) return true;
-    if (paso === 3) {
+    // Paso 2 es configuración IA (para método IA)
+    if (paso === 2 && metodo === 'ia') {
       const iaMetodo = this.wizardIAMetodo();
       if (iaMetodo === 'prompt') return !!this.promptIA().trim();
       if (iaMetodo === 'documento') return !!this.wizardDocumento();
@@ -1210,7 +1192,7 @@ export class CuestionariosComponent {
 
     this.generandoIA.set(false);
     this.wizardPreviewCuestionario.set(cuestionarioGenerado);
-    this.wizardPaso.set(4);
+    this.wizardPaso.set(3); // Paso 3 es preview para flujo IA (saltamos umbrales)
     this.messageService.add({ severity: 'success', summary: 'IA', detail: 'Cuestionario generado. Revisa el preview.' });
   }
 
@@ -1224,8 +1206,32 @@ export class CuestionariosComponent {
     this.vistaActual.set('editor');
   }
 
+  guardarYVolverALista() {
+    const preview = this.wizardPreviewCuestionario();
+    if (!preview) return;
+
+    // Agregar el cuestionario a la lista
+    this.cuestionarios.update(lista => [...lista, preview]);
+
+    // Limpiar estado del wizard
+    this.wizardPreviewCuestionario.set(null);
+    this.wizardPaso.set(0);
+    this.metodoCreacion.set(null);
+    this.promptIA.set('');
+    this.wizardDocumento.set(null);
+
+    // Volver a la lista
+    this.vistaActual.set('lista');
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Guardado',
+      detail: 'Cuestionario guardado exitosamente'
+    });
+  }
+
   regenerarConIA() {
-    this.wizardPaso.set(3);
+    this.wizardPaso.set(2); // Volver al paso de configuración IA para regenerar
     this.wizardPreviewCuestionario.set(null);
   }
 

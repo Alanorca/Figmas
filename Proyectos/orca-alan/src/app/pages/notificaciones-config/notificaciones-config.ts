@@ -210,26 +210,22 @@ interface DiaSemana {
         <p-tabs [(value)]="tabActivo">
           <p-tablist>
             <p-tab [value]="0">
-              <i class="pi pi-user mr-2"></i>
-              Preferencias Personales
-            </p-tab>
-            <p-tab [value]="1">
               <i class="pi pi-th-large mr-2"></i>
               Configuración por Módulo
             </p-tab>
-            <p-tab [value]="2">
+            <p-tab [value]="1">
               <i class="pi pi-sliders-h mr-2"></i>
               Gestión de Reglas
             </p-tab>
-            <p-tab [value]="3">
+            <p-tab [value]="2">
               <i class="pi pi-history mr-2"></i>
               Log de Notificaciones
             </p-tab>
           </p-tablist>
 
           <p-tabpanels>
-            <!-- Tab 1: Configuración por Módulo -->
-            <p-tabpanel [value]="1">
+            <!-- Tab 0: Configuración por Módulo -->
+            <p-tabpanel [value]="0">
               <div class="notificaciones-layout">
                 <!-- Panel Izquierdo: Lista de Módulos -->
                 <div class="modulos-panel">
@@ -501,277 +497,8 @@ interface DiaSemana {
               </div>
             </p-tabpanel>
 
-            <!-- Tab 0: Preferencias Personales -->
-            <p-tabpanel [value]="0">
-              <div class="preferencias-container">
-                <!-- Indicador de carga/guardado -->
-                @if (guardandoPreferencias) {
-                  <div class="preferencias-loading">
-                    <i class="pi pi-spin pi-spinner"></i>
-                    <span>Guardando preferencias...</span>
-                  </div>
-                }
-
-                <!-- Sección: Horario No Molestar -->
-                <div class="horario-no-molestar-card">
-                  <div class="horario-header">
-                    <div class="horario-title">
-                      <i class="pi pi-moon"></i>
-                      <h4>Horario No Molestar</h4>
-                    </div>
-                    <p-toggleswitch [(ngModel)]="horarioNoMolestar.habilitado" (onChange)="onPreferenceChange()" />
-                  </div>
-                  <p class="horario-desc">Durante este horario no recibirás notificaciones, excepto las de prioridad crítica.</p>
-
-                  <div class="horario-inputs" [class.disabled]="!horarioNoMolestar.habilitado">
-                    <!-- Días de la semana -->
-                    <div class="horario-dias">
-                      <label>Días activos</label>
-                      <div class="dias-semana-grid">
-                        @for (dia of diasSemana; track dia.valor) {
-                          <button
-                            type="button"
-                            class="dia-btn"
-                            [class.active]="isDiaSeleccionado(dia.valor)"
-                            [class.disabled]="!horarioNoMolestar.habilitado"
-                            (click)="toggleDia(dia.valor)"
-                            [pTooltip]="dia.label"
-                            tooltipPosition="top"
-                          >
-                            {{ dia.labelCorto }}
-                          </button>
-                        }
-                      </div>
-                    </div>
-
-                    <!-- Horas -->
-                    <div class="horario-horas">
-                      <div class="horario-field">
-                        <label>Desde</label>
-                        <p-select
-                          [(ngModel)]="horarioNoMolestar.horaInicio"
-                          [options]="horasDisponibles"
-                          optionLabel="label"
-                          optionValue="value"
-                          [disabled]="!horarioNoMolestar.habilitado"
-                          styleClass="hora-select"
-                          (onChange)="onPreferenceChange()"
-                        />
-                      </div>
-                      <div class="horario-separator">
-                        <i class="pi pi-arrow-right"></i>
-                      </div>
-                      <div class="horario-field">
-                        <label>Hasta</label>
-                        <p-select
-                          [(ngModel)]="horarioNoMolestar.horaFin"
-                          [options]="horasDisponibles"
-                          optionLabel="label"
-                          optionValue="value"
-                          [disabled]="!horarioNoMolestar.habilitado"
-                          styleClass="hora-select"
-                          (onChange)="onPreferenceChange()"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="horario-warning">
-                    <i class="pi pi-exclamation-triangle"></i>
-                    <span>Las alertas con prioridad <strong>Crítica</strong> ignoran este horario</span>
-                  </div>
-                </div>
-
-                <!-- Sección: Rate Limiting Global -->
-                <div class="rate-limit-card">
-                  <div class="rate-limit-header">
-                    <div class="rate-limit-title">
-                      <i class="pi pi-gauge"></i>
-                      <h4>Límite de Notificaciones</h4>
-                    </div>
-                    <p-toggleswitch [(ngModel)]="rateLimit.habilitado" (onChange)="onPreferenceChange()" />
-                  </div>
-                  <p class="rate-limit-desc">Limita el número máximo de notificaciones que puedes recibir por hora para evitar saturación.</p>
-
-                  <div class="rate-limit-inputs" [class.disabled]="!rateLimit.habilitado">
-                    <div class="rate-limit-field">
-                      <label>Máximo por hora</label>
-                      <div class="rate-limit-input-group">
-                        <p-inputNumber
-                          [(ngModel)]="rateLimit.maxPorHora"
-                          [min]="10"
-                          [max]="1000"
-                          [step]="10"
-                          [showButtons]="true"
-                          buttonLayout="horizontal"
-                          incrementButtonIcon="pi pi-plus"
-                          decrementButtonIcon="pi pi-minus"
-                          [disabled]="!rateLimit.habilitado"
-                          (onInput)="onPreferenceChange()"
-                          styleClass="rate-limit-input"
-                        />
-                        <span class="rate-limit-unit">notificaciones/hora</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="rate-limit-info">
-                    <i class="pi pi-info-circle"></i>
-                    <span>Cuando se alcanza el límite, las notificaciones adicionales se omiten temporalmente</span>
-                  </div>
-                </div>
-
-                <!-- Sección: Frecuencia de Emails -->
-                <div class="frecuencia-card">
-                  <div class="frecuencia-header">
-                    <div class="frecuencia-title">
-                      <i class="pi pi-envelope"></i>
-                      <h4>Frecuencia de Emails</h4>
-                    </div>
-                  </div>
-                  <p class="frecuencia-desc">¿Cómo prefieres recibir las notificaciones por email?</p>
-
-                  <div class="frecuencia-options">
-                    <div
-                      class="frecuencia-option"
-                      [class.selected]="preferenciasNotificacion.frecuenciaEmail === 'inmediato'"
-                      (click)="setFrecuenciaEmail('inmediato')"
-                    >
-                      <div class="frecuencia-option-icon">
-                        <i class="pi pi-bolt"></i>
-                      </div>
-                      <div class="frecuencia-option-content">
-                        <span class="frecuencia-option-title">Inmediato</span>
-                        <span class="frecuencia-option-desc">Recibe cada notificación al momento</span>
-                      </div>
-                      <div class="frecuencia-option-check">
-                        @if (preferenciasNotificacion.frecuenciaEmail === 'inmediato') {
-                          <i class="pi pi-check-circle"></i>
-                        }
-                      </div>
-                    </div>
-
-                    <div
-                      class="frecuencia-option"
-                      [class.selected]="preferenciasNotificacion.frecuenciaEmail === 'resumen_diario'"
-                      (click)="setFrecuenciaEmail('resumen_diario')"
-                    >
-                      <div class="frecuencia-option-icon">
-                        <i class="pi pi-calendar"></i>
-                      </div>
-                      <div class="frecuencia-option-content">
-                        <span class="frecuencia-option-title">Resumen Diario</span>
-                        <span class="frecuencia-option-desc">Un email con todas las notificaciones del día</span>
-                      </div>
-                      <div class="frecuencia-option-check">
-                        @if (preferenciasNotificacion.frecuenciaEmail === 'resumen_diario') {
-                          <i class="pi pi-check-circle"></i>
-                        }
-                      </div>
-                    </div>
-
-                    <div
-                      class="frecuencia-option"
-                      [class.selected]="preferenciasNotificacion.frecuenciaEmail === 'resumen_semanal'"
-                      (click)="setFrecuenciaEmail('resumen_semanal')"
-                    >
-                      <div class="frecuencia-option-icon">
-                        <i class="pi pi-calendar-plus"></i>
-                      </div>
-                      <div class="frecuencia-option-content">
-                        <span class="frecuencia-option-title">Resumen Semanal</span>
-                        <span class="frecuencia-option-desc">Un email semanal con el resumen de notificaciones</span>
-                      </div>
-                      <div class="frecuencia-option-check">
-                        @if (preferenciasNotificacion.frecuenciaEmail === 'resumen_semanal') {
-                          <i class="pi pi-check-circle"></i>
-                        }
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Hora del resumen (solo si es diario o semanal) -->
-                  @if (preferenciasNotificacion.frecuenciaEmail !== 'inmediato') {
-                    <div class="hora-resumen">
-                      <label>
-                        <i class="pi pi-clock"></i>
-                        Hora de envío del resumen
-                      </label>
-                      <p-select
-                        [(ngModel)]="preferenciasNotificacion.horaResumen"
-                        [options]="horasDisponibles"
-                        optionLabel="label"
-                        optionValue="value"
-                        styleClass="hora-select"
-                        (onChange)="onPreferenceChange()"
-                      />
-                    </div>
-                  }
-                </div>
-
-                <!-- Sección: Preferencias por Prioridad -->
-                <div class="prioridades-card">
-                  <div class="prioridades-header">
-                    <i class="pi pi-flag"></i>
-                    <h4>Preferencias por Prioridad</h4>
-                  </div>
-                  <p class="prioridades-desc">Define qué canales usar según la prioridad de la notificación</p>
-
-                  <div class="prioridades-grid">
-                    <div class="prioridad-header">
-                      <span></span>
-                      <span>In-App</span>
-                      <span>Email</span>
-                    </div>
-                    <div class="prioridad-row">
-                      <span class="prioridad-label">
-                        <p-tag value="Crítica" severity="danger" />
-                      </span>
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.critical.inApp" [binary]="true" (onChange)="onPreferenceChange()" />
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.critical.email" [binary]="true" (onChange)="onPreferenceChange()" />
-                    </div>
-                    <div class="prioridad-row">
-                      <span class="prioridad-label">
-                        <p-tag value="Alta" severity="warn" />
-                      </span>
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.high.inApp" [binary]="true" (onChange)="onPreferenceChange()" />
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.high.email" [binary]="true" (onChange)="onPreferenceChange()" />
-                    </div>
-                    <div class="prioridad-row">
-                      <span class="prioridad-label">
-                        <p-tag value="Media" severity="info" />
-                      </span>
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.medium.inApp" [binary]="true" (onChange)="onPreferenceChange()" />
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.medium.email" [binary]="true" (onChange)="onPreferenceChange()" />
-                    </div>
-                    <div class="prioridad-row">
-                      <span class="prioridad-label">
-                        <p-tag value="Baja" severity="secondary" />
-                      </span>
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.low.inApp" [binary]="true" (onChange)="onPreferenceChange()" />
-                      <p-checkbox [(ngModel)]="preferenciasNotificacion.prioridades.low.email" [binary]="true" (onChange)="onPreferenceChange()" />
-                    </div>
-                  </div>
-
-                  <div class="prioridades-footer">
-                    <span class="auto-save-hint" [class.visible]="preferenciasCambiadas">
-                      <i class="pi pi-info-circle"></i>
-                      Los cambios se guardan automáticamente
-                    </span>
-                    <button
-                      pButton
-                      label="Guardar preferencias"
-                      icon="pi pi-check"
-                      [loading]="guardandoPreferencias"
-                      (click)="guardarPreferencias()"
-                    ></button>
-                  </div>
-                </div>
-              </div>
-            </p-tabpanel>
-
-            <!-- Tab 3: Gestión de Reglas -->
-            <p-tabpanel [value]="2">
+            <!-- Tab 1: Gestión de Reglas -->
+            <p-tabpanel [value]="1">
               <div class="reglas-container">
                 <!-- Toolbar con select y botón -->
                 <div class="rules-toolbar">
@@ -1211,8 +938,8 @@ interface DiaSemana {
               </div>
             </p-tabpanel>
 
-            <!-- Tab 3: Log de Notificaciones -->
-            <p-tabpanel [value]="3">
+            <!-- Tab 2: Log de Notificaciones -->
+            <p-tabpanel [value]="2">
               <app-notificaciones-logs />
             </p-tabpanel>
           </p-tabpanels>

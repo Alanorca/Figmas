@@ -67,6 +67,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/cuestionarios/cuestionarios').then(m => m.CuestionariosComponent)
   },
   {
+    path: 'cuestionarios/crear',
+    loadComponent: () => import('./pages/cuestionario-crear/cuestionario-crear').then(m => m.CuestionarioCrearComponent)
+  },
+  {
     path: 'cumplimiento',
     loadComponent: () => import('./pages/cumplimiento/cumplimiento').then(m => m.CumplimientoComponent)
   },
@@ -89,6 +93,10 @@ export const routes: Routes = [
   {
     path: 'perfil',
     loadComponent: () => import('./pages/perfil/perfil').then(m => m.PerfilComponent)
+  },
+  {
+    path: 'notificaciones-preferencias',
+    loadComponent: () => import('./pages/notificaciones-preferencias/notificaciones-preferencias').then(m => m.NotificacionesPreferenciasComponent)
   },
   {
     path: 'notificaciones-config',
