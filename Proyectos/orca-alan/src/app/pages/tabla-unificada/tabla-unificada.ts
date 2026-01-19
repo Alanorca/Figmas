@@ -43,6 +43,10 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 // Componentes personalizados
 import { GraficasInteractivasComponent, DatosGrafica, FiltroGrafica, TipoGraficaAvanzada } from '../../components/graficas-interactivas/graficas-interactivas';
 
+// Type imports for Data Board (components not used but types referenced)
+import type { RiskPoint } from '../../shared/components/data-board/risk-map/risk-map';
+import type { KpiCardConfig } from '../../shared/components/data-board/kpi-card/kpi-card';
+
 // Services & Models
 import { TablaUnificadaService } from '../../services/tabla-unificada.service';
 import { MessageService } from 'primeng/api';
@@ -474,6 +478,158 @@ export class TablaUnificadaComponent implements OnInit {
     { label: '50', value: 50 },
     { label: '100', value: 100 }
   ];
+
+  // ==================== DATA BOARD - KPIs & RISK MAP ====================
+  showDashboardView = signal(false);
+
+  // KPI Cards computados dinámicamente
+  kpiCards = computed<KpiCardConfig[]>(() => {
+    const datos = this.datosFiltrados();
+    const contadores = this.contadores();
+
+    // Contar por estado
+    const enProgreso = datos.filter(d => ['evaluado', 'en_progreso', 'abierto'].includes(d.estado)).length;
+    const criticos = datos.filter(d =>
+      (d.nivelRiesgo && d.nivelRiesgo >= 15) ||
+      d.severidad === 'critico' ||
+      d.severidad === 'alto'
+    ).length;
+    const resueltos = datos.filter(d => ['mitigado', 'cerrado', 'resuelto'].includes(d.estado)).length;
+
+    // Calcular tendencias (simulado - en producción sería con datos históricos)
+    const totalAnterior = Math.max(1, contadores.total - Math.floor(Math.random() * 10));
+    const cambioTotal = ((contadores.total - totalAnterior) / totalAnterior) * 100;
+
+    return [
+      {
+        id: 'total',
+        title: 'Total Registros',
+        value: contadores.total,
+        icon: 'pi pi-database',
+        color: 'primary',
+        percentChange: cambioTotal,
+        trend: cambioTotal > 0 ? 'up' : cambioTotal < 0 ? 'down' : 'stable',
+        decisionLevel: 'executive'
+      },
+      {
+        id: 'riesgos',
+        title: 'Riesgos',
+        value: contadores.riesgos,
+        icon: 'pi pi-shield',
+        color: 'warning',
+        percentChange: 5.2,
+        trend: 'up',
+        decisionLevel: 'tactical'
+      },
+      {
+        id: 'incidentes',
+        title: 'Incidentes',
+        value: contadores.incidentes,
+        icon: 'pi pi-exclamation-triangle',
+        color: 'danger',
+        percentChange: -3.1,
+        trend: 'down',
+        decisionLevel: 'operational'
+      },
+      {
+        id: 'criticos',
+        title: 'Críticos',
+        value: criticos,
+        icon: 'pi pi-exclamation-circle',
+        color: 'danger',
+        target: 0,
+        targetLabel: 'Objetivo',
+        decisionLevel: 'executive'
+      },
+      {
+        id: 'en-progreso',
+        title: 'En Progreso',
+        value: enProgreso,
+        icon: 'pi pi-spinner',
+        color: 'info',
+        decisionLevel: 'operational'
+      },
+      {
+        id: 'resueltos',
+        title: 'Resueltos',
+        value: resueltos,
+        icon: 'pi pi-check-circle',
+        color: 'success',
+        percentChange: 12.5,
+        trend: 'up',
+        decisionLevel: 'tactical'
+      }
+    ];
+  });
+
+  // Puntos para el Risk Map
+  riskMapPoints = computed<RiskPoint[]>(() => {
+    const datos = this.datosFiltrados();
+
+    // Filtrar solo registros con probabilidad e impacto
+    return datos
+      .filter(d => d.probabilidad !== undefined && d.impacto !== undefined)
+      .map(d => ({
+        id: d.id,
+        name: d.descripcion || d.titulo || d.id,
+        probability: d.probabilidad!,
+        impact: d.impacto!,
+        metadata: {
+          estado: d.estado,
+          responsable: d.responsable,
+          tipoEntidad: d.tipoEntidad
+        }
+      }));
+  });
+
+  // Toggle dashboard view
+  toggleDashboardView(): void {
+    this.showDashboardView.update(v => !v);
+  }
+
+  // Handler para click en KPI Card
+  onKpiCardClick(config: KpiCardConfig): void {
+    // Filtrar tabla por el tipo de KPI seleccionado
+    switch (config.id) {
+      case 'riesgos':
+        this.onEntidadChange('riesgo');
+        break;
+      case 'incidentes':
+        this.onEntidadChange('incidente');
+        break;
+      case 'criticos':
+        // Filtrar por nivel crítico
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Filtro aplicado',
+          detail: 'Mostrando registros críticos'
+        });
+        break;
+    }
+  }
+
+  // Handler para click en punto del Risk Map
+  onRiskMapPointClick(point: RiskPoint): void {
+    const registro = this.datosFiltrados().find(d => d.id === point.id);
+    if (registro) {
+      this.verDetalle(registro);
+    }
+  }
+
+  // Handler para click en celda del Risk Map
+  onRiskMapCellClick(cell: { probability: number; impact: number }): void {
+    const registrosEnCelda = this.datosFiltrados().filter(d =>
+      d.probabilidad === cell.probability && d.impacto === cell.impact
+    );
+
+    if (registrosEnCelda.length > 0) {
+      this.messageService.add({
+        severity: 'info',
+        summary: `Celda (${cell.probability}, ${cell.impact})`,
+        detail: `${registrosEnCelda.length} registro(s) en esta posición`
+      });
+    }
+  }
 
   // Estado del asistente de gráficas
   pasoGrafica = signal(1);

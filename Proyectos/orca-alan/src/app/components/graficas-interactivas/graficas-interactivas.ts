@@ -23,6 +23,8 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { GroqService } from '../../services/groq.service';
 import { ThemeService } from '../../services/theme.service';
+import { ChartLibraryService, ChartTemplate } from '../../services/chart-library.service';
+import { AnalisisInteligenteService, InterpretacionConsulta } from '../../services/analisis-inteligente.service';
 
 // Importar tipos de ApexCharts
 import {
@@ -221,6 +223,8 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private elementRef = inject(ElementRef);
   private themeService = inject(ThemeService);
+  readonly chartLibrary = inject(ChartLibraryService);
+  private analisisService = inject(AnalisisInteligenteService);
 
   // ==================== RESIZE OBSERVER ====================
 
@@ -542,7 +546,25 @@ export class GraficasInteractivasComponent implements AfterViewInit, OnDestroy {
   mostrarDialogGuardar = signal(false);
   nombreConfiguracion = signal('');
   descripcionConfiguracion = signal('');
-  tabActivo = signal<'config' | 'guardadas' | 'asistente'>('config');
+  tabActivo = signal<'config' | 'guardadas' | 'asistente' | 'biblioteca' | 'analitica'>('config');
+
+  // Biblioteca de templates
+  bibliotecaSearch = signal('');
+  bibliotecaCategoryFilter = signal<string | null>(null);
+  bibliotecaLevelFilter = signal<string | null>(null);
+
+  // Tab de Analítica Avanzada
+  analisisConsulta = signal('');
+  analisisInterpretacion = signal<InterpretacionConsulta | null>(null);
+  analisisProcesando = signal(false);
+  analisisResultado = signal<{
+    tipo: 'descriptivo' | 'predictivo' | 'correlacion';
+    titulo: string;
+    explicacion: string;
+    insights: string[];
+    recomendaciones: string[];
+  } | null>(null);
+  analisisHistorial = signal<{ consulta: string; fecha: Date; tipo: string }[]>([]);
 
   // Asistente IA
   mensajesAsistente = signal<MensajeAsistente[]>([]);
@@ -3372,5 +3394,272 @@ EJEMPLOS de respuestas correctas:
         this.drillDownMenu.show(event);
       }
     }, 0);
+  }
+
+  // ==================== BIBLIOTECA DE TEMPLATES ====================
+
+  /**
+   * Manejar cambio en búsqueda de biblioteca
+   */
+  onBibliotecaSearchChange(query: string): void {
+    this.bibliotecaSearch.set(query);
+    this.chartLibrary.setSearchQuery(query);
+  }
+
+  /**
+   * Manejar cambio en filtro de categoría
+   */
+  onBibliotecaCategoryChange(entity: string | null): void {
+    this.bibliotecaCategoryFilter.set(entity);
+    this.chartLibrary.setSelectedCategory(entity);
+  }
+
+  /**
+   * Manejar cambio en filtro de nivel de decisión
+   */
+  onBibliotecaLevelChange(level: string | null): void {
+    this.bibliotecaLevelFilter.set(level);
+    this.chartLibrary.setDecisionLevel(level);
+  }
+
+  /**
+   * Aplicar un template de la biblioteca
+   */
+  aplicarTemplate(template: ChartTemplate): void {
+    // Mapear el tipo de gráfica del template al tipo del componente
+    const mappedType = this.chartLibrary.mapChartType(template.chartType) as TipoGraficaAvanzada;
+    this.tipoGrafica.set(mappedType);
+
+    // Mapear el campo de categoría
+    const mappedField = this.chartLibrary.mapCategoryColumn(template.categoryColumn);
+    this.campoEjeX.set(mappedField);
+
+    // Aplicar la paleta si está definida
+    if (template.paleta && this.paletas[template.paleta]) {
+      this.paletaSeleccionada.set(template.paleta);
+    }
+
+    // Cambiar al tab de configuración para ver los cambios
+    this.tabActivo.set('config');
+
+    // Emitir evento de cambio de campo
+    const campoInfo = this.camposDisponibles.find(c => c.value === mappedField);
+    if (campoInfo) {
+      this.campoSeleccionado.emit({ campo: mappedField, tipo: campoInfo.tipo });
+    }
+  }
+
+  /**
+   * Obtener severity para el tag de nivel de decisión
+   */
+  getDecisionLevelSeverity(level: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    switch (level) {
+      case 'executive': return 'danger';
+      case 'tactical': return 'warn';
+      case 'operational': return 'info';
+      case 'analytical': return 'success';
+      default: return 'secondary';
+    }
+  }
+
+  /**
+   * Obtener preview de colores de una paleta
+   */
+  getPaletaPreview(paletaName: string): string[] {
+    const paleta = this.paletas[paletaName];
+    return paleta ? paleta.slice(0, 4) : [];
+  }
+
+  // ==================== TAB DE ANALÍTICA AVANZADA ====================
+
+  /**
+   * Usar una sugerencia de análisis
+   */
+  usarSugerenciaAnalisis(consulta: string): void {
+    this.analisisConsulta.set(consulta);
+    this.ejecutarAnalisis();
+  }
+
+  /**
+   * Ejecutar el análisis basado en la consulta
+   */
+  async ejecutarAnalisis(): Promise<void> {
+    const consulta = this.analisisConsulta().trim();
+    if (!consulta) return;
+
+    this.analisisProcesando.set(true);
+    this.analisisResultado.set(null);
+
+    try {
+      // Interpretar la consulta usando el servicio de análisis
+      const interpretacion = await this.analisisService.interpretarConsulta(consulta);
+      this.analisisInterpretacion.set(interpretacion);
+
+      // Generar el análisis con explicaciones usando Groq
+      const resultado = await this.generarAnalisisConExplicacion(consulta, interpretacion);
+      this.analisisResultado.set(resultado);
+
+      // Agregar al historial
+      this.analisisHistorial.update(h => [{
+        consulta,
+        fecha: new Date(),
+        tipo: resultado.tipo
+      }, ...h].slice(0, 10));
+
+    } catch (error) {
+      console.error('Error ejecutando análisis:', error);
+      this.analisisResultado.set({
+        tipo: 'descriptivo',
+        titulo: 'Error en el análisis',
+        explicacion: 'No se pudo completar el análisis. Por favor intenta con una consulta diferente.',
+        insights: [],
+        recomendaciones: ['Verifica tu conexión a internet', 'Intenta con una consulta más específica']
+      });
+    } finally {
+      this.analisisProcesando.set(false);
+    }
+  }
+
+  /**
+   * Generar análisis con explicación detallada usando Groq
+   */
+  private async generarAnalisisConExplicacion(
+    consulta: string,
+    interpretacion: InterpretacionConsulta
+  ): Promise<{
+    tipo: 'descriptivo' | 'predictivo' | 'correlacion';
+    titulo: string;
+    explicacion: string;
+    insights: string[];
+    recomendaciones: string[];
+  }> {
+    const datos = this.datosSignal();
+    const tipoGrafica = this.tipoGrafica();
+    const campo = this.campoEjeX();
+
+    // Construir contexto de datos
+    const datosResumen = datos.labels.map((label, i) => {
+      const valor = Array.isArray(datos.series) && typeof datos.series[0] === 'number'
+        ? (datos.series as number[])[i]
+        : (datos.series as { name: string; data: number[] }[])[0]?.data[i] || 0;
+      return `${label}: ${valor}`;
+    }).join(', ');
+
+    const prompt = `Eres un analista de datos experto. El usuario pregunta: "${consulta}"
+
+DATOS ACTUALES (${campo}):
+${datosResumen}
+
+INTERPRETACIÓN:
+- Tipo de análisis detectado: ${interpretacion.tipoAnalisisSugerido}
+- Entidades: ${interpretacion.entidadesDetectadas.join(', ') || 'General'}
+- Período: ${interpretacion.periodo?.etiqueta || 'No especificado'}
+- Confianza: ${Math.round(interpretacion.confianzaInterpretacion)}%
+
+Genera un análisis en formato JSON con esta estructura exacta:
+{
+  "tipo": "${interpretacion.tipoAnalisisSugerido}",
+  "titulo": "Título conciso del análisis",
+  "explicacion": "Explicación detallada de 2-3 oraciones sobre qué muestran los datos y por qué es relevante",
+  "insights": ["Insight 1 basado en los datos", "Insight 2", "Insight 3"],
+  "recomendaciones": ["Acción recomendada 1", "Acción recomendada 2"]
+}
+
+IMPORTANTE:
+- Los insights deben ser específicos y basados en los datos proporcionados
+- Las recomendaciones deben ser accionables
+- Responde SOLO con el JSON válido, sin texto adicional`;
+
+    try {
+      const response = await this.groqService.ask(prompt, {
+        temperature: 0.3,
+        maxTokens: 800
+      });
+
+      // Extraer JSON de la respuesta
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          tipo: parsed.tipo || 'descriptivo',
+          titulo: parsed.titulo || 'Análisis de datos',
+          explicacion: parsed.explicacion || 'Análisis completado.',
+          insights: parsed.insights || [],
+          recomendaciones: parsed.recomendaciones || []
+        };
+      }
+    } catch (e) {
+      console.error('Error parsing análisis:', e);
+    }
+
+    // Fallback si falla Groq
+    return this.generarAnalisisFallback(consulta, interpretacion, datos);
+  }
+
+  /**
+   * Generar análisis de fallback sin Groq
+   */
+  private generarAnalisisFallback(
+    consulta: string,
+    interpretacion: InterpretacionConsulta,
+    datos: DatosGrafica
+  ): {
+    tipo: 'descriptivo' | 'predictivo' | 'correlacion';
+    titulo: string;
+    explicacion: string;
+    insights: string[];
+    recomendaciones: string[];
+  } {
+    const valores = Array.isArray(datos.series) && typeof datos.series[0] === 'number'
+      ? datos.series as number[]
+      : (datos.series as { name: string; data: number[] }[])[0]?.data || [];
+
+    const total = valores.reduce((a, b) => a + b, 0);
+    const max = Math.max(...valores);
+    const maxIndex = valores.indexOf(max);
+    const maxLabel = datos.labels[maxIndex] || 'N/A';
+
+    return {
+      tipo: interpretacion.tipoAnalisisSugerido as 'descriptivo' | 'predictivo' | 'correlacion',
+      titulo: `Análisis de ${this.campoEjeX()}`,
+      explicacion: `Los datos muestran un total de ${total} registros distribuidos en ${datos.labels.length} categorías. La categoría "${maxLabel}" presenta el valor más alto con ${max} registros, representando el ${Math.round((max / total) * 100)}% del total.`,
+      insights: [
+        `La categoría "${maxLabel}" concentra la mayor cantidad de registros`,
+        `Se identifican ${datos.labels.length} categorías diferentes`,
+        total > 0 ? `El promedio por categoría es de ${Math.round(total / datos.labels.length)} registros` : 'No hay datos suficientes'
+      ],
+      recomendaciones: [
+        `Revisar los elementos en la categoría "${maxLabel}" para identificar patrones`,
+        'Considerar establecer alertas para categorías con valores atípicos',
+        'Comparar con períodos anteriores para identificar tendencias'
+      ]
+    };
+  }
+
+  /**
+   * Limpiar el resultado del análisis
+   */
+  limpiarAnalisis(): void {
+    this.analisisResultado.set(null);
+    this.analisisConsulta.set('');
+    this.analisisInterpretacion.set(null);
+  }
+
+  /**
+   * Aplicar el análisis a la gráfica actual
+   */
+  aplicarAnalisisAGrafica(): void {
+    const interpretacion = this.analisisInterpretacion();
+    if (!interpretacion) return;
+
+    // Aplicar tipo de gráfica sugerido
+    if (interpretacion.tipoAnalisisSugerido === 'predictivo') {
+      this.tipoGrafica.set('line');
+    } else if (interpretacion.tipoAnalisisSugerido === 'correlacion') {
+      this.tipoGrafica.set('scatter');
+    }
+
+    // Cambiar al tab de configuración
+    this.tabActivo.set('config');
   }
 }

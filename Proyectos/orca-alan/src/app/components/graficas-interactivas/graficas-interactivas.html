@@ -42,6 +42,20 @@
         <i class="pi pi-sparkles"></i>
         <span>IA</span>
       </button>
+      <button
+        class="config-tab biblioteca-tab"
+        [class.active]="tabActivo() === 'biblioteca'"
+        (click)="tabActivo.set('biblioteca')">
+        <i class="pi pi-book"></i>
+        <span>Biblioteca</span>
+      </button>
+      <button
+        class="config-tab analitica-tab"
+        [class.active]="tabActivo() === 'analitica'"
+        (click)="tabActivo.set('analitica')">
+        <i class="pi pi-calculator"></i>
+        <span>Analítica</span>
+      </button>
     </div>
 
     <!-- Tab de Configuración -->
@@ -546,6 +560,280 @@
           [disabled]="!inputAsistente().trim() || asistenteEscribiendo()"
           (onClick)="enviarMensajeAsistente()" />
       </div>
+    </div>
+    }
+
+    <!-- Tab de Biblioteca de Templates -->
+    @if (tabActivo() === 'biblioteca') {
+    <div class="biblioteca-panel">
+      <!-- Búsqueda y filtros -->
+      <div class="biblioteca-filtros">
+        <div class="biblioteca-search">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            [ngModel]="bibliotecaSearch()"
+            (ngModelChange)="onBibliotecaSearchChange($event)"
+            placeholder="Buscar plantillas..."
+            class="w-full" />
+        </div>
+        <div class="biblioteca-level-filter">
+          <p-select
+            [options]="chartLibrary.decisionLevels"
+            [ngModel]="bibliotecaLevelFilter()"
+            (ngModelChange)="onBibliotecaLevelChange($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Nivel de decisión"
+            [showClear]="true"
+            appendTo="body"
+            [style]="{ width: '100%' }">
+            <ng-template let-option pTemplate="item">
+              <div class="level-option">
+                <i [class]="option.icon" class="mr-2"></i>
+                <span>{{ option.label }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+      </div>
+
+      <!-- Categorías de entidades -->
+      <div class="biblioteca-categories">
+        <button
+          class="category-chip"
+          [class.active]="!bibliotecaCategoryFilter()"
+          (click)="onBibliotecaCategoryChange(null)">
+          <i class="pi pi-list"></i>
+          Todas
+        </button>
+        @for (cat of chartLibrary.categories(); track cat.entity) {
+          <button
+            class="category-chip"
+            [class.active]="bibliotecaCategoryFilter() === cat.entity"
+            (click)="onBibliotecaCategoryChange(cat.entity)"
+            [pTooltip]="cat.description"
+            tooltipPosition="top">
+            <i [class]="cat.icon"></i>
+            {{ cat.label }}
+          </button>
+        }
+      </div>
+
+      <!-- Lista de templates -->
+      <div class="biblioteca-templates">
+        @if (chartLibrary.filteredTemplates().length === 0) {
+          <div class="empty-biblioteca">
+            <i class="pi pi-search"></i>
+            <h4>No se encontraron plantillas</h4>
+            <p>Intenta con otros filtros o búsqueda</p>
+          </div>
+        } @else {
+          @for (template of chartLibrary.filteredTemplates(); track template.id) {
+            <div class="template-card" (click)="aplicarTemplate(template)">
+              <div class="template-header">
+                <div class="template-icon">
+                  <i [class]="template.icon"></i>
+                </div>
+                <div class="template-level">
+                  <p-tag
+                    [value]="chartLibrary.getDecisionLevelLabel(template.decisionLevel)"
+                    [severity]="getDecisionLevelSeverity(template.decisionLevel)"
+                    styleClass="level-tag" />
+                </div>
+              </div>
+              <div class="template-body">
+                <h4 class="template-name">{{ template.name }}</h4>
+                <p class="template-description">{{ template.description }}</p>
+                <div class="template-value">
+                  <i class="pi pi-lightbulb"></i>
+                  <span>{{ template.businessValue }}</span>
+                </div>
+              </div>
+              <div class="template-footer">
+                <div class="template-tags">
+                  <p-tag [value]="template.chartType" severity="info" styleClass="chart-type-tag" />
+                  @if (template.paleta) {
+                    <span class="template-palette">
+                      @for (color of getPaletaPreview(template.paleta); track $index) {
+                        <span class="color-dot" [style.background]="color"></span>
+                      }
+                    </span>
+                  }
+                </div>
+                <p-button
+                  icon="pi pi-arrow-right"
+                  [rounded]="true"
+                  size="small"
+                  severity="success"
+                  pTooltip="Aplicar plantilla"
+                  tooltipPosition="top" />
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Templates destacados -->
+      @if (!bibliotecaSearch() && !bibliotecaCategoryFilter() && !bibliotecaLevelFilter()) {
+        <div class="biblioteca-featured">
+          <h4><i class="pi pi-star mr-2"></i>Plantillas Destacadas</h4>
+          <div class="featured-grid">
+            @for (template of chartLibrary.featuredTemplates(); track template.id) {
+              <div class="featured-card" (click)="aplicarTemplate(template)">
+                <i [class]="template.icon"></i>
+                <span>{{ template.name }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+    }
+
+    <!-- Tab de Analítica Avanzada -->
+    @if (tabActivo() === 'analitica') {
+    <div class="analitica-panel">
+      <!-- Header con título -->
+      <div class="analitica-header">
+        <div class="analitica-title">
+          <i class="pi pi-calculator"></i>
+          <span>Análisis Inteligente</span>
+        </div>
+        <p class="analitica-subtitle">Describe qué quieres analizar en lenguaje natural</p>
+      </div>
+
+      <!-- Input de consulta -->
+      <div class="analitica-input-section">
+        <div class="analitica-input-wrapper">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            [ngModel]="analisisConsulta()"
+            (ngModelChange)="analisisConsulta.set($event)"
+            placeholder="Ej: ¿Cuál es la tendencia de riesgos críticos en los últimos 6 meses?"
+            (keyup.enter)="ejecutarAnalisis()"
+            class="w-full" />
+          <p-button
+            icon="pi pi-send"
+            [rounded]="true"
+            severity="success"
+            [disabled]="!analisisConsulta().trim() || analisisProcesando()"
+            [loading]="analisisProcesando()"
+            (onClick)="ejecutarAnalisis()" />
+        </div>
+      </div>
+
+      <!-- Sugerencias de consultas -->
+      @if (!analisisResultado() && !analisisProcesando()) {
+        <div class="analitica-sugerencias">
+          <span class="sugerencias-label">Sugerencias:</span>
+          <div class="sugerencias-chips">
+            <button class="sugerencia-chip" (click)="usarSugerenciaAnalisis('¿Cuál es la distribución de riesgos por severidad?')">
+              Distribución por severidad
+            </button>
+            <button class="sugerencia-chip" (click)="usarSugerenciaAnalisis('¿Cuál es la tendencia de incidentes en los últimos 3 meses?')">
+              Tendencia de incidentes
+            </button>
+            <button class="sugerencia-chip" (click)="usarSugerenciaAnalisis('¿Existe correlación entre severidad y tiempo de resolución?')">
+              Correlación severidad-tiempo
+            </button>
+            <button class="sugerencia-chip" (click)="usarSugerenciaAnalisis('¿Cuáles son los activos con mayor cantidad de riesgos?')">
+              Top activos con riesgos
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Resultado del análisis -->
+      @if (analisisResultado()) {
+        <div class="analitica-resultado">
+          <!-- Header del resultado -->
+          <div class="resultado-header">
+            <div class="resultado-tipo">
+              <p-tag
+                [value]="analisisResultado()!.tipo | titlecase"
+                [severity]="analisisResultado()!.tipo === 'predictivo' ? 'warn' : analisisResultado()!.tipo === 'correlacion' ? 'info' : 'success'" />
+            </div>
+            <h4 class="resultado-titulo">{{ analisisResultado()!.titulo }}</h4>
+          </div>
+
+          <!-- Explicación -->
+          <div class="resultado-explicacion">
+            <div class="explicacion-header">
+              <i class="pi pi-info-circle"></i>
+              <span>Explicación</span>
+            </div>
+            <p class="explicacion-texto">{{ analisisResultado()!.explicacion }}</p>
+          </div>
+
+          <!-- Insights -->
+          @if (analisisResultado()!.insights.length > 0) {
+            <div class="resultado-insights">
+              <div class="insights-header">
+                <i class="pi pi-lightbulb"></i>
+                <span>Insights Clave</span>
+              </div>
+              <ul class="insights-list">
+                @for (insight of analisisResultado()!.insights; track $index) {
+                  <li>{{ insight }}</li>
+                }
+              </ul>
+            </div>
+          }
+
+          <!-- Recomendaciones -->
+          @if (analisisResultado()!.recomendaciones.length > 0) {
+            <div class="resultado-recomendaciones">
+              <div class="recomendaciones-header">
+                <i class="pi pi-check-circle"></i>
+                <span>Recomendaciones</span>
+              </div>
+              <ul class="recomendaciones-list">
+                @for (rec of analisisResultado()!.recomendaciones; track $index) {
+                  <li>{{ rec }}</li>
+                }
+              </ul>
+            </div>
+          }
+
+          <!-- Acciones -->
+          <div class="resultado-acciones">
+            <p-button
+              label="Nuevo análisis"
+              icon="pi pi-refresh"
+              severity="secondary"
+              size="small"
+              (onClick)="limpiarAnalisis()" />
+            <p-button
+              label="Aplicar a gráfica"
+              icon="pi pi-chart-bar"
+              severity="success"
+              size="small"
+              (onClick)="aplicarAnalisisAGrafica()" />
+          </div>
+        </div>
+      }
+
+      <!-- Historial de análisis -->
+      @if (analisisHistorial().length > 0 && !analisisResultado()) {
+        <div class="analitica-historial">
+          <div class="historial-header">
+            <i class="pi pi-history"></i>
+            <span>Análisis recientes</span>
+          </div>
+          <div class="historial-list">
+            @for (item of analisisHistorial().slice(0, 5); track $index) {
+              <button class="historial-item" (click)="usarSugerenciaAnalisis(item.consulta)">
+                <span class="historial-consulta">{{ item.consulta }}</span>
+                <span class="historial-meta">
+                  <p-tag [value]="item.tipo" size="small" severity="secondary" />
+                </span>
+              </button>
+            }
+          </div>
+        </div>
+      }
     </div>
     }
   </div>

@@ -2365,3 +2365,107 @@ mark.search-highlight-alt {
     }
   }
 }
+
+// ==================== DRAWER DE ANÁLISIS INTELIGENTE ====================
+
+.ai-button {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    border-radius: 50%;
+    animation: pulse-ai 2s ease-in-out infinite;
+  }
+
+  :host ::ng-deep .pi-sparkles {
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+@keyframes pulse-ai {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+:host ::ng-deep .analisis-drawer {
+  .p-drawer-header {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+    border-bottom: 1px solid var(--surface-border);
+    padding: 1rem 1.5rem;
+  }
+
+  .p-drawer-content {
+    padding: 0;
+    background: var(--surface-ground);
+  }
+}
+
+.drawer-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  .drawer-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-color);
+
+    i {
+      font-size: 1.25rem;
+      background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  }
+
+  .ai-badge {
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    color: white;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+  }
+}
+
+.analisis-drawer-content {
+  height: 100%;
+  padding: 1rem;
+
+  app-analisis-inteligente-widget {
+    display: block;
+    height: 100%;
+  }
+}
+
+// Dark mode para drawer de análisis
+:host-context(.dark) {
+  :host ::ng-deep .analisis-drawer {
+    .p-drawer-header {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+    }
+
+    .p-drawer-content {
+      background: var(--surface-900);
+    }
+  }
+}
