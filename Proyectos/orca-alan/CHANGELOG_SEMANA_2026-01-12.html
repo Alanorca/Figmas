@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Cambios - Semana del 12 al 16 de Enero 2026</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+        h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        h2 { color: #555; margin-top: 30px; }
+        h3 { color: #666; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f5f5f5; }
+        hr { margin: 30px 0; border: none; border-top: 1px solid #ddd; }
+        .commit-box { background: #f9f9f9; padding: 15px; border-left: 4px solid #0066cc; margin: 15px 0; }
+        code { background: #eee; padding: 2px 6px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<h1>Registro de Cambios - Semana del 12 al 16 de Enero 2026</h1>
+
+<p><strong>Proyecto:</strong> orca-alan<br>
+<strong>Período:</strong> Lunes 12 de Enero - Viernes 16 de Enero, 2026<br>
+<strong>Generado:</strong> 2026-01-16</p>
+
+<hr>
+
+<h2>Resumen Ejecutivo</h2>
+
+<p>Durante esta semana se realizaron <strong>5 commits</strong> con las siguientes mejoras principales:</p>
+
+<ul>
+    <li>Nueva funcionalidad de <strong>Proceso Runner</strong> con layout master-detail</li>
+    <li>Refactorización de la estructura del proyecto</li>
+    <li>Documentación y configuración de entorno</li>
+</ul>
+
+<hr>
+
+<h2>Commits Detallados</h2>
+
+<div class="commit-box">
+    <h3>1. feat(proceso-runner): Add process runner page with execution history</h3>
+    <p><strong>Commit:</strong> <code>68175fd</code><br>
+    <strong>Autor:</strong> Alanorca<br>
+    <strong>Fecha:</strong> 2026-01-14</p>
+    <p><strong>Descripción:</strong></p>
+    <ul>
+        <li>Añadida nueva página de proceso runner</li>
+        <li>Implementado historial de ejecución de procesos</li>
+    </ul>
+</div>
+
+<div class="commit-box">
+    <h3>2. feat(proceso-runner): add master-detail layout, search, filters and zoom</h3>
+    <p><strong>Commit:</strong> <code>521aa2e</code><br>
+    <strong>Autor:</strong> Alanorca<br>
+    <strong>Fecha:</strong> 2026-01-14</p>
+    <p><strong>Descripción:</strong></p>
+    <ul>
+        <li>Layout master-detail para visualización de procesos</li>
+        <li>Funcionalidad de búsqueda</li>
+        <li>Sistema de filtros</li>
+        <li>Control de zoom para visualización</li>
+    </ul>
+</div>
+
+<div class="commit-box">
+    <h3>3. feat: add orca-alan-2 project and design resources</h3>
+    <p><strong>Commit:</strong> <code>98a2e87</code><br>
+    <strong>Autor:</strong> Alan Franco<br>
+    <strong>Fecha:</strong> 2026-01-14</p>
+    <p><strong>Descripción:</strong></p>
+    <ul>
+        <li>Añadidos recursos de diseño del proyecto</li>
+        <li>Integración de assets y configuraciones</li>
+    </ul>
+</div>
+
+<div class="commit-box">
+    <h3>4. refactor: rename orca-alan-2 to orca-alan, remove node_modules</h3>
+    <p><strong>Commit:</strong> <code>c25e8c2</code><br>
+    <strong>Autor:</strong> Alan Franco<br>
+    <strong>Fecha:</strong> 2026-01-14</p>
+    <p><strong>Descripción:</strong></p>
+    <ul>
+        <li>Renombrado del proyecto de orca-alan-2 a orca-alan</li>
+        <li>Limpieza de node_modules del repositorio</li>
+        <li>Reorganización de la estructura de carpetas</li>
+    </ul>
+</div>
+
+<div class="commit-box">
+    <h3>5. docs: add README with setup instructions and .env.example</h3>
+    <p><strong>Commit:</strong> <code>1ac5ffb</code><br>
+    <strong>Autor:</strong> Alan Franco<br>
+    <strong>Fecha:</strong> 2026-01-14 16:51</p>
+    <p><strong>Descripción:</strong></p>
+    <ul>
+        <li>Añadido README completo con instrucciones de instalación</li>
+        <li>Creado archivo .env.example para configuración del backend</li>
+        <li>Corregida estructura del proyecto (eliminada carpeta anidada orca-alan-2)</li>
+    </ul>
+    <p><strong>Co-Authored-By:</strong> Claude Opus 4.5</p>
+</div>
+
+<hr>
+
+<h2>Estadísticas</h2>
+
+<table>
+    <tr>
+        <th>Métrica</th>
+        <th>Valor</th>
+    </tr>
+    <tr>
+        <td>Total de commits</td>
+        <td>5</td>
+    </tr>
+    <tr>
+        <td>Autores</td>
+        <td>2 (Alan Franco, Alanorca)</td>
+    </tr>
+    <tr>
+        <td>Features nuevos</td>
+        <td>3</td>
+    </tr>
+    <tr>
+        <td>Refactorizaciones</td>
+        <td>1</td>
+    </tr>
+    <tr>
+        <td>Documentación</td>
+        <td>1</td>
+    </tr>
+</table>
+
+<hr>
+
+<h2>Componentes Afectados</h2>
+
+<h3>Nuevos</h3>
+<ul>
+    <li><code>src/app/pages/proceso-runner/</code> - Página de ejecución de procesos</li>
+</ul>
+
+<h3>Modificados</h3>
+<ul>
+    <li>Estructura general del proyecto</li>
+    <li>Configuración de backend (.env)</li>
+    <li>Documentación (README.md)</li>
+</ul>
+
+<hr>
+
+<p><em>Documento generado automáticamente</em></p>
+
+</body>
+</html>

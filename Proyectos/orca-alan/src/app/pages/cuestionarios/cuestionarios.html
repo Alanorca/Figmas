@@ -292,94 +292,96 @@
 
     <!-- Paso 0: Selección de Método -->
     @if (wizardPaso() === 0) {
-    <div class="grid">
+    <div class="flex gap-4 flex-column md:flex-row">
       <!-- Opción Cuestionario IA -->
-      <div class="col-12 md:col-6">
-        <div class="wizard-method-card h-full border-round-xl p-4 cursor-pointer transition-all"
-             [class]="metodoCreacion() === 'ia' ? 'wizard-method-selected bg-purple-50' : 'surface-card shadow-1 hover:shadow-3'"
-             style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);"
+      <div class="flex-1">
+        <div class="wizard-method-card h-full border-round-xl cursor-pointer transition-all flex flex-column"
+             [class]="metodoCreacion() === 'ia' ? 'wizard-method-selected' : 'shadow-1 hover:shadow-3'"
+             style="background: #F4F4F5; padding: 1.5rem;"
              (click)="seleccionarMetodoCreacion('ia')">
+
           <!-- Icono decorativo -->
           <div class="flex justify-content-center mb-4">
-            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle bg-purple-100"
-                 style="width: 80px; height: 80px;">
-              <span class="material-icons text-purple-500" style="font-size: 2.5rem;">psychology</span>
+            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle"
+                 style="width: 122px; height: 122px; background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%);">
+              <i class="pi pi-microchip-ai text-white" style="font-size: 3.5rem;"></i>
             </div>
           </div>
 
           <!-- Título y descripción -->
           <div class="text-center mb-4">
-            <h3 class="text-xl font-bold text-900 m-0 mb-2">Cuestionario IA</h3>
-            <p class="text-500 text-sm m-0 line-height-3">Diseña tu cuestionario desde cero agregando secciones y preguntas</p>
+            <h3 class="font-semibold text-900 m-0 mb-2" style="font-size: 1.1rem;">Cuestionario IA</h3>
+            <p class="text-500 m-0 line-height-3" style="font-size: 0.875rem;">Diseña tu cuestionario desde cero agregando secciones y preguntas</p>
           </div>
 
           <!-- Stats cards -->
-          <div class="flex gap-2 mb-4">
-            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+          <div class="flex gap-3 mb-4 flex-1">
+            <div class="flex-1 surface-card border-round-xl shadow-1" style="padding: 1.25rem;">
               <div class="text-center">
-                <span class="text-xl font-bold text-900">89%</span>
-                <p class="text-500 text-xs m-0 mt-1">Precisión</p>
+                <span class="font-semibold text-900" style="font-size: 1.1rem;">89%</span>
+                <p class="text-500 m-0 mt-1" style="font-size: 0.875rem;">Precisión</p>
               </div>
             </div>
-            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+            <div class="flex-1 surface-card border-round-xl shadow-1" style="padding: 1.25rem;">
               <div class="text-center">
-                <span class="text-xl font-bold text-900">&lt; 30 segundos</span>
-                <p class="text-500 text-xs m-0 mt-1">Tiempo Promedio</p>
+                <span class="font-semibold text-900" style="font-size: 1.1rem;">&lt; 30 segundos</span>
+                <p class="text-500 m-0 mt-1" style="font-size: 0.875rem;">Tiempo Promedio</p>
               </div>
             </div>
-            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+            <div class="flex-1 surface-card border-round-xl shadow-1" style="padding: 1.25rem;">
               <div class="text-center">
-                <span class="text-xl font-bold text-900">Preguntas</span>
-                <p class="text-500 text-xs m-0 mt-1">Entre 5 y 50</p>
+                <span class="font-semibold text-900" style="font-size: 1.1rem;">Preguntas</span>
+                <p class="text-500 m-0 mt-1" style="font-size: 0.875rem;">Entre 5 y 50</p>
               </div>
             </div>
           </div>
 
           <!-- Botón de acción -->
-          <p-button label="Generar análisis con IA" icon="pi pi-sparkles" iconPos="right"
+          <p-button label="Generar análisis con IA" icon="pi pi-microchip-ai" iconPos="right"
                     severity="help" styleClass="w-full"
                     (onClick)="seleccionarMetodoCreacion('ia'); continuarWizard()" />
         </div>
       </div>
 
       <!-- Opción Manual -->
-      <div class="col-12 md:col-6">
-        <div class="wizard-method-card h-full border-round-xl p-4 cursor-pointer transition-all"
-             [class]="metodoCreacion() === 'manual' ? 'wizard-method-selected' : 'surface-card shadow-1 hover:shadow-3'"
-             style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);"
+      <div class="flex-1">
+        <div class="wizard-method-card h-full border-round-xl cursor-pointer transition-all flex flex-column"
+             [class]="metodoCreacion() === 'manual' ? 'wizard-method-selected' : 'shadow-1 hover:shadow-3'"
+             style="background: #F4F4F5; padding: 1.5rem;"
              (click)="seleccionarMetodoCreacion('manual')">
+
           <!-- Icono decorativo -->
           <div class="flex justify-content-center mb-4">
-            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle bg-blue-100"
-                 style="width: 80px; height: 80px;">
-              <span class="material-icons text-blue-500" style="font-size: 2.5rem;">edit_note</span>
+            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle"
+                 style="width: 122px; height: 122px; background: linear-gradient(135deg, #020617 0%, #1E293B 100%);">
+              <i class="pi pi-file-edit text-white" style="font-size: 3.5rem;"></i>
             </div>
           </div>
 
           <!-- Título y descripción -->
           <div class="text-center mb-4">
-            <h3 class="text-xl font-bold text-900 m-0 mb-2">Manual</h3>
-            <p class="text-500 text-sm m-0 line-height-3">Genera preguntas automáticamente con IA o sube un documento</p>
+            <h3 class="font-semibold text-900 m-0 mb-2" style="font-size: 1.1rem;">Manual</h3>
+            <p class="text-500 m-0 line-height-3" style="font-size: 0.875rem;">Genera preguntas automáticamente con IA o sube un documento</p>
           </div>
 
           <!-- Stats cards -->
-          <div class="flex gap-2 mb-4">
-            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+          <div class="flex gap-3 mb-4 flex-1">
+            <div class="flex-1 surface-card border-round-xl shadow-1" style="padding: 1.25rem;">
               <div class="text-center">
-                <span class="text-xl font-bold text-900">100%</span>
-                <p class="text-500 text-xs m-0 mt-1">Control</p>
+                <span class="font-semibold text-900" style="font-size: 1.1rem;">100%</span>
+                <p class="text-500 m-0 mt-1" style="font-size: 0.875rem;">Control</p>
               </div>
             </div>
-            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+            <div class="flex-1 surface-card border-round-xl shadow-1" style="padding: 1.25rem;">
               <div class="text-center">
-                <span class="text-xl font-bold text-900">10 tipos de preguntas</span>
-                <p class="text-500 text-xs m-0 mt-1">Agrupa por sección</p>
+                <span class="font-semibold text-900" style="font-size: 1.1rem;">10 tipos de preguntas</span>
+                <p class="text-500 m-0 mt-1" style="font-size: 0.875rem;">Agrupa por sección</p>
               </div>
             </div>
           </div>
 
           <!-- Botón de acción -->
-          <p-button label="Crear respuesta manual" icon="pi pi-arrow-right" iconPos="right"
+          <p-button label="Crear respuesta manual" icon="pi pi-file-edit" iconPos="right"
                     severity="contrast" styleClass="w-full"
                     (onClick)="seleccionarMetodoCreacion('manual'); continuarWizard()" />
         </div>
