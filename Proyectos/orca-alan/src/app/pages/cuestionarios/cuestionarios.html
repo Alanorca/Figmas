@@ -292,97 +292,126 @@
 
     <!-- Paso 0: Selección de Método -->
     @if (wizardPaso() === 0) {
-    <div class="flex gap-4 flex-column md:flex-row">
-      <!-- Opción Cuestionario IA -->
-      <div class="flex-1">
-        <div class="wizard-method-card h-full border-round-xl cursor-pointer transition-all flex flex-column"
-             [class]="metodoCreacion() === 'ia' ? 'wizard-method-selected' : 'shadow-1 hover:shadow-3'"
-             style="background: #F4F4F5; padding: 1.5rem;"
+    <div class="flex gap-5 flex-column lg:flex-row justify-content-center">
+      <!-- Opción Portafolio de respuesta IA -->
+      <div class="flex-1" style="max-width: 520px;">
+        <div class="wizard-method-card h-full border-round-2xl cursor-pointer transition-all flex flex-column"
+             [class]="metodoCreacion() === 'ia' ? 'wizard-method-selected shadow-2' : 'shadow-1 hover:shadow-3'"
+             style="background: #FFFFFF; padding: 2rem 2.5rem;"
              (click)="seleccionarMetodoCreacion('ia')">
 
-          <!-- Icono decorativo -->
+          <!-- Ilustración IA -->
           <div class="flex justify-content-center mb-4">
-            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle"
-                 style="width: 122px; height: 122px; background: linear-gradient(135deg, #A855F7 0%, #7C3AED 100%);">
-              <i class="pi pi-microchip-ai text-white" style="font-size: 3.5rem;"></i>
-            </div>
+            <svg width="140" height="100" viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Monitor -->
+              <rect x="30" y="15" width="60" height="45" rx="4" fill="#1E293B"/>
+              <rect x="34" y="19" width="52" height="37" rx="2" fill="#10B981"/>
+              <!-- Code lines -->
+              <rect x="38" y="24" width="20" height="3" rx="1" fill="#FFFFFF" opacity="0.8"/>
+              <rect x="38" y="30" width="30" height="3" rx="1" fill="#FFFFFF" opacity="0.6"/>
+              <rect x="38" y="36" width="25" height="3" rx="1" fill="#FFFFFF" opacity="0.8"/>
+              <rect x="38" y="42" width="35" height="3" rx="1" fill="#FFFFFF" opacity="0.6"/>
+              <!-- Monitor stand -->
+              <rect x="55" y="60" width="10" height="8" fill="#475569"/>
+              <rect x="45" y="68" width="30" height="4" rx="2" fill="#475569"/>
+              <!-- Person -->
+              <circle cx="105" cy="35" r="12" fill="#FCD34D"/>
+              <path d="M93 75 L93 55 Q93 48 100 48 L110 48 Q117 48 117 55 L117 75" fill="#7C3AED"/>
+              <!-- Desk -->
+              <rect x="20" y="75" width="100" height="6" rx="2" fill="#94A3B8"/>
+              <!-- AI sparkles -->
+              <circle cx="25" cy="25" r="3" fill="#A855F7"/>
+              <circle cx="115" cy="20" r="2" fill="#A855F7"/>
+              <circle cx="125" cy="45" r="2.5" fill="#A855F7"/>
+            </svg>
           </div>
 
           <!-- Título y descripción -->
           <div class="text-center mb-4">
-            <h3 class="font-semibold text-900 m-0 mb-2" style="font-size: 1.1rem;">Cuestionario IA</h3>
-            <p class="text-500 m-0 line-height-3" style="font-size: 0.875rem;">Diseña tu cuestionario desde cero agregando secciones y preguntas</p>
+            <h3 class="font-bold text-900 m-0 mb-3" style="font-size: 1.25rem;">Portafolio de respuesta IA</h3>
+            <p class="text-600 m-0 line-height-3" style="font-size: 0.875rem;">Genera mitigaciones y oportunidades automáticas utilizando inteligencia artificial. El sistema analiza el incidente y propone respuestas basadas en mejores prácticas y casos históricos.</p>
           </div>
 
           <!-- Stats cards -->
-          <div class="flex gap-3 mb-4 flex-1">
-            <div class="flex-1 surface-card border-round-xl shadow-1" style="padding: 1.25rem;">
-              <div class="text-center">
-                <span class="font-semibold text-900" style="font-size: 1.1rem;">89%</span>
-                <p class="text-500 m-0 mt-1" style="font-size: 0.875rem;">Precisión</p>
-              </div>
+          <div class="flex gap-3 mb-4 flex-1 align-items-end">
+            <div class="flex-1 border-round-lg" style="background: #F4F4F5; padding: 1rem 1.25rem;">
+              <span class="font-bold text-900 block mb-1" style="font-size: 1.1rem;">89%</span>
+              <span class="text-600" style="font-size: 0.75rem;">Precisión</span>
             </div>
-            <div class="flex-1 surface-card border-round-xl shadow-1" style="padding: 1.25rem;">
-              <div class="text-center">
-                <span class="font-semibold text-900" style="font-size: 1.1rem;">&lt; 30 segundos</span>
-                <p class="text-500 m-0 mt-1" style="font-size: 0.875rem;">Tiempo Promedio</p>
-              </div>
+            <div class="flex-1 border-round-lg" style="background: #F4F4F5; padding: 1rem 1.25rem;">
+              <span class="font-bold text-900 block mb-1" style="font-size: 1.1rem;">&lt; 30 segundos</span>
+              <span class="text-600" style="font-size: 0.75rem;">Tiempo Promedio</span>
             </div>
-            <div class="flex-1 surface-card border-round-xl shadow-1" style="padding: 1.25rem;">
-              <div class="text-center">
-                <span class="font-semibold text-900" style="font-size: 1.1rem;">Preguntas</span>
-                <p class="text-500 m-0 mt-1" style="font-size: 0.875rem;">Entre 5 y 50</p>
-              </div>
+            <div class="flex-1 border-round-lg" style="background: #F4F4F5; padding: 1rem 1.25rem;">
+              <span class="font-bold text-900 block mb-1" style="font-size: 1.1rem;">Hasta 12</span>
+              <span class="text-600" style="font-size: 0.75rem;">Respuestas de mitigación y/o Oportunidad</span>
             </div>
           </div>
 
           <!-- Botón de acción -->
-          <p-button label="Generar análisis con IA" icon="pi pi-microchip-ai" iconPos="right"
-                    severity="help" styleClass="w-full"
+          <p-button label="Generar análisis con IA" icon="pi pi-sparkles" iconPos="right"
+                    severity="help" styleClass="w-full justify-content-center"
                     (onClick)="seleccionarMetodoCreacion('ia'); continuarWizard()" />
         </div>
       </div>
 
       <!-- Opción Manual -->
-      <div class="flex-1">
-        <div class="wizard-method-card h-full border-round-xl cursor-pointer transition-all flex flex-column"
-             [class]="metodoCreacion() === 'manual' ? 'wizard-method-selected' : 'shadow-1 hover:shadow-3'"
-             style="background: #F4F4F5; padding: 1.5rem;"
+      <div class="flex-1" style="max-width: 520px;">
+        <div class="wizard-method-card h-full border-round-2xl cursor-pointer transition-all flex flex-column"
+             [class]="metodoCreacion() === 'manual' ? 'wizard-method-selected shadow-2' : 'shadow-1 hover:shadow-3'"
+             style="background: #FFFFFF; padding: 2rem 2.5rem;"
              (click)="seleccionarMetodoCreacion('manual')">
 
-          <!-- Icono decorativo -->
+          <!-- Ilustración Manual -->
           <div class="flex justify-content-center mb-4">
-            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle"
-                 style="width: 122px; height: 122px; background: linear-gradient(135deg, #020617 0%, #1E293B 100%);">
-              <i class="pi pi-file-edit text-white" style="font-size: 3.5rem;"></i>
-            </div>
+            <svg width="140" height="100" viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Window frame -->
+              <rect x="75" y="10" width="50" height="60" rx="3" fill="#E2E8F0" stroke="#CBD5E1" stroke-width="2"/>
+              <rect x="80" y="25" width="40" height="40" fill="#BFDBFE"/>
+              <!-- Plant -->
+              <rect x="110" y="55" width="8" height="12" fill="#065F46"/>
+              <circle cx="114" cy="50" r="8" fill="#10B981"/>
+              <circle cx="108" cy="45" r="5" fill="#34D399"/>
+              <!-- Person sitting -->
+              <circle cx="45" cy="30" r="12" fill="#FCD34D"/>
+              <ellipse cx="45" cy="32" rx="8" ry="6" fill="#92400E" opacity="0.3"/>
+              <!-- Body -->
+              <path d="M30 80 L30 55 Q30 45 40 45 L50 45 Q60 45 60 55 L60 80" fill="#1E293B"/>
+              <!-- Laptop -->
+              <rect x="25" y="65" width="40" height="25" rx="2" fill="#475569"/>
+              <rect x="28" y="68" width="34" height="18" rx="1" fill="#94A3B8"/>
+              <!-- Chair -->
+              <rect x="20" y="75" width="50" height="8" rx="2" fill="#78716C"/>
+              <!-- Floor -->
+              <rect x="10" y="85" width="120" height="4" rx="2" fill="#E5E7EB"/>
+            </svg>
           </div>
 
           <!-- Título y descripción -->
           <div class="text-center mb-4">
-            <h3 class="font-semibold text-900 m-0 mb-2" style="font-size: 1.1rem;">Manual</h3>
-            <p class="text-500 m-0 line-height-3" style="font-size: 0.875rem;">Genera preguntas automáticamente con IA o sube un documento</p>
+            <h3 class="font-bold text-900 m-0 mb-3" style="font-size: 1.25rem;">Manual</h3>
+            <p class="text-600 m-0 line-height-3" style="font-size: 0.875rem;">Define manualmente cada respuesta con control completo sobre todos los campos.</p>
           </div>
 
           <!-- Stats cards -->
-          <div class="flex gap-3 mb-4 flex-1">
-            <div class="flex-1 surface-card border-round-xl shadow-1" style="padding: 1.25rem;">
-              <div class="text-center">
-                <span class="font-semibold text-900" style="font-size: 1.1rem;">100%</span>
-                <p class="text-500 m-0 mt-1" style="font-size: 0.875rem;">Control</p>
-              </div>
+          <div class="flex gap-3 mb-4 flex-1 align-items-end">
+            <div class="flex-1 border-round-lg" style="background: #F4F4F5; padding: 1rem 1.25rem;">
+              <span class="font-bold text-900 block mb-1" style="font-size: 1.1rem;">100%</span>
+              <span class="text-600" style="font-size: 0.75rem;">Control</span>
             </div>
-            <div class="flex-1 surface-card border-round-xl shadow-1" style="padding: 1.25rem;">
-              <div class="text-center">
-                <span class="font-semibold text-900" style="font-size: 1.1rem;">10 tipos de preguntas</span>
-                <p class="text-500 m-0 mt-1" style="font-size: 0.875rem;">Agrupa por sección</p>
-              </div>
+            <div class="flex-1 border-round-lg" style="background: #F4F4F5; padding: 1rem 1.25rem;">
+              <span class="font-bold text-900 block mb-1" style="font-size: 1.1rem;">4 minutos</span>
+              <span class="text-600" style="font-size: 0.75rem;">Tiempo Promedio</span>
+            </div>
+            <div class="flex-1 border-round-lg" style="background: #F4F4F5; padding: 1rem 1.25rem;">
+              <span class="font-bold text-900 block mb-1" style="font-size: 1.1rem;">Hasta 1</span>
+              <span class="text-600" style="font-size: 0.75rem;">Respuesta a la vez</span>
             </div>
           </div>
 
           <!-- Botón de acción -->
-          <p-button label="Crear respuesta manual" icon="pi pi-file-edit" iconPos="right"
-                    severity="contrast" styleClass="w-full"
+          <p-button label="Crear respuesta manual" icon="pi pi-pencil" iconPos="right"
+                    [outlined]="true" styleClass="w-full justify-content-center p-button-contrast"
                     (onClick)="seleccionarMetodoCreacion('manual'); continuarWizard()" />
         </div>
       </div>

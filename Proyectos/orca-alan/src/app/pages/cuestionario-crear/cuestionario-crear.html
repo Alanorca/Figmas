@@ -48,53 +48,126 @@
       <div class="step-panel">
         <h2 class="panel-title">Elige el método de creación</h2>
 
-        <div class="metodos-grid">
+        <div class="metodos-grid-new">
           <!-- Opción IA -->
           <div
-            class="metodo-card"
+            class="metodo-card-new"
             [class.selected]="metodoCreacion() === 'ia'"
             (click)="seleccionarMetodo('ia')">
-            <div class="metodo-icon metodo-icon--ia">
-              <i class="pi pi-sparkles"></i>
+
+            <!-- Ilustración IA - Documento con IA -->
+            <div class="metodo-ilustracion">
+              <svg width="140" height="100" viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Documento/Formulario -->
+                <rect x="20" y="10" width="55" height="70" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                <rect x="28" y="20" width="30" height="4" rx="1" fill="#CBD5E1"/>
+                <rect x="28" y="28" width="38" height="3" rx="1" fill="#E2E8F0"/>
+                <rect x="28" y="34" width="35" height="3" rx="1" fill="#E2E8F0"/>
+                <!-- Checkboxes -->
+                <rect x="28" y="44" width="8" height="8" rx="2" fill="#10B981"/>
+                <path d="M30 48 L32 50 L35 46" stroke="white" stroke-width="1.5" fill="none"/>
+                <rect x="40" y="45" width="25" height="3" rx="1" fill="#CBD5E1"/>
+                <rect x="28" y="56" width="8" height="8" rx="2" fill="#10B981"/>
+                <path d="M30 60 L32 62 L35 58" stroke="white" stroke-width="1.5" fill="none"/>
+                <rect x="40" y="57" width="20" height="3" rx="1" fill="#CBD5E1"/>
+                <!-- Robot/IA -->
+                <circle cx="100" cy="35" r="20" fill="#7C3AED" opacity="0.1"/>
+                <rect x="88" y="25" width="24" height="20" rx="4" fill="#7C3AED"/>
+                <circle cx="94" cy="33" r="3" fill="#FFFFFF"/>
+                <circle cx="106" cy="33" r="3" fill="#FFFFFF"/>
+                <rect x="95" y="39" width="10" height="2" rx="1" fill="#FFFFFF"/>
+                <!-- Sparkles -->
+                <circle cx="82" cy="20" r="2" fill="#A855F7"/>
+                <circle cx="118" cy="28" r="2.5" fill="#A855F7"/>
+                <circle cx="112" cy="55" r="2" fill="#A855F7"/>
+                <!-- Conexión -->
+                <path d="M75 40 L85 40" stroke="#A855F7" stroke-width="2" stroke-dasharray="3 2"/>
+              </svg>
             </div>
-            <div class="metodo-content">
+
+            <div class="metodo-content-new">
               <h3>Crear con IA</h3>
-              <p>Genera automáticamente un cuestionario basado en tus requerimientos o documentos</p>
-              <ul class="metodo-features">
-                <li><i class="pi pi-check"></i> Generación automática de preguntas</li>
-                <li><i class="pi pi-check"></i> Basado en marcos normativos</li>
-                <li><i class="pi pi-check"></i> Sube documentos de referencia</li>
-              </ul>
+              <p>Genera automáticamente un cuestionario basado en tus requerimientos o documentos. La IA analiza tu contexto y propone preguntas relevantes.</p>
             </div>
-            @if (metodoCreacion() === 'ia') {
-              <div class="metodo-check">
-                <i class="pi pi-check"></i>
+
+            <!-- Stats -->
+            <div class="metodo-stats">
+              <div class="stat-box">
+                <span class="stat-value">Automático</span>
+                <span class="stat-label">Generación de preguntas</span>
               </div>
-            }
+              <div class="stat-box">
+                <span class="stat-value">&lt; 30 seg</span>
+                <span class="stat-label">Tiempo promedio</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value">Marcos</span>
+                <span class="stat-label">Basado en normativos</span>
+              </div>
+            </div>
+
+            <!-- Botón -->
+            <button class="metodo-btn metodo-btn--ia" (click)="seleccionarMetodo('ia'); siguiente()">
+              Crear con IA
+              <i class="pi pi-sparkles"></i>
+            </button>
           </div>
 
           <!-- Opción Manual -->
           <div
-            class="metodo-card"
+            class="metodo-card-new"
             [class.selected]="metodoCreacion() === 'manual'"
             (click)="seleccionarMetodo('manual')">
-            <div class="metodo-icon metodo-icon--manual">
-              <i class="pi pi-pencil"></i>
+
+            <!-- Ilustración Manual - Persona editando -->
+            <div class="metodo-ilustracion">
+              <svg width="140" height="100" viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Persona -->
+                <circle cx="45" cy="30" r="12" fill="#FCD34D"/>
+                <path d="M30 75 L30 52 Q30 44 40 44 L50 44 Q60 44 60 52 L60 75" fill="#1E293B"/>
+                <!-- Escritorio -->
+                <rect x="15" y="75" width="110" height="6" rx="2" fill="#94A3B8"/>
+                <!-- Documento que está editando -->
+                <rect x="70" y="20" width="50" height="50" rx="3" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                <rect x="78" y="28" width="25" height="3" rx="1" fill="#CBD5E1"/>
+                <rect x="78" y="35" width="32" height="2" rx="1" fill="#E2E8F0"/>
+                <rect x="78" y="41" width="28" height="2" rx="1" fill="#E2E8F0"/>
+                <rect x="78" y="47" width="30" height="2" rx="1" fill="#E2E8F0"/>
+                <!-- Lápiz en mano -->
+                <rect x="58" y="48" width="16" height="3" rx="1" fill="#10B981" transform="rotate(-30 58 48)"/>
+                <!-- Checklist icon -->
+                <rect x="78" y="53" width="6" height="6" rx="1" stroke="#10B981" stroke-width="1.5" fill="none"/>
+                <path d="M79 56 L80 57 L83 54" stroke="#10B981" stroke-width="1" fill="none"/>
+                <rect x="88" y="55" width="15" height="2" rx="1" fill="#CBD5E1"/>
+              </svg>
             </div>
-            <div class="metodo-content">
+
+            <div class="metodo-content-new">
               <h3>Crear manualmente</h3>
-              <p>Diseña tu cuestionario paso a paso con control total sobre cada pregunta</p>
-              <ul class="metodo-features">
-                <li><i class="pi pi-check"></i> Control total del contenido</li>
-                <li><i class="pi pi-check"></i> Editor visual intuitivo</li>
-                <li><i class="pi pi-check"></i> Lógica condicional avanzada</li>
-              </ul>
+              <p>Diseña tu cuestionario paso a paso con control total sobre cada pregunta y sección.</p>
             </div>
-            @if (metodoCreacion() === 'manual') {
-              <div class="metodo-check">
-                <i class="pi pi-check"></i>
+
+            <!-- Stats -->
+            <div class="metodo-stats">
+              <div class="stat-box">
+                <span class="stat-value">100%</span>
+                <span class="stat-label">Control total</span>
               </div>
-            }
+              <div class="stat-box">
+                <span class="stat-value">Visual</span>
+                <span class="stat-label">Editor intuitivo</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value">Lógica</span>
+                <span class="stat-label">Condicional avanzada</span>
+              </div>
+            </div>
+
+            <!-- Botón -->
+            <button class="metodo-btn metodo-btn--manual" (click)="seleccionarMetodo('manual'); siguiente()">
+              Crear manualmente
+              <i class="pi pi-pencil"></i>
+            </button>
           </div>
         </div>
       </div>
