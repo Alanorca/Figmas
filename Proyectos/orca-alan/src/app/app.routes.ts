@@ -95,6 +95,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/perfil/perfil').then(m => m.PerfilComponent)
   },
   {
+    path: 'preferencias-personales',
+    loadComponent: () => import('./pages/preferencias-personales/preferencias-personales').then(m => m.PreferenciasPersonalesComponent)
+  },
+  {
     path: 'notificaciones-config',
     loadComponent: () => import('./pages/notificaciones-config/notificaciones-config').then(m => m.NotificacionesConfigComponent)
   },

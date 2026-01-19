@@ -121,6 +121,14 @@ interface BreadcrumbItem {
                 <span class="submenu-label">Perfil</span>
               </a>
               <a
+                routerLink="/preferencias-personales"
+                routerLinkActive="submenu-active"
+                class="submenu-item"
+              >
+                <i class="pi pi-cog"></i>
+                <span class="submenu-label">Preferencias Personales</span>
+              </a>
+              <a
                 routerLink="/notificaciones-config"
                 routerLinkActive="submenu-active"
                 class="submenu-item"
