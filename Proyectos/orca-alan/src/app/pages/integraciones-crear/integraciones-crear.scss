@@ -5,7 +5,9 @@
 // Importar estilos base de proceso-crear
 @use '../proceso-crear/proceso-crear.scss';
 
-// Estilos específicos para integraciones-crear
+// ==================== CONNECTOR TYPE CARDS ====================
+// Siguiendo el patrón de Wizard Method Cards del Design System
+
 .connector-type-selection {
   margin-bottom: var(--spacing-6);
 
@@ -19,68 +21,265 @@
 
   .connector-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: var(--spacing-4);
-
-    .connector-card {
-      padding: var(--spacing-5);
-      border: 2px solid var(--surface-border);
-      border-radius: var(--border-radius-lg);
-      cursor: pointer;
-      transition: all var(--transition-duration);
-      text-align: center;
-      background: var(--surface-0);
-
-      &:hover {
-        border-color: var(--primary-400);
-        background-color: var(--surface-hover);
-      }
-
-      &.selected {
-        border-color: var(--primary-color);
-        background-color: var(--primary-50);
-      }
-
-      .connector-icon {
-        font-size: 2.5rem;
-        color: var(--primary-color);
-        display: block;
-        margin-bottom: var(--spacing-3);
-      }
-
-      .connector-label {
-        display: block;
-        font-size: var(--font-size-sm);
-        font-weight: var(--font-weight-semibold);
-        color: var(--text-color);
-        margin-bottom: var(--spacing-2);
-      }
-
-      .connector-mode {
-        display: inline-block;
-        font-size: var(--font-size-xs);
-        padding: var(--spacing-1) var(--spacing-3);
-        background-color: var(--surface-200);
-        border-radius: var(--border-radius-md);
-        color: var(--text-color-secondary);
-        margin-bottom: var(--spacing-3);
-      }
-
-      .connector-desc {
-        font-size: var(--font-size-xs);
-        color: var(--text-color-secondary);
-        margin: 0;
-        line-height: 1.5;
-      }
-    }
   }
 }
+
+// Base connector card styles
+.connector-card {
+  padding: var(--spacing-5);
+  border: 2px solid transparent;
+  border-radius: var(--border-radius-xl);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
+  }
+
+  &.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 8px 25px -5px rgba(var(--primary-color-rgb), 0.3);
+  }
+
+  .connector-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--spacing-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-full);
+    transition: all 0.3s ease;
+
+    i {
+      font-size: 1.75rem;
+    }
+  }
+
+  &:hover .connector-icon {
+    transform: scale(1.1);
+  }
+
+  .connector-label {
+    display: block;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-color);
+    margin-bottom: var(--spacing-2);
+  }
+
+  .connector-mode {
+    display: inline-block;
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-3);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .connector-desc {
+    font-size: var(--font-size-xs);
+    color: var(--text-color-secondary);
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+// ==================== CONNECTOR CARD VARIANTS ====================
+
+// Webhook Card - Verde (Push/Incoming)
+.connector-card[data-type="webhook"],
+.connector-card:nth-child(1) {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+
+  .connector-icon {
+    background: rgba(16, 185, 129, 0.15);
+    i { color: #10b981; }
+  }
+
+  .connector-mode {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #059669;
+  }
+
+  &.selected {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  }
+
+  // Dark mode
+  :host-context(.dark-mode) & {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.12) 100%);
+    border-color: var(--surface-border);
+
+    .connector-icon {
+      background: rgba(16, 185, 129, 0.25);
+    }
+
+    .connector-mode {
+      background-color: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.08) 100%);
+    }
+  }
+
+  :host-context(.dark-mode) &.selected {
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.6) 0%, rgba(4, 120, 87, 0.5) 100%) !important;
+    border-color: var(--green-400) !important;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(16, 185, 129, 0.3) !important;
+  }
+}
+
+// REST API Card - Azul (Pull/Fetching)
+.connector-card[data-type="rest_api"],
+.connector-card:nth-child(2) {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+
+  .connector-icon {
+    background: rgba(59, 130, 246, 0.15);
+    i { color: #3b82f6; }
+  }
+
+  .connector-mode {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #2563eb;
+  }
+
+  &.selected {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  }
+
+  // Dark mode
+  :host-context(.dark-mode) & {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.12) 100%);
+    border-color: var(--surface-border);
+
+    .connector-icon {
+      background: rgba(59, 130, 246, 0.25);
+    }
+
+    .connector-mode {
+      background-color: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.08) 100%);
+    }
+  }
+
+  :host-context(.dark-mode) &.selected {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.6) 0%, rgba(29, 78, 216, 0.5) 100%) !important;
+    border-color: var(--blue-400) !important;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+  }
+}
+
+// Database Card - Púrpura (Query)
+.connector-card[data-type="database"],
+.connector-card:nth-child(3) {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+
+  .connector-icon {
+    background: rgba(139, 92, 246, 0.15);
+    i { color: #8b5cf6; }
+  }
+
+  .connector-mode {
+    background-color: rgba(139, 92, 246, 0.15);
+    color: #7c3aed;
+  }
+
+  &.selected {
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  }
+
+  // Dark mode
+  :host-context(.dark-mode) & {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(124, 58, 237, 0.18) 100%);
+    border-color: var(--surface-border);
+
+    .connector-icon {
+      background: rgba(139, 92, 246, 0.25);
+    }
+
+    .connector-mode {
+      background-color: rgba(139, 92, 246, 0.2);
+      color: #a78bfa;
+    }
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(124, 58, 237, 0.14) 100%);
+    }
+  }
+
+  :host-context(.dark-mode) &.selected {
+    background: linear-gradient(135deg, rgba(88, 28, 135, 0.6) 0%, rgba(76, 29, 149, 0.5) 100%) !important;
+    border-color: var(--purple-400) !important;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(139, 92, 246, 0.3) !important;
+  }
+}
+
+// Folder Card - Naranja (File System)
+.connector-card[data-type="folder"],
+.connector-card:nth-child(4) {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+
+  .connector-icon {
+    background: rgba(249, 115, 22, 0.15);
+    i { color: #f97316; }
+  }
+
+  .connector-mode {
+    background-color: rgba(249, 115, 22, 0.15);
+    color: #ea580c;
+  }
+
+  &.selected {
+    background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  }
+
+  // Dark mode
+  :host-context(.dark-mode) & {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(234, 88, 12, 0.12) 100%);
+    border-color: var(--surface-border);
+
+    .connector-icon {
+      background: rgba(249, 115, 22, 0.25);
+    }
+
+    .connector-mode {
+      background-color: rgba(249, 115, 22, 0.2);
+      color: #fb923c;
+    }
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(234, 88, 12, 0.08) 100%);
+    }
+  }
+
+  :host-context(.dark-mode) &.selected {
+    background: linear-gradient(135deg, rgba(124, 45, 18, 0.6) 0%, rgba(154, 52, 18, 0.5) 100%) !important;
+    border-color: var(--orange-400) !important;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(249, 115, 22, 0.3) !important;
+  }
+}
+
+// ==================== CONNECTOR CONFIG SECTION ====================
 
 .connector-config {
   background: var(--surface-0);
   border: 1px solid var(--surface-border);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-6);
+  margin-top: var(--spacing-6);
 
   h4 {
     font-size: var(--font-size-base);
@@ -93,6 +292,12 @@
     color: var(--text-color-secondary);
     font-size: var(--font-size-sm);
     margin: 0 0 var(--spacing-5) 0;
+  }
+
+  // Dark mode
+  :host-context(.dark-mode) & {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
   }
 }
 
@@ -111,12 +316,15 @@
   font-size: var(--font-size-sm);
 }
 
+// ==================== MAPPING PLACEHOLDER ====================
+
 .mapping-placeholder {
   text-align: center;
   padding: var(--spacing-8);
   background-color: var(--surface-ground);
   border-radius: var(--border-radius-lg);
   border: 1px dashed var(--surface-border);
+  margin-top: var(--spacing-6);
 
   i {
     font-size: 3rem;
@@ -137,7 +345,19 @@
     color: var(--text-color-secondary);
     font-size: var(--font-size-sm);
   }
+
+  // Dark mode
+  :host-context(.dark-mode) & {
+    background-color: var(--surface-800);
+    border-color: var(--surface-600);
+
+    i {
+      color: var(--surface-500);
+    }
+  }
 }
+
+// ==================== SUMMARY SECTION ====================
 
 .summary-section {
   background: var(--surface-0);
@@ -176,9 +396,44 @@
       }
     }
   }
+
+  // Dark mode
+  :host-context(.dark-mode) & {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+
+    .summary-item {
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--surface-700);
+    }
+  }
 }
 
-// Form adjustments
+// ==================== SCHEDULE SECTION ====================
+
+.schedule-config {
+  background: var(--surface-0);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-6);
+
+  h4 {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-color);
+    margin: 0 0 var(--spacing-5) 0;
+  }
+
+  // Dark mode
+  :host-context(.dark-mode) & {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+  }
+}
+
+// ==================== FORM ADJUSTMENTS ====================
+
 .form-grid {
   max-width: 100%;
 }
@@ -207,23 +462,8 @@
   margin-top: var(--spacing-1);
 }
 
-// Schedule section
-.schedule-config {
-  background: var(--surface-0);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-6);
-  margin-bottom: var(--spacing-6);
+// ==================== RESPONSIVE ====================
 
-  h4 {
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-semibold);
-    color: var(--text-color);
-    margin: 0 0 var(--spacing-5) 0;
-  }
-}
-
-// Responsive
 @media screen and (max-width: 768px) {
   .form-row {
     flex-direction: column;

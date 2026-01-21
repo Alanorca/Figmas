@@ -320,6 +320,17 @@ $text-dark: var(--text-color);
     border-color: var(--surface-300, #d1d5db);
     color: var(--text-color, $text-primary);
   }
+
+  &.execute-btn {
+    color: var(--green-600, #16a34a);
+    border-color: var(--green-200, #bbf7d0);
+
+    &:hover {
+      background: var(--green-50, #f0fdf4);
+      border-color: var(--green-400, #4ade80);
+      color: var(--green-700, #15803d);
+    }
+  }
 }
 
 .toolbar-center {

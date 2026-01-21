@@ -2,55 +2,10 @@
 <p-confirmDialog />
 
 <div class="integraciones-container">
-  <!-- Header Stats Cards -->
-  <div class="stats-cards">
-    <p-card styleClass="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon total">
-          <i class="pi pi-wifi"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ integracionesService.radios().length }}</span>
-          <span class="stat-label">Total Radios</span>
-        </div>
-      </div>
-    </p-card>
-
-    <p-card styleClass="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon active">
-          <i class="pi pi-check-circle"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ integracionesService.activeRadiosCount() }}</span>
-          <span class="stat-label">Activos</span>
-        </div>
-      </div>
-    </p-card>
-
-    <p-card styleClass="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon error">
-          <i class="pi pi-exclamation-triangle"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ integracionesService.errorRadiosCount() }}</span>
-          <span class="stat-label">Con Error</span>
-        </div>
-      </div>
-    </p-card>
-
-    <p-card styleClass="stat-card">
-      <div class="stat-content">
-        <div class="stat-icon pulses">
-          <i class="pi pi-bolt"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value">{{ integracionesService.pulsesLast24hCount() }}</span>
-          <span class="stat-label">Pulsos 24h</span>
-        </div>
-      </div>
-    </p-card>
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Integraciones</h1>
+    <p class="page-subtitle">Gestión de radios y conectores para integración de datos externos</p>
   </div>
 
   <!-- Main Content Card -->
@@ -286,6 +241,36 @@
                   [text]="true"
                   (onClick)="showMenu(radio, menu, $event)"
                 />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+          <tr class="table-footer">
+            <td colspan="4">
+              <div class="footer-summary">
+                <span class="footer-label">Resumen:</span>
+                <span class="footer-item">
+                  <i class="pi pi-wifi"></i>
+                  <strong>{{ integracionesService.radios().length }}</strong> Total
+                </span>
+                <span class="footer-item success">
+                  <i class="pi pi-check-circle"></i>
+                  <strong>{{ integracionesService.activeRadiosCount() }}</strong> Activos
+                </span>
+                <span class="footer-item danger">
+                  <i class="pi pi-exclamation-triangle"></i>
+                  <strong>{{ integracionesService.errorRadiosCount() }}</strong> Con Error
+                </span>
+              </div>
+            </td>
+            <td colspan="5" class="text-right">
+              <div class="footer-summary justify-content-end">
+                <span class="footer-item info">
+                  <i class="pi pi-bolt"></i>
+                  <strong>{{ integracionesService.pulsesLast24hCount() }}</strong> Pulsos últimas 24h
+                </span>
               </div>
             </td>
           </tr>

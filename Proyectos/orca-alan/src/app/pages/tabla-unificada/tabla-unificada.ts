@@ -251,6 +251,7 @@ export class TablaUnificadaComponent implements OnInit {
   serieSecundariaAgregacion = signal<'conteo' | 'suma' | 'promedio'>('conteo');
   mostrarEjeYSecundario = signal(true);
 
+
   // ==================== PANEL DE VISUALIZACIÓN SANKEY ====================
   mostrarPanelVisualizacion = signal(false);
   tipoGraficaVisualizacion = signal<TipoGraficaAvanzada>('sankey');

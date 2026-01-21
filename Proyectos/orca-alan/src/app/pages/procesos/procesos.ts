@@ -24,7 +24,8 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { ChipModule } from 'primeng/chip';
 import { AccordionModule } from 'primeng/accordion';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
+import { MenuModule } from 'primeng/menu';
+import { ConfirmationService, MenuItem } from 'primeng/api';
 import { ProcessService } from '../../services/process.service';
 import { GroqService } from '../../services/groq.service';
 import { ApiService } from '../../services/api.service';
@@ -84,7 +85,8 @@ interface TestResult {
     MultiSelectModule,
     ChipModule,
     AccordionModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    MenuModule
   ],
   providers: [ConfirmationService],
   templateUrl: './procesos.html',
@@ -118,6 +120,20 @@ export class ProcesosComponent implements OnInit {
 
   // ID del proceso actual (de la ruta)
   procesoId = signal<string | null>(null);
+
+  // Menu items para ejecutar
+  executeMenuItems: MenuItem[] = [
+    {
+      label: 'Ejecutar prueba',
+      icon: 'pi pi-play',
+      command: () => this.executeProcess()
+    },
+    {
+      label: 'Ir al Runner',
+      icon: 'pi pi-external-link',
+      command: () => this.goToRunner()
+    }
+  ];
 
   // Metadata de tipos de nodos para el sidebar
   nodeTypes = NODE_TYPES_METADATA;
@@ -977,6 +993,13 @@ export class ProcesosComponent implements OnInit {
       await this.processService.executeProcess();
     } catch (error) {
       console.error('Error ejecutando proceso:', error);
+    }
+  }
+
+  goToRunner(): void {
+    const procesoId = this.procesoId();
+    if (procesoId) {
+      this.router.navigate(['/procesos', procesoId, 'runner']);
     }
   }
 

@@ -603,6 +603,255 @@ Chips compactos para mostrar estadísticas con diferentes colores.
 
 ---
 
+## 6. Wizard Method Cards con Dark Mode
+
+### Descripción
+Cards seleccionables para wizards de selección de método (IA vs Manual, opciones múltiples, etc.) con soporte completo de dark mode, estados hover y selected, y stats cards internas.
+
+### Archivos de referencia
+- `src/app/pages/cuestionarios/cuestionarios.html`
+- `src/app/pages/cuestionarios/cuestionarios.scss`
+
+### Características
+- Gradientes de color diferenciados por tipo (púrpura para IA, azul para Manual)
+- Estados: default, hover, selected
+- Stats cards internas con contraste adecuado
+- Dark mode completo con WCAG 2.1 AA compliance
+- Efecto "presionado" en estado selected (más oscuro, no más claro)
+
+### Implementación
+
+#### 6.1 HTML - Estructura de Cards
+
+```html
+<div class="grid">
+  <!-- Card IA (púrpura) -->
+  <div class="col-12 md:col-6">
+    <div class="wizard-method-card wizard-method-ia h-full border-round-xl p-4 cursor-pointer transition-all"
+         [class.wizard-method-selected]="metodoCreacion() === 'ia'"
+         (click)="seleccionarMetodo('ia')">
+
+      <!-- Icono decorativo -->
+      <div class="flex justify-content-center mb-4">
+        <div class="wizard-method-icon flex align-items-center justify-content-center border-circle bg-purple-100"
+             style="width: 80px; height: 80px;">
+          <span class="material-icons text-purple-500" style="font-size: 2.5rem;">psychology</span>
+        </div>
+      </div>
+
+      <!-- Título y descripción -->
+      <div class="text-center mb-4">
+        <h3 class="text-xl font-bold m-0 mb-2 wizard-method-title">Título Card</h3>
+        <p class="text-sm m-0 line-height-3 wizard-method-desc">Descripción de la opción</p>
+      </div>
+
+      <!-- Stats cards internas -->
+      <div class="flex gap-2 mb-4">
+        <div class="flex-1 wizard-stat-card border-round-lg p-3">
+          <div class="text-center">
+            <span class="text-xl font-bold wizard-stat-value">89%</span>
+            <p class="text-xs m-0 mt-1 wizard-stat-label">Precisión</p>
+          </div>
+        </div>
+        <div class="flex-1 wizard-stat-card border-round-lg p-3">
+          <div class="text-center">
+            <span class="text-xl font-bold wizard-stat-value">< 30s</span>
+            <p class="text-xs m-0 mt-1 wizard-stat-label">Tiempo</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón de acción -->
+      <p-button label="Seleccionar" icon="pi pi-arrow-right" iconPos="right"
+                severity="help" styleClass="w-full" />
+    </div>
+  </div>
+
+  <!-- Card Manual (azul) -->
+  <div class="col-12 md:col-6">
+    <div class="wizard-method-card wizard-method-manual h-full border-round-xl p-4 cursor-pointer transition-all"
+         [class.wizard-method-selected]="metodoCreacion() === 'manual'"
+         (click)="seleccionarMetodo('manual')">
+      <!-- ... mismo patrón con bg-blue-100 y text-blue-500 ... -->
+    </div>
+  </div>
+</div>
+```
+
+#### 6.2 SCSS - Estilos Base (Light Mode)
+
+```scss
+// ==================== WIZARD METHOD CARDS ====================
+
+// Wizard step icon
+.wizard-step-icon {
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+// Wizard method cards - Base
+.wizard-method-card {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
+  }
+
+  &.wizard-method-selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 8px 25px -5px rgba(var(--primary-color-rgb), 0.3);
+  }
+
+  // Card IA - púrpura (light mode)
+  &.wizard-method-ia {
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+
+    &.wizard-method-selected {
+      background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    }
+  }
+
+  // Card Manual - azul/gris (light mode)
+  &.wizard-method-manual {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+
+    &.wizard-method-selected {
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    }
+  }
+}
+
+// Textos dentro de wizard cards
+.wizard-method-title {
+  color: var(--text-color);
+}
+
+.wizard-method-desc {
+  color: var(--text-color-secondary);
+}
+
+// Stats cards dentro del wizard
+.wizard-stat-card {
+  background-color: var(--surface-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.wizard-stat-value {
+  color: var(--text-color);
+}
+
+.wizard-stat-label {
+  color: var(--text-color-secondary);
+}
+
+// Efecto hover en el icono
+.wizard-method-icon {
+  transition: all 0.3s ease;
+}
+
+.wizard-method-card:hover .wizard-method-icon {
+  transform: scale(1.1);
+}
+```
+
+#### 6.3 SCSS - Dark Mode Overrides
+
+```scss
+// Card IA - Dark mode
+.wizard-method-card.wizard-method-ia {
+  // Dark mode override
+  :host-context(.dark-mode) & {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(124, 58, 237, 0.18) 100%);
+    border-color: var(--surface-border);
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(124, 58, 237, 0.14) 100%);
+    }
+  }
+
+  // Dark mode selected - MÁS OSCURO (efecto "presionado")
+  :host-context(.dark-mode) &.wizard-method-selected {
+    background: linear-gradient(135deg, rgba(88, 28, 135, 0.6) 0%, rgba(76, 29, 149, 0.5) 100%) !important;
+    border-color: var(--purple-400) !important;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(139, 92, 246, 0.3) !important;
+  }
+}
+
+// Card Manual - Dark mode
+.wizard-method-card.wizard-method-manual {
+  // Dark mode override
+  :host-context(.dark-mode) & {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.12) 100%);
+    border-color: var(--surface-border);
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
+    }
+  }
+
+  // Dark mode selected - MÁS OSCURO (efecto "presionado")
+  :host-context(.dark-mode) &.wizard-method-selected {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.6) 0%, rgba(29, 78, 216, 0.5) 100%) !important;
+    border-color: var(--blue-400) !important;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+  }
+}
+
+// Stats cards - Dark mode
+.wizard-stat-card {
+  :host-context(.dark-mode) & {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(4px);
+  }
+}
+```
+
+### Colores de Referencia
+
+| Elemento | Light Mode | Dark Mode Default | Dark Mode Selected |
+|----------|-----------|-------------------|-------------------|
+| **Card IA** | `#f5f3ff → #ede9fe` | `rgba(139,92,246,0.25)` | `rgba(88,28,135,0.6)` |
+| **Card Manual** | `#f8fafc → #f1f5f9` | `rgba(59,130,246,0.2)` | `rgba(30,58,138,0.6)` |
+| **Stats Card** | `var(--surface-card)` | `rgba(255,255,255,0.08)` | mismo |
+| **Border Selected** | `var(--primary-color)` | `--purple-400` / `--blue-400` | + glow |
+
+### Principios de Diseño
+
+1. **Estado Selected = Más Oscuro**: En dark mode, el estado selected debe ser MÁS OSCURO que el default para dar sensación de "presionado/hundido".
+
+2. **Contraste de Stats Cards**: Las stats cards internas usan fondo semi-transparente blanco (`rgba(255,255,255,0.08)`) para contrastar con el gradiente del parent.
+
+3. **Glow en Selected**: Se agrega un `box-shadow` con `inset` + glow exterior para indicar claramente la selección.
+
+4. **Colores Semánticos**: Púrpura para IA/automático, Azul para Manual/control.
+
+### Variantes Adicionales
+
+Para crear nuevas variantes de color, seguir el patrón:
+
+```scss
+// Card Verde (ejemplo: Automático)
+&.wizard-method-auto {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+
+  :host-context(.dark-mode) & {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.12) 100%);
+  }
+
+  :host-context(.dark-mode) &.wizard-method-selected {
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.6) 0%, rgba(4, 120, 87, 0.5) 100%) !important;
+    border-color: var(--green-400) !important;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(16, 185, 129, 0.3) !important;
+  }
+}
+```
+
+---
+
 ## Notas Importantes
 
 1. **Angular Signals**: Este proyecto usa Angular Signals para el manejo de estado reactivo.
@@ -612,3 +861,16 @@ Chips compactos para mostrar estadísticas con diferentes colores.
 3. **Encapsulamiento CSS**: Usa `::ng-deep` cuando necesites atravesar el encapsulamiento de Angular para estilos de componentes de PrimeNG.
 
 4. **Variables CSS**: Usa las variables de PrimeNG (`--primary-color`, `--surface-border`, etc.) para mantener consistencia con el tema.
+
+5. **Dark Mode**:
+   - El proyecto usa la clase `.dark-mode` en `<html>`, NO `.dark`
+   - Usar `:host-context(.dark-mode)` para estilos de dark mode en componentes
+   - Para contenido en drawers/dialogs (renderizados en body), agregar estilos en `styles.scss` bajo `html.dark-mode`
+   - Ver `src/styles/_dark-mode.scss` para mixins y utilidades
+   - Ver `src/styles/_design-tokens.scss` para tokens de colores
+
+6. **Principios de Dark Mode**:
+   - Estado selected = más oscuro (efecto "presionado"), no más claro
+   - Usar `rgba()` con opacidades para gradientes en dark mode
+   - Mantener contraste WCAG 2.1 AA (4.5:1 mínimo para texto)
+   - Stats cards internas usar fondo semi-transparente blanco para contrastar

@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 
 /**
  * Template de gráfica predefinido
@@ -11,9 +12,41 @@ export interface ChartTemplate {
   icon: string;
   chartType: string;
   categoryColumn: string;
-  series?: { column: string; aggregation: string }[];
+  mappedColumn?: string;
+  series?: { column: string; aggregation: string; label?: string }[];
   decisionLevel: 'executive' | 'tactical' | 'operational' | 'analytical';
-  paleta?: string;
+  isExecutive?: boolean;
+  palette?: string;
+  paleta?: string; // legacy
+  tags?: string[];
+  drillDowns?: { targetColumn: string; label: string }[];
+}
+
+/**
+ * Reporte ejecutivo compuesto
+ */
+export interface ExecutiveReport {
+  id: string;
+  name: string;
+  description: string;
+  businessValue: string;
+  icon: string;
+  chartType: string;
+  decisionLevel: 'executive';
+  isExecutive: true;
+  palette: string;
+  tags: string[];
+  components: { templateId: string; position: string }[];
+}
+
+/**
+ * Paleta de colores
+ */
+export interface ColorPalette {
+  id: string;
+  name: string;
+  colors: string[];
+  description: string;
 }
 
 /**
@@ -632,5 +665,115 @@ export class ChartLibraryService {
       'reporter.fullName': 'reportador'
     };
     return mapping[column] || 'estado';
+  }
+
+  // Paletas de colores disponibles
+  readonly colorPalettes: ColorPalette[] = [
+    {
+      id: 'semaforo',
+      name: 'Semáforo',
+      colors: ['#22c55e', '#eab308', '#f97316', '#ef4444'],
+      description: 'Verde-Amarillo-Naranja-Rojo para estados'
+    },
+    {
+      id: 'corporate',
+      name: 'Corporativo',
+      colors: ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899'],
+      description: 'Tonos profesionales púrpura-rosa'
+    },
+    {
+      id: 'vibrant',
+      name: 'Vibrante',
+      colors: ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+      description: 'Colores vivos y diferenciados'
+    },
+    {
+      id: 'ocean',
+      name: 'Océano',
+      colors: ['#0ea5e9', '#06b6d4', '#14b8a6', '#22c55e', '#84cc16'],
+      description: 'Tonos azul-verde refrescantes'
+    },
+    {
+      id: 'pastel',
+      name: 'Pastel',
+      colors: ['#93c5fd', '#c4b5fd', '#f9a8d4', '#fcd34d', '#a7f3d0'],
+      description: 'Colores suaves y agradables'
+    },
+    {
+      id: 'sunset',
+      name: 'Atardecer',
+      colors: ['#f97316', '#fb923c', '#fbbf24', '#facc15', '#fde047'],
+      description: 'Tonos cálidos naranja-amarillo'
+    }
+  ];
+
+  /**
+   * Obtiene los colores de una paleta
+   */
+  getPaletteColors(paletteId: string): string[] {
+    const palette = this.colorPalettes.find(p => p.id === paletteId);
+    return palette?.colors || this.colorPalettes[0].colors;
+  }
+
+  /**
+   * Obtiene los templates ejecutivos (para reportes de comité)
+   */
+  getExecutiveTemplates(): ChartTemplate[] {
+    return this._categories()
+      .flatMap(c => c.templates)
+      .filter(t => t.isExecutive || t.decisionLevel === 'executive');
+  }
+
+  /**
+   * Busca templates por tags
+   */
+  searchByTags(tags: string[]): ChartTemplate[] {
+    const lowerTags = tags.map(t => t.toLowerCase());
+    return this._categories()
+      .flatMap(c => c.templates)
+      .filter(t => t.tags?.some(tag => lowerTags.includes(tag.toLowerCase())));
+  }
+
+  /**
+   * Obtiene un template con su configuración de drill-down
+   */
+  getTemplateWithDrillDowns(templateId: string): { template: ChartTemplate; drillDowns: { targetColumn: string; label: string }[] } | undefined {
+    const template = this.getTemplateById(templateId);
+    if (!template) return undefined;
+
+    return {
+      template,
+      drillDowns: template.drillDowns || []
+    };
+  }
+
+  /**
+   * Obtiene estadísticas de la biblioteca
+   */
+  getLibraryStats(): { totalTemplates: number; byDecisionLevel: Record<string, number>; byEntity: Record<string, number> } {
+    const templates = this._categories().flatMap(c => c.templates);
+
+    const byDecisionLevel: Record<string, number> = {
+      executive: 0,
+      tactical: 0,
+      operational: 0,
+      analytical: 0
+    };
+
+    const byEntity: Record<string, number> = {};
+
+    templates.forEach(t => {
+      byDecisionLevel[t.decisionLevel]++;
+    });
+
+    this._categories().forEach(c => {
+      byEntity[c.entity] = c.templates.length;
+    });
+
+    return {
+      totalTemplates: templates.length,
+      byDecisionLevel,
+      byEntity
+    };
   }
 }

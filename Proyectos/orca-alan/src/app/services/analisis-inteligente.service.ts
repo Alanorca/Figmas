@@ -26,6 +26,9 @@ import {
   VISUALIZACIONES_POR_TIPO
 } from '../models/analisis-inteligente.models';
 
+// Re-export types for easier imports
+export type { InterpretacionConsulta } from '../models/analisis-inteligente.models';
+
 @Injectable({
   providedIn: 'root'
 })

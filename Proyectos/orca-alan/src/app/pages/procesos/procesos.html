@@ -96,6 +96,13 @@
       </div>
 
       <div class="toolbar-right">
+        <button
+          class="toolbar-icon-btn execute-btn"
+          pTooltip="Ejecutar"
+          (click)="executeMenu.toggle($event)">
+          <i class="pi pi-play"></i>
+        </button>
+        <p-menu #executeMenu [model]="executeMenuItems" [popup]="true" />
         <p-button
           icon="pi pi-save"
           label="Guardar"

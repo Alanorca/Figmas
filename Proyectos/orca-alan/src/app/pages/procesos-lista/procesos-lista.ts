@@ -1071,15 +1071,9 @@ export class ProcesosListaComponent {
     }
   }
 
-  // Ejecutar proceso
+  // Ejecutar proceso - navega al runner
   ejecutarProceso(proceso: Proceso): void {
-    this.processService.loadProceso(proceso.id);
-    this.processService.executeProcess();
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Ejecutando',
-      detail: `Proceso "${proceso.nombre}" en ejecución`
-    });
+    this.router.navigate(['/procesos', proceso.id, 'runner']);
   }
 
   // Eliminar proceso
