@@ -121,12 +121,12 @@ interface BreadcrumbItem {
                 <span class="submenu-label">Perfil</span>
               </a>
               <a
-                routerLink="/preferencias-personales"
+                routerLink="/notificaciones-preferencias"
                 routerLinkActive="submenu-active"
                 class="submenu-item"
               >
-                <i class="pi pi-cog"></i>
-                <span class="submenu-label">Preferencias Personales</span>
+                <i class="pi pi-sliders-h"></i>
+                <span class="submenu-label">Preferencias</span>
               </a>
               <a
                 routerLink="/notificaciones-config"
@@ -248,7 +248,6 @@ interface BreadcrumbItem {
       top: 0;
       flex-shrink: 0;
       border-right: 1px solid var(--surface-border);
-      z-index: 50; /* Por encima del page-footer-fixed */
     }
 
     /* ===== Icon Bar (Barra de iconos principal) ===== */

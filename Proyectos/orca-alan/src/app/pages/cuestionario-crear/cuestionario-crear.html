@@ -1,0 +1,424 @@
+<p-toast></p-toast>
+
+<div class="crear-proceso-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a routerLink="/cuestionarios">Cuestionarios</a>
+      <span class="separator">/</span>
+      <span>Nuevo</span>
+    </div>
+    <h1>Crear cuestionario</h1>
+    <p class="page-subtitle">{{ steps()[pasoActual()].descripcion }}</p>
+  </div>
+
+  <!-- Stepper -->
+  <div class="stepper-container">
+    @for (step of steps(); track $index; let i = $index) {
+      <div
+        class="step-item"
+        [class.active]="i === pasoActual()"
+        [class.completed]="i < pasoActual()"
+        [class.clickable]="i < pasoActual()"
+        (click)="irAPaso(i)">
+        <div class="step-indicator">
+          <div class="step-icon">
+            @if (i < pasoActual()) {
+              <i class="pi pi-check"></i>
+            } @else {
+              <i [class]="step.icon"></i>
+            }
+          </div>
+          @if (i < steps().length - 1) {
+            <div class="step-line" [class.completed]="i < pasoActual()"></div>
+          }
+        </div>
+        <div class="step-content">
+          <span class="step-label">{{ step.label }}</span>
+          <span class="step-description">{{ step.descripcion }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Content Card -->
+  <div class="content-card">
+    <!-- PASO 0: Selección de Método -->
+    @if (pasoActual() === 0) {
+      <div class="step-panel">
+        <h2 class="panel-title">Elige el método de creación</h2>
+
+        <div class="metodos-grid-new">
+          <!-- Opción IA -->
+          <div
+            class="metodo-card-new"
+            [class.selected]="metodoCreacion() === 'ia'"
+            (click)="seleccionarMetodo('ia')">
+
+            <!-- Ilustración IA - Documento con IA -->
+            <div class="metodo-ilustracion">
+              <svg width="140" height="100" viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Documento/Formulario -->
+                <rect x="20" y="10" width="55" height="70" rx="4" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                <rect x="28" y="20" width="30" height="4" rx="1" fill="#CBD5E1"/>
+                <rect x="28" y="28" width="38" height="3" rx="1" fill="#E2E8F0"/>
+                <rect x="28" y="34" width="35" height="3" rx="1" fill="#E2E8F0"/>
+                <!-- Checkboxes -->
+                <rect x="28" y="44" width="8" height="8" rx="2" fill="#10B981"/>
+                <path d="M30 48 L32 50 L35 46" stroke="white" stroke-width="1.5" fill="none"/>
+                <rect x="40" y="45" width="25" height="3" rx="1" fill="#CBD5E1"/>
+                <rect x="28" y="56" width="8" height="8" rx="2" fill="#10B981"/>
+                <path d="M30 60 L32 62 L35 58" stroke="white" stroke-width="1.5" fill="none"/>
+                <rect x="40" y="57" width="20" height="3" rx="1" fill="#CBD5E1"/>
+                <!-- Robot/IA -->
+                <circle cx="100" cy="35" r="20" fill="#7C3AED" opacity="0.1"/>
+                <rect x="88" y="25" width="24" height="20" rx="4" fill="#7C3AED"/>
+                <circle cx="94" cy="33" r="3" fill="#FFFFFF"/>
+                <circle cx="106" cy="33" r="3" fill="#FFFFFF"/>
+                <rect x="95" y="39" width="10" height="2" rx="1" fill="#FFFFFF"/>
+                <!-- Sparkles -->
+                <circle cx="82" cy="20" r="2" fill="#A855F7"/>
+                <circle cx="118" cy="28" r="2.5" fill="#A855F7"/>
+                <circle cx="112" cy="55" r="2" fill="#A855F7"/>
+                <!-- Conexión -->
+                <path d="M75 40 L85 40" stroke="#A855F7" stroke-width="2" stroke-dasharray="3 2"/>
+              </svg>
+            </div>
+
+            <div class="metodo-content-new">
+              <h3>Crear con IA</h3>
+              <p>Genera automáticamente un cuestionario basado en tus requerimientos o documentos. La IA analiza tu contexto y propone preguntas relevantes.</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="metodo-stats">
+              <div class="stat-box">
+                <span class="stat-value">Automático</span>
+                <span class="stat-label">Generación de preguntas</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value">&lt; 30 seg</span>
+                <span class="stat-label">Tiempo promedio</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value">Marcos</span>
+                <span class="stat-label">Basado en normativos</span>
+              </div>
+            </div>
+
+            <!-- Botón -->
+            <button class="metodo-btn metodo-btn--ia" (click)="seleccionarMetodo('ia'); siguiente()">
+              Crear con IA
+              <i class="pi pi-sparkles"></i>
+            </button>
+          </div>
+
+          <!-- Opción Manual -->
+          <div
+            class="metodo-card-new"
+            [class.selected]="metodoCreacion() === 'manual'"
+            (click)="seleccionarMetodo('manual')">
+
+            <!-- Ilustración Manual - Persona editando -->
+            <div class="metodo-ilustracion">
+              <svg width="140" height="100" viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Persona -->
+                <circle cx="45" cy="30" r="12" fill="#FCD34D"/>
+                <path d="M30 75 L30 52 Q30 44 40 44 L50 44 Q60 44 60 52 L60 75" fill="#1E293B"/>
+                <!-- Escritorio -->
+                <rect x="15" y="75" width="110" height="6" rx="2" fill="#94A3B8"/>
+                <!-- Documento que está editando -->
+                <rect x="70" y="20" width="50" height="50" rx="3" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2"/>
+                <rect x="78" y="28" width="25" height="3" rx="1" fill="#CBD5E1"/>
+                <rect x="78" y="35" width="32" height="2" rx="1" fill="#E2E8F0"/>
+                <rect x="78" y="41" width="28" height="2" rx="1" fill="#E2E8F0"/>
+                <rect x="78" y="47" width="30" height="2" rx="1" fill="#E2E8F0"/>
+                <!-- Lápiz en mano -->
+                <rect x="58" y="48" width="16" height="3" rx="1" fill="#10B981" transform="rotate(-30 58 48)"/>
+                <!-- Checklist icon -->
+                <rect x="78" y="53" width="6" height="6" rx="1" stroke="#10B981" stroke-width="1.5" fill="none"/>
+                <path d="M79 56 L80 57 L83 54" stroke="#10B981" stroke-width="1" fill="none"/>
+                <rect x="88" y="55" width="15" height="2" rx="1" fill="#CBD5E1"/>
+              </svg>
+            </div>
+
+            <div class="metodo-content-new">
+              <h3>Crear manualmente</h3>
+              <p>Diseña tu cuestionario paso a paso con control total sobre cada pregunta y sección.</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="metodo-stats">
+              <div class="stat-box">
+                <span class="stat-value">100%</span>
+                <span class="stat-label">Control total</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value">Visual</span>
+                <span class="stat-label">Editor intuitivo</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value">Lógica</span>
+                <span class="stat-label">Condicional avanzada</span>
+              </div>
+            </div>
+
+            <!-- Botón -->
+            <button class="metodo-btn metodo-btn--manual" (click)="seleccionarMetodo('manual'); siguiente()">
+              Crear manualmente
+              <i class="pi pi-pencil"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- PASO 1: Datos Generales -->
+    @if (pasoActual() === 1) {
+      <div class="step-panel panel-columna-izquierda">
+        <h2 class="panel-title">Información del Cuestionario</h2>
+
+        <div class="form-field">
+          <label class="field-label">Nombre del Cuestionario *</label>
+          <input
+            type="text"
+            class="field-input"
+            [ngModel]="nombreCuestionario()"
+            (ngModelChange)="nombreCuestionario.set($event)"
+            placeholder="Ej: Evaluación ISO 27001 - Q1 2026">
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Descripción</label>
+          <textarea
+            class="field-textarea"
+            [ngModel]="descripcionCuestionario()"
+            (ngModelChange)="descripcionCuestionario.set($event)"
+            rows="3"
+            placeholder="Describe el propósito del cuestionario..."></textarea>
+        </div>
+
+        <div class="inline-form-row">
+          <div class="form-field flex-1">
+            <label class="field-label">Marco Normativo</label>
+            <div class="select-wrapper">
+              <select
+                class="field-select"
+                [ngModel]="marcoNormativo()"
+                (ngModelChange)="marcoNormativo.set($event)">
+                <option value="">Seleccionar marco</option>
+                @for (opt of marcoOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+              <i class="pi pi-chevron-down select-icon"></i>
+            </div>
+          </div>
+          <div class="form-field flex-1">
+            <label class="field-label">Periodicidad</label>
+            <div class="select-wrapper">
+              <select
+                class="field-select"
+                [ngModel]="periodicidad()"
+                (ngModelChange)="periodicidad.set($event)">
+                <option value="">Seleccionar periodicidad</option>
+                @for (opt of periodicidadOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+              <i class="pi pi-chevron-down select-icon"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- PASO 2: Configuración IA (solo si eligió IA) -->
+    @if (pasoActual() === 2 && metodoCreacion() === 'ia' && !cuestionarioGenerado()) {
+      <div class="step-panel panel-columna-izquierda">
+        <h2 class="panel-title">Configuración de IA</h2>
+
+        <!-- Tabs de método IA -->
+        <div class="tabs-container">
+          <button
+            class="tab-btn"
+            [class.active]="iaMetodo() === 'prompt'"
+            (click)="iaMetodo.set('prompt')">
+            <i class="pi pi-comment"></i>
+            Describir con texto
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="iaMetodo() === 'documento'"
+            (click)="iaMetodo.set('documento')">
+            <i class="pi pi-file"></i>
+            Subir documento
+          </button>
+        </div>
+
+        <!-- Opción: Prompt -->
+        @if (iaMetodo() === 'prompt') {
+          <div class="form-field">
+            <label class="field-label">Describe el cuestionario que necesitas</label>
+            <textarea
+              class="field-textarea field-textarea--large"
+              [ngModel]="promptIA()"
+              (ngModelChange)="promptIA.set($event)"
+              rows="6"
+              placeholder="Ej: Necesito un cuestionario de evaluación de seguridad de la información basado en ISO 27001, enfocado en controles de acceso y gestión de incidentes. Debe tener preguntas tipo Sí/No y escala de cumplimiento..."></textarea>
+            <span class="field-hint">Sé específico sobre el tipo de preguntas, áreas a evaluar y nivel de detalle deseado</span>
+          </div>
+        }
+
+        <!-- Opción: Documento -->
+        @if (iaMetodo() === 'documento') {
+          <div class="form-field">
+            <label class="field-label">Sube un documento de referencia</label>
+            @if (!documentoIA()) {
+              <div class="upload-area">
+                <p-fileUpload
+                  mode="basic"
+                  name="documento"
+                  accept=".pdf,.doc,.docx,.txt"
+                  [maxFileSize]="10000000"
+                  chooseLabel="Seleccionar archivo"
+                  chooseIcon="pi pi-upload"
+                  (onSelect)="onSelectDocumento($event)"
+                  styleClass="upload-button">
+                </p-fileUpload>
+                <p class="upload-hint">PDF, DOC, DOCX o TXT (máx. 10MB)</p>
+              </div>
+            } @else {
+              <div class="documento-preview">
+                <div class="documento-info">
+                  <i class="pi pi-file-pdf"></i>
+                  <span>{{ documentoNombre() }}</span>
+                </div>
+                <button class="btn-remove" (click)="onRemoveDocumento()">
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+            }
+            <span class="field-hint">La IA analizará el documento para generar preguntas relevantes</span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- PASO 2: Preview del cuestionario generado (IA) -->
+    @if (pasoActual() === 2 && metodoCreacion() === 'ia' && cuestionarioGenerado()) {
+      <div class="step-panel">
+        <div class="preview-header">
+          <div class="preview-icon">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <div>
+            <h2 class="panel-title">Cuestionario Generado</h2>
+            <p class="panel-subtitle">Revisa el resultado antes de continuar</p>
+          </div>
+        </div>
+
+        <!-- Resumen general -->
+        <div class="preview-summary">
+          <div class="summary-header">
+            <h3>{{ cuestionarioGenerado()?.nombre }}</h3>
+            @if (cuestionarioGenerado()?.marcoNormativo) {
+              <span class="marco-tag">{{ cuestionarioGenerado()?.marcoNormativo | uppercase }}</span>
+            }
+          </div>
+          <p class="summary-description">{{ cuestionarioGenerado()?.descripcion }}</p>
+          <div class="summary-stats">
+            <div class="stat-item">
+              <i class="pi pi-list"></i>
+              <span>{{ cuestionarioGenerado()?.secciones?.length || 0 }} secciones</span>
+            </div>
+            <div class="stat-item">
+              <i class="pi pi-question-circle"></i>
+              <span>{{ cuestionarioGenerado()?.preguntas || 0 }} preguntas</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vista previa de secciones -->
+        <div class="preview-secciones">
+          @for (seccion of cuestionarioGenerado()?.secciones || []; track seccion.id; let i = $index) {
+            <div class="seccion-card">
+              <div class="seccion-header">
+                <div class="seccion-number">{{ i + 1 }}</div>
+                <div class="seccion-info">
+                  <span class="seccion-nombre">{{ seccion.nombre }}</span>
+                  <span class="seccion-peso">Peso: {{ seccion.peso }}%</span>
+                </div>
+              </div>
+              <p class="seccion-descripcion">{{ seccion.descripcion }}</p>
+              <div class="preguntas-list">
+                @for (pregunta of seccion.preguntas; track pregunta.id; let j = $index) {
+                  <div class="pregunta-item">
+                    <span class="pregunta-number">{{ j + 1 }}.</span>
+                    <div class="pregunta-content">
+                      <p class="pregunta-texto">{{ pregunta.texto }}</p>
+                      <div class="pregunta-meta">
+                        <span class="tipo-tag" [class.tipo-sino]="pregunta.tipo === 'siNoNa'" [class.tipo-escala]="pregunta.tipo === 'escala'">
+                          {{ getTipoPreguntaLabel(pregunta.tipo) }}
+                        </span>
+                        @if (pregunta.requerida) {
+                          <span class="requerida-tag">Requerida</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Footer Fixed -->
+  <div class="page-footer-fixed">
+    <div class="footer-content">
+      @if (pasoActual() > 0 && !cuestionarioGenerado()) {
+        <button class="btn-atras" (click)="anterior()">
+          <i class="pi pi-arrow-left"></i>
+          Atrás
+        </button>
+      } @else if (cuestionarioGenerado()) {
+        <button class="btn-atras" (click)="regenerarConIA()">
+          <i class="pi pi-refresh"></i>
+          Regenerar
+        </button>
+      } @else {
+        <button class="btn-atras" (click)="cancelar()">Cancelar</button>
+      }
+
+      @if (cuestionarioGenerado()) {
+        <div class="footer-actions-right">
+          <button class="btn-secundario" (click)="irAEditor()">
+            <i class="pi pi-pencil"></i>
+            Editar cuestionario
+          </button>
+          <button class="btn-guardar" (click)="guardarYVolverALista()">
+            <i class="pi pi-check"></i>
+            Guardar
+          </button>
+        </div>
+      } @else if (pasoActual() === 2 && metodoCreacion() === 'ia') {
+        <button class="btn-guardar btn-ia" (click)="generarConIA()" [disabled]="!puedeAvanzar() || generandoIA()">
+          @if (generandoIA()) {
+            <i class="pi pi-spin pi-spinner"></i>
+            Generando...
+          } @else {
+            <i class="pi pi-sparkles"></i>
+            Generar con IA
+          }
+        </button>
+      } @else {
+        <button class="btn-siguiente" (click)="siguiente()" [disabled]="!puedeAvanzar()">
+          {{ getBotonSiguienteLabel() }}
+        </button>
+      }
+    </div>
+  </div>
+</div>
