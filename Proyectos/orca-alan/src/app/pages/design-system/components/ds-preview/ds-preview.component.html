@@ -1,0 +1,34 @@
+<div class="ds-preview">
+  <header class="preview-header">
+    <div class="header-content">
+      @if (title()) {
+        <h3 class="preview-title">{{ title() }}</h3>
+      }
+      @if (description()) {
+        <p class="preview-description">{{ description() }}</p>
+      }
+    </div>
+    @if (showModeToggle()) {
+      <div class="mode-toggle">
+        <p-selectButton
+          [options]="modeOptions"
+          [(ngModel)]="previewMode"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false"
+        >
+          <ng-template pTemplate="item" let-item>
+            <i [class]="item.icon"></i>
+            <span>{{ item.label }}</span>
+          </ng-template>
+        </p-selectButton>
+      </div>
+    }
+  </header>
+
+  <div class="preview-container" [class]="'mode-' + previewMode()">
+    <div class="preview-panel" [class.light-mode]="previewMode() === 'light'" [class.dark-mode]="previewMode() === 'dark'">
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>

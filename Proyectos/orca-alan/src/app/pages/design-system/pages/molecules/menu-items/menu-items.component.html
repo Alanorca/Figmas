@@ -1,0 +1,187 @@
+<div class="menu-items-page">
+  <p-toast />
+
+  <header class="page-header">
+    <h1>Menu Items</h1>
+    <p class="subtitle">
+      Navigation patterns using menus, menubars, breadcrumbs, and context menus.
+      <strong>All examples below are interactive - try them!</strong>
+    </p>
+  </header>
+
+  <!-- Interactive Menu Demo -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Navigation Menu</h2>
+    <p class="section-description">
+      Click on menu items to see actions. This menu includes badges, submenus, and command callbacks.
+    </p>
+    <app-ds-preview title="Interactive Menu" [showModeToggle]="false">
+      <div class="interactive-menu-demo">
+        <div class="menu-wrapper">
+          <p-menu [model]="interactiveMenu" />
+        </div>
+        <div class="menu-status">
+          <div class="status-card">
+            <span class="status-label">Last Selected</span>
+            <span class="status-value">{{ selectedMenuItem() || 'None' }}</span>
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="interactiveCode" language="typescript" />
+  </section>
+
+  <!-- Interactive Menubar Demo -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bars"></i> Interactive Menubar</h2>
+    <p class="section-description">
+      Application-style menubar with dropdowns. Click any menu option to trigger an action.
+    </p>
+    <app-ds-preview title="Interactive Menubar" [showModeToggle]="false">
+      <div class="menubar-demo">
+        <p-menubar [model]="menubarItems" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="menubarCode" language="typescript" />
+  </section>
+
+  <!-- Interactive Breadcrumb Demo -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-sitemap"></i> Interactive Breadcrumb Navigation</h2>
+    <p class="section-description">
+      Click folders to navigate deeper, or click breadcrumb items to go back.
+    </p>
+    <app-ds-preview title="Dynamic Breadcrumb" [showModeToggle]="false">
+      <div class="breadcrumb-interactive">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb-wrapper">
+          <p-breadcrumb [model]="breadcrumbItems()" />
+        </div>
+
+        <!-- Folder Navigation -->
+        <div class="folder-grid">
+          <h4>Available Folders</h4>
+          <div class="folders">
+            @for (folder of folders; track folder.label) {
+              <div class="folder-item" (click)="navigateToFolder(folder)">
+                <i [class]="folder.icon"></i>
+                <span>{{ folder.label }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Navigation Actions -->
+        <div class="nav-actions">
+          <p-button
+            label="Go Home"
+            icon="pi pi-home"
+            severity="secondary"
+            [outlined]="true"
+            size="small"
+            (onClick)="goHome()"
+            [disabled]="currentPath().length <= 1"
+          />
+          <span class="path-info">Current depth: {{ currentPath().length }} level(s)</span>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="breadcrumbCode" language="typescript" />
+  </section>
+
+  <!-- Context Menu Demo -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-list"></i> Context Menu</h2>
+    <p class="section-description">
+      Right-click on the target area below to see the context menu in action.
+    </p>
+    <app-ds-preview title="Context Menu Demo" [showModeToggle]="false">
+      <div class="context-menu-demo">
+        <p-contextMenu [model]="contextMenuItems" [target]="contextTarget" />
+        <div #contextTarget class="context-target">
+          <i class="pi pi-file"></i>
+          <span>Right-click me!</span>
+          <small>A context menu will appear with options</small>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Basic Menu</h2>
+    <p class="section-description">
+      Simple vertical menu with icons and separators.
+    </p>
+    <app-ds-preview title="Menu" [showModeToggle]="false">
+      <div class="menu-demo">
+        <p-menu [model]="menuItems" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="menuCode" language="typescript" />
+  </section>
+
+  <section class="section">
+    <h2>Menu Item Structure</h2>
+    <p class="section-description">
+      Common properties for menu items across all menu components.
+    </p>
+    <div class="structure-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>label</code></td>
+            <td>string</td>
+            <td>Text to display</td>
+          </tr>
+          <tr>
+            <td><code>icon</code></td>
+            <td>string</td>
+            <td>Icon class (PrimeIcons)</td>
+          </tr>
+          <tr>
+            <td><code>routerLink</code></td>
+            <td>string</td>
+            <td>Router navigation path</td>
+          </tr>
+          <tr>
+            <td><code>command</code></td>
+            <td>function</td>
+            <td>Callback function on click</td>
+          </tr>
+          <tr>
+            <td><code>items</code></td>
+            <td>MenuItem[]</td>
+            <td>Sub-menu items</td>
+          </tr>
+          <tr>
+            <td><code>separator</code></td>
+            <td>boolean</td>
+            <td>Renders a separator line</td>
+          </tr>
+          <tr>
+            <td><code>badge</code></td>
+            <td>string</td>
+            <td>Badge value to display</td>
+          </tr>
+          <tr>
+            <td><code>disabled</code></td>
+            <td>boolean</td>
+            <td>Disables the menu item</td>
+          </tr>
+          <tr>
+            <td><code>visible</code></td>
+            <td>boolean</td>
+            <td>Controls visibility</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

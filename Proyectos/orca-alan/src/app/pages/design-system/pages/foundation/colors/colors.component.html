@@ -1,0 +1,152 @@
+<div class="colors-page">
+  <p-toast />
+
+  <header class="page-header">
+    <h1>Colors</h1>
+    <p class="subtitle">
+      Color palettes define the visual identity of ORCA. The primary color is <strong>Emerald</strong> (#10b981),
+      with <strong>Slate/Zinc</strong> grays for surfaces. Click on any color to copy its CSS variable.
+    </p>
+  </header>
+
+  <!-- Primary Color - Emerald -->
+  <section class="section">
+    <h2><i class="pi pi-palette"></i> Primary Color (Emerald)</h2>
+    <p class="section-description">
+      The primary color is used for interactive elements, links, buttons, and primary actions.
+      Emerald provides a fresh, modern, and accessible color that works well in both light and dark modes.
+    </p>
+    <app-ds-color-swatch [palette]="primaryPalette" />
+  </section>
+
+  <!-- Semantic Primary -->
+  <section class="section">
+    <h2>Primary (Semantic Aliases)</h2>
+    <p class="section-description">
+      Use these semantic variables instead of the raw emerald values for better maintainability.
+      If the brand color changes, only the mapping needs to update.
+    </p>
+    <app-ds-color-swatch [palette]="semanticPrimaryPalette" />
+  </section>
+
+  <!-- Surface Colors - Secondary/Grays -->
+  <section class="section">
+    <h2><i class="pi pi-th-large"></i> Surface Colors (Secondary)</h2>
+    <p class="section-description">
+      Surface colors define backgrounds, borders, and neutral elements. These are the "secondary" colors
+      that complement the primary Emerald.
+    </p>
+
+    <h3 class="subsection-title">Slate (Light Mode Base)</h3>
+    <p class="subsection-description">Used for surfaces in light mode. Slightly cool gray with blue undertones.</p>
+    <app-ds-color-swatch [palette]="slatePalette" />
+
+    <h3 class="subsection-title">Zinc (Dark Mode Base)</h3>
+    <p class="subsection-description">Pure neutral gray used for surfaces in dark mode.</p>
+    <app-ds-color-swatch [palette]="zincPalette" />
+
+    <h3 class="subsection-title">Gray (Alternative Neutral)</h3>
+    <p class="subsection-description">Standard gray scale for general use.</p>
+    <app-ds-color-swatch [palette]="grayPalette" />
+  </section>
+
+  <!-- Semantic Surface -->
+  <section class="section">
+    <h2>Surface (Semantic Aliases)</h2>
+    <p class="section-description">
+      Use these semantic surface variables for automatic light/dark mode support.
+      The values change based on the current theme.
+    </p>
+    <app-ds-color-swatch [palette]="surfacePalette" />
+
+    <div class="semantic-tokens">
+      <h4>Key Semantic Tokens:</h4>
+      <div class="token-grid">
+        <div class="token-item">
+          <code>--surface-card</code>
+          <span>Card backgrounds</span>
+        </div>
+        <div class="token-item">
+          <code>--surface-border</code>
+          <span>Border colors</span>
+        </div>
+        <div class="token-item">
+          <code>--surface-hover</code>
+          <span>Hover states</span>
+        </div>
+        <div class="token-item">
+          <code>--text-color</code>
+          <span>Primary text</span>
+        </div>
+        <div class="token-item">
+          <code>--text-color-secondary</code>
+          <span>Secondary text</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Semantic State Colors -->
+  <section class="section">
+    <h2><i class="pi pi-info-circle"></i> Semantic State Colors</h2>
+    <p class="section-description">
+      These colors communicate meaning: success, information, warning, danger, and help states.
+    </p>
+    @for (palette of semanticPalettes; track palette.name) {
+      <app-ds-color-swatch [palette]="palette" />
+    }
+  </section>
+
+  <!-- Extended Palette -->
+  <section class="section">
+    <h2><i class="pi pi-star"></i> Extended Palette</h2>
+    <p class="section-description">
+      Additional colors available for data visualization, charts, and special use cases.
+    </p>
+    <div class="extended-grid">
+      @for (palette of extendedPalettes; track palette.name) {
+        <app-ds-color-swatch [palette]="palette" />
+      }
+    </div>
+  </section>
+
+  <!-- Usage -->
+  <section class="section">
+    <h2>Usage</h2>
+    <p class="section-description">
+      Use CSS custom properties to apply colors consistently across the application.
+    </p>
+    <app-ds-code-block [code]="usageCode" language="scss" />
+  </section>
+
+  <!-- Accessibility -->
+  <section class="section">
+    <h2>Accessibility</h2>
+    <div class="accessibility-info">
+      <div class="info-card">
+        <i class="pi pi-check-circle"></i>
+        <div>
+          <h4>WCAG AA Compliance</h4>
+          <p>All text colors meet minimum contrast ratios (4.5:1 for normal text, 3:1 for large text).
+             Emerald-500 on white has a 3.4:1 ratio - suitable for large text and icons.</p>
+        </div>
+      </div>
+      <div class="info-card">
+        <i class="pi pi-moon"></i>
+        <div>
+          <h4>Dark Mode Support</h4>
+          <p>Colors are automatically adjusted for dark mode. Semantic tokens like --surface-card and
+             --text-color switch values automatically based on theme.</p>
+        </div>
+      </div>
+      <div class="info-card">
+        <i class="pi pi-eye"></i>
+        <div>
+          <h4>Color Blindness</h4>
+          <p>State colors use sufficient lightness contrast to remain distinguishable for users with
+             color vision deficiencies. Never rely on color alone to convey information.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

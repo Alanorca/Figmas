@@ -1,0 +1,70 @@
+<div class="shadows-page">
+  <header class="page-header">
+    <h1>Shadows</h1>
+    <p class="subtitle">
+      Shadows create depth and hierarchy by indicating elevation levels in the interface.
+    </p>
+  </header>
+
+  <section class="section">
+    <h2>Elevation Scale</h2>
+    <p class="section-description">
+      Progressive shadow scale from subtle to prominent, each with specific use cases.
+    </p>
+    <div class="shadows-grid">
+      @for (shadow of shadows; track shadow.name) {
+        <div class="shadow-card" [style.box-shadow]="shadow.value">
+          <div class="shadow-preview"></div>
+          <div class="shadow-info">
+            <h4>{{ shadow.name }}</h4>
+            <code>{{ shadow.variable }}</code>
+            <p>{{ shadow.useCase }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Focus Shadows</h2>
+    <p class="section-description">
+      Focus indicators for accessibility and visual feedback on interactive elements.
+    </p>
+    <div class="focus-demos">
+      @for (shadow of focusShadows; track shadow.name) {
+        <div class="focus-demo">
+          <div class="focus-preview" [style.box-shadow]="shadow.value">
+            Focus
+          </div>
+          <div class="focus-info">
+            <h4>{{ shadow.name }}</h4>
+            <code>{{ shadow.variable }}</code>
+            <p>{{ shadow.useCase }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Interactive Demo</h2>
+    <p class="section-description">
+      Hover over cards to see shadow transitions creating elevation changes.
+    </p>
+    <div class="interactive-demo">
+      <div class="demo-card hover-elevate">
+        <i class="pi pi-arrow-up"></i>
+        <span>Hover to elevate</span>
+      </div>
+      <div class="demo-card hover-depress">
+        <i class="pi pi-arrow-down"></i>
+        <span>Hover to depress</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Usage</h2>
+    <app-ds-code-block [code]="usageCode" language="scss" />
+  </section>
+</div>

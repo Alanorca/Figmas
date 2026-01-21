@@ -1,0 +1,26 @@
+<div class="ds-token-display">
+  @if (title()) {
+    <h4 class="token-title">{{ title() }}</h4>
+  }
+  <div class="tokens-grid">
+    @for (token of tokens(); track token.name) {
+      <div
+        class="token-item"
+        [class.copied]="copiedToken() === token.name"
+        (click)="copyToken(token)"
+        pTooltip="Click to copy"
+        tooltipPosition="top"
+      >
+        <div class="token-preview" [style.background]="token.value"></div>
+        <div class="token-info">
+          <code class="token-name">{{ token.name }}</code>
+          <span class="token-value">{{ token.value }}</span>
+          @if (token.description) {
+            <span class="token-description">{{ token.description }}</span>
+          }
+        </div>
+        <i class="pi" [class.pi-check]="copiedToken() === token.name" [class.pi-copy]="copiedToken() !== token.name"></i>
+      </div>
+    }
+  </div>
+</div>

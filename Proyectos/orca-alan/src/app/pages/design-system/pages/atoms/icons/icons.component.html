@@ -1,0 +1,137 @@
+<div class="icons-page">
+  <header class="page-header">
+    <h1>Icons</h1>
+    <p class="subtitle">
+      PrimeIcons library with 200+ icons for consistent visual communication.
+    </p>
+  </header>
+
+  <div class="search-bar">
+    <span class="p-input-icon-left">
+      <i class="pi pi-search"></i>
+      <input pInputText placeholder="Search icons..." [(ngModel)]="searchTerm" />
+    </span>
+  </div>
+
+  <section class="section">
+    <h2>Sizes</h2>
+    <app-ds-preview title="Icon Sizes" [showModeToggle]="false">
+      <div class="size-demo">
+        <div class="size-item">
+          <i class="pi pi-home" style="font-size: 0.875rem"></i>
+          <span>0.875rem</span>
+        </div>
+        <div class="size-item">
+          <i class="pi pi-home" style="font-size: 1rem"></i>
+          <span>1rem</span>
+        </div>
+        <div class="size-item">
+          <i class="pi pi-home" style="font-size: 1.25rem"></i>
+          <span>1.25rem</span>
+        </div>
+        <div class="size-item">
+          <i class="pi pi-home" style="font-size: 1.5rem"></i>
+          <span>1.5rem</span>
+        </div>
+        <div class="size-item">
+          <i class="pi pi-home" style="font-size: 2rem"></i>
+          <span>2rem</span>
+        </div>
+        <div class="size-item">
+          <i class="pi pi-home" style="font-size: 3rem"></i>
+          <span>3rem</span>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Usage</h2>
+    <app-ds-code-block [code]="usageCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Common Icons</h2>
+    <p class="section-description">Click on any icon to copy its class name.</p>
+    <div class="icons-grid">
+      @for (icon of filteredCommonIcons; track icon) {
+        <div
+          class="icon-item"
+          [class.copied]="copiedIcon() === icon"
+          (click)="copyIcon(icon)"
+          [pTooltip]="'pi ' + icon"
+          tooltipPosition="top"
+        >
+          <i [class]="'pi ' + icon"></i>
+          <span class="icon-name">{{ icon.replace('pi-', '') }}</span>
+          @if (copiedIcon() === icon) {
+            <i class="pi pi-check copy-indicator"></i>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Navigation Icons</h2>
+    <div class="icons-grid">
+      @for (icon of filteredNavigationIcons; track icon) {
+        <div
+          class="icon-item"
+          [class.copied]="copiedIcon() === icon"
+          (click)="copyIcon(icon)"
+          [pTooltip]="'pi ' + icon"
+          tooltipPosition="top"
+        >
+          <i [class]="'pi ' + icon"></i>
+          <span class="icon-name">{{ icon.replace('pi-', '') }}</span>
+          @if (copiedIcon() === icon) {
+            <i class="pi pi-check copy-indicator"></i>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Media Icons</h2>
+    <div class="icons-grid">
+      @for (icon of filteredMediaIcons; track icon) {
+        <div
+          class="icon-item"
+          [class.copied]="copiedIcon() === icon"
+          (click)="copyIcon(icon)"
+          [pTooltip]="'pi ' + icon"
+          tooltipPosition="top"
+        >
+          <i [class]="'pi ' + icon"></i>
+          <span class="icon-name">{{ icon.replace('pi-', '') }}</span>
+          @if (copiedIcon() === icon) {
+            <i class="pi pi-check copy-indicator"></i>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Social Icons</h2>
+    <div class="icons-grid">
+      @for (icon of filteredSocialIcons; track icon) {
+        <div
+          class="icon-item"
+          [class.copied]="copiedIcon() === icon"
+          (click)="copyIcon(icon)"
+          [pTooltip]="'pi ' + icon"
+          tooltipPosition="top"
+        >
+          <i [class]="'pi ' + icon"></i>
+          <span class="icon-name">{{ icon.replace('pi-', '') }}</span>
+          @if (copiedIcon() === icon) {
+            <i class="pi pi-check copy-indicator"></i>
+          }
+        </div>
+      }
+    </div>
+  </section>
+</div>

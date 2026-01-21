@@ -1,0 +1,87 @@
+<div class="border-radius-page">
+  <header class="page-header">
+    <h1>Border Radius</h1>
+    <p class="subtitle">
+      Border radius tokens create consistent rounded corners across the interface.
+    </p>
+  </header>
+
+  <section class="section">
+    <h2>Radius Scale</h2>
+    <p class="section-description">
+      A progressive scale from sharp to fully rounded, each suited for specific element sizes.
+    </p>
+    <div class="radius-grid">
+      @for (radius of radiusTokens; track radius.name) {
+        <div class="radius-card">
+          <div class="radius-preview" [style.border-radius]="radius.value"></div>
+          <div class="radius-info">
+            <h4>{{ radius.name }}</h4>
+            <code>{{ radius.variable }}</code>
+            <span class="radius-value">{{ radius.value }}</span>
+            <p>{{ radius.useCase }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Common Applications</h2>
+    <div class="applications-grid">
+      <div class="app-example">
+        <div class="app-preview buttons">
+          <button class="demo-btn radius-none">None</button>
+          <button class="demo-btn radius-base">Base</button>
+          <button class="demo-btn radius-full">Full</button>
+        </div>
+        <span class="app-label">Buttons</span>
+      </div>
+      <div class="app-example">
+        <div class="app-preview inputs">
+          <div class="demo-input radius-sm">Input SM</div>
+          <div class="demo-input radius-base">Input Base</div>
+        </div>
+        <span class="app-label">Inputs</span>
+      </div>
+      <div class="app-example">
+        <div class="app-preview cards">
+          <div class="demo-card radius-md">Card MD</div>
+          <div class="demo-card radius-lg">Card LG</div>
+        </div>
+        <span class="app-label">Cards</span>
+      </div>
+      <div class="app-example">
+        <div class="app-preview avatars">
+          <div class="demo-avatar radius-md">MD</div>
+          <div class="demo-avatar radius-full">Full</div>
+        </div>
+        <span class="app-label">Avatars</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Selective Rounding</h2>
+    <p class="section-description">
+      Apply radius to specific corners for attached or grouped elements.
+    </p>
+    <div class="selective-demo">
+      <div class="selective-group">
+        <div class="selective-item top-only">Top only</div>
+        <div class="selective-item no-radius">Attached</div>
+        <div class="selective-item bottom-only">Bottom only</div>
+      </div>
+      <div class="selective-group horizontal">
+        <div class="selective-item left-only">Left</div>
+        <div class="selective-item no-radius">Middle</div>
+        <div class="selective-item right-only">Right</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Usage</h2>
+    <app-ds-code-block [code]="usageCode" language="scss" />
+  </section>
+</div>

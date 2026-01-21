@@ -1,0 +1,334 @@
+<div class="badges-page">
+  <p-toast />
+
+  <header class="page-header">
+    <h1>Badges & Tags</h1>
+    <p class="subtitle">
+      Badges and tags communicate status, labels, and small counts.
+      <strong>All examples below are interactive - try them!</strong>
+    </p>
+  </header>
+
+  <!-- Interactive Demo Section -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Demo</h2>
+    <p class="section-description">
+      Click the buttons to see badges update in real-time.
+    </p>
+    <app-ds-preview title="Try It!" [showModeToggle]="false">
+      <div class="interactive-demo">
+        <div class="demo-group">
+          <h4>Notification Badge</h4>
+          <div class="demo-controls">
+            <p-button
+              icon="pi pi-bell"
+              [badge]="notificationCount().toString()"
+              badgeSeverity="danger"
+              [text]="true"
+              severity="secondary"
+              (onClick)="clearNotifications()"
+              pTooltip="Click to clear"
+            />
+            <p-button
+              label="Add Notification"
+              icon="pi pi-plus"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              (onClick)="addNotification()"
+            />
+          </div>
+          <small class="helper-text">Click bell to clear, or add more notifications</small>
+        </div>
+
+        <div class="demo-group">
+          <h4>Message Counter</h4>
+          <div class="demo-controls">
+            <p-button
+              icon="pi pi-envelope"
+              [badge]="messageCount().toString()"
+              badgeSeverity="info"
+              [text]="true"
+              severity="secondary"
+              (onClick)="readMessage()"
+              pTooltip="Click to read one"
+            />
+            <p-button
+              label="New Message"
+              icon="pi pi-plus"
+              severity="info"
+              [outlined]="true"
+              size="small"
+              (onClick)="addMessage()"
+            />
+          </div>
+          <small class="helper-text">{{ messageCount() }} unread messages</small>
+        </div>
+
+        <div class="demo-group">
+          <h4>Shopping Cart</h4>
+          <div class="demo-controls">
+            <p-button
+              icon="pi pi-shopping-cart"
+              [badge]="cartCount().toString()"
+              badgeSeverity="success"
+              [text]="true"
+              severity="secondary"
+            />
+            <p-button
+              label="Add to Cart"
+              icon="pi pi-plus"
+              severity="success"
+              [outlined]="true"
+              size="small"
+              (onClick)="addToCart()"
+            />
+          </div>
+          <small class="helper-text">{{ cartCount() }} items in cart</small>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="interactiveCode" language="typescript" />
+  </section>
+
+  <!-- Interactive Status Tag -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-tag"></i> Dynamic Status Tag</h2>
+    <p class="section-description">
+      Click the tag or buttons to change the status dynamically.
+    </p>
+    <app-ds-preview title="Status Workflow" [showModeToggle]="false">
+      <div class="status-demo">
+        <div class="current-status">
+          <span class="status-label">Current Status:</span>
+          <p-tag
+            [value]="currentStatusConfig().label"
+            [severity]="currentStatusConfig().severity"
+            [icon]="currentStatusConfig().icon"
+            (click)="cycleStatus()"
+            class="clickable-tag"
+          />
+        </div>
+        <div class="status-actions">
+          <p-button
+            label="Pending"
+            icon="pi pi-clock"
+            severity="warn"
+            [outlined]="currentStatus() !== 'pending'"
+            size="small"
+            (onClick)="setStatus('pending')"
+          />
+          <p-button
+            label="Review"
+            icon="pi pi-eye"
+            severity="info"
+            [outlined]="currentStatus() !== 'review'"
+            size="small"
+            (onClick)="setStatus('review')"
+          />
+          <p-button
+            label="Approve"
+            icon="pi pi-check"
+            severity="success"
+            [outlined]="currentStatus() !== 'approved'"
+            size="small"
+            (onClick)="setStatus('approved')"
+          />
+          <p-button
+            label="Reject"
+            icon="pi pi-times"
+            severity="danger"
+            [outlined]="currentStatus() !== 'rejected'"
+            size="small"
+            (onClick)="setStatus('rejected')"
+          />
+        </div>
+        <small class="helper-text">Click the tag to cycle through statuses, or use buttons</small>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Badges</h2>
+    <p class="section-description">
+      Badges display small numeric values or status indicators.
+    </p>
+    <app-ds-preview title="Badge Severities" [showModeToggle]="false">
+      <div class="badge-row">
+        <div class="badge-item">
+          <p-badge value="2" />
+          <span class="badge-label">Default</span>
+        </div>
+        <div class="badge-item">
+          <p-badge value="8" severity="success" />
+          <span class="badge-label">Success</span>
+        </div>
+        <div class="badge-item">
+          <p-badge value="4" severity="info" />
+          <span class="badge-label">Info</span>
+        </div>
+        <div class="badge-item">
+          <p-badge value="12" severity="warn" />
+          <span class="badge-label">Warning</span>
+        </div>
+        <div class="badge-item">
+          <p-badge value="3" severity="danger" />
+          <span class="badge-label">Danger</span>
+        </div>
+        <div class="badge-item">
+          <p-badge value="5" severity="secondary" />
+          <span class="badge-label">Secondary</span>
+        </div>
+        <div class="badge-item">
+          <p-badge value="7" severity="contrast" />
+          <span class="badge-label">Contrast</span>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="badgeCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Badge Sizes</h2>
+    <p class="section-description">
+      Different sizes for various use cases.
+    </p>
+    <app-ds-preview title="Badge Sizes" [showModeToggle]="false">
+      <div class="badge-row align-center">
+        <div class="badge-item">
+          <p-badge value="2" />
+          <span class="badge-label">Default</span>
+        </div>
+        <div class="badge-item">
+          <p-badge value="4" size="large" />
+          <span class="badge-label">Large</span>
+        </div>
+        <div class="badge-item">
+          <p-badge value="6" size="xlarge" />
+          <span class="badge-label">X-Large</span>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Badges on Buttons</h2>
+    <p class="section-description">
+      Badges can be attached to buttons to show counts.
+    </p>
+    <app-ds-preview title="Button Badges" [showModeToggle]="false">
+      <div class="badge-row">
+        <p-button label="Emails" badge="8" />
+        <p-button label="Messages" icon="pi pi-envelope" badge="3" badgeSeverity="danger" />
+        <p-button icon="pi pi-bell" badge="2" badgeSeverity="warn" severity="secondary" [text]="true" />
+        <p-button label="Cart" icon="pi pi-shopping-cart" badge="5" badgeSeverity="success" severity="success" [outlined]="true" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="buttonBadgeCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Tags</h2>
+    <p class="section-description">
+      Tags categorize content with labels and status indicators.
+    </p>
+    <app-ds-preview title="Tag Severities" [showModeToggle]="false">
+      <div class="badge-row">
+        <p-tag value="New" />
+        <p-tag value="Approved" severity="success" />
+        <p-tag value="Pending" severity="warn" />
+        <p-tag value="Rejected" severity="danger" />
+        <p-tag value="Info" severity="info" />
+        <p-tag value="Secondary" severity="secondary" />
+        <p-tag value="Contrast" severity="contrast" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="tagCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Tags with Icons</h2>
+    <p class="section-description">
+      Icons provide additional visual context.
+    </p>
+    <app-ds-preview title="Icon Tags" [showModeToggle]="false">
+      <div class="badge-row">
+        <p-tag value="Active" icon="pi pi-check" severity="success" />
+        <p-tag value="Warning" icon="pi pi-exclamation-triangle" severity="warn" />
+        <p-tag value="Error" icon="pi pi-times" severity="danger" />
+        <p-tag value="User" icon="pi pi-user" />
+        <p-tag value="Settings" icon="pi pi-cog" severity="secondary" />
+        <p-tag value="Star" icon="pi pi-star" severity="info" />
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Rounded Tags</h2>
+    <p class="section-description">
+      Pill-shaped tags with fully rounded corners.
+    </p>
+    <app-ds-preview title="Rounded Tags" [showModeToggle]="false">
+      <div class="badge-row">
+        <p-tag value="Primary" [rounded]="true" />
+        <p-tag value="Success" severity="success" [rounded]="true" />
+        <p-tag value="Warning" severity="warn" [rounded]="true" />
+        <p-tag value="Danger" severity="danger" [rounded]="true" />
+        <p-tag value="Info" severity="info" [rounded]="true" />
+        <p-tag value="Secondary" severity="secondary" [rounded]="true" />
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Use Cases Section -->
+  <section class="section">
+    <h2>Common Use Cases</h2>
+    <p class="section-description">
+      Real-world examples of badges and tags in action.
+    </p>
+    <app-ds-preview title="Practical Examples" [showModeToggle]="false">
+      <div class="use-cases">
+        <div class="use-case-card">
+          <h4>User Status</h4>
+          <div class="use-case-content">
+            <span class="user-name">John Doe</span>
+            <p-tag value="Admin" severity="info" icon="pi pi-shield" [rounded]="true" />
+          </div>
+        </div>
+        <div class="use-case-card">
+          <h4>Task Priority</h4>
+          <div class="use-case-content">
+            <p-tag value="High" severity="danger" icon="pi pi-arrow-up" />
+            <p-tag value="Medium" severity="warn" icon="pi pi-minus" />
+            <p-tag value="Low" severity="success" icon="pi pi-arrow-down" />
+          </div>
+        </div>
+        <div class="use-case-card">
+          <h4>Document Status</h4>
+          <div class="use-case-content">
+            <p-tag value="Draft" severity="secondary" icon="pi pi-file" />
+            <p-tag value="Published" severity="success" icon="pi pi-check-circle" />
+          </div>
+        </div>
+        <div class="use-case-card">
+          <h4>Navigation Icons</h4>
+          <div class="use-case-content">
+            <p-button icon="pi pi-inbox" badge="12" [text]="true" severity="secondary" />
+            <p-button icon="pi pi-calendar" badge="3" badgeSeverity="warn" [text]="true" severity="secondary" />
+            <p-button icon="pi pi-users" badge="7" badgeSeverity="info" [text]="true" severity="secondary" />
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Badge Properties</h2>
+    <app-ds-props-table [props]="badgeProps" title="Badge Properties" />
+  </section>
+
+  <section class="section">
+    <h2>Tag Properties</h2>
+    <app-ds-props-table [props]="tagProps" title="Tag Properties" />
+  </section>
+</div>

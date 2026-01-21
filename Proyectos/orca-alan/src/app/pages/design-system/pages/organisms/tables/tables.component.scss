@@ -1,0 +1,164 @@
+.tables-page {
+  max-width: 1000px;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    line-height: 1.5;
+
+    strong {
+      color: var(--primary-color);
+    }
+  }
+}
+
+.section {
+  margin-bottom: 3rem;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+
+    i {
+      margin-right: 0.5rem;
+      color: var(--primary-color);
+    }
+  }
+
+  .section-description {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+}
+
+.highlight-section {
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 3rem;
+
+  h2 {
+    color: var(--primary-700);
+  }
+}
+
+.table-demo {
+  width: 100%;
+  overflow-x: auto;
+}
+
+// Interactive Table Demo
+.interactive-table-demo {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.table-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  text-align: center;
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+  }
+
+  &.warning {
+    .stat-value {
+      color: var(--orange-600);
+    }
+  }
+}
+
+::ng-deep .table-toolbar {
+  border-bottom: none;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  gap: 0.5rem;
+
+  .p-toolbar-start {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .p-toolbar-end {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+}
+
+.product-name {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.low-qty {
+  color: var(--orange-600);
+  font-weight: 600;
+}
+
+.empty-message {
+  text-align: center;
+  padding: 3rem !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-color-secondary);
+
+  i {
+    font-size: 2rem;
+    opacity: 0.5;
+  }
+}
+
+// Legacy helper classes
+::ng-deep .mb-0 {
+  margin-bottom: 0 !important;
+}
+
+::ng-deep .mr-2 {
+  margin-right: 0.5rem;
+}
+
+::ng-deep .border-noround-bottom {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}

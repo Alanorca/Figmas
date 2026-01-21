@@ -1,0 +1,305 @@
+<div class="form-fields-page">
+  <p-toast />
+
+  <header class="page-header">
+    <h1>Form Fields</h1>
+    <p class="subtitle">
+      Form fields combine labels, inputs, and helper text for complete form experiences.
+      <strong>All examples below are interactive - try them!</strong>
+    </p>
+  </header>
+
+  <!-- Interactive Registration Form Demo -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Registration Form</h2>
+    <p class="section-description">
+      A complete registration form with real-time validation. Fill out the fields to see validation in action.
+    </p>
+    <app-ds-preview title="Live Registration Demo" [showModeToggle]="false">
+      <div class="registration-form">
+        <!-- Full Name Field -->
+        <div class="field">
+          <label for="reg-name">Full Name <span class="required">*</span></label>
+          <p-iconField>
+            <p-inputIcon styleClass="pi pi-user" />
+            <input
+              pInputText
+              id="reg-name"
+              placeholder="Enter your full name"
+              [ngModel]="regName()"
+              (ngModelChange)="regName.set($event)"
+              (blur)="regNameTouched.set(true)"
+              [class.ng-invalid]="!isNameValid() && regNameTouched()"
+              [class.ng-valid]="isNameValid() && regName()"
+              [class.ng-dirty]="regNameTouched()"
+            />
+          </p-iconField>
+          @if (!isNameValid() && regNameTouched()) {
+            <small class="p-error"><i class="pi pi-times-circle"></i> Name must be at least 2 characters</small>
+          }
+          @if (isNameValid() && regName()) {
+            <small class="p-success"><i class="pi pi-check-circle"></i> Looks good!</small>
+          }
+        </div>
+
+        <!-- Email Field -->
+        <div class="field">
+          <label for="reg-email">Email Address <span class="required">*</span></label>
+          <p-iconField>
+            <p-inputIcon styleClass="pi pi-envelope" />
+            <input
+              pInputText
+              id="reg-email"
+              type="email"
+              placeholder="Enter your email"
+              [ngModel]="regEmail()"
+              (ngModelChange)="regEmail.set($event)"
+              (blur)="regEmailTouched.set(true)"
+              [class.ng-invalid]="!isEmailValid() && regEmailTouched()"
+              [class.ng-valid]="isEmailValid() && regEmail()"
+              [class.ng-dirty]="regEmailTouched()"
+            />
+          </p-iconField>
+          @if (!isEmailValid() && regEmailTouched()) {
+            <small class="p-error"><i class="pi pi-times-circle"></i> Please enter a valid email address</small>
+          }
+          @if (isEmailValid() && regEmail()) {
+            <small class="p-success"><i class="pi pi-check-circle"></i> Valid email format</small>
+          }
+        </div>
+
+        <!-- Password Field with Strength Indicator -->
+        <div class="field">
+          <label for="reg-password">Password <span class="required">*</span></label>
+          <p-iconField>
+            <p-inputIcon styleClass="pi pi-lock" />
+            <input
+              pInputText
+              id="reg-password"
+              type="password"
+              placeholder="Create a password"
+              [ngModel]="regPassword()"
+              (ngModelChange)="regPassword.set($event)"
+              (blur)="regPasswordTouched.set(true)"
+              [class.ng-dirty]="regPasswordTouched()"
+            />
+          </p-iconField>
+          @if (regPassword()) {
+            <div class="password-strength">
+              <div class="strength-bar">
+                <div class="strength-fill" [class]="getPasswordStrengthClass()" [style.width.%]="passwordStrength().score"></div>
+              </div>
+              <span class="strength-text" [class]="getPasswordStrengthClass()">{{ passwordStrength().text }}</span>
+            </div>
+            <small class="p-text-secondary">
+              Tips: Use 8+ characters, uppercase, numbers, and special characters
+            </small>
+          } @else {
+            <small class="p-text-secondary">
+              Must be at least 8 characters with mixed case and numbers
+            </small>
+          }
+        </div>
+
+        <!-- Country Select Field -->
+        <div class="field">
+          <label for="reg-country">Country</label>
+          <p-select
+            id="reg-country"
+            [options]="countries"
+            [ngModel]="regCountry()"
+            (ngModelChange)="regCountry.set($event)"
+            optionLabel="name"
+            placeholder="Select your country"
+            [showClear]="true"
+          />
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-actions">
+          <p-button
+            label="Create Account"
+            icon="pi pi-user-plus"
+            (onClick)="submitRegistration()"
+            [disabled]="!isFormValid()"
+          />
+          <p-button
+            label="Cancel"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="regName.set(''); regEmail.set(''); regPassword.set(''); regCountry.set(null)"
+          />
+        </div>
+
+        <!-- Form Status -->
+        <div class="form-status">
+          <span class="status-indicator" [class.valid]="isFormValid()">
+            <i [class]="isFormValid() ? 'pi pi-check-circle' : 'pi pi-exclamation-circle'"></i>
+            {{ isFormValid() ? 'Ready to submit' : 'Please complete required fields' }}
+          </span>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="interactiveCode" language="typescript" />
+  </section>
+
+  <section class="section">
+    <h2>Basic Field</h2>
+    <p class="section-description">
+      A form field with label and input.
+    </p>
+    <app-ds-preview title="Basic Form Field" [showModeToggle]="false">
+      <div class="form-demo">
+        <div class="field">
+          <label for="username">Username</label>
+          <input pInputText id="username" [ngModel]="basicValue()" (ngModelChange)="basicValue.set($event)" />
+        </div>
+        <div class="field">
+          <label for="email-basic">Email</label>
+          <input pInputText id="email-basic" type="email" />
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Float Label</h2>
+    <p class="section-description">
+      Labels that float above the input when focused or filled.
+    </p>
+    <app-ds-preview title="Float Label Fields" [showModeToggle]="false">
+      <div class="form-demo">
+        <p-floatLabel>
+          <input pInputText id="float-email" [ngModel]="floatValue()" (ngModelChange)="floatValue.set($event)" />
+          <label for="float-email">Email</label>
+        </p-floatLabel>
+        <p-floatLabel>
+          <input pInputText id="float-name" />
+          <label for="float-name">Full Name</label>
+        </p-floatLabel>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="floatLabelCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Icon Fields</h2>
+    <p class="section-description">
+      Input fields with icons for context.
+    </p>
+    <app-ds-preview title="Icon Fields" [showModeToggle]="false">
+      <div class="form-demo">
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-search" />
+          <input
+            pInputText
+            placeholder="Search..."
+            [ngModel]="searchValue()"
+            (ngModelChange)="searchValue.set($event)"
+            (keyup.enter)="onSearch()"
+          />
+        </p-iconField>
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-user" />
+          <input pInputText placeholder="Username" />
+        </p-iconField>
+        <p-iconField iconPosition="right">
+          <p-inputIcon styleClass="pi pi-envelope" />
+          <input pInputText placeholder="Email" />
+        </p-iconField>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="iconFieldCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Validation</h2>
+    <p class="section-description">
+      Display validation errors with helpful messages.
+    </p>
+    <app-ds-preview title="Validation States" [showModeToggle]="false">
+      <div class="form-demo">
+        <div class="field">
+          <label for="val-email">Email *</label>
+          <input
+            pInputText
+            id="val-email"
+            [formControl]="form.controls.email"
+            [class.ng-invalid]="form.controls.email.invalid && form.controls.email.dirty"
+            [class.ng-dirty]="form.controls.email.dirty"
+          />
+          @if (form.controls.email.invalid && form.controls.email.dirty) {
+            <small class="p-error">
+              @if (form.controls.email.errors?.['required']) {
+                Email is required
+              } @else if (form.controls.email.errors?.['email']) {
+                Enter a valid email address
+              }
+            </small>
+          }
+        </div>
+        <div class="field">
+          <label for="val-password">Password *</label>
+          <input
+            pInputText
+            id="val-password"
+            type="password"
+            [formControl]="form.controls.password"
+            [class.ng-invalid]="form.controls.password.invalid && form.controls.password.dirty"
+            [class.ng-dirty]="form.controls.password.dirty"
+          />
+          @if (form.controls.password.invalid && form.controls.password.dirty) {
+            <small class="p-error">Password must be at least 8 characters</small>
+          }
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="validationCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Helper Text</h2>
+    <p class="section-description">
+      Additional context or instructions below the input.
+    </p>
+    <app-ds-preview title="Helper Text" [showModeToggle]="false">
+      <div class="form-demo">
+        <div class="field">
+          <label for="help-password">Password</label>
+          <input pInputText id="help-password" type="password" />
+          <small class="p-text-secondary">Must be at least 8 characters</small>
+        </div>
+        <div class="field">
+          <label for="help-bio">Bio</label>
+          <input pInputText id="help-bio" />
+          <small class="p-text-secondary">Brief description about yourself</small>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="helpTextCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Field States</h2>
+    <p class="section-description">
+      Different visual states for form fields.
+    </p>
+    <app-ds-preview title="Field States" [showModeToggle]="false">
+      <div class="form-demo">
+        <div class="field">
+          <label>Normal</label>
+          <input pInputText placeholder="Normal state" />
+        </div>
+        <div class="field">
+          <label>Disabled</label>
+          <input pInputText placeholder="Disabled" [disabled]="true" />
+        </div>
+        <div class="field">
+          <label>Readonly</label>
+          <input pInputText value="Read only value" [readonly]="true" />
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+</div>

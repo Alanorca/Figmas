@@ -1,0 +1,433 @@
+.cards-page {
+  max-width: 1000px;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    line-height: 1.5;
+
+    strong {
+      color: var(--primary-color);
+    }
+  }
+}
+
+.section {
+  margin-bottom: 3rem;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+
+    i {
+      margin-right: 0.5rem;
+      color: var(--primary-color);
+    }
+  }
+
+  .section-description {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+}
+
+.highlight-section {
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 3rem;
+
+  h2 {
+    color: var(--primary-700);
+  }
+}
+
+.cards-demo {
+  max-width: 400px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+// Product Cards Demo
+.product-cards-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cart-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+}
+
+.cart-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+
+  i {
+    font-size: 1.25rem;
+    color: var(--primary-color);
+  }
+}
+
+.cart-total {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+::ng-deep .product-card {
+  .p-card-body {
+    padding: 0;
+  }
+
+  .p-card-content {
+    padding: 1rem;
+  }
+
+  .p-card-footer {
+    padding: 0 1rem 1rem;
+  }
+}
+
+.product-image {
+  height: 140px;
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+
+  > i {
+    font-size: 3rem;
+    color: var(--primary-400);
+  }
+}
+
+::ng-deep .sale-badge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+}
+
+::ng-deep .favorite-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.product-info {
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 0.5rem 0;
+  }
+}
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+
+  i {
+    color: var(--yellow-500);
+  }
+
+  .reviews {
+    color: var(--text-color-secondary);
+    margin-left: 0.25rem;
+  }
+}
+
+.product-price {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .current-price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+
+  .original-price {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    text-decoration: line-through;
+  }
+}
+
+// Stats Demo
+.stats-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+::ng-deep .stat-card {
+  .p-card-body {
+    padding: 1.25rem;
+  }
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--border-radius);
+  background: var(--primary-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 1.25rem;
+    color: var(--primary-600);
+  }
+
+  &.success {
+    background: var(--green-100);
+    i { color: var(--green-600); }
+  }
+
+  &.info {
+    background: var(--cyan-100);
+    i { color: var(--cyan-600); }
+  }
+
+  &.warning {
+    background: var(--yellow-100);
+    i { color: var(--yellow-600); }
+  }
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.stat-label {
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+}
+
+// User Cards
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+::ng-deep .user-card-interactive {
+  text-align: center;
+
+  .p-card-body {
+    padding: 1.5rem;
+  }
+
+  .p-card-footer {
+    padding: 0 1.5rem 1.5rem;
+    border-top: 1px solid var(--surface-border);
+    margin-top: 1rem;
+  }
+}
+
+.user-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-card-body {
+  margin-top: 1rem;
+
+  h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 0.25rem 0;
+  }
+
+  .user-role {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+.user-card-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+.user-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .stat-num {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-color);
+  }
+
+  .stat-text {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+// Legacy styles
+::ng-deep .card-with-image {
+  .p-card-body {
+    padding-top: 0;
+  }
+}
+
+.card-image-placeholder {
+  height: 150px;
+  background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-200) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 3rem;
+    color: var(--primary-400);
+  }
+}
+
+.card-footer-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+// User card (legacy)
+::ng-deep .user-card {
+  max-width: 320px;
+
+  .p-card-body {
+    padding: 1.5rem;
+  }
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  .user-info {
+    flex: 1;
+
+    h4 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin: 0 0 0.25rem 0;
+    }
+
+    span {
+      font-size: 0.8125rem;
+      color: var(--text-color-secondary);
+    }
+  }
+}
+
+.user-stats {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+.user-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  .stat-num {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-color);
+  }
+
+  .stat-text {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+  }
+}

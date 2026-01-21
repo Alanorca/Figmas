@@ -1,0 +1,87 @@
+<div class="overview-page">
+  <header class="page-header">
+    <h1>ORCA Design System</h1>
+    <p class="subtitle">
+      A comprehensive design system built with Angular and PrimeNG, following atomic design principles.
+    </p>
+  </header>
+
+  <section class="quick-stats">
+    <div class="stat-card">
+      <i class="pi pi-palette"></i>
+      <div class="stat-content">
+        <span class="stat-value">18</span>
+        <span class="stat-label">Color Palettes</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <i class="pi pi-code"></i>
+      <div class="stat-content">
+        <span class="stat-value">650+</span>
+        <span class="stat-label">CSS Variables</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <i class="pi pi-box"></i>
+      <div class="stat-content">
+        <span class="stat-value">62</span>
+        <span class="stat-label">Components</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <i class="pi pi-moon"></i>
+      <div class="stat-content">
+        <span class="stat-value">2</span>
+        <span class="stat-label">Theme Modes</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="sections-grid">
+    @for (section of sections; track section.title) {
+      <p-card styleClass="section-card">
+        <div class="card-header">
+          <div class="icon-wrapper">
+            <i [class]="section.icon"></i>
+          </div>
+          <h2>{{ section.title }}</h2>
+        </div>
+        <p class="card-description">{{ section.description }}</p>
+        <ul class="items-list">
+          @for (item of section.items; track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+        <div class="card-footer">
+          <a pButton [routerLink]="section.route" label="Explore" icon="pi pi-arrow-right" iconPos="right" class="p-button-outlined"></a>
+        </div>
+      </p-card>
+    }
+  </section>
+
+  <section class="principles">
+    <h2>Design Principles</h2>
+    <div class="principles-grid">
+      <div class="principle">
+        <i class="pi pi-check-circle"></i>
+        <h3>Consistency</h3>
+        <p>Unified visual language across all components and pages.</p>
+      </div>
+      <div class="principle">
+        <i class="pi pi-bolt"></i>
+        <h3>Efficiency</h3>
+        <p>Reusable components and tokens for faster development.</p>
+      </div>
+      <div class="principle">
+        <i class="pi pi-eye"></i>
+        <h3>Accessibility</h3>
+        <p>WCAG compliant with proper contrast and focus states.</p>
+      </div>
+      <div class="principle">
+        <i class="pi pi-sliders-h"></i>
+        <h3>Flexibility</h3>
+        <p>Customizable through CSS variables and theming.</p>
+      </div>
+    </div>
+  </section>
+</div>

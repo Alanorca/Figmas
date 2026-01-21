@@ -1,0 +1,22 @@
+<div class="ds-color-swatch" [class.compact]="compact()">
+  <h4 class="palette-name">{{ palette().name }}</h4>
+  <div class="colors-row">
+    @for (color of palette().colors; track color.variable) {
+      <div
+        class="color-item"
+        [style.background-color]="color.hex"
+        [style.color]="getTextColor(color)"
+        [class.copied]="copiedColor() === color.variable"
+        (click)="copyColor(color)"
+        [pTooltip]="color.variable"
+        tooltipPosition="top"
+      >
+        <span class="color-name">{{ color.name }}</span>
+        <span class="color-hex">{{ color.hex }}</span>
+        @if (copiedColor() === color.variable) {
+          <i class="pi pi-check copy-icon"></i>
+        }
+      </div>
+    }
+  </div>
+</div>

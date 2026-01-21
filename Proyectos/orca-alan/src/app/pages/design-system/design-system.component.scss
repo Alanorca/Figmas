@@ -1,0 +1,34 @@
+
+
+.design-system-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--surface-ground);
+}
+
+.ds-sidebar-container {
+  width: 280px;
+  flex-shrink: 0;
+  transition: width 0.3s ease;
+  background: var(--surface-card);
+  border-right: 1px solid var(--surface-border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+
+  .sidebar-collapsed & {
+    width: 64px;
+  }
+}
+
+.ds-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-x: hidden;
+  min-width: 0;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}

@@ -1,0 +1,64 @@
+
+
+.ds-props-table {
+  margin-bottom: 2rem;
+}
+
+.props-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
+.prop-name {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  background: var(--primary-50);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+}
+
+.prop-type {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  color: var(--purple-600);
+  background: var(--purple-50);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+}
+
+.prop-default {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  background: var(--surface-100);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+}
+
+.no-default {
+  color: var(--text-color-secondary);
+  font-style: italic;
+}
+
+.prop-description {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  line-height: 1.5;
+}
+
+::ng-deep .p-datatable {
+  .p-datatable-thead > tr > th {
+    background: var(--surface-50);
+    font-weight: 600;
+    font-size: 0.8125rem;
+  }
+
+  .p-datatable-tbody > tr > td {
+    vertical-align: top;
+    padding: 0.75rem 1rem;
+  }
+}

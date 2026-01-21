@@ -1,0 +1,253 @@
+<div class="buttons-page">
+  <p-toast />
+
+  <header class="page-header">
+    <h1>Buttons</h1>
+    <p class="subtitle">
+      Buttons trigger actions and communicate what will happen when clicked.
+      <strong>Click any button below to see it in action!</strong>
+    </p>
+  </header>
+
+  <!-- Interactive Demo Section -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Demo</h2>
+    <p class="section-description">
+      Try clicking these buttons to see the interactivity. The counter shows reactive updates with Angular Signals.
+    </p>
+    <app-ds-preview title="Try It!" [showModeToggle]="false">
+      <div class="interactive-demo">
+        <div class="demo-group">
+          <p-button
+            [label]="'Click me: ' + clickCount()"
+            icon="pi pi-plus"
+            (onClick)="incrementCount()"
+          />
+          <p-button
+            label="Reset"
+            icon="pi pi-refresh"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="clickCount.set(0)"
+          />
+        </div>
+        <div class="demo-group">
+          <p-button
+            label="Save Changes"
+            icon="pi pi-save"
+            [loading]="isLoading()"
+            (onClick)="simulateLoading()"
+          />
+          <p-button
+            label="Delete"
+            icon="pi pi-trash"
+            severity="danger"
+            (onClick)="confirmDelete()"
+          />
+          <p-button
+            label="Submit"
+            icon="pi pi-check"
+            severity="success"
+            (onClick)="submitForm()"
+          />
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="interactiveCode" language="typescript" />
+  </section>
+
+  <section class="section">
+    <h2>Severity Variants</h2>
+    <p class="section-description">
+      Different severity levels communicate the importance and type of action. Click each button to see a notification.
+    </p>
+    <app-ds-preview title="Basic Buttons" [showModeToggle]="false">
+      <div class="button-row">
+        <p-button label="Primary" (onClick)="onButtonClick('primary')" />
+        <p-button label="Secondary" severity="secondary" (onClick)="onButtonClick('secondary')" />
+        <p-button label="Success" severity="success" (onClick)="onButtonClick('success')" />
+        <p-button label="Info" severity="info" (onClick)="onButtonClick('info')" />
+        <p-button label="Warn" severity="warn" (onClick)="onButtonClick('warn')" />
+        <p-button label="Danger" severity="danger" (onClick)="onButtonClick('danger')" />
+        <p-button label="Help" severity="help" (onClick)="onButtonClick('help')" />
+        <p-button label="Contrast" severity="contrast" (onClick)="onButtonClick('contrast')" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Outlined</h2>
+    <p class="section-description">
+      Outlined buttons have transparent backgrounds for secondary actions.
+    </p>
+    <app-ds-preview title="Outlined Buttons" [showModeToggle]="false">
+      <div class="button-row">
+        <p-button label="Primary" [outlined]="true" />
+        <p-button label="Secondary" severity="secondary" [outlined]="true" />
+        <p-button label="Success" severity="success" [outlined]="true" />
+        <p-button label="Info" severity="info" [outlined]="true" />
+        <p-button label="Warn" severity="warn" [outlined]="true" />
+        <p-button label="Danger" severity="danger" [outlined]="true" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="outlinedCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Text</h2>
+    <p class="section-description">
+      Text buttons are used for low-emphasis actions.
+    </p>
+    <app-ds-preview title="Text Buttons" [showModeToggle]="false">
+      <div class="button-row">
+        <p-button label="Primary" [text]="true" />
+        <p-button label="Secondary" severity="secondary" [text]="true" />
+        <p-button label="Success" severity="success" [text]="true" />
+        <p-button label="Info" severity="info" [text]="true" />
+        <p-button label="Warn" severity="warn" [text]="true" />
+        <p-button label="Danger" severity="danger" [text]="true" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="textCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Raised</h2>
+    <p class="section-description">
+      Raised buttons have a shadow to indicate elevated importance.
+    </p>
+    <app-ds-preview title="Raised Buttons" [showModeToggle]="false">
+      <div class="button-row">
+        <p-button label="Primary" [raised]="true" />
+        <p-button label="Secondary" severity="secondary" [raised]="true" />
+        <p-button label="Success" severity="success" [raised]="true" />
+        <p-button label="Info" severity="info" [raised]="true" />
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Rounded</h2>
+    <p class="section-description">
+      Rounded buttons have pill-shaped corners.
+    </p>
+    <app-ds-preview title="Rounded Buttons" [showModeToggle]="false">
+      <div class="button-row">
+        <p-button label="Primary" [rounded]="true" />
+        <p-button label="Secondary" severity="secondary" [rounded]="true" />
+        <p-button label="Success" severity="success" [rounded]="true" />
+        <p-button icon="pi pi-check" [rounded]="true" />
+        <p-button icon="pi pi-heart" severity="danger" [rounded]="true" />
+        <p-button icon="pi pi-star" severity="warn" [rounded]="true" />
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Icons</h2>
+    <p class="section-description">
+      Buttons can include icons for better visual communication.
+    </p>
+    <app-ds-preview title="Icon Buttons" [showModeToggle]="false">
+      <div class="button-row">
+        <p-button icon="pi pi-check" />
+        <p-button label="Submit" icon="pi pi-check" />
+        <p-button label="Edit" icon="pi pi-pencil" />
+        <p-button label="Delete" icon="pi pi-trash" severity="danger" />
+        <p-button label="Next" icon="pi pi-arrow-right" iconPos="right" />
+        <p-button label="Download" icon="pi pi-download" severity="success" />
+        <p-button label="Upload" icon="pi pi-upload" severity="info" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="iconsCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Sizes</h2>
+    <p class="section-description">
+      Buttons come in small, normal, and large sizes.
+    </p>
+    <app-ds-preview title="Button Sizes" [showModeToggle]="false">
+      <div class="button-row align-center">
+        <p-button label="Small" size="small" />
+        <p-button label="Normal" />
+        <p-button label="Large" size="large" />
+      </div>
+      <div class="button-row align-center" style="margin-top: 1rem;">
+        <p-button label="Small" size="small" icon="pi pi-user" />
+        <p-button label="Normal" icon="pi pi-user" />
+        <p-button label="Large" size="large" icon="pi pi-user" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="sizesCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Loading State</h2>
+    <p class="section-description">
+      Loading state for asynchronous actions. Click the button to see the loading animation.
+    </p>
+    <app-ds-preview title="Loading Buttons" [showModeToggle]="false">
+      <div class="button-row">
+        <p-button label="Save" icon="pi pi-save" [loading]="isLoading()" (onClick)="simulateLoading()" />
+        <p-button label="Loading" [loading]="true" />
+        <p-button label="Processing" [loading]="true" [outlined]="true" />
+        <p-button label="Syncing" [loading]="true" severity="secondary" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="loadingCode" language="typescript" />
+  </section>
+
+  <section class="section">
+    <h2>Disabled State</h2>
+    <p class="section-description">
+      Disabled buttons cannot be interacted with.
+    </p>
+    <app-ds-preview title="Disabled Buttons" [showModeToggle]="false">
+      <div class="button-row">
+        <p-button label="Disabled" [disabled]="true" />
+        <p-button label="Disabled" severity="secondary" [disabled]="true" />
+        <p-button label="Disabled" [outlined]="true" [disabled]="true" />
+        <p-button label="Disabled" [text]="true" [disabled]="true" />
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Button Groups</h2>
+    <p class="section-description">
+      Common button patterns used together.
+    </p>
+    <app-ds-preview title="Button Patterns" [showModeToggle]="false">
+      <div class="button-patterns">
+        <div class="pattern-group">
+          <span class="pattern-label">Form Actions:</span>
+          <div class="button-row">
+            <p-button label="Cancel" severity="secondary" [text]="true" />
+            <p-button label="Save" icon="pi pi-check" />
+          </div>
+        </div>
+        <div class="pattern-group">
+          <span class="pattern-label">Confirmation:</span>
+          <div class="button-row">
+            <p-button label="No, Cancel" severity="secondary" [outlined]="true" />
+            <p-button label="Yes, Delete" severity="danger" icon="pi pi-trash" />
+          </div>
+        </div>
+        <div class="pattern-group">
+          <span class="pattern-label">Navigation:</span>
+          <div class="button-row">
+            <p-button label="Back" icon="pi pi-arrow-left" severity="secondary" [text]="true" />
+            <p-button label="Next" icon="pi pi-arrow-right" iconPos="right" />
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Properties</h2>
+    <app-ds-props-table [props]="buttonProps" />
+  </section>
+</div>

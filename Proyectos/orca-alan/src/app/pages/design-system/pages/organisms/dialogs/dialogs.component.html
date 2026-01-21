@@ -1,0 +1,344 @@
+<div class="dialogs-page">
+  <p-toast />
+  <p-confirmDialog />
+
+  <header class="page-header">
+    <h1>Dialogs</h1>
+    <p class="subtitle">
+      Dialogs inform users about a task or gather information through a layer above the page.
+      <strong>All examples below are interactive - try them!</strong>
+    </p>
+  </header>
+
+  <!-- Interactive Settings Dialog Demo -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Settings Dialog</h2>
+    <p class="section-description">
+      Fully functional settings dialog with form controls. Changes are saved with toast feedback.
+    </p>
+    <app-ds-preview title="Settings Dialog" [showModeToggle]="false">
+      <div class="interactive-dialog-demo">
+        <div class="demo-actions">
+          <p-button
+            label="Open Settings"
+            icon="pi pi-cog"
+            (onClick)="settingsVisible.set(true)"
+          />
+        </div>
+        <div class="current-settings">
+          <h4>Current Settings</h4>
+          <div class="settings-preview">
+            <div class="setting-row">
+              <span class="setting-label">Notifications</span>
+              <span class="setting-value" [class.enabled]="settings().notifications">
+                {{ settings().notifications ? 'Enabled' : 'Disabled' }}
+              </span>
+            </div>
+            <div class="setting-row">
+              <span class="setting-label">Dark Mode</span>
+              <span class="setting-value" [class.enabled]="settings().darkMode">
+                {{ settings().darkMode ? 'Enabled' : 'Disabled' }}
+              </span>
+            </div>
+            <div class="setting-row">
+              <span class="setting-label">Language</span>
+              <span class="setting-value">{{ settings().language | uppercase }}</span>
+            </div>
+            <div class="setting-row">
+              <span class="setting-label">Font Size</span>
+              <span class="setting-value">{{ settings().fontSize }}px</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="interactiveCode" language="typescript" />
+
+    <!-- Settings Dialog -->
+    <p-dialog
+      header="Settings"
+      [(visible)]="settingsVisible"
+      [modal]="true"
+      [style]="{width: '450px'}"
+      [closable]="true"
+    >
+      <div class="settings-form">
+        <div class="setting-item">
+          <div class="setting-info">
+            <label>Notifications</label>
+            <small>Receive email notifications</small>
+          </div>
+          <p-toggleswitch
+            [ngModel]="settings().notifications"
+            (ngModelChange)="updateNotifications($event)"
+          />
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <label>Dark Mode</label>
+            <small>Use dark theme</small>
+          </div>
+          <p-toggleswitch
+            [ngModel]="settings().darkMode"
+            (ngModelChange)="updateDarkMode($event)"
+          />
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <label>Language</label>
+            <small>Select your preferred language</small>
+          </div>
+          <p-select
+            [options]="languages"
+            [ngModel]="settings().language"
+            (ngModelChange)="updateLanguage($event)"
+            [style]="{width: '140px'}"
+          />
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <label>Font Size</label>
+            <small>{{ settings().fontSize }}px</small>
+          </div>
+          <p-slider
+            [ngModel]="settings().fontSize"
+            (ngModelChange)="updateFontSize($event)"
+            [min]="12"
+            [max]="24"
+            [style]="{width: '140px'}"
+          />
+        </div>
+      </div>
+      <ng-template pTemplate="footer">
+        <p-button label="Cancel" [text]="true" (onClick)="settingsVisible.set(false)" />
+        <p-button label="Save Settings" icon="pi pi-check" (onClick)="saveSettings()" />
+      </ng-template>
+    </p-dialog>
+  </section>
+
+  <!-- Interactive Profile Dialog Demo -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-user"></i> Interactive Profile Editor</h2>
+    <p class="section-description">
+      Edit profile dialog with form validation and avatar display.
+    </p>
+    <app-ds-preview title="Profile Dialog" [showModeToggle]="false">
+      <div class="interactive-dialog-demo">
+        <div class="demo-actions">
+          <p-button
+            label="Edit Profile"
+            icon="pi pi-pencil"
+            (onClick)="profileVisible.set(true)"
+          />
+        </div>
+        <div class="profile-card">
+          <p-avatar
+            icon="pi pi-user"
+            size="xlarge"
+            shape="circle"
+            styleClass="profile-avatar"
+          />
+          <div class="profile-info">
+            <span class="profile-name">{{ profileName() }}</span>
+            <span class="profile-email">{{ profileEmail() }}</span>
+            <span class="profile-bio">{{ profileBio() }}</span>
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <!-- Profile Dialog -->
+    <p-dialog
+      header="Edit Profile"
+      [(visible)]="profileVisible"
+      [modal]="true"
+      [style]="{width: '500px'}"
+    >
+      <div class="profile-form">
+        <div class="profile-avatar-section">
+          <p-avatar
+            icon="pi pi-user"
+            size="xlarge"
+            shape="circle"
+          />
+          <p-button label="Change Photo" [text]="true" icon="pi pi-camera" size="small" />
+        </div>
+        <div class="field">
+          <label for="profileName">Full Name</label>
+          <input
+            pInputText
+            id="profileName"
+            [ngModel]="profileName()"
+            (ngModelChange)="profileName.set($event)"
+            placeholder="Enter your name"
+          />
+        </div>
+        <div class="field">
+          <label for="profileEmail">Email</label>
+          <input
+            pInputText
+            id="profileEmail"
+            [ngModel]="profileEmail()"
+            (ngModelChange)="profileEmail.set($event)"
+            placeholder="Enter your email"
+          />
+        </div>
+        <div class="field">
+          <label for="profileBio">Bio</label>
+          <textarea
+            pInputText
+            id="profileBio"
+            rows="3"
+            [ngModel]="profileBio()"
+            (ngModelChange)="profileBio.set($event)"
+            placeholder="Tell us about yourself"
+          ></textarea>
+        </div>
+      </div>
+      <ng-template pTemplate="footer">
+        <p-button label="Cancel" [text]="true" (onClick)="profileVisible.set(false)" />
+        <p-button label="Save Profile" icon="pi pi-check" (onClick)="saveProfile()" />
+      </ng-template>
+    </p-dialog>
+  </section>
+
+  <!-- Confirmation Dialogs -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-question-circle"></i> Confirmation Dialogs</h2>
+    <p class="section-description">
+      Use ConfirmationService for reusable confirmation patterns with different contexts.
+    </p>
+    <app-ds-preview title="Confirmations" [showModeToggle]="false">
+      <div class="confirm-demo">
+        <div class="confirm-action">
+          <p-button
+            label="Delete Item"
+            icon="pi pi-trash"
+            severity="danger"
+            (onClick)="confirmDelete()"
+          />
+          <small>Destructive action with warning</small>
+        </div>
+        <div class="confirm-action">
+          <p-button
+            label="Save Changes"
+            icon="pi pi-save"
+            (onClick)="confirmSave()"
+          />
+          <small>Save with confirmation</small>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="confirmCode" language="typescript" />
+  </section>
+
+  <!-- Basic Dialog -->
+  <section class="section">
+    <h2>Basic Dialog</h2>
+    <p class="section-description">
+      Simple dialog with header and content.
+    </p>
+    <app-ds-preview title="Basic Dialog" [showModeToggle]="false">
+      <div class="dialog-demo">
+        <p-button label="Show Dialog" (onClick)="basicVisible.set(true)" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+
+    <p-dialog header="Basic Dialog" [(visible)]="basicVisible" [style]="{width: '450px'}">
+      <p>This is a basic dialog with just content inside.</p>
+      <p>Dialogs are used to display content in a layer above the application.</p>
+    </p-dialog>
+  </section>
+
+  <!-- Modal Dialog -->
+  <section class="section">
+    <h2>Modal Dialog</h2>
+    <p class="section-description">
+      Dialog with backdrop that blocks interaction with the page.
+    </p>
+    <app-ds-preview title="Modal Dialog" [showModeToggle]="false">
+      <div class="dialog-demo">
+        <p-button label="Show Modal" (onClick)="confirmVisible.set(true)" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="modalCode" language="html" />
+
+    <p-dialog
+      header="Confirm Action"
+      [(visible)]="confirmVisible"
+      [modal]="true"
+      [closable]="true"
+      [style]="{width: '400px'}"
+    >
+      <div class="modal-content">
+        <i class="pi pi-exclamation-triangle modal-icon"></i>
+        <p>Are you sure you want to proceed with this action?</p>
+      </div>
+      <ng-template pTemplate="footer">
+        <p-button label="Cancel" [text]="true" (onClick)="confirmVisible.set(false)" />
+        <p-button label="Confirm" (onClick)="confirmVisible.set(false)" />
+      </ng-template>
+    </p-dialog>
+  </section>
+
+  <!-- Maximizable Dialog -->
+  <section class="section">
+    <h2>Maximizable Dialog</h2>
+    <p class="section-description">
+      Dialog that can be maximized to full screen.
+    </p>
+    <app-ds-preview title="Maximizable" [showModeToggle]="false">
+      <div class="dialog-demo">
+        <p-button label="Show Maximizable" icon="pi pi-window-maximize" (onClick)="maximizableVisible.set(true)" />
+      </div>
+    </app-ds-preview>
+
+    <p-dialog
+      header="Maximizable Dialog"
+      [(visible)]="maximizableVisible"
+      [modal]="true"
+      [maximizable]="true"
+      [style]="{width: '600px'}"
+    >
+      <p>This dialog can be maximized to full screen by clicking the maximize button in the header.</p>
+      <p>Try clicking the maximize button to see it in action!</p>
+    </p-dialog>
+  </section>
+
+  <!-- Dialog Positions -->
+  <section class="section">
+    <h2>Dialog Positions</h2>
+    <p class="section-description">
+      Dialogs can be positioned at different locations on the screen.
+    </p>
+    <app-ds-preview title="Position Options" [showModeToggle]="false">
+      <div class="dialog-demo positions">
+        <p-button label="Top Left" (onClick)="showPosition('topleft')" severity="secondary" [outlined]="true" size="small" />
+        <p-button label="Top" (onClick)="showPosition('top')" severity="secondary" [outlined]="true" size="small" />
+        <p-button label="Top Right" (onClick)="showPosition('topright')" severity="secondary" [outlined]="true" size="small" />
+        <p-button label="Left" (onClick)="showPosition('left')" severity="secondary" [outlined]="true" size="small" />
+        <p-button label="Center" (onClick)="showPosition('center')" size="small" />
+        <p-button label="Right" (onClick)="showPosition('right')" severity="secondary" [outlined]="true" size="small" />
+        <p-button label="Bottom Left" (onClick)="showPosition('bottomleft')" severity="secondary" [outlined]="true" size="small" />
+        <p-button label="Bottom" (onClick)="showPosition('bottom')" severity="secondary" [outlined]="true" size="small" />
+        <p-button label="Bottom Right" (onClick)="showPosition('bottomright')" severity="secondary" [outlined]="true" size="small" />
+      </div>
+    </app-ds-preview>
+
+    <p-dialog
+      header="Position Dialog"
+      [(visible)]="positionVisible"
+      [position]="position()"
+      [style]="{width: '350px'}"
+    >
+      <p>This dialog is positioned at: <strong>{{ position() }}</strong></p>
+    </p-dialog>
+  </section>
+
+  <!-- Properties -->
+  <section class="section">
+    <h2>Properties</h2>
+    <app-ds-props-table [props]="dialogProps" />
+  </section>
+</div>

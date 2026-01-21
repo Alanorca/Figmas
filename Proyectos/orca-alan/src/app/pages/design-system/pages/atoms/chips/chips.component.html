@@ -1,0 +1,235 @@
+<div class="chips-page">
+  <p-toast />
+
+  <header class="page-header">
+    <h1>Chips</h1>
+    <p class="subtitle">
+      Chips represent complex entities in small blocks, such as tags, contacts, or filters.
+      <strong>All examples below are interactive - try them!</strong>
+    </p>
+  </header>
+
+  <!-- Interactive Demo: Filter Chips -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Filter Chips</h2>
+    <p class="section-description">
+      Click on chips to filter content. Only one filter can be active at a time.
+    </p>
+    <app-ds-preview title="Filter Selection" [showModeToggle]="false">
+      <div class="filter-demo">
+        <div class="chip-row">
+          @for (chip of filterChips(); track chip.label; let i = $index) {
+            <p-chip
+              [label]="chip.label"
+              [icon]="chip.icon"
+              [styleClass]="chip.active ? 'chip-active' : 'chip-inactive'"
+              (click)="toggleFilter(i)"
+            />
+          }
+        </div>
+        <div class="filter-result">
+          <span class="result-label">Active filter:</span>
+          <strong>{{ activeFilter() }}</strong>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Interactive Demo: Tag Input -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-tags"></i> Dynamic Tag Management</h2>
+    <p class="section-description">
+      Add new tags or remove existing ones. Tags can be used for categorization.
+    </p>
+    <app-ds-preview title="Tag Input" [showModeToggle]="false">
+      <div class="tag-demo">
+        <div class="tag-input-row">
+          <input
+            pInputText
+            [ngModel]="newTag()"
+            (ngModelChange)="newTag.set($event)"
+            (keyup.enter)="addTag()"
+            placeholder="Enter a new tag..."
+            class="tag-input"
+          />
+          <p-button
+            icon="pi pi-plus"
+            label="Add Tag"
+            (onClick)="addTag()"
+            [disabled]="!newTag().trim()"
+          />
+        </div>
+        <div class="chip-row">
+          @for (tag of tags(); track tag) {
+            <p-chip
+              [label]="tag"
+              [removable]="true"
+              (onRemove)="removeTag(tag)"
+            />
+          } @empty {
+            <span class="empty-message">No tags added yet. Add some tags above!</span>
+          }
+        </div>
+        <small class="helper-text">{{ tagCount() }} tags total</small>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="interactiveCode" language="typescript" />
+  </section>
+
+  <!-- Interactive Demo: Category Selection -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bookmark"></i> Multi-Select Categories</h2>
+    <p class="section-description">
+      Click chips to toggle selection. Multiple categories can be selected.
+    </p>
+    <app-ds-preview title="Category Selection" [showModeToggle]="false">
+      <div class="category-demo">
+        <div class="chip-row">
+          @for (category of allCategories; track category) {
+            <p-chip
+              [label]="category"
+              [styleClass]="isCategorySelected(category) ? 'chip-selected' : 'chip-unselected'"
+              (click)="toggleCategory(category)"
+            />
+          }
+        </div>
+        @if (selectedCategories().length) {
+          <div class="selection-summary">
+            <span class="summary-label">Selected:</span>
+            <div class="selected-chips">
+              @for (cat of selectedCategories(); track cat) {
+                <p-chip [label]="cat" icon="pi pi-check" styleClass="chip-selected-small" />
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Skills Demo with Levels -->
+  <section class="section">
+    <h2><i class="pi pi-star"></i> Skill Chips with Levels</h2>
+    <p class="section-description">
+      Chips can display different visual styles based on data. Click X to remove skills.
+    </p>
+    <app-ds-preview title="Skills by Level" [showModeToggle]="false">
+      <div class="skills-demo">
+        <div class="skill-legend">
+          <span class="legend-item"><span class="legend-dot advanced"></span> Advanced</span>
+          <span class="legend-item"><span class="legend-dot intermediate"></span> Intermediate</span>
+          <span class="legend-item"><span class="legend-dot beginner"></span> Beginner</span>
+        </div>
+        <div class="chip-row">
+          @for (skill of skills(); track skill.id) {
+            <p-chip
+              [label]="skill.name"
+              [removable]="true"
+              [styleClass]="getSkillClass(skill.level)"
+              (onRemove)="removeSkill(skill)"
+            />
+          } @empty {
+            <span class="empty-message">All skills removed. Refresh to reset.</span>
+          }
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Basic Chips</h2>
+    <p class="section-description">
+      Simple chips with labels for categorization.
+    </p>
+    <app-ds-preview title="Basic Chips" [showModeToggle]="false">
+      <div class="chip-row">
+        <p-chip label="Action" />
+        <p-chip label="Comedy" />
+        <p-chip label="Drama" />
+        <p-chip label="Thriller" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Chips with Icons</h2>
+    <p class="section-description">
+      Add icons for additional context.
+    </p>
+    <app-ds-preview title="Icon Chips" [showModeToggle]="false">
+      <div class="chip-row">
+        <p-chip label="Apple" icon="pi pi-apple" />
+        <p-chip label="Google" icon="pi pi-google" />
+        <p-chip label="Microsoft" icon="pi pi-microsoft" />
+        <p-chip label="Amazon" icon="pi pi-amazon" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="iconCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Chips with Avatars</h2>
+    <p class="section-description">
+      Display user avatars or images within chips.
+    </p>
+    <app-ds-preview title="Avatar Chips" [showModeToggle]="false">
+      <div class="chip-row">
+        <p-chip>
+          <ng-template pTemplate="content">
+            <div class="chip-avatar">JD</div>
+            <span>John Doe</span>
+          </ng-template>
+        </p-chip>
+        <p-chip>
+          <ng-template pTemplate="content">
+            <div class="chip-avatar bg-success">JS</div>
+            <span>Jane Smith</span>
+          </ng-template>
+        </p-chip>
+        <p-chip>
+          <ng-template pTemplate="content">
+            <div class="chip-avatar bg-warn">MJ</div>
+            <span>Mike Johnson</span>
+          </ng-template>
+        </p-chip>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="imageCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Removable Chips</h2>
+    <p class="section-description">
+      Allow users to remove chips with a close button.
+    </p>
+    <app-ds-preview title="Removable Chips" [showModeToggle]="false">
+      <div class="chip-row">
+        <p-chip label="Removable" [removable]="true" (onRemove)="onChipRemove($event)" />
+        <p-chip label="With Icon" icon="pi pi-tag" [removable]="true" (onRemove)="onChipRemove($event)" />
+        <p-chip label="Also Removable" [removable]="true" (onRemove)="onChipRemove($event)" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="removableCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Styled Chips</h2>
+    <p class="section-description">
+      Custom styled chips for different contexts using CSS classes.
+    </p>
+    <app-ds-preview title="Styled Chips" [showModeToggle]="false">
+      <div class="chip-row">
+        <p-chip label="Success" icon="pi pi-check" styleClass="chip-success" />
+        <p-chip label="Warning" icon="pi pi-exclamation-triangle" styleClass="chip-warning" />
+        <p-chip label="Danger" icon="pi pi-times" styleClass="chip-danger" />
+        <p-chip label="Info" icon="pi pi-info-circle" styleClass="chip-info" />
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Properties</h2>
+    <app-ds-props-table [props]="chipProps" />
+  </section>
+</div>

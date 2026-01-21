@@ -1,0 +1,39 @@
+<div class="ds-props-table">
+  <h4 class="props-title">{{ title() }}</h4>
+  <p-table [value]="props()" styleClass="p-datatable-sm p-datatable-gridlines">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Default</th>
+        <th>Description</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-prop>
+      <tr>
+        <td>
+          <code class="prop-name">{{ prop.name }}</code>
+          @if (prop.required) {
+            <p-tag value="Required" severity="danger" styleClass="ml-2" />
+          }
+        </td>
+        <td>
+          <code class="prop-type">{{ prop.type }}</code>
+        </td>
+        <td>
+          @if (prop.default) {
+            <code class="prop-default">{{ prop.default }}</code>
+          } @else {
+            <span class="no-default">-</span>
+          }
+        </td>
+        <td class="prop-description">{{ prop.description }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" class="text-center">No properties defined</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

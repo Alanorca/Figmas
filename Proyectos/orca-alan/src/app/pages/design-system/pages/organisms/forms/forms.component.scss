@@ -1,0 +1,405 @@
+.forms-page {
+  max-width: 1000px;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    line-height: 1.5;
+
+    strong {
+      color: var(--primary-color);
+    }
+  }
+}
+
+.section {
+  margin-bottom: 3rem;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+
+    i {
+      margin-right: 0.5rem;
+      color: var(--primary-color);
+    }
+  }
+
+  .section-description {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+}
+
+.highlight-section {
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  margin-bottom: 3rem;
+
+  h2 {
+    color: var(--primary-700);
+  }
+}
+
+// Interactive Form Demo
+.interactive-form-demo {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.form-container {
+  flex: 1;
+  min-width: 300px;
+}
+
+.contact-form {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+}
+
+.form-status {
+  min-width: 200px;
+}
+
+.status-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--surface-border);
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.status-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+
+  &.valid {
+    color: var(--primary-color);
+  }
+
+  &.invalid {
+    color: var(--red-500);
+  }
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--surface-200);
+  border-radius: 3px;
+  margin-top: 1rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary-color);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.char-count {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  display: block;
+  margin-top: 0.25rem;
+}
+
+// Multi-Step Form
+.multistep-form {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  max-width: 600px;
+}
+
+.step-indicators {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-200);
+  color: var(--text-color-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+
+  .active & {
+    background: var(--primary-color);
+    color: white;
+  }
+
+  .completed & {
+    background: var(--primary-color);
+    color: white;
+  }
+}
+
+.step-label {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  font-weight: 500;
+
+  .active & {
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+}
+
+.step-line {
+  width: 60px;
+  height: 2px;
+  background: var(--surface-200);
+  margin: 0 0.5rem;
+  margin-bottom: 1.5rem;
+  transition: background 0.3s ease;
+
+  &.active {
+    background: var(--primary-color);
+  }
+}
+
+.step-content {
+  min-height: 200px;
+}
+
+.step-panel {
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+  }
+}
+
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+// Plan Options
+.plan-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.plan-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--surface-50);
+  border: 2px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-color);
+  }
+
+  &.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+  }
+}
+
+.plan-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.plan-price {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+.terms-field {
+  margin-top: 1rem;
+}
+
+// Standard Form Styles
+.form-demo {
+  max-width: 500px;
+}
+
+::ng-deep .form-card {
+  .p-card-body {
+    padding: 1.5rem;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  .col-6 {
+    grid-column: span 1;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  small.p-error {
+    font-size: 0.75rem;
+    color: var(--red-500);
+  }
+}
+
+.field-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+
+  label {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    cursor: pointer;
+  }
+}
+
+.field-section {
+  margin-bottom: 1.5rem;
+
+  h4 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+  }
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.field-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    cursor: pointer;
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+.w-full {
+  width: 100%;
+}
+
+.inline-form {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.float-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 400px;
+}
+
+// Invalid input styling
+input.ng-invalid.ng-touched,
+input.ng-invalid:not(:placeholder-shown) {
+  border-color: var(--red-500);
+}
+
+::ng-deep .p-select.ng-invalid.ng-touched .p-select-label {
+  border-color: var(--red-500);
+}

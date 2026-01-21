@@ -1,0 +1,139 @@
+
+
+.icons-page {
+  max-width: 1000px;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    line-height: 1.5;
+  }
+}
+
+.search-bar {
+  margin-bottom: 2rem;
+
+  input {
+    width: 100%;
+    max-width: 400px;
+  }
+}
+
+.section {
+  margin-bottom: 3rem;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .section-description {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+}
+
+.size-demo {
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.size-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+
+  i {
+    color: var(--text-color);
+  }
+
+  span {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    font-family: 'Fira Code', monospace;
+  }
+}
+
+.icons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.5rem;
+}
+
+.icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    background: var(--surface-hover);
+    border-color: var(--primary-color);
+  }
+
+  &.copied {
+    border-color: var(--green-500);
+    background: var(--green-50);
+  }
+
+  i.pi {
+    font-size: 1.5rem;
+    color: var(--text-color);
+  }
+}
+
+.icon-name {
+  font-size: 0.625rem;
+  color: var(--text-color-secondary);
+  text-align: center;
+  word-break: break-word;
+}
+
+.copy-indicator {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  font-size: 0.75rem !important;
+  color: var(--green-500) !important;
+}
+
+::ng-deep .p-input-icon-left {
+  display: block;
+
+  > i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-color-secondary);
+  }
+
+  > input {
+    padding-left: 2.5rem;
+  }
+}

@@ -1,0 +1,67 @@
+<div class="spacing-page">
+  <header class="page-header">
+    <h1>Spacing</h1>
+    <p class="subtitle">
+      A consistent spacing scale creates rhythm and hierarchy in layouts.
+    </p>
+  </header>
+
+  <section class="section">
+    <h2>Spacing Scale</h2>
+    <p class="section-description">
+      Based on a 4px base unit (0.25rem), the spacing scale provides predictable increments.
+    </p>
+    <div class="spacing-grid">
+      @for (space of spacingScale; track space.name) {
+        <div class="spacing-item">
+          <div class="spacing-visual">
+            <div class="spacing-bar" [style.width]="space.value"></div>
+          </div>
+          <div class="spacing-info">
+            <code class="spacing-name">{{ space.name }}</code>
+            <span class="spacing-value">{{ space.value }}</span>
+            <span class="spacing-pixels">{{ space.pixels }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Gap Utilities</h2>
+    <p class="section-description">
+      Gap utilities for flexbox and grid layouts.
+    </p>
+    <div class="gap-demo">
+      @for (gap of gapTokens; track gap.name) {
+        <div class="gap-example">
+          <span class="gap-label">{{ gap.name }}</span>
+          <div class="gap-boxes" [style.gap]="gap.value">
+            <div class="gap-box"></div>
+            <div class="gap-box"></div>
+            <div class="gap-box"></div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Padding & Margin Demo</h2>
+    <div class="pm-demo">
+      <div class="pm-example">
+        <div class="pm-outer p-label">padding: 1rem</div>
+        <div class="pm-inner padding-demo">Content</div>
+      </div>
+      <div class="pm-example">
+        <div class="pm-outer m-label">margin: 1rem</div>
+        <div class="pm-inner margin-demo">Content</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Usage</h2>
+    <app-ds-code-block [code]="usageCode" language="html" />
+  </section>
+</div>

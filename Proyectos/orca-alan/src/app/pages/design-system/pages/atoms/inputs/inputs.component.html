@@ -1,0 +1,331 @@
+<div class="inputs-page">
+  <p-toast />
+
+  <header class="page-header">
+    <h1>Inputs</h1>
+    <p class="subtitle">
+      Input components collect user data through various field types.
+      <strong>All inputs below are interactive - try them!</strong>
+    </p>
+  </header>
+
+  <!-- Interactive Demo Section -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Demo</h2>
+    <p class="section-description">
+      Type in these fields to see real-time validation and feedback.
+    </p>
+    <app-ds-preview title="Try It!" [showModeToggle]="false">
+      <div class="interactive-demo">
+        <div class="demo-field">
+          <label>Email Validation</label>
+          <p-iconField>
+            <p-inputIcon styleClass="pi pi-envelope" />
+            <input
+              pInputText
+              placeholder="Enter your email"
+              [ngModel]="emailValue()"
+              (ngModelChange)="emailValue.set($event)"
+              (blur)="onEmailBlur()"
+              [class.ng-invalid]="isEmailValid() === false"
+              [class.ng-valid]="isEmailValid() === true"
+              [class.ng-dirty]="emailValue()"
+            />
+          </p-iconField>
+          @if (isEmailValid() === true) {
+            <small class="valid-text"><i class="pi pi-check"></i> Valid email</small>
+          }
+          @if (isEmailValid() === false) {
+            <small class="invalid-text"><i class="pi pi-times"></i> Invalid email format</small>
+          }
+        </div>
+
+        <div class="demo-field">
+          <label>Search with Action</label>
+          <p-inputGroup>
+            <p-inputIcon styleClass="pi pi-search" />
+            <input
+              pInputText
+              placeholder="Search..."
+              [ngModel]="searchValue()"
+              (ngModelChange)="searchValue.set($event)"
+              (keyup.enter)="onSearch()"
+            />
+            <button type="button" pButton icon="pi pi-search" (click)="onSearch()"></button>
+          </p-inputGroup>
+        </div>
+
+        <div class="demo-field">
+          <label>Quantity Selector</label>
+          <p-inputNumber
+            [ngModel]="quantityValue()"
+            (ngModelChange)="quantityValue.set($event ?? 1)"
+            [showButtons]="true"
+            [min]="1"
+            [max]="100"
+            buttonLayout="horizontal"
+            spinnerMode="horizontal"
+            decrementButtonClass="p-button-secondary"
+            incrementButtonClass="p-button-secondary"
+            incrementButtonIcon="pi pi-plus"
+            decrementButtonIcon="pi pi-minus"
+          />
+          <small class="helper-text">Selected: {{ quantityValue() }} items</small>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Text Input</h2>
+    <p class="section-description">
+      Basic text input for single-line text entry.
+    </p>
+    <app-ds-preview title="Text Inputs" [showModeToggle]="false">
+      <div class="input-row">
+        <input pInputText placeholder="Enter text" [ngModel]="textValue()" (ngModelChange)="textValue.set($event)" />
+        <input pInputText placeholder="Disabled" [disabled]="true" />
+        <input pInputText placeholder="Readonly" [readonly]="true" value="Read only" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Float Label</h2>
+    <p class="section-description">
+      Labels that float above the input when focused or filled.
+    </p>
+    <app-ds-preview title="Float Label Inputs" [showModeToggle]="false">
+      <div class="input-row">
+        <p-floatLabel>
+          <input pInputText id="username" [ngModel]="textValue()" (ngModelChange)="textValue.set($event)" />
+          <label for="username">Username</label>
+        </p-floatLabel>
+        <p-floatLabel>
+          <input pInputText id="email-float" [ngModel]="emailValue()" (ngModelChange)="emailValue.set($event)" />
+          <label for="email-float">Email</label>
+        </p-floatLabel>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="floatLabelCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Input with Icons</h2>
+    <p class="section-description">
+      Add icons for visual context.
+    </p>
+    <app-ds-preview title="Icon Inputs" [showModeToggle]="false">
+      <div class="input-row">
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-search" />
+          <input pInputText placeholder="Search..." />
+        </p-iconField>
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-user" />
+          <input pInputText placeholder="Username" />
+        </p-iconField>
+        <p-iconField iconPosition="right">
+          <p-inputIcon styleClass="pi pi-spinner pi-spin" />
+          <input pInputText placeholder="Loading..." />
+        </p-iconField>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="iconFieldCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Input Groups</h2>
+    <p class="section-description">
+      Combine inputs with addons for enhanced functionality.
+    </p>
+    <app-ds-preview title="Input Groups" [showModeToggle]="false">
+      <div class="input-column">
+        <p-inputGroup>
+          <p-inputGroupAddon>
+            <i class="pi pi-user"></i>
+          </p-inputGroupAddon>
+          <input pInputText placeholder="Username" />
+        </p-inputGroup>
+
+        <p-inputGroup>
+          <p-inputGroupAddon>https://</p-inputGroupAddon>
+          <input pInputText placeholder="website.com" />
+        </p-inputGroup>
+
+        <p-inputGroup>
+          <p-inputGroupAddon>$</p-inputGroupAddon>
+          <p-inputNumber placeholder="Price" [ngModel]="numberValue()" (ngModelChange)="numberValue.set($event)" />
+          <p-inputGroupAddon>.00</p-inputGroupAddon>
+        </p-inputGroup>
+
+        <p-inputGroup>
+          <input pInputText placeholder="Search keyword" />
+          <button type="button" pButton label="Search" icon="pi pi-search"></button>
+        </p-inputGroup>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="inputGroupCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Variants</h2>
+    <p class="section-description">
+      Outlined and filled variants for different visual styles.
+    </p>
+    <app-ds-preview title="Input Variants" [showModeToggle]="false">
+      <div class="input-row">
+        <input pInputText variant="outlined" placeholder="Outlined" />
+        <input pInputText variant="filled" placeholder="Filled" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="variantsCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Sizes</h2>
+    <p class="section-description">
+      Small, normal, and large sizes for different contexts.
+    </p>
+    <app-ds-preview title="Input Sizes" [showModeToggle]="false">
+      <div class="input-row align-center">
+        <input pInputText size="small" placeholder="Small" />
+        <input pInputText placeholder="Normal" />
+        <input pInputText size="large" placeholder="Large" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="sizesCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Number Input</h2>
+    <p class="section-description">
+      Numeric input with optional formatting and spinner buttons.
+    </p>
+    <app-ds-preview title="Number Inputs" [showModeToggle]="false">
+      <div class="input-row">
+        <p-inputNumber [ngModel]="numberValue()" (ngModelChange)="numberValue.set($event)" placeholder="Enter number" />
+        <p-inputNumber [ngModel]="currencyValue()" (ngModelChange)="currencyValue.set($event)" mode="currency" currency="USD" locale="en-US" />
+        <p-inputNumber [ngModel]="quantityValue()" (ngModelChange)="quantityValue.set($event ?? 1)" [showButtons]="true" [min]="0" [max]="100" />
+      </div>
+      <div class="input-row" style="margin-top: 1rem;">
+        <p-inputNumber [ngModel]="numberValue()" (ngModelChange)="numberValue.set($event)" [minFractionDigits]="2" [maxFractionDigits]="2" placeholder="Decimal" />
+        <p-inputNumber [ngModel]="numberValue()" (ngModelChange)="numberValue.set($event)" prefix="%" placeholder="Percentage" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="numberCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Password</h2>
+    <p class="section-description">
+      Password input with optional strength indicator and toggle visibility.
+    </p>
+    <app-ds-preview title="Password Input" [showModeToggle]="false">
+      <div class="input-row">
+        <div class="password-demo">
+          <p-password [ngModel]="passwordValue()" (ngModelChange)="passwordValue.set($event)" placeholder="Enter password" [feedback]="false" />
+        </div>
+        <div class="password-demo">
+          <p-password [ngModel]="passwordValue()" (ngModelChange)="passwordValue.set($event)" placeholder="With feedback" [feedback]="true" />
+          @if (passwordStrength()) {
+            <div class="strength-indicator" [class]="passwordStrength()">
+              Strength: {{ passwordStrength() }}
+            </div>
+          }
+        </div>
+        <div class="password-demo">
+          <p-password [ngModel]="passwordValue()" (ngModelChange)="passwordValue.set($event)" placeholder="Toggle mask" [toggleMask]="true" />
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Textarea</h2>
+    <p class="section-description">
+      Multi-line text input for longer content with live character count.
+    </p>
+    <app-ds-preview title="Textarea" [showModeToggle]="false">
+      <div class="input-column full-width">
+        <textarea
+          pTextarea
+          [ngModel]="textareaValue()"
+          (ngModelChange)="textareaValue.set($event)"
+          rows="4"
+          placeholder="Enter description"
+          class="w-full"
+        ></textarea>
+        <div class="char-counter">
+          <span>{{ charCount() }} characters</span>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="textareaCode" language="typescript" />
+  </section>
+
+  <section class="section">
+    <h2>Select</h2>
+    <p class="section-description">
+      Dropdown selection for choosing from predefined options.
+    </p>
+    <app-ds-preview title="Select Input" [showModeToggle]="false">
+      <div class="input-row">
+        <p-select
+          [ngModel]="selectedCity()"
+          (ngModelChange)="selectedCity.set($event)"
+          [options]="cities"
+          optionLabel="name"
+          placeholder="Select a City"
+        />
+        <p-select
+          [ngModel]="selectedCity()"
+          (ngModelChange)="selectedCity.set($event)"
+          [options]="cities"
+          optionLabel="name"
+          placeholder="With Filter"
+          [filter]="true"
+          filterPlaceholder="Search..."
+        />
+        <p-select
+          [options]="cities"
+          optionLabel="name"
+          placeholder="Disabled"
+          [disabled]="true"
+        />
+      </div>
+      @if (selectedCity()) {
+        <div class="selection-display">
+          Selected: <strong>{{ selectedCity()?.name }}</strong> ({{ selectedCity()?.code }})
+        </div>
+      }
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Validation States</h2>
+    <p class="section-description">
+      Visual feedback for validation states.
+    </p>
+    <app-ds-preview title="Input States" [showModeToggle]="false">
+      <div class="input-column">
+        <div class="state-demo">
+          <label>Invalid State</label>
+          <input pInputText placeholder="Invalid input" class="ng-invalid ng-dirty" />
+          <small class="invalid-text">This field is required</small>
+        </div>
+        <div class="state-demo">
+          <label>Valid State</label>
+          <input pInputText value="Valid input" class="ng-valid ng-dirty" />
+          <small class="valid-text">Looks good!</small>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Properties</h2>
+    <app-ds-props-table [props]="inputProps" />
+  </section>
+</div>

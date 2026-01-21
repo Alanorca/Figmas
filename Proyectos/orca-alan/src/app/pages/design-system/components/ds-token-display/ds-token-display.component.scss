@@ -1,0 +1,94 @@
+
+
+.ds-token-display {
+  margin-bottom: 2rem;
+}
+
+.token-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
+.tokens-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.token-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--surface-hover);
+    border-color: var(--primary-color);
+
+    .pi-copy {
+      opacity: 1;
+    }
+  }
+
+  &.copied {
+    border-color: var(--green-500);
+    background: var(--green-50);
+
+    .pi-check {
+      color: var(--green-500);
+    }
+  }
+}
+
+.token-preview {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--surface-border);
+  flex-shrink: 0;
+}
+
+.token-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.token-name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-color);
+  font-family: 'Fira Code', monospace;
+}
+
+.token-value {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  font-family: 'Fira Code', monospace;
+}
+
+.token-description {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  margin-top: 0.125rem;
+}
+
+.pi {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  flex-shrink: 0;
+
+  &.pi-copy {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+  }
+}

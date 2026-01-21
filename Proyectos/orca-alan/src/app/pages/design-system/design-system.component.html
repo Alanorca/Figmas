@@ -1,0 +1,9 @@
+<div class="design-system-layout" [class.sidebar-collapsed]="sidebarCollapsed()">
+  <aside class="ds-sidebar-container">
+    <app-ds-sidebar [collapsed]="sidebarCollapsed()" (toggleCollapse)="toggleSidebar()" />
+  </aside>
+
+  <main class="ds-content">
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,67 @@
+<div class="ds-sidebar" [class.collapsed]="collapsed()">
+  <div class="sidebar-header">
+    <div class="logo-section">
+      <i class="pi pi-palette logo-icon"></i>
+      @if (!collapsed()) {
+        <span class="logo-text">Design System</span>
+      }
+    </div>
+    <button
+      pButton
+      pRipple
+      [icon]="collapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'"
+      class="p-button-text p-button-rounded p-button-sm collapse-btn"
+      (click)="toggleCollapse.emit()"
+    ></button>
+  </div>
+
+  <nav class="sidebar-nav">
+    @for (item of navItems; track item.label) {
+      @if (item.route) {
+        <a
+          class="nav-item"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          pRipple
+        >
+          <i [class]="item.icon"></i>
+          @if (!collapsed()) {
+            <span>{{ item.label }}</span>
+          }
+        </a>
+      } @else if (item.children) {
+        <div class="nav-section">
+          <button
+            class="section-header"
+            (click)="toggleSection(item.label)"
+            pRipple
+          >
+            <i [class]="item.icon"></i>
+            @if (!collapsed()) {
+              <span>{{ item.label }}</span>
+              <i
+                class="pi toggle-icon"
+                [class.pi-chevron-down]="isSectionExpanded(item.label)"
+                [class.pi-chevron-right]="!isSectionExpanded(item.label)"
+              ></i>
+            }
+          </button>
+          @if (!collapsed() && isSectionExpanded(item.label)) {
+            <div class="section-children">
+              @for (child of item.children; track child.label) {
+                <a
+                  class="nav-item child"
+                  [routerLink]="child.route"
+                  routerLinkActive="active"
+                  pRipple
+                >
+                  <span>{{ child.label }}</span>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+  </nav>
+</div>

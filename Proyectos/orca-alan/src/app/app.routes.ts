@@ -223,6 +223,11 @@ export const routes: Routes = [
     path: 'evento-subtipos/:id/editar',
     loadComponent: () => import('./pages/evento-subtipo-crear/evento-subtipo-crear').then(m => m.EventoSubtipoCrearComponent)
   },
+  // Design System
+  {
+    path: 'design-system',
+    loadChildren: () => import('./pages/design-system/design-system.routes').then(m => m.DESIGN_SYSTEM_ROUTES)
+  },
   {
     path: '**',
     redirectTo: 'dashboard'

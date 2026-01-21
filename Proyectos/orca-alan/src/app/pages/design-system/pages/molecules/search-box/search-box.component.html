@@ -1,0 +1,247 @@
+<div class="search-box-page">
+  <p-toast />
+
+  <header class="page-header">
+    <h1>Search Box</h1>
+    <p class="subtitle">
+      Search components help users find content quickly through various input patterns.
+      <strong>All examples below are interactive - try them!</strong>
+    </p>
+  </header>
+
+  <!-- Interactive Search Demo -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Search Demo</h2>
+    <p class="section-description">
+      A complete search experience with history, filters, and results. Try searching for "Dashboard", "User", or "API".
+    </p>
+    <app-ds-preview title="Live Search Demo" [showModeToggle]="false">
+      <div class="interactive-search">
+        <!-- Search Input -->
+        <div class="search-input-wrapper">
+          <p-iconField class="search-field">
+            <p-inputIcon [styleClass]="isSearching() ? 'pi pi-spin pi-spinner' : 'pi pi-search'" />
+            <input
+              pInputText
+              placeholder="Search pages, documents, users..."
+              [ngModel]="searchValue()"
+              (ngModelChange)="searchValue.set($event)"
+              (keyup.enter)="performSearch()"
+              class="search-input-lg"
+            />
+          </p-iconField>
+          <p-button
+            icon="pi pi-search"
+            label="Search"
+            (onClick)="performSearch()"
+            [loading]="isSearching()"
+            [disabled]="!searchValue().trim()"
+          />
+          @if (searchValue()) {
+            <p-button
+              icon="pi pi-times"
+              severity="secondary"
+              [text]="true"
+              (onClick)="clearSearch()"
+              pTooltip="Clear search"
+            />
+          }
+        </div>
+
+        <!-- Search History -->
+        @if (searchHistory().length && !hasResults()) {
+          <div class="search-history">
+            <div class="history-header">
+              <span class="history-label"><i class="pi pi-history"></i> Recent searches</span>
+              <p-button
+                label="Clear all"
+                [text]="true"
+                size="small"
+                (onClick)="clearHistory()"
+              />
+            </div>
+            <div class="history-chips">
+              @for (item of searchHistory(); track item) {
+                <p-chip
+                  [label]="item"
+                  [removable]="true"
+                  (click)="useHistoryItem(item)"
+                  (onRemove)="removeHistoryItem(item)"
+                  styleClass="history-chip"
+                />
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Results Section -->
+        @if (hasResults()) {
+          <div class="search-results">
+            <!-- Filters -->
+            <div class="results-filters">
+              @for (filter of filters; track filter.value) {
+                <p-button
+                  [label]="filter.label"
+                  [icon]="filter.icon"
+                  [severity]="activeFilter() === filter.value ? 'primary' : 'secondary'"
+                  [outlined]="activeFilter() !== filter.value"
+                  size="small"
+                  (onClick)="setFilter(filter.value)"
+                />
+              }
+            </div>
+
+            <!-- Results Count -->
+            <div class="results-info">
+              <span>{{ resultCount() }} results found</span>
+              @if (activeFilter() !== 'all') {
+                <span class="filter-indicator">
+                  Filtered by: <strong>{{ activeFilter() }}</strong>
+                </span>
+              }
+            </div>
+
+            <!-- Results List -->
+            <div class="results-list">
+              @for (result of filteredResults(); track result.title) {
+                <div class="result-item" (click)="selectResult(result)">
+                  <div class="result-icon">
+                    <i [class]="result.icon"></i>
+                  </div>
+                  <div class="result-content">
+                    <div class="result-title">{{ result.title }}</div>
+                    <div class="result-description">{{ result.description }}</div>
+                  </div>
+                  <div class="result-type">
+                    <span class="type-badge" [class]="'type-' + result.type">{{ result.type }}</span>
+                  </div>
+                </div>
+              } @empty {
+                <div class="no-results">
+                  <i class="pi pi-search"></i>
+                  <p>No results match the current filter</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="interactiveCode" language="typescript" />
+  </section>
+
+  <section class="section">
+    <h2>Basic Search</h2>
+    <p class="section-description">
+      Simple search input with icon.
+    </p>
+    <app-ds-preview title="Basic Search" [showModeToggle]="false">
+      <div class="search-demo">
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-search" />
+          <input pInputText placeholder="Search..." />
+        </p-iconField>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Search with Button</h2>
+    <p class="section-description">
+      Search input paired with a submit button.
+    </p>
+    <app-ds-preview title="Search with Button" [showModeToggle]="false">
+      <div class="search-demo">
+        <div class="search-with-button">
+          <input pInputText placeholder="Search..." class="search-input" />
+          <p-button icon="pi pi-search" />
+        </div>
+        <div class="search-with-button outlined">
+          <input pInputText placeholder="Search products..." class="search-input" />
+          <p-button icon="pi pi-search" label="Search" />
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="buttonCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Search Variations</h2>
+    <p class="section-description">
+      Different visual styles for search inputs.
+    </p>
+    <app-ds-preview title="Search Variations" [showModeToggle]="false">
+      <div class="search-demo">
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-search" />
+          <input pInputText placeholder="Outlined search" variant="outlined" />
+        </p-iconField>
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-search" />
+          <input pInputText placeholder="Filled search" variant="filled" />
+        </p-iconField>
+        <p-iconField iconPosition="right">
+          <p-inputIcon styleClass="pi pi-times" style="cursor: pointer" />
+          <input pInputText placeholder="With clear button" value="Clear me" />
+        </p-iconField>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>AutoComplete Search</h2>
+    <p class="section-description">
+      Search with suggestions as you type.
+    </p>
+    <app-ds-preview title="AutoComplete" [showModeToggle]="false">
+      <div class="search-demo">
+        <p-autoComplete
+          [(ngModel)]="autoCompleteValue"
+          [suggestions]="suggestions"
+          (completeMethod)="search($event)"
+          placeholder="Search frameworks..."
+        />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="autoCompleteCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Search Sizes</h2>
+    <p class="section-description">
+      Different sizes for various contexts.
+    </p>
+    <app-ds-preview title="Search Sizes" [showModeToggle]="false">
+      <div class="search-demo align-center">
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-search" />
+          <input pInputText placeholder="Small" size="small" />
+        </p-iconField>
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-search" />
+          <input pInputText placeholder="Normal" />
+        </p-iconField>
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-search" />
+          <input pInputText placeholder="Large" size="large" />
+        </p-iconField>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Full Width Search</h2>
+    <p class="section-description">
+      Expandable search that takes full width of its container.
+    </p>
+    <app-ds-preview title="Full Width" [showModeToggle]="false">
+      <div class="full-width-demo">
+        <p-iconField class="w-full">
+          <p-inputIcon styleClass="pi pi-search" />
+          <input pInputText placeholder="Search anything..." class="w-full" />
+        </p-iconField>
+      </div>
+    </app-ds-preview>
+  </section>
+</div>

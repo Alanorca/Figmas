@@ -1,0 +1,281 @@
+<div class="cards-page">
+  <p-toast />
+
+  <header class="page-header">
+    <h1>Cards</h1>
+    <p class="subtitle">
+      Cards contain content and actions about a single subject.
+      <strong>All examples below are interactive - try them!</strong>
+    </p>
+  </header>
+
+  <!-- Interactive Product Cards Demo -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Product Cards</h2>
+    <p class="section-description">
+      E-commerce style product cards with cart and wishlist functionality. Click to add items to cart or favorites.
+    </p>
+    <app-ds-preview title="Product Cards Demo" [showModeToggle]="false">
+      <div class="product-cards-demo">
+        <!-- Cart Summary -->
+        <div class="cart-summary">
+          <span class="cart-info">
+            <i class="pi pi-shopping-cart"></i>
+            <span>{{ cartCount() }} items in cart</span>
+          </span>
+          <span class="cart-total">${{ cartTotal().toFixed(2) }}</span>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="products-grid">
+          @for (product of products(); track product.id) {
+            <p-card styleClass="product-card">
+              <ng-template pTemplate="header">
+                <div class="product-image">
+                  <i [class]="product.image"></i>
+                  @if (product.originalPrice) {
+                    <p-tag value="Sale" severity="danger" styleClass="sale-badge" />
+                  }
+                  <p-button
+                    [icon]="product.favorite ? 'pi pi-heart-fill' : 'pi pi-heart'"
+                    [severity]="product.favorite ? 'danger' : 'secondary'"
+                    [rounded]="true"
+                    [text]="true"
+                    (onClick)="toggleFavorite(product)"
+                    styleClass="favorite-btn"
+                    pTooltip="Add to wishlist"
+                  />
+                </div>
+              </ng-template>
+              <div class="product-info">
+                <h4>{{ product.name }}</h4>
+                <div class="product-rating">
+                  <i class="pi pi-star-fill"></i>
+                  <span>{{ product.rating }}</span>
+                  <span class="reviews">({{ product.reviews }} reviews)</span>
+                </div>
+                <div class="product-price">
+                  <span class="current-price">${{ product.price }}</span>
+                  @if (product.originalPrice) {
+                    <span class="original-price">${{ product.originalPrice }}</span>
+                  }
+                </div>
+              </div>
+              <ng-template pTemplate="footer">
+                <p-button
+                  [label]="product.inCart ? 'In Cart' : 'Add to Cart'"
+                  [icon]="product.inCart ? 'pi pi-check' : 'pi pi-shopping-cart'"
+                  (onClick)="toggleCart(product)"
+                  [severity]="product.inCart ? 'success' : 'primary'"
+                  styleClass="w-full"
+                />
+              </ng-template>
+            </p-card>
+          }
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="interactiveCode" language="typescript" />
+  </section>
+
+  <!-- Interactive Stats Cards -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-chart-line"></i> Interactive Dashboard Stats</h2>
+    <p class="section-description">
+      Dashboard stat cards with live data. Click refresh to update the numbers.
+    </p>
+    <app-ds-preview title="Stats Cards Demo" [showModeToggle]="false">
+      <div class="stats-demo">
+        <div class="stats-header">
+          <h3>Dashboard Overview</h3>
+          <p-button
+            icon="pi pi-refresh"
+            label="Refresh"
+            [outlined]="true"
+            size="small"
+            (onClick)="refreshStats()"
+          />
+        </div>
+        <div class="stats-grid">
+          <p-card styleClass="stat-card stat-primary">
+            <div class="stat-content">
+              <div class="stat-icon">
+                <i class="pi pi-users"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{{ stats().users | number }}</span>
+                <span class="stat-label">Total Users</span>
+              </div>
+            </div>
+          </p-card>
+
+          <p-card styleClass="stat-card stat-success">
+            <div class="stat-content">
+              <div class="stat-icon success">
+                <i class="pi pi-dollar"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">${{ stats().revenue | number }}</span>
+                <span class="stat-label">Revenue</span>
+              </div>
+            </div>
+          </p-card>
+
+          <p-card styleClass="stat-card stat-info">
+            <div class="stat-content">
+              <div class="stat-icon info">
+                <i class="pi pi-shopping-bag"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{{ stats().orders }}</span>
+                <span class="stat-label">Orders</span>
+              </div>
+            </div>
+          </p-card>
+
+          <p-card styleClass="stat-card stat-warning">
+            <div class="stat-content">
+              <div class="stat-icon warning">
+                <i class="pi pi-chart-line"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">+{{ stats().growth }}%</span>
+                <span class="stat-label">Growth</span>
+              </div>
+            </div>
+          </p-card>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Interactive User Cards -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-users"></i> Interactive User Cards</h2>
+    <p class="section-description">
+      User profile cards with follow/unfollow functionality. Click follow to toggle state.
+    </p>
+    <app-ds-preview title="User Cards Demo" [showModeToggle]="false">
+      <div class="users-grid">
+        @for (user of users(); track user.id) {
+          <p-card styleClass="user-card-interactive">
+            <div class="user-card-header">
+              <p-avatar [label]="user.avatar" size="xlarge" shape="circle" />
+              <p-button
+                [icon]="user.isFollowing ? 'pi pi-user-minus' : 'pi pi-user-plus'"
+                [label]="user.isFollowing ? 'Following' : 'Follow'"
+                [severity]="user.isFollowing ? 'secondary' : 'primary'"
+                [outlined]="user.isFollowing"
+                size="small"
+                (onClick)="toggleFollow(user)"
+              />
+            </div>
+            <div class="user-card-body">
+              <h4>{{ user.name }}</h4>
+              <span class="user-role">{{ user.role }}</span>
+            </div>
+            <div class="user-card-stats">
+              <div class="user-stat-item">
+                <span class="stat-num">{{ user.followers | number }}</span>
+                <span class="stat-text">Followers</span>
+              </div>
+              <div class="user-stat-item">
+                <span class="stat-num">{{ user.projects }}</span>
+                <span class="stat-text">Projects</span>
+              </div>
+              <div class="user-stat-item">
+                <span class="stat-num">{{ user.rating }}%</span>
+                <span class="stat-text">Rating</span>
+              </div>
+            </div>
+            <ng-template pTemplate="footer">
+              <p-button
+                label="View Profile"
+                icon="pi pi-arrow-right"
+                iconPos="right"
+                [text]="true"
+                styleClass="w-full"
+                (onClick)="viewProfile(user)"
+              />
+            </ng-template>
+          </p-card>
+        }
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Basic Card</h2>
+    <p class="section-description">
+      Simple card with header and content.
+    </p>
+    <app-ds-preview title="Basic Card" [showModeToggle]="false">
+      <div class="cards-demo">
+        <p-card header="Card Title">
+          <p>This is basic card content. Cards are used to group related information and actions.</p>
+        </p-card>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Card with Subheader</h2>
+    <p class="section-description">
+      Cards can have a subheader for additional context.
+    </p>
+    <app-ds-preview title="Card with Subheader" [showModeToggle]="false">
+      <div class="cards-demo">
+        <p-card header="Project Alpha" subheader="Last updated 2 hours ago">
+          <p>This project is currently in development phase with 80% completion.</p>
+        </p-card>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <section class="section">
+    <h2>Card with Header Image</h2>
+    <p class="section-description">
+      Visual header area for images or custom content.
+    </p>
+    <app-ds-preview title="Header Image Card" [showModeToggle]="false">
+      <div class="cards-demo">
+        <p-card header="Mountain View" subheader="Nature Photography" styleClass="card-with-image">
+          <ng-template pTemplate="header">
+            <div class="card-image-placeholder">
+              <i class="pi pi-image"></i>
+            </div>
+          </ng-template>
+          <p>Beautiful mountain landscape captured during sunrise.</p>
+        </p-card>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="headerCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Card with Footer</h2>
+    <p class="section-description">
+      Footer area for actions.
+    </p>
+    <app-ds-preview title="Footer Card" [showModeToggle]="false">
+      <div class="cards-demo">
+        <p-card header="Save Changes">
+          <p>You have unsaved changes. Would you like to save them?</p>
+          <ng-template pTemplate="footer">
+            <div class="card-footer-actions">
+              <p-button label="Save" icon="pi pi-check" />
+              <p-button label="Cancel" severity="secondary" [text]="true" />
+            </div>
+          </ng-template>
+        </p-card>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="footerCode" language="html" />
+  </section>
+
+  <section class="section">
+    <h2>Properties</h2>
+    <app-ds-props-table [props]="cardProps" />
+  </section>
+</div>
