@@ -85,7 +85,14 @@ export class EventosService {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const data = await this.db.getAll<Event>('events');
+      let data = await this.db.getAll<Event>('events');
+
+      // Seed demo data if empty
+      if (data.length === 0) {
+        await this.seedSampleEvents();
+        data = await this.db.getAll<Event>('events');
+      }
+
       // Ordenar por fecha de creación descendente
       data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       this.events.set(data);
@@ -565,42 +572,80 @@ export class EventosService {
     const now = new Date();
 
     const sampleEvents: Partial<Event>[] = [
+      // === RIESGOS ===
       {
         title: 'Riesgo de fuga de datos sensibles',
-        description: 'Se ha identificado una vulnerabilidad potencial en el sistema de almacenamiento que podría exponer datos sensibles de clientes.',
+        description: 'Se ha identificado una vulnerabilidad potencial en el sistema de almacenamiento que podría exponer datos sensibles de clientes. Es necesario implementar cifrado adicional y revisar los controles de acceso.',
+        eventType: EventType.RISK,
+        eventSubType: riskSubType ? { id: riskSubType.id, code: riskSubType.code, name: riskSubType.name } : undefined,
+        eventStatus: EventStatus.OPEN,
+        initialSeverity: SeverityLevel.CRITICAL,
+        probabilityLevel: ProbabilityLevel.MEDIUM,
+        impactLevel: ImpactLevel.CATASTROPHIC,
+        initialDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        title: 'Riesgo de interrupción del servicio',
+        description: 'El servidor principal está alcanzando su capacidad máxima (85%), lo que podría causar interrupciones del servicio durante horas pico.',
+        eventType: EventType.RISK,
+        eventSubType: riskSubType ? { id: riskSubType.id, code: riskSubType.code, name: riskSubType.name } : undefined,
+        eventStatus: EventStatus.IN_PROGRESS,
+        initialSeverity: SeverityLevel.HIGH,
+        probabilityLevel: ProbabilityLevel.HIGH,
+        impactLevel: ImpactLevel.MAJOR,
+        initialDate: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        title: 'Riesgo de incumplimiento normativo PCI-DSS',
+        description: 'Vencimiento de certificación PCI-DSS en 60 días. Es necesario programar auditoría y preparar documentación.',
         eventType: EventType.RISK,
         eventSubType: riskSubType ? { id: riskSubType.id, code: riskSubType.code, name: riskSubType.name } : undefined,
         eventStatus: EventStatus.OPEN,
         initialSeverity: SeverityLevel.HIGH,
         probabilityLevel: ProbabilityLevel.MEDIUM,
         impactLevel: ImpactLevel.MAJOR,
-        initialDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        initialDate: new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
-        title: 'Riesgo de interrupción del servicio',
-        description: 'El servidor principal está alcanzando su capacidad máxima, lo que podría causar interrupciones.',
+        title: 'Riesgo de pérdida de personal clave',
+        description: 'El arquitecto principal del sistema ha recibido ofertas de la competencia. Sin plan de sucesión documentado.',
         eventType: EventType.RISK,
         eventSubType: riskSubType ? { id: riskSubType.id, code: riskSubType.code, name: riskSubType.name } : undefined,
-        eventStatus: EventStatus.IN_PROGRESS,
+        eventStatus: EventStatus.RESOLVED,
         initialSeverity: SeverityLevel.MEDIUM,
-        probabilityLevel: ProbabilityLevel.HIGH,
+        probabilityLevel: ProbabilityLevel.LOW,
         impactLevel: ImpactLevel.MODERATE,
-        initialDate: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString()
+        initialDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        resolvedAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        solution: 'Se negoció retención con aumento salarial y se documentó el conocimiento crítico.'
       },
       {
+        title: 'Riesgo de obsolescencia tecnológica',
+        description: 'El sistema de base de datos Oracle 11g dejará de tener soporte en 12 meses. Se requiere plan de migración.',
+        eventType: EventType.RISK,
+        eventSubType: riskSubType ? { id: riskSubType.id, code: riskSubType.code, name: riskSubType.name } : undefined,
+        eventStatus: EventStatus.OPEN,
+        initialSeverity: SeverityLevel.MEDIUM,
+        probabilityLevel: ProbabilityLevel.VERY_HIGH,
+        impactLevel: ImpactLevel.MODERATE,
+        initialDate: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString()
+      },
+
+      // === INCIDENTES ===
+      {
         title: 'Incidente de acceso no autorizado',
-        description: 'Se detectó un intento de acceso no autorizado al sistema de administración.',
+        description: 'Se detectó un intento de acceso no autorizado al sistema de administración desde una IP desconocida en Rusia. Se realizaron 50 intentos de login fallidos.',
         eventType: EventType.INCIDENT,
         eventSubType: incidentSubType ? { id: incidentSubType.id, code: incidentSubType.code, name: incidentSubType.name } : undefined,
         eventStatus: EventStatus.RESOLVED,
         initialSeverity: SeverityLevel.CRITICAL,
         initialDate: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
         resolvedAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-        solution: 'Se bloqueó la IP origen y se reforzaron las políticas de acceso.'
+        solution: 'Se bloqueó la IP origen, se implementó geoblocking y se reforzaron las políticas de acceso con MFA obligatorio.'
       },
       {
         title: 'Caída del servicio de correo',
-        description: 'El servicio de correo electrónico estuvo inaccesible durante 2 horas.',
+        description: 'El servicio de correo electrónico estuvo inaccesible durante 2 horas afectando a 500 usuarios. Causa: saturación del servidor SMTP.',
         eventType: EventType.INCIDENT,
         eventSubType: incidentSubType ? { id: incidentSubType.id, code: incidentSubType.code, name: incidentSubType.name } : undefined,
         eventStatus: EventStatus.CLOSED,
@@ -610,8 +655,39 @@ export class EventosService {
         closedAt: new Date(now.getTime() - 9 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
-        title: 'Error en cálculo de reportes',
-        description: 'Los reportes mensuales muestran valores incorrectos en la columna de totales.',
+        title: 'Phishing masivo a empleados',
+        description: 'Se detectó campaña de phishing dirigida a empleados de finanzas. 3 usuarios hicieron clic en el enlace malicioso.',
+        eventType: EventType.INCIDENT,
+        eventSubType: incidentSubType ? { id: incidentSubType.id, code: incidentSubType.code, name: incidentSubType.name } : undefined,
+        eventStatus: EventStatus.IN_PROGRESS,
+        initialSeverity: SeverityLevel.HIGH,
+        initialDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        title: 'Falla en backup nocturno',
+        description: 'El proceso de backup nocturno falló 3 noches consecutivas. No hay respaldo reciente de la base de datos de producción.',
+        eventType: EventType.INCIDENT,
+        eventSubType: incidentSubType ? { id: incidentSubType.id, code: incidentSubType.code, name: incidentSubType.name } : undefined,
+        eventStatus: EventStatus.OPEN,
+        initialSeverity: SeverityLevel.CRITICAL,
+        initialDate: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        title: 'Pérdida de laptop corporativa',
+        description: 'Un empleado reportó la pérdida de su laptop corporativa en el transporte público. El equipo contenía datos de clientes.',
+        eventType: EventType.INCIDENT,
+        eventSubType: incidentSubType ? { id: incidentSubType.id, code: incidentSubType.code, name: incidentSubType.name } : undefined,
+        eventStatus: EventStatus.RESOLVED,
+        initialSeverity: SeverityLevel.MEDIUM,
+        initialDate: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+        resolvedAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        solution: 'Se activó el borrado remoto del equipo. Se verificó que el disco estaba cifrado con BitLocker.'
+      },
+
+      // === DEFECTOS ===
+      {
+        title: 'Error en cálculo de reportes financieros',
+        description: 'Los reportes mensuales muestran valores incorrectos en la columna de totales. El error es de aproximadamente 0.01% debido a redondeo.',
         eventType: EventType.DEFECT,
         eventSubType: defectSubType ? { id: defectSubType.id, code: defectSubType.code, name: defectSubType.name } : undefined,
         eventStatus: EventStatus.OPEN,
@@ -620,12 +696,41 @@ export class EventosService {
       },
       {
         title: 'Problema de rendimiento en búsqueda',
-        description: 'La función de búsqueda tarda más de 10 segundos en mostrar resultados.',
+        description: 'La función de búsqueda de clientes tarda más de 10 segundos en mostrar resultados cuando hay más de 100,000 registros.',
         eventType: EventType.DEFECT,
         eventSubType: defectSubType ? { id: defectSubType.id, code: defectSubType.code, name: defectSubType.name } : undefined,
         eventStatus: EventStatus.IN_PROGRESS,
         initialSeverity: SeverityLevel.LOW,
         initialDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        title: 'Botón de guardar no responde en Safari',
+        description: 'En navegador Safari, el botón "Guardar" del formulario de registro no funciona. Afecta a usuarios Mac.',
+        eventType: EventType.DEFECT,
+        eventSubType: defectSubType ? { id: defectSubType.id, code: defectSubType.code, name: defectSubType.name } : undefined,
+        eventStatus: EventStatus.OPEN,
+        initialSeverity: SeverityLevel.MEDIUM,
+        initialDate: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        title: 'Fechas incorrectas en zona horaria UTC',
+        description: 'Los usuarios en zona horaria diferente a la del servidor ven fechas incorrectas en el calendario de eventos.',
+        eventType: EventType.DEFECT,
+        eventSubType: defectSubType ? { id: defectSubType.id, code: defectSubType.code, name: defectSubType.name } : undefined,
+        eventStatus: EventStatus.RESOLVED,
+        initialSeverity: SeverityLevel.HIGH,
+        initialDate: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        resolvedAt: new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+        solution: 'Se implementó conversión de zona horaria usando Intl.DateTimeFormat.'
+      },
+      {
+        title: 'Memory leak en dashboard',
+        description: 'El dashboard consume cada vez más memoria RAM si se deja abierto por más de 2 horas. Causa eventual crash del navegador.',
+        eventType: EventType.DEFECT,
+        eventSubType: defectSubType ? { id: defectSubType.id, code: defectSubType.code, name: defectSubType.name } : undefined,
+        eventStatus: EventStatus.IN_PROGRESS,
+        initialSeverity: SeverityLevel.HIGH,
+        initialDate: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString()
       }
     ];
 
