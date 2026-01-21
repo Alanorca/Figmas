@@ -87,10 +87,17 @@ export class EventosService {
     try {
       let data = await this.db.getAll<Event>('events');
 
-      // Seed demo data if empty
+      // Seed demo data if empty or missing defects
       if (data.length === 0) {
         await this.seedSampleEvents();
         data = await this.db.getAll<Event>('events');
+      } else {
+        // Check if defects are missing (old seed didn't have them)
+        const hasDefects = data.some(e => e.eventType === EventType.DEFECT);
+        if (!hasDefects) {
+          await this.seedDefectsOnly();
+          data = await this.db.getAll<Event>('events');
+        }
       }
 
       // Ordenar por fecha de creación descendente
@@ -763,5 +770,88 @@ export class EventosService {
 
     await this.loadEvents();
     console.log('✅ Sample events seeded');
+  }
+
+  // Seed only defects (for databases that were seeded before defects were added)
+  async seedDefectsOnly(): Promise<void> {
+    console.log('🌱 Seeding defects...');
+
+    await this.subTypesService.loadEventSubTypes();
+    const defectSubType = this.subTypesService.defectSubTypes()[0];
+    const now = new Date();
+
+    const defects: Partial<Event>[] = [
+      {
+        title: 'Error en cálculo de reportes financieros',
+        description: 'Los reportes mensuales muestran valores incorrectos en la columna de totales. El error es de aproximadamente 0.01% debido a redondeo.',
+        eventType: EventType.DEFECT,
+        eventSubType: defectSubType ? { id: defectSubType.id, code: defectSubType.code, name: defectSubType.name } : undefined,
+        eventStatus: EventStatus.OPEN,
+        initialSeverity: SeverityLevel.MEDIUM,
+        initialDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        title: 'Problema de rendimiento en búsqueda',
+        description: 'La función de búsqueda de clientes tarda más de 10 segundos en mostrar resultados cuando hay más de 100,000 registros.',
+        eventType: EventType.DEFECT,
+        eventSubType: defectSubType ? { id: defectSubType.id, code: defectSubType.code, name: defectSubType.name } : undefined,
+        eventStatus: EventStatus.IN_PROGRESS,
+        initialSeverity: SeverityLevel.LOW,
+        initialDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        title: 'Botón de guardar no responde en Safari',
+        description: 'En navegador Safari, el botón "Guardar" del formulario de registro no funciona. Afecta a usuarios Mac.',
+        eventType: EventType.DEFECT,
+        eventSubType: defectSubType ? { id: defectSubType.id, code: defectSubType.code, name: defectSubType.name } : undefined,
+        eventStatus: EventStatus.OPEN,
+        initialSeverity: SeverityLevel.MEDIUM,
+        initialDate: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        title: 'Fechas incorrectas en zona horaria UTC',
+        description: 'Los usuarios en zona horaria diferente a la del servidor ven fechas incorrectas en el calendario de eventos.',
+        eventType: EventType.DEFECT,
+        eventSubType: defectSubType ? { id: defectSubType.id, code: defectSubType.code, name: defectSubType.name } : undefined,
+        eventStatus: EventStatus.RESOLVED,
+        initialSeverity: SeverityLevel.HIGH,
+        initialDate: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        resolvedAt: new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+        solution: 'Se implementó conversión de zona horaria usando Intl.DateTimeFormat.'
+      },
+      {
+        title: 'Memory leak en dashboard',
+        description: 'El dashboard consume cada vez más memoria RAM si se deja abierto por más de 2 horas. Causa eventual crash del navegador.',
+        eventType: EventType.DEFECT,
+        eventSubType: defectSubType ? { id: defectSubType.id, code: defectSubType.code, name: defectSubType.name } : undefined,
+        eventStatus: EventStatus.IN_PROGRESS,
+        initialSeverity: SeverityLevel.HIGH,
+        initialDate: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    for (const defectData of defects) {
+      const event: Event = {
+        id: generateEventId(),
+        title: defectData.title!,
+        description: defectData.description!,
+        eventType: defectData.eventType!,
+        eventSubType: defectData.eventSubType,
+        eventStatus: defectData.eventStatus!,
+        initialSeverity: defectData.initialSeverity,
+        calculatedImpactLevel: defectData.initialSeverity,
+        initialDate: defectData.initialDate,
+        resolvedAt: defectData.resolvedAt,
+        solution: defectData.solution,
+        propertyValues: [],
+        comments: [],
+        createdAt: defectData.initialDate || now.toISOString(),
+        updatedAt: now.toISOString()
+      };
+
+      await this.db.add('events', event);
+    }
+
+    console.log('✅ Defects seeded');
   }
 }
