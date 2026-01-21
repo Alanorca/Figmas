@@ -1,0 +1,403 @@
+<p-toast />
+
+<div class="eventos-crear-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <p-button
+        icon="pi pi-arrow-left"
+        [rounded]="true"
+        [text]="true"
+        severity="secondary"
+        (onClick)="cancel()"
+        pTooltip="Volver"
+      />
+      <div class="header-text">
+        <h1>{{ pageTitle() }}</h1>
+        <p class="page-subtitle">Complete la información del evento</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Form -->
+  <div class="form-layout">
+    <!-- Left Column: Basic Info -->
+    <div class="form-section">
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="card-header">
+            <i class="pi pi-file-edit"></i>
+            <span>Información Básica</span>
+          </div>
+        </ng-template>
+
+        <div class="form-grid">
+          <!-- Título -->
+          <div class="field full-width">
+            <label for="title">Título *</label>
+            <input
+              id="title"
+              pInputText
+              [ngModel]="title()"
+              (ngModelChange)="title.set($event)"
+              placeholder="Ingrese el título del evento"
+              class="w-full"
+            />
+          </div>
+
+          <!-- Descripción -->
+          <div class="field full-width">
+            <label for="description">Descripción</label>
+            <textarea
+              id="description"
+              pTextarea
+              [ngModel]="description()"
+              (ngModelChange)="description.set($event)"
+              [rows]="3"
+              placeholder="Descripción detallada del evento"
+              class="w-full"
+            ></textarea>
+          </div>
+
+          <!-- Tipo de Evento -->
+          <div class="field">
+            <label for="eventType">Tipo de Evento</label>
+            <p-select
+              id="eventType"
+              [options]="eventTypeOptions"
+              [ngModel]="eventType()"
+              (ngModelChange)="eventType.set($event)"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione un tipo"
+              class="w-full"
+              [disabled]="isEditMode()"
+            >
+              <ng-template let-item pTemplate="item">
+                <div class="flex align-items-center gap-2">
+                  <i [class]="item.icon" [style.color]="item.color"></i>
+                  <span>{{ item.label }}</span>
+                </div>
+              </ng-template>
+              <ng-template let-item pTemplate="selectedItem">
+                <div class="flex align-items-center gap-2">
+                  <i [class]="item.icon" [style.color]="item.color"></i>
+                  <span>{{ item.label }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+
+          <!-- Plantilla -->
+          <div class="field">
+            <label for="subType">Plantilla</label>
+            <p-select
+              id="subType"
+              [options]="availableSubTypes()"
+              [ngModel]="eventSubTypeId()"
+              (ngModelChange)="onSubTypeChange($event)"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Seleccione una plantilla"
+              [showClear]="true"
+              class="w-full"
+            />
+            @if (availableSubTypes().length === 0) {
+              <small class="text-muted">No hay plantillas disponibles para este tipo</small>
+            }
+          </div>
+
+          <!-- Estado -->
+          <div class="field">
+            <label for="status">Estado</label>
+            <p-select
+              id="status"
+              [options]="statusOptions"
+              [ngModel]="eventStatus()"
+              (ngModelChange)="eventStatus.set($event)"
+              optionLabel="label"
+              optionValue="value"
+              class="w-full"
+            />
+          </div>
+
+          <!-- Severidad -->
+          <div class="field">
+            <label for="severity">Severidad</label>
+            <p-select
+              id="severity"
+              [options]="severityOptions"
+              [ngModel]="initialSeverity()"
+              (ngModelChange)="initialSeverity.set($event)"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione severidad"
+              [showClear]="true"
+              class="w-full"
+            />
+          </div>
+
+          <!-- Campos específicos de Riesgo -->
+          @if (isRisk()) {
+            <div class="field">
+              <label for="probability">Probabilidad</label>
+              <p-select
+                id="probability"
+                [options]="probabilityOptions"
+                [ngModel]="probabilityLevel()"
+                (ngModelChange)="probabilityLevel.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione probabilidad"
+                [showClear]="true"
+                class="w-full"
+              />
+            </div>
+
+            <div class="field">
+              <label for="impact">Impacto</label>
+              <p-select
+                id="impact"
+                [options]="impactOptions"
+                [ngModel]="impactLevel()"
+                (ngModelChange)="impactLevel.set($event)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione impacto"
+                [showClear]="true"
+                class="w-full"
+              />
+            </div>
+          }
+
+          <!-- Fecha Inicial -->
+          <div class="field">
+            <label for="initialDate">Fecha de Inicio</label>
+            <p-datepicker
+              id="initialDate"
+              [ngModel]="initialDate()"
+              (ngModelChange)="initialDate.set($event)"
+              [showIcon]="true"
+              dateFormat="dd/mm/yy"
+              placeholder="Seleccione fecha"
+              class="w-full"
+            />
+          </div>
+
+          <!-- Fecha de Vencimiento -->
+          <div class="field">
+            <label for="dueDate">Fecha de Vencimiento</label>
+            <p-datepicker
+              id="dueDate"
+              [ngModel]="dueDate()"
+              (ngModelChange)="dueDate.set($event)"
+              [showIcon]="true"
+              dateFormat="dd/mm/yy"
+              placeholder="Seleccione fecha"
+              class="w-full"
+            />
+          </div>
+
+          <!-- Solución (si está resuelto) -->
+          @if (eventStatus() === 'resolved' || eventStatus() === 'closed') {
+            <div class="field full-width">
+              <label for="solution">Solución / Resolución</label>
+              <textarea
+                id="solution"
+                pTextarea
+                [ngModel]="solution()"
+                (ngModelChange)="solution.set($event)"
+                [rows]="3"
+                placeholder="Describa la solución aplicada"
+                class="w-full"
+              ></textarea>
+            </div>
+          }
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Right Column: Custom Properties -->
+    <div class="form-section">
+      @if (selectedSubType()) {
+        @for (group of groupedProperties(); track group.group.id) {
+          <p-panel [header]="group.group.name" [toggleable]="true" styleClass="mb-3">
+            @if (group.group.description) {
+              <p class="group-description">{{ group.group.description }}</p>
+            }
+
+            <div class="properties-grid">
+              @for (property of group.properties; track property.id) {
+                @if (!property.isHidden) {
+                  <div class="field" [class.full-width]="property.metadata?.columns === 2">
+                    <label [for]="property.id">
+                      {{ property.name }}
+                      @if (property.isRequired) {
+                        <span class="required">*</span>
+                      }
+                    </label>
+
+                    <!-- TEXT -->
+                    @if (property.dataType === 'TEXT') {
+                      <input
+                        [id]="property.id"
+                        pInputText
+                        [ngModel]="propertyValues()[property.id]"
+                        (ngModelChange)="updatePropertyValue(property.id, $event)"
+                        [placeholder]="property.metadata?.placeholder ?? ''"
+                        [readonly]="property.isReadOnly"
+                        class="w-full"
+                      />
+                    }
+
+                    <!-- INTEGER -->
+                    @if (property.dataType === 'INTEGER') {
+                      <p-inputNumber
+                        [id]="property.id"
+                        [ngModel]="propertyValues()[property.id]"
+                        (ngModelChange)="updatePropertyValue(property.id, $event)"
+                        [min]="property.metadata?.minValue ?? null"
+                        [max]="property.metadata?.maxValue ?? null"
+                        [readonly]="property.isReadOnly"
+                        [suffix]="property.metadata?.unit ? ' ' + property.metadata!.unit : ''"
+                        class="w-full"
+                      />
+                    }
+
+                    <!-- DECIMAL -->
+                    @if (property.dataType === 'DECIMAL') {
+                      <p-inputNumber
+                        [id]="property.id"
+                        [ngModel]="propertyValues()[property.id]"
+                        (ngModelChange)="updatePropertyValue(property.id, $event)"
+                        mode="decimal"
+                        [minFractionDigits]="property.metadata?.decimals ?? 2"
+                        [maxFractionDigits]="property.metadata?.decimals ?? 2"
+                        [min]="property.metadata?.minValue ?? null"
+                        [max]="property.metadata?.maxValue ?? null"
+                        [readonly]="property.isReadOnly"
+                        [suffix]="property.metadata?.unit ? ' ' + property.metadata!.unit : ''"
+                        class="w-full"
+                      />
+                    }
+
+                    <!-- DATE -->
+                    @if (property.dataType === 'DATE') {
+                      <p-datepicker
+                        [id]="property.id"
+                        [ngModel]="propertyValues()[property.id]"
+                        (ngModelChange)="updatePropertyValue(property.id, $event)"
+                        [showIcon]="true"
+                        dateFormat="dd/mm/yy"
+                        [disabled]="property.isReadOnly"
+                        class="w-full"
+                      />
+                    }
+
+                    <!-- BOOLEAN -->
+                    @if (property.dataType === 'BOOLEAN') {
+                      <div class="checkbox-field">
+                        <p-checkbox
+                          [id]="property.id"
+                          [ngModel]="propertyValues()[property.id]"
+                          (ngModelChange)="updatePropertyValue(property.id, $event)"
+                          [binary]="true"
+                          [readonly]="property.isReadOnly"
+                        />
+                        <label [for]="property.id" class="ml-2">{{ property.description || 'Activar' }}</label>
+                      </div>
+                    }
+
+                    <!-- SELECT -->
+                    @if (property.dataType === 'SELECT') {
+                      <p-select
+                        [id]="property.id"
+                        [options]="property.options"
+                        [ngModel]="propertyValues()[property.id]"
+                        (ngModelChange)="updatePropertyValue(property.id, $event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        [placeholder]="property.metadata?.placeholder ?? 'Seleccione...'"
+                        [showClear]="!property.isRequired"
+                        [readonly]="property.isReadOnly"
+                        class="w-full"
+                      />
+                    }
+
+                    <!-- MULTISELECT -->
+                    @if (property.dataType === 'MULTISELECT') {
+                      <p-multiselect
+                        [id]="property.id"
+                        [options]="property.options"
+                        [ngModel]="propertyValues()[property.id]"
+                        (ngModelChange)="updatePropertyValue(property.id, $event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        [placeholder]="property.metadata?.placeholder ?? 'Seleccione...'"
+                        [readonly]="property.isReadOnly"
+                        class="w-full"
+                      />
+                    }
+
+                    <!-- JSON -->
+                    @if (property.dataType === 'JSON') {
+                      <textarea
+                        [id]="property.id"
+                        pTextarea
+                        [ngModel]="propertyValues()[property.id] | json"
+                        (ngModelChange)="updatePropertyValue(property.id, $event)"
+                        [rows]="4"
+                        [readonly]="property.isReadOnly"
+                        class="w-full font-mono"
+                        placeholder="{}"
+                      ></textarea>
+                    }
+
+                    <!-- AUTOINCREMENTAL (read only) -->
+                    @if (property.dataType === 'AUTOINCREMENTAL') {
+                      <input
+                        [id]="property.id"
+                        pInputText
+                        [ngModel]="propertyValues()[property.id] || 'Auto-generado'"
+                        [readonly]="true"
+                        class="w-full"
+                      />
+                    }
+
+                    <!-- Help text -->
+                    @if (property.metadata?.helpText) {
+                      <small class="help-text">{{ property.metadata!.helpText }}</small>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          </p-panel>
+        }
+      } @else {
+        <p-card>
+          <div class="no-template-info">
+            <i class="pi pi-info-circle"></i>
+            <p>Seleccione una plantilla para ver los campos personalizados</p>
+          </div>
+        </p-card>
+      }
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="form-actions">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="cancel()"
+    />
+    <p-button
+      [label]="isEditMode() ? 'Guardar Cambios' : 'Crear Evento'"
+      icon="pi pi-check"
+      (onClick)="save()"
+      [disabled]="!isValid()"
+    />
+  </div>
+</div>

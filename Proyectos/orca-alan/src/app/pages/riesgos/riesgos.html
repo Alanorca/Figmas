@@ -36,7 +36,7 @@
   <p-card styleClass="table-card">
     <p-table #dt [value]="riesgos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} riesgos"
-             [globalFilterFields]="['id', 'activoNombre', 'descripcion', 'estado', 'responsable']"
+             [globalFilterFields]="['id', 'title', 'description', 'eventStatus']"
              styleClass="p-datatable-striped"
              [(selection)]="riesgosSeleccionados"
              (selectionChange)="onSelectionChange($event)"
@@ -46,14 +46,13 @@
           <th style="width: 3rem">
             <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
           </th>
-          <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
-          <th pSortableColumn="activoNombre">Activo <p-sortIcon field="activoNombre"></p-sortIcon></th>
-          <th pSortableColumn="descripcion">Descripcion <p-sortIcon field="descripcion"></p-sortIcon></th>
-          <th pSortableColumn="probabilidad">Probabilidad <p-sortIcon field="probabilidad"></p-sortIcon></th>
-          <th pSortableColumn="impacto">Impacto <p-sortIcon field="impacto"></p-sortIcon></th>
+          <th pSortableColumn="title">Título <p-sortIcon field="title"></p-sortIcon></th>
+          <th pSortableColumn="description">Descripción <p-sortIcon field="description"></p-sortIcon></th>
+          <th pSortableColumn="probabilityLevel">Probabilidad <p-sortIcon field="probabilityLevel"></p-sortIcon></th>
+          <th pSortableColumn="impactLevel">Impacto <p-sortIcon field="impactLevel"></p-sortIcon></th>
           <th>Nivel</th>
-          <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
-          <th pSortableColumn="responsable">Responsable <p-sortIcon field="responsable"></p-sortIcon></th>
+          <th pSortableColumn="eventStatus">Estado <p-sortIcon field="eventStatus"></p-sortIcon></th>
+          <th pSortableColumn="initialDate">Fecha <p-sortIcon field="initialDate"></p-sortIcon></th>
           <th style="width: 100px">Acciones</th>
         </tr>
       </ng-template>
@@ -62,75 +61,77 @@
           <td>
             <p-tableCheckbox [value]="riesgo"></p-tableCheckbox>
           </td>
-          <td class="font-mono text-sm">{{ riesgo.id }}</td>
-          <td class="font-medium">{{ riesgo.activoNombre }}</td>
-          <!-- Descripcion -->
-          <td>
+          <!-- Título -->
+          <td class="font-medium">
             @if (estaEditando(riesgo.id)) {
-              <input pInputText [ngModel]="getValorEdicion('descripcion')"
-                     (ngModelChange)="setValorEdicion('descripcion', $event)"
+              <input pInputText [ngModel]="getValorEdicion('title')"
+                     (ngModelChange)="setValorEdicion('title', $event)"
                      class="w-full" />
             } @else {
-              {{ riesgo.descripcion }}
+              {{ riesgo.title }}
+            }
+          </td>
+          <!-- Descripción -->
+          <td>
+            @if (estaEditando(riesgo.id)) {
+              <input pInputText [ngModel]="getValorEdicion('description')"
+                     (ngModelChange)="setValorEdicion('description', $event)"
+                     class="w-full" />
+            } @else {
+              <span class="text-color-secondary">{{ riesgo.description | slice:0:50 }}{{ riesgo.description?.length > 50 ? '...' : '' }}</span>
             }
           </td>
           <!-- Probabilidad -->
           <td>
             @if (estaEditando(riesgo.id)) {
-              <p-select [options]="[{label:'1',value:1},{label:'2',value:2},{label:'3',value:3},{label:'4',value:4},{label:'5',value:5}]"
-                        [ngModel]="getValorEdicion('probabilidad')"
-                        (ngModelChange)="setValorEdicion('probabilidad', $event)"
-                        [style]="{width: '70px'}" />
+              <p-select [options]="probabilityOptions"
+                        [ngModel]="getValorEdicion('probabilityLevel')"
+                        (ngModelChange)="setValorEdicion('probabilityLevel', $event)"
+                        [style]="{width: '120px'}" />
             } @else {
               <div class="flex align-items-center gap-2">
-                <div class="w-6rem progress-bar-track" style="height: 8px;">
-                  <div class="bg-primary border-round" [style.width.%]="riesgo.probabilidad * 20" style="height: 100%;"></div>
+                <div class="w-4rem progress-bar-track" style="height: 8px;">
+                  <div class="bg-primary border-round" [style.width.%]="getProbabilityValue(riesgo.probabilityLevel) * 20" style="height: 100%;"></div>
                 </div>
-                <span class="font-bold text-color">{{ riesgo.probabilidad }}</span>
+                <span class="text-sm">{{ getProbabilityLabel(riesgo.probabilityLevel) }}</span>
               </div>
             }
           </td>
           <!-- Impacto -->
           <td>
             @if (estaEditando(riesgo.id)) {
-              <p-select [options]="[{label:'1',value:1},{label:'2',value:2},{label:'3',value:3},{label:'4',value:4},{label:'5',value:5}]"
-                        [ngModel]="getValorEdicion('impacto')"
-                        (ngModelChange)="setValorEdicion('impacto', $event)"
-                        [style]="{width: '70px'}" />
+              <p-select [options]="impactOptions"
+                        [ngModel]="getValorEdicion('impactLevel')"
+                        (ngModelChange)="setValorEdicion('impactLevel', $event)"
+                        [style]="{width: '120px'}" />
             } @else {
               <div class="flex align-items-center gap-2">
-                <div class="w-6rem progress-bar-track" style="height: 8px;">
-                  <div class="bg-orange-500 border-round" [style.width.%]="riesgo.impacto * 20" style="height: 100%;"></div>
+                <div class="w-4rem progress-bar-track" style="height: 8px;">
+                  <div class="bg-orange-500 border-round" [style.width.%]="getImpactValue(riesgo.impactLevel) * 20" style="height: 100%;"></div>
                 </div>
-                <span class="font-bold text-color">{{ riesgo.impacto }}</span>
+                <span class="text-sm">{{ getImpactLabel(riesgo.impactLevel) }}</span>
               </div>
             }
           </td>
           <!-- Nivel (calculado, solo lectura) -->
           <td>
-            <p-tag [value]="getNivelLabel(getNivelRiesgo(riesgo.probabilidad, riesgo.impacto)) + ' (' + getNivelRiesgo(riesgo.probabilidad, riesgo.impacto) + ')'"
-                   [severity]="getNivelSeverity(getNivelRiesgo(riesgo.probabilidad, riesgo.impacto))"></p-tag>
+            <p-tag [value]="getNivelLabel(getNivelRiesgo(riesgo.probabilityLevel, riesgo.impactLevel)) + ' (' + getNivelRiesgo(riesgo.probabilityLevel, riesgo.impactLevel) + ')'"
+                   [severity]="getNivelSeverity(getNivelRiesgo(riesgo.probabilityLevel, riesgo.impactLevel))"></p-tag>
           </td>
           <!-- Estado -->
           <td>
             @if (estaEditando(riesgo.id)) {
-              <p-select [options]="estadosRiesgo"
-                        [ngModel]="getValorEdicion('estado')"
-                        (ngModelChange)="setValorEdicion('estado', $event)"
+              <p-select [options]="statusOptions"
+                        [ngModel]="getValorEdicion('eventStatus')"
+                        (ngModelChange)="setValorEdicion('eventStatus', $event)"
                         [style]="{width: '100%'}" />
             } @else {
-              <p-tag [value]="riesgo.estado" [severity]="getEstadoSeverity(riesgo.estado)"></p-tag>
+              <p-tag [value]="getEventStatusLabel(riesgo.eventStatus)" [severity]="getEventStatusSeverity(riesgo.eventStatus)"></p-tag>
             }
           </td>
-          <!-- Responsable -->
-          <td>
-            @if (estaEditando(riesgo.id)) {
-              <input pInputText [ngModel]="getValorEdicion('responsable')"
-                     (ngModelChange)="setValorEdicion('responsable', $event)"
-                     class="w-full" />
-            } @else {
-              {{ riesgo.responsable }}
-            }
+          <!-- Fecha -->
+          <td class="text-sm text-color-secondary">
+            {{ formatDate(riesgo.initialDate) }}
           </td>
           <!-- Acciones -->
           <td class="actions-cell">
@@ -153,7 +154,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="10" class="text-center py-4">
+          <td colspan="9" class="text-center py-4">
             <span class="text-color-secondary">No hay riesgos registrados</span>
           </td>
         </tr>
@@ -169,7 +170,6 @@
           <td>
             <span class="text-color-secondary">{{ riesgos().length }} riesgos</span>
           </td>
-          <td></td>
           <td>
             <span class="text-primary">Promedio</span>
           </td>
@@ -197,51 +197,47 @@
 <p-dialog header="Nuevo Riesgo" [modal]="true" [(visible)]="showDialog" [style]="{width: '550px'}">
   <div class="flex flex-column gap-4">
     <div class="flex flex-column gap-2">
-      <label for="activo" class="font-medium">Activo Asociado *</label>
-      <p-select id="activo" [options]="activosOptions()" [(ngModel)]="nuevoRiesgo().activoId"
-                  placeholder="Seleccionar activo" [style]="{width: '100%'}"></p-select>
+      <label for="title" class="font-medium">Título *</label>
+      <input pInputText id="title" [(ngModel)]="nuevoRiesgo().title" placeholder="Título del riesgo" />
     </div>
+    @if (subTypeOptions().length > 0) {
+      <div class="flex flex-column gap-2">
+        <label for="subtype" class="font-medium">Tipo de Riesgo</label>
+        <p-select id="subtype" [options]="subTypeOptions()" [(ngModel)]="nuevoRiesgo().eventSubTypeId"
+                    placeholder="Seleccionar tipo" [style]="{width: '100%'}"></p-select>
+      </div>
+    }
     <div class="flex flex-column gap-2">
-      <label for="descripcion" class="font-medium">Descripcion del Riesgo *</label>
-      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoRiesgo().descripcion" rows="3"
+      <label for="descripcion" class="font-medium">Descripción del Riesgo</label>
+      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoRiesgo().description" rows="3"
                 placeholder="Describe el riesgo identificado"></textarea>
     </div>
     <div class="grid">
       <div class="col-6">
         <div class="flex flex-column gap-2">
-          <label class="font-medium">Probabilidad: {{ nuevoRiesgo().probabilidad }}</label>
-          <p-slider [(ngModel)]="nuevoRiesgo().probabilidad" [min]="1" [max]="5" [step]="1"></p-slider>
-          <div class="flex justify-content-between text-xs text-color-secondary">
-            <span>Muy Baja</span>
-            <span>Muy Alta</span>
-          </div>
+          <label class="font-medium">Probabilidad</label>
+          <p-select [options]="probabilityOptions" [(ngModel)]="nuevoRiesgo().probabilityLevel"
+                    [style]="{width: '100%'}"></p-select>
         </div>
       </div>
       <div class="col-6">
         <div class="flex flex-column gap-2">
-          <label class="font-medium">Impacto: {{ nuevoRiesgo().impacto }}</label>
-          <p-slider [(ngModel)]="nuevoRiesgo().impacto" [min]="1" [max]="5" [step]="1"></p-slider>
-          <div class="flex justify-content-between text-xs text-color-secondary">
-            <span>Muy Bajo</span>
-            <span>Muy Alto</span>
-          </div>
+          <label class="font-medium">Impacto</label>
+          <p-select [options]="impactOptions" [(ngModel)]="nuevoRiesgo().impactLevel"
+                    [style]="{width: '100%'}"></p-select>
         </div>
       </div>
     </div>
     <div class="p-3 surface-ground border-round text-center">
       <p class="text-color-secondary text-sm m-0 mb-1">Nivel de Riesgo Calculado</p>
-      <p-tag [value]="getNivelLabel(nuevoRiesgo().probabilidad * nuevoRiesgo().impacto) + ' (' + (nuevoRiesgo().probabilidad * nuevoRiesgo().impacto) + ')'"
-             [severity]="getNivelSeverity(nuevoRiesgo().probabilidad * nuevoRiesgo().impacto)"
+      <p-tag [value]="getNivelLabel(getNivelRiesgo(nuevoRiesgo().probabilityLevel, nuevoRiesgo().impactLevel)) + ' (' + getNivelRiesgo(nuevoRiesgo().probabilityLevel, nuevoRiesgo().impactLevel) + ')'"
+             [severity]="getNivelSeverity(getNivelRiesgo(nuevoRiesgo().probabilityLevel, nuevoRiesgo().impactLevel))"
              styleClass="text-lg"></p-tag>
     </div>
     <div class="flex flex-column gap-2">
       <label for="estado" class="font-medium">Estado</label>
-      <p-select id="estado" [options]="estadosRiesgo" [(ngModel)]="nuevoRiesgo().estado"
+      <p-select id="estado" [options]="statusOptions" [(ngModel)]="nuevoRiesgo().eventStatus"
                   [style]="{width: '100%'}"></p-select>
-    </div>
-    <div class="flex flex-column gap-2">
-      <label for="responsable" class="font-medium">Responsable *</label>
-      <input pInputText id="responsable" [(ngModel)]="nuevoRiesgo().responsable" placeholder="Nombre del responsable" />
     </div>
   </div>
   <ng-template pTemplate="footer">
@@ -258,28 +254,22 @@
     <!-- Probabilidad -->
     <div class="flex flex-column gap-2">
       <label class="font-medium">Probabilidad</label>
-      <p-select [options]="[{label:'1 - Muy Baja',value:1},{label:'2 - Baja',value:2},{label:'3 - Media',value:3},{label:'4 - Alta',value:4},{label:'5 - Muy Alta',value:5}]"
+      <p-select [options]="probabilityOptions"
                 placeholder="Sin cambios" [showClear]="true" [style]="{width: '100%'}" />
     </div>
 
     <!-- Impacto -->
     <div class="flex flex-column gap-2">
       <label class="font-medium">Impacto</label>
-      <p-select [options]="[{label:'1 - Muy Bajo',value:1},{label:'2 - Bajo',value:2},{label:'3 - Medio',value:3},{label:'4 - Alto',value:4},{label:'5 - Muy Alto',value:5}]"
+      <p-select [options]="impactOptions"
                 placeholder="Sin cambios" [showClear]="true" [style]="{width: '100%'}" />
     </div>
 
     <!-- Estado -->
     <div class="flex flex-column gap-2">
       <label class="font-medium">Estado</label>
-      <p-select [options]="estadosRiesgo" placeholder="Sin cambios" [showClear]="true"
+      <p-select [options]="statusOptions" placeholder="Sin cambios" [showClear]="true"
                 [style]="{width: '100%'}" />
-    </div>
-
-    <!-- Responsable -->
-    <div class="flex flex-column gap-2">
-      <label class="font-medium">Responsable</label>
-      <input pInputText placeholder="Sin cambios" class="w-full" />
     </div>
   </div>
 
@@ -292,3 +282,6 @@
     </div>
   </ng-template>
 </p-drawer>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

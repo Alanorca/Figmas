@@ -8,7 +8,14 @@
   <!-- Toolbar -->
   <p-toolbar>
     <ng-template pTemplate="start">
-      <div class="flex align-items-center gap-3">
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search" />
+        <input type="text" pInputText placeholder="Buscar incidentes..." #dtFilter
+               (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
+      </p-iconfield>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <div class="flex gap-2">
         @if (incidentesSeleccionados().length > 0) {
           <p-button
             label="Acciones masivas"
@@ -20,15 +27,8 @@
             styleClass="btn-acciones-masivas"
             (onClick)="abrirAccionesMasivasDrawer()" />
         }
-        <p-iconfield>
-          <p-inputicon styleClass="pi pi-search" />
-          <input type="text" pInputText placeholder="Buscar incidentes..." #dtFilter
-                 (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
-        </p-iconfield>
+        <p-button label="Reportar Incidente" icon="pi pi-plus" severity="danger" (onClick)="openNewDialog()"></p-button>
       </div>
-    </ng-template>
-    <ng-template pTemplate="end">
-      <p-button label="Reportar Incidente" icon="pi pi-plus" severity="danger" (onClick)="openNewDialog()"></p-button>
     </ng-template>
   </p-toolbar>
 
@@ -36,7 +36,7 @@
   <p-card styleClass="table-card">
     <p-table #dt [value]="incidentes()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} incidentes"
-             [globalFilterFields]="['id', 'titulo', 'activoNombre', 'severidad', 'estado', 'reportadoPor']"
+             [globalFilterFields]="['id', 'title', 'description', 'eventStatus']"
              styleClass="p-datatable-striped"
              [(selection)]="incidentesSeleccionados"
              (selectionChange)="onSelectionChange($event)"
@@ -46,13 +46,11 @@
           <th style="width: 3rem">
             <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
           </th>
-          <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
-          <th pSortableColumn="titulo">Titulo <p-sortIcon field="titulo"></p-sortIcon></th>
-          <th pSortableColumn="activoNombre">Activo <p-sortIcon field="activoNombre"></p-sortIcon></th>
-          <th pSortableColumn="severidad">Severidad <p-sortIcon field="severidad"></p-sortIcon></th>
-          <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
-          <th pSortableColumn="reportadoPor">Reportado Por <p-sortIcon field="reportadoPor"></p-sortIcon></th>
-          <th pSortableColumn="fechaReporte">Fecha <p-sortIcon field="fechaReporte"></p-sortIcon></th>
+          <th pSortableColumn="title">Título <p-sortIcon field="title"></p-sortIcon></th>
+          <th pSortableColumn="description">Descripción <p-sortIcon field="description"></p-sortIcon></th>
+          <th pSortableColumn="initialSeverity">Severidad <p-sortIcon field="initialSeverity"></p-sortIcon></th>
+          <th pSortableColumn="eventStatus">Estado <p-sortIcon field="eventStatus"></p-sortIcon></th>
+          <th pSortableColumn="initialDate">Fecha <p-sortIcon field="initialDate"></p-sortIcon></th>
           <th style="width: 100px">Acciones</th>
         </tr>
       </ng-template>
@@ -61,55 +59,52 @@
           <td>
             <p-tableCheckbox [value]="incidente"></p-tableCheckbox>
           </td>
-          <td class="font-mono text-sm">{{ incidente.id }}</td>
-          <!-- Titulo -->
-          <td>
+          <!-- Título -->
+          <td class="font-medium">
             @if (estaEditando(incidente.id)) {
-              <input pInputText [ngModel]="getValorEdicion('titulo')"
-                     (ngModelChange)="setValorEdicion('titulo', $event)"
+              <input pInputText [ngModel]="getValorEdicion('title')"
+                     (ngModelChange)="setValorEdicion('title', $event)"
                      class="w-full" />
             } @else {
-              <div>
-                <p class="font-medium m-0">{{ incidente.titulo }}</p>
-                <p class="text-sm text-500 m-0 mt-1">{{ incidente.descripcion | slice:0:50 }}...</p>
-              </div>
+              {{ incidente.title }}
             }
           </td>
-          <td class="font-medium">{{ incidente.activoNombre }}</td>
+          <!-- Descripción -->
+          <td>
+            @if (estaEditando(incidente.id)) {
+              <input pInputText [ngModel]="getValorEdicion('description')"
+                     (ngModelChange)="setValorEdicion('description', $event)"
+                     class="w-full" />
+            } @else {
+              <span class="text-color-secondary">{{ incidente.description | slice:0:50 }}{{ incidente.description?.length > 50 ? '...' : '' }}</span>
+            }
+          </td>
           <!-- Severidad -->
           <td>
             @if (estaEditando(incidente.id)) {
-              <p-select [options]="severidades"
-                        [ngModel]="getValorEdicion('severidad')"
-                        (ngModelChange)="setValorEdicion('severidad', $event)"
-                        [style]="{width: '100%'}" />
+              <p-select [options]="severityOptions"
+                        [ngModel]="getValorEdicion('initialSeverity')"
+                        (ngModelChange)="setValorEdicion('initialSeverity', $event)"
+                        [style]="{width: '120px'}" />
             } @else {
-              <p-tag [value]="incidente.severidad" [severity]="getSeveridadSeverity(incidente.severidad)"></p-tag>
+              <p-tag [value]="getSeverityLabel(incidente.initialSeverity)" [severity]="getSeveritySeverity(incidente.initialSeverity)"></p-tag>
             }
           </td>
           <!-- Estado -->
           <td>
             @if (estaEditando(incidente.id)) {
-              <p-select [options]="estados"
-                        [ngModel]="getValorEdicion('estado')"
-                        (ngModelChange)="setValorEdicion('estado', $event)"
+              <p-select [options]="statusOptions"
+                        [ngModel]="getValorEdicion('eventStatus')"
+                        (ngModelChange)="setValorEdicion('eventStatus', $event)"
                         [style]="{width: '100%'}" />
             } @else {
-              <p-tag [value]="incidente.estado" [severity]="getEstadoSeverity(incidente.estado)"
-                     [icon]="getEstadoIcon(incidente.estado)"></p-tag>
+              <p-tag [value]="getEventStatusLabel(incidente.eventStatus)" [severity]="getEventStatusSeverity(incidente.eventStatus)"></p-tag>
             }
           </td>
-          <!-- Reportado Por -->
-          <td>
-            @if (estaEditando(incidente.id)) {
-              <input pInputText [ngModel]="getValorEdicion('reportadoPor')"
-                     (ngModelChange)="setValorEdicion('reportadoPor', $event)"
-                     class="w-full" />
-            } @else {
-              {{ incidente.reportadoPor }}
-            }
+          <!-- Fecha -->
+          <td class="text-sm text-color-secondary">
+            {{ formatDate(incidente.initialDate) }}
           </td>
-          <td>{{ incidente.fechaReporte | date:'dd/MM/yyyy' }}</td>
           <!-- Acciones -->
           <td class="actions-cell">
             @if (estaEditando(incidente.id)) {
@@ -131,38 +126,34 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9" class="text-center py-4">
-            <div class="flex flex-column align-items-center gap-2">
-              <span class="material-icons text-4xl text-green-500">verified</span>
-              <span class="text-500">No hay incidentes registrados</span>
-            </div>
+          <td colspan="7" class="text-center py-4">
+            <span class="text-color-secondary">No hay incidentes registrados</span>
           </td>
         </tr>
       </ng-template>
 
       <!-- Pie de tabla con totales por columna -->
       <ng-template pTemplate="footer">
-        <tr class="font-semibold surface-100">
+        <tr class="font-semibold surface-ground">
           <td></td>
           <td>
-            <span class="text-900">Totales</span>
+            <span class="text-color">Totales</span>
           </td>
           <td>
-            <span class="text-600">{{ incidentes().length }} incidentes</span>
+            <span class="text-color-secondary">{{ incidentes().length }} incidentes</span>
           </td>
-          <td></td>
           <td>
-            <p-tag [value]="getIncidentesCriticos().toString() + ' críticos'" severity="danger" styleClass="text-xs" />
+            <div class="flex gap-1">
+              <p-tag [value]="incidentesCriticos().toString()" severity="danger" styleClass="text-xs" pTooltip="Críticos" />
+              <p-tag [value]="incidentesAltos().toString()" severity="warn" styleClass="text-xs" pTooltip="Altos" />
+            </div>
           </td>
           <td>
             <div class="flex gap-1">
               <p-tag [value]="incidentesAbiertos().toString()" severity="danger" styleClass="text-xs" pTooltip="Abiertos" />
-              <p-tag [value]="incidentesEnProceso().toString()" severity="warn" styleClass="text-xs" pTooltip="En Proceso" />
               <p-tag [value]="incidentesResueltos().toString()" severity="success" styleClass="text-xs" pTooltip="Resueltos" />
-              <p-tag [value]="incidentesCerrados().toString()" severity="secondary" styleClass="text-xs" pTooltip="Cerrados" />
             </div>
           </td>
-          <td></td>
           <td></td>
           <td></td>
         </tr>
@@ -173,40 +164,38 @@
 
 <!-- Dialog Nuevo Incidente -->
 <p-dialog header="Reportar Incidente" [modal]="true" [(visible)]="showDialog" [style]="{width: '550px'}">
-  <div class="flex flex-column gap-3">
+  <div class="flex flex-column gap-4">
     <div class="flex flex-column gap-2">
-      <label for="activo" class="font-medium">Activo Afectado *</label>
-      <p-select id="activo" [options]="activosOptions()" [(ngModel)]="nuevoIncidente().activoId"
-                  placeholder="Seleccionar activo" [style]="{width: '100%'}"></p-select>
+      <label for="title" class="font-medium">Título *</label>
+      <input pInputText id="title" [(ngModel)]="nuevoIncidente().title" placeholder="Título del incidente" />
     </div>
+    @if (subTypeOptions().length > 0) {
+      <div class="flex flex-column gap-2">
+        <label for="subtype" class="font-medium">Tipo de Incidente</label>
+        <p-select id="subtype" [options]="subTypeOptions()" [(ngModel)]="nuevoIncidente().eventSubTypeId"
+                    placeholder="Seleccionar tipo" [style]="{width: '100%'}"></p-select>
+      </div>
+    }
     <div class="flex flex-column gap-2">
-      <label for="titulo" class="font-medium">Titulo del Incidente *</label>
-      <input pInputText id="titulo" [(ngModel)]="nuevoIncidente().titulo" placeholder="Titulo breve del incidente" />
-    </div>
-    <div class="flex flex-column gap-2">
-      <label for="descripcion" class="font-medium">Descripcion</label>
-      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoIncidente().descripcion" rows="4"
+      <label for="descripcion" class="font-medium">Descripción del Incidente</label>
+      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoIncidente().description" rows="3"
                 placeholder="Describe el incidente en detalle"></textarea>
     </div>
     <div class="grid">
       <div class="col-6">
         <div class="flex flex-column gap-2">
-          <label for="severidad" class="font-medium">Severidad *</label>
-          <p-select id="severidad" [options]="severidades" [(ngModel)]="nuevoIncidente().severidad"
-                      [style]="{width: '100%'}"></p-select>
+          <label class="font-medium">Severidad</label>
+          <p-select [options]="severityOptions" [(ngModel)]="nuevoIncidente().initialSeverity"
+                    [style]="{width: '100%'}"></p-select>
         </div>
       </div>
       <div class="col-6">
         <div class="flex flex-column gap-2">
-          <label for="estado" class="font-medium">Estado</label>
-          <p-select id="estado" [options]="estados" [(ngModel)]="nuevoIncidente().estado"
-                      [style]="{width: '100%'}"></p-select>
+          <label class="font-medium">Estado</label>
+          <p-select [options]="statusOptions" [(ngModel)]="nuevoIncidente().eventStatus"
+                    [style]="{width: '100%'}"></p-select>
         </div>
       </div>
-    </div>
-    <div class="flex flex-column gap-2">
-      <label for="reportadoPor" class="font-medium">Reportado Por *</label>
-      <input pInputText id="reportadoPor" [(ngModel)]="nuevoIncidente().reportadoPor" placeholder="Nombre de quien reporta" />
     </div>
   </div>
   <ng-template pTemplate="footer">
@@ -218,26 +207,20 @@
 <!-- Drawer Acciones Masivas -->
 <p-drawer [(visible)]="showAccionesMasivasDrawer" position="right" [style]="{width: '400px'}" header="Acciones Masivas">
   <div class="flex flex-column gap-4">
-    <p class="text-600 m-0">Aplicar cambios a {{ incidentesSeleccionados().length }} incidentes seleccionados</p>
+    <p class="text-color-secondary m-0">Aplicar cambios a {{ incidentesSeleccionados().length }} incidentes seleccionados</p>
 
     <!-- Severidad -->
     <div class="flex flex-column gap-2">
       <label class="font-medium">Severidad</label>
-      <p-select [options]="severidades" placeholder="Sin cambios" [showClear]="true"
+      <p-select [options]="severityOptions" placeholder="Sin cambios" [showClear]="true"
                 [style]="{width: '100%'}" />
     </div>
 
     <!-- Estado -->
     <div class="flex flex-column gap-2">
       <label class="font-medium">Estado</label>
-      <p-select [options]="estados" placeholder="Sin cambios" [showClear]="true"
+      <p-select [options]="statusOptions" placeholder="Sin cambios" [showClear]="true"
                 [style]="{width: '100%'}" />
-    </div>
-
-    <!-- Reportado Por -->
-    <div class="flex flex-column gap-2">
-      <label class="font-medium">Reportado Por</label>
-      <input pInputText placeholder="Sin cambios" class="w-full" />
     </div>
   </div>
 
@@ -250,3 +233,6 @@
     </div>
   </ng-template>
 </p-drawer>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>

@@ -1,0 +1,565 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="evento-subtipo-crear-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <p-button
+        icon="pi pi-arrow-left"
+        severity="secondary"
+        [text]="true"
+        [rounded]="true"
+        (onClick)="cancel()"
+        pTooltip="Volver"
+      />
+      <div class="header-text">
+        <h1>{{ isEditMode() ? 'Editar' : 'Nueva' }} Plantilla de Evento</h1>
+        <p class="page-subtitle">
+          {{ isEditMode() ? 'Modifica los campos y propiedades de la plantilla' : 'Define los campos personalizados para este tipo de evento' }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div class="steps-container">
+    <p-steps
+      [model]="steps"
+      [activeIndex]="activeStep()"
+      [readonly]="false"
+      (activeIndexChange)="goToStep($event)"
+    />
+  </div>
+
+  <!-- Content Card -->
+  <p-card>
+    <!-- Step 1: Información Básica -->
+    @if (activeStep() === 0) {
+      <div class="step-content">
+        <h2 class="step-title">Información Básica</h2>
+        <p class="step-description">Define el nombre, código y tipo de evento para esta plantilla</p>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="eventType">Tipo de Evento *</label>
+            <p-select
+              id="eventType"
+              [options]="eventTypeOptions"
+              [ngModel]="eventType()"
+              (ngModelChange)="onEventTypeChange($event)"
+              optionLabel="label"
+              optionValue="value"
+              [disabled]="isEditMode()"
+              class="w-full"
+            >
+              <ng-template let-item pTemplate="item">
+                <div class="flex align-items-center gap-2">
+                  <i [class]="item.icon" [style.color]="item.color"></i>
+                  <span>{{ item.label }}</span>
+                </div>
+              </ng-template>
+              <ng-template let-item pTemplate="selectedItem">
+                <div class="flex align-items-center gap-2">
+                  <i [class]="item.icon" [style.color]="item.color"></i>
+                  <span>{{ item.label }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+
+          <div class="field">
+            <label for="name">Nombre *</label>
+            <input
+              id="name"
+              pInputText
+              [ngModel]="name()"
+              (ngModelChange)="name.set($event)"
+              placeholder="Ej: Riesgo de Seguridad"
+              class="w-full"
+            />
+          </div>
+
+          <div class="field">
+            <label for="code">Código *</label>
+            <input
+              id="code"
+              pInputText
+              [ngModel]="code()"
+              (ngModelChange)="code.set($event)"
+              placeholder="Ej: RISK_SECURITY"
+              class="w-full"
+              [disabled]="isEditMode()"
+            />
+            <small class="text-secondary">Identificador único, sin espacios</small>
+          </div>
+
+          <div class="field">
+            <label for="color">Color</label>
+            <div class="flex align-items-center gap-2">
+              <p-colorPicker
+                [ngModel]="color()"
+                (ngModelChange)="color.set($event)"
+              />
+              <input
+                pInputText
+                [ngModel]="color()"
+                (ngModelChange)="color.set($event)"
+                class="color-input"
+              />
+            </div>
+          </div>
+
+          <div class="field full-width">
+            <label for="description">Descripción</label>
+            <textarea
+              id="description"
+              pInputTextarea
+              [ngModel]="description()"
+              (ngModelChange)="description.set($event)"
+              placeholder="Describe el propósito de esta plantilla..."
+              [rows]="3"
+              class="w-full"
+            ></textarea>
+          </div>
+
+          <div class="field">
+            <div class="flex align-items-center gap-2">
+              <p-checkbox
+                [ngModel]="isDefault()"
+                (ngModelChange)="isDefault.set($event)"
+                [binary]="true"
+                inputId="isDefault"
+              />
+              <label for="isDefault">Establecer como plantilla predeterminada</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Grupos -->
+    @if (activeStep() === 1) {
+      <div class="step-content">
+        <div class="step-header">
+          <div>
+            <h2 class="step-title">Grupos de Propiedades</h2>
+            <p class="step-description">Organiza las propiedades en grupos (opcional)</p>
+          </div>
+          <p-button
+            label="Agregar Grupo"
+            icon="pi pi-plus"
+            (onClick)="openAddGroupDialog()"
+          />
+        </div>
+
+        @if (propertyGroups().length === 0) {
+          <div class="empty-state-small">
+            <i class="pi pi-folder-open"></i>
+            <p>No hay grupos definidos. Los grupos son opcionales y sirven para organizar las propiedades.</p>
+          </div>
+        } @else {
+          <div class="groups-list">
+            @for (group of propertyGroups(); track group.id; let i = $index) {
+              <div class="group-card">
+                <div class="group-info">
+                  <div class="group-order">{{ i + 1 }}</div>
+                  <div class="group-details">
+                    <span class="group-name">{{ group.name }}</span>
+                    @if (group.description) {
+                      <span class="group-description">{{ group.description }}</span>
+                    }
+                  </div>
+                </div>
+                <div class="group-actions">
+                  <p-button
+                    icon="pi pi-pencil"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="info"
+                    pTooltip="Editar"
+                    (onClick)="openEditGroupDialog(group)"
+                  />
+                  <p-button
+                    icon="pi pi-trash"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="danger"
+                    pTooltip="Eliminar"
+                    (onClick)="deleteGroup(group)"
+                  />
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Step 3: Propiedades -->
+    @if (activeStep() === 2) {
+      <div class="step-content">
+        <div class="step-header">
+          <div>
+            <h2 class="step-title">Propiedades</h2>
+            <p class="step-description">Define los campos personalizados de esta plantilla</p>
+          </div>
+          <p-button
+            label="Agregar Propiedad"
+            icon="pi pi-plus"
+            (onClick)="openAddPropertyDialog()"
+          />
+        </div>
+
+        @if (properties().length === 0) {
+          <div class="empty-state-small">
+            <i class="pi pi-list"></i>
+            <p>No hay propiedades definidas. Agrega propiedades para capturar información específica del evento.</p>
+          </div>
+        } @else {
+          <!-- Properties by group -->
+          @if (propertyGroups().length > 0) {
+            @for (group of propertyGroups(); track group.id) {
+              @if (getPropertiesByGroup(group.id).length > 0) {
+                <p-panel [header]="group.name" [toggleable]="true" styleClass="mb-3">
+                  <div class="properties-list">
+                    @for (prop of getPropertiesByGroup(group.id); track prop.id; let i = $index) {
+                      <ng-container *ngTemplateOutlet="propertyItem; context: { $implicit: prop, index: i }"></ng-container>
+                    }
+                  </div>
+                </p-panel>
+              }
+            }
+          }
+
+          <!-- Ungrouped properties -->
+          @if (getUngroupedProperties().length > 0) {
+            <p-panel header="Sin Grupo" [toggleable]="true" styleClass="mb-3">
+              <div class="properties-list">
+                @for (prop of getUngroupedProperties(); track prop.id; let i = $index) {
+                  <ng-container *ngTemplateOutlet="propertyItem; context: { $implicit: prop, index: i }"></ng-container>
+                }
+              </div>
+            </p-panel>
+          }
+
+          <!-- If no groups, show flat list -->
+          @if (propertyGroups().length === 0) {
+            <div class="properties-list">
+              @for (prop of properties(); track prop.id; let i = $index) {
+                <ng-container *ngTemplateOutlet="propertyItem; context: { $implicit: prop, index: i }"></ng-container>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- Footer Actions -->
+    <p-divider />
+    <div class="form-actions">
+      <div class="left-actions">
+        @if (activeStep() > 0) {
+          <p-button
+            label="Anterior"
+            icon="pi pi-arrow-left"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="prevStep()"
+          />
+        }
+      </div>
+      <div class="right-actions">
+        <p-button
+          label="Cancelar"
+          severity="secondary"
+          [text]="true"
+          (onClick)="cancel()"
+        />
+        @if (activeStep() < 2) {
+          <p-button
+            label="Siguiente"
+            icon="pi pi-arrow-right"
+            iconPos="right"
+            (onClick)="nextStep()"
+            [disabled]="!isCurrentStepValid()"
+          />
+        } @else {
+          <p-button
+            [label]="isEditMode() ? 'Guardar Cambios' : 'Crear Plantilla'"
+            icon="pi pi-check"
+            (onClick)="save()"
+            [disabled]="!canSave()"
+            [loading]="saving()"
+          />
+        }
+      </div>
+    </div>
+  </p-card>
+</div>
+
+<!-- Property Item Template -->
+<ng-template #propertyItem let-prop let-index="index">
+  <div class="property-card">
+    <div class="property-order">
+      <p-button
+        icon="pi pi-chevron-up"
+        [rounded]="true"
+        [text]="true"
+        size="small"
+        [disabled]="index === 0"
+        (onClick)="movePropertyUp(prop)"
+      />
+      <p-button
+        icon="pi pi-chevron-down"
+        [rounded]="true"
+        [text]="true"
+        size="small"
+        [disabled]="index === properties().length - 1"
+        (onClick)="movePropertyDown(prop)"
+      />
+    </div>
+    <div class="property-icon">
+      <i [class]="getPropertyDataTypeIcon(prop.dataType)"></i>
+    </div>
+    <div class="property-info">
+      <div class="property-header">
+        <span class="property-name">{{ prop.name }}</span>
+        <code class="property-code">{{ prop.code }}</code>
+      </div>
+      <div class="property-meta">
+        <p-tag
+          [value]="getPropertyDataTypeLabel(prop.dataType)"
+          severity="secondary"
+          styleClass="text-xs"
+        />
+        @if (prop.isRequired) {
+          <p-tag value="Requerido" severity="warn" styleClass="text-xs" />
+        }
+        @if (prop.isReadOnly) {
+          <p-tag value="Solo lectura" severity="info" styleClass="text-xs" />
+        }
+        @if (prop.isHidden) {
+          <p-tag value="Oculto" severity="secondary" styleClass="text-xs" />
+        }
+      </div>
+    </div>
+    <div class="property-actions">
+      <p-button
+        icon="pi pi-pencil"
+        [rounded]="true"
+        [text]="true"
+        severity="info"
+        pTooltip="Editar"
+        (onClick)="openEditPropertyDialog(prop)"
+      />
+      <p-button
+        icon="pi pi-trash"
+        [rounded]="true"
+        [text]="true"
+        severity="danger"
+        pTooltip="Eliminar"
+        (onClick)="deleteProperty(prop)"
+      />
+    </div>
+  </div>
+</ng-template>
+
+<!-- Group Dialog -->
+<p-dialog
+  [header]="editingGroup() ? 'Editar Grupo' : 'Nuevo Grupo'"
+  [(visible)]="showGroupDialog"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+>
+  <div class="flex flex-column gap-3">
+    <div class="field">
+      <label for="groupName">Nombre del Grupo *</label>
+      <input
+        id="groupName"
+        pInputText
+        [ngModel]="groupName()"
+        (ngModelChange)="groupName.set($event)"
+        class="w-full"
+        placeholder="Ej: Información Financiera"
+      />
+    </div>
+    <div class="field">
+      <label for="groupDescription">Descripción</label>
+      <textarea
+        id="groupDescription"
+        pInputTextarea
+        [ngModel]="groupDescription()"
+        (ngModelChange)="groupDescription.set($event)"
+        [rows]="2"
+        class="w-full"
+      ></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showGroupDialog.set(false)" />
+    <p-button [label]="editingGroup() ? 'Guardar' : 'Crear'" icon="pi pi-check" (onClick)="saveGroup()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Property Dialog -->
+<p-dialog
+  [header]="editingProperty() ? 'Editar Propiedad' : 'Nueva Propiedad'"
+  [(visible)]="showPropertyDialog"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+>
+  <div class="flex flex-column gap-3">
+    <div class="form-row">
+      <div class="field">
+        <label for="propName">Nombre *</label>
+        <input
+          id="propName"
+          pInputText
+          [ngModel]="propName()"
+          (ngModelChange)="propName.set($event)"
+          class="w-full"
+          placeholder="Ej: Monto Estimado"
+        />
+      </div>
+      <div class="field">
+        <label for="propCode">Código *</label>
+        <input
+          id="propCode"
+          pInputText
+          [ngModel]="propCode()"
+          (ngModelChange)="propCode.set($event)"
+          class="w-full"
+          placeholder="Ej: monto_estimado"
+        />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label for="propDataType">Tipo de Dato *</label>
+        <p-select
+          id="propDataType"
+          [options]="dataTypeOptions"
+          [ngModel]="propDataType()"
+          (ngModelChange)="propDataType.set($event)"
+          optionLabel="label"
+          optionValue="value"
+          class="w-full"
+        >
+          <ng-template let-item pTemplate="item">
+            <div class="flex align-items-center gap-2">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+      <div class="field">
+        <label for="propGroup">Grupo</label>
+        <p-select
+          id="propGroup"
+          [options]="groupOptions()"
+          [ngModel]="propGroupId()"
+          (ngModelChange)="propGroupId.set($event)"
+          optionLabel="label"
+          optionValue="value"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="propDescription">Descripción</label>
+      <textarea
+        id="propDescription"
+        pInputTextarea
+        [ngModel]="propDescription()"
+        (ngModelChange)="propDescription.set($event)"
+        [rows]="2"
+        class="w-full"
+      ></textarea>
+    </div>
+
+    <div class="field">
+      <label for="propDefault">Valor por Defecto</label>
+      <input
+        id="propDefault"
+        pInputText
+        [ngModel]="propDefaultValue()"
+        (ngModelChange)="propDefaultValue.set($event)"
+        class="w-full"
+      />
+    </div>
+
+    <div class="flex gap-4">
+      <div class="flex align-items-center gap-2">
+        <p-checkbox [ngModel]="propIsRequired()" (ngModelChange)="propIsRequired.set($event)" [binary]="true" inputId="propRequired" />
+        <label for="propRequired">Requerido</label>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <p-checkbox [ngModel]="propIsReadOnly()" (ngModelChange)="propIsReadOnly.set($event)" [binary]="true" inputId="propReadOnly" />
+        <label for="propReadOnly">Solo lectura</label>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <p-checkbox [ngModel]="propIsHidden()" (ngModelChange)="propIsHidden.set($event)" [binary]="true" inputId="propHidden" />
+        <label for="propHidden">Oculto</label>
+      </div>
+    </div>
+
+    <!-- Options for SELECT/MULTISELECT -->
+    @if (needsOptions(propDataType())) {
+      <p-divider />
+      <div class="options-section">
+        <div class="options-header">
+          <label>Opciones</label>
+          <p-button label="Agregar" icon="pi pi-plus" size="small" [outlined]="true" (onClick)="addOption()" />
+        </div>
+        @if (propOptions().length === 0) {
+          <p class="text-secondary text-sm">No hay opciones. Agrega opciones para este campo.</p>
+        } @else {
+          <div class="options-list">
+            @for (opt of propOptions(); track opt.id; let i = $index) {
+              <div class="option-row">
+                <input
+                  pInputText
+                  [ngModel]="opt.value"
+                  (ngModelChange)="updateOption(i, 'value', $event)"
+                  placeholder="Valor"
+                  class="option-value"
+                />
+                <input
+                  pInputText
+                  [ngModel]="opt.label"
+                  (ngModelChange)="updateOption(i, 'label', $event)"
+                  placeholder="Etiqueta"
+                  class="option-label"
+                />
+                <p-checkbox
+                  [ngModel]="opt.isDefault"
+                  (ngModelChange)="updateOption(i, 'isDefault', $event)"
+                  [binary]="true"
+                  pTooltip="Default"
+                />
+                <p-button
+                  icon="pi pi-times"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  (onClick)="removeOption(i)"
+                />
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showPropertyDialog.set(false)" />
+    <p-button [label]="editingProperty() ? 'Guardar' : 'Crear'" icon="pi pi-check" (onClick)="saveProperty()" />
+  </ng-template>
+</p-dialog>

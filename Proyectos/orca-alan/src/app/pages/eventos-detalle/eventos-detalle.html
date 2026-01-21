@@ -1,0 +1,358 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="eventos-detalle-container">
+  @if (loading()) {
+    <div class="loading-container">
+      <p-progressSpinner strokeWidth="4" />
+      <span>Cargando evento...</span>
+    </div>
+  } @else if (event()) {
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          (onClick)="goBack()"
+          pTooltip="Volver"
+        />
+        <div class="header-info">
+          <div class="header-badges">
+            <p-tag
+              [value]="getEventTypeLabel(event()!.eventType)"
+              [style.background-color]="getEventTypeColor(event()!.eventType)"
+              [style.color]="'white'"
+            />
+            <p-tag
+              [value]="getEventStatusLabel(event()!.eventStatus)"
+              [severity]="getEventStatusSeverity(event()!.eventStatus)"
+            />
+            @if (event()!.initialSeverity) {
+              <p-tag
+                [value]="getSeverityLabel(event()!.initialSeverity!)"
+                [severity]="getSeveritySeverity(event()!.initialSeverity!)"
+                [rounded]="true"
+              />
+            }
+          </div>
+          <h1>{{ event()!.title }}</h1>
+          @if (event()!.eventSubType) {
+            <span class="subtype-label">
+              <i class="pi pi-file-edit mr-2"></i>
+              {{ event()!.eventSubType!.name }}
+            </span>
+          }
+        </div>
+      </div>
+      <div class="header-actions">
+        <p-button
+          label="Editar"
+          icon="pi pi-pencil"
+          severity="info"
+          [outlined]="true"
+          (onClick)="navigateToEdit()"
+        />
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="showMenu(menu, $event)"
+        />
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-layout">
+      <!-- Left Column -->
+      <div class="main-content">
+        <p-card>
+          <p-tabs [(value)]="activeTab">
+            <p-tablist>
+              <p-tab value="0">
+                <i class="pi pi-info-circle mr-2"></i>
+                <span>Información</span>
+              </p-tab>
+              <p-tab value="1">
+                <i class="pi pi-list mr-2"></i>
+                <span>Propiedades</span>
+                @if (groupedPropertyValues().length > 0) {
+                  <p-badge
+                    [value]="event()!.propertyValues.length.toString()"
+                    class="ml-2"
+                    severity="info"
+                  />
+                }
+              </p-tab>
+              <p-tab value="2">
+                <i class="pi pi-comments mr-2"></i>
+                <span>Comentarios</span>
+                @if (comments().length > 0) {
+                  <p-badge
+                    [value]="comments().length.toString()"
+                    class="ml-2"
+                    severity="secondary"
+                  />
+                }
+              </p-tab>
+            </p-tablist>
+
+            <!-- Tab: Información -->
+            <p-tabpanel value="0">
+              <div class="info-section">
+                <h3>Descripción</h3>
+                @if (event()!.description) {
+                  <p class="description-text">{{ event()!.description }}</p>
+                } @else {
+                  <p class="no-data">Sin descripción</p>
+                }
+              </div>
+
+              @if (event()!.solution) {
+                <div class="info-section">
+                  <h3>Solución / Resolución</h3>
+                  <p class="description-text">{{ event()!.solution }}</p>
+                </div>
+              }
+
+              <!-- Fechas -->
+              <div class="info-section">
+                <h3>Fechas</h3>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">Fecha de Inicio</span>
+                    <span class="info-value">{{ formatDate(event()!.initialDate) }}</span>
+                  </div>
+                  @if (event()!.dueDate) {
+                    <div class="info-item">
+                      <span class="info-label">Fecha de Vencimiento</span>
+                      <span class="info-value">{{ formatDate(event()!.dueDate) }}</span>
+                    </div>
+                  }
+                  @if (event()!.resolvedAt) {
+                    <div class="info-item">
+                      <span class="info-label">Fecha de Resolución</span>
+                      <span class="info-value">{{ formatDateTime(event()!.resolvedAt) }}</span>
+                    </div>
+                  }
+                  @if (event()!.closedAt) {
+                    <div class="info-item">
+                      <span class="info-label">Fecha de Cierre</span>
+                      <span class="info-value">{{ formatDateTime(event()!.closedAt) }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Severidad (para Riesgos) -->
+              @if (isRisk()) {
+                <div class="info-section">
+                  <h3>Evaluación del Riesgo</h3>
+                  <div class="info-grid">
+                    @if (event()!.probabilityLevel) {
+                      <div class="info-item">
+                        <span class="info-label">Probabilidad</span>
+                        <span class="info-value">{{ getProbabilityLabel(event()!.probabilityLevel!) }}</span>
+                      </div>
+                    }
+                    @if (event()!.impactLevel) {
+                      <div class="info-item">
+                        <span class="info-label">Impacto</span>
+                        <span class="info-value">{{ getImpactLabel(event()!.impactLevel!) }}</span>
+                      </div>
+                    }
+                    @if (event()!.initialSeverity) {
+                      <div class="info-item">
+                        <span class="info-label">Severidad Calculada</span>
+                        <p-tag
+                          [value]="getSeverityLabel(event()!.initialSeverity!)"
+                          [severity]="getSeveritySeverity(event()!.initialSeverity!)"
+                        />
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Auditoría -->
+              <div class="info-section">
+                <h3>Auditoría</h3>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">Creado</span>
+                    <span class="info-value">{{ formatDateTime(event()!.createdAt) }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Actualizado</span>
+                    <span class="info-value">{{ formatDateTime(event()!.updatedAt) }}</span>
+                  </div>
+                  @if (event()!.createdByName) {
+                    <div class="info-item">
+                      <span class="info-label">Creado por</span>
+                      <span class="info-value">{{ event()!.createdByName }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </p-tabpanel>
+
+            <!-- Tab: Propiedades -->
+            <p-tabpanel value="1">
+              @if (groupedPropertyValues().length > 0) {
+                @for (group of groupedPropertyValues(); track group.group.id) {
+                  <div class="properties-group">
+                    <h4>{{ group.group.name }}</h4>
+                    <div class="properties-grid">
+                      @for (item of group.properties; track item.property.id) {
+                        <div class="property-item">
+                          <span class="property-label">{{ item.property.name }}</span>
+                          <span class="property-value">
+                            {{ formatPropertyValue(item.value, item.property.dataType) }}
+                          </span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              } @else {
+                <div class="empty-state-small">
+                  <i class="pi pi-list"></i>
+                  <p>Este evento no tiene propiedades personalizadas</p>
+                </div>
+              }
+            </p-tabpanel>
+
+            <!-- Tab: Comentarios -->
+            <p-tabpanel value="2">
+              <!-- Add comment -->
+              <div class="add-comment">
+                <textarea
+                  pTextarea
+                  [ngModel]="newComment()"
+                  (ngModelChange)="newComment.set($event)"
+                  [rows]="2"
+                  placeholder="Escribe un comentario..."
+                  class="w-full"
+                ></textarea>
+                <div class="add-comment-actions">
+                  <p-button
+                    label="Agregar Comentario"
+                    icon="pi pi-send"
+                    [disabled]="!newComment().trim()"
+                    (onClick)="addComment()"
+                  />
+                </div>
+              </div>
+
+              <p-divider />
+
+              <!-- Comments list -->
+              @if (comments().length > 0) {
+                <div class="comments-list">
+                  @for (comment of comments(); track comment.id) {
+                    <div class="comment-item">
+                      <p-avatar
+                        [label]="getInitials(comment.createdByName || 'U')"
+                        size="normal"
+                        shape="circle"
+                        styleClass="comment-avatar"
+                      />
+                      <div class="comment-content">
+                        <div class="comment-header">
+                          <span class="comment-author">{{ comment.createdByName || 'Usuario' }}</span>
+                          <span class="comment-date">{{ formatDateTime(comment.createdAt) }}</span>
+                        </div>
+                        <p class="comment-text">{{ comment.content }}</p>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="empty-state-small">
+                  <i class="pi pi-comments"></i>
+                  <p>No hay comentarios todavía</p>
+                </div>
+              }
+            </p-tabpanel>
+          </p-tabs>
+        </p-card>
+      </div>
+
+      <!-- Right Column: Summary -->
+      <div class="sidebar-content">
+        <p-card styleClass="summary-card">
+          <ng-template pTemplate="header">
+            <div class="summary-header">
+              <i [class]="getEventTypeIcon(event()!.eventType)" [style.color]="getEventTypeColor(event()!.eventType)"></i>
+              <span>Resumen</span>
+            </div>
+          </ng-template>
+
+          <div class="summary-list">
+            <div class="summary-item">
+              <span class="summary-label">Estado</span>
+              <p-tag
+                [value]="getEventStatusLabel(event()!.eventStatus)"
+                [severity]="getEventStatusSeverity(event()!.eventStatus)"
+              />
+            </div>
+
+            @if (event()!.initialSeverity) {
+              <div class="summary-item">
+                <span class="summary-label">Severidad</span>
+                <p-tag
+                  [value]="getSeverityLabel(event()!.initialSeverity!)"
+                  [severity]="getSeveritySeverity(event()!.initialSeverity!)"
+                  [rounded]="true"
+                />
+              </div>
+            }
+
+            <div class="summary-item">
+              <span class="summary-label">Tipo</span>
+              <span class="summary-value">{{ getEventTypeLabel(event()!.eventType) }}</span>
+            </div>
+
+            @if (event()!.eventSubType) {
+              <div class="summary-item">
+                <span class="summary-label">Plantilla</span>
+                <span class="summary-value">{{ event()!.eventSubType!.name }}</span>
+              </div>
+            }
+
+            <p-divider />
+
+            <div class="summary-item">
+              <span class="summary-label">Fecha Inicio</span>
+              <span class="summary-value">{{ formatDate(event()!.initialDate) }}</span>
+            </div>
+
+            @if (event()!.dueDate) {
+              <div class="summary-item">
+                <span class="summary-label">Vencimiento</span>
+                <span class="summary-value">{{ formatDate(event()!.dueDate) }}</span>
+              </div>
+            }
+
+            <p-divider />
+
+            <div class="summary-item">
+              <span class="summary-label">Propiedades</span>
+              <span class="summary-value">{{ event()!.propertyValues.length }}</span>
+            </div>
+
+            <div class="summary-item">
+              <span class="summary-label">Comentarios</span>
+              <span class="summary-value">{{ comments().length }}</span>
+            </div>
+          </div>
+        </p-card>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Context Menu -->
+<p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />

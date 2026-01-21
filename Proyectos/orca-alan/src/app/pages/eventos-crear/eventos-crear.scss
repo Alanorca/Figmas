@@ -1,0 +1,232 @@
+.eventos-crear-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  // Page Header
+  .page-header {
+    margin-bottom: 1.5rem;
+
+    .header-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .header-text {
+      h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      .page-subtitle {
+        margin: 0.25rem 0 0 0;
+        font-size: 0.9rem;
+        color: var(--text-color-secondary);
+      }
+    }
+  }
+
+  // Form Layout
+  .form-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  // Card Header
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  // Form Grid
+  .form-grid,
+  .properties-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      &.full-width {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        font-weight: 500;
+        color: var(--text-color);
+        font-size: 0.9rem;
+
+        .required {
+          color: var(--red-500);
+          margin-left: 0.25rem;
+        }
+      }
+
+      .help-text {
+        font-size: 0.75rem;
+        color: var(--text-color-secondary);
+      }
+    }
+
+    .checkbox-field {
+      display: flex;
+      align-items: center;
+      padding-top: 0.5rem;
+
+      label {
+        font-weight: 400;
+        cursor: pointer;
+      }
+    }
+  }
+
+  // Group description
+  .group-description {
+    margin: 0 0 1rem 0;
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+  }
+
+  // No template info
+  .no-template-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-color-secondary);
+
+    i {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--surface-400);
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  // Form Actions
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--surface-200);
+  }
+
+  // Font mono for JSON
+  .font-mono {
+    font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+    font-size: 0.875rem;
+  }
+
+  // Text muted
+  .text-muted {
+    color: var(--text-color-secondary);
+  }
+}
+
+// Panel styles
+:host ::ng-deep {
+  .p-panel {
+    .p-panel-header {
+      padding: 0.75rem 1rem;
+      background: var(--surface-50);
+      border-radius: 6px 6px 0 0;
+    }
+
+    .p-panel-content {
+      padding: 1rem;
+    }
+
+    .p-panel-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+  }
+
+  // Card header template
+  p-card {
+    .p-card-header {
+      padding: 0;
+      border-bottom: 1px solid var(--surface-200);
+    }
+
+    .p-card-body {
+      padding: 1rem;
+    }
+  }
+}
+
+// Responsive
+@media screen and (max-width: 1200px) {
+  .eventos-crear-container {
+    .form-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .eventos-crear-container {
+    padding: 1rem;
+
+    .form-grid,
+    .properties-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+      flex-direction: column-reverse;
+
+      p-button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Dark mode
+:host-context(.dark-mode) {
+  .form-actions {
+    border-color: #3f3f46;
+  }
+
+  :host ::ng-deep {
+    .p-panel {
+      .p-panel-header {
+        background: #27272a;
+      }
+    }
+
+    p-card {
+      .p-card-header {
+        border-color: #3f3f46;
+      }
+    }
+  }
+}

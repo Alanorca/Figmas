@@ -16,7 +16,7 @@ interface DBStore {
 })
 export class IndexedDBService {
   private dbName = 'OrcaDB';
-  private dbVersion = 2; // Incrementado para agregar stores de integraciones
+  private dbVersion = 3; // Incrementado para agregar stores de eventos
   private db: IDBDatabase | null = null;
 
   // Store definitions matching Prisma schema
@@ -88,6 +88,22 @@ export class IndexedDBService {
     { name: 'radio_sync_logs', keyPath: 'id', indexes: [
       { name: 'radioId', keyPath: 'radioId' },
       { name: 'startedAt', keyPath: 'startedAt' }
+    ]},
+    // Eventos - Subtipos y Eventos
+    { name: 'event_subtypes', keyPath: 'id', indexes: [
+      { name: 'eventType', keyPath: 'eventType' },
+      { name: 'code', keyPath: 'code', unique: true },
+      { name: 'isDefault', keyPath: 'isDefault' }
+    ]},
+    { name: 'events', keyPath: 'id', indexes: [
+      { name: 'eventType', keyPath: 'eventType' },
+      { name: 'eventSubTypeId', keyPath: 'eventSubType.id' },
+      { name: 'eventStatus', keyPath: 'eventStatus' },
+      { name: 'initialSeverity', keyPath: 'initialSeverity' },
+      { name: 'createdAt', keyPath: 'createdAt' }
+    ]},
+    { name: 'event_comments', keyPath: 'id', indexes: [
+      { name: 'eventId', keyPath: 'eventId' }
     ]},
   ];
 

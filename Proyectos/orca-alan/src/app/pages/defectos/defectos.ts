@@ -1,228 +1,272 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+
+// PrimeNG Modules
 import { TableModule } from 'primeng/table';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
+import { ToolbarModule } from 'primeng/toolbar';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
-import { MenuModule } from 'primeng/menu';
-import { ToolbarModule } from 'primeng/toolbar';
-import { CheckboxModule } from 'primeng/checkbox';
-import { DrawerModule } from 'primeng/drawer';
 import { TooltipModule } from 'primeng/tooltip';
+import { MenuModule } from 'primeng/menu';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { MenuItem } from 'primeng/api';
-import { ApiService } from '../../services/api.service';
-import { Defecto, TipoDefecto, Severidad, EstadoDefecto, Activo } from '../../models';
+import { BadgeModule } from 'primeng/badge';
+import { DialogModule } from 'primeng/dialog';
+import { TextareaModule } from 'primeng/textarea';
+import { DrawerModule } from 'primeng/drawer';
+import { CheckboxModule } from 'primeng/checkbox';
 
-interface DefectoConActivo extends Defecto {
-  activoNombre: string;
-}
+import { MessageService, ConfirmationService, MenuItem } from 'primeng/api';
+
+import { EventosService } from '../../services/eventos.service';
+import { EventoSubtiposService } from '../../services/evento-subtipos.service';
+import {
+  Event,
+  EventType,
+  EventStatus,
+  SeverityLevel,
+  CreateEventRequest,
+  EVENT_STATUS_OPTIONS,
+  SEVERITY_OPTIONS,
+  getEventStatusLabel,
+  getEventStatusSeverity,
+  getSeverityLabel,
+  getSeveritySeverity
+} from '../../models/eventos.models';
 
 @Component({
   selector: 'app-defectos',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, TableModule, CardModule, ButtonModule, DialogModule,
-    InputTextModule, SelectModule, TextareaModule, TagModule, MenuModule, ToolbarModule,
-    CheckboxModule, DrawerModule, TooltipModule, IconFieldModule, InputIconModule
+    CommonModule,
+    FormsModule,
+    TableModule,
+    CardModule,
+    ButtonModule,
+    ToolbarModule,
+    InputTextModule,
+    SelectModule,
+    TagModule,
+    TooltipModule,
+    MenuModule,
+    ConfirmDialogModule,
+    ToastModule,
+    IconFieldModule,
+    InputIconModule,
+    BadgeModule,
+    DialogModule,
+    TextareaModule,
+    DrawerModule,
+    CheckboxModule
   ],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './defectos.html',
   styleUrl: './defectos.scss'
 })
 export class DefectosComponent implements OnInit {
-  private api = inject(ApiService);
+  private router = inject(Router);
+  private messageService = inject(MessageService);
+  private confirmationService = inject(ConfirmationService);
+  eventosService = inject(EventosService);
+  subTypesService = inject(EventoSubtiposService);
 
-  activos = signal<Activo[]>([]);
-  defectosData = signal<any[]>([]);
+  // Diálogo de nuevo defecto
   showDialog = signal(false);
 
   // Selección múltiple
-  defectosSeleccionados = signal<DefectoConActivo[]>([]);
+  defectosSeleccionados = signal<Event[]>([]);
+
+  // Drawer de acciones masivas
+  showAccionesMasivasDrawer = signal(false);
 
   // Edición in-place
   defectoEditando = signal<string | null>(null);
   valoresEdicion = signal<Record<string, any>>({});
 
-  // Drawer de acciones masivas
-  showAccionesMasivasDrawer = signal(false);
-
-  ngOnInit(): void {
-    this.cargarDatos();
-  }
-
-  cargarDatos(): void {
-    this.api.getActivos().subscribe({
-      next: (data) => this.activos.set(data),
-      error: (err) => console.error('Error cargando activos:', err)
-    });
-    this.api.getDefectos().subscribe({
-      next: (data) => this.defectosData.set(data),
-      error: (err) => console.error('Error cargando defectos:', err)
-    });
-  }
-
-  defectos = computed<DefectoConActivo[]>(() => {
-    return this.defectosData().map(defecto => ({
-      ...defecto,
-      activoNombre: defecto.activo?.nombre || 'Sin activo'
-    }));
-  });
-
-  // Computed properties for KPIs (arrow functions not allowed in templates)
-  defectosFuncionales = computed(() => this.defectos().filter(d => d.tipo === 'funcional').length);
-  defectosSeguridad = computed(() => this.defectos().filter(d => d.tipo === 'seguridad').length);
-  defectosRendimiento = computed(() => this.defectos().filter(d => d.tipo === 'rendimiento').length);
-  defectosUsabilidad = computed(() => this.defectos().filter(d => d.tipo === 'usabilidad').length);
-
+  // Nuevo defecto
   nuevoDefecto = signal({
-    activoId: '',
-    titulo: '',
-    descripcion: '',
-    tipo: 'funcional' as TipoDefecto,
-    prioridad: 'media' as Severidad,
-    estado: 'nuevo' as EstadoDefecto,
-    detectadoPor: ''
+    title: '',
+    description: '',
+    initialSeverity: SeverityLevel.MEDIUM,
+    eventStatus: EventStatus.OPEN,
+    eventSubTypeId: null as string | null
   });
 
-  activosOptions = computed(() =>
-    this.activos().map(a => ({ label: a.nombre, value: a.id }))
+  // Defectos
+  defectos = computed(() => this.eventosService.defects());
+
+  // Subtipos de defecto disponibles
+  defectSubTypes = computed(() =>
+    this.subTypesService.eventSubTypes().filter(
+      st => st.eventType === EventType.DEFECT && st.isActive
+    )
   );
 
-  tiposDefecto = [
-    { label: 'Funcional', value: 'funcional' },
-    { label: 'Seguridad', value: 'seguridad' },
-    { label: 'Rendimiento', value: 'rendimiento' },
-    { label: 'Usabilidad', value: 'usabilidad' }
-  ];
+  // KPIs
+  defectosCriticos = computed(() =>
+    this.defectos().filter(d => d.initialSeverity === SeverityLevel.CRITICAL).length
+  );
 
-  prioridades = [
-    { label: 'Critica', value: 'critica' },
-    { label: 'Alta', value: 'alta' },
-    { label: 'Media', value: 'media' },
-    { label: 'Baja', value: 'baja' }
-  ];
+  defectosAltos = computed(() =>
+    this.defectos().filter(d => d.initialSeverity === SeverityLevel.HIGH).length
+  );
 
-  estados = [
-    { label: 'Nuevo', value: 'nuevo' },
-    { label: 'Confirmado', value: 'confirmado' },
-    { label: 'En Correccion', value: 'en_correccion' },
-    { label: 'Corregido', value: 'corregido' },
-    { label: 'Verificado', value: 'verificado' }
-  ];
+  defectosAbiertos = computed(() =>
+    this.defectos().filter(d =>
+      d.eventStatus === EventStatus.OPEN ||
+      d.eventStatus === EventStatus.IN_PROGRESS
+    ).length
+  );
 
-  getPrioridadSeverity(prioridad: string): 'danger' | 'warn' | 'success' | 'info' {
-    switch (prioridad) {
-      case 'critica': return 'danger';
-      case 'alta': return 'warn';
-      case 'media': return 'info';
-      default: return 'success';
-    }
+  defectosResueltos = computed(() =>
+    this.defectos().filter(d =>
+      d.eventStatus === EventStatus.RESOLVED ||
+      d.eventStatus === EventStatus.CLOSED
+    ).length
+  );
+
+  // Opciones
+  statusOptions = EVENT_STATUS_OPTIONS;
+  severityOptions = SEVERITY_OPTIONS;
+
+  subTypeOptions = computed(() =>
+    this.defectSubTypes().map(st => ({ label: st.name, value: st.id }))
+  );
+
+  async ngOnInit(): Promise<void> {
+    await this.subTypesService.loadEventSubTypes();
+    await this.eventosService.loadEvents();
   }
 
-  getEstadoSeverity(estado: string): 'danger' | 'warn' | 'success' | 'info' | 'secondary' {
-    switch (estado) {
-      case 'nuevo': return 'danger';
-      case 'confirmado': return 'warn';
-      case 'en_correccion': return 'info';
-      case 'corregido': return 'success';
-      case 'verificado': return 'secondary';
-      default: return 'info';
-    }
+  // ============ Navegación ============
+
+  navigateToCreate(): void {
+    this.router.navigate(['/defectos/crear']);
   }
 
-  getTipoIcon(tipo: string): string {
-    switch (tipo) {
-      case 'funcional': return 'build';
-      case 'seguridad': return 'security';
-      case 'rendimiento': return 'speed';
-      case 'usabilidad': return 'touch_app';
-      default: return 'bug_report';
-    }
+  navigateToDetail(defect: Event): void {
+    this.router.navigate(['/defectos', defect.id]);
   }
+
+  navigateToEdit(defect: Event): void {
+    this.router.navigate(['/defectos', defect.id, 'editar']);
+  }
+
+  // ============ Diálogo Nuevo Defecto ============
 
   openNewDialog(): void {
+    const defaultSubType = this.defectSubTypes().find(st => st.isDefault);
     this.nuevoDefecto.set({
-      activoId: '',
-      titulo: '',
-      descripcion: '',
-      tipo: 'funcional',
-      prioridad: 'media',
-      estado: 'nuevo',
-      detectadoPor: ''
+      title: '',
+      description: '',
+      initialSeverity: SeverityLevel.MEDIUM,
+      eventStatus: EventStatus.OPEN,
+      eventSubTypeId: defaultSubType?.id ?? null
     });
     this.showDialog.set(true);
   }
 
-  saveDefecto(): void {
+  async saveDefecto(): Promise<void> {
     const defecto = this.nuevoDefecto();
-    if (defecto.activoId && defecto.titulo && defecto.detectadoPor) {
-      this.api.createDefecto({
-        activoId: defecto.activoId,
-        titulo: defecto.titulo,
-        descripcion: defecto.descripcion,
-        tipo: defecto.tipo,
-        prioridad: defecto.prioridad,
-        estado: defecto.estado,
-        detectadoPor: defecto.detectadoPor
-      }).subscribe({
-        next: () => {
-          this.cargarDatos();
-          this.showDialog.set(false);
-        },
-        error: (err) => console.error('Error creando defecto:', err)
+    if (!defecto.title.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validación',
+        detail: 'El título es requerido'
+      });
+      return;
+    }
+
+    const request: CreateEventRequest = {
+      title: defecto.title,
+      description: defecto.description,
+      eventType: EventType.DEFECT,
+      eventSubTypeId: defecto.eventSubTypeId ?? undefined,
+      eventStatus: defecto.eventStatus,
+      initialSeverity: defecto.initialSeverity,
+      initialDate: new Date().toISOString()
+    };
+
+    const result = await this.eventosService.createEvent(request);
+    if (result) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Defecto creado',
+        detail: `El defecto "${defecto.title}" ha sido creado`
+      });
+      this.showDialog.set(false);
+    }
+  }
+
+  // ============ Acciones ============
+
+  async changeStatus(defect: Event, newStatus: EventStatus): Promise<void> {
+    const result = await this.eventosService.changeStatus(defect.id, newStatus);
+    if (result) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Estado actualizado',
+        detail: `El defecto "${defect.title}" ahora está ${getEventStatusLabel(newStatus)}`
       });
     }
   }
 
-  eliminarDefecto(defecto: DefectoConActivo): void {
-    this.api.deleteDefecto(defecto.id).subscribe({
-      next: () => this.cargarDatos(),
-      error: (err) => console.error('Error eliminando defecto:', err)
+  confirmDelete(defect: Event): void {
+    this.confirmationService.confirm({
+      message: `¿Está seguro de eliminar el defecto "${defect.title}"?`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        const deleted = await this.eventosService.deleteEvent(defect.id);
+        if (deleted) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Defecto eliminado',
+            detail: `El defecto "${defect.title}" ha sido eliminado`
+          });
+        }
+      }
     });
   }
 
-  getMenuItemsDefecto(defecto: DefectoConActivo): MenuItem[] {
+  getMenuItemsDefecto(defecto: Event): MenuItem[] {
     return [
-      { label: 'Ver detalle', icon: 'pi pi-eye', command: () => console.log('Ver', defecto.id) },
-      { label: 'Edición rápida', icon: 'pi pi-pencil', command: () => this.iniciarEdicionDesdeMenu(defecto) },
+      { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.navigateToDetail(defecto) },
+      { label: 'Editar', icon: 'pi pi-pencil', command: () => this.navigateToEdit(defecto) },
       { separator: true },
-      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.eliminarDefecto(defecto) }
+      {
+        label: 'Cambiar estado',
+        icon: 'pi pi-sync',
+        items: EVENT_STATUS_OPTIONS.map(status => ({
+          label: status.label,
+          command: () => this.changeStatus(defecto, status.value)
+        }))
+      },
+      { separator: true },
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.confirmDelete(defecto) }
     ];
   }
 
-  iniciarEdicionDesdeMenu(defecto: DefectoConActivo): void {
-    this.defectoEditando.set(defecto.id);
-    this.valoresEdicion.set({
-      titulo: defecto.titulo,
-      descripcion: defecto.descripcion,
-      tipo: defecto.tipo,
-      prioridad: defecto.prioridad,
-      estado: defecto.estado,
-      detectadoPor: defecto.detectadoPor
-    });
-  }
+  // ============ Edición In-Place ============
 
-  getDefectosResueltos(): number {
-    return this.defectos().filter(d => d.estado === 'corregido' || d.estado === 'verificado').length;
-  }
-
-  // Métodos de edición in-place
-  iniciarEdicion(defecto: DefectoConActivo, event: Event): void {
+  iniciarEdicion(defecto: Event, event: globalThis.Event): void {
     event.stopPropagation();
     this.defectoEditando.set(defecto.id);
     this.valoresEdicion.set({
-      titulo: defecto.titulo,
-      descripcion: defecto.descripcion,
-      tipo: defecto.tipo,
-      prioridad: defecto.prioridad,
-      estado: defecto.estado,
-      detectadoPor: defecto.detectadoPor
+      title: defecto.title,
+      description: defecto.description,
+      initialSeverity: defecto.initialSeverity,
+      eventStatus: defecto.eventStatus
     });
   }
 
@@ -238,27 +282,36 @@ export class DefectosComponent implements OnInit {
     this.valoresEdicion.update(v => ({ ...v, [campo]: valor }));
   }
 
-  guardarEdicion(defecto: DefectoConActivo, event: Event): void {
+  async guardarEdicion(defecto: Event, event: globalThis.Event): Promise<void> {
     event.stopPropagation();
     const valores = this.valoresEdicion();
-    this.api.updateDefecto(defecto.id, valores).subscribe({
-      next: () => {
-        this.cargarDatos();
-        this.defectoEditando.set(null);
-        this.valoresEdicion.set({});
-      },
-      error: (err) => console.error('Error actualizando defecto:', err)
+
+    await this.eventosService.updateEvent(defecto.id, {
+      title: valores['title'],
+      description: valores['description'],
+      eventStatus: valores['eventStatus'],
+      initialSeverity: valores['initialSeverity']
     });
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Defecto actualizado',
+      detail: `El defecto ha sido actualizado`
+    });
+
+    this.defectoEditando.set(null);
+    this.valoresEdicion.set({});
   }
 
-  cancelarEdicion(event: Event): void {
+  cancelarEdicion(event: globalThis.Event): void {
     event.stopPropagation();
     this.defectoEditando.set(null);
     this.valoresEdicion.set({});
   }
 
-  // Métodos de selección
-  onSelectionChange(defectos: DefectoConActivo[]): void {
+  // ============ Selección Masiva ============
+
+  onSelectionChange(defectos: Event[]): void {
     this.defectosSeleccionados.set(defectos);
   }
 
@@ -269,5 +322,21 @@ export class DefectosComponent implements OnInit {
   aplicarAccionesMasivas(): void {
     console.log('Aplicando acciones masivas a:', this.defectosSeleccionados());
     this.showAccionesMasivasDrawer.set(false);
+  }
+
+  // ============ Helpers ============
+
+  getEventStatusLabel = getEventStatusLabel;
+  getEventStatusSeverity = getEventStatusSeverity;
+  getSeverityLabel = getSeverityLabel;
+  getSeveritySeverity = getSeveritySeverity;
+
+  formatDate(dateStr: string | undefined): string {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('es-MX', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   }
 }

@@ -1,0 +1,361 @@
+.eventos-detalle-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  // Loading
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    gap: 1rem;
+    color: var(--text-color-secondary);
+  }
+
+  // Page Header
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+
+    .header-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .header-info {
+      .header-badges {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      h1 {
+        margin: 0 0 0.25rem 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      .subtype-label {
+        font-size: 0.875rem;
+        color: var(--text-color-secondary);
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+
+  // Content Layout
+  .content-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+  }
+
+  .main-content {
+    min-width: 0;
+  }
+
+  .sidebar-content {
+    .summary-card {
+      position: sticky;
+      top: 1rem;
+    }
+  }
+
+  // Summary Card
+  .summary-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    border-bottom: 1px solid var(--surface-200);
+
+    i {
+      font-size: 1.25rem;
+    }
+  }
+
+  .summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+  }
+
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .summary-label {
+      font-size: 0.875rem;
+      color: var(--text-color-secondary);
+    }
+
+    .summary-value {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+  }
+
+  // Info sections
+  .info-section {
+    margin-bottom: 1.5rem;
+
+    h3 {
+      margin: 0 0 0.75rem 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .description-text {
+      margin: 0;
+      color: var(--text-color);
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    .no-data {
+      margin: 0;
+      color: var(--text-color-secondary);
+      font-style: italic;
+    }
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .info-label {
+      font-size: 0.75rem;
+      color: var(--text-color-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 0.9rem;
+      color: var(--text-color);
+    }
+  }
+
+  // Properties
+  .properties-group {
+    margin-bottom: 1.5rem;
+
+    h4 {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-color);
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--surface-200);
+    }
+  }
+
+  .properties-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .property-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .property-label {
+      font-size: 0.75rem;
+      color: var(--text-color-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .property-value {
+      font-size: 0.9rem;
+      color: var(--text-color);
+    }
+  }
+
+  // Comments
+  .add-comment {
+    margin-bottom: 1rem;
+
+    .add-comment-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0.75rem;
+    }
+  }
+
+  .comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .comment-item {
+    display: flex;
+    gap: 0.75rem;
+
+    .comment-avatar {
+      flex-shrink: 0;
+    }
+
+    .comment-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .comment-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.25rem;
+
+      .comment-author {
+        font-weight: 500;
+        color: var(--text-color);
+      }
+
+      .comment-date {
+        font-size: 0.75rem;
+        color: var(--text-color-secondary);
+      }
+    }
+
+    .comment-text {
+      margin: 0;
+      color: var(--text-color);
+      line-height: 1.5;
+    }
+  }
+
+  // Empty state small
+  .empty-state-small {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-color-secondary);
+
+    i {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--surface-400);
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+// Tab styles
+:host ::ng-deep {
+  .p-tabs {
+    .p-tablist {
+      border-bottom: 1px solid var(--surface-200);
+    }
+
+    .p-tab {
+      padding: 0.75rem 1.25rem;
+    }
+
+    .p-tabpanel {
+      padding: 1rem 0;
+    }
+  }
+
+  // Summary card
+  .summary-card {
+    .p-card-header {
+      padding: 0;
+    }
+
+    .p-card-body {
+      padding: 1rem;
+    }
+  }
+}
+
+// Responsive
+@media screen and (max-width: 1024px) {
+  .eventos-detalle-container {
+    .content-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .sidebar-content {
+      order: -1;
+
+      .summary-card {
+        position: static;
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .eventos-detalle-container {
+    padding: 1rem;
+
+    .page-header {
+      flex-direction: column;
+
+      .header-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+
+    .properties-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Dark mode
+:host-context(.dark-mode) {
+  .summary-header {
+    border-color: #3f3f46;
+  }
+
+  .properties-group h4 {
+    border-color: #3f3f46;
+  }
+
+  :host ::ng-deep {
+    .p-tabs {
+      .p-tablist {
+        border-color: #3f3f46;
+      }
+    }
+  }
+}

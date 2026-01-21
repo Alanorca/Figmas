@@ -1,0 +1,235 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="eventos-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Gestión de Eventos</h1>
+    <p class="page-subtitle">Administra Riesgos, Incidentes y Defectos de tu organización</p>
+  </div>
+
+  <!-- Main Card -->
+  <p-card>
+    <!-- Tabs -->
+    <p-tabs [(value)]="activeTab" scrollable>
+      <p-tablist>
+        <p-tab value="0">
+          <i class="pi pi-exclamation-triangle mr-2"></i>
+          <span>Riesgos</span>
+          <p-badge [value]="getTabCount('0').toString()" class="ml-2" severity="warn" />
+        </p-tab>
+        <p-tab value="1">
+          <i class="pi pi-bolt mr-2"></i>
+          <span>Incidentes</span>
+          <p-badge [value]="getTabCount('1').toString()" class="ml-2" severity="danger" />
+        </p-tab>
+        <p-tab value="2">
+          <i class="pi pi-bug mr-2"></i>
+          <span>Defectos</span>
+          <p-badge [value]="getTabCount('2').toString()" class="ml-2" severity="info" />
+        </p-tab>
+      </p-tablist>
+
+      <!-- Tab Panel: Riesgos -->
+      <p-tabpanel value="0">
+        <ng-container *ngTemplateOutlet="eventTableTemplate"></ng-container>
+      </p-tabpanel>
+
+      <!-- Tab Panel: Incidentes -->
+      <p-tabpanel value="1">
+        <ng-container *ngTemplateOutlet="eventTableTemplate"></ng-container>
+      </p-tabpanel>
+
+      <!-- Tab Panel: Defectos -->
+      <p-tabpanel value="2">
+        <ng-container *ngTemplateOutlet="eventTableTemplate"></ng-container>
+      </p-tabpanel>
+    </p-tabs>
+  </p-card>
+</div>
+
+<!-- Template de tabla reutilizable -->
+<ng-template #eventTableTemplate>
+  <!-- Toolbar -->
+  <p-toolbar styleClass="mb-4 mt-3">
+    <ng-template #start>
+      <div class="flex align-items-center gap-3">
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input
+            pInputText
+            type="text"
+            placeholder="Buscar eventos..."
+            [ngModel]="searchText()"
+            (ngModelChange)="searchText.set($event)"
+            class="search-input"
+          />
+        </p-iconfield>
+
+        @if (currentSubTypes().length > 0) {
+          <p-select
+            [options]="currentSubTypes()"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Filtrar por plantilla"
+            [showClear]="true"
+            [style]="{ minWidth: '180px' }"
+          />
+        }
+      </div>
+    </ng-template>
+
+    <ng-template #end>
+      <p-button
+        [label]="'Nuevo ' + getEventTypeLabel(currentEventType())"
+        icon="pi pi-plus"
+        (onClick)="navigateToCreate()"
+      />
+    </ng-template>
+  </p-toolbar>
+
+  <!-- Loading State -->
+  @if (eventosService.loading()) {
+    <div class="loading-container">
+      <p-progressSpinner strokeWidth="4" />
+      <span>Cargando eventos...</span>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!eventosService.loading() && filteredEvents().length === 0) {
+    <div class="empty-state">
+      <i [class]="getEventTypeIcon(currentEventType()) + ' empty-icon'"></i>
+      <h3>No hay {{ getEventTypeLabel(currentEventType()).toLowerCase() }}s</h3>
+      <p>Crea tu primer {{ getEventTypeLabel(currentEventType()).toLowerCase() }} para comenzar a gestionar eventos</p>
+      <p-button
+        [label]="'Crear ' + getEventTypeLabel(currentEventType())"
+        icon="pi pi-plus"
+        (onClick)="navigateToCreate()"
+      />
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!eventosService.loading() && filteredEvents().length > 0) {
+    <p-table
+      [value]="filteredEvents()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} eventos"
+      styleClass="p-datatable-striped"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="title" style="width: 30%">
+            Título
+            <p-sortIcon field="title" />
+          </th>
+          <th style="width: 15%">Plantilla</th>
+          <th pSortableColumn="eventStatus" style="width: 12%">
+            Estado
+            <p-sortIcon field="eventStatus" />
+          </th>
+          <th pSortableColumn="initialSeverity" style="width: 12%">
+            Severidad
+            <p-sortIcon field="initialSeverity" />
+          </th>
+          <th pSortableColumn="initialDate" style="width: 12%">
+            Fecha
+            <p-sortIcon field="initialDate" />
+          </th>
+          <th style="width: 10%">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-event>
+        <tr class="cursor-pointer" (click)="onRowClick(event)">
+          <td>
+            <div class="event-title-cell">
+              <span class="event-title">{{ event.title }}</span>
+              @if (event.description) {
+                <span class="event-description">{{ event.description }}</span>
+              }
+            </div>
+          </td>
+          <td>
+            @if (event.eventSubType) {
+              <span class="subtype-badge">{{ event.eventSubType.name }}</span>
+            } @else {
+              <span class="text-muted">-</span>
+            }
+          </td>
+          <td>
+            <p-tag
+              [value]="getEventStatusLabel(event.eventStatus)"
+              [severity]="getEventStatusSeverity(event.eventStatus)"
+            />
+          </td>
+          <td>
+            @if (event.initialSeverity) {
+              <p-tag
+                [value]="getSeverityLabel(event.initialSeverity)"
+                [severity]="getSeveritySeverity(event.initialSeverity)"
+                [rounded]="true"
+              />
+            } @else {
+              <span class="text-muted">-</span>
+            }
+          </td>
+          <td>
+            <span class="date-text">{{ formatDate(event.initialDate) }}</span>
+          </td>
+          <td>
+            <div class="action-buttons" (click)="$event.stopPropagation()">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="info"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (onClick)="navigateToEdit(event)"
+              />
+              <p-button
+                icon="pi pi-ellipsis-v"
+                [rounded]="true"
+                [text]="true"
+                (onClick)="showMenu(event, menu, $event)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="footer">
+        <tr class="table-footer">
+          <td colspan="6">
+            <div class="footer-summary">
+              <span class="footer-label">Resumen:</span>
+              <span class="footer-item">
+                <strong>{{ filteredEvents().length }}</strong> {{ getEventTypeLabel(currentEventType()).toLowerCase() }}s
+              </span>
+              <span class="footer-item info">
+                <i class="pi pi-file-edit"></i>
+                <strong>{{ currentStats().draft }}</strong> Borradores
+              </span>
+              <span class="footer-item warn">
+                <i class="pi pi-clock"></i>
+                <strong>{{ currentStats().open + currentStats().inProgress }}</strong> Activos
+              </span>
+              <span class="footer-item success">
+                <i class="pi pi-check-circle"></i>
+                <strong>{{ currentStats().resolved + currentStats().closed }}</strong> Cerrados
+              </span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</ng-template>
+
+<!-- Context Menu -->
+<p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />

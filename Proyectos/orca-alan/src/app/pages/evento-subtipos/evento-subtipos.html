@@ -1,0 +1,316 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="evento-subtipos-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Plantillas de Eventos</h1>
+    <p class="page-subtitle">Configura los tipos de eventos con campos personalizados</p>
+  </div>
+
+  <!-- Main Card -->
+  <p-card>
+    <!-- Toolbar -->
+    <p-toolbar styleClass="mb-4">
+      <ng-template #start>
+        <div class="flex align-items-center gap-3">
+          <p-select
+            [options]="eventTypeOptions"
+            [ngModel]="selectedEventType()"
+            (ngModelChange)="selectedEventType.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Filtrar por tipo"
+            [style]="{ minWidth: '180px' }"
+          >
+            <ng-template let-item pTemplate="item">
+              <div class="flex align-items-center gap-2">
+                @if (item.icon) {
+                  <i [class]="item.icon"></i>
+                }
+                <span>{{ item.label }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+
+          <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              type="text"
+              placeholder="Buscar plantillas..."
+              [ngModel]="searchText()"
+              (ngModelChange)="searchText.set($event)"
+              class="search-input"
+            />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template #end>
+        <div class="flex gap-2">
+          <p-button
+            label="Importar"
+            icon="pi pi-upload"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="openImportDialog()"
+          />
+          <p-button
+            label="Nueva Plantilla"
+            icon="pi pi-plus"
+            (onClick)="navigateToCreate()"
+          />
+        </div>
+      </ng-template>
+    </p-toolbar>
+
+    <!-- Loading State -->
+    @if (subTypesService.loading()) {
+      <div class="loading-container">
+        <p-progressSpinner strokeWidth="4" />
+        <span>Cargando plantillas...</span>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!subTypesService.loading() && filteredSubTypes().length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-file-edit empty-icon"></i>
+        <h3>No hay plantillas</h3>
+        <p>Crea una plantilla para definir los campos personalizados de tus eventos</p>
+        <p-button
+          label="Crear Plantilla"
+          icon="pi pi-plus"
+          (onClick)="navigateToCreate()"
+        />
+      </div>
+    }
+
+    <!-- Table -->
+    @if (!subTypesService.loading() && filteredSubTypes().length > 0) {
+      <p-table
+        [value]="filteredSubTypes()"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 25]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} plantillas"
+        styleClass="p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="name" style="width: 25%">
+              Nombre
+              <p-sortIcon field="name" />
+            </th>
+            <th pSortableColumn="code" style="width: 15%">
+              Código
+              <p-sortIcon field="code" />
+            </th>
+            <th pSortableColumn="eventType" style="width: 15%">
+              Tipo
+              <p-sortIcon field="eventType" />
+            </th>
+            <th style="width: 10%">Propiedades</th>
+            <th style="width: 10%">Estado</th>
+            <th style="width: 10%">Default</th>
+            <th style="width: 15%">Acciones</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-subType>
+          <tr class="cursor-pointer" (click)="onRowClick(subType)">
+            <td>
+              <div class="subtype-name-cell">
+                <div class="subtype-icon" [style.background-color]="subType.color + '20'" [style.color]="subType.color">
+                  <i [class]="subType.iconPath || getEventTypeIcon(subType.eventType)"></i>
+                </div>
+                <div class="subtype-info">
+                  <span class="subtype-name">{{ subType.name }}</span>
+                  @if (subType.description) {
+                    <span class="subtype-description">{{ subType.description }}</span>
+                  }
+                </div>
+              </div>
+            </td>
+            <td>
+              <code class="subtype-code">{{ subType.code }}</code>
+            </td>
+            <td>
+              <p-tag
+                [value]="getEventTypeLabel(subType.eventType)"
+                [severity]="getEventTypeSeverity(subType.eventType)"
+              />
+            </td>
+            <td>
+              <p-badge
+                [value]="subType.properties.length.toString()"
+                [severity]="subType.properties.length > 0 ? 'info' : 'secondary'"
+              />
+            </td>
+            <td>
+              <p-tag
+                [value]="subType.isActive ? 'Activa' : 'Inactiva'"
+                [severity]="subType.isActive ? 'success' : 'secondary'"
+                [rounded]="true"
+              />
+            </td>
+            <td>
+              @if (subType.isDefault) {
+                <i class="pi pi-star-fill text-yellow-500" pTooltip="Plantilla predeterminada"></i>
+              } @else {
+                <i class="pi pi-star text-gray-300"></i>
+              }
+            </td>
+            <td>
+              <div class="action-buttons" (click)="$event.stopPropagation()">
+                <p-button
+                  icon="pi pi-pencil"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="info"
+                  pTooltip="Editar"
+                  tooltipPosition="top"
+                  (onClick)="navigateToEdit(subType)"
+                />
+                <p-button
+                  icon="pi pi-copy"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  pTooltip="Clonar"
+                  tooltipPosition="top"
+                  (onClick)="openCloneDialog(subType, $event)"
+                />
+                <p-button
+                  icon="pi pi-ellipsis-v"
+                  [rounded]="true"
+                  [text]="true"
+                  (onClick)="showMenu(subType, menu, $event)"
+                />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="footer">
+          <tr class="table-footer">
+            <td colspan="7">
+              <div class="footer-summary">
+                <span class="footer-label">Resumen:</span>
+                <span class="footer-item">
+                  <strong>{{ filteredSubTypes().length }}</strong> plantillas
+                </span>
+                <span class="footer-item warn">
+                  <i class="pi pi-exclamation-triangle"></i>
+                  <strong>{{ subTypesService.riskSubTypes().length }}</strong> Riesgos
+                </span>
+                <span class="footer-item danger">
+                  <i class="pi pi-bolt"></i>
+                  <strong>{{ subTypesService.incidentSubTypes().length }}</strong> Incidentes
+                </span>
+                <span class="footer-item info">
+                  <i class="pi pi-bug"></i>
+                  <strong>{{ subTypesService.defectSubTypes().length }}</strong> Defectos
+                </span>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </p-card>
+</div>
+
+<!-- Context Menu -->
+<p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
+
+<!-- Clone Dialog -->
+<p-dialog
+  header="Clonar Plantilla"
+  [(visible)]="showCloneDialog"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [closable]="true"
+>
+  <div class="flex flex-column gap-3">
+    <div class="field">
+      <label for="cloneName">Nombre de la nueva plantilla</label>
+      <input
+        id="cloneName"
+        pInputText
+        [ngModel]="cloneName()"
+        (ngModelChange)="cloneName.set($event)"
+        class="w-full"
+      />
+    </div>
+    <div class="field">
+      <label for="cloneCode">Código</label>
+      <input
+        id="cloneCode"
+        pInputText
+        [ngModel]="cloneCode()"
+        (ngModelChange)="cloneCode.set($event)"
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="showCloneDialog.set(false)"
+    />
+    <p-button
+      label="Clonar"
+      icon="pi pi-copy"
+      (onClick)="confirmClone()"
+      [disabled]="!cloneName() || !cloneCode()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- Import Dialog -->
+<p-dialog
+  header="Importar Plantilla"
+  [(visible)]="showImportDialog"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [closable]="true"
+>
+  <div class="flex flex-column gap-3">
+    <p class="text-secondary">
+      Pegue el contenido JSON de la plantilla que desea importar.
+    </p>
+    <div class="field">
+      <label for="importJson">JSON de la plantilla</label>
+      <textarea
+        id="importJson"
+        pInputTextarea
+        [ngModel]="importJson()"
+        (ngModelChange)="importJson.set($event)"
+        [rows]="12"
+        class="w-full font-mono text-sm"
+        placeholder='{ "name": "...", "code": "...", ... }'
+      ></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="showImportDialog.set(false)"
+    />
+    <p-button
+      label="Importar"
+      icon="pi pi-upload"
+      (onClick)="confirmImport()"
+      [disabled]="!importJson()"
+    />
+  </ng-template>
+</p-dialog>

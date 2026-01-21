@@ -30,17 +30,56 @@ export const routes: Routes = [
     path: 'organigramas/:id/objetivos-kpis',
     loadComponent: () => import('./pages/objetivos-kpis/objetivos-kpis').then(m => m.ObjetivosKpisComponent)
   },
+  // Riesgos
   {
     path: 'riesgos',
     loadComponent: () => import('./pages/riesgos/riesgos').then(m => m.RiesgosComponent)
   },
   {
+    path: 'riesgos/crear',
+    loadComponent: () => import('./pages/eventos-crear/eventos-crear').then(m => m.EventosCrearComponent)
+  },
+  {
+    path: 'riesgos/:id',
+    loadComponent: () => import('./pages/eventos-detalle/eventos-detalle').then(m => m.EventosDetalleComponent)
+  },
+  {
+    path: 'riesgos/:id/editar',
+    loadComponent: () => import('./pages/eventos-crear/eventos-crear').then(m => m.EventosCrearComponent)
+  },
+  // Incidentes
+  {
     path: 'incidentes',
     loadComponent: () => import('./pages/incidentes/incidentes').then(m => m.IncidentesComponent)
   },
   {
+    path: 'incidentes/crear',
+    loadComponent: () => import('./pages/eventos-crear/eventos-crear').then(m => m.EventosCrearComponent)
+  },
+  {
+    path: 'incidentes/:id',
+    loadComponent: () => import('./pages/eventos-detalle/eventos-detalle').then(m => m.EventosDetalleComponent)
+  },
+  {
+    path: 'incidentes/:id/editar',
+    loadComponent: () => import('./pages/eventos-crear/eventos-crear').then(m => m.EventosCrearComponent)
+  },
+  // Defectos
+  {
     path: 'defectos',
     loadComponent: () => import('./pages/defectos/defectos').then(m => m.DefectosComponent)
+  },
+  {
+    path: 'defectos/crear',
+    loadComponent: () => import('./pages/eventos-crear/eventos-crear').then(m => m.EventosCrearComponent)
+  },
+  {
+    path: 'defectos/:id',
+    loadComponent: () => import('./pages/eventos-detalle/eventos-detalle').then(m => m.EventosDetalleComponent)
+  },
+  {
+    path: 'defectos/:id/editar',
+    loadComponent: () => import('./pages/eventos-crear/eventos-crear').then(m => m.EventosCrearComponent)
   },
   {
     path: 'procesos',
@@ -153,6 +192,36 @@ export const routes: Routes = [
   {
     path: 'integraciones/:id/editar',
     loadComponent: () => import('./pages/integraciones-crear/integraciones-crear').then(m => m.IntegracionesCrearComponent)
+  },
+  // Eventos
+  {
+    path: 'eventos',
+    loadComponent: () => import('./pages/eventos/eventos').then(m => m.EventosComponent)
+  },
+  {
+    path: 'eventos/crear',
+    loadComponent: () => import('./pages/eventos-crear/eventos-crear').then(m => m.EventosCrearComponent)
+  },
+  {
+    path: 'eventos/:id',
+    loadComponent: () => import('./pages/eventos-detalle/eventos-detalle').then(m => m.EventosDetalleComponent)
+  },
+  {
+    path: 'eventos/:id/editar',
+    loadComponent: () => import('./pages/eventos-crear/eventos-crear').then(m => m.EventosCrearComponent)
+  },
+  // Subtipos de eventos (plantillas)
+  {
+    path: 'evento-subtipos',
+    loadComponent: () => import('./pages/evento-subtipos/evento-subtipos').then(m => m.EventoSubtiposComponent)
+  },
+  {
+    path: 'evento-subtipos/crear',
+    loadComponent: () => import('./pages/evento-subtipo-crear/evento-subtipo-crear').then(m => m.EventoSubtipoCrearComponent)
+  },
+  {
+    path: 'evento-subtipos/:id/editar',
+    loadComponent: () => import('./pages/evento-subtipo-crear/evento-subtipo-crear').then(m => m.EventoSubtipoCrearComponent)
   },
   {
     path: '**',

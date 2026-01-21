@@ -921,6 +921,15 @@ export class SidebarComponent implements OnDestroy {
       ]
     },
     {
+      label: 'Gestión de Eventos',
+      icon: 'pi pi-calendar-times',
+      expanded: true,
+      items: [
+        { label: 'Eventos', icon: 'pi pi-list', routerLink: '/eventos' },
+        { label: 'Plantillas', icon: 'pi pi-file-edit', routerLink: '/evento-subtipos' }
+      ]
+    },
+    {
       label: 'Cumplimiento',
       icon: 'pi pi-check-circle',
       expanded: true,
@@ -998,7 +1007,12 @@ export class SidebarComponent implements OnDestroy {
     'proyectos': 'Proyectos',
     'proyecto-crear': 'Crear Proyecto',
     'proyecto-detalle': 'Detalle del Proyecto',
-    'editar': 'Editar'
+    'editar': 'Editar',
+    'eventos': 'Eventos',
+    'eventos-crear': 'Crear Evento',
+    'eventos-detalle': 'Detalle del Evento',
+    'evento-subtipos': 'Plantillas de Eventos',
+    'evento-subtipo-crear': 'Crear Plantilla'
   };
 
   constructor() {
