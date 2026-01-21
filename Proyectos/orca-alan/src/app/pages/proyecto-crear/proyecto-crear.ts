@@ -14,6 +14,8 @@ import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { BadgeModule } from 'primeng/badge';
 
 // Services
 import { ProyectosService } from '../../services/proyectos.service';
@@ -79,7 +81,9 @@ interface ObjectiveForm {
     TagModule,
     CardModule,
     DividerModule,
-    InputNumberModule
+    InputNumberModule,
+    SelectButtonModule,
+    BadgeModule
   ],
   providers: [MessageService],
   templateUrl: './proyecto-crear.html',
@@ -152,6 +156,12 @@ export class ProyectoCrearComponent {
   tipoOptions = [
     { label: 'Estratégico', value: 'estrategico' },
     { label: 'Operativo', value: 'operativo' }
+  ];
+
+  // Opciones para tabs de objetivos (definidas aquí para evitar recreación en cada ciclo)
+  modoObjetivosOptions = [
+    { label: 'Seleccionar', value: 'seleccionar', icon: 'pi pi-search' },
+    { label: 'Crear nuevos', value: 'crear', icon: 'pi pi-plus' }
   ];
 
   // Estado de objetivos (colapsados, editando)

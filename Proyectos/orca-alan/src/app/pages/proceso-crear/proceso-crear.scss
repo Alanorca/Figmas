@@ -415,7 +415,7 @@
       &:first-child { border-bottom: 1px solid var(--surface-border); }
       &:hover { background: var(--surface-100); }
 
-      i { font-size: 10px; color: var(--text-color-secondary); }
+      i { font-size: var(--font-size-2xs); color: var(--text-color-secondary); }
     }
   }
 }
@@ -458,13 +458,13 @@
   padding: var(--spacing-2) 0;
 
   span {
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     color: var(--text-color-secondary);
     text-align: right;
     white-space: nowrap;
   }
 
-  &.mini span { font-size: 9px; }
+  &.mini span { font-size: var(--font-size-2xs); }
 }
 
 .matriz-grid {
@@ -472,14 +472,14 @@
   flex-direction: column;
   gap: var(--spacing-1);
 
-  &.mini { gap: 2px; }
+  &.mini { gap: var(--spacing-0-5); }
 }
 
 .matriz-row {
   display: flex;
   gap: var(--spacing-1);
 
-  .mini & { gap: 2px; }
+  .mini & { gap: var(--spacing-0-5); }
 }
 
 .matriz-cell {
@@ -497,7 +497,7 @@
   &.critico { background: var(--red-500); }
 
   &.selected {
-    box-shadow: inset 0 0 0 3px rgba(0,0,0,0.3);
+    box-shadow: var(--shadow-inset-selected);
   }
 
   .cell-marker {
@@ -525,7 +525,7 @@
   padding-left: 70px;
 
   span {
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     color: var(--text-color-secondary);
     text-align: center;
     width: 56px;
@@ -534,7 +534,7 @@
   &.mini {
     padding-left: 50px;
     span {
-      font-size: 9px;
+      font-size: var(--font-size-2xs);
       width: 36px;
     }
   }
@@ -602,7 +602,7 @@
   }
 
   .label-y {
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     color: var(--text-color-secondary);
     text-align: right;
     padding-right: var(--spacing-2);
@@ -611,7 +611,7 @@
   }
 
   .label-x {
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     color: var(--text-color-secondary);
     text-align: center;
     padding-top: var(--spacing-2);
@@ -651,7 +651,7 @@
     &.dentro-apetito {
       opacity: 1;
       filter: none;
-      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow-inset-highlight);
     }
 
     &.selected {
@@ -692,7 +692,7 @@
     justify-content: space-between;
 
     span {
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       color: var(--text-color-secondary);
       text-align: right;
       height: 40px;
@@ -707,12 +707,12 @@
   .matriz-grid-10 {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--spacing-0-5);
   }
 
   .matriz-row {
     display: flex;
-    gap: 3px;
+    gap: var(--spacing-0-5);
   }
 
   .matriz-cell {
@@ -737,7 +737,7 @@
     &.critico { background: var(--red-500); }
 
     &.dentro-apetito {
-      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow-inset-highlight);
 
       &::after {
         content: '';
@@ -746,8 +746,8 @@
         left: 2px;
         right: 2px;
         bottom: 2px;
-        border: 2px dashed rgba(0, 0, 0, 0.3);
-        border-radius: 2px;
+        border: 2px dashed var(--surface-500);
+        border-radius: var(--border-radius-xs);
         pointer-events: none;
       }
     }
@@ -776,12 +776,12 @@
 
   .matriz-x-labels {
     display: flex;
-    gap: 3px;
+    gap: var(--spacing-0-5);
     padding-left: 0;
 
     span {
       width: 40px;
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       color: var(--text-color-secondary);
       text-align: center;
       font-weight: var(--font-weight-medium);
@@ -802,7 +802,7 @@
   box-shadow: var(--shadow-md);
 
   span {
-    font-size: 9px;
+    font-size: var(--font-size-2xs);
     font-weight: var(--font-weight-bold);
     color: var(--surface-0);
     line-height: 1;
@@ -843,7 +843,7 @@
     height: 20px;
     border-radius: var(--border-radius-sm);
     background: var(--green-500);
-    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+    box-shadow: var(--shadow-inset-highlight);
   }
 
   .leyenda-fuera {
@@ -901,7 +901,7 @@
 
 // Formularios Inline
 .inline-form {
-  background: var(--surface-0);
+  background: var(--surface-card);
   border: 1px solid var(--primary-color);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-4);
@@ -915,7 +915,7 @@
   margin-bottom: var(--spacing-4);
 
   h4 {
-    font-size: 15px;
+    font-size: var(--font-size-md);
     font-weight: var(--font-weight-semibold);
     color: var(--text-color);
     margin: 0;
@@ -1126,16 +1126,16 @@
   transition: background 0.15s ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--surface-hover);
   }
 }
 
 .kpis-count-badge {
-  padding: 3px 10px;
+  padding: var(--spacing-0-5) var(--spacing-2);
   background: var(--surface-200);
   color: var(--text-color-secondary);
   border-radius: var(--border-radius-xl);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
 }
 
@@ -1150,7 +1150,7 @@
   flex: 1;
 
   .objetivo-titulo {
-    font-size: 15px;
+    font-size: var(--font-size-md);
     font-weight: var(--font-weight-semibold);
     color: var(--text-color);
     margin: 0 0 var(--spacing-2) 0;
@@ -1273,7 +1273,7 @@
   background: var(--primary-color);
   color: var(--surface-0);
   border-radius: var(--border-radius-full);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1337,18 +1337,18 @@
   .kpi-alert-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
+    gap: var(--spacing-1);
+    padding: var(--spacing-0-5) var(--spacing-2);
     background: var(--red-500);
     color: var(--surface-0);
     border-radius: var(--border-radius-md);
-    font-size: 10px;
+    font-size: var(--font-size-2xs);
     font-weight: var(--font-weight-bold);
     text-transform: uppercase;
     letter-spacing: 0.3px;
 
     i {
-      font-size: 9px;
+      font-size: var(--font-size-2xs);
     }
   }
 }
@@ -1417,11 +1417,11 @@
 // Empty State
 .empty-state {
   text-align: center;
-  padding: 48px var(--spacing-6);
+  padding: var(--spacing-8) var(--spacing-6);
   color: var(--text-color-secondary);
 
   i {
-    font-size: 48px;
+    font-size: var(--font-size-6xl);
     margin-bottom: var(--spacing-4);
     color: var(--surface-300);
   }
@@ -1561,7 +1561,7 @@
     transition: background 0.15s ease;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.02);
+      background: var(--surface-hover);
     }
   }
 
@@ -1610,9 +1610,9 @@
   .badge {
     background: var(--primary-color);
     color: var(--surface-0);
-    padding: 2px var(--spacing-2);
-    border-radius: 10px;
-    font-size: 11px;
+    padding: var(--spacing-0-5) var(--spacing-2);
+    border-radius: var(--border-radius-lg);
+    font-size: var(--font-size-xs);
     margin-left: var(--spacing-2);
   }
 }
@@ -1741,7 +1741,7 @@
   }
 
   .info-hint {
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     color: var(--surface-400);
     display: block;
     margin-top: var(--spacing-1);
@@ -1768,17 +1768,17 @@
   gap: var(--spacing-1);
 }
 
-// Footer Fixed
+// Footer Fixed - respeta el ancho del sidebar (64px)
 .page-footer-fixed {
   position: fixed;
   bottom: 0;
-  left: 0;
+  left: 64px; // Ancho del icon-bar del sidebar
   right: 0;
   background: var(--surface-card);
   border-top: 1px solid var(--surface-border);
   padding: var(--spacing-4) var(--spacing-8);
-  z-index: 10; // Debajo del sidebar
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 5; // Debajo del sidebar
+  box-shadow: var(--shadow-sm);
 
   .footer-content {
     display: flex;
@@ -2067,7 +2067,7 @@
   }
 
   .pi-chevron-right {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: var(--text-color-secondary);
   }
 }
@@ -2083,7 +2083,7 @@
     background: var(--primary-color);
     color: var(--surface-0);
     border-radius: var(--border-radius-full);
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2122,7 +2122,7 @@
   color: var(--text-color-secondary);
 
   i {
-    font-size: 48px;
+    font-size: var(--font-size-5xl);
     margin-bottom: var(--spacing-4);
     color: var(--surface-300);
   }
@@ -2349,7 +2349,7 @@
   align-items: center;
   justify-content: center;
 
-  i { color: var(--text-color-secondary); font-size: 12px; }
+  i { color: var(--text-color-secondary); font-size: var(--font-size-xs); }
 
   &:hover { background: var(--surface-ground); }
 }
@@ -2396,7 +2396,7 @@
       background: var(--primary-color);
       color: var(--surface-0);
       border-radius: var(--border-radius-full);
-      font-size: 12px;
+      font-size: var(--font-size-xs);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2415,7 +2415,7 @@
   font-size: var(--font-size-sm);
   cursor: pointer;
 
-  i { font-size: 12px; }
+  i { font-size: var(--font-size-xs); }
 
   &:hover { text-decoration: underline; }
 }
@@ -2488,7 +2488,7 @@
   align-items: center;
   justify-content: center;
 
-  i { color: var(--surface-0); font-size: 14px; }
+  i { color: var(--surface-0); font-size: var(--font-size-sm); }
 
   &:hover { background: var(--primary-hover-color); }
 }
@@ -2505,7 +2505,7 @@
   align-items: center;
   justify-content: center;
 
-  i { color: var(--text-color-secondary); font-size: 14px; }
+  i { color: var(--text-color-secondary); font-size: var(--font-size-sm); }
 
   &:hover { background: var(--surface-ground); }
 }
@@ -2555,18 +2555,18 @@
     .kpi-alert-badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
+      gap: var(--spacing-1);
+      padding: var(--spacing-0-5) var(--spacing-2);
       background: var(--red-500);
       color: var(--surface-0);
       border-radius: var(--border-radius-md);
-      font-size: 10px;
+      font-size: var(--font-size-2xs);
       font-weight: var(--font-weight-bold);
       text-transform: uppercase;
       letter-spacing: 0.3px;
 
       i {
-        font-size: 9px;
+        font-size: var(--font-size-2xs);
       }
     }
   }
@@ -2635,7 +2635,7 @@
   align-items: center;
   justify-content: center;
 
-  i { color: var(--text-color-secondary); font-size: 12px; }
+  i { color: var(--text-color-secondary); font-size: var(--font-size-xs); }
 
   &:hover i { color: var(--red-500); }
 }
@@ -2658,7 +2658,7 @@
   color: var(--text-color-secondary);
 
   i {
-    font-size: 32px;
+    font-size: var(--font-size-5xl);
     margin-bottom: var(--spacing-3);
     color: var(--surface-300);
   }
@@ -2677,8 +2677,8 @@
 
 // Tag pequeño
 ::ng-deep .tag-sm {
-  font-size: 10px !important;
-  padding: 2px 6px !important;
+  font-size: var(--font-size-2xs) !important;
+  padding: var(--spacing-0-5) var(--spacing-1-5) !important;
 }
 
 // ==================== KPI ALERTAS CONFIG ====================
@@ -2724,7 +2724,7 @@
     }
 
     i {
-      font-size: 14px;
+      font-size: var(--font-size-sm);
       color: var(--text-color-secondary);
     }
 
@@ -2739,7 +2739,10 @@
 }
 
 // ==================== DARK MODE SUPPORT ====================
-:host-context(.dark-mode) {
+// NOTA: Los colores hex en esta sección son overrides específicos de PrimeNG
+// para dark mode. Considerado aceptable para compatibilidad con componentes.
+// Usar :root.dark-mode porque la clase está en <html>
+:host-context(:root.dark-mode) {
   // Page header - breadcrumb separator
   .page-header {
     .breadcrumb {
@@ -3008,6 +3011,45 @@
   .inline-form {
     background: var(--surface-800);
     border-color: var(--primary-600);
+
+    // Variante para objetivos
+    &.objetivo-form-inline {
+      background: var(--surface-900);
+      border-color: var(--primary-500);
+    }
+  }
+
+  // Objetivo card
+  .objetivo-card {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+
+    &.editando {
+      border-color: var(--primary-500);
+      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2);
+    }
+
+    &.colapsado {
+      background: var(--surface-850, var(--surface-800));
+    }
+  }
+
+  // KPIs section dentro de objetivo
+  .kpis-section {
+    background: var(--surface-900);
+  }
+
+  // Revision section
+  .revision-section {
+    .section-row {
+      label {
+        color: var(--text-color-secondary);
+      }
+
+      .section-value {
+        color: var(--text-color);
+      }
+    }
   }
 
   // Empty state

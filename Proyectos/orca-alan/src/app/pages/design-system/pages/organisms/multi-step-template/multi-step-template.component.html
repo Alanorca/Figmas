@@ -1,0 +1,401 @@
+<div class="ds-page">
+  <header class="ds-page-header">
+    <h1>Plantilla Multi-Pasos</h1>
+    <p class="ds-page-description">
+      Template para formularios de varios pasos (wizards). Incluye stepper horizontal,
+      header dinamico, area de contenido y barra de navegacion fija. Usado en paginas
+      como Crear Proyecto, Crear Cuestionario, etc.
+    </p>
+  </header>
+
+  <!-- Overview -->
+  <section class="ds-section">
+    <h2>Estructura del Layout</h2>
+    <p>
+      El template multi-pasos sigue una estructura de 4 secciones principales que
+      mantienen consistencia visual y de navegacion en todas las paginas wizard.
+    </p>
+
+    <div class="layout-diagram">
+      <div class="layout-box layout-header">
+        <span class="layout-label">page-header</span>
+        <span class="layout-desc">Titulo + Subtitulo dinamico</span>
+      </div>
+      <div class="layout-box layout-stepper">
+        <span class="layout-label">stepper-container</span>
+        <span class="layout-desc">Indicador de progreso horizontal</span>
+      </div>
+      <div class="layout-box layout-content">
+        <span class="layout-label">content-card</span>
+        <span class="layout-desc">Contenido del paso actual (formularios, selecciones, etc.)</span>
+      </div>
+      <div class="layout-box layout-footer">
+        <span class="layout-label">page-footer-fixed</span>
+        <span class="layout-desc">Botones: Atras/Cancelar | Siguiente/Guardar</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo Interactivo -->
+  <section class="ds-section">
+    <h2>Demo Interactivo</h2>
+    <p>Navega entre los pasos usando los botones o haciendo click en pasos completados:</p>
+
+    <app-ds-preview title="Multi-Step Template">
+      <div class="demo-wizard">
+        <!-- Mini Header -->
+        <div class="demo-header">
+          <h3>Crear Elemento</h3>
+          <p>{{ steps[pasoActual()].descripcion }}</p>
+        </div>
+
+        <!-- Stepper -->
+        <div class="stepper-container">
+          @for (step of steps; track $index; let i = $index) {
+            <div class="step-item"
+                 [class.active]="i === pasoActual()"
+                 [class.completed]="i < pasoActual()"
+                 [class.clickable]="i < pasoActual()"
+                 (click)="irAPaso(i)">
+              <div class="step-indicator">
+                <div class="step-icon">
+                  @if (i < pasoActual()) {
+                    <i class="pi pi-check"></i>
+                  } @else {
+                    <i [class]="step.icon"></i>
+                  }
+                </div>
+                @if (i < steps.length - 1) {
+                  <div class="step-line" [class.completed]="i < pasoActual()"></div>
+                }
+              </div>
+              <div class="step-content">
+                <span class="step-label">{{ step.label }}</span>
+                <span class="step-description">{{ step.descripcion }}</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Content Area -->
+        <div class="demo-content-card">
+          @switch (pasoActual()) {
+            @case (0) {
+              <div class="demo-step-content">
+                <h4>Paso 1: Informacion Basica</h4>
+                <div class="demo-form-field">
+                  <label>Nombre</label>
+                  <input type="text" pInputText placeholder="Ingresa el nombre" />
+                </div>
+                <div class="demo-form-field">
+                  <label>Descripcion</label>
+                  <input type="text" pInputText placeholder="Descripcion opcional" />
+                </div>
+              </div>
+            }
+            @case (1) {
+              <div class="demo-step-content">
+                <h4>Paso 2: Configuracion</h4>
+                <p class="text-color-secondary">Aqui van las opciones de configuracion del elemento.</p>
+                <div class="demo-options">
+                  <div class="demo-option">
+                    <i class="pi pi-cog"></i>
+                    <span>Opcion A</span>
+                  </div>
+                  <div class="demo-option">
+                    <i class="pi pi-sliders-h"></i>
+                    <span>Opcion B</span>
+                  </div>
+                </div>
+              </div>
+            }
+            @case (2) {
+              <div class="demo-step-content">
+                <h4>Paso 3: Confirmacion</h4>
+                <div class="demo-summary">
+                  <i class="pi pi-check-circle text-green-500" style="font-size: 3rem;"></i>
+                  <p>Revisa la informacion y confirma para crear el elemento.</p>
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Footer Buttons -->
+        <div class="demo-footer">
+          @if (pasoActual() > 0) {
+            <button class="btn-atras" (click)="anterior()">
+              <i class="pi pi-arrow-left"></i> Atras
+            </button>
+          } @else {
+            <button class="btn-atras">Cancelar</button>
+          }
+
+          @if (pasoActual() < steps.length - 1) {
+            <button class="btn-siguiente" (click)="siguiente()">
+              Siguiente <i class="pi pi-arrow-right"></i>
+            </button>
+          } @else {
+            <button class="btn-guardar" (click)="resetDemo()">
+              <i class="pi pi-check"></i> Crear
+            </button>
+          }
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Stepper Component -->
+  <section class="ds-section">
+    <h2>Componente Stepper</h2>
+    <p>
+      El stepper muestra el progreso a traves de los pasos. Los pasos completados son
+      clickeables para navegar hacia atras. El paso actual y completados tienen estilo destacado.
+    </p>
+
+    <h3>Estados del Stepper</h3>
+    <div class="stepper-states">
+      <!-- Pending -->
+      <div class="state-example">
+        <h4>Pendiente</h4>
+        <div class="step-icon state-pending">
+          <i class="pi pi-info-circle"></i>
+        </div>
+        <p class="text-sm text-color-secondary">Borde gris, icono secundario</p>
+      </div>
+
+      <!-- Active -->
+      <div class="state-example">
+        <h4>Activo</h4>
+        <div class="step-icon state-active">
+          <i class="pi pi-info-circle"></i>
+        </div>
+        <p class="text-sm text-color-secondary">Fondo primario, icono blanco</p>
+      </div>
+
+      <!-- Completed -->
+      <div class="state-example">
+        <h4>Completado</h4>
+        <div class="step-icon state-completed">
+          <i class="pi pi-check"></i>
+        </div>
+        <p class="text-sm text-color-secondary">Fondo primario, checkmark</p>
+      </div>
+    </div>
+
+    <h3>Linea Conectora</h3>
+    <div class="line-states">
+      <div class="line-example">
+        <span class="text-sm">Pendiente:</span>
+        <div class="step-line"></div>
+      </div>
+      <div class="line-example">
+        <span class="text-sm">Completada:</span>
+        <div class="step-line completed"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Fixed -->
+  <section class="ds-section">
+    <h2>Barra de Navegacion Fija</h2>
+    <p>
+      El footer fijo permanece visible mientras se hace scroll. Respeta el ancho del
+      sidebar (<code>left: 64px</code>) y tiene <code>z-index: 5</code> para no
+      superponer elementos importantes.
+    </p>
+
+    <div class="surface-card border-round p-4 mb-4">
+      <h4 class="mt-0 flex align-items-center gap-2">
+        <i class="pi pi-exclamation-triangle text-orange-500"></i>
+        Posicionamiento Importante
+      </h4>
+      <ul class="line-height-3 pl-3 m-0">
+        <li><code>position: fixed</code> con <code>bottom: 0</code></li>
+        <li><code>left: 64px</code> para respetar el sidebar</li>
+        <li><code>z-index: 5</code> (menor que sidebar z-index: 100)</li>
+        <li><code>padding-bottom: 100px</code> en el contenedor principal para dejar espacio</li>
+      </ul>
+    </div>
+
+    <h3>Botones de Navegacion</h3>
+    <div class="buttons-demo">
+      <div class="button-example">
+        <h4>Boton Secundario</h4>
+        <button class="btn-atras">
+          <i class="pi pi-arrow-left"></i> Atras
+        </button>
+        <button class="btn-atras">Cancelar</button>
+        <p class="text-sm text-color-secondary mt-2">
+          Fondo transparente, borde gris. Usado para "Atras" o "Cancelar".
+        </p>
+      </div>
+
+      <div class="button-example">
+        <h4>Boton Primario</h4>
+        <button class="btn-siguiente">
+          Siguiente <i class="pi pi-arrow-right"></i>
+        </button>
+        <button class="btn-guardar">
+          <i class="pi pi-check"></i> Crear Proyecto
+        </button>
+        <p class="text-sm text-color-secondary mt-2">
+          Fondo primario. Usado para "Siguiente" o accion final.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Paginas que lo usan -->
+  <section class="ds-section">
+    <h2>Paginas que Usan este Template</h2>
+    <div class="pages-grid">
+      <a href="/proyectos/crear" class="page-card" target="_blank">
+        <i class="pi pi-folder-plus"></i>
+        <div>
+          <strong>Crear Proyecto</strong>
+          <span>/proyectos/crear</span>
+        </div>
+      </a>
+      <a href="/cuestionarios/crear" class="page-card" target="_blank">
+        <i class="pi pi-file-edit"></i>
+        <div>
+          <strong>Crear Cuestionario</strong>
+          <span>/cuestionarios/crear</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Props Tables -->
+  <section class="ds-section">
+    <h2>Clases CSS</h2>
+
+    <h3>Layout Principal</h3>
+    <app-ds-props-table [props]="layoutProps" title="Layout Classes"></app-ds-props-table>
+
+    <h3 class="mt-4">Stepper</h3>
+    <app-ds-props-table [props]="stepperProps" title="Stepper Classes"></app-ds-props-table>
+
+    <h3 class="mt-4">Footer / Botones</h3>
+    <app-ds-props-table [props]="footerProps" title="Footer Classes"></app-ds-props-table>
+  </section>
+
+  <!-- Design Tokens -->
+  <section class="ds-section">
+    <h2>Design Tokens</h2>
+    <p>Tokens CSS utilizados por este template:</p>
+
+    <div class="tokens-grid">
+      @for (token of tokens; track token.name) {
+        <div class="token-item surface-card border-round p-3">
+          <div class="flex align-items-center gap-3">
+            <div class="token-preview border-round"
+                 [style.background]="token.value"
+                 style="width: 40px; height: 40px; border: 1px solid var(--surface-border);"></div>
+            <div class="flex-1">
+              <code class="text-primary font-bold">{{ token.name }}</code>
+              <p class="text-sm text-color-secondary m-0 mt-1">{{ token.description }}</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Code Examples -->
+  <section class="ds-section">
+    <h2>Codigo</h2>
+
+    <h3>Estructura HTML Principal</h3>
+    <app-ds-code-block [code]="htmlLayoutCode" language="html"></app-ds-code-block>
+
+    <h3 class="mt-4">Stepper HTML</h3>
+    <app-ds-code-block [code]="htmlStepperCode" language="html"></app-ds-code-block>
+
+    <h3 class="mt-4">SCSS - Layout</h3>
+    <app-ds-code-block [code]="scssLayoutCode" language="scss"></app-ds-code-block>
+
+    <h3 class="mt-4">SCSS - Stepper</h3>
+    <app-ds-code-block [code]="scssStepperCode" language="scss"></app-ds-code-block>
+
+    <h3 class="mt-4">SCSS - Botones</h3>
+    <app-ds-code-block [code]="scssButtonsCode" language="scss"></app-ds-code-block>
+
+    <h3 class="mt-4">TypeScript</h3>
+    <app-ds-code-block [code]="typescriptCode" language="typescript"></app-ds-code-block>
+  </section>
+
+  <!-- Dark Mode -->
+  <section class="ds-section">
+    <h2>Dark Mode</h2>
+    <p>
+      El template usa tokens semanticos que se adaptan automaticamente a dark mode.
+      Asegurate de usar variables CSS en lugar de valores hardcodeados.
+    </p>
+
+    <div class="surface-card border-round p-4">
+      <h4 class="mt-0">Tokens que cambian en Dark Mode</h4>
+      <ul class="line-height-3 pl-3 m-0">
+        <li><code>--surface-ground</code> - Fondo de pagina</li>
+        <li><code>--surface-card</code> - Fondo de cards y footer</li>
+        <li><code>--surface-border</code> - Bordes</li>
+        <li><code>--text-color</code> y <code>--text-color-secondary</code> - Texto</li>
+        <li><code>--primary-color</code> se mantiene pero sobre fondos oscuros</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Usage Guidelines -->
+  <section class="ds-section">
+    <h2>Guias de Uso</h2>
+
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <div class="surface-card border-round p-4 h-full">
+          <h4 class="flex align-items-center gap-2 mt-0">
+            <i class="pi pi-check-circle text-green-500"></i>
+            Do's
+          </h4>
+          <ul class="line-height-3 pl-3">
+            <li>Validar cada paso antes de avanzar</li>
+            <li>Permitir navegacion hacia atras sin perder datos</li>
+            <li>Mostrar descripcion clara del paso actual</li>
+            <li>Usar iconos representativos para cada paso</li>
+            <li>Deshabilitar "Siguiente" si faltan campos requeridos</li>
+            <li>Mostrar feedback con Toast para errores de validacion</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-12 md:col-6">
+        <div class="surface-card border-round p-4 h-full">
+          <h4 class="flex align-items-center gap-2 mt-0">
+            <i class="pi pi-times-circle text-red-500"></i>
+            Don'ts
+          </h4>
+          <ul class="line-height-3 pl-3">
+            <li>No permitir navegar a pasos futuros no completados</li>
+            <li>No usar mas de 5 pasos (dividir en sub-wizards si es necesario)</li>
+            <li>No ocultar el footer o stepper durante el proceso</li>
+            <li>No usar z-index mayor a 10 en el footer</li>
+            <li>No olvidar el padding-bottom en el contenedor principal</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Accessibility -->
+  <section class="ds-section">
+    <h2>Accesibilidad</h2>
+    <div class="surface-card border-round p-4">
+      <ul class="line-height-3 pl-3 m-0">
+        <li><strong>Keyboard:</strong> Todos los botones y pasos clickeables deben ser accesibles con Tab</li>
+        <li><strong>Focus visible:</strong> Mantener outline visible en elementos focuseados</li>
+        <li><strong>Screen readers:</strong> Anunciar cambios de paso y errores de validacion</li>
+        <li><strong>Contraste:</strong> Los estados activo/completado deben tener suficiente contraste</li>
+        <li><strong>ARIA:</strong> Usar aria-current="step" en el paso activo</li>
+      </ul>
+    </div>
+  </section>
+</div>

@@ -3357,3 +3357,110 @@ html.dark-mode,
     }
   }
 }
+
+// =============================================================================
+// DARK MODE - PROYECTO/PROCESO CREAR COMPONENTS
+// =============================================================================
+// Estilos globales para dark mode de componentes de crear proceso/proyecto.
+// Necesarios porque :host-context no funciona en todos los casos con Angular.
+// Incluimos múltiples selectores para compatibilidad (.dark y .dark-mode)
+
+:root.dark-mode,
+:root.dark,
+html.dark-mode,
+html.dark,
+[data-theme="dark"] {
+  // Inline forms (objetivo, kpi)
+  .inline-form {
+    background: #27272a !important; // zinc-800
+    border-color: var(--primary-600) !important;
+
+    &.objetivo-form-inline {
+      background: #18181b !important; // zinc-900
+      border-color: var(--primary-500) !important;
+    }
+  }
+
+  // Objetivo cards
+  .objetivo-card {
+    background: #27272a !important; // zinc-800
+    border-color: #3f3f46 !important; // zinc-700
+
+    &.editando {
+      border-color: var(--primary-500) !important;
+      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2) !important;
+    }
+  }
+
+  // KPIs sections
+  .kpis-section {
+    background: #18181b !important; // zinc-900
+  }
+
+  .kpi-item {
+    background: #27272a !important; // zinc-800
+    border-color: #3f3f46 !important; // zinc-700
+
+    &.has-alert {
+      background: rgba(239, 68, 68, 0.1) !important;
+      border-color: var(--red-800) !important;
+    }
+  }
+
+  .kpi-form-inline {
+    background: #18181b !important; // zinc-900
+    border-color: var(--primary-600) !important;
+  }
+
+  // Progress bars
+  .progress-bar,
+  .kpi-progress-bar {
+    background: #3f3f46 !important; // zinc-700
+  }
+
+  // Revision sections
+  .revision-objetivo,
+  .objetivo-rev-card {
+    background: #27272a !important; // zinc-800
+    border-color: #3f3f46 !important; // zinc-700
+  }
+
+  .descripcion-box {
+    background: #18181b !important; // zinc-900
+    border-color: #3f3f46 !important; // zinc-700
+  }
+
+  .kpis-section-rev {
+    background: #18181b !important; // zinc-900
+  }
+
+  .kpi-item-rev {
+    background: #27272a !important; // zinc-800
+    border-color: #3f3f46 !important; // zinc-700
+  }
+
+  // Empty state
+  .empty-state {
+    i {
+      color: #52525b !important; // zinc-600
+    }
+  }
+
+  // Matriz y leyenda
+  .matriz-leyenda {
+    background: #18181b !important; // zinc-900
+  }
+
+  // Revision section rows
+  .revision-section {
+    .section-row {
+      label {
+        color: #a1a1aa !important; // zinc-400
+      }
+
+      .section-value {
+        color: #fafafa !important; // zinc-50
+      }
+    }
+  }
+}

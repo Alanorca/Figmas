@@ -363,7 +363,9 @@
   // SPACING
   // ===========================================================================
   --spacing-0: 0;
+  --spacing-0-5: 0.125rem;  // 2px - micro spacing
   --spacing-1: 0.25rem;
+  --spacing-1-5: 0.375rem;  // 6px - compact spacing
   --spacing-2: 0.5rem;
   --spacing-3: 0.75rem;
   --spacing-4: 1rem;
@@ -388,6 +390,7 @@
   --font-size-3xl: 1.875rem;   // 30px
   --font-size-4xl: 2.25rem;    // 36px
   --font-size-5xl: 2rem;       // 32px - icons grandes
+  --font-size-6xl: 3rem;       // 48px - headlines extra
 
   --font-weight-normal: 400;
   --font-weight-medium: 500;
@@ -410,6 +413,10 @@
   --overlay-select-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   --overlay-popover-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   --overlay-modal-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+
+  // Inset shadows
+  --shadow-inset-selected: inset 0 0 0 3px rgba(0, 0, 0, 0.3);
+  --shadow-inset-highlight: inset 0 0 0 2px rgba(255, 255, 255, 0.8);
 
   // ===========================================================================
   // TRANSITIONS
@@ -928,4 +935,46 @@
   // Icon colors in selected state
   --icon-selected: #34d399;              // emerald-400 (mejor contraste en dark)
   --icon-on-selected-bg: #34d399;        // emerald-400
+
+  // ===========================================================================
+  // INLINE FORM & COMPONENT SECTION TOKENS (Dark theme)
+  // ===========================================================================
+  // Tokens semánticos para formularios inline, cards de objetivos, KPIs, etc.
+  // Estos tokens resuelven el problema de :host-context en Angular donde
+  // las variables CSS no se heredan correctamente en componentes con @use.
+  //
+  // USO: En componentes que usan @use para importar estilos, usar estos tokens
+  // dentro de :host-context(.dark-mode) o :host-context(.dark) para garantizar
+  // que los estilos de dark mode se apliquen correctamente.
+
+  // Fondos de componentes elevados (cards, inline forms)
+  --inline-form-bg: #27272a;             // zinc-800 - Fondo de formularios inline
+  --inline-form-bg-nested: #18181b;      // zinc-900 - Fondo de forms anidados
+  --inline-form-border: #059669;         // emerald-600 - Borde primario
+  --inline-form-border-accent: #10b981;  // emerald-500 - Borde acentuado
+
+  // Fondos de secciones (KPIs, revisión, resumen)
+  --section-bg: #18181b;                 // zinc-900 - Fondo de secciones
+  --section-bg-elevated: #27272a;        // zinc-800 - Secciones elevadas
+  --section-border: #3f3f46;             // zinc-700 - Bordes de sección
+
+  // Progress bars
+  --progress-bar-bg: #3f3f46;            // zinc-700 - Fondo de barras de progreso
+
+  // Estados de alerta en dark mode
+  --alert-bg: rgba(239, 68, 68, 0.1);    // Fondo de alerta (rojo transparente)
+  --alert-border: #991b1b;               // red-800 - Borde de alerta
+
+  // Texto en secciones de revisión
+  --review-label-color: #a1a1aa;         // zinc-400 - Labels
+  --review-value-color: #fafafa;         // zinc-50 - Valores
+
+  // Iconos muted
+  --icon-muted: #52525b;                 // zinc-600 - Iconos deshabilitados/muted
+
+  // Upload areas (drag & drop zones)
+  --upload-area-bg: #27272a;             // zinc-800 - Fondo de upload area
+  --upload-area-bg-hover: #3f3f46;       // zinc-700 - Fondo en hover
+  --upload-area-border: #3f3f46;         // zinc-700 - Borde dashed
+  --upload-area-border-hover: var(--primary-color); // Borde en hover
 }

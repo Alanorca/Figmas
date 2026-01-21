@@ -73,6 +73,14 @@ export const DESIGN_SYSTEM_ROUTES: Routes = [
         path: 'molecules/cards',
         loadComponent: () => import('./pages/molecules/cards/cards.component').then(m => m.CardsComponent)
       },
+      {
+        path: 'molecules/selection-cards',
+        loadComponent: () => import('./pages/molecules/selection-cards/selection-cards.component').then(m => m.SelectionCardsComponent)
+      },
+      {
+        path: 'molecules/upload-area',
+        loadComponent: () => import('./pages/molecules/upload-area/upload-area.component').then(m => m.UploadAreaComponent)
+      },
       // Organisms
       {
         path: 'organisms/tables',
@@ -85,6 +93,10 @@ export const DESIGN_SYSTEM_ROUTES: Routes = [
       {
         path: 'organisms/forms',
         loadComponent: () => import('./pages/organisms/forms/forms.component').then(m => m.FormsComponent)
+      },
+      {
+        path: 'organisms/multi-step-template',
+        loadComponent: () => import('./pages/organisms/multi-step-template/multi-step-template.component').then(m => m.MultiStepTemplateComponent)
       }
     ]
   }

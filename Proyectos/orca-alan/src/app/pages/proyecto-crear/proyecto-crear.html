@@ -3,11 +3,6 @@
 <div class="crear-proceso-page">
   <!-- Header -->
   <div class="page-header">
-    <div class="breadcrumb">
-      <a routerLink="/proyectos">Proyectos</a>
-      <span class="separator">/</span>
-      <span>{{ isEditMode() ? 'Editar' : 'Nuevo' }}</span>
-    </div>
     <h1>{{ isEditMode() ? 'Editar Proyecto' : 'Crear proyecto' }}</h1>
     <p class="page-subtitle">{{ steps[pasoActual()].descripcion }}</p>
   </div>
@@ -51,21 +46,22 @@
         <div class="form-field">
           <label class="field-label">Nombre del Proyecto *</label>
           <input
-            type="text"
-            class="field-input"
+            pInputText
             [ngModel]="nombreProyecto()"
             (ngModelChange)="nombreProyecto.set($event)"
-            placeholder="Ej: Implementación Sistema ERP">
+            placeholder="Ej: Implementación Sistema ERP"
+            class="w-full">
         </div>
 
         <div class="form-field">
           <label class="field-label">Descripción</label>
           <textarea
-            class="field-textarea"
+            pTextarea
             [ngModel]="descripcionProyecto()"
             (ngModelChange)="descripcionProyecto.set($event)"
             rows="3"
-            placeholder="Describe brevemente el proyecto..."></textarea>
+            placeholder="Describe brevemente el proyecto..."
+            class="w-full"></textarea>
         </div>
 
         <div class="inline-form-row">
@@ -93,49 +89,40 @@
         <div class="inline-form-row">
           <div class="form-field flex-1">
             <label class="field-label">Prioridad</label>
-            <div class="select-wrapper">
-              <select
-                class="field-select"
-                [ngModel]="prioridad()"
-                (ngModelChange)="prioridad.set($event)">
-                @for (opt of prioridadOptions; track opt.value) {
-                  <option [value]="opt.value">{{ opt.label }}</option>
-                }
-              </select>
-              <i class="pi pi-chevron-down select-icon"></i>
-            </div>
+            <p-select
+              [options]="prioridadOptions"
+              [ngModel]="prioridad()"
+              (ngModelChange)="prioridad.set($event)"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
           </div>
           <div class="form-field flex-1">
             <label class="field-label">Responsable</label>
-            <div class="select-wrapper">
-              <select
-                class="field-select"
-                [ngModel]="responsableId()"
-                (ngModelChange)="responsableId.set($event)">
-                <option value="">Seleccionar responsable</option>
-                @for (opt of responsablesOptions(); track opt.value) {
-                  <option [value]="opt.value">{{ opt.label }}</option>
-                }
-              </select>
-              <i class="pi pi-chevron-down select-icon"></i>
-            </div>
+            <p-select
+              [options]="responsablesOptions()"
+              [ngModel]="responsableId()"
+              (ngModelChange)="responsableId.set($event)"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccionar responsable"
+              styleClass="w-full"
+            />
           </div>
         </div>
 
         <div class="form-field">
           <label class="field-label">Unidad Organizacional</label>
-          <div class="select-wrapper">
-            <select
-              class="field-select"
-              [ngModel]="unidadOrganizacionalId()"
-              (ngModelChange)="unidadOrganizacionalId.set($event)">
-              <option value="">Seleccionar unidad</option>
-              @for (opt of unidadesOptions(); track opt.value) {
-                <option [value]="opt.value">{{ opt.label }}</option>
-              }
-            </select>
-            <i class="pi pi-chevron-down select-icon"></i>
-          </div>
+          <p-select
+            [options]="unidadesOptions()"
+            [ngModel]="unidadOrganizacionalId()"
+            (ngModelChange)="unidadOrganizacionalId.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar unidad"
+            styleClass="w-full"
+          />
         </div>
       </div>
     }
@@ -147,40 +134,34 @@
 
         <!-- Tabs -->
         <div class="tabs-container">
-          <button
-            class="tab-btn"
-            [class.active]="modoObjetivos() === 'seleccionar'"
-            (click)="modoObjetivos.set('seleccionar')">
-            <i class="pi pi-search"></i>
-            Seleccionar
-          </button>
-          <button
-            class="tab-btn"
-            [class.active]="modoObjetivos() === 'crear'"
-            (click)="modoObjetivos.set('crear')">
-            <i class="pi pi-plus"></i>
-            Crear nuevos
-          </button>
+          <p-selectButton
+            [options]="modoObjetivosOptions"
+            [ngModel]="modoObjetivos()"
+            (ngModelChange)="modoObjetivos.set($event)"
+            optionLabel="label"
+            optionValue="value"
+          />
           @if (modoObjetivos() === 'crear') {
-            <button class="btn-agregar-objetivo" (click)="abrirFormObjetivo()">
-              <i class="pi pi-plus"></i>
-              Agregar objetivo
-            </button>
+            <p-button
+              label="Agregar objetivo"
+              icon="pi pi-plus"
+              [outlined]="true"
+              (onClick)="abrirFormObjetivo()"
+              class="ml-auto"
+            />
           }
         </div>
 
         <!-- Modo Seleccionar -->
         @if (modoObjetivos() === 'seleccionar') {
           <div class="form-field">
-            <div class="select-wrapper">
-              <select class="field-select">
-                <option>Seleccionar Existente</option>
-                @for (obj of objetivosExistentes(); track obj.id) {
-                  <option [value]="obj.id">{{ obj.nombre }}</option>
-                }
-              </select>
-              <i class="pi pi-chevron-down select-icon"></i>
-            </div>
+            <p-select
+              [options]="objetivosExistentes()"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="Seleccionar Existente"
+              styleClass="w-full"
+            />
           </div>
         }
 
@@ -189,48 +170,45 @@
           <div class="inline-form objetivo-form-inline">
             <div class="inline-form-header">
               <h4>Nuevo Objetivo</h4>
-              <button class="btn-icon-x" (click)="cerrarFormObjetivo()">
-                <i class="pi pi-times"></i>
-              </button>
+              <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary" (onClick)="cerrarFormObjetivo()" />
             </div>
             <div class="inline-form-body">
               <div class="inline-form-row">
                 <div class="form-field flex-2">
                   <label class="field-label">Nombre *</label>
                   <input
-                    type="text"
-                    class="field-input"
+                    pInputText
                     [ngModel]="nuevoObjetivoNombre()"
                     (ngModelChange)="nuevoObjetivoNombre.set($event)"
-                    placeholder="Nombre del objetivo">
+                    placeholder="Nombre del objetivo"
+                    class="w-full">
                 </div>
                 <div class="form-field flex-1">
                   <label class="field-label">Tipo *</label>
-                  <div class="select-wrapper">
-                    <select
-                      class="field-select"
-                      [ngModel]="nuevoObjetivoTipo()"
-                      (ngModelChange)="nuevoObjetivoTipo.set($event)">
-                      <option value="estrategico">Estratégico</option>
-                      <option value="operativo">Operativo</option>
-                    </select>
-                    <i class="pi pi-chevron-down select-icon"></i>
-                  </div>
+                  <p-select
+                    [options]="tipoOptions"
+                    [ngModel]="nuevoObjetivoTipo()"
+                    (ngModelChange)="nuevoObjetivoTipo.set($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    styleClass="w-full"
+                  />
                 </div>
               </div>
               <div class="form-field">
                 <label class="field-label">Descripción</label>
                 <textarea
-                  class="field-textarea"
+                  pTextarea
                   [ngModel]="nuevoObjetivoDescripcion()"
                   (ngModelChange)="nuevoObjetivoDescripcion.set($event)"
                   rows="2"
-                  placeholder="Descripción del objetivo"></textarea>
+                  placeholder="Descripción del objetivo"
+                  class="w-full"></textarea>
               </div>
             </div>
             <div class="inline-form-actions">
-              <button class="btn-cancelar-sm" (click)="cerrarFormObjetivo()">Cancelar</button>
-              <button class="btn-guardar-sm" (click)="guardarObjetivo()">Crear</button>
+              <p-button label="Cancelar" [text]="true" (onClick)="cerrarFormObjetivo()" />
+              <p-button label="Crear" icon="pi pi-check" (onClick)="guardarObjetivo()" />
             </div>
           </div>
         }
@@ -239,12 +217,8 @@
         <div class="objetivos-lista">
           @if (objetivos().length > 1) {
             <div class="objetivos-collapse-actions">
-              <button class="btn-collapse-all" (click)="expandirTodosObjetivos()">
-                <i class="pi pi-angle-double-down"></i> Expandir todos
-              </button>
-              <button class="btn-collapse-all" (click)="colapsarTodosObjetivos()">
-                <i class="pi pi-angle-double-up"></i> Colapsar todos
-              </button>
+              <p-button label="Expandir todos" icon="pi pi-angle-double-down" [text]="true" size="small" (onClick)="expandirTodosObjetivos()" />
+              <p-button label="Colapsar todos" icon="pi pi-angle-double-up" [text]="true" size="small" (onClick)="colapsarTodosObjetivos()" />
             </div>
           }
           @for (objetivo of objetivos(); track objetivo.id) {
@@ -262,14 +236,10 @@
                     }
                   </div>
                   <div class="objetivo-actions-top" (click)="$event.stopPropagation()">
-                    <span class="objetivo-tag" [class.estrategico]="objetivo.tipo === 'estrategico'">
-                      {{ getTipoLabel(objetivo.tipo) }}
-                    </span>
-                    <span class="kpis-count-badge">{{ objetivo.kpis.length }} KPIs</span>
-                    <button class="btn-icon" (click)="abrirFormObjetivo(objetivo)">Editar</button>
-                    <button class="btn-icon-x" (click)="eliminarObjetivo(objetivo.id)">
-                      <i class="pi pi-times"></i>
-                    </button>
+                    <p-tag [value]="getTipoLabel(objetivo.tipo)" [severity]="objetivo.tipo === 'estrategico' ? 'info' : 'secondary'" />
+                    <p-tag [value]="objetivo.kpis.length + ' KPIs'" severity="secondary" />
+                    <p-button label="Editar" [text]="true" size="small" (onClick)="abrirFormObjetivo(objetivo)" />
+                    <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="danger" size="small" (onClick)="eliminarObjetivo(objetivo.id)" />
                   </div>
                 </div>
 
@@ -289,39 +259,38 @@
                     <div class="form-field flex-2">
                       <label class="field-label">Nombre *</label>
                       <input
-                        type="text"
-                        class="field-input"
+                        pInputText
                         [ngModel]="nuevoObjetivoNombre()"
                         (ngModelChange)="nuevoObjetivoNombre.set($event)"
-                        placeholder="Nombre del objetivo">
+                        placeholder="Nombre del objetivo"
+                        class="w-full">
                     </div>
                     <div class="form-field flex-1">
                       <label class="field-label">Tipo *</label>
-                      <div class="select-wrapper">
-                        <select
-                          class="field-select"
-                          [ngModel]="nuevoObjetivoTipo()"
-                          (ngModelChange)="nuevoObjetivoTipo.set($event)">
-                          <option value="estrategico">Estratégico</option>
-                          <option value="operativo">Operativo</option>
-                        </select>
-                        <i class="pi pi-chevron-down select-icon"></i>
-                      </div>
+                      <p-select
+                        [options]="tipoOptions"
+                        [ngModel]="nuevoObjetivoTipo()"
+                        (ngModelChange)="nuevoObjetivoTipo.set($event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        styleClass="w-full"
+                      />
                     </div>
                   </div>
                   <div class="form-field">
                     <label class="field-label">Descripción</label>
                     <textarea
-                      class="field-textarea"
+                      pTextarea
                       [ngModel]="nuevoObjetivoDescripcion()"
                       (ngModelChange)="nuevoObjetivoDescripcion.set($event)"
                       rows="2"
-                      placeholder="Descripción del objetivo"></textarea>
+                      placeholder="Descripción del objetivo"
+                      class="w-full"></textarea>
                   </div>
                 </div>
                 <div class="inline-form-actions">
-                  <button class="btn-cancelar-sm" (click)="cerrarFormObjetivo()">Cancelar</button>
-                  <button class="btn-guardar-sm" (click)="guardarObjetivo()">Guardar</button>
+                  <p-button label="Cancelar" [text]="true" (onClick)="cerrarFormObjetivo()" />
+                  <p-button label="Guardar" icon="pi pi-check" (onClick)="guardarObjetivo()" />
                 </div>
               }
 
@@ -331,12 +300,9 @@
                   <div class="kpis-header">
                     <span class="kpis-title">
                       KPIs
-                      <span class="kpis-badge">{{ objetivo.kpis.length }}</span>
+                      <p-badge [value]="objetivo.kpis.length.toString()" />
                     </span>
-                    <button class="btn-agregar-kpi" (click)="abrirFormKPI(objetivo.id)">
-                      Agregar KPIs
-                      <i class="pi pi-plus"></i>
-                    </button>
+                    <p-button label="Agregar KPIs" icon="pi pi-plus" [outlined]="true" size="small" (onClick)="abrirFormKPI(objetivo.id)" />
                   </div>
 
                   <!-- Formulario inline para nuevo KPI -->
@@ -347,65 +313,59 @@
                           <div class="form-field flex-2">
                             <label class="field-label">Nombre *</label>
                             <input
-                              type="text"
-                              class="field-input"
+                              pInputText
                               [ngModel]="nuevoKPINombre()"
                               (ngModelChange)="nuevoKPINombre.set($event)"
-                              placeholder="Nombre del KPI">
+                              placeholder="Nombre del KPI"
+                              class="w-full">
                           </div>
                         </div>
                         <div class="inline-form-row">
                           <div class="form-field flex-1">
                             <label class="field-label">Actual</label>
-                            <input
-                              type="number"
-                              class="field-input"
+                            <p-inputNumber
                               [ngModel]="nuevoKPIActual()"
-                              (ngModelChange)="nuevoKPIActual.set($event)"
-                              min="0">
+                              (ngModelChange)="nuevoKPIActual.set($event ?? 0)"
+                              [min]="0"
+                              styleClass="w-full"
+                            />
                           </div>
                           <div class="form-field flex-1">
                             <label class="field-label">Meta</label>
-                            <input
-                              type="number"
-                              class="field-input"
+                            <p-inputNumber
                               [ngModel]="nuevoKPIMeta()"
-                              (ngModelChange)="nuevoKPIMeta.set($event)"
-                              min="0">
+                              (ngModelChange)="nuevoKPIMeta.set($event ?? 100)"
+                              [min]="0"
+                              styleClass="w-full"
+                            />
                           </div>
                           <div class="form-field flex-1">
                             <label class="field-label">Unidad</label>
-                            <div class="select-wrapper">
-                              <select
-                                class="field-select"
-                                [ngModel]="nuevoKPIUnidad()"
-                                (ngModelChange)="nuevoKPIUnidad.set($event)">
-                                @for (opt of unidadOptions; track opt.value) {
-                                  <option [value]="opt.value">{{ opt.label }}</option>
-                                }
-                              </select>
-                              <i class="pi pi-chevron-down select-icon"></i>
-                            </div>
+                            <p-select
+                              [options]="unidadOptions"
+                              [ngModel]="nuevoKPIUnidad()"
+                              (ngModelChange)="nuevoKPIUnidad.set($event)"
+                              optionLabel="label"
+                              optionValue="value"
+                              styleClass="w-full"
+                            />
                           </div>
                           <div class="form-field flex-1">
                             <label class="field-label">Fórmula</label>
-                            <div class="select-wrapper">
-                              <select
-                                class="field-select"
-                                [ngModel]="nuevoKPIFormulaType()"
-                                (ngModelChange)="nuevoKPIFormulaType.set($event)">
-                                @for (opt of formulaTypeOptions; track opt.value) {
-                                  <option [value]="opt.value">{{ opt.label }}</option>
-                                }
-                              </select>
-                              <i class="pi pi-chevron-down select-icon"></i>
-                            </div>
+                            <p-select
+                              [options]="formulaTypeOptions"
+                              [ngModel]="nuevoKPIFormulaType()"
+                              (ngModelChange)="nuevoKPIFormulaType.set($event)"
+                              optionLabel="label"
+                              optionValue="value"
+                              styleClass="w-full"
+                            />
                           </div>
                         </div>
                       </div>
                       <div class="inline-form-actions">
-                        <button class="btn-cancelar-sm" (click)="cerrarFormKPI()">Cancelar</button>
-                        <button class="btn-guardar-sm" (click)="guardarKPI(objetivo.id)">Crear</button>
+                        <p-button label="Cancelar" [text]="true" (onClick)="cerrarFormKPI()" />
+                        <p-button label="Crear" icon="pi pi-check" (onClick)="guardarKPI(objetivo.id)" />
                       </div>
                     </div>
                   }
@@ -417,7 +377,7 @@
                         <div class="kpi-info">
                           <div class="kpi-nombre-row">
                             <span class="kpi-nombre">{{ kpi.name }}</span>
-                            <span class="objetivo-tag">{{ getFormulaTypeLabel(kpi.formulaType) }}</span>
+                            <p-tag [value]="getFormulaTypeLabel(kpi.formulaType)" severity="secondary" />
                           </div>
                           <div class="kpi-meta">
                             <span class="meta-label">Actual</span>
@@ -433,10 +393,8 @@
                           </div>
                         </div>
                         <div class="kpi-actions">
-                          <button class="btn-icon" (click)="abrirFormKPI(objetivo.id, kpi)">Editar</button>
-                          <button class="btn-icon-x" (click)="eliminarKPI(objetivo.id, kpi.id)">
-                            <i class="pi pi-times"></i>
-                          </button>
+                          <p-button label="Editar" [text]="true" size="small" (onClick)="abrirFormKPI(objetivo.id, kpi)" />
+                          <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="danger" size="small" (onClick)="eliminarKPI(objetivo.id, kpi.id)" />
                         </div>
                       </div>
                     }
@@ -457,10 +415,7 @@
             <div class="empty-state">
               <i class="pi pi-bullseye"></i>
               <p>No hay objetivos agregados</p>
-              <button class="btn-crear-primero" (click)="abrirFormObjetivo()">
-                <i class="pi pi-plus"></i>
-                Crear primer objetivo
-              </button>
+              <p-button label="Crear primer objetivo" icon="pi pi-plus" (onClick)="abrirFormObjetivo()" />
             </div>
           }
         </div>
@@ -482,9 +437,7 @@
             </div>
             <div class="section-row">
               <label>Prioridad</label>
-              <span class="section-value objetivo-tag" [class.estrategico]="prioridad() === 'high'">
-                {{ getPrioridadLabel(prioridad()) }}
-              </span>
+              <p-tag [value]="getPrioridadLabel(prioridad())" [severity]="getPrioridadSeverity(prioridad())" />
             </div>
             <div class="section-row">
               <label>Duración</label>
@@ -522,9 +475,7 @@
                   <div class="objetivo-rev-card">
                     <div class="objetivo-rev-header">
                       <span class="kpi-nombre-rev">{{ objetivo.nombre }}</span>
-                      <span class="objetivo-tag" [class.estrategico]="objetivo.tipo === 'estrategico'">
-                        {{ getTipoLabel(objetivo.tipo) }}
-                      </span>
+                      <p-tag [value]="getTipoLabel(objetivo.tipo)" [severity]="objetivo.tipo === 'estrategico' ? 'info' : 'secondary'" />
                     </div>
                     @if (objetivo.kpis.length > 0) {
                       <div class="kpis-rev-list">
@@ -554,25 +505,35 @@
   <div class="page-footer-fixed">
     <div class="footer-content">
       @if (pasoActual() > 0) {
-        <button class="btn-atras" (click)="anterior()">
-          <i class="pi pi-arrow-left"></i>
-          Atrás
-        </button>
+        <p-button
+          label="Atrás"
+          icon="pi pi-arrow-left"
+          [outlined]="true"
+          (onClick)="anterior()"
+        />
       } @else {
-        <button class="btn-atras" (click)="cancelar()">Cancelar</button>
+        <p-button
+          label="Cancelar"
+          [text]="true"
+          (onClick)="cancelar()"
+        />
       }
 
       @if (pasoActual() < 2) {
-        <button class="btn-siguiente" (click)="siguiente()">Siguiente</button>
+        <p-button
+          label="Siguiente"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          (onClick)="siguiente()"
+        />
       } @else {
-        <button class="btn-guardar" (click)="guardarProyecto()" [disabled]="saving()">
-          @if (saving()) {
-            <i class="pi pi-spin pi-spinner"></i>
-            Guardando...
-          } @else {
-            {{ isEditMode() ? 'Guardar Cambios' : 'Crear Proyecto' }}
-          }
-        </button>
+        <p-button
+          [label]="isEditMode() ? 'Guardar Cambios' : 'Crear Proyecto'"
+          icon="pi pi-check"
+          (onClick)="guardarProyecto()"
+          [loading]="saving()"
+          [disabled]="saving()"
+        />
       }
     </div>
   </div>

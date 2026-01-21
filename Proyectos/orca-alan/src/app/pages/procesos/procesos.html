@@ -4,9 +4,13 @@
     <div class="sidebar-header-dark">
       <div class="sidebar-title-row">
         <span class="sidebar-title">Nodos</span>
-        <button class="close-sidebar-btn" (click)="sidebarCollapsed.set(true)">
-          <i class="pi pi-times"></i>
-        </button>
+        <p-button
+          icon="pi pi-times"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          (onClick)="sidebarCollapsed.set(true)"
+          styleClass="close-sidebar-btn" />
       </div>
     </div>
 
@@ -73,18 +77,10 @@
         <div class="toolbar-divider"></div>
 
         <div class="toolbar-buttons">
-          <button class="toolbar-icon-btn" pTooltip="Zoom -" (click)="zoomOut()">
-            <i class="pi pi-search-minus"></i>
-          </button>
-          <button class="toolbar-icon-btn" pTooltip="Zoom +" (click)="zoomIn()">
-            <i class="pi pi-search-plus"></i>
-          </button>
-          <button class="toolbar-icon-btn" pTooltip="Ajustar vista" (click)="fitView()">
-            <i class="pi pi-expand"></i>
-          </button>
-          <button class="toolbar-icon-btn" pTooltip="Capas" (click)="toggleLayers()">
-            <i class="pi pi-clone"></i>
-          </button>
+          <p-button icon="pi pi-search-minus" [rounded]="true" [outlined]="true" severity="secondary" pTooltip="Zoom -" (onClick)="zoomOut()" />
+          <p-button icon="pi pi-search-plus" [rounded]="true" [outlined]="true" severity="secondary" pTooltip="Zoom +" (onClick)="zoomIn()" />
+          <p-button icon="pi pi-expand" [rounded]="true" [outlined]="true" severity="secondary" pTooltip="Ajustar vista" (onClick)="fitView()" />
+          <p-button icon="pi pi-clone" [rounded]="true" [outlined]="true" severity="secondary" pTooltip="Capas" (onClick)="toggleLayers()" />
         </div>
       </div>
 
@@ -96,19 +92,19 @@
       </div>
 
       <div class="toolbar-right">
-        <button
-          class="toolbar-icon-btn execute-btn"
+        <p-button
+          icon="pi pi-play"
+          [rounded]="true"
+          [outlined]="true"
+          severity="success"
           pTooltip="Ejecutar"
-          (click)="executeMenu.toggle($event)">
-          <i class="pi pi-play"></i>
-        </button>
+          (onClick)="executeMenu.toggle($event)" />
         <p-menu #executeMenu [model]="executeMenuItems" [popup]="true" />
         <p-button
           icon="pi pi-save"
           label="Guardar"
           severity="success"
-          (onClick)="openSaveDialog()">
-        </p-button>
+          (onClick)="openSaveDialog()" />
       </div>
     </div>
 
@@ -119,29 +115,44 @@
 
       <!-- FAB para abrir sidebar -->
       @if (sidebarCollapsed()) {
-        <button class="fab-open-sidebar" (click)="sidebarCollapsed.set(false)">
-          <i class="pi pi-plus"></i>
-        </button>
+        <p-button
+          icon="pi pi-plus"
+          [rounded]="true"
+          severity="secondary"
+          styleClass="fab-open-sidebar"
+          (onClick)="sidebarCollapsed.set(false)" />
       }
 
       <!-- Botones flotantes -->
       <div class="floating-actions">
-        <button class="floating-btn primary" (click)="executeProcess()" [disabled]="processService.isExecuting()" pTooltip="Ejecutar proceso">
-          @if (processService.isExecuting()) {
-            <i class="pi pi-spin pi-spinner"></i>
-          } @else {
-            <i class="pi pi-play"></i>
-          }
-        </button>
-        <button class="floating-btn" (click)="openAiAssistant()" pTooltip="Asistente IA">
-          <i class="pi pi-sparkles"></i>
-        </button>
-        <button class="floating-btn" (click)="openApiKeyDialog()" pTooltip="API Key">
-          <i class="pi pi-key"></i>
-        </button>
-        <button class="floating-btn" (click)="clearCanvas()" pTooltip="Limpiar">
-          <i class="pi pi-trash"></i>
-        </button>
+        <p-button
+          [icon]="processService.isExecuting() ? 'pi pi-spin pi-spinner' : 'pi pi-play'"
+          [rounded]="true"
+          severity="success"
+          [disabled]="processService.isExecuting()"
+          pTooltip="Ejecutar proceso"
+          (onClick)="executeProcess()" />
+        <p-button
+          icon="pi pi-sparkles"
+          [rounded]="true"
+          [outlined]="true"
+          severity="help"
+          pTooltip="Asistente IA"
+          (onClick)="openAiAssistant()" />
+        <p-button
+          icon="pi pi-key"
+          [rounded]="true"
+          [outlined]="true"
+          severity="secondary"
+          pTooltip="API Key"
+          (onClick)="openApiKeyDialog()" />
+        <p-button
+          icon="pi pi-trash"
+          [rounded]="true"
+          [outlined]="true"
+          severity="danger"
+          pTooltip="Limpiar"
+          (onClick)="clearCanvas()" />
       </div>
 
       <vflow
@@ -164,12 +175,8 @@
                 <span class="node-figma-title">{{ ctx.node.data?.label || getNodeMeta(ctx.node.data?.nodeType)?.title }}</span>
               </div>
               <div class="node-figma-actions">
-                <button class="node-figma-action-btn" (click)="$event.stopPropagation()" pTooltip="Agregar">
-                  <i class="pi pi-plus"></i>
-                </button>
-                <button class="node-figma-action-btn danger" (click)="deleteNodeById(ctx.node.id); $event.stopPropagation()" pTooltip="Eliminar">
-                  <i class="pi pi-trash"></i>
-                </button>
+                <p-button icon="pi pi-plus" [rounded]="true" [text]="true" severity="secondary" pTooltip="Agregar" (onClick)="$event.stopPropagation()" />
+                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="deleteNodeById(ctx.node.id); $event.stopPropagation()" />
               </div>
             </div>
 
@@ -181,19 +188,13 @@
               <!-- ========== NODO CSV/ARCHIVO ========== -->
               @if (ctx.node.data?.nodeType === 'csv') {
                 <div class="node-figma-form">
-                  <input type="text" class="node-figma-input" [value]="ctx.node.data?.config?.fileName || ''" placeholder="Nombre del Nodo:" (click)="$event.stopPropagation()" />
+                  <input pInputText type="text" class="node-figma-input w-full" [value]="ctx.node.data?.config?.fileName || ''" placeholder="Nombre del Nodo:" (click)="$event.stopPropagation()" />
 
                   <!-- Botones Choose/Upload/Cancel -->
                   <div class="node-figma-btn-group">
-                    <button class="figma-btn choose" [class.active]="ctx.node.data?.config?.loadMode === 'choose'" (click)="updateNodeConfigById(ctx.node.id, { loadMode: 'choose' }); $event.stopPropagation()">
-                      <i class="pi pi-check"></i> Choose
-                    </button>
-                    <button class="figma-btn upload" [class.active]="ctx.node.data?.config?.loadMode === 'upload'" (click)="updateNodeConfigById(ctx.node.id, { loadMode: 'upload' }); $event.stopPropagation()">
-                      <i class="pi pi-upload"></i> Upload
-                    </button>
-                    <button class="figma-btn cancel" [class.active]="ctx.node.data?.config?.loadMode === 'cancel'" (click)="updateNodeConfigById(ctx.node.id, { loadMode: 'cancel' }); $event.stopPropagation()">
-                      <i class="pi pi-times"></i> Cancel
-                    </button>
+                    <p-button icon="pi pi-check" label="Choose" [outlined]="ctx.node.data?.config?.loadMode !== 'choose'" severity="success" size="small" (onClick)="updateNodeConfigById(ctx.node.id, { loadMode: 'choose' }); $event.stopPropagation()" />
+                    <p-button icon="pi pi-upload" label="Upload" [outlined]="ctx.node.data?.config?.loadMode !== 'upload'" severity="info" size="small" (onClick)="updateNodeConfigById(ctx.node.id, { loadMode: 'upload' }); $event.stopPropagation()" />
+                    <p-button icon="pi pi-times" label="Cancel" [outlined]="ctx.node.data?.config?.loadMode !== 'cancel'" severity="danger" size="small" (onClick)="updateNodeConfigById(ctx.node.id, { loadMode: 'cancel' }); $event.stopPropagation()" />
                   </div>
 
                   <!-- Dropzone -->
@@ -205,18 +206,15 @@
                   <!-- Selector delimitador -->
                   <div class="node-figma-field">
                     <label>Delimitador (CSV):</label>
-                    <select class="node-figma-select" (click)="$event.stopPropagation()">
-                      <option value=",">,</option>
-                      <option value=";">;</option>
-                      <option value="|">|</option>
-                      <option value="tab">Tab</option>
-                    </select>
+                    <p-select
+                      [options]="delimiterOptions"
+                      [ngModel]="ctx.node.data?.config?.delimiter || ','"
+                      (onClick)="$event.stopPropagation()"
+                      styleClass="w-full" />
                   </div>
 
                   <!-- Botón cargar datos -->
-                  <button class="figma-btn-primary" (click)="loadData(); $event.stopPropagation()">
-                    Cargar Datos
-                  </button>
+                  <p-button label="Cargar Datos" icon="pi pi-download" severity="primary" styleClass="w-full" (onClick)="loadData(); $event.stopPropagation()" />
                 </div>
               }
 
@@ -225,24 +223,25 @@
                 <div class="node-figma-form">
                   <div class="node-figma-field">
                     <label>Área del Activo:</label>
-                    <select class="node-figma-select" (click)="$event.stopPropagation()">
-                      <option value="">Seleccionar área...</option>
-                      @for (area of areaOptions; track area.value) {
-                        <option [value]="area.value">{{ area.label }}</option>
-                      }
-                    </select>
+                    <p-select
+                      [options]="areaOptions"
+                      [ngModel]="ctx.node.data?.config?.area"
+                      placeholder="Seleccionar área..."
+                      (onClick)="$event.stopPropagation()"
+                      styleClass="w-full" />
                   </div>
 
                   <div class="node-figma-field">
                     <label>Activo:</label>
-                    <select class="node-figma-select" (click)="$event.stopPropagation()">
-                      <option value="">Seleccionar activo...</option>
-                    </select>
+                    <p-select
+                      [options]="activoOptions()"
+                      [ngModel]="ctx.node.data?.config?.activoId"
+                      placeholder="Seleccionar activo..."
+                      (onClick)="$event.stopPropagation()"
+                      styleClass="w-full" />
                   </div>
 
-                  <button class="figma-btn-primary" (click)="vincularActivo(); $event.stopPropagation()">
-                    Vincular activos
-                  </button>
+                  <p-button label="Vincular activos" icon="pi pi-link" severity="primary" styleClass="w-full" (onClick)="vincularActivo(); $event.stopPropagation()" />
                 </div>
               }
 
@@ -251,26 +250,25 @@
                 <div class="node-figma-form">
                   <div class="node-figma-field">
                     <label>Modelo:</label>
-                    <select class="node-figma-select" (click)="$event.stopPropagation()">
-                      @for (model of llmModelOptions; track model.value) {
-                        <option [value]="model.value">{{ model.label }}</option>
-                      }
-                    </select>
+                    <p-select
+                      [options]="llmModelOptions"
+                      [ngModel]="ctx.node.data?.config?.model"
+                      (onClick)="$event.stopPropagation()"
+                      styleClass="w-full" />
                   </div>
 
                   <div class="node-figma-field">
                     <label>Prompt:</label>
-                    <textarea class="node-figma-textarea" rows="3" placeholder="Escribe tu prompt aquí..." (click)="$event.stopPropagation()"></textarea>
+                    <textarea pTextarea rows="3" class="w-full" placeholder="Escribe tu prompt aquí..." [ngModel]="ctx.node.data?.config?.prompt" (click)="$event.stopPropagation()"></textarea>
                   </div>
 
                   <div class="node-figma-field">
                     <label>Formato de salida:</label>
-                    <select class="node-figma-select" (click)="$event.stopPropagation()">
-                      <option value="json">JSON</option>
-                      <option value="text">Texto plano</option>
-                      <option value="table">Tabla</option>
-                      <option value="markdown">Markdown</option>
-                    </select>
+                    <p-select
+                      [options]="[{label: 'JSON', value: 'json'}, {label: 'Texto plano', value: 'text'}, {label: 'Tabla', value: 'table'}, {label: 'Markdown', value: 'markdown'}]"
+                      [ngModel]="ctx.node.data?.config?.outputFormat || 'json'"
+                      (onClick)="$event.stopPropagation()"
+                      styleClass="w-full" />
                   </div>
                 </div>
               }
@@ -280,21 +278,21 @@
                 <div class="node-figma-form">
                   <div class="node-figma-field">
                     <label>Variable a evaluar:</label>
-                    <input type="text" class="node-figma-input" placeholder="nombre_variable" (click)="$event.stopPropagation()" />
+                    <input pInputText type="text" class="w-full" placeholder="nombre_variable" [ngModel]="ctx.node.data?.config?.variable" (click)="$event.stopPropagation()" />
                   </div>
 
                   <div class="node-figma-field">
                     <label>Operador:</label>
-                    <select class="node-figma-select" (click)="$event.stopPropagation()">
-                      @for (op of operadorOptions; track op.value) {
-                        <option [value]="op.value">{{ op.label }}</option>
-                      }
-                    </select>
+                    <p-select
+                      [options]="operadorOptions"
+                      [ngModel]="ctx.node.data?.config?.operador"
+                      (onClick)="$event.stopPropagation()"
+                      styleClass="w-full" />
                   </div>
 
                   <div class="node-figma-field">
                     <label>Valor a comparar:</label>
-                    <input type="text" class="node-figma-input" placeholder="valor" (click)="$event.stopPropagation()" />
+                    <input pInputText type="text" class="w-full" placeholder="valor" [ngModel]="ctx.node.data?.config?.valor" (click)="$event.stopPropagation()" />
                   </div>
                 </div>
               }
@@ -304,16 +302,16 @@
                 <div class="node-figma-form">
                   <div class="node-figma-field">
                     <label>Operación:</label>
-                    <select class="node-figma-select" (click)="$event.stopPropagation()">
-                      @for (op of operacionOptions; track op.value) {
-                        <option [value]="op.value">{{ op.label }}</option>
-                      }
-                    </select>
+                    <p-select
+                      [options]="operacionOptions"
+                      [ngModel]="ctx.node.data?.config?.operacion"
+                      (onClick)="$event.stopPropagation()"
+                      styleClass="w-full" />
                   </div>
 
                   <div class="node-figma-field">
                     <label>Expresión / Mapeo:</label>
-                    <textarea class="node-figma-textarea" rows="2" placeholder="Escribe la expresión..." (click)="$event.stopPropagation()"></textarea>
+                    <textarea pTextarea rows="2" class="w-full" placeholder="Escribe la expresión..." [ngModel]="ctx.node.data?.config?.expresion" (click)="$event.stopPropagation()"></textarea>
                   </div>
                 </div>
               }
@@ -323,19 +321,16 @@
                 <div class="node-figma-form">
                   <div class="node-figma-field">
                     <label>Estado:</label>
-                    <select class="node-figma-select" (click)="$event.stopPropagation()">
-                      <option value="pending">Pending</option>
-                      <option value="running">Running</option>
-                      <option value="complete">Complete</option>
-                      <option value="fail">Fail</option>
-                      <option value="post">Post</option>
-                      <option value="canceled">Canceled</option>
-                    </select>
+                    <p-select
+                      [options]="[{label: 'Pending', value: 'pending'}, {label: 'Running', value: 'running'}, {label: 'Complete', value: 'complete'}, {label: 'Fail', value: 'fail'}, {label: 'Post', value: 'post'}, {label: 'Canceled', value: 'canceled'}]"
+                      [ngModel]="ctx.node.data?.config?.estado"
+                      (onClick)="$event.stopPropagation()"
+                      styleClass="w-full" />
                   </div>
 
                   <div class="node-figma-field">
                     <label>Motivo:</label>
-                    <input type="text" class="node-figma-input" placeholder="Motivo del cambio" (click)="$event.stopPropagation()" />
+                    <input pInputText type="text" class="w-full" placeholder="Motivo del cambio" [ngModel]="ctx.node.data?.config?.motivo" (click)="$event.stopPropagation()" />
                   </div>
                 </div>
               }
@@ -346,14 +341,14 @@
                   <div class="node-figma-field">
                     <label>Fórmula:</label>
                     <div class="node-figma-formula-toolbar">
-                      <button class="formula-op" (click)="$event.stopPropagation()">+</button>
-                      <button class="formula-op" (click)="$event.stopPropagation()">-</button>
-                      <button class="formula-op" (click)="$event.stopPropagation()">×</button>
-                      <button class="formula-op" (click)="$event.stopPropagation()">÷</button>
-                      <button class="formula-op" (click)="$event.stopPropagation()">(</button>
-                      <button class="formula-op" (click)="$event.stopPropagation()">)</button>
+                      <p-button label="+" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="$event.stopPropagation()" />
+                      <p-button label="-" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="$event.stopPropagation()" />
+                      <p-button label="×" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="$event.stopPropagation()" />
+                      <p-button label="÷" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="$event.stopPropagation()" />
+                      <p-button label="(" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="$event.stopPropagation()" />
+                      <p-button label=")" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="$event.stopPropagation()" />
                     </div>
-                    <input type="text" class="node-figma-input mono" placeholder="(a + b) * c" (click)="$event.stopPropagation()" />
+                    <input pInputText type="text" class="w-full font-mono" placeholder="(a + b) * c" [ngModel]="ctx.node.data?.config?.formula" (click)="$event.stopPropagation()" />
                   </div>
                 </div>
               }
@@ -363,15 +358,16 @@
                 <div class="node-figma-form">
                   <div class="node-figma-field">
                     <label>Cantidad de ramas:</label>
-                    <input type="number" class="node-figma-input" min="2" max="10" value="2" (click)="$event.stopPropagation()" />
+                    <p-inputNumber [ngModel]="ctx.node.data?.config?.cantidadRamas || 2" [min]="2" [max]="10" [showButtons]="true" styleClass="w-full" (onClick)="$event.stopPropagation()" />
                   </div>
 
                   <div class="node-figma-field">
                     <label>Estrategia:</label>
-                    <select class="node-figma-select" (click)="$event.stopPropagation()">
-                      <option value="parallel">Paralelo</option>
-                      <option value="sequential">Secuencial</option>
-                    </select>
+                    <p-select
+                      [options]="[{label: 'Paralelo', value: 'parallel'}, {label: 'Secuencial', value: 'sequential'}]"
+                      [ngModel]="ctx.node.data?.config?.estrategia || 'parallel'"
+                      (onClick)="$event.stopPropagation()"
+                      styleClass="w-full" />
                   </div>
                 </div>
               }
@@ -381,21 +377,21 @@
                 <div class="node-figma-form">
                   <div class="node-figma-field">
                     <label>Nombre del modelo:</label>
-                    <input type="text" class="node-figma-input" placeholder="Mi modelo ML" (click)="$event.stopPropagation()" />
+                    <input pInputText type="text" class="w-full" placeholder="Mi modelo ML" [ngModel]="ctx.node.data?.config?.modeloNombre" (click)="$event.stopPropagation()" />
                   </div>
 
                   <div class="node-figma-field">
                     <label>Tipo de modelo:</label>
-                    <select class="node-figma-select" (click)="$event.stopPropagation()">
-                      <option value="classification">Clasificación</option>
-                      <option value="regression">Regresión</option>
-                      <option value="clustering">Clustering</option>
-                    </select>
+                    <p-select
+                      [options]="[{label: 'Clasificación', value: 'classification'}, {label: 'Regresión', value: 'regression'}, {label: 'Clustering', value: 'clustering'}]"
+                      [ngModel]="ctx.node.data?.config?.tipoModelo"
+                      (onClick)="$event.stopPropagation()"
+                      styleClass="w-full" />
                   </div>
 
                   <div class="node-figma-field">
                     <label>Endpoint:</label>
-                    <input type="text" class="node-figma-input" placeholder="https://api.ml/predict" (click)="$event.stopPropagation()" />
+                    <input pInputText type="text" class="w-full" placeholder="https://api.ml/predict" [ngModel]="ctx.node.data?.config?.endpoint" (click)="$event.stopPropagation()" />
                   </div>
                 </div>
               }
@@ -433,9 +429,7 @@
             <p>{{ getNodeDescription(node.type) }}</p>
           </div>
         </div>
-        <button class="close-panel-btn" (click)="closeConfigSidebar()">
-          <i class="pi pi-times"></i>
-        </button>
+        <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="secondary" (onClick)="closeConfigSidebar()" />
       </div>
 
       <!-- TabView para configuracion -->
@@ -475,19 +469,10 @@
 
                 <div class="props-section">
                   <label class="props-label">Modo de carga</label>
-                  <div class="btn-group-choice">
-                    <button class="choice-btn" [class.active]="getConfigValue(node, 'loadMode') === 'choose'"
-                            (click)="updateNodeConfig({ loadMode: 'choose' })">
-                      <i class="pi pi-check"></i> Choose
-                    </button>
-                    <button class="choice-btn" [class.active]="getConfigValue(node, 'loadMode') === 'upload'"
-                            (click)="updateNodeConfig({ loadMode: 'upload' })">
-                      <i class="pi pi-upload"></i> Upload
-                    </button>
-                    <button class="choice-btn" [class.active]="getConfigValue(node, 'loadMode') === 'cancel'"
-                            (click)="updateNodeConfig({ loadMode: 'cancel' })">
-                      <i class="pi pi-times"></i> Cancel
-                    </button>
+                  <div class="btn-group-choice flex gap-2">
+                    <p-button icon="pi pi-check" label="Choose" [outlined]="getConfigValue(node, 'loadMode') !== 'choose'" severity="success" size="small" (onClick)="updateNodeConfig({ loadMode: 'choose' })" />
+                    <p-button icon="pi pi-upload" label="Upload" [outlined]="getConfigValue(node, 'loadMode') !== 'upload'" severity="info" size="small" (onClick)="updateNodeConfig({ loadMode: 'upload' })" />
+                    <p-button icon="pi pi-times" label="Cancel" [outlined]="getConfigValue(node, 'loadMode') !== 'cancel'" severity="danger" size="small" (onClick)="updateNodeConfig({ loadMode: 'cancel' })" />
                   </div>
                 </div>
 
@@ -504,9 +489,7 @@
                             (ngModelChange)="updateNodeConfig({ delimiter: $event })" styleClass="w-full"></p-select>
                 </div>
 
-                <button class="props-action-btn primary" (click)="loadData()">
-                  Cargar Datos
-                </button>
+                <p-button label="Cargar Datos" icon="pi pi-download" severity="primary" styleClass="w-full mt-3" (onClick)="loadData()" />
               }
 
               @case ('activo') {
@@ -766,9 +749,7 @@
                           @for (variable of variablesSalidaActivo(); track variable) {
                             <div class="output-var-item" pTooltip="Click para copiar" tooltipPosition="top">
                               <code>{{ '{{' }}{{ variable }}{{ '}}' }}</code>
-                              <button class="copy-btn" (click)="copyToClipboard('{{' + variable + '}}')" type="button">
-                                <span class="material-symbols-rounded">content_copy</span>
-                              </button>
+                              <p-button icon="pi pi-copy" [rounded]="true" [text]="true" severity="success" size="small" (onClick)="copyToClipboard('{{' + variable + '}}')" />
                             </div>
                           }
                         </div>
@@ -887,13 +868,13 @@
               @case ('matematico') {
                 <div class="props-section">
                   <label class="props-label">Formula</label>
-                  <div class="formula-toolbar-mini">
-                    <button class="op-btn" (click)="appendToFormula('+')">+</button>
-                    <button class="op-btn" (click)="appendToFormula('-')">-</button>
-                    <button class="op-btn" (click)="appendToFormula('*')">x</button>
-                    <button class="op-btn" (click)="appendToFormula('/')">/</button>
-                    <button class="op-btn" (click)="appendToFormula('(')">(</button>
-                    <button class="op-btn" (click)="appendToFormula(')')">)</button>
+                  <div class="formula-toolbar-mini flex gap-1 mb-2">
+                    <p-button label="+" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="appendToFormula('+')" />
+                    <p-button label="-" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="appendToFormula('-')" />
+                    <p-button label="x" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="appendToFormula('*')" />
+                    <p-button label="/" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="appendToFormula('/')" />
+                    <p-button label="(" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="appendToFormula('(')" />
+                    <p-button label=")" [text]="true" severity="secondary" size="small" styleClass="formula-op-btn" (onClick)="appendToFormula(')')" />
                   </div>
                   <input pInputText [ngModel]="getConfigValue(node, 'formula')"
                          (ngModelChange)="updateNodeConfig({ formula: $event })"
@@ -1072,12 +1053,18 @@
 
       <!-- Footer -->
       <div class="props-panel-footer">
-        <button class="props-footer-btn" (click)="duplicateNode()">
-          <i class="pi pi-copy"></i> Duplicar
-        </button>
-        <button class="props-footer-btn danger" (click)="deleteSelectedNode()">
-          <i class="pi pi-trash"></i> Eliminar
-        </button>
+        <p-button
+          icon="pi pi-copy"
+          label="Duplicar"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="duplicateNode()" />
+        <p-button
+          icon="pi pi-trash"
+          label="Eliminar"
+          [outlined]="true"
+          severity="danger"
+          (onClick)="deleteSelectedNode()" />
       </div>
     </aside>
   }
@@ -1087,9 +1074,12 @@
     <aside class="preview-panel-v2">
       <div class="preview-panel-header">
         <h3>Previsualizador</h3>
-        <button class="close-panel-btn" (click)="showPreviewPanel.set(false)">
-          <i class="pi pi-times"></i>
-        </button>
+        <p-button
+          icon="pi pi-times"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          (onClick)="showPreviewPanel.set(false)" />
       </div>
       <div class="preview-panel-body">
         <p-table [value]="previewData()" [scrollable]="true" scrollHeight="400px" styleClass="p-datatable-sm">
@@ -1121,9 +1111,12 @@
           <label>Selecciona las columnas para analizar</label>
           <p-multiSelect [options]="previewColumns()" placeholder="Selecciona multiples opciones" styleClass="w-full"></p-multiSelect>
         </div>
-        <button class="props-action-btn primary" (click)="guardarConfiguracionColumnas()">
-          Guardar
-        </button>
+        <p-button
+          icon="pi pi-save"
+          label="Guardar"
+          severity="primary"
+          styleClass="w-full"
+          (onClick)="guardarConfiguracionColumnas()" />
       </div>
     </aside>
   }
@@ -1342,10 +1335,10 @@
 
   <div class="ai-input-area">
     <div class="ai-quick-actions">
-      <button class="quick-action" (click)="aiInputMessage.set('Crea un nodo CSV')">CSV</button>
-      <button class="quick-action" (click)="aiInputMessage.set('Crea un nodo LLM')">LLM</button>
-      <button class="quick-action" (click)="aiInputMessage.set('Crea un condicional')">Condicional</button>
-      <button class="quick-action" (click)="aiInputMessage.set('Ejecuta el proceso')">Ejecutar</button>
+      <p-button label="CSV" [rounded]="true" [outlined]="true" severity="secondary" size="small" (onClick)="aiInputMessage.set('Crea un nodo CSV')" />
+      <p-button label="LLM" [rounded]="true" [outlined]="true" severity="secondary" size="small" (onClick)="aiInputMessage.set('Crea un nodo LLM')" />
+      <p-button label="Condicional" [rounded]="true" [outlined]="true" severity="secondary" size="small" (onClick)="aiInputMessage.set('Crea un condicional')" />
+      <p-button label="Ejecutar" [rounded]="true" [outlined]="true" severity="secondary" size="small" (onClick)="aiInputMessage.set('Ejecuta el proceso')" />
     </div>
     <div class="ai-input-wrapper">
       <input

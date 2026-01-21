@@ -59,7 +59,9 @@ export class DsSidebarComponent {
         { label: 'Form Fields', route: '/design-system/molecules/form-fields' },
         { label: 'Search Box', route: '/design-system/molecules/search-box' },
         { label: 'Menu Items', route: '/design-system/molecules/menu-items' },
-        { label: 'Cards', route: '/design-system/molecules/cards' }
+        { label: 'Cards', route: '/design-system/molecules/cards' },
+        { label: 'Selection Cards', route: '/design-system/molecules/selection-cards' },
+        { label: 'Upload Area', route: '/design-system/molecules/upload-area' }
       ]
     },
     {
@@ -68,7 +70,8 @@ export class DsSidebarComponent {
       children: [
         { label: 'Tables', route: '/design-system/organisms/tables' },
         { label: 'Dialogs', route: '/design-system/organisms/dialogs' },
-        { label: 'Forms', route: '/design-system/organisms/forms' }
+        { label: 'Forms', route: '/design-system/organisms/forms' },
+        { label: 'Multi-Step Template', route: '/design-system/organisms/multi-step-template' }
       ]
     }
   ];

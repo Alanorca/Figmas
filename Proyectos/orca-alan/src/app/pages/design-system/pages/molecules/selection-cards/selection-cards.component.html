@@ -1,0 +1,308 @@
+<p-toast></p-toast>
+
+<div class="ds-page">
+  <header class="ds-page-header">
+    <h1>Selection Cards</h1>
+    <p class="ds-page-description">
+      Cards de selección para wizards y flujos de decisión. Usadas para presentar opciones
+      mutuamente excluyentes como "IA vs Manual", "Plan A vs Plan B", etc.
+    </p>
+  </header>
+
+  <!-- Overview -->
+  <section class="ds-section">
+    <h2>Wizard Method Cards</h2>
+    <p>
+      Componente <code>wizard-method-card</code> para selección de método en wizards.
+      Incluye dos variantes: <strong>IA (púrpura)</strong> y <strong>Manual (azul)</strong>.
+    </p>
+
+    <app-ds-preview title="Selection Cards - Wizard">
+      <div class="grid">
+        @for (option of wizardOptions; track option.id) {
+          <div class="col-12 md:col-6">
+            <div class="wizard-method-card h-full border-round-xl p-4 cursor-pointer transition-all"
+                 [class.wizard-method-ia]="option.variant === 'ia'"
+                 [class.wizard-method-manual]="option.variant === 'manual'"
+                 [class.wizard-method-selected]="isSelected(option.id)"
+                 (click)="selectOption(option.id)">
+
+              <!-- Icono -->
+              <div class="flex justify-content-center mb-4">
+                <div class="wizard-method-icon flex align-items-center justify-content-center border-circle"
+                     [ngClass]="option.iconBgClass"
+                     style="width: 80px; height: 80px;">
+                  <i [class]="option.icon + ' ' + option.iconColorClass" style="font-size: 2.5rem;"></i>
+                </div>
+              </div>
+
+              <!-- Título y descripción -->
+              <div class="text-center mb-4">
+                <h3 class="text-xl font-bold m-0 mb-2 wizard-method-title">{{ option.label }}</h3>
+                <p class="text-sm m-0 line-height-3 wizard-method-desc">{{ option.description }}</p>
+              </div>
+
+              <!-- Stats cards -->
+              @if (option.stats && option.stats.length > 0) {
+                <div class="flex gap-2 mb-4">
+                  @for (stat of option.stats; track stat.label) {
+                    <div class="flex-1 wizard-stat-card border-round-lg p-3">
+                      <div class="text-center">
+                        <span class="text-xl font-bold wizard-stat-value">{{ stat.value }}</span>
+                        <p class="text-xs m-0 mt-1 wizard-stat-label">{{ stat.label }}</p>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Botón -->
+              <p-button [label]="option.buttonLabel"
+                        [icon]="option.icon"
+                        iconPos="right"
+                        [severity]="option.buttonSeverity"
+                        styleClass="w-full" />
+            </div>
+          </div>
+        }
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Estados -->
+  <section class="ds-section">
+    <h2>Estados</h2>
+
+    <div class="grid">
+      <!-- Default -->
+      <div class="col-12 md:col-4">
+        <h4>Default</h4>
+        <div class="wizard-method-card wizard-method-ia border-round-xl p-4">
+          <div class="flex justify-content-center mb-3">
+            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle bg-purple-100"
+                 style="width: 60px; height: 60px;">
+              <i class="pi pi-sparkles text-purple-500" style="font-size: 1.5rem;"></i>
+            </div>
+          </div>
+          <div class="text-center">
+            <h4 class="m-0 mb-1 wizard-method-title">Estado Default</h4>
+            <p class="text-xs m-0 wizard-method-desc">Sin interacción</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hover (simulado) -->
+      <div class="col-12 md:col-4">
+        <h4>Hover</h4>
+        <div class="wizard-method-card wizard-method-ia border-round-xl p-4"
+             style="transform: translateY(-4px); box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);">
+          <div class="flex justify-content-center mb-3">
+            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle bg-purple-100"
+                 style="width: 60px; height: 60px; transform: scale(1.1);">
+              <i class="pi pi-sparkles text-purple-500" style="font-size: 1.5rem;"></i>
+            </div>
+          </div>
+          <div class="text-center">
+            <h4 class="m-0 mb-1 wizard-method-title">Estado Hover</h4>
+            <p class="text-xs m-0 wizard-method-desc">Elevación + icono escala</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selected -->
+      <div class="col-12 md:col-4">
+        <h4>Selected</h4>
+        <div class="wizard-method-card wizard-method-ia wizard-method-selected border-round-xl p-4">
+          <div class="flex justify-content-center mb-3">
+            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle bg-purple-100"
+                 style="width: 60px; height: 60px;">
+              <i class="pi pi-sparkles text-purple-500" style="font-size: 1.5rem;"></i>
+            </div>
+          </div>
+          <div class="text-center">
+            <h4 class="m-0 mb-1 wizard-method-title">Estado Selected</h4>
+            <p class="text-xs m-0 wizard-method-desc">Borde primary + sombra</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Variantes -->
+  <section class="ds-section">
+    <h2>Variantes</h2>
+
+    <div class="grid">
+      <!-- IA Variant -->
+      <div class="col-12 md:col-6">
+        <h4>Variante IA (Púrpura)</h4>
+        <p class="text-sm text-color-secondary mb-3">
+          Usa gradiente púrpura. Ideal para opciones automatizadas o asistidas por IA.
+        </p>
+        <div class="wizard-method-card wizard-method-ia border-round-xl p-4">
+          <div class="flex align-items-center gap-3">
+            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle bg-purple-100"
+                 style="width: 50px; height: 50px;">
+              <i class="pi pi-sparkles text-purple-500" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+              <h4 class="m-0 wizard-method-title">wizard-method-ia</h4>
+              <p class="text-xs m-0 wizard-method-desc">Gradiente: #f5f3ff → #ede9fe</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Variant -->
+      <div class="col-12 md:col-6">
+        <h4>Variante Manual (Azul)</h4>
+        <p class="text-sm text-color-secondary mb-3">
+          Usa gradiente azul/gris. Ideal para opciones manuales o personalizadas.
+        </p>
+        <div class="wizard-method-card wizard-method-manual border-round-xl p-4">
+          <div class="flex align-items-center gap-3">
+            <div class="wizard-method-icon flex align-items-center justify-content-center border-circle bg-blue-100"
+                 style="width: 50px; height: 50px;">
+              <i class="pi pi-pencil text-blue-500" style="font-size: 1.25rem;"></i>
+            </div>
+            <div>
+              <h4 class="m-0 wizard-method-title">wizard-method-manual</h4>
+              <p class="text-xs m-0 wizard-method-desc">Gradiente: #f8fafc → #f1f5f9</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stat Cards -->
+  <section class="ds-section">
+    <h2>Stat Cards (Internas)</h2>
+    <p>
+      Mini cards para mostrar estadísticas o métricas dentro de las selection cards.
+    </p>
+
+    <app-ds-preview title="Stat Cards">
+      <div class="flex gap-3 flex-wrap">
+        <div class="wizard-stat-card border-round-lg p-3" style="min-width: 100px;">
+          <div class="text-center">
+            <span class="text-2xl font-bold wizard-stat-value">89%</span>
+            <p class="text-xs m-0 mt-1 wizard-stat-label">Precisión</p>
+          </div>
+        </div>
+        <div class="wizard-stat-card border-round-lg p-3" style="min-width: 100px;">
+          <div class="text-center">
+            <span class="text-2xl font-bold wizard-stat-value">< 30s</span>
+            <p class="text-xs m-0 mt-1 wizard-stat-label">Tiempo</p>
+          </div>
+        </div>
+        <div class="wizard-stat-card border-round-lg p-3" style="min-width: 100px;">
+          <div class="text-center">
+            <span class="text-2xl font-bold wizard-stat-value">100%</span>
+            <p class="text-xs m-0 mt-1 wizard-stat-label">Control</p>
+          </div>
+        </div>
+        <div class="wizard-stat-card border-round-lg p-3" style="min-width: 100px;">
+          <div class="text-center">
+            <span class="text-2xl font-bold wizard-stat-value">10</span>
+            <p class="text-xs m-0 mt-1 wizard-stat-label">Tipos</p>
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Tokens -->
+  <section class="ds-section">
+    <h2>Design Tokens</h2>
+    <p>Tokens CSS utilizados por este componente:</p>
+
+    <div class="tokens-grid">
+      @for (token of tokens; track token.name) {
+        <div class="token-item surface-card border-round p-3 mb-2">
+          <div class="flex align-items-center gap-3">
+            <div class="token-preview border-round"
+                 [style.background]="token.value"
+                 style="width: 40px; height: 40px; border: 1px solid var(--surface-border);"></div>
+            <div class="flex-1">
+              <code class="text-primary font-bold">{{ token.name }}</code>
+              <p class="text-sm text-color-secondary m-0 mt-1">{{ token.description }}</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Props Table -->
+  <section class="ds-section">
+    <h2>Clases CSS</h2>
+    <app-ds-props-table [props]="cardProps" title="Selection Card Classes"></app-ds-props-table>
+  </section>
+
+  <!-- Code Examples -->
+  <section class="ds-section">
+    <h2>Código</h2>
+
+    <h3>HTML Template</h3>
+    <app-ds-code-block [code]="basicHtmlCode" language="html"></app-ds-code-block>
+
+    <h3 class="mt-4">SCSS Styles</h3>
+    <app-ds-code-block [code]="scssCode" language="scss"></app-ds-code-block>
+
+    <h3 class="mt-4">TypeScript</h3>
+    <app-ds-code-block [code]="typescriptCode" language="typescript"></app-ds-code-block>
+  </section>
+
+  <!-- Usage Guidelines -->
+  <section class="ds-section">
+    <h2>Guías de Uso</h2>
+
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <div class="surface-card border-round p-4 h-full">
+          <h4 class="flex align-items-center gap-2 mt-0">
+            <i class="pi pi-check-circle text-green-500"></i>
+            Do's
+          </h4>
+          <ul class="line-height-3 pl-3">
+            <li>Usar para opciones mutuamente excluyentes</li>
+            <li>Incluir iconos distintivos para cada opción</li>
+            <li>Mostrar métricas/stats cuando aporten valor</li>
+            <li>Usar variante IA para opciones automatizadas</li>
+            <li>Usar variante Manual para opciones personalizadas</li>
+            <li>Mantener descripciones cortas y claras</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-12 md:col-6">
+        <div class="surface-card border-round p-4 h-full">
+          <h4 class="flex align-items-center gap-2 mt-0">
+            <i class="pi pi-times-circle text-red-500"></i>
+            Don'ts
+          </h4>
+          <ul class="line-height-3 pl-3">
+            <li>No usar para más de 3-4 opciones (usar radio/select)</li>
+            <li>No mezclar variantes sin justificación</li>
+            <li>No sobrecargar con demasiadas stats</li>
+            <li>No usar para selección múltiple (usar checkboxes)</li>
+            <li>No omitir estado selected visual</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Accessibility -->
+  <section class="ds-section">
+    <h2>Accesibilidad</h2>
+    <div class="surface-card border-round p-4">
+      <ul class="line-height-3 pl-3 m-0">
+        <li><strong>Keyboard:</strong> Las cards son clickeables, asegurar que sean focusables con <code>tabindex="0"</code></li>
+        <li><strong>Screen readers:</strong> Usar <code>role="radio"</code> y <code>aria-checked</code> para indicar selección</li>
+        <li><strong>Contraste:</strong> Los gradientes mantienen contraste WCAG AA con el texto</li>
+        <li><strong>Dark mode:</strong> Los colores se adaptan automáticamente manteniendo legibilidad</li>
+      </ul>
+    </div>
+  </section>
+</div>

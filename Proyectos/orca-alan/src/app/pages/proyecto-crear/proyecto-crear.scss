@@ -1,11 +1,131 @@
 // ============================================
 // PROYECTO CREAR - Usa estilos de proceso-crear
+// Migrado a PrimeNG Components
 // ============================================
 
 // Importar estilos base de proceso-crear
 @use '../proceso-crear/proceso-crear.scss';
 
-// Estilos específicos para proyecto-crear (si los hay)
+// ============================================
+// DARK MODE SUPPORT
+// ============================================
+// Este componente usa @use para importar estilos de proceso-crear.
+// Los selectores :host-context del archivo importado NO SE HEREDAN
+// porque cada componente Angular tiene su propio host.
+//
+// SOLUCIÓN: Definir estilos de dark mode propios usando tokens semánticos
+// definidos en _design-tokens.scss (sección INLINE FORM & COMPONENT SECTION TOKENS)
+//
+// Referencia: Design System Guardian - Reglas de Prevención de Errores Dark Mode
+
+// Mixin con tokens semánticos (no hardcoded)
+@mixin dark-mode-styles {
+  // Formularios inline
+  .inline-form {
+    background: var(--inline-form-bg) !important;
+    border-color: var(--inline-form-border) !important;
+
+    &.objetivo-form-inline {
+      background: var(--inline-form-bg-nested) !important;
+      border-color: var(--inline-form-border-accent) !important;
+    }
+  }
+
+  // Objetivo cards
+  .objetivo-card {
+    background: var(--section-bg-elevated) !important;
+    border-color: var(--section-border) !important;
+
+    &.editando {
+      border-color: var(--inline-form-border-accent) !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+    }
+  }
+
+  // KPIs sections
+  .kpis-section {
+    background: var(--section-bg) !important;
+  }
+
+  .kpi-item {
+    background: var(--section-bg-elevated) !important;
+    border-color: var(--section-border) !important;
+
+    &.has-alert {
+      background: var(--alert-bg) !important;
+      border-color: var(--alert-border) !important;
+    }
+  }
+
+  .kpi-form-inline {
+    background: var(--inline-form-bg-nested) !important;
+    border-color: var(--inline-form-border) !important;
+  }
+
+  // Progress bars
+  .progress-bar,
+  .kpi-progress-bar {
+    background: var(--progress-bar-bg) !important;
+  }
+
+  // Revision sections
+  .revision-objetivo,
+  .objetivo-rev-card {
+    background: var(--section-bg-elevated) !important;
+    border-color: var(--section-border) !important;
+  }
+
+  .descripcion-box,
+  .apetito-resumen {
+    background: var(--section-bg) !important;
+    border-color: var(--section-border) !important;
+  }
+
+  .kpis-section-rev {
+    background: var(--section-bg) !important;
+  }
+
+  .kpi-item-rev {
+    background: var(--section-bg-elevated) !important;
+    border-color: var(--section-border) !important;
+  }
+
+  // Empty state
+  .empty-state i {
+    color: var(--icon-muted) !important;
+  }
+
+  // Matriz y leyenda
+  .matriz-leyenda {
+    background: var(--section-bg) !important;
+  }
+
+  // Revision section rows
+  .revision-section .section-row {
+    label {
+      color: var(--review-label-color) !important;
+    }
+    .section-value {
+      color: var(--review-value-color) !important;
+    }
+  }
+}
+
+// Aplicar con múltiples selectores para máxima compatibilidad
+// Necesario porque la clase puede ser .dark-mode, .dark, o [data-theme="dark"]
+:host-context(.dark-mode) {
+  @include dark-mode-styles;
+}
+
+:host-context(.dark) {
+  @include dark-mode-styles;
+}
+
+:host-context([data-theme="dark"]) {
+  @include dark-mode-styles;
+}
+
+// Estilos específicos para proyecto-crear
 .kpis-wizard-header {
   display: flex;
   justify-content: space-between;
@@ -22,4 +142,66 @@
   color: var(--text-color-secondary);
   margin: var(--spacing-2) 0 0 0;
   line-height: 1.5;
+}
+
+// ============================================
+// Ajustes para PrimeNG Components
+// ============================================
+
+// Tabs container con SelectButton
+.tabs-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+
+  .ml-auto {
+    margin-left: auto;
+  }
+}
+
+// Ajuste para p-select en formularios
+::ng-deep {
+  .form-field {
+    p-select,
+    p-inputnumber {
+      width: 100%;
+    }
+  }
+
+  // Ajuste para badges en KPIs header
+  .kpis-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+
+  // Ajuste para acciones de objetivo
+  .objetivo-actions-top {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+
+  // Ajuste para acciones de KPI
+  .kpi-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+  }
+
+  // Ajuste para el footer
+  .footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  // Ajuste para inline form actions
+  .inline-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-2);
+    margin-top: var(--spacing-4);
+  }
 }

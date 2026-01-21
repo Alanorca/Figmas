@@ -62,11 +62,13 @@ export class ThemeService {
     const root = document.documentElement;
 
     if (theme === 'dark') {
-      root.classList.add('dark-mode');
-      root.classList.remove('light-mode');
+      // Agregar ambas clases para compatibilidad con diferentes selectores
+      // Algunos componentes usan .dark, otros .dark-mode
+      root.classList.add('dark-mode', 'dark');
+      root.classList.remove('light-mode', 'light');
     } else {
-      root.classList.add('light-mode');
-      root.classList.remove('dark-mode');
+      root.classList.add('light-mode', 'light');
+      root.classList.remove('dark-mode', 'dark');
     }
 
     // También actualizar el atributo data-theme para compatibilidad

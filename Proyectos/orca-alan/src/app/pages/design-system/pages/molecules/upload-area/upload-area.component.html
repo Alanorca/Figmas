@@ -1,0 +1,276 @@
+<p-toast></p-toast>
+
+<div class="ds-page">
+  <header class="ds-page-header">
+    <h1>Upload Area</h1>
+    <p class="ds-page-description">
+      Componente de arrastrar y soltar archivos (drag & drop). Usado en formularios donde
+      el usuario necesita subir documentos, imágenes u otros archivos.
+    </p>
+  </header>
+
+  <!-- Overview -->
+  <section class="ds-section">
+    <h2>Vista General</h2>
+    <p>
+      El componente <code>upload-area</code> proporciona una zona visual para subir archivos,
+      con soporte completo para dark mode usando tokens semánticos.
+    </p>
+
+    <app-ds-preview title="Upload Area - Interactivo">
+      <div class="demo-container">
+        @if (!uploadedFile()) {
+          <div class="upload-area">
+            <p-fileUpload
+              mode="basic"
+              name="documento"
+              accept=".pdf,.doc,.docx,.txt,.png,.jpg"
+              [maxFileSize]="10000000"
+              chooseLabel="Seleccionar archivo"
+              chooseIcon="pi pi-upload"
+              (onSelect)="onSelectFile($event)"
+              styleClass="upload-button">
+            </p-fileUpload>
+            <p class="upload-hint">PDF, DOC, DOCX, TXT, PNG o JPG (máx. 10MB)</p>
+          </div>
+        } @else {
+          <div class="documento-preview">
+            <div class="documento-info">
+              <i class="pi pi-file"></i>
+              <span>{{ uploadedFileName() }}</span>
+            </div>
+            <button class="btn-remove" (click)="onRemoveFile()">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        }
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Estados -->
+  <section class="ds-section">
+    <h2>Estados</h2>
+
+    <div class="grid">
+      <!-- Default -->
+      <div class="col-12 md:col-4">
+        <h4>Default</h4>
+        <div class="upload-area">
+          <i class="pi pi-cloud-upload text-4xl text-color-secondary mb-3"></i>
+          <span class="text-color-secondary text-sm">Arrastra archivos aquí</span>
+        </div>
+      </div>
+
+      <!-- Hover (simulado) -->
+      <div class="col-12 md:col-4">
+        <h4>Hover</h4>
+        <div class="upload-area upload-area--hover">
+          <i class="pi pi-cloud-upload text-4xl mb-3" style="color: var(--primary-color);"></i>
+          <span class="text-sm" style="color: var(--primary-color);">Suelta para subir</span>
+        </div>
+      </div>
+
+      <!-- Con archivo -->
+      <div class="col-12 md:col-4">
+        <h4>Con archivo</h4>
+        <div class="documento-preview">
+          <div class="documento-info">
+            <i class="pi pi-file-pdf"></i>
+            <span>documento.pdf</span>
+          </div>
+          <button class="btn-remove">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Variantes -->
+  <section class="ds-section">
+    <h2>Variantes</h2>
+
+    <div class="grid">
+      <!-- Standard -->
+      <div class="col-12 md:col-6">
+        <h4>Standard</h4>
+        <p class="text-sm text-color-secondary mb-3">
+          Tamaño completo con padding generoso. Ideal para formularios con espacio.
+        </p>
+        <div class="upload-area">
+          <p-fileUpload
+            mode="basic"
+            chooseLabel="Seleccionar archivo"
+            chooseIcon="pi pi-upload"
+            styleClass="upload-button">
+          </p-fileUpload>
+          <p class="upload-hint">Formatos permitidos: PDF, DOC</p>
+        </div>
+      </div>
+
+      <!-- Compact -->
+      <div class="col-12 md:col-6">
+        <h4>Compact</h4>
+        <p class="text-sm text-color-secondary mb-3">
+          Versión reducida para espacios limitados o formularios densos.
+        </p>
+        <div class="upload-area upload-area--compact">
+          <div class="flex align-items-center gap-3">
+            <i class="pi pi-upload text-xl text-color-secondary"></i>
+            <span class="text-sm text-color-secondary">Subir archivo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tipos de archivo -->
+  <section class="ds-section">
+    <h2>Iconos por Tipo de Archivo</h2>
+    <p>Usa el icono apropiado según el tipo de archivo esperado:</p>
+
+    <div class="flex gap-4 flex-wrap">
+      <div class="documento-preview" style="min-width: 200px;">
+        <div class="documento-info">
+          <i class="pi pi-file-pdf" style="color: var(--red-500);"></i>
+          <span>documento.pdf</span>
+        </div>
+      </div>
+      <div class="documento-preview" style="min-width: 200px;">
+        <div class="documento-info">
+          <i class="pi pi-file-word" style="color: var(--blue-500);"></i>
+          <span>documento.docx</span>
+        </div>
+      </div>
+      <div class="documento-preview" style="min-width: 200px;">
+        <div class="documento-info">
+          <i class="pi pi-file-excel" style="color: var(--green-500);"></i>
+          <span>datos.xlsx</span>
+        </div>
+      </div>
+      <div class="documento-preview" style="min-width: 200px;">
+        <div class="documento-info">
+          <i class="pi pi-image" style="color: var(--purple-500);"></i>
+          <span>imagen.png</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dark Mode -->
+  <section class="ds-section">
+    <h2>Dark Mode</h2>
+    <p>
+      El componente usa tokens semánticos para dark mode. Es <strong>crítico</strong> aplicar
+      los estilos de dark mode usando el patrón de mixin con múltiples selectores.
+    </p>
+
+    <div class="surface-card border-round p-4 mb-4">
+      <h4 class="mt-0 flex align-items-center gap-2">
+        <i class="pi pi-exclamation-triangle text-orange-500"></i>
+        Problema común
+      </h4>
+      <p class="m-0 line-height-3">
+        El fondo del upload-area aparece blanco en dark mode porque
+        <code>var(--surface-ground)</code> y <code>var(--primary-50)</code> no tienen
+        valores adecuados para dark mode en algunos contextos. La solución es usar
+        los tokens específicos: <code>--upload-area-bg</code> y <code>--upload-area-bg-hover</code>.
+      </p>
+    </div>
+  </section>
+
+  <!-- Tokens -->
+  <section class="ds-section">
+    <h2>Design Tokens</h2>
+    <p>Tokens CSS utilizados por este componente:</p>
+
+    <div class="tokens-grid">
+      @for (token of tokens; track token.name) {
+        <div class="token-item surface-card border-round p-3 mb-2">
+          <div class="flex align-items-center gap-3">
+            <div class="token-preview border-round"
+                 [style.background]="token.value"
+                 style="width: 40px; height: 40px; border: 1px solid var(--surface-border);"></div>
+            <div class="flex-1">
+              <code class="text-primary font-bold">{{ token.name }}</code>
+              <p class="text-sm text-color-secondary m-0 mt-1">{{ token.description }}</p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Props Table -->
+  <section class="ds-section">
+    <h2>Clases CSS</h2>
+    <app-ds-props-table [props]="areaProps" title="Upload Area Classes"></app-ds-props-table>
+  </section>
+
+  <!-- Code Examples -->
+  <section class="ds-section">
+    <h2>Código</h2>
+
+    <h3>HTML Template</h3>
+    <app-ds-code-block [code]="htmlCode" language="html"></app-ds-code-block>
+
+    <h3 class="mt-4">SCSS Styles</h3>
+    <app-ds-code-block [code]="scssCode" language="scss"></app-ds-code-block>
+
+    <h3 class="mt-4">TypeScript</h3>
+    <app-ds-code-block [code]="typescriptCode" language="typescript"></app-ds-code-block>
+  </section>
+
+  <!-- Usage Guidelines -->
+  <section class="ds-section">
+    <h2>Guías de Uso</h2>
+
+    <div class="grid">
+      <div class="col-12 md:col-6">
+        <div class="surface-card border-round p-4 h-full">
+          <h4 class="flex align-items-center gap-2 mt-0">
+            <i class="pi pi-check-circle text-green-500"></i>
+            Do's
+          </h4>
+          <ul class="line-height-3 pl-3">
+            <li>Usar tokens semánticos para dark mode</li>
+            <li>Mostrar tipos de archivo permitidos</li>
+            <li>Indicar tamaño máximo de archivo</li>
+            <li>Proporcionar feedback visual al subir</li>
+            <li>Mostrar nombre del archivo seleccionado</li>
+            <li>Permitir eliminar archivo seleccionado</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-12 md:col-6">
+        <div class="surface-card border-round p-4 h-full">
+          <h4 class="flex align-items-center gap-2 mt-0">
+            <i class="pi pi-times-circle text-red-500"></i>
+            Don'ts
+          </h4>
+          <ul class="line-height-3 pl-3">
+            <li>No usar colores hardcodeados (#fff, #f5f5f5)</li>
+            <li>No omitir el estado hover</li>
+            <li>No olvidar soporte para dark mode</li>
+            <li>No usar solo var(--surface-ground) en dark mode</li>
+            <li>No ocultar información del archivo seleccionado</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Accessibility -->
+  <section class="ds-section">
+    <h2>Accesibilidad</h2>
+    <div class="surface-card border-round p-4">
+      <ul class="line-height-3 pl-3 m-0">
+        <li><strong>Keyboard:</strong> El botón de upload debe ser accesible con Tab y activable con Enter/Space</li>
+        <li><strong>Screen readers:</strong> Incluir aria-label descriptivo en el input de archivo</li>
+        <li><strong>Contraste:</strong> El borde dashed debe tener suficiente contraste en ambos modos</li>
+        <li><strong>Feedback:</strong> Anunciar cuando un archivo es seleccionado o eliminado</li>
+      </ul>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,246 @@
+// ============================================
+// UPLOAD AREA - Design System Documentation
+// ============================================
+
+// Page layout
+.ds-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ds-page-header {
+  margin-bottom: var(--spacing-8, 2rem);
+
+  h1 {
+    margin: 0 0 var(--spacing-2, 0.5rem) 0;
+    font-size: var(--font-size-2xl, 1.75rem);
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .ds-page-description {
+    margin: 0;
+    color: var(--text-color-secondary);
+    line-height: 1.6;
+    max-width: 800px;
+  }
+}
+
+.ds-section {
+  margin-bottom: var(--spacing-10, 2.5rem);
+
+  h2 {
+    font-size: var(--font-size-xl, 1.25rem);
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 var(--spacing-4, 1rem) 0;
+    padding-bottom: var(--spacing-2, 0.5rem);
+    border-bottom: 1px solid var(--surface-border);
+  }
+
+  h3 {
+    font-size: var(--font-size-lg, 1.125rem);
+    font-weight: 500;
+    color: var(--text-color);
+    margin: var(--spacing-6, 1.5rem) 0 var(--spacing-3, 0.75rem) 0;
+  }
+
+  h4 {
+    font-size: var(--font-size-md, 1rem);
+    font-weight: 500;
+    color: var(--text-color);
+    margin: 0 0 var(--spacing-2, 0.5rem) 0;
+  }
+
+  p {
+    color: var(--text-color-secondary);
+    line-height: 1.6;
+  }
+
+  code {
+    background: var(--surface-100);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.875em;
+    color: var(--primary-color);
+  }
+}
+
+// Demo container
+.demo-container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+// Tokens grid
+.tokens-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2, 0.5rem);
+}
+
+.token-item {
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+
+  .token-preview {
+    flex-shrink: 0;
+  }
+}
+
+// ============================================
+// UPLOAD AREA - Component Styles
+// ============================================
+
+.upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8, 2rem);
+  border: 2px dashed var(--surface-border);
+  border-radius: var(--border-radius-lg, 0.75rem);
+  background: var(--surface-ground);
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover,
+  &.upload-area--hover {
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+  }
+
+  // Compact variant
+  &.upload-area--compact {
+    padding: var(--spacing-4, 1rem);
+  }
+
+  ::ng-deep .upload-button {
+    .p-button {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+
+      &:hover {
+        background: var(--primary-hover-color);
+        border-color: var(--primary-hover-color);
+      }
+    }
+  }
+}
+
+.upload-hint {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-color-secondary);
+  margin: var(--spacing-3, 0.75rem) 0 0 0;
+}
+
+.documento-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-4, 1rem);
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg, 0.75rem);
+}
+
+.documento-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3, 0.75rem);
+
+  i {
+    font-size: 1.5rem;
+    color: var(--red-500);
+  }
+
+  span {
+    font-size: var(--font-size-sm, 0.875rem);
+    color: var(--text-color);
+    font-weight: var(--font-weight-medium, 500);
+  }
+}
+
+.btn-remove {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-md, 0.5rem);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  i {
+    font-size: var(--font-size-sm, 0.875rem);
+    color: var(--text-color-secondary);
+  }
+
+  &:hover {
+    background: var(--red-50);
+    border-color: var(--red-200);
+
+    i {
+      color: var(--red-500);
+    }
+  }
+}
+
+// ============================================
+// DARK MODE
+// ============================================
+
+@mixin dark-mode-styles {
+  .ds-section code {
+    background: var(--surface-700);
+  }
+
+  .token-item:hover {
+    background: var(--surface-700);
+  }
+
+  // Upload area dark mode - CRITICAL
+  .upload-area {
+    background: var(--upload-area-bg, #27272a) !important;
+    border-color: var(--upload-area-border, #3f3f46) !important;
+
+    &:hover,
+    &.upload-area--hover {
+      background: var(--upload-area-bg-hover, #3f3f46) !important;
+      border-color: var(--upload-area-border-hover, var(--primary-color)) !important;
+    }
+  }
+
+  .documento-preview {
+    background: var(--surface-800, #27272a) !important;
+    border-color: var(--surface-700, #3f3f46) !important;
+  }
+
+  .btn-remove {
+    border-color: var(--surface-600) !important;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.2) !important;
+      border-color: var(--red-700) !important;
+    }
+  }
+}
+
+:host-context(.dark-mode) {
+  @include dark-mode-styles;
+}
+
+:host-context(.dark) {
+  @include dark-mode-styles;
+}
+
+:host-context([data-theme="dark"]) {
+  @include dark-mode-styles;
+}
