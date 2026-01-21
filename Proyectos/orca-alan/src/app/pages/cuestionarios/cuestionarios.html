@@ -201,101 +201,104 @@
 
 <!-- ==================== VISTA: WIZARD NUEVO CUESTIONARIO (Página completa) ==================== -->
 @if (vistaActual() === 'wizard') {
-<div class="surface-ground min-h-screen">
-  <!-- Header con título -->
-  <div class="surface-card border-bottom-1 surface-border px-4 py-3">
-    <div class="flex justify-content-between align-items-center">
-      <div>
-        <h1 class="text-2xl font-bold text-900 m-0">Nuevo Cuestionario</h1>
-        <p class="text-500 text-sm m-0 mt-1">Orca&#64;Securityby Design</p>
-      </div>
+<div class="crear-proceso-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a routerLink="/cuestionarios" (click)="cancelarWizard(); $event.preventDefault()">Cuestionarios</a>
+      <span class="separator">/</span>
+      <span>Nuevo</span>
     </div>
+    <h1>Nuevo Cuestionario</h1>
+    <p class="page-subtitle">Crea un nuevo cuestionario de cumplimiento con IA o manualmente</p>
   </div>
 
-  <!-- Contenedor principal -->
-  <div class="p-4">
-    <!-- Stepper horizontal con líneas conectoras -->
-    <div class="surface-card border-round-xl p-4 mb-4">
-      <div class="flex align-items-start justify-content-between">
-        <!-- Paso 1: Método -->
-        <div class="flex-1 flex flex-column align-items-start">
-          <div class="flex align-items-center w-full mb-2">
-            <div class="wizard-step-icon flex align-items-center justify-content-center border-circle border-2"
-                 [class]="wizardPaso() > 0 ? 'bg-teal-500 border-teal-500' : (wizardPaso() === 0 ? 'border-teal-500 surface-card' : 'border-300 surface-card')"
-                 style="width: 32px; height: 32px; flex-shrink: 0;">
-              @if (wizardPaso() > 0) {
-                <i class="pi pi-check text-white" style="font-size: 0.875rem;"></i>
-              } @else {
-                <span class="material-icons" [class]="wizardPaso() === 0 ? 'text-teal-500' : 'text-400'" style="font-size: 1rem;">shuffle</span>
-              }
-            </div>
-            <div class="flex-1 mx-3" style="height: 2px;" [class]="wizardPaso() > 0 ? 'bg-teal-500' : 'bg-300'"></div>
-          </div>
-          <div>
-            <span class="font-semibold block" [class]="wizardPaso() >= 0 ? 'text-900' : 'text-500'">Método</span>
-            <span class="text-500 text-sm">Selecciona cómo deseas crear tu cuestionario con IA o manualmente</span>
-          </div>
+  <!-- Stepper -->
+  <div class="stepper-container">
+    <div class="step-item"
+         [class.active]="wizardPaso() === 0"
+         [class.completed]="wizardPaso() > 0"
+         [class.clickable]="wizardPaso() > 0"
+         (click)="wizardPaso() > 0 ? irAPasoWizard(0) : null">
+      <div class="step-indicator">
+        <div class="step-icon">
+          <i [class]="wizardPaso() > 0 ? 'pi pi-check' : 'pi pi-sliders-h'"></i>
         </div>
-
-        <!-- Paso 2: Datos -->
-        <div class="flex-1 flex flex-column align-items-start">
-          <div class="flex align-items-center w-full mb-2">
-            <div class="wizard-step-icon flex align-items-center justify-content-center border-circle border-2"
-                 [class]="wizardPaso() > 1 ? 'bg-teal-500 border-teal-500' : (wizardPaso() === 1 ? 'border-teal-500 surface-card' : 'border-300 surface-card')"
-                 style="width: 32px; height: 32px; flex-shrink: 0;">
-              @if (wizardPaso() > 1) {
-                <i class="pi pi-check text-white" style="font-size: 0.875rem;"></i>
-              } @else {
-                <span class="material-icons" [class]="wizardPaso() >= 1 ? 'text-teal-500' : 'text-400'" style="font-size: 1rem;">vpn_key</span>
-              }
-            </div>
-            <div class="flex-1 mx-3" style="height: 2px;" [class]="wizardPaso() > 1 ? 'bg-teal-500' : 'bg-300'"></div>
-          </div>
-          <div>
-            <span class="font-semibold block" [class]="wizardPaso() >= 1 ? 'text-900' : 'text-500'">Datos</span>
-            <span class="text-500 text-sm">Nombre, marco y periodicidad</span>
-          </div>
-        </div>
-
-        <!-- Paso 3: Umbrales -->
-        <div class="flex flex-column align-items-start" style="flex: 0 0 auto;">
-          <div class="flex align-items-center mb-2">
-            <div class="wizard-step-icon flex align-items-center justify-content-center border-circle border-2"
-                 [class]="wizardPaso() > 2 ? 'bg-teal-500 border-teal-500' : (wizardPaso() === 2 ? 'border-teal-500 surface-card' : 'border-300 surface-card')"
-                 style="width: 32px; height: 32px; flex-shrink: 0;">
-              @if (wizardPaso() > 2) {
-                <i class="pi pi-check text-white" style="font-size: 0.875rem;"></i>
-              } @else {
-                <span class="material-icons" [class]="wizardPaso() >= 2 ? 'text-teal-500' : 'text-400'" style="font-size: 1rem;">format_list_numbered</span>
-              }
-            </div>
-          </div>
-          <div>
-            <span class="font-semibold block" [class]="wizardPaso() >= 2 ? 'text-900' : 'text-500'">Umbrales</span>
-            <span class="text-500 text-sm">Define rangos de calificación</span>
-          </div>
-        </div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <span class="step-label">Método</span>
+        <span class="step-description">IA o Manual</span>
       </div>
     </div>
 
-    <!-- Tarjeta de contexto (Contenedor o proceso) -->
-    <div class="surface-card border-round-xl p-4 mb-4 shadow-1">
-      <div class="flex align-items-center gap-3">
-        <div>
-          <h3 class="text-lg font-semibold text-900 m-0">Contenedor o proceso</h3>
-          <p class="text-500 text-sm m-0 mt-1">Severidad: Alta | Impacto Financiero: $45,000 | Estado: En Resolución</p>
+    <div class="step-item"
+         [class.active]="wizardPaso() === 1"
+         [class.completed]="wizardPaso() > 1"
+         [class.clickable]="wizardPaso() > 1"
+         (click)="wizardPaso() > 1 ? irAPasoWizard(1) : null">
+      <div class="step-indicator">
+        <div class="step-icon">
+          <i [class]="wizardPaso() > 1 ? 'pi pi-check' : 'pi pi-file-edit'"></i>
         </div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <span class="step-label">Datos Generales</span>
+        <span class="step-description">Nombre, marco y tipo</span>
       </div>
     </div>
+
+    <!-- Umbrales - Solo para Manual -->
+    @if (metodoCreacion() !== 'ia') {
+      <div class="step-item"
+           [class.active]="wizardPaso() === 2"
+           [class.completed]="wizardPaso() > 2"
+           [class.clickable]="wizardPaso() > 2"
+           (click)="wizardPaso() > 2 ? irAPasoWizard(2) : null">
+        <div class="step-indicator">
+          <div class="step-icon">
+            <i [class]="wizardPaso() > 2 ? 'pi pi-check' : 'pi pi-sliders-v'"></i>
+          </div>
+        </div>
+        <div class="step-content">
+          <span class="step-label">Umbrales</span>
+          <span class="step-description">Rangos de calificación</span>
+        </div>
+      </div>
+    }
+
+    <!-- Generación IA - Solo para IA -->
+    @if (metodoCreacion() === 'ia') {
+      <div class="step-item"
+           [class.active]="wizardPaso() === 2"
+           [class.completed]="wizardPaso() > 2">
+        <div class="step-indicator">
+          <div class="step-icon">
+            <i [class]="wizardPaso() > 2 ? 'pi pi-check' : 'pi pi-sparkles'"></i>
+          </div>
+        </div>
+        <div class="step-content">
+          <span class="step-label">Generación IA</span>
+          <span class="step-description">Configurar prompts</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Content -->
+  <div class="content-card">
 
     <!-- Paso 0: Selección de Método -->
     @if (wizardPaso() === 0) {
+    <div class="step-panel">
+      <h3 class="panel-title">Selecciona el método de creación</h3>
+    </div>
     <div class="grid">
       <!-- Opción Cuestionario IA -->
       <div class="col-12 md:col-6">
-        <div class="wizard-method-card h-full border-round-xl p-4 cursor-pointer transition-all"
-             [class]="metodoCreacion() === 'ia' ? 'wizard-method-selected bg-purple-50' : 'surface-card shadow-1 hover:shadow-3'"
-             style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);"
+        <div class="wizard-method-card wizard-method-ia h-full border-round-xl p-4 cursor-pointer transition-all"
+             [class.wizard-method-selected]="metodoCreacion() === 'ia'"
              (click)="seleccionarMetodoCreacion('ia')">
           <!-- Icono decorativo -->
           <div class="flex justify-content-center mb-4">
@@ -307,28 +310,28 @@
 
           <!-- Título y descripción -->
           <div class="text-center mb-4">
-            <h3 class="text-xl font-bold text-900 m-0 mb-2">Cuestionario IA</h3>
-            <p class="text-500 text-sm m-0 line-height-3">Diseña tu cuestionario desde cero agregando secciones y preguntas</p>
+            <h3 class="text-xl font-bold m-0 mb-2 wizard-method-title">Cuestionario IA</h3>
+            <p class="text-sm m-0 line-height-3 wizard-method-desc">Diseña tu cuestionario desde cero agregando secciones y preguntas</p>
           </div>
 
           <!-- Stats cards -->
           <div class="flex gap-2 mb-4">
-            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+            <div class="flex-1 wizard-stat-card border-round-lg p-3">
               <div class="text-center">
-                <span class="text-xl font-bold text-900">89%</span>
-                <p class="text-500 text-xs m-0 mt-1">Precisión</p>
+                <span class="text-xl font-bold wizard-stat-value">89%</span>
+                <p class="text-xs m-0 mt-1 wizard-stat-label">Precisión</p>
               </div>
             </div>
-            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+            <div class="flex-1 wizard-stat-card border-round-lg p-3">
               <div class="text-center">
-                <span class="text-xl font-bold text-900">&lt; 30 segundos</span>
-                <p class="text-500 text-xs m-0 mt-1">Tiempo Promedio</p>
+                <span class="text-xl font-bold wizard-stat-value">&lt; 30 segundos</span>
+                <p class="text-xs m-0 mt-1 wizard-stat-label">Tiempo Promedio</p>
               </div>
             </div>
-            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+            <div class="flex-1 wizard-stat-card border-round-lg p-3">
               <div class="text-center">
-                <span class="text-xl font-bold text-900">Preguntas</span>
-                <p class="text-500 text-xs m-0 mt-1">Entre 5 y 50</p>
+                <span class="text-xl font-bold wizard-stat-value">Preguntas</span>
+                <p class="text-xs m-0 mt-1 wizard-stat-label">Entre 5 y 50</p>
               </div>
             </div>
           </div>
@@ -342,9 +345,8 @@
 
       <!-- Opción Manual -->
       <div class="col-12 md:col-6">
-        <div class="wizard-method-card h-full border-round-xl p-4 cursor-pointer transition-all"
-             [class]="metodoCreacion() === 'manual' ? 'wizard-method-selected' : 'surface-card shadow-1 hover:shadow-3'"
-             style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);"
+        <div class="wizard-method-card wizard-method-manual h-full border-round-xl p-4 cursor-pointer transition-all"
+             [class.wizard-method-selected]="metodoCreacion() === 'manual'"
              (click)="seleccionarMetodoCreacion('manual')">
           <!-- Icono decorativo -->
           <div class="flex justify-content-center mb-4">
@@ -356,22 +358,22 @@
 
           <!-- Título y descripción -->
           <div class="text-center mb-4">
-            <h3 class="text-xl font-bold text-900 m-0 mb-2">Manual</h3>
-            <p class="text-500 text-sm m-0 line-height-3">Genera preguntas automáticamente con IA o sube un documento</p>
+            <h3 class="text-xl font-bold m-0 mb-2 wizard-method-title">Manual</h3>
+            <p class="text-sm m-0 line-height-3 wizard-method-desc">Genera preguntas automáticamente con IA o sube un documento</p>
           </div>
 
           <!-- Stats cards -->
           <div class="flex gap-2 mb-4">
-            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+            <div class="flex-1 wizard-stat-card border-round-lg p-3">
               <div class="text-center">
-                <span class="text-xl font-bold text-900">100%</span>
-                <p class="text-500 text-xs m-0 mt-1">Control</p>
+                <span class="text-xl font-bold wizard-stat-value">100%</span>
+                <p class="text-xs m-0 mt-1 wizard-stat-label">Control</p>
               </div>
             </div>
-            <div class="flex-1 surface-card border-round-lg p-3 shadow-1">
+            <div class="flex-1 wizard-stat-card border-round-lg p-3">
               <div class="text-center">
-                <span class="text-xl font-bold text-900">10 tipos de preguntas</span>
-                <p class="text-500 text-xs m-0 mt-1">Agrupa por sección</p>
+                <span class="text-xl font-bold wizard-stat-value">10 tipos de preguntas</span>
+                <p class="text-xs m-0 mt-1 wizard-stat-label">Agrupa por sección</p>
               </div>
             </div>
           </div>
@@ -387,32 +389,29 @@
 
     <!-- Paso 1: Datos Generales -->
     @if (wizardPaso() === 1) {
-    <div class="surface-card border-round-xl p-4 shadow-1">
-      <div class="flex align-items-center gap-3 mb-4">
-        <div class="flex align-items-center justify-content-center border-circle bg-blue-100" style="width: 48px; height: 48px;">
-          <span class="material-icons text-blue-500">description</span>
-        </div>
-        <div>
-          <h3 class="text-lg font-semibold text-900 m-0">Datos Generales</h3>
-          <p class="text-500 text-sm m-0">Información básica del cuestionario</p>
-        </div>
-      </div>
+    <div class="step-panel panel-columna-izquierda">
+      <h3 class="panel-title">Datos Generales</h3>
 
-      <div class="grid">
-        <div class="col-12">
-          <label class="block font-medium mb-2 text-900">Nombre del cuestionario *</label>
-          <input pInputText [ngModel]="wizardDatosGenerales().nombre"
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label">Nombre del cuestionario *</label>
+          <input type="text" class="field-input"
+                 [ngModel]="wizardDatosGenerales().nombre"
                  (ngModelChange)="actualizarDatosGenerales('nombre', $event)"
-                 class="w-full" placeholder="Ej: Evaluación de Controles ISO 27001" />
+                 placeholder="Ej: Evaluación de Controles ISO 27001" />
         </div>
-        <div class="col-12">
-          <label class="block font-medium mb-2 text-900">Descripción</label>
-          <textarea pTextarea [ngModel]="wizardDatosGenerales().descripcion"
+
+        <div class="form-field">
+          <label class="field-label">Descripción</label>
+          <textarea class="field-textarea"
+                    [ngModel]="wizardDatosGenerales().descripcion"
                     (ngModelChange)="actualizarDatosGenerales('descripcion', $event)"
-                    class="w-full" rows="3" placeholder="Descripción breve del cuestionario..."></textarea>
+                    rows="3" placeholder="Descripción breve del cuestionario..."></textarea>
         </div>
-        <div class="col-12 md:col-6">
-          <label class="block font-medium mb-2 text-900">Marco Normativo</label>
+
+        <div class="inline-form-row">
+          <div class="form-field flex-1">
+            <label class="field-label">Marco Normativo</label>
           <p-multiselect [options]="marcosNormativos()" [(ngModel)]="wizardMarcosSeleccionados"
                          (ngModelChange)="actualizarMarcosSeleccionados($event)"
                          placeholder="Seleccionar marcos" optionLabel="acronimo"
@@ -471,32 +470,24 @@
               </div>
             </ng-template>
           </p-multiselect>
-        </div>
-        <div class="col-12 md:col-6">
-          <label class="block font-medium mb-2 text-900">Tipo de Evaluación</label>
-          <p-select [options]="tipoEvaluacionOptions" optionLabel="label" optionValue="value"
-                    [ngModel]="wizardDatosGenerales().tipoEvaluacion"
-                    (ngModelChange)="actualizarDatosGenerales('tipoEvaluacion', $event)"
-                    styleClass="w-full" />
-        </div>
-      </div>
+          </div>
 
-      <!-- Botones de navegación -->
-      <div class="flex justify-content-between mt-4 pt-4 border-top-1 surface-border">
-        <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="volverPasoWizard()" />
-        <p-button label="Continuar" icon="pi pi-arrow-right" iconPos="right" (onClick)="continuarWizard()" [disabled]="!puedeAvanzarWizard()" />
+          <div class="form-field flex-1">
+            <label class="field-label">Tipo de Evaluación</label>
+            <p-select [options]="tipoEvaluacionOptions" optionLabel="label" optionValue="value"
+                      [ngModel]="wizardDatosGenerales().tipoEvaluacion"
+                      (ngModelChange)="actualizarDatosGenerales('tipoEvaluacion', $event)"
+                      styleClass="w-full" />
+          </div>
+        </div>
       </div>
     </div>
     }
 
-    <!-- Paso 2: Umbrales -->
-    @if (wizardPaso() === 2) {
-    <div class="surface-card border-round-xl p-4 shadow-1">
-      <!-- Título y descripción -->
-      <div class="mb-4">
-        <h3 class="text-xl font-semibold text-900 m-0">Definición de Umbrales</h3>
-        <p class="text-500 text-sm m-0 mt-1">Configura los niveles de cumplimiento</p>
-      </div>
+    <!-- Paso 2: Umbrales (solo Manual) -->
+    @if (wizardPaso() === 2 && metodoCreacion() !== 'ia') {
+    <div class="step-panel panel-columna-izquierda">
+      <h3 class="panel-title">Definición de Umbrales</h3>
 
       <!-- Cards de umbrales en horizontal (diseño Figma) -->
       <div class="grid mb-4">
@@ -583,30 +574,13 @@
         </div>
       </div>
 
-      <!-- Botones centrados -->
-      <div class="flex justify-content-center gap-3 mt-4 pt-4 border-top-1 surface-border">
-        <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="cancelarWizard()" />
-        @if (metodoCreacion() === 'manual') {
-          <p-button label="Crear cuestionario" styleClass="bg-teal-500 border-teal-500" (onClick)="continuarWizard()" />
-        } @else {
-          <p-button label="Continuar a IA" icon="pi pi-sparkles" iconPos="right" severity="help" (onClick)="continuarWizard()" />
-        }
-      </div>
     </div>
     }
 
-    <!-- Paso 3: Configuración IA (solo si eligió IA) -->
-    @if (wizardPaso() === 3 && metodoCreacion() === 'ia') {
-    <div class="surface-card border-round-xl p-4 shadow-1">
-      <div class="flex align-items-center gap-3 mb-4">
-        <div class="flex align-items-center justify-content-center border-circle bg-purple-100" style="width: 48px; height: 48px;">
-          <span class="material-icons text-purple-500">psychology</span>
-        </div>
-        <div>
-          <h3 class="text-lg font-semibold text-900 m-0">Generación con IA</h3>
-          <p class="text-500 text-sm m-0">Elige cómo generar las preguntas</p>
-        </div>
-      </div>
+    <!-- Paso 2: Configuración IA (solo si eligió IA) -->
+    @if (wizardPaso() === 2 && metodoCreacion() === 'ia') {
+    <div class="step-panel panel-columna-izquierda">
+      <h3 class="panel-title">Generación con IA</h3>
 
       <!-- Selector de método IA -->
       <div class="flex gap-3 mb-4">
@@ -676,26 +650,13 @@
         </div>
       }
 
-      <!-- Botones de navegación -->
-      <div class="flex justify-content-between mt-4 pt-4 border-top-1 surface-border">
-        <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="volverPasoWizard()" />
-        <p-button label="Generar con IA" icon="pi pi-sparkles" severity="help" [loading]="generandoIA()" (onClick)="generarConIAWizard()" />
-      </div>
     </div>
     }
 
-    <!-- Paso 4: Preview del cuestionario generado (IA) -->
-    @if (wizardPaso() === 4 && wizardPreviewCuestionario()) {
-    <div class="surface-card border-round-xl p-4 shadow-1">
-      <div class="flex align-items-center gap-3 mb-4">
-        <div class="flex align-items-center justify-content-center border-circle bg-green-100" style="width: 48px; height: 48px;">
-          <span class="material-icons text-green-500">check_circle</span>
-        </div>
-        <div>
-          <h3 class="text-lg font-semibold text-900 m-0">Cuestionario Generado</h3>
-          <p class="text-500 text-sm m-0">Revisa el resultado antes de continuar</p>
-        </div>
-      </div>
+    <!-- Paso 3: Preview del cuestionario generado (IA) -->
+    @if (wizardPaso() === 3 && wizardPreviewCuestionario()) {
+    <div class="step-panel">
+      <h3 class="panel-title">Cuestionario Generado</h3>
 
       <!-- Resumen general -->
       <div class="p-3 surface-100 border-round mb-4">
@@ -755,13 +716,54 @@
         }
       </div>
 
-      <!-- Botones de navegación -->
-      <div class="flex justify-content-between mt-4 pt-4 border-top-1 surface-border">
-        <p-button label="Regenerar" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="regenerarConIA()" />
-        <p-button label="Editar cuestionario" icon="pi pi-pencil" (onClick)="irAEditorDesdePreview()" />
-      </div>
     </div>
     }
+  </div>
+
+  <!-- Footer Fixed -->
+  <div class="page-footer-fixed">
+    <div class="footer-content">
+      @if (wizardPaso() > 0) {
+        <button type="button" class="btn-atras" (click)="volverPasoWizard()">
+          <i class="pi pi-arrow-left"></i>
+          Atrás
+        </button>
+      } @else {
+        <button type="button" class="btn-atras" (click)="cancelarWizard()">
+          Cancelar
+        </button>
+      }
+
+      @if (wizardPaso() === 0) {
+        <!-- Paso 0: No mostrar botón siguiente, las cards tienen sus propios botones -->
+      } @else if (wizardPaso() === 2 && metodoCreacion() === 'manual') {
+        <!-- Paso 2 Manual: Crear cuestionario -->
+        <button type="button" class="btn-guardar" (click)="continuarWizard()">
+          Crear cuestionario
+        </button>
+      } @else if (wizardPaso() === 2 && metodoCreacion() === 'ia') {
+        <!-- Paso 2 IA: Generar con IA -->
+        <button type="button" class="btn-guardar" [disabled]="generandoIA()" (click)="generarConIAWizard()">
+          @if (generandoIA()) {
+            <i class="pi pi-spinner pi-spin"></i>
+          }
+          Generar con IA
+        </button>
+      } @else if (wizardPaso() === 3 && metodoCreacion() === 'ia') {
+        <!-- Paso 3 IA: Preview -->
+        <button type="button" class="btn-siguiente" (click)="regenerarConIA()">
+          <i class="pi pi-refresh"></i>
+          Regenerar
+        </button>
+        <button type="button" class="btn-guardar" (click)="irAEditorDesdePreview()">
+          Editar cuestionario
+        </button>
+      } @else {
+        <button type="button" class="btn-siguiente" [disabled]="!puedeAvanzarWizard()" (click)="continuarWizard()">
+          Siguiente
+        </button>
+      }
+    </div>
   </div>
 </div>
 }

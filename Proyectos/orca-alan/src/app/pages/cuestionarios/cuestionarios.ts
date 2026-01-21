@@ -1210,7 +1210,7 @@ export class CuestionariosComponent {
 
     this.generandoIA.set(false);
     this.wizardPreviewCuestionario.set(cuestionarioGenerado);
-    this.wizardPaso.set(4);
+    this.wizardPaso.set(3); // Paso 3: Preview (flujo IA sin umbrales)
     this.messageService.add({ severity: 'success', summary: 'IA', detail: 'Cuestionario generado. Revisa el preview.' });
   }
 
@@ -1225,7 +1225,7 @@ export class CuestionariosComponent {
   }
 
   regenerarConIA() {
-    this.wizardPaso.set(3);
+    this.wizardPaso.set(2); // Volver al paso de configuración IA
     this.wizardPreviewCuestionario.set(null);
   }
 
@@ -1274,6 +1274,13 @@ export class CuestionariosComponent {
       this.wizardPaso.update(p => p - 1);
     } else {
       this.vistaActual.set('lista');
+    }
+  }
+
+  irAPasoWizard(paso: number) {
+    // Solo permite ir a pasos ya completados
+    if (paso < this.wizardPaso()) {
+      this.wizardPaso.set(paso);
     }
   }
 

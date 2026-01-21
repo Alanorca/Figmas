@@ -2465,7 +2465,9 @@ mark.search-highlight-alt {
     }
 
     .p-drawer-content {
-      background: var(--surface-900);
+      // Hardcoded para evitar inversión de var(--surface-900) en dark mode
+      background: #18181b;
     }
   }
 }
+

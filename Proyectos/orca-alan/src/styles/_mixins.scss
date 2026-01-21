@@ -165,7 +165,8 @@
           }
 
           &.editing-row {
-            background: color-mix(in srgb, var(--primary-color) 20%, var(--surface-900));
+            // Hardcoded para evitar inversión de var(--surface-900) en dark mode
+            background: #1a3329;
           }
         }
       }
@@ -612,7 +613,8 @@
 
       &.selected,
       &.active {
-        background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900));
+        // Hardcoded para evitar inversión de var(--surface-900) en dark mode
+        background: #1a3329;
         border-color: var(--primary-color);
 
         // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
@@ -708,7 +710,8 @@
 
     &.selected,
     &.active {
-      background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900));
+      // Hardcoded para evitar inversión de var(--surface-900) en dark mode
+      background: #1a3329;
       border-color: var(--primary-color);
 
       // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+

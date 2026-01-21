@@ -2714,7 +2714,8 @@
   }
 
   .category-chip {
-    background: var(--surface-900);
+    // Hardcoded para evitar inversión de var(--surface-900) en dark mode
+    background: #18181b;
     border-color: var(--surface-700);
 
     &:hover {
@@ -2722,7 +2723,8 @@
     }
 
     &.active {
-      background: color-mix(in srgb, var(--primary-500) 25%, var(--surface-900));
+      // Hardcoded: 25% emerald + 75% zinc-900
+      background: #1f4a38;
       border-color: var(--primary-500);
     }
   }

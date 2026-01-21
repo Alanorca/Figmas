@@ -50,7 +50,7 @@
   display: flex;
   gap: 0;
   margin-bottom: var(--spacing-6);
-  background: var(--surface-0);
+  background: var(--surface-card);
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-6);
   border: 1px solid var(--surface-border);
@@ -204,7 +204,7 @@
   border-radius: var(--border-radius-lg);
   font-size: var(--font-size-sm);
   color: var(--text-color);
-  background: var(--surface-0);
+  background: var(--surface-card);
   transition: border-color var(--transition-duration);
 
   &:focus {
@@ -1774,10 +1774,10 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--surface-0);
+  background: var(--surface-card);
   border-top: 1px solid var(--surface-border);
   padding: var(--spacing-4) var(--spacing-8);
-  z-index: 100;
+  z-index: 10; // Debajo del sidebar
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 
   .footer-content {
@@ -2734,6 +2734,559 @@
       i {
         color: var(--primary-color);
       }
+    }
+  }
+}
+
+// ==================== DARK MODE SUPPORT ====================
+:host-context(.dark-mode) {
+  // Page header - breadcrumb separator
+  .page-header {
+    .breadcrumb {
+      .separator {
+        color: var(--surface-500);
+      }
+    }
+  }
+
+  // Stepper container - colores hardcoded (zinc palette)
+  .stepper-container {
+    background: #27272a !important;
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+  }
+
+  // Step items - colores hardcoded
+  .step-item {
+    .step-icon {
+      background: #3f3f46 !important;
+      border-color: #52525b !important;
+
+      i {
+        color: #a1a1aa !important;
+      }
+    }
+
+    .step-line {
+      background: #52525b !important;
+    }
+
+    .step-label {
+      color: #a1a1aa !important;
+    }
+
+    .step-description {
+      color: #71717a !important;
+    }
+
+    // Active state
+    &.active {
+      .step-icon {
+        background: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+
+        i {
+          color: #fafafa !important;
+        }
+      }
+
+      .step-label {
+        color: #fafafa !important;
+      }
+    }
+
+    // Completed state
+    &.completed {
+      .step-icon {
+        background: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+
+        i {
+          color: #fafafa !important;
+        }
+      }
+
+      .step-line {
+        background: var(--primary-color) !important;
+      }
+
+      .step-label {
+        color: var(--primary-400) !important;
+      }
+    }
+
+    // Clickable hover
+    &.clickable:hover {
+      .step-icon {
+        box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2) !important;
+      }
+    }
+  }
+
+  // Form inputs - colores hardcoded (zinc palette)
+  .field-input,
+  .field-textarea,
+  .field-select {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
+
+    &::placeholder {
+      color: #71717a !important;
+    }
+
+    &:focus {
+      border-color: var(--primary-color) !important;
+    }
+  }
+
+  // PrimeNG inputs - colores hardcoded
+  ::ng-deep input.p-inputtext,
+  ::ng-deep textarea.p-textarea,
+  ::ng-deep .p-inputtextarea {
+    background: #27272a !important;
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
+
+    &::placeholder {
+      color: #71717a !important;
+    }
+
+    &:focus {
+      border-color: var(--primary-color) !important;
+    }
+  }
+
+  // PrimeNG selects
+  ::ng-deep .p-select,
+  ::ng-deep .p-multiselect,
+  ::ng-deep .p-dropdown {
+    background: #27272a !important;
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    .p-select-label,
+    .p-multiselect-label,
+    .p-dropdown-label {
+      color: #fafafa !important;
+    }
+
+    .p-select-trigger,
+    .p-multiselect-trigger,
+    .p-dropdown-trigger {
+      color: #a1a1aa !important;
+    }
+  }
+
+  // PrimeNG datepicker
+  ::ng-deep .p-datepicker-input,
+  ::ng-deep .p-calendar input {
+    background: #27272a !important;
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
+  }
+
+  // PrimeNG dropdown panels
+  ::ng-deep .p-select-overlay,
+  ::ng-deep .p-multiselect-overlay,
+  ::ng-deep .p-dropdown-panel,
+  ::ng-deep .p-datepicker {
+    background: #27272a !important;
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    .p-select-option,
+    .p-multiselect-option,
+    .p-dropdown-item {
+      color: #fafafa !important;
+
+      &:hover {
+        background: #3f3f46 !important;
+      }
+
+      &.p-highlight {
+        background: var(--primary-color) !important;
+      }
+    }
+  }
+
+  .input-group {
+    border-color: #3f3f46 !important;
+
+    .number-input {
+      background: #27272a !important;
+      color: #fafafa !important;
+    }
+
+    .input-controls {
+      border-left-color: #3f3f46 !important;
+
+      button {
+        background: #3f3f46 !important;
+
+        &:first-child {
+          border-bottom-color: #3f3f46 !important;
+        }
+
+        &:hover {
+          background: #52525b !important;
+        }
+      }
+    }
+  }
+
+  // Tabs
+  .tabs-container {
+    border-bottom-color: var(--surface-700);
+  }
+
+  .btn-guardar-apetito {
+    background: var(--surface-600);
+
+    &:hover {
+      background: var(--surface-500);
+    }
+  }
+
+  // Objetivos y KPIs
+  .objetivo-card {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+
+    &.editando {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2);
+    }
+  }
+
+  .objetivo-header-colapsable:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .kpis-count-badge {
+    background: var(--surface-700);
+    color: var(--text-color-secondary);
+  }
+
+  .objetivo-tag {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--blue-400);
+
+    &.estrategico {
+      background: rgba(var(--primary-color-rgb), 0.2);
+      color: var(--primary-400);
+    }
+  }
+
+  // KPIs section
+  .kpis-section {
+    background: var(--surface-900);
+  }
+
+  .kpi-item {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+
+    &.has-alert {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--red-800);
+    }
+  }
+
+  .kpi-form-inline {
+    background: var(--surface-900);
+    border-color: var(--primary-600);
+  }
+
+  .kpi-progress-bar {
+    background: var(--surface-700);
+  }
+
+  // Inline forms
+  .inline-form {
+    background: var(--surface-800);
+    border-color: var(--primary-600);
+  }
+
+  // Empty state
+  .empty-state {
+    i {
+      color: var(--surface-600);
+    }
+  }
+
+  // Progress bars
+  .progress-bar {
+    background: var(--surface-700);
+  }
+
+  // Matriz y leyenda
+  .matriz-leyenda {
+    background: var(--surface-900);
+  }
+
+  .leyenda-fuera {
+    background: var(--green-700);
+  }
+
+  // Buttons
+  .btn-collapse-all {
+    background: var(--surface-800);
+    border-color: var(--surface-600);
+
+    &:hover {
+      background: var(--surface-700);
+    }
+  }
+
+  .btn-icon {
+    border-color: var(--surface-600);
+
+    &:hover {
+      background: var(--surface-800);
+    }
+  }
+
+  // Revisión section
+  .revision-objetivo {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+  }
+
+  .objetivo-header-rev.objetivo-header-colapsable:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .kpis-section-rev {
+    background: var(--surface-900);
+  }
+
+  .kpi-item-rev {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+  }
+
+  .descripcion-box,
+  .apetito-resumen {
+    background: var(--surface-900);
+    border-color: var(--surface-700);
+  }
+
+  // Footer - colores hardcoded (zinc palette)
+  .page-footer-fixed {
+    background: #18181b !important;
+    background-color: #18181b !important;
+    border-top-color: #3f3f46 !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .btn-atras {
+    background: transparent !important;
+    border-color: #52525b !important;
+    color: #a1a1aa !important;
+
+    &:hover {
+      background: #27272a !important;
+      border-color: #71717a !important;
+    }
+  }
+
+  // Drawer
+  .drawer-left-column {
+    background: var(--surface-900);
+    border-right-color: var(--surface-700);
+  }
+
+  .drawer-list-header {
+    border-bottom-color: var(--surface-700);
+  }
+
+  .drawer-search input {
+    background: var(--surface-800);
+    border-color: var(--surface-600);
+    color: var(--text-color);
+
+    &:focus {
+      border-color: var(--primary-color);
+    }
+  }
+
+  .drawer-objetivo-item {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+
+    &:hover {
+      border-color: var(--primary-700);
+    }
+
+    &.selected {
+      border-color: var(--primary-color);
+      background: rgba(var(--primary-color-rgb), 0.1);
+    }
+  }
+
+  .drawer-right-column {
+    background: var(--surface-800);
+  }
+
+  .drawer-detail-header {
+    border-bottom-color: var(--surface-700);
+  }
+
+  .detail-progress-section .progress-track-lg {
+    background: var(--surface-700);
+  }
+
+  .btn-editar {
+    border-color: var(--surface-600);
+
+    &:hover {
+      border-color: var(--primary-color);
+    }
+  }
+
+  .btn-eliminar-x {
+    background: rgba(239, 68, 68, 0.15);
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+  }
+
+  .detail-edit-form {
+    background: var(--surface-900);
+  }
+
+  .edit-input-title,
+  .edit-textarea,
+  .edit-select {
+    background: var(--surface-800);
+    border-color: var(--surface-600);
+    color: var(--text-color);
+
+    &:focus {
+      border-color: var(--primary-color);
+    }
+  }
+
+  .edit-actions {
+    border-top-color: var(--surface-700);
+  }
+
+  .btn-cancelar {
+    border-color: var(--surface-600);
+
+    &:hover {
+      background: var(--surface-800);
+      border-color: var(--surface-500);
+    }
+  }
+
+  // KPIs drawer section
+  .drawer-kpis-section {
+    background: var(--surface-900);
+  }
+
+  .kpi-edit-row {
+    background: var(--surface-800);
+    border-color: var(--primary-600);
+  }
+
+  .kpi-input-nombre,
+  .kpi-input-meta,
+  .kpi-input-actual,
+  .kpi-select-escala {
+    background: var(--surface-700);
+    border-color: var(--surface-600);
+    color: var(--text-color);
+
+    &:focus {
+      border-color: var(--primary-color);
+    }
+  }
+
+  .kpi-input-umbral {
+    background: rgba(249, 115, 22, 0.1);
+    border-color: var(--orange-700);
+
+    &:focus {
+      border-color: var(--orange-500);
+    }
+  }
+
+  .btn-x {
+    border-color: var(--surface-600);
+
+    &:hover {
+      background: var(--surface-700);
+    }
+  }
+
+  .drawer-kpi-item {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+
+    &.has-alert {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--red-800);
+    }
+  }
+
+  .kpi-view-row .kpi-progress-bar {
+    background: var(--surface-700);
+  }
+
+  .btn-editar-sm {
+    border-color: var(--surface-600);
+
+    &:hover {
+      border-color: var(--primary-color);
+    }
+  }
+
+  .drawer-empty-state i,
+  .drawer-no-selection i {
+    color: var(--surface-600);
+  }
+
+  // Modal
+  .modal-content {
+    background: var(--surface-800);
+  }
+
+  .modal-header {
+    border-bottom-color: var(--surface-700);
+
+    .btn-close:hover {
+      background: var(--surface-700);
+    }
+  }
+
+  .modal-footer {
+    background: var(--surface-900);
+    border-top-color: var(--surface-700);
+  }
+
+  // KPI Alertas config
+  .kpi-alertas-config {
+    border-top-color: var(--surface-600);
+  }
+
+  // Select wrapper compact
+  .select-wrapper.compact .field-select {
+    background: rgba(var(--primary-color-rgb), 0.15);
+    border-color: var(--primary-600);
+  }
+
+  // Umbral input override
+  .umbral-input {
+    background: rgba(249, 115, 22, 0.15) !important;
+    border-color: var(--orange-700) !important;
+
+    &:focus {
+      border-color: var(--orange-500) !important;
     }
   }
 }

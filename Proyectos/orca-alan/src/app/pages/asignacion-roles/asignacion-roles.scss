@@ -551,8 +551,9 @@
     }
 
     &.selected {
-      // Fondo con tinte del color primario (como en el ejemplo)
-      background-color: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900)) !important;
+      // Fondo con tinte del color primario - hardcoded para evitar inversión de var(--surface-900)
+      // Equivale a color-mix(in srgb, var(--primary-color) 15%, #18181b)
+      background-color: #1a3329 !important;
       border: 2px solid var(--primary-color) !important;
       border-radius: 8px;
 

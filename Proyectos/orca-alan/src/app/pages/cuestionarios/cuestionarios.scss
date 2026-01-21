@@ -1,4 +1,6 @@
 // Estilos específicos para cuestionarios
+// Importar estilos base de proceso-crear para el layout del wizard
+@use '../proceso-crear/proceso-crear.scss';
 
 :host {
   display: block;
@@ -23,6 +25,813 @@
     margin: 0.25rem 0 0 0;
     font-size: 0.9rem;
     color: var(--text-color-secondary);
+  }
+}
+
+// ==================== DARK MODE FIXES ====================
+:host-context(.dark-mode) {
+  // Fix textos con colores numéricos fijos
+  .text-900 {
+    color: var(--text-color) !important;
+  }
+
+  .text-800 {
+    color: var(--text-color) !important;
+  }
+
+  .text-700 {
+    color: var(--text-color-secondary) !important;
+  }
+
+  .text-600 {
+    color: var(--text-color-secondary) !important;
+  }
+
+  .text-500 {
+    color: var(--text-color-secondary) !important;
+  }
+
+  .text-400 {
+    color: var(--surface-400) !important;
+  }
+
+  .text-300 {
+    color: var(--surface-400) !important;
+  }
+
+  // Fix fondos grises
+  .bg-gray-200,
+  .bg-gray-100 {
+    background-color: var(--surface-700) !important;
+  }
+
+  .bg-300 {
+    background-color: var(--surface-600) !important;
+  }
+
+  // Fix bordes
+  .border-300 {
+    border-color: var(--surface-500) !important;
+  }
+
+  // Fix fondos de superficie
+  .bg-surface-100 {
+    background-color: var(--surface-800) !important;
+  }
+
+  .bg-surface-50 {
+    background-color: var(--surface-800) !important;
+  }
+
+  // Nota: Los estilos dark mode de wizard-method-card están inline en la sección WIZARD STYLES
+
+  // Fix tarjeta cuestionario IA con fondo púrpura
+  .bg-purple-50 {
+    background-color: rgba(139, 92, 246, 0.15) !important;
+  }
+
+  .bg-purple-100 {
+    background-color: rgba(139, 92, 246, 0.2) !important;
+  }
+
+  .bg-blue-100 {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+  }
+
+  .bg-teal-100 {
+    background-color: rgba(20, 184, 166, 0.2) !important;
+  }
+
+  // Fix wizard step icons
+  .wizard-step-icon {
+    &.border-300 {
+      border-color: var(--surface-500) !important;
+    }
+  }
+
+  // Fix barra de progreso
+  .bg-gray-200 {
+    background-color: var(--surface-600) !important;
+  }
+
+  // Fix items de cuestionario en lista
+  .cuestionario-item {
+    &:hover {
+      background-color: var(--surface-700) !important;
+    }
+
+    &.cuestionario-item-selected {
+      background-color: var(--surface-700) !important;
+    }
+  }
+
+  // Fix upload zone
+  .upload-zone {
+    background-color: var(--surface-800) !important;
+    border-color: var(--surface-500) !important;
+
+    &:hover {
+      border-color: var(--purple-400) !important;
+      background-color: rgba(139, 92, 246, 0.1) !important;
+    }
+  }
+
+  // Fix formula editor
+  .formula-editor {
+    .formula-textarea {
+      background-color: var(--surface-800) !important;
+      border-color: var(--surface-500) !important;
+      color: var(--text-color) !important;
+
+      &:focus {
+        background-color: var(--surface-900) !important;
+      }
+    }
+
+    .formula-help code {
+      background-color: rgba(59, 130, 246, 0.2) !important;
+      color: var(--blue-300) !important;
+    }
+  }
+
+  // Fix scrollbar
+  .overflow-y-auto {
+    &::-webkit-scrollbar-track {
+      background: var(--surface-800);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--surface-500);
+
+      &:hover {
+        background: var(--surface-400);
+      }
+    }
+  }
+
+  // Fix chips
+  ::ng-deep .p-chip {
+    &.cursor-pointer:hover {
+      background-color: rgba(99, 102, 241, 0.2) !important;
+    }
+  }
+
+  // Fix cards hover
+  ::ng-deep .p-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+
+  // Fix tabla footer
+  ::ng-deep .p-datatable-footer {
+    tr.bg-surface-100 {
+      background-color: var(--surface-800) !important;
+    }
+  }
+
+  // Fix empty message
+  .text-300 {
+    color: var(--surface-500) !important;
+  }
+
+  // Fix sombras en dark mode
+  .shadow-1 {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .shadow-2 {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .shadow-3 {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  // Fix fondos surface-100 usados en cards de información
+  .surface-100 {
+    background-color: var(--surface-800) !important;
+  }
+
+  // Fix bg-200 para barras de progreso
+  .bg-200 {
+    background-color: var(--surface-600) !important;
+  }
+
+  // Fix tabs de navegación en detalle
+  .p-3.border-round-lg {
+    &.surface-100 {
+      background-color: var(--surface-700) !important;
+    }
+  }
+
+  // Fix botones de tabs personalizados
+  button.p-2.border-round-lg {
+    &.surface-100,
+    &[class*="surface-100"] {
+      background-color: var(--surface-700) !important;
+    }
+
+    &:hover {
+      background-color: var(--surface-600) !important;
+    }
+  }
+
+  // Fix contenedor de responsable
+  .surface-100.border-round-lg {
+    background-color: var(--surface-700) !important;
+  }
+
+  // Fix panel izquierdo detalle
+  .surface-card.border-round-xl {
+    background-color: var(--surface-card) !important;
+    border: 1px solid var(--surface-border);
+  }
+
+  // Fix drawer panel
+  ::ng-deep .p-drawer {
+    .p-drawer-content {
+      background-color: var(--surface-ground) !important;
+    }
+  }
+
+  // Fix acordeones
+  ::ng-deep .p-accordion {
+    .p-accordion-panel {
+      background-color: var(--surface-card) !important;
+    }
+
+    .p-accordion-header-link {
+      background-color: var(--surface-card) !important;
+
+      &:hover {
+        background-color: var(--surface-hover) !important;
+      }
+    }
+
+    .p-accordion-content {
+      background-color: var(--surface-card) !important;
+    }
+  }
+
+  // ==================== FIX INPUTS Y FORMULARIOS - COLORES HARDCODED ====================
+  // Zinc palette: #18181b (zinc-900), #27272a (zinc-800), #3f3f46 (zinc-700),
+  // #52525b (zinc-600), #71717a (zinc-500), #a1a1aa (zinc-400), #fafafa (zinc-50)
+
+  // Fix TODOS los inputs de PrimeNG
+  ::ng-deep textarea.p-textarea,
+  ::ng-deep input.p-inputtext,
+  ::ng-deep .p-inputtext,
+  ::ng-deep input[pInputText],
+  ::ng-deep textarea[pTextarea] {
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
+
+    &::placeholder {
+      color: #71717a !important;
+    }
+
+    &:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+    }
+
+    &:disabled {
+      background-color: #18181b !important;
+      color: #71717a !important;
+    }
+  }
+
+  // Fix inputs nativos dentro del wizard
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  textarea {
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
+
+    &::placeholder {
+      color: #71717a !important;
+    }
+
+    &:focus {
+      border-color: var(--primary-color) !important;
+      outline: none !important;
+    }
+  }
+
+  // Fix selects y multiselects - colores hardcoded
+  ::ng-deep .p-select,
+  ::ng-deep .p-multiselect {
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    .p-select-label,
+    .p-multiselect-label {
+      color: #fafafa !important;
+    }
+
+    .p-select-trigger,
+    .p-multiselect-trigger {
+      color: #a1a1aa !important;
+    }
+
+    &:hover {
+      border-color: #52525b !important;
+    }
+
+    &.p-focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+    }
+  }
+
+  // Fix dropdown panel y overlay
+  ::ng-deep .p-select-overlay,
+  ::ng-deep .p-multiselect-overlay,
+  ::ng-deep .p-select-panel,
+  ::ng-deep .p-multiselect-panel {
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    .p-select-header,
+    .p-multiselect-header {
+      background-color: #27272a !important;
+      border-color: #3f3f46 !important;
+    }
+
+    .p-select-option,
+    .p-multiselect-option,
+    .p-select-item,
+    .p-multiselect-item {
+      color: #fafafa !important;
+
+      &:hover {
+        background-color: #3f3f46 !important;
+      }
+
+      &.p-highlight,
+      &.p-selected {
+        background-color: rgba(16, 185, 129, 0.2) !important;
+        color: var(--primary-color) !important;
+      }
+    }
+
+    .p-select-empty-message,
+    .p-multiselect-empty-message {
+      color: #71717a !important;
+    }
+  }
+
+  // Fix iconfield (campo de búsqueda con icono)
+  ::ng-deep .p-iconfield {
+    .p-inputicon {
+      color: #71717a !important;
+    }
+  }
+
+  // Fix chips dentro de multiselect
+  ::ng-deep .p-multiselect-chip,
+  ::ng-deep .p-chip {
+    background-color: #3f3f46 !important;
+    color: #fafafa !important;
+  }
+
+  // Fix slider
+  ::ng-deep .p-slider {
+    background-color: #3f3f46 !important;
+
+    .p-slider-range {
+      background-color: var(--primary-color) !important;
+    }
+
+    .p-slider-handle {
+      background-color: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
+    }
+  }
+
+  // Fix inputnumber
+  ::ng-deep .p-inputnumber {
+    .p-inputnumber-input {
+      background-color: #27272a !important;
+      border-color: #3f3f46 !important;
+      color: #fafafa !important;
+    }
+
+    .p-inputnumber-button {
+      background-color: #3f3f46 !important;
+      border-color: #3f3f46 !important;
+      color: #fafafa !important;
+
+      &:hover {
+        background-color: #52525b !important;
+      }
+    }
+  }
+
+  // Fix table footer
+  ::ng-deep .p-datatable {
+    .p-datatable-footer {
+      background-color: var(--surface-800) !important;
+    }
+
+    .p-datatable-header {
+      background-color: var(--surface-card) !important;
+    }
+
+    tr.cursor-pointer:hover {
+      background-color: var(--surface-hover) !important;
+    }
+  }
+
+  // Fix preguntas panel
+  .preguntas-panel {
+    .pregunta-item {
+      background-color: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+
+      &:hover {
+        background-color: var(--surface-hover) !important;
+      }
+    }
+  }
+
+  // Fix dialogs
+  ::ng-deep .p-dialog {
+    .p-dialog-header {
+      background-color: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+    }
+
+    .p-dialog-content {
+      background-color: var(--surface-card) !important;
+    }
+
+    .p-dialog-footer {
+      background-color: var(--surface-card) !important;
+      border-color: var(--surface-border) !important;
+    }
+  }
+
+  // Fix tooltips y popovers
+  ::ng-deep .p-tooltip {
+    .p-tooltip-text {
+      background-color: var(--surface-800) !important;
+      color: var(--text-color) !important;
+    }
+  }
+
+  // Fix column filters
+  ::ng-deep .p-column-filter {
+    .p-inputtext,
+    .p-select {
+      background-color: var(--surface-ground) !important;
+    }
+  }
+
+  // Fix menus contextuales
+  ::ng-deep .p-menu {
+    background-color: var(--surface-card) !important;
+    border-color: var(--surface-border) !important;
+
+    .p-menuitem-link {
+      &:hover {
+        background-color: var(--surface-hover) !important;
+      }
+    }
+  }
+
+  // Fix iconos con colores fijos
+  .pi.text-500 {
+    color: var(--text-color-secondary) !important;
+  }
+
+  // Fix border-top-3 para stats cards
+  .border-top-3 {
+    &.border-blue-500 {
+      border-top-color: var(--blue-400) !important;
+    }
+    &.border-green-500 {
+      border-top-color: var(--green-400) !important;
+    }
+    &.border-orange-500 {
+      border-top-color: var(--orange-400) !important;
+    }
+    &.border-red-500 {
+      border-top-color: var(--red-400) !important;
+    }
+    &.border-purple-500 {
+      border-top-color: var(--purple-400) !important;
+    }
+  }
+
+  // ==================== WIZARD LAYOUT DARK MODE ====================
+
+  // Stepper container - colores hardcoded (zinc-800)
+  .stepper-container,
+  .crear-proceso-page .stepper-container {
+    background: #27272a !important;
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+  }
+
+  // Step items
+  .step-item {
+    .step-icon {
+      background: var(--surface-700) !important;
+      border-color: var(--surface-600) !important;
+
+      i {
+        color: var(--surface-400) !important;
+      }
+    }
+
+    .step-line {
+      background: var(--surface-600) !important;
+    }
+
+    .step-label {
+      color: var(--surface-400) !important;
+    }
+
+    .step-description {
+      color: var(--surface-500) !important;
+    }
+
+    // Active state
+    &.active {
+      .step-icon {
+        background: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+
+        i {
+          color: var(--surface-0) !important;
+        }
+      }
+
+      .step-label {
+        color: var(--text-color) !important;
+      }
+    }
+
+    // Completed state
+    &.completed {
+      .step-icon {
+        background: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+
+        i {
+          color: var(--surface-0) !important;
+        }
+      }
+
+      .step-line {
+        background: var(--primary-color) !important;
+      }
+
+      .step-label {
+        color: var(--primary-400) !important;
+      }
+    }
+
+    // Clickable hover
+    &.clickable:hover {
+      .step-icon {
+        box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2);
+      }
+    }
+  }
+
+  // Page footer fixed - colores hardcoded (zinc-900)
+  .page-footer-fixed,
+  .crear-proceso-page .page-footer-fixed {
+    background: #18181b !important;
+    background-color: #18181b !important;
+    border-top-color: #3f3f46 !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  // Botón contrast en wizard method card (Manual) - colores hardcoded
+  ::ng-deep .p-button.p-button-contrast {
+    background: #3f3f46 !important;
+    border-color: #52525b !important;
+    color: #fafafa !important;
+
+    &:hover {
+      background: #52525b !important;
+      border-color: #71717a !important;
+    }
+  }
+
+  // Footer buttons - colores hardcoded
+  .btn-atras {
+    background: transparent !important;
+    border-color: #52525b !important;
+    color: #a1a1aa !important;
+
+    &:hover {
+      background: #27272a !important;
+      border-color: #71717a !important;
+    }
+  }
+
+  .btn-siguiente,
+  .btn-guardar {
+    background: var(--primary-color) !important;
+    color: var(--surface-0) !important;
+
+    &:hover {
+      background: var(--primary-hover-color) !important;
+    }
+
+    &:disabled {
+      background: var(--surface-600) !important;
+      color: var(--surface-400) !important;
+    }
+  }
+
+  // Breadcrumb separator
+  .page-header {
+    .breadcrumb {
+      .separator {
+        color: var(--surface-500) !important;
+      }
+    }
+  }
+
+  // Content card
+  .content-card {
+    background: transparent !important;
+  }
+
+  // ==================== PASO 1: DATOS GENERALES ====================
+
+  // Panel title
+  .step-panel .panel-title {
+    color: var(--text-color) !important;
+  }
+
+  // Form fields - colores hardcoded zinc palette
+  .field-label {
+    color: #fafafa !important;
+  }
+
+  .field-input,
+  .field-textarea {
+    background: #27272a !important;
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
+
+    &::placeholder {
+      color: #71717a !important;
+    }
+
+    &:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+      outline: none !important;
+    }
+  }
+
+  // ==================== PASO 2: UMBRALES ====================
+
+  // Cards de umbrales - colores hardcoded
+  .surface-card {
+    background: #27272a !important;
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+  }
+
+  // Labels y textos dentro de cards de umbrales
+  .text-900 {
+    color: #fafafa !important;
+  }
+
+  .text-500 {
+    color: #a1a1aa !important;
+  }
+
+  // ==================== PASO 3: CONFIGURACIÓN IA ====================
+
+  // Selectores de método IA - colores hardcoded
+  .bg-purple-50 {
+    background-color: rgba(139, 92, 246, 0.2) !important;
+  }
+
+  .text-purple-700 {
+    color: #c4b5fd !important;
+  }
+
+  .text-700 {
+    color: #d4d4d8 !important;
+  }
+
+  // Método IA selector cards
+  .flex-1.p-3.border-round-lg {
+    &.border-1.surface-border {
+      background-color: #27272a !important;
+      border-color: #3f3f46 !important;
+    }
+  }
+
+  // Upload zone - colores hardcoded
+  .upload-zone {
+    background-color: #27272a !important;
+    border-color: #52525b !important;
+
+    .text-700 {
+      color: #d4d4d8 !important;
+    }
+
+    .text-500 {
+      color: #a1a1aa !important;
+    }
+
+    .text-400 {
+      color: #71717a !important;
+    }
+
+    &:hover {
+      border-color: #a78bfa !important;
+      background-color: rgba(139, 92, 246, 0.15) !important;
+    }
+  }
+
+  // Documento subido - colores hardcoded
+  .surface-100.border-round,
+  .surface-100 {
+    background-color: #27272a !important;
+  }
+
+  // ==================== PASO 4: PREVIEW ====================
+
+  // Resumen general
+  .p-3.surface-100.border-round {
+    background-color: #27272a !important;
+  }
+
+  // Secciones preview - colores hardcoded
+  .border-1.surface-border.border-round,
+  .p-3.border-1.surface-border.border-round {
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+  }
+
+  // Preguntas dentro de secciones - colores hardcoded
+  .surface-50,
+  .p-2.surface-50.border-round {
+    background-color: #3f3f46 !important;
+  }
+
+  // ==================== WIZARD METHOD CARDS ====================
+
+  // Cards de selección de método (IA / Manual)
+  .wizard-method-card {
+    background-color: #27272a !important;
+    border-color: #3f3f46 !important;
+
+    &:hover {
+      border-color: #52525b !important;
+    }
+
+    &.wizard-method-selected {
+      border-color: var(--primary-color) !important;
+      background-color: rgba(16, 185, 129, 0.1) !important;
+    }
+
+    .wizard-method-title {
+      color: #fafafa !important;
+    }
+
+    .wizard-method-desc {
+      color: #a1a1aa !important;
+    }
+
+    .wizard-stat-card {
+      background-color: #3f3f46 !important;
+    }
+
+    .wizard-stat-value {
+      color: #fafafa !important;
+    }
+
+    .wizard-stat-label {
+      color: #71717a !important;
+    }
+  }
+
+  // Iconos de método
+  .wizard-method-icon {
+    &.bg-purple-100 {
+      background-color: rgba(139, 92, 246, 0.2) !important;
+    }
+
+    &.bg-blue-100 {
+      background-color: rgba(59, 130, 246, 0.2) !important;
+    }
   }
 }
 
@@ -112,15 +921,99 @@
 .wizard-method-card {
   transition: all 0.3s ease;
   border: 2px solid transparent;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
   &:hover {
     transform: translateY(-4px);
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.15);
   }
 
   &.wizard-method-selected {
     border-color: var(--primary-color);
     box-shadow: 0 8px 25px -5px rgba(var(--primary-color-rgb), 0.3);
   }
+
+  // Card IA - púrpura
+  &.wizard-method-ia {
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+
+    &.wizard-method-selected {
+      background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    }
+
+    // Dark mode override
+    :host-context(.dark-mode) & {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(124, 58, 237, 0.18) 100%);
+      border-color: var(--surface-border);
+
+      &:hover {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(124, 58, 237, 0.14) 100%);
+      }
+    }
+
+    // Dark mode selected - más oscuro
+    :host-context(.dark-mode) &.wizard-method-selected {
+      background: linear-gradient(135deg, rgba(88, 28, 135, 0.6) 0%, rgba(76, 29, 149, 0.5) 100%) !important;
+      border-color: var(--purple-400) !important;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(139, 92, 246, 0.3) !important;
+    }
+  }
+
+  // Card Manual - azul/gris
+  &.wizard-method-manual {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+
+    &.wizard-method-selected {
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    }
+
+    // Dark mode override
+    :host-context(.dark-mode) & {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.12) 100%);
+      border-color: var(--surface-border);
+
+      &:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
+      }
+    }
+
+    // Dark mode selected - más oscuro
+    :host-context(.dark-mode) &.wizard-method-selected {
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.6) 0%, rgba(29, 78, 216, 0.5) 100%) !important;
+      border-color: var(--blue-400) !important;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+    }
+  }
+}
+
+// Textos dentro de wizard cards
+.wizard-method-title {
+  color: var(--text-color);
+}
+
+.wizard-method-desc {
+  color: var(--text-color-secondary);
+}
+
+// Stats cards dentro del wizard
+.wizard-stat-card {
+  background-color: var(--surface-card);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  // Dark mode override - fondo más claro para contrastar con parent card
+  :host-context(.dark-mode) & {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(4px);
+  }
+}
+
+.wizard-stat-value {
+  color: var(--text-color);
+}
+
+.wizard-stat-label {
+  color: var(--text-color-secondary);
 }
 
 // Wizard method icon

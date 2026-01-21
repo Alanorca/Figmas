@@ -485,10 +485,12 @@ $dm-text-disabled: var(--surface-600);
 // ----------------------------------------------------------------------------
 // UTILITY: COLOR MIX FOR SELECTIONS
 // ----------------------------------------------------------------------------
-// Genera un color de fondo para selección que funciona en dark mode
+// ⚠️ DEPRECATED: NO USAR ESTA FUNCIÓN - var(--surface-900) se invierte en dark mode
+// Usar colores hardcoded: $dm-selection-emerald (#1a3329), etc.
 
 @function selection-bg($color: var(--primary-color), $intensity: 20%) {
-  @return color-mix(in srgb, #{$color} #{$intensity}, var(--surface-900));
+  // ⚠️ DEPRECATED: Esta función produce colores incorrectos en dark mode
+  @return #1a3329; // Fallback seguro
 }
 
 // ----------------------------------------------------------------------------
@@ -686,7 +688,8 @@ $dm-text-disabled: var(--surface-600);
 
     &.selected,
     &.active {
-      background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900));
+      // Hardcoded para evitar inversión de var(--surface-900) en dark mode
+      background: #1a3329;
       border-color: var(--primary-color);
 
       // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+
@@ -744,7 +747,8 @@ $dm-text-disabled: var(--surface-600);
     }
 
     &.selected {
-      background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-900));
+      // Hardcoded para evitar inversión de var(--surface-900) en dark mode
+      background: #1a3329;
       border-color: var(--primary-color);
 
       // WCAG 2.1 AA: Texto blanco para contraste 4.5:1+

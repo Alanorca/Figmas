@@ -94,127 +94,155 @@ html.light-mode * {
 /* ===========================================
    DARK MODE - PrimeNG Components Override
    =========================================== */
+/* Zinc palette hardcoded para evitar inversión de variables:
+   #18181b (zinc-900), #27272a (zinc-800), #3f3f46 (zinc-700),
+   #52525b (zinc-600), #71717a (zinc-500), #a1a1aa (zinc-400), #fafafa (zinc-50) */
+
 html.dark-mode {
   /* Drawer */
   .p-drawer {
-    background: var(--surface-card) !important;
-    border-color: var(--surface-border) !important;
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
 
     .p-drawer-header {
-      background: var(--surface-card) !important;
-      border-color: var(--surface-border) !important;
-      color: var(--text-color) !important;
+      background: #27272a !important;
+      border-color: #3f3f46 !important;
+      color: #fafafa !important;
     }
 
     .p-drawer-content {
-      background: var(--surface-card) !important;
-      color: var(--text-color) !important;
+      background: #27272a !important;
+      color: #fafafa !important;
     }
   }
 
   /* Panel */
   .p-panel {
-    background: var(--surface-card);
-    border-color: var(--surface-border);
+    background: #27272a;
+    border-color: #3f3f46;
 
     .p-panel-header {
-      background: var(--surface-50) !important;
-      border-color: var(--surface-border) !important;
-      color: var(--text-color) !important;
+      background: #3f3f46 !important;
+      border-color: #3f3f46 !important;
+      color: #fafafa !important;
     }
 
     .p-panel-content {
-      background: var(--surface-card) !important;
-      color: var(--text-color) !important;
+      background: #27272a !important;
+      color: #fafafa !important;
     }
   }
 
-  /* Inputs */
+  /* Inputs - colores hardcoded */
   .p-inputtext,
   .p-textarea,
-  .p-password input {
-    background: var(--surface-100) !important;
-    border-color: var(--surface-border) !important;
-    color: var(--text-color) !important;
+  .p-password input,
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  textarea {
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
 
     &::placeholder {
-      color: var(--text-color-secondary) !important;
+      color: #71717a !important;
+    }
+
+    &:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
     }
   }
 
-  /* Select / Dropdown */
+  /* Select / Dropdown - colores hardcoded */
   .p-select,
   .p-dropdown {
-    background: var(--surface-100) !important;
-    border-color: var(--surface-border) !important;
-    color: var(--text-color) !important;
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
 
     .p-select-label,
     .p-dropdown-label {
-      color: var(--text-color) !important;
+      color: #fafafa !important;
+    }
+
+    &:hover {
+      border-color: #52525b !important;
     }
   }
 
   .p-select-overlay,
   .p-dropdown-panel {
-    background: var(--surface-card) !important;
-    border-color: var(--surface-border) !important;
+    background: #27272a !important;
+    border-color: #3f3f46 !important;
 
     .p-select-option,
     .p-dropdown-item {
-      color: var(--text-color) !important;
+      color: #fafafa !important;
 
       &:hover {
-        background: var(--surface-hover) !important;
+        background: #3f3f46 !important;
       }
 
       &.p-highlight {
-        background: var(--highlight-background) !important;
-        color: var(--highlight-color) !important;
+        background: rgba(16, 185, 129, 0.2) !important;
+        color: var(--primary-color) !important;
       }
     }
   }
 
-  /* TreeSelect y MultiSelect - UNIFICADOS */
+  /* TreeSelect y MultiSelect - colores hardcoded */
   .p-treeselect,
   .p-multiselect {
-    background: var(--surface-overlay) !important;
-    border: 1px solid var(--surface-border) !important;
-    color: var(--text-color) !important;
+    background: #27272a !important;
+    border: 1px solid #3f3f46 !important;
+    color: #fafafa !important;
 
     .p-treeselect-label,
     .p-multiselect-label {
-      color: var(--text-color) !important;
+      color: #fafafa !important;
     }
 
     .p-treeselect-label.p-placeholder,
     .p-multiselect-label.p-placeholder {
-      color: var(--text-color-secondary) !important;
+      color: #71717a !important;
     }
 
     .p-treeselect-dropdown,
-    .p-multiselect-dropdown {
-      color: var(--text-color-secondary) !important;
+    .p-multiselect-dropdown,
+    .p-treeselect-trigger,
+    .p-multiselect-trigger {
+      color: #a1a1aa !important;
+    }
+
+    &:hover {
+      border-color: #52525b !important;
+    }
+
+    &.p-focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
     }
   }
 
   .p-treeselect-overlay,
   .p-multiselect-overlay {
-    background: var(--surface-overlay) !important;
-    border: 1px solid var(--surface-border) !important;
+    background: #27272a !important;
+    border: 1px solid #3f3f46 !important;
 
     /* Header con filtro */
     .p-treeselect-header,
     .p-multiselect-header {
-      background: var(--surface-overlay) !important;
+      background: #27272a !important;
       padding: 0.75rem !important;
-      border-bottom: 1px solid var(--surface-border) !important;
+      border-bottom: 1px solid #3f3f46 !important;
       gap: 0.5rem !important;
 
       .p-checkbox {
         .p-checkbox-box {
-          background: var(--surface-ground) !important;
-          border-color: var(--surface-border) !important;
+          background: #3f3f46 !important;
+          border-color: #52525b !important;
         }
 
         // Estado checked
@@ -228,30 +256,30 @@ html.dark-mode {
 
       .p-treeselect-filter,
       .p-multiselect-filter {
-        background: var(--surface-ground) !important;
-        border: 1px solid var(--surface-border) !important;
-        color: var(--text-color) !important;
+        background: #3f3f46 !important;
+        border: 1px solid #52525b !important;
+        color: #fafafa !important;
 
         &::placeholder {
-          color: var(--text-color-secondary) !important;
+          color: #71717a !important;
         }
       }
 
       .p-treeselect-close,
       .p-multiselect-close {
-        color: var(--text-color-secondary) !important;
+        color: #a1a1aa !important;
       }
     }
 
-    /* Items wrapper */
+    /* Items wrapper - colores hardcoded */
     .p-treeselect-items-wrapper,
     .p-multiselect-items-wrapper {
-      background: var(--surface-overlay) !important;
+      background: #27272a !important;
     }
 
-    /* Tree en TreeSelect */
+    /* Tree en TreeSelect - colores hardcoded */
     .p-tree {
-      background: var(--surface-overlay) !important;
+      background: #27272a !important;
       border: none !important;
       padding: 0.5rem !important;
 
@@ -269,35 +297,35 @@ html.dark-mode {
         cursor: pointer !important;
 
         &:hover {
-          background: var(--surface-hover) !important;
+          background: #3f3f46 !important;
         }
 
         .p-tree-toggler {
-          color: var(--text-color-secondary) !important;
+          color: #a1a1aa !important;
           width: 1.5rem !important;
           height: 1.5rem !important;
           min-width: 1.5rem !important;
           flex-shrink: 0 !important;
 
           &:hover {
-            background: var(--surface-hover) !important;
+            background: #3f3f46 !important;
           }
         }
 
         .p-tree-node-icon {
-          color: var(--text-color-secondary) !important;
+          color: #a1a1aa !important;
         }
 
         .p-tree-node-label {
-          color: var(--text-color) !important;
+          color: #fafafa !important;
         }
 
         .p-checkbox {
           flex-shrink: 0 !important;
 
           .p-checkbox-box {
-            background: var(--surface-ground) !important;
-            border-color: var(--surface-border) !important;
+            background: #3f3f46 !important;
+            border-color: #52525b !important;
           }
 
           // Estado checked - PrimeNG v19+
@@ -311,34 +339,34 @@ html.dark-mode {
       }
     }
 
-    /* Items en MultiSelect */
+    /* Items en MultiSelect - colores hardcoded */
     .p-multiselect-items {
-      background: var(--surface-overlay) !important;
+      background: #27272a !important;
       padding: 0.5rem !important;
 
       .p-multiselect-item {
         background: transparent !important;
-        color: var(--text-color) !important;
+        color: #fafafa !important;
         padding: 0.5rem 0.75rem !important;
         border-radius: 6px !important;
         margin: 0 !important;
         gap: 0.5rem !important;
 
         &:hover {
-          background: var(--surface-hover) !important;
+          background: #3f3f46 !important;
         }
 
         &.p-highlight {
-          background: var(--surface-hover) !important;
-          color: var(--text-color) !important;
+          background: rgba(16, 185, 129, 0.15) !important;
+          color: #fafafa !important;
         }
 
         .p-checkbox {
           margin-right: 0.5rem !important;
 
           .p-checkbox-box {
-            background: var(--surface-ground) !important;
-            border-color: var(--surface-border) !important;
+            background: #3f3f46 !important;
+            border-color: #52525b !important;
           }
 
           // Estado checked - PrimeNG v19+
@@ -352,28 +380,40 @@ html.dark-mode {
       }
 
       .p-multiselect-empty-message {
-        color: var(--text-color-secondary) !important;
+        color: #71717a !important;
         padding: 0.5rem 0.75rem !important;
       }
     }
   }
 
-  /* Buttons */
+  /* Buttons - colores hardcoded */
   .p-button.p-button-secondary {
-    background: var(--surface-200) !important;
-    border-color: var(--surface-200) !important;
-    color: var(--text-color) !important;
+    background: #3f3f46 !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
 
     &:hover {
-      background: var(--surface-300) !important;
+      background: #52525b !important;
     }
   }
 
   .p-button.p-button-text {
-    color: var(--text-color) !important;
+    color: #fafafa !important;
 
     &:hover {
-      background: var(--surface-hover) !important;
+      background: #3f3f46 !important;
+    }
+  }
+
+  /* Button Contrast - colores hardcoded */
+  .p-button.p-button-contrast {
+    background: #3f3f46 !important;
+    border-color: #52525b !important;
+    color: #fafafa !important;
+
+    &:hover {
+      background: #52525b !important;
+      border-color: #71717a !important;
     }
   }
 

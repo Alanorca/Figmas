@@ -248,6 +248,7 @@ interface BreadcrumbItem {
       top: 0;
       flex-shrink: 0;
       border-right: 1px solid var(--surface-border);
+      z-index: 50; /* Por encima del page-footer-fixed */
     }
 
     /* ===== Icon Bar (Barra de iconos principal) ===== */
