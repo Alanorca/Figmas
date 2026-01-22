@@ -15,7 +15,7 @@
     <p class="section-description">
       Type in these fields to see real-time validation and feedback.
     </p>
-    <app-ds-preview title="Try It!" [showModeToggle]="false">
+    <app-ds-preview title="Try It!">
       <div class="interactive-demo">
         <div class="demo-field">
           <label>Email Validation</label>
@@ -81,7 +81,7 @@
     <p class="section-description">
       Basic text input for single-line text entry.
     </p>
-    <app-ds-preview title="Text Inputs" [showModeToggle]="false">
+    <app-ds-preview title="Text Inputs">
       <div class="input-row">
         <input pInputText placeholder="Enter text" [ngModel]="textValue()" (ngModelChange)="textValue.set($event)" />
         <input pInputText placeholder="Disabled" [disabled]="true" />
@@ -96,7 +96,7 @@
     <p class="section-description">
       Labels that float above the input when focused or filled.
     </p>
-    <app-ds-preview title="Float Label Inputs" [showModeToggle]="false">
+    <app-ds-preview title="Float Label Inputs">
       <div class="input-row">
         <p-floatLabel>
           <input pInputText id="username" [ngModel]="textValue()" (ngModelChange)="textValue.set($event)" />
@@ -116,7 +116,7 @@
     <p class="section-description">
       Add icons for visual context.
     </p>
-    <app-ds-preview title="Icon Inputs" [showModeToggle]="false">
+    <app-ds-preview title="Icon Inputs">
       <div class="input-row">
         <p-iconField>
           <p-inputIcon styleClass="pi pi-search" />
@@ -140,7 +140,7 @@
     <p class="section-description">
       Combine inputs with addons for enhanced functionality.
     </p>
-    <app-ds-preview title="Input Groups" [showModeToggle]="false">
+    <app-ds-preview title="Input Groups">
       <div class="input-column">
         <p-inputGroup>
           <p-inputGroupAddon>
@@ -174,7 +174,7 @@
     <p class="section-description">
       Outlined and filled variants for different visual styles.
     </p>
-    <app-ds-preview title="Input Variants" [showModeToggle]="false">
+    <app-ds-preview title="Input Variants">
       <div class="input-row">
         <input pInputText variant="outlined" placeholder="Outlined" />
         <input pInputText variant="filled" placeholder="Filled" />
@@ -188,7 +188,7 @@
     <p class="section-description">
       Small, normal, and large sizes for different contexts.
     </p>
-    <app-ds-preview title="Input Sizes" [showModeToggle]="false">
+    <app-ds-preview title="Input Sizes">
       <div class="input-row align-center">
         <input pInputText size="small" placeholder="Small" />
         <input pInputText placeholder="Normal" />
@@ -203,7 +203,7 @@
     <p class="section-description">
       Numeric input with optional formatting and spinner buttons.
     </p>
-    <app-ds-preview title="Number Inputs" [showModeToggle]="false">
+    <app-ds-preview title="Number Inputs">
       <div class="input-row">
         <p-inputNumber [ngModel]="numberValue()" (ngModelChange)="numberValue.set($event)" placeholder="Enter number" />
         <p-inputNumber [ngModel]="currencyValue()" (ngModelChange)="currencyValue.set($event)" mode="currency" currency="USD" locale="en-US" />
@@ -222,7 +222,7 @@
     <p class="section-description">
       Password input with optional strength indicator and toggle visibility.
     </p>
-    <app-ds-preview title="Password Input" [showModeToggle]="false">
+    <app-ds-preview title="Password Input">
       <div class="input-row">
         <div class="password-demo">
           <p-password [ngModel]="passwordValue()" (ngModelChange)="passwordValue.set($event)" placeholder="Enter password" [feedback]="false" />
@@ -247,7 +247,7 @@
     <p class="section-description">
       Multi-line text input for longer content with live character count.
     </p>
-    <app-ds-preview title="Textarea" [showModeToggle]="false">
+    <app-ds-preview title="Textarea">
       <div class="input-column full-width">
         <textarea
           pTextarea
@@ -270,7 +270,7 @@
     <p class="section-description">
       Dropdown selection for choosing from predefined options.
     </p>
-    <app-ds-preview title="Select Input" [showModeToggle]="false">
+    <app-ds-preview title="Select Input">
       <div class="input-row">
         <p-select
           [ngModel]="selectedCity()"
@@ -308,7 +308,7 @@
     <p class="section-description">
       Visual feedback for validation states.
     </p>
-    <app-ds-preview title="Input States" [showModeToggle]="false">
+    <app-ds-preview title="Input States">
       <div class="input-column">
         <div class="state-demo">
           <label>Invalid State</label>

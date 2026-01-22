@@ -13,9 +13,17 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TooltipModule } from 'primeng/tooltip';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { MenuModule } from 'primeng/menu';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { SliderModule } from 'primeng/slider';
+import { DrawerModule } from 'primeng/drawer';
+import { CheckboxModule } from 'primeng/checkbox';
+import { MessageService, ConfirmationService, MenuItem } from 'primeng/api';
 import { DsPreviewComponent } from '../../../components/ds-preview/ds-preview.component';
 import { DsCodeBlockComponent } from '../../../components/ds-code-block/ds-code-block.component';
+import { DsCodeTabsComponent, CodeTab } from '../../../components/ds-code-tabs/ds-code-tabs.component';
+import { DsPropsTableComponent, ComponentProp } from '../../../components/ds-props-table/ds-props-table.component';
+import { DsGuidelinesComponent } from '../../../components/ds-guidelines/ds-guidelines.component';
 
 interface Product {
   id: number;
@@ -32,8 +40,9 @@ interface Product {
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule, InputTextModule, TagModule,
     ToolbarModule, IconFieldModule, InputIconModule, ToastModule, ConfirmDialogModule,
-    SelectModule, InputNumberModule, TooltipModule,
-    DsPreviewComponent, DsCodeBlockComponent
+    SelectModule, InputNumberModule, TooltipModule, MenuModule, MultiSelectModule,
+    SliderModule, DrawerModule, CheckboxModule,
+    DsPreviewComponent, DsCodeBlockComponent, DsCodeTabsComponent, DsPropsTableComponent, DsGuidelinesComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './tables.component.html',
@@ -278,4 +287,392 @@ deleteProduct(product: Product): void {
     products.filter(p => p.id !== product.id)
   );
 }`;
+
+  // ============================================
+  // GUIDELINES
+  // ============================================
+  guidelinesDos = [
+    'Usar footer de tabla para totales y agregados',
+    'Proveer filtros de columna para datasets grandes',
+    'Implementar acciones masivas con multi-selección',
+    'Agregar menú de acciones por fila para operaciones contextuales',
+    'Permitir reordenamiento y configuración de columnas'
+  ];
+
+  guidelinesDonts = [
+    'No poner summary cards arriba de la tabla (usar footer)',
+    'No sobrecargar el header con demasiados filtros',
+    'No habilitar drag-and-drop sin feedback visual',
+    'No omitir estados de carga para operaciones async'
+  ];
+
+  // ============================================
+  // DRAWER SIGNALS
+  // ============================================
+  showBulkActionsDrawer = signal(false);
+  showColumnConfigDrawer = signal(false);
+  bulkSelectedProducts = signal<Product[]>([]);
+
+  // ============================================
+  // COLUMN CONFIG
+  // ============================================
+  columnConfigs = signal([
+    { field: 'name', header: 'Name', visible: true, sortable: true },
+    { field: 'category', header: 'Category', visible: true, sortable: true },
+    { field: 'price', header: 'Price', visible: true, sortable: true },
+    { field: 'quantity', header: 'Quantity', visible: true, sortable: false },
+    { field: 'status', header: 'Status', visible: true, sortable: true }
+  ]);
+
+  visibleColumns = computed(() => this.columnConfigs().filter(c => c.visible));
+
+  toggleColumnVisibility(field: string): void {
+    this.columnConfigs.update(cols =>
+      cols.map(c => c.field === field ? { ...c, visible: !c.visible } : c)
+    );
+  }
+
+  onColumnReorder(event: any): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Columns Reordered',
+      detail: 'Column order updated'
+    });
+  }
+
+  // ============================================
+  // ROW ACTIONS MENU
+  // ============================================
+  getRowMenuItems(product: Product): MenuItem[] {
+    return [
+      { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.viewDetail(product) },
+      { label: 'Editar', icon: 'pi pi-pencil', command: () => this.editProduct(product) },
+      { separator: true },
+      { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500', command: () => this.deleteProduct(product) }
+    ];
+  }
+
+  viewDetail(product: Product): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'View Detail',
+      detail: `Viewing ${product.name}`
+    });
+  }
+
+  // ============================================
+  // BULK ACTIONS
+  // ============================================
+  bulkActionFields = signal([
+    { field: 'category', header: 'Category', active: false, value: '' },
+    { field: 'status', header: 'Status', active: false, value: '' },
+    { field: 'price', header: 'Price', active: false, value: 0 }
+  ]);
+
+  toggleBulkField(field: string): void {
+    this.bulkActionFields.update(fields =>
+      fields.map(f => f.field === field ? { ...f, active: !f.active } : f)
+    );
+  }
+
+  applyBulkActions(): void {
+    const count = this.bulkSelectedProducts().length;
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Bulk Update',
+      detail: `Applied changes to ${count} items`
+    });
+    this.showBulkActionsDrawer.set(false);
+    this.bulkSelectedProducts.set([]);
+  }
+
+  // ============================================
+  // FILTER DEMO
+  // ============================================
+  priceRange = signal<[number, number]>([0, 1500]);
+
+  onPriceRangeChange(range: [number, number], filterCallback: Function): void {
+    this.priceRange.set(range);
+    filterCallback(range);
+  }
+
+  // ============================================
+  // COMPUTED FOR FOOTER
+  // ============================================
+  inStockCount = computed(() => this.products().filter(p => p.status === 'In Stock').length);
+  totalQuantity = computed(() => this.products().reduce((sum, p) => sum + (p.quantity || 0), 0));
+
+  // ============================================
+  // CODE EXAMPLES
+  // ============================================
+  footerCodeTabs: CodeTab[] = [
+    {
+      label: 'HTML',
+      language: 'html',
+      icon: 'pi pi-code',
+      code: `<p-table [value]="products">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Name</th>
+      <th>Price</th>
+      <th>Qty</th>
+      <th>Status</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-product>
+    <tr>
+      <td>{{ product.name }}</td>
+      <td>{{ product.price | currency }}</td>
+      <td>{{ product.quantity }}</td>
+      <td><p-tag [value]="product.status" /></td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <tr class="font-semibold surface-100">
+      <td>Totales</td>
+      <td>{{ totalValue() | currency }}</td>
+      <td>{{ totalQuantity() }}</td>
+      <td>
+        <p-tag [value]="lowStockCount().toString()" severity="warn" />
+      </td>
+    </tr>
+  </ng-template>
+</p-table>`
+    },
+    {
+      label: 'TypeScript',
+      language: 'typescript',
+      icon: 'pi pi-file',
+      code: `// Computed values for footer
+totalValue = computed(() =>
+  this.products().reduce((sum, p) => sum + p.price * p.quantity, 0)
+);
+
+totalQuantity = computed(() =>
+  this.products().reduce((sum, p) => sum + p.quantity, 0)
+);
+
+lowStockCount = computed(() =>
+  this.products().filter(p => p.status === 'Low Stock').length
+);`
+    }
+  ];
+
+  rowActionsCodeTabs: CodeTab[] = [
+    {
+      label: 'HTML',
+      language: 'html',
+      icon: 'pi pi-code',
+      code: `<td class="text-center">
+  <p-menu #rowMenu [model]="getRowMenuItems(product)" [popup]="true" appendTo="body" />
+  <p-button
+    icon="pi pi-ellipsis-v"
+    [text]="true"
+    size="small"
+    (onClick)="rowMenu.toggle($event)" />
+</td>`
+    },
+    {
+      label: 'TypeScript',
+      language: 'typescript',
+      icon: 'pi pi-file',
+      code: `getRowMenuItems(product: Product): MenuItem[] {
+  return [
+    { label: 'Ver detalle', icon: 'pi pi-eye', command: () => this.viewDetail(product) },
+    { label: 'Editar', icon: 'pi pi-pencil', command: () => this.editProduct(product) },
+    { separator: true },
+    { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500' }
+  ];
+}`
+    }
+  ];
+
+  bulkActionsCodeTabs: CodeTab[] = [
+    {
+      label: 'HTML',
+      language: 'html',
+      icon: 'pi pi-code',
+      code: `<!-- Toolbar with bulk actions button -->
+@if (selectedProducts().length > 0) {
+  <p-button
+    label="Acciones masivas"
+    icon="pi pi-check-square"
+    [badge]="selectedProducts().length.toString()"
+    badgeSeverity="contrast"
+    severity="success"
+    [outlined]="true"
+    (onClick)="showBulkActionsDrawer.set(true)" />
+}
+
+<!-- Drawer -->
+<p-drawer
+  [(visible)]="showBulkActionsDrawer"
+  position="right"
+  [style]="{ width: '420px' }"
+  header="Acciones Masivas">
+  <div class="acciones-masivas-content">
+    <!-- Field toggles and inputs -->
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" (onClick)="showBulkActionsDrawer.set(false)" />
+    <p-button label="Aplicar" icon="pi pi-check" (onClick)="applyBulkActions()" />
+  </ng-template>
+</p-drawer>`
+    }
+  ];
+
+  dragDropCodeTabs: CodeTab[] = [
+    {
+      label: 'HTML',
+      language: 'html',
+      icon: 'pi pi-code',
+      code: `<p-table
+  [value]="products"
+  [reorderableColumns]="true"
+  (onColReorder)="onColumnReorder($event)"
+  styleClass="p-datatable-reorderable">
+  <ng-template pTemplate="header">
+    <tr>
+      @for (col of visibleColumns(); track col.field) {
+        <th pReorderableColumn>
+          <div class="column-header">
+            <span class="drag-handle-grip"></span>
+            <span>{{ col.header }}</span>
+          </div>
+        </th>
+      }
+    </tr>
+  </ng-template>
+</p-table>`
+    },
+    {
+      label: 'SCSS',
+      language: 'scss',
+      icon: 'pi pi-palette',
+      code: `.column-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .drag-handle-grip {
+    width: 10px;
+    height: 14px;
+    cursor: grab;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    background-image: radial-gradient(circle, #9ca3af 1.5px, transparent 1.5px);
+    background-size: 5px 4px;
+
+    &:hover { opacity: 1; }
+  }
+}
+
+th:hover .drag-handle-grip { opacity: 0.7; }`
+    }
+  ];
+
+  columnConfigCodeTabs: CodeTab[] = [
+    {
+      label: 'HTML',
+      language: 'html',
+      icon: 'pi pi-code',
+      code: `<p-drawer
+  [(visible)]="showColumnConfigDrawer"
+  position="right"
+  [style]="{ width: '380px' }"
+  header="Configurar Columnas">
+  <div class="columnas-drawer-content">
+    <!-- Search -->
+    <p-iconfield class="mb-3">
+      <p-inputicon styleClass="pi pi-search" />
+      <input pInputText placeholder="Buscar columna..." class="w-full" />
+    </p-iconfield>
+
+    <!-- Column list -->
+    <div class="columnas-list">
+      @for (col of columnConfigs(); track col.field; let i = $index) {
+        <div class="columna-item">
+          <i class="pi pi-bars drag-handle-config"></i>
+          <span class="columna-orden-badge">{{ i + 1 }}</span>
+          <p-checkbox [ngModel]="col.visible" (ngModelChange)="toggleColumnVisibility(col.field)" [binary]="true" />
+          <label class="ml-2 flex-1">{{ col.header }}</label>
+          <i [class]="col.visible ? 'pi pi-eye text-primary' : 'pi pi-eye-slash text-secondary'"></i>
+        </div>
+      }
+    </div>
+  </div>
+</p-drawer>`
+    }
+  ];
+
+  filterCodeTabs: CodeTab[] = [
+    {
+      label: 'HTML',
+      language: 'html',
+      icon: 'pi pi-code',
+      code: `<!-- Filter row in header -->
+<tr>
+  <th>
+    <p-columnFilter type="text" field="name" [showMenu]="false">
+      <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+        <input pInputText [ngModel]="value" (ngModelChange)="filter($event)" placeholder="Buscar..." />
+      </ng-template>
+    </p-columnFilter>
+  </th>
+  <th>
+    <p-columnFilter field="category" matchMode="in" [showMenu]="false">
+      <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+        <p-multiSelect
+          [ngModel]="value"
+          (ngModelChange)="filter($event)"
+          [options]="categories"
+          placeholder="Todos"
+          appendTo="body" />
+      </ng-template>
+    </p-columnFilter>
+  </th>
+</tr>`
+    }
+  ];
+
+  // ============================================
+  // PROPS TABLES
+  // ============================================
+  tableFooterProps: ComponentProp[] = [
+    { name: 'pTemplate="footer"', type: 'ng-template', description: 'Template para el footer de la tabla' },
+    { name: 'surface-100', type: 'class', description: 'Fondo gris claro para distinguir el footer' },
+    { name: 'font-semibold', type: 'class', description: 'Texto en negrita para totales' }
+  ];
+
+  filterProps: ComponentProp[] = [
+    { name: 'p-columnFilter', type: 'component', description: 'Componente de filtro en header' },
+    { name: 'field', type: 'string', description: 'Campo a filtrar', required: true },
+    { name: 'matchMode', type: "'contains' | 'in' | 'equals'", default: "'contains'", description: 'Modo de coincidencia' },
+    { name: '[showMenu]', type: 'boolean', default: 'true', description: 'Mostrar menú popup' }
+  ];
+
+  rowActionsProps: ComponentProp[] = [
+    { name: 'p-menu', type: 'component', description: 'Menú contextual de PrimeNG' },
+    { name: '[model]', type: 'MenuItem[]', description: 'Items del menú', required: true },
+    { name: '[popup]', type: 'boolean', default: 'false', description: 'Modo popup' },
+    { name: 'appendTo', type: "'body'", description: 'Donde renderizar el popup' }
+  ];
+
+  bulkActionsProps: ComponentProp[] = [
+    { name: '[(selection)]', type: 'any[]', description: 'Two-way binding para items seleccionados', required: true },
+    { name: 'dataKey', type: 'string', description: 'Campo identificador único', required: true },
+    { name: '[badge]', type: 'string', description: 'Contador de seleccionados en el botón' }
+  ];
+
+  dragDropProps: ComponentProp[] = [
+    { name: '[reorderableColumns]', type: 'boolean', default: 'false', description: 'Habilitar drag & drop de columnas' },
+    { name: '(onColReorder)', type: 'EventEmitter', description: 'Callback cuando se reordenan columnas' },
+    { name: 'pReorderableColumn', type: 'directive', description: 'Directiva en th para reordenamiento' }
+  ];
+
+  columnConfigProps: ComponentProp[] = [
+    { name: 'p-drawer', type: 'component', description: 'Panel lateral deslizable' },
+    { name: 'position', type: "'left' | 'right'", default: "'left'", description: 'Posición del drawer' },
+    { name: '[(visible)]', type: 'boolean', description: 'Two-way binding para visibilidad' }
+  ];
 }

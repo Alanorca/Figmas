@@ -97,6 +97,11 @@ export const DESIGN_SYSTEM_ROUTES: Routes = [
       {
         path: 'organisms/multi-step-template',
         loadComponent: () => import('./pages/organisms/multi-step-template/multi-step-template.component').then(m => m.MultiStepTemplateComponent)
+      },
+      // Guides
+      {
+        path: 'guides/documentation',
+        loadComponent: () => import('./pages/guides/documentation-guide/documentation-guide.component').then(m => m.DocumentationGuideComponent)
       }
     ]
   }

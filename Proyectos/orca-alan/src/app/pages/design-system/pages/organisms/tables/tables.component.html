@@ -5,39 +5,460 @@
   <header class="page-header">
     <h1>Tables</h1>
     <p class="subtitle">
-      Data tables display information in a grid of rows and columns with features like sorting, filtering, and pagination.
-      <strong>All examples below are interactive - try them!</strong>
+      Data tables display information in a grid of rows and columns with features like sorting, filtering, pagination, and advanced interactions.
+      <strong>All examples below are interactive!</strong>
     </p>
   </header>
 
-  <!-- Interactive Data Table Demo -->
-  <section class="section highlight-section">
-    <h2><i class="pi pi-bolt"></i> Interactive Product Management Table</h2>
-    <p class="section-description">
-      Full CRUD table with search, selection, and actions. Try adding, editing, or deleting products.
-    </p>
-    <app-ds-preview title="Product Management" [showModeToggle]="false">
-      <div class="interactive-table-demo">
-        <!-- Stats Summary -->
-        <div class="table-stats">
-          <div class="stat-item">
-            <span class="stat-value">{{ totalProducts() }}</span>
-            <span class="stat-label">Products</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">{{ totalValue() | currency }}</span>
-            <span class="stat-label">Total Value</span>
-          </div>
-          <div class="stat-item warning">
-            <span class="stat-value">{{ lowStockCount() }}</span>
-            <span class="stat-label">Low/Out Stock</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">{{ selectedProducts().length }}</span>
-            <span class="stat-label">Selected</span>
-          </div>
-        </div>
+  <!-- Guidelines -->
+  <app-ds-guidelines
+    [dos]="guidelinesDos"
+    [donts]="guidelinesDonts"
+    [compact]="true"
+  />
 
+  <!-- Basic Table -->
+  <section class="section">
+    <h2>Basic Table</h2>
+    <p class="section-description">
+      Simple table with header and body templates.
+    </p>
+    <app-ds-preview title="Basic Table">
+      <div class="table-demo">
+        <p-table [value]="products()" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Price</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.category }}</td>
+              <td>{{ product.price | currency }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+  </section>
+
+  <!-- Table Footer -->
+  <section class="section">
+    <h2><i class="pi pi-chart-bar"></i> Table Footer</h2>
+    <p class="section-description">
+      Use the footer template to display totals, aggregates, and summary information.
+      <strong>This is the recommended pattern instead of summary cards above the table.</strong>
+    </p>
+    <app-ds-preview title="Table with Footer">
+      <div class="table-demo">
+        <p-table [value]="products()" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Status</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.category }}</td>
+              <td>{{ product.price | currency }}</td>
+              <td [class.low-qty]="product.quantity <= 5">{{ product.quantity }}</td>
+              <td><p-tag [value]="product.status" [severity]="getSeverity(product.status)" /></td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="footer">
+            <tr class="font-semibold">
+              <td colspan="2">Totales</td>
+              <td>{{ totalValue() | currency }}</td>
+              <td>{{ totalQuantity() }} items</td>
+              <td>
+                <div class="flex gap-1">
+                  <p-tag [value]="lowStockCount().toString()" severity="warn" pTooltip="Low Stock" styleClass="text-xs" />
+                  <p-tag [value]="inStockCount().toString()" severity="success" pTooltip="In Stock" styleClass="text-xs" />
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-tabs [tabs]="footerCodeTabs" />
+    <app-ds-props-table [props]="tableFooterProps" title="Footer Template" />
+  </section>
+
+  <!-- Sortable Table -->
+  <section class="section">
+    <h2>Sortable Table</h2>
+    <p class="section-description">
+      Enable column sorting by clicking on headers.
+    </p>
+    <app-ds-preview title="Sortable Table">
+      <div class="table-demo">
+        <p-table [value]="products()" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+              <th pSortableColumn="category">Category <p-sortIcon field="category" /></th>
+              <th pSortableColumn="price">Price <p-sortIcon field="price" /></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.category }}</td>
+              <td>{{ product.price | currency }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="sortableCode" language="html" />
+  </section>
+
+  <!-- Column Filters -->
+  <section class="section">
+    <h2><i class="pi pi-filter"></i> Column Filters</h2>
+    <p class="section-description">
+      Add a second header row with filters for each column. Supports text, multiselect, and other filter types.
+    </p>
+    <app-ds-preview title="Table with Filters">
+      <div class="table-demo">
+        <p-table
+          #dt
+          [value]="products()"
+          [paginator]="true"
+          [rows]="5"
+          [filterDelay]="300"
+          styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <!-- Row 1: Column titles -->
+            <tr>
+              <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+              <th pSortableColumn="category">Category <p-sortIcon field="category" /></th>
+              <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+              <th style="width: 3rem">
+                <p-button
+                  icon="pi pi-filter-slash"
+                  [rounded]="true"
+                  [text]="true"
+                  (onClick)="dt.clear()"
+                  pTooltip="Clear filters" />
+              </th>
+            </tr>
+            <!-- Row 2: Filters -->
+            <tr>
+              <th>
+                <p-columnFilter type="text" field="name" [showMenu]="false">
+                  <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                    <input pInputText [ngModel]="value" (ngModelChange)="filter($event)" placeholder="Search..." class="w-full" />
+                  </ng-template>
+                </p-columnFilter>
+              </th>
+              <th>
+                <p-columnFilter field="category" matchMode="in" [showMenu]="false">
+                  <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                    <p-multiSelect
+                      [ngModel]="value"
+                      (ngModelChange)="filter($event)"
+                      [options]="categories"
+                      placeholder="All"
+                      appendTo="body"
+                      [showHeader]="false"
+                      styleClass="w-full" />
+                  </ng-template>
+                </p-columnFilter>
+              </th>
+              <th>
+                <p-columnFilter field="status" matchMode="in" [showMenu]="false">
+                  <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                    <p-multiSelect
+                      [ngModel]="value"
+                      (ngModelChange)="filter($event)"
+                      [options]="statuses"
+                      placeholder="All"
+                      appendTo="body"
+                      [showHeader]="false"
+                      styleClass="w-full" />
+                  </ng-template>
+                </p-columnFilter>
+              </th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.category }}</td>
+              <td><p-tag [value]="product.status" [severity]="getSeverity(product.status)" /></td>
+              <td></td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-tabs [tabs]="filterCodeTabs" />
+    <app-ds-props-table [props]="filterProps" title="Filter Properties" />
+  </section>
+
+  <!-- Row Actions Menu -->
+  <section class="section">
+    <h2><i class="pi pi-ellipsis-v"></i> Row Actions Menu</h2>
+    <p class="section-description">
+      Add a 3-dot menu in each row for contextual actions like view, edit, and delete.
+      Use p-menu with popup mode and generate menu items dynamically.
+    </p>
+    <app-ds-preview title="Table with Row Actions">
+      <div class="table-demo">
+        <p-table [value]="products()" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th style="width: 80px">Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.category }}</td>
+              <td>{{ product.price | currency }}</td>
+              <td class="text-center actions-cell">
+                <p-menu #rowMenu [model]="getRowMenuItems(product)" [popup]="true" appendTo="body" />
+                <p-button
+                  icon="pi pi-ellipsis-v"
+                  [text]="true"
+                  size="small"
+                  (onClick)="rowMenu.toggle($event)" />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-tabs [tabs]="rowActionsCodeTabs" />
+    <app-ds-props-table [props]="rowActionsProps" title="Row Menu Properties" />
+  </section>
+
+  <!-- Bulk Actions -->
+  <section class="section">
+    <h2><i class="pi pi-check-square"></i> Bulk Actions</h2>
+    <p class="section-description">
+      When multiple rows are selected, show a bulk actions button that opens a drawer.
+      The badge shows the count of selected items.
+    </p>
+    <app-ds-preview title="Table with Bulk Actions">
+      <div class="table-demo">
+        <!-- Toolbar with bulk actions button -->
+        <p-toolbar styleClass="table-toolbar mb-0">
+          <ng-template pTemplate="left">
+            @if (bulkSelectedProducts().length > 0) {
+              <p-button
+                label="Bulk Actions"
+                icon="pi pi-check-square"
+                [badge]="bulkSelectedProducts().length.toString()"
+                badgeSeverity="contrast"
+                severity="success"
+                [outlined]="true"
+                (onClick)="showBulkActionsDrawer.set(true)" />
+            } @else {
+              <span class="text-color-secondary text-sm">Select rows to enable bulk actions</span>
+            }
+          </ng-template>
+        </p-toolbar>
+
+        <!-- Table with selection -->
+        <p-table
+          [value]="products()"
+          [(selection)]="bulkSelectedProducts"
+          dataKey="id"
+          styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Status</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td><p-tableCheckbox [value]="product" /></td>
+              <td>{{ product.name }}</td>
+              <td>{{ product.category }}</td>
+              <td><p-tag [value]="product.status" [severity]="getSeverity(product.status)" /></td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-tabs [tabs]="bulkActionsCodeTabs" />
+    <app-ds-props-table [props]="bulkActionsProps" title="Bulk Actions Properties" />
+  </section>
+
+  <!-- Header Menu -->
+  <section class="section">
+    <h2><i class="pi pi-cog"></i> Header Menu</h2>
+    <p class="section-description">
+      Add a 3-dot button in the Actions column header to open column configuration.
+    </p>
+    <app-ds-preview title="Header with Config Menu">
+      <div class="table-demo">
+        <p-table [value]="products()" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th style="width: 100px">
+                <div class="flex align-items-center justify-content-between">
+                  <span>Actions</span>
+                  <p-button
+                    icon="pi pi-ellipsis-v"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="showColumnConfigDrawer.set(true)"
+                    pTooltip="Configure columns" />
+                </div>
+              </th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.category }}</td>
+              <td class="text-center">
+                <p-button icon="pi pi-pencil" [text]="true" size="small" />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Drag and Drop Columns -->
+  <section class="section">
+    <h2><i class="pi pi-arrows-h"></i> Drag and Drop Columns</h2>
+    <p class="section-description">
+      Enable column reordering by setting [reorderableColumns]="true" on p-table.
+      Add a visual grip handle for better UX. <strong>Try dragging the columns!</strong>
+    </p>
+    <app-ds-preview title="Reorderable Columns">
+      <div class="table-demo">
+        <p-table
+          [value]="products()"
+          [reorderableColumns]="true"
+          (onColReorder)="onColumnReorder($event)"
+          styleClass="p-datatable-sm p-datatable-reorderable">
+          <ng-template pTemplate="header">
+            <tr>
+              @for (col of visibleColumns(); track col.field) {
+                <th pReorderableColumn [pSortableColumn]="col.sortable ? col.field : undefined">
+                  <div class="column-header">
+                    <span class="drag-handle-grip"></span>
+                    <span>{{ col.header }}</span>
+                    @if (col.sortable) {
+                      <p-sortIcon [field]="col.field" />
+                    }
+                  </div>
+                </th>
+              }
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              @for (col of visibleColumns(); track col.field) {
+                <td>
+                  @switch (col.field) {
+                    @case ('price') { {{ product.price | currency }} }
+                    @case ('status') { <p-tag [value]="product.status" [severity]="getSeverity(product.status)" /> }
+                    @default { {{ product[col.field] }} }
+                  }
+                </td>
+              }
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-tabs [tabs]="dragDropCodeTabs" />
+    <app-ds-props-table [props]="dragDropProps" title="Reorder Properties" />
+  </section>
+
+  <!-- Column Configuration -->
+  <section class="section">
+    <h2><i class="pi pi-sliders-h"></i> Column Configuration</h2>
+    <p class="section-description">
+      A drawer that allows users to search, reorder, and toggle column visibility.
+      Click the button below to open the configuration drawer.
+    </p>
+    <app-ds-preview title="Column Configuration Drawer">
+      <div class="flex flex-column align-items-center gap-3">
+        <p-button
+          label="Configure Columns"
+          icon="pi pi-cog"
+          [outlined]="true"
+          (onClick)="showColumnConfigDrawer.set(true)" />
+        <p class="text-color-secondary text-sm m-0">
+          Current visible: {{ visibleColumns().length }} of {{ columnConfigs().length }} columns
+        </p>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-tabs [tabs]="columnConfigCodeTabs" />
+    <app-ds-props-table [props]="columnConfigProps" title="Drawer Properties" />
+  </section>
+
+  <!-- Striped & Gridlines -->
+  <section class="section">
+    <h2>Striped & Gridlines</h2>
+    <p class="section-description">
+      Visual variations for tables using CSS classes.
+    </p>
+    <app-ds-preview title="Striped Table">
+      <div class="table-demo">
+        <p-table [value]="products()" styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Status</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ product.category }}</td>
+              <td>{{ product.price | currency }}</td>
+              <td>
+                <p-tag [value]="product.status" [severity]="getSeverity(product.status)" />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Full-Featured Table -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Full-Featured Table</h2>
+    <p class="section-description">
+      Complete example combining all features: footer, filters, selection, row menu, and pagination.
+      <strong>Note: Summary is in the footer, not at top.</strong>
+    </p>
+    <app-ds-preview title="Product Management">
+      <div class="interactive-table-demo">
         <!-- Toolbar -->
         <p-toolbar styleClass="table-toolbar">
           <ng-template pTemplate="left">
@@ -56,12 +477,16 @@
               [disabled]="selectedProducts().length === 0"
               pTooltip="Delete selected"
             />
-            <p-button
-              icon="pi pi-refresh"
-              [outlined]="true"
-              (onClick)="refreshData()"
-              pTooltip="Refresh data"
-            />
+            @if (selectedProducts().length > 0) {
+              <p-button
+                label="Bulk Actions"
+                icon="pi pi-check-square"
+                [badge]="selectedProducts().length.toString()"
+                badgeSeverity="contrast"
+                severity="success"
+                [outlined]="true"
+                (onClick)="showBulkActionsDrawer.set(true)" />
+            }
           </ng-template>
           <ng-template pTemplate="right">
             <p-button
@@ -104,7 +529,19 @@
               <th pSortableColumn="price">Price <p-sortIcon field="price" /></th>
               <th pSortableColumn="quantity">Qty <p-sortIcon field="quantity" /></th>
               <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
-              <th style="width: 8rem">Actions</th>
+              <th style="width: 5rem">
+                <div class="flex align-items-center justify-content-between">
+                  <span>Actions</span>
+                  <p-button
+                    icon="pi pi-ellipsis-v"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="showColumnConfigDrawer.set(true)"
+                    pTooltip="Configure" />
+                </div>
+              </th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-product>
@@ -123,23 +560,30 @@
               <td>
                 <p-tag [value]="product.status" [severity]="getSeverity(product.status)" />
               </td>
-              <td>
+              <td class="actions-cell">
+                <p-menu #fullMenu [model]="getRowMenuItems(product)" [popup]="true" appendTo="body" />
                 <p-button
-                  icon="pi pi-pencil"
+                  icon="pi pi-ellipsis-v"
                   [text]="true"
-                  [rounded]="true"
-                  (onClick)="editProduct(product)"
-                  pTooltip="Edit"
-                />
-                <p-button
-                  icon="pi pi-trash"
-                  [text]="true"
-                  [rounded]="true"
-                  severity="danger"
-                  (onClick)="deleteProduct(product)"
-                  pTooltip="Delete"
-                />
+                  size="small"
+                  (onClick)="fullMenu.toggle($event)" />
               </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="footer">
+            <tr class="font-semibold">
+              <td></td>
+              <td>Totales</td>
+              <td>{{ totalProducts() }} productos</td>
+              <td>{{ totalValue() | currency }}</td>
+              <td>{{ totalQuantity() }} units</td>
+              <td>
+                <div class="flex gap-1">
+                  <p-tag [value]="lowStockCount().toString()" severity="warn" pTooltip="Low/Out Stock" styleClass="text-xs" />
+                  <p-tag [value]="inStockCount().toString()" severity="success" pTooltip="In Stock" styleClass="text-xs" />
+                </div>
+              </td>
+              <td></td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
@@ -155,91 +599,101 @@
     </app-ds-preview>
     <app-ds-code-block [code]="interactiveCode" language="typescript" />
   </section>
-
-  <section class="section">
-    <h2>Basic Table</h2>
-    <p class="section-description">
-      Simple table with header and body templates.
-    </p>
-    <app-ds-preview title="Basic Table" [showModeToggle]="false">
-      <div class="table-demo">
-        <p-table [value]="products()" styleClass="p-datatable-sm">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Price</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-product>
-            <tr>
-              <td>{{ product.name }}</td>
-              <td>{{ product.category }}</td>
-              <td>{{ product.price | currency }}</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </app-ds-preview>
-    <app-ds-code-block [code]="basicCode" language="html" />
-  </section>
-
-  <section class="section">
-    <h2>Sortable Table</h2>
-    <p class="section-description">
-      Enable column sorting by clicking on headers.
-    </p>
-    <app-ds-preview title="Sortable Table" [showModeToggle]="false">
-      <div class="table-demo">
-        <p-table [value]="products()" styleClass="p-datatable-sm">
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
-              <th pSortableColumn="category">Category <p-sortIcon field="category" /></th>
-              <th pSortableColumn="price">Price <p-sortIcon field="price" /></th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-product>
-            <tr>
-              <td>{{ product.name }}</td>
-              <td>{{ product.category }}</td>
-              <td>{{ product.price | currency }}</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </app-ds-preview>
-    <app-ds-code-block [code]="sortableCode" language="html" />
-  </section>
-
-  <section class="section">
-    <h2>Striped & Gridlines</h2>
-    <p class="section-description">
-      Visual variations for tables.
-    </p>
-    <app-ds-preview title="Striped Table" [showModeToggle]="false">
-      <div class="table-demo">
-        <p-table [value]="products()" styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Status</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-product>
-            <tr>
-              <td>{{ product.name }}</td>
-              <td>{{ product.category }}</td>
-              <td>{{ product.price | currency }}</td>
-              <td>
-                <p-tag [value]="product.status" [severity]="getSeverity(product.status)" />
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </app-ds-preview>
-  </section>
 </div>
+
+<!-- Bulk Actions Drawer -->
+<p-drawer
+  [(visible)]="showBulkActionsDrawer"
+  position="right"
+  [style]="{ width: '420px' }"
+  header="Bulk Actions">
+  <div class="acciones-masivas-content">
+    <div class="acciones-masivas-header">
+      <p-tag
+        [value]="(bulkSelectedProducts().length || selectedProducts().length) + ' items selected'"
+        severity="success"
+        icon="pi pi-check-circle" />
+    </div>
+
+    <div class="acciones-masivas-fields">
+      @for (field of bulkActionFields(); track field.field) {
+        <div class="accion-masiva-item" [class.active]="field.active">
+          <div class="accion-masiva-header" (click)="toggleBulkField(field.field)">
+            <p-checkbox [ngModel]="field.active" [binary]="true" />
+            <span class="campo-nombre">{{ field.header }}</span>
+            <i [class]="field.active ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
+          </div>
+          @if (field.active) {
+            <div class="accion-masiva-control">
+              <label class="control-label">New value for {{ field.header }}</label>
+              @switch (field.field) {
+                @case ('category') {
+                  <p-select [options]="categories" [(ngModel)]="field.value" placeholder="Select category" styleClass="w-full" />
+                }
+                @case ('status') {
+                  <p-select [options]="statuses" [(ngModel)]="field.value" placeholder="Select status" styleClass="w-full" />
+                }
+                @default {
+                  <input pInputText [(ngModel)]="field.value" class="w-full" />
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-between w-full">
+      <p-button label="Cancel" [text]="true" severity="secondary" (onClick)="showBulkActionsDrawer.set(false)" />
+      <p-button label="Apply Changes" icon="pi pi-check" (onClick)="applyBulkActions()" />
+    </div>
+  </ng-template>
+</p-drawer>
+
+<!-- Column Configuration Drawer -->
+<p-drawer
+  [(visible)]="showColumnConfigDrawer"
+  position="right"
+  [style]="{ width: '380px' }"
+  header="Configure Columns">
+  <div class="columnas-drawer-content">
+    <!-- Search -->
+    <p-iconField class="mb-3">
+      <p-inputIcon styleClass="pi pi-search" />
+      <input pInputText placeholder="Search columns..." class="w-full" />
+    </p-iconField>
+
+    <p class="text-color-secondary text-sm mb-3">
+      <i class="pi pi-info-circle mr-1"></i>
+      Toggle visibility with checkboxes. Drag to reorder.
+    </p>
+
+    <!-- Column list -->
+    <div class="columnas-list">
+      @for (col of columnConfigs(); track col.field; let i = $index) {
+        <div class="columna-item">
+          <div class="columna-item-content">
+            <i class="pi pi-bars drag-handle-config"></i>
+            <span class="columna-orden-badge">{{ i + 1 }}</span>
+            <p-checkbox
+              [ngModel]="col.visible"
+              (ngModelChange)="toggleColumnVisibility(col.field)"
+              [binary]="true"
+              [inputId]="col.field" />
+            <label [for]="col.field" class="ml-2 flex-1">{{ col.header }}</label>
+            <i [class]="col.visible ? 'pi pi-eye text-primary' : 'pi pi-eye-slash text-color-secondary'"></i>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-between w-full">
+      <p-button label="Reset" icon="pi pi-refresh" [text]="true" severity="secondary" />
+      <p-button label="Done" icon="pi pi-check" (onClick)="showColumnConfigDrawer.set(false)" />
+    </div>
+  </ng-template>
+</p-drawer>

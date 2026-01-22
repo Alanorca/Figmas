@@ -15,7 +15,7 @@
     <p class="section-description">
       Click on chips to filter content. Only one filter can be active at a time.
     </p>
-    <app-ds-preview title="Filter Selection" [showModeToggle]="false">
+    <app-ds-preview title="Filter Selection">
       <div class="filter-demo">
         <div class="chip-row">
           @for (chip of filterChips(); track chip.label; let i = $index) {
@@ -41,7 +41,7 @@
     <p class="section-description">
       Add new tags or remove existing ones. Tags can be used for categorization.
     </p>
-    <app-ds-preview title="Tag Input" [showModeToggle]="false">
+    <app-ds-preview title="Tag Input">
       <div class="tag-demo">
         <div class="tag-input-row">
           <input
@@ -82,7 +82,7 @@
     <p class="section-description">
       Click chips to toggle selection. Multiple categories can be selected.
     </p>
-    <app-ds-preview title="Category Selection" [showModeToggle]="false">
+    <app-ds-preview title="Category Selection">
       <div class="category-demo">
         <div class="chip-row">
           @for (category of allCategories; track category) {
@@ -113,7 +113,7 @@
     <p class="section-description">
       Chips can display different visual styles based on data. Click X to remove skills.
     </p>
-    <app-ds-preview title="Skills by Level" [showModeToggle]="false">
+    <app-ds-preview title="Skills by Level">
       <div class="skills-demo">
         <div class="skill-legend">
           <span class="legend-item"><span class="legend-dot advanced"></span> Advanced</span>
@@ -141,7 +141,7 @@
     <p class="section-description">
       Simple chips with labels for categorization.
     </p>
-    <app-ds-preview title="Basic Chips" [showModeToggle]="false">
+    <app-ds-preview title="Basic Chips">
       <div class="chip-row">
         <p-chip label="Action" />
         <p-chip label="Comedy" />
@@ -157,7 +157,7 @@
     <p class="section-description">
       Add icons for additional context.
     </p>
-    <app-ds-preview title="Icon Chips" [showModeToggle]="false">
+    <app-ds-preview title="Icon Chips">
       <div class="chip-row">
         <p-chip label="Apple" icon="pi pi-apple" />
         <p-chip label="Google" icon="pi pi-google" />
@@ -173,7 +173,7 @@
     <p class="section-description">
       Display user avatars or images within chips.
     </p>
-    <app-ds-preview title="Avatar Chips" [showModeToggle]="false">
+    <app-ds-preview title="Avatar Chips">
       <div class="chip-row">
         <p-chip>
           <ng-template pTemplate="content">
@@ -203,7 +203,7 @@
     <p class="section-description">
       Allow users to remove chips with a close button.
     </p>
-    <app-ds-preview title="Removable Chips" [showModeToggle]="false">
+    <app-ds-preview title="Removable Chips">
       <div class="chip-row">
         <p-chip label="Removable" [removable]="true" (onRemove)="onChipRemove($event)" />
         <p-chip label="With Icon" icon="pi pi-tag" [removable]="true" (onRemove)="onChipRemove($event)" />
@@ -218,7 +218,7 @@
     <p class="section-description">
       Custom styled chips for different contexts using CSS classes.
     </p>
-    <app-ds-preview title="Styled Chips" [showModeToggle]="false">
+    <app-ds-preview title="Styled Chips">
       <div class="chip-row">
         <p-chip label="Success" icon="pi pi-check" styleClass="chip-success" />
         <p-chip label="Warning" icon="pi pi-exclamation-triangle" styleClass="chip-warning" />

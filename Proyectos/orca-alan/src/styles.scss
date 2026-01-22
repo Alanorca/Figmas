@@ -3464,3 +3464,762 @@ html.dark,
     }
   }
 }
+
+// =========================================
+// DESIGN SYSTEM - OVERLAY THEME HANDLING
+// =========================================
+// These styles ensure PrimeNG overlays (dropdowns, menus, dialogs)
+// follow the DS page theme instead of the global app theme
+
+// DS Light Mode - Force light overlays even when global is dark
+body[data-ds-theme="light"] {
+  .p-select-overlay,
+  .p-dropdown-panel,
+  .p-multiselect-overlay,
+  .p-treeselect-overlay,
+  .p-autocomplete-overlay,
+  .p-menu,
+  .p-tieredmenu,
+  .p-contextmenu,
+  .p-dialog,
+  .p-popover,
+  .p-tooltip,
+  .p-overlaypanel {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+
+    // Dropdown/Select items
+    .p-select-option,
+    .p-dropdown-item,
+    .p-listbox-option,
+    .p-autocomplete-option {
+      color: #1e293b !important;
+
+      &:hover {
+        background: #f1f5f9 !important;
+      }
+
+      &.p-highlight {
+        background: #ecfdf5 !important;
+        color: #047857 !important;
+      }
+    }
+
+    // Menu items
+    .p-menuitem-link,
+    .p-menuitem-content {
+      color: #1e293b !important;
+
+      &:hover {
+        background: #f1f5f9 !important;
+      }
+
+      .p-menuitem-icon {
+        color: #64748b !important;
+      }
+
+      .p-menuitem-text {
+        color: #1e293b !important;
+      }
+    }
+
+    // Dialog content
+    .p-dialog-header {
+      background: #ffffff !important;
+      color: #1e293b !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .p-dialog-content {
+      background: #ffffff !important;
+      color: #1e293b !important;
+    }
+
+    .p-dialog-footer {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+    }
+  }
+}
+
+// DS Dark Mode - Force dark overlays even when global is light
+body[data-ds-theme="dark"] {
+  .p-select-overlay,
+  .p-dropdown-panel,
+  .p-multiselect-overlay,
+  .p-treeselect-overlay,
+  .p-autocomplete-overlay,
+  .p-menu,
+  .p-tieredmenu,
+  .p-contextmenu,
+  .p-dialog,
+  .p-popover,
+  .p-tooltip,
+  .p-overlaypanel {
+    background: #18181b !important;
+    border-color: #27272a !important;
+    color: #fafafa !important;
+
+    // Dropdown/Select items
+    .p-select-option,
+    .p-dropdown-item,
+    .p-listbox-option,
+    .p-autocomplete-option {
+      color: #fafafa !important;
+
+      &:hover {
+        background: #27272a !important;
+      }
+
+      &.p-highlight {
+        background: rgba(52, 211, 153, 0.16) !important;
+        color: #6ee7b7 !important;
+      }
+    }
+
+    // Menu items
+    .p-menuitem-link,
+    .p-menuitem-content {
+      color: #fafafa !important;
+
+      &:hover {
+        background: #27272a !important;
+      }
+
+      .p-menuitem-icon {
+        color: #a1a1aa !important;
+      }
+
+      .p-menuitem-text {
+        color: #fafafa !important;
+      }
+    }
+
+    // Dialog content
+    .p-dialog-header {
+      background: #18181b !important;
+      color: #fafafa !important;
+      border-color: #27272a !important;
+    }
+
+    .p-dialog-content {
+      background: #18181b !important;
+      color: #fafafa !important;
+    }
+
+    .p-dialog-footer {
+      background: #18181b !important;
+      border-color: #27272a !important;
+    }
+  }
+}
+
+// =========================================
+// DESIGN SYSTEM - PRIMENG OVERRIDE FIX
+// =========================================
+// These styles have HIGHER SPECIFICITY than PrimeNG's darkModeSelector
+// to ensure DS components respect DS theme, not global app theme.
+//
+// Problem: PrimeNG uses `html.dark-mode .p-component` selectors
+// Solution: Use `html.dark-mode app-design-system.ds-theme-light .p-component`
+//           which has higher specificity and always wins.
+
+// ===== CASE 1: Global Dark, DS Light =====
+// When global app is dark but DS page is in light mode
+html.dark-mode app-design-system.ds-theme-light {
+  // Surface and text colors
+  --surface-ground: #f8fafc;
+  --surface-card: #ffffff;
+  --surface-border: #e2e8f0;
+  --surface-hover: #f1f5f9;
+  --surface-50: #f8fafc;
+  --surface-100: #f1f5f9;
+  --surface-200: #e2e8f0;
+  --text-color: #1e293b;
+  --text-color-secondary: #64748b;
+  --primary-color: #10b981;
+
+  // Input Text
+  .p-inputtext,
+  input[pInputText],
+  .search-input {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+
+    &::placeholder {
+      color: #94a3b8 !important;
+    }
+
+    &:focus {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 1px #10b981 !important;
+    }
+  }
+
+  // Select Button / Toggle Button
+  .p-selectbutton {
+    background: transparent !important;
+
+    .p-togglebutton,
+    .p-button {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #64748b !important;
+
+      &::before {
+        background: transparent !important;
+      }
+
+      .p-togglebutton-content,
+      .p-button-label,
+      i,
+      span {
+        color: #64748b !important;
+      }
+
+      &:hover:not(.p-togglebutton-checked):not(.p-highlight) {
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+        color: #1e293b !important;
+
+        .p-togglebutton-content,
+        .p-button-label,
+        i,
+        span {
+          color: #1e293b !important;
+        }
+      }
+
+      &.p-togglebutton-checked,
+      &.p-highlight {
+        background: #10b981 !important;
+        border-color: #10b981 !important;
+        color: #ffffff !important;
+
+        .p-togglebutton-content,
+        .p-button-label,
+        i,
+        span {
+          color: #ffffff !important;
+        }
+      }
+    }
+  }
+
+  // Buttons
+  .p-button {
+    &.p-button-text {
+      background: transparent !important;
+      color: #64748b !important;
+
+      &:hover {
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
+      }
+    }
+
+    &.p-button-outlined {
+      background: transparent !important;
+      border-color: #10b981 !important;
+      color: #10b981 !important;
+
+      &:hover {
+        background: #ecfdf5 !important;
+      }
+    }
+  }
+
+  // DataTable
+  .p-datatable {
+    background: #ffffff !important;
+
+    .p-datatable-wrapper,
+    .p-datatable-table-container,
+    .p-datatable-table,
+    table {
+      background: #ffffff !important;
+    }
+
+    .p-datatable-thead > tr {
+      background: #f8fafc !important;
+    }
+
+    .p-datatable-thead > tr > th,
+    .p-datatable-header-cell,
+    thead th {
+      background: #f8fafc !important;
+      color: #1e293b !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .p-datatable-tbody > tr,
+    tbody > tr {
+      background: #ffffff !important;
+      color: #1e293b !important;
+    }
+
+    .p-datatable-tbody > tr > td,
+    tbody > tr > td {
+      background: #ffffff !important;
+      color: #1e293b !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .p-datatable-tbody > tr:hover,
+    tbody > tr:hover {
+      background: #f1f5f9 !important;
+    }
+
+    .p-sortable-column-icon,
+    .p-datatable-sort-icon {
+      color: #64748b !important;
+    }
+  }
+
+  // Paginator
+  .p-paginator {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+
+    .p-paginator-element,
+    .p-paginator-page,
+    .p-paginator-next,
+    .p-paginator-prev,
+    .p-paginator-first,
+    .p-paginator-last {
+      background: transparent !important;
+      color: #64748b !important;
+
+      &:hover:not(.p-disabled) {
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
+      }
+
+      &.p-highlight {
+        background: #10b981 !important;
+        color: #ffffff !important;
+      }
+    }
+
+    .p-dropdown,
+    .p-select {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+
+      .p-dropdown-label,
+      .p-select-label {
+        color: #1e293b !important;
+      }
+    }
+  }
+
+  // Select / Dropdown
+  .p-select,
+  .p-dropdown {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+
+    .p-select-label,
+    .p-dropdown-label {
+      color: #1e293b !important;
+    }
+
+    .p-select-trigger,
+    .p-dropdown-trigger {
+      color: #64748b !important;
+    }
+  }
+
+  // Toolbar
+  .p-toolbar {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+  }
+
+  // ds-preview specific
+  app-ds-preview,
+  [class*="ds-preview"] {
+    .ds-preview {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .preview-header {
+      background: #f8fafc !important;
+      border-bottom-color: #e2e8f0 !important;
+    }
+
+    .preview-title {
+      color: #1e293b !important;
+    }
+
+    .preview-description {
+      color: #64748b !important;
+    }
+
+    .preview-panel {
+      background: #ffffff !important;
+      color: #1e293b !important;
+    }
+  }
+
+  // Sidebar
+  .ds-sidebar-container,
+  app-ds-sidebar {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+
+    .sidebar-header {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+    }
+
+    .sidebar-content {
+      background: #ffffff !important;
+    }
+
+    .menu-item {
+      color: #64748b !important;
+
+      &:hover {
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
+      }
+
+      &.active {
+        background: #ecfdf5 !important;
+        color: #10b981 !important;
+      }
+    }
+  }
+
+  // Header
+  .ds-header {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  // Search
+  .search-results {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .category-header {
+    background: #f8fafc !important;
+    color: #64748b !important;
+  }
+
+  .search-result-item {
+    color: #1e293b !important;
+
+    &:hover {
+      background: #ecfdf5 !important;
+      color: #10b981 !important;
+    }
+  }
+}
+
+// ===== CASE 2: Global Light, DS Dark =====
+// When global app is light but DS page is in dark mode
+html:not(.dark-mode) app-design-system.ds-theme-dark {
+  // Surface and text colors
+  --surface-ground: #09090b;
+  --surface-card: #18181b;
+  --surface-border: #27272a;
+  --surface-hover: #27272a;
+  --surface-50: #18181b;
+  --surface-100: #27272a;
+  --surface-200: #3f3f46;
+  --text-color: #fafafa;
+  --text-color-secondary: #a1a1aa;
+  --primary-color: #34d399;
+
+  // Input Text
+  .p-inputtext,
+  input[pInputText],
+  .search-input {
+    background: #18181b !important;
+    border-color: #3f3f46 !important;
+    color: #fafafa !important;
+
+    &::placeholder {
+      color: #71717a !important;
+    }
+
+    &:focus {
+      border-color: #34d399 !important;
+      box-shadow: 0 0 0 1px #34d399 !important;
+    }
+  }
+
+  // Select Button / Toggle Button
+  .p-selectbutton {
+    background: transparent !important;
+
+    .p-togglebutton,
+    .p-button {
+      background: #18181b !important;
+      border-color: #3f3f46 !important;
+      color: #a1a1aa !important;
+
+      &::before {
+        background: transparent !important;
+      }
+
+      .p-togglebutton-content,
+      .p-button-label,
+      i,
+      span {
+        color: #a1a1aa !important;
+      }
+
+      &:hover:not(.p-togglebutton-checked):not(.p-highlight) {
+        background: #27272a !important;
+        border-color: #52525b !important;
+        color: #fafafa !important;
+
+        .p-togglebutton-content,
+        .p-button-label,
+        i,
+        span {
+          color: #fafafa !important;
+        }
+      }
+
+      &.p-togglebutton-checked,
+      &.p-highlight {
+        background: #34d399 !important;
+        border-color: #34d399 !important;
+        color: #18181b !important;
+
+        .p-togglebutton-content,
+        .p-button-label,
+        i,
+        span {
+          color: #18181b !important;
+        }
+      }
+    }
+  }
+
+  // Buttons
+  .p-button {
+    &.p-button-text {
+      background: transparent !important;
+      color: #a1a1aa !important;
+
+      &:hover {
+        background: #27272a !important;
+        color: #fafafa !important;
+      }
+    }
+
+    &.p-button-outlined {
+      background: transparent !important;
+      border-color: #34d399 !important;
+      color: #34d399 !important;
+
+      &:hover {
+        background: rgba(52, 211, 153, 0.16) !important;
+      }
+    }
+  }
+
+  // DataTable
+  .p-datatable {
+    background: #18181b !important;
+
+    .p-datatable-wrapper,
+    .p-datatable-table-container,
+    .p-datatable-table,
+    table {
+      background: #18181b !important;
+    }
+
+    .p-datatable-thead > tr {
+      background: #18181b !important;
+    }
+
+    .p-datatable-thead > tr > th,
+    .p-datatable-header-cell,
+    thead th {
+      background: #18181b !important;
+      color: #fafafa !important;
+      border-color: #27272a !important;
+    }
+
+    .p-datatable-tbody > tr,
+    tbody > tr {
+      background: #18181b !important;
+      color: #fafafa !important;
+    }
+
+    .p-datatable-tbody > tr > td,
+    tbody > tr > td {
+      background: #18181b !important;
+      color: #fafafa !important;
+      border-color: #27272a !important;
+    }
+
+    .p-datatable-tbody > tr:hover,
+    tbody > tr:hover {
+      background: #27272a !important;
+    }
+
+    .p-sortable-column-icon,
+    .p-datatable-sort-icon {
+      color: #a1a1aa !important;
+    }
+  }
+
+  // Paginator
+  .p-paginator {
+    background: #18181b !important;
+    border-color: #27272a !important;
+    color: #fafafa !important;
+
+    .p-paginator-element,
+    .p-paginator-page,
+    .p-paginator-next,
+    .p-paginator-prev,
+    .p-paginator-first,
+    .p-paginator-last {
+      background: transparent !important;
+      color: #a1a1aa !important;
+
+      &:hover:not(.p-disabled) {
+        background: #27272a !important;
+        color: #fafafa !important;
+      }
+
+      &.p-highlight {
+        background: #34d399 !important;
+        color: #18181b !important;
+      }
+    }
+
+    .p-dropdown,
+    .p-select {
+      background: #18181b !important;
+      border-color: #3f3f46 !important;
+
+      .p-dropdown-label,
+      .p-select-label {
+        color: #fafafa !important;
+      }
+    }
+  }
+
+  // Select / Dropdown
+  .p-select,
+  .p-dropdown {
+    background: #18181b !important;
+    border-color: #3f3f46 !important;
+
+    .p-select-label,
+    .p-dropdown-label {
+      color: #fafafa !important;
+    }
+
+    .p-select-trigger,
+    .p-dropdown-trigger {
+      color: #a1a1aa !important;
+    }
+  }
+
+  // Toolbar
+  .p-toolbar {
+    background: #18181b !important;
+    border-color: #27272a !important;
+    color: #fafafa !important;
+  }
+
+  // ds-preview specific
+  app-ds-preview,
+  [class*="ds-preview"] {
+    .ds-preview {
+      background: #18181b !important;
+      border-color: #27272a !important;
+    }
+
+    .preview-header {
+      background: #18181b !important;
+      border-bottom-color: #27272a !important;
+    }
+
+    .preview-title {
+      color: #fafafa !important;
+    }
+
+    .preview-description {
+      color: #a1a1aa !important;
+    }
+
+    .preview-panel {
+      background: #18181b !important;
+      color: #fafafa !important;
+    }
+  }
+
+  // Sidebar
+  .ds-sidebar-container,
+  app-ds-sidebar {
+    background: #18181b !important;
+    border-color: #27272a !important;
+
+    .sidebar-header {
+      background: #18181b !important;
+      border-color: #27272a !important;
+    }
+
+    .sidebar-content {
+      background: #18181b !important;
+    }
+
+    .menu-item {
+      color: #a1a1aa !important;
+
+      &:hover {
+        background: #27272a !important;
+        color: #fafafa !important;
+      }
+
+      &.active {
+        background: rgba(52, 211, 153, 0.16) !important;
+        color: #34d399 !important;
+      }
+    }
+  }
+
+  // Header
+  .ds-header {
+    background: #18181b !important;
+    border-color: #27272a !important;
+  }
+
+  // Search
+  .search-results {
+    background: #18181b !important;
+    border-color: #27272a !important;
+  }
+
+  .category-header {
+    background: #18181b !important;
+    color: #a1a1aa !important;
+  }
+
+  .search-result-item {
+    color: #fafafa !important;
+
+    &:hover {
+      background: rgba(52, 211, 153, 0.16) !important;
+      color: #34d399 !important;
+    }
+  }
+}
+

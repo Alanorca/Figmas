@@ -1,0 +1,239 @@
+<div class="guide-page">
+  <header class="page-header">
+    <h1>Guía de Documentación DS</h1>
+    <p class="subtitle">
+      Template y mejores prácticas para documentar componentes en el Design System.
+      <strong>Esta página es auto-documentada - es su propio ejemplo.</strong>
+    </p>
+  </header>
+
+  <!-- Quick Guidelines -->
+  <app-ds-guidelines
+    [dos]="guidelinesDos"
+    [donts]="guidelinesDonts"
+    [compact]="true"
+  />
+
+  <!-- Overview -->
+  <section class="section">
+    <h2><i class="pi pi-info-circle"></i> Resumen de Cambios Recientes</h2>
+    <p class="section-description">
+      Consolidación de mejoras al Design System para asegurar consistencia visual.
+    </p>
+
+    <div class="changes-summary">
+      <div class="change-card">
+        <div class="change-icon">
+          <i class="pi pi-palette"></i>
+        </div>
+        <div class="change-content">
+          <h4>Paleta Dark Mode Corregida</h4>
+          <p>Cambiado de <code>slate</code> (azulado) a <code>zinc</code> (grises puros) para coincidir con ORCA.</p>
+        </div>
+      </div>
+
+      <div class="change-card">
+        <div class="change-icon">
+          <i class="pi pi-box"></i>
+        </div>
+        <div class="change-content">
+          <h4>Form Field Tokens</h4>
+          <p>Agregados tokens <code>--form-field-*</code> a ds-preview para inputs correctos en ambos modos.</p>
+        </div>
+      </div>
+
+      <div class="change-card">
+        <div class="change-icon">
+          <i class="pi pi-code"></i>
+        </div>
+        <div class="change-content">
+          <h4>Code Blocks con Variables</h4>
+          <p>Reemplazados colores hardcodeados por <code>var(--primary-color)</code> y paleta slate.</p>
+        </div>
+      </div>
+
+      <div class="change-card">
+        <div class="change-icon">
+          <i class="pi pi-th-large"></i>
+        </div>
+        <div class="change-content">
+          <h4>Nuevos Componentes DS</h4>
+          <p>Creados: <code>ds-code-tabs</code>, <code>ds-guidelines</code>, <code>ds-usage-list</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DS Components Available -->
+  <section class="section">
+    <h2><i class="pi pi-th-large"></i> Componentes DS Disponibles</h2>
+    <p class="section-description">
+      Componentes reutilizables para documentar el Design System.
+    </p>
+    <app-ds-usage-list
+      [items]="dsComponents"
+      type="components"
+    />
+  </section>
+
+  <!-- ds-preview Section -->
+  <section class="section" id="ds-preview">
+    <h2><i class="pi pi-eye"></i> ds-preview</h2>
+    <p class="section-description">
+      Contenedor principal para demos. Incluye toggle light/dark mode que aplica tema aislado.
+    </p>
+
+    <app-ds-preview title="Ejemplo de Preview">
+      <div class="preview-demo">
+        <p>Este contenido respeta el tema seleccionado.</p>
+        <div class="demo-card">
+          <span class="card-title">Card de Ejemplo</span>
+          <span class="card-subtitle">Con colores del tema</span>
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="previewProps" />
+
+    <app-ds-code-block
+      [code]="dsPreviewUsageCode"
+      language="html"
+    />
+  </section>
+
+  <!-- Critical Tokens -->
+  <section class="section">
+    <h2><i class="pi pi-sliders-h"></i> Tokens CSS Críticos</h2>
+    <p class="section-description">
+      Variables CSS que DEBEN usarse en lugar de colores hardcodeados.
+    </p>
+
+    @for (category of tokenCategories; track category.name) {
+      <div class="token-category">
+        <h3>{{ category.name }}</h3>
+        <div class="tokens-table">
+          <div class="tokens-header">
+            <span>Variable</span>
+            <span>Light</span>
+            <span>Dark</span>
+            <span>Uso</span>
+          </div>
+          @for (token of category.tokens; track token.name) {
+            <div class="token-row">
+              <code>{{ token.name }}</code>
+              <div class="color-preview">
+                <span class="color-swatch" [style.background]="token.light"></span>
+                <span class="color-value">{{ token.light }}</span>
+              </div>
+              <div class="color-preview">
+                <span class="color-swatch" [style.background]="token.dark"></span>
+                <span class="color-value">{{ token.dark }}</span>
+              </div>
+              <span class="token-usage">{{ token.usage }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- Template Code -->
+  <section class="section">
+    <h2><i class="pi pi-file"></i> Template Completo</h2>
+    <p class="section-description">
+      Código base para crear una nueva página de documentación DS.
+    </p>
+    <app-ds-code-tabs [tabs]="codeTabs" />
+  </section>
+
+  <!-- Checklist -->
+  <section class="section">
+    <h2><i class="pi pi-check-square"></i> Checklist de Implementación</h2>
+    <p class="section-description">
+      Verificar antes de completar una página de documentación.
+    </p>
+
+    <div class="checklist">
+      @for (item of checklist; track item.text) {
+        <div class="checklist-item" [class.done]="item.done">
+          <i class="pi" [class.pi-check-circle]="item.done" [class.pi-circle]="!item.done"></i>
+          <span>{{ item.text }}</span>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Dark Mode Specifics -->
+  <section class="section">
+    <h2><i class="pi pi-moon"></i> Dark Mode: Zinc vs Slate</h2>
+    <p class="section-description">
+      La app ORCA usa paleta <strong>zinc</strong> (grises puros). NO usar slate (tiene tinte azul).
+    </p>
+
+    <app-ds-preview title="Comparación de Paletas">
+      <div class="palette-comparison">
+        <div class="palette-column">
+          <h4 class="palette-title correct">Zinc (Correcto)</h4>
+          <div class="color-stack">
+            <div class="color-block" style="background: #09090b;"><span>#09090b</span></div>
+            <div class="color-block" style="background: #18181b;"><span>#18181b</span></div>
+            <div class="color-block" style="background: #27272a;"><span>#27272a</span></div>
+            <div class="color-block" style="background: #3f3f46;"><span>#3f3f46</span></div>
+          </div>
+          <p class="palette-desc">Grises puros, sin tinte de color</p>
+        </div>
+
+        <div class="palette-column">
+          <h4 class="palette-title incorrect">Slate (Incorrecto)</h4>
+          <div class="color-stack">
+            <div class="color-block" style="background: #0f172a;"><span>#0f172a</span></div>
+            <div class="color-block" style="background: #1e293b;"><span>#1e293b</span></div>
+            <div class="color-block" style="background: #334155;"><span>#334155</span></div>
+            <div class="color-block" style="background: #475569;"><span>#475569</span></div>
+          </div>
+          <p class="palette-desc">Tiene tinte azulado</p>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- File Structure -->
+  <section class="section">
+    <h2><i class="pi pi-folder"></i> Estructura de Archivos</h2>
+    <p class="section-description">
+      Organización de carpetas para páginas del Design System.
+    </p>
+
+    <div class="file-tree">
+      <pre>
+src/app/pages/design-system/
+├── components/                    # Componentes DS reutilizables
+│   ├── ds-preview/               # Preview con toggle light/dark
+│   ├── ds-code-block/            # Bloque de código
+│   ├── ds-code-tabs/             # Tabs de código (HTML/TS/SCSS)
+│   ├── ds-guidelines/            # Do's y Don'ts
+│   ├── ds-usage-list/            # Lista de componentes que lo usan
+│   └── ds-props-table/           # Tabla de propiedades
+│
+├── pages/
+│   ├── foundation/               # Colores, tipografía, spacing...
+│   ├── atoms/                    # Buttons, inputs, icons...
+│   ├── molecules/                # Cards, form-fields...
+│   ├── organisms/                # Tables, dialogs, forms...
+│   └── guides/                   # Guías y templates (esta página)
+│
+└── design-system.routes.ts       # Rutas del DS
+      </pre>
+    </div>
+  </section>
+
+  <!-- Quick Reference -->
+  <section class="section">
+    <h2><i class="pi pi-bookmark"></i> Referencia Rápida</h2>
+    <p class="section-description">
+      Snippets de código listos para copiar y usar en nuevas páginas del DS.
+    </p>
+
+    <app-ds-code-tabs [tabs]="quickRefTabs" />
+  </section>
+</div>

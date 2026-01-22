@@ -121,24 +121,35 @@
           }
         </div>
 
-        <!-- Footer Buttons -->
+        <!-- Footer Buttons (using p-button like the real app) -->
         <div class="demo-footer">
           @if (pasoActual() > 0) {
-            <button class="btn-atras" (click)="anterior()">
-              <i class="pi pi-arrow-left"></i> Atras
-            </button>
+            <p-button
+              label="Atrás"
+              icon="pi pi-arrow-left"
+              [outlined]="true"
+              (onClick)="anterior()"
+            />
           } @else {
-            <button class="btn-atras">Cancelar</button>
+            <p-button
+              label="Cancelar"
+              [text]="true"
+            />
           }
 
           @if (pasoActual() < steps.length - 1) {
-            <button class="btn-siguiente" (click)="siguiente()">
-              Siguiente <i class="pi pi-arrow-right"></i>
-            </button>
+            <p-button
+              label="Siguiente"
+              icon="pi pi-arrow-right"
+              iconPos="right"
+              (onClick)="siguiente()"
+            />
           } @else {
-            <button class="btn-guardar" (click)="resetDemo()">
-              <i class="pi pi-check"></i> Crear
-            </button>
+            <p-button
+              label="Crear"
+              icon="pi pi-check"
+              (onClick)="resetDemo()"
+            />
           }
         </div>
       </div>

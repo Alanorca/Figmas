@@ -106,21 +106,21 @@
     box-shadow: 0 8px 25px -5px rgba(var(--primary-color-rgb, 16, 185, 129), 0.3);
   }
 
-  // Variante IA - Púrpura
+  // Variante IA - Púrpura (uses violet palette)
   &.wizard-method-ia {
-    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    background: linear-gradient(135deg, var(--violet-50, #f5f3ff) 0%, var(--violet-100, #ede9fe) 100%);
 
     &.wizard-method-selected {
-      background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+      background: linear-gradient(135deg, var(--violet-100, #ede9fe) 0%, var(--violet-200, #ddd6fe) 100%);
     }
   }
 
-  // Variante Manual - Azul/Gris
+  // Variante Manual - Azul/Gris (uses slate/sky palette)
   &.wizard-method-manual {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background: linear-gradient(135deg, var(--slate-50) 0%, var(--slate-100) 100%);
 
     &.wizard-method-selected {
-      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+      background: linear-gradient(135deg, var(--sky-100, #e0f2fe) 0%, var(--sky-200, #bae6fd) 100%);
     }
   }
 }

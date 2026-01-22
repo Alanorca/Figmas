@@ -15,7 +15,7 @@
     <p class="section-description">
       E-commerce style product cards with cart and wishlist functionality. Click to add items to cart or favorites.
     </p>
-    <app-ds-preview title="Product Cards Demo" [showModeToggle]="false">
+    <app-ds-preview title="Product Cards Demo">
       <div class="product-cards-demo">
         <!-- Cart Summary -->
         <div class="cart-summary">
@@ -84,7 +84,7 @@
     <p class="section-description">
       Dashboard stat cards with live data. Click refresh to update the numbers.
     </p>
-    <app-ds-preview title="Stats Cards Demo" [showModeToggle]="false">
+    <app-ds-preview title="Stats Cards Demo">
       <div class="stats-demo">
         <div class="stats-header">
           <h3>Dashboard Overview</h3>
@@ -155,7 +155,7 @@
     <p class="section-description">
       User profile cards with follow/unfollow functionality. Click follow to toggle state.
     </p>
-    <app-ds-preview title="User Cards Demo" [showModeToggle]="false">
+    <app-ds-preview title="User Cards Demo">
       <div class="users-grid">
         @for (user of users(); track user.id) {
           <p-card styleClass="user-card-interactive">
@@ -209,7 +209,7 @@
     <p class="section-description">
       Simple card with header and content.
     </p>
-    <app-ds-preview title="Basic Card" [showModeToggle]="false">
+    <app-ds-preview title="Basic Card">
       <div class="cards-demo">
         <p-card header="Card Title">
           <p>This is basic card content. Cards are used to group related information and actions.</p>
@@ -224,7 +224,7 @@
     <p class="section-description">
       Cards can have a subheader for additional context.
     </p>
-    <app-ds-preview title="Card with Subheader" [showModeToggle]="false">
+    <app-ds-preview title="Card with Subheader">
       <div class="cards-demo">
         <p-card header="Project Alpha" subheader="Last updated 2 hours ago">
           <p>This project is currently in development phase with 80% completion.</p>
@@ -238,7 +238,7 @@
     <p class="section-description">
       Visual header area for images or custom content.
     </p>
-    <app-ds-preview title="Header Image Card" [showModeToggle]="false">
+    <app-ds-preview title="Header Image Card">
       <div class="cards-demo">
         <p-card header="Mountain View" subheader="Nature Photography" styleClass="card-with-image">
           <ng-template pTemplate="header">
@@ -258,7 +258,7 @@
     <p class="section-description">
       Footer area for actions.
     </p>
-    <app-ds-preview title="Footer Card" [showModeToggle]="false">
+    <app-ds-preview title="Footer Card">
       <div class="cards-demo">
         <p-card header="Save Changes">
           <p>You have unsaved changes. Would you like to save them?</p>

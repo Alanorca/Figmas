@@ -1,0 +1,89 @@
+.ds-usage-list {
+  margin-bottom: 2rem;
+}
+
+.usage-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0 0 1rem 0;
+
+  i {
+    color: var(--primary-color);
+  }
+}
+
+.usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.usage-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  color: var(--text-color);
+  transition: all 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--primary-color);
+    background: var(--surface-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+    .arrow-icon {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  > i:first-child {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    flex-shrink: 0;
+  }
+}
+
+.usage-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+
+  strong {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .usage-path {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    font-family: 'Fira Code', monospace;
+  }
+
+  .usage-description {
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+    margin-top: 0.25rem;
+  }
+}
+
+.arrow-icon {
+  font-size: 0.875rem;
+  color: var(--primary-color);
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all 0.2s;
+}

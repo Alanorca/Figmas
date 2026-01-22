@@ -1,0 +1,21 @@
+<div class="ds-usage-list">
+  <h3 class="usage-title">
+    <i [class]="type() === 'pages' ? 'pi pi-file' : 'pi pi-box'"></i>
+    {{ title() }}
+  </h3>
+  <div class="usage-grid">
+    @for (item of items(); track item.path) {
+      <a [routerLink]="item.path" class="usage-card" pRipple>
+        <i [class]="item.icon || (type() === 'pages' ? 'pi pi-file' : 'pi pi-box')"></i>
+        <div class="usage-info">
+          <strong>{{ item.title }}</strong>
+          <span class="usage-path">{{ item.path }}</span>
+          @if (item.description) {
+            <span class="usage-description">{{ item.description }}</span>
+          }
+        </div>
+        <i class="pi pi-arrow-right arrow-icon"></i>
+      </a>
+    }
+  </div>
+</div>

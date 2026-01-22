@@ -1,0 +1,28 @@
+<div class="ds-guidelines" [class.compact]="compact()">
+  @if (dos().length > 0) {
+    <div class="guideline-card do">
+      <h4>
+        <i class="pi pi-check-circle"></i>
+        Do's
+      </h4>
+      <ul>
+        @for (item of dos(); track $index) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+    </div>
+  }
+  @if (donts().length > 0) {
+    <div class="guideline-card dont">
+      <h4>
+        <i class="pi pi-times-circle"></i>
+        Don'ts
+      </h4>
+      <ul>
+        @for (item of donts(); track $index) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+    </div>
+  }
+</div>

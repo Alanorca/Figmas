@@ -1,0 +1,36 @@
+<div class="ds-code-tabs">
+  <header class="code-header">
+    <div class="tabs-container">
+      @for (tab of tabs(); track $index; let i = $index) {
+        <button
+          class="code-tab"
+          [class.active]="i === activeTabIndex()"
+          (click)="selectTab(i)"
+        >
+          @if (tab.icon) {
+            <i [class]="tab.icon"></i>
+          }
+          <span>{{ tab.label }}</span>
+        </button>
+      }
+    </div>
+    <div class="header-actions">
+      <span class="language-badge">{{ activeTab.language }}</span>
+      <button
+        pButton
+        pRipple
+        [icon]="copied() ? 'pi pi-check' : 'pi pi-copy'"
+        class="p-button-text p-button-sm copy-btn"
+        [class.copied]="copied()"
+        pTooltip="Copiar código"
+        tooltipPosition="left"
+        (click)="copyCode()"
+      >
+        <span>{{ copied() ? 'Copiado!' : 'Copiar' }}</span>
+      </button>
+    </div>
+  </header>
+  <div class="code-content">
+    <pre><code>@for (line of codeLines; track $index; let i = $index) {<span class="code-line">@if (showLineNumbers()) {<span class="line-number">{{ i + 1 }}</span>}<span class="line-content">{{ line }}</span></span>}</code></pre>
+  </div>
+</div>

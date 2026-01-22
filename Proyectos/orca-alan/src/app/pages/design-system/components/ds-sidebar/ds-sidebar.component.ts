@@ -22,7 +22,7 @@ export class DsSidebarComponent {
   collapsed = input(false);
   toggleCollapse = output<void>();
 
-  expandedSections = signal<Set<string>>(new Set(['foundation', 'atoms', 'molecules', 'organisms']));
+  expandedSections = signal<Set<string>>(new Set(['foundation', 'atoms', 'molecules', 'organisms', 'guides']));
 
   navItems: NavItem[] = [
     {
@@ -72,6 +72,13 @@ export class DsSidebarComponent {
         { label: 'Dialogs', route: '/design-system/organisms/dialogs' },
         { label: 'Forms', route: '/design-system/organisms/forms' },
         { label: 'Multi-Step Template', route: '/design-system/organisms/multi-step-template' }
+      ]
+    },
+    {
+      label: 'Guides',
+      icon: 'pi pi-book',
+      children: [
+        { label: 'Documentation', route: '/design-system/guides/documentation' }
       ]
     }
   ];

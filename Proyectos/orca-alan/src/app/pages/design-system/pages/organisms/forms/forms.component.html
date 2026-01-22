@@ -15,7 +15,7 @@
     <p class="section-description">
       Fully functional contact form with real-time validation and submission feedback.
     </p>
-    <app-ds-preview title="Contact Form" [showModeToggle]="false">
+    <app-ds-preview title="Contact Form">
       <div class="interactive-form-demo">
         <div class="form-container">
           <div class="contact-form">
@@ -120,7 +120,7 @@
     <p class="section-description">
       Step-by-step form with progress tracking. Complete all steps to submit.
     </p>
-    <app-ds-preview title="Multi-Step Form" [showModeToggle]="false">
+    <app-ds-preview title="Multi-Step Form">
       <div class="multistep-form">
         <div class="step-indicators">
           <div class="step-indicator" [class.active]="currentStep() >= 0" [class.completed]="currentStep() > 0">
@@ -281,7 +281,7 @@
     <p class="section-description">
       A typical registration form with reactive form validation.
     </p>
-    <app-ds-preview title="Registration Form" [showModeToggle]="false">
+    <app-ds-preview title="Registration Form">
       <div class="form-demo">
         <p-card header="Create Account" styleClass="form-card">
           <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()">
@@ -351,7 +351,7 @@
     <p class="section-description">
       Form with checkboxes and radio buttons for settings.
     </p>
-    <app-ds-preview title="Settings Form" [showModeToggle]="false">
+    <app-ds-preview title="Settings Form">
       <div class="form-demo">
         <p-card header="Preferences" styleClass="form-card">
           <form [formGroup]="settingsForm">
@@ -399,7 +399,7 @@
     <p class="section-description">
       Form with floating labels for a cleaner look.
     </p>
-    <app-ds-preview title="Float Label Form" [showModeToggle]="false">
+    <app-ds-preview title="Float Label Form">
       <div class="form-demo">
         <div class="float-form">
           <p-floatLabel>

@@ -3,7 +3,73 @@
     <app-ds-sidebar [collapsed]="sidebarCollapsed()" (toggleCollapse)="toggleSidebar()" />
   </aside>
 
-  <main class="ds-content">
-    <router-outlet />
-  </main>
+  <div class="ds-main">
+    <header class="ds-header">
+      <div class="search-container" style="flex: 1;">
+        <div class="search-input-wrapper">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            (focus)="onSearchFocus()"
+            (keydown.escape)="closeSearch()"
+            placeholder="Buscar componentes... (Ctrl+K)"
+            class="search-input"
+            #searchInput
+          />
+          @if (searchQuery) {
+            <i class="pi pi-times clear-icon" (click)="clearSearch()"></i>
+          }
+        </div>
+        @if (showResults) {
+          <div class="search-results">
+            @for (category of groupedComponents(); track category.name) {
+              <div class="search-category">
+                <div class="category-header">
+                  <i [class]="category.icon"></i>
+                  <span>{{ category.name }}</span>
+                </div>
+                @for (item of category.items; track item.route) {
+                  <a
+                    class="search-result-item"
+                    [routerLink]="item.route"
+                    (click)="selectComponent()"
+                    pRipple
+                  >
+                    <i [class]="item.icon"></i>
+                    <span class="result-label">{{ item.label }}</span>
+                  </a>
+                }
+              </div>
+            }
+            @if (groupedComponents().length === 0) {
+              <div class="no-results">
+                <i class="pi pi-search"></i>
+                <span>No se encontraron componentes</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Theme Toggle -->
+      <div class="ds-theme-toggle">
+        <button
+          pButton
+          pRipple
+          [icon]="dsTheme.isDarkMode() ? 'pi pi-sun' : 'pi pi-moon'"
+          class="p-button-text p-button-rounded"
+          (click)="dsTheme.toggleTheme()"
+          [pTooltip]="dsTheme.isDarkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+          tooltipPosition="bottom"
+        ></button>
+      </div>
+    </header>
+
+    <main class="ds-content">
+      <router-outlet />
+    </main>
+  </div>
 </div>

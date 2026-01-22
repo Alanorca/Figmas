@@ -9,13 +9,20 @@
     </p>
   </header>
 
+  <!-- Guidelines -->
+  <app-ds-guidelines
+    [dos]="guidelinesDos"
+    [donts]="guidelinesDonts"
+    [compact]="true"
+  />
+
   <!-- Interactive Demo Section -->
   <section class="section highlight-section">
     <h2><i class="pi pi-bolt"></i> Interactive Demo</h2>
     <p class="section-description">
       Try clicking these buttons to see the interactivity. The counter shows reactive updates with Angular Signals.
     </p>
-    <app-ds-preview title="Try It!" [showModeToggle]="false">
+    <app-ds-preview title="Try It!">
       <div class="interactive-demo">
         <div class="demo-group">
           <p-button
@@ -61,7 +68,7 @@
     <p class="section-description">
       Different severity levels communicate the importance and type of action. Click each button to see a notification.
     </p>
-    <app-ds-preview title="Basic Buttons" [showModeToggle]="false">
+    <app-ds-preview title="Basic Buttons">
       <div class="button-row">
         <p-button label="Primary" (onClick)="onButtonClick('primary')" />
         <p-button label="Secondary" severity="secondary" (onClick)="onButtonClick('secondary')" />
@@ -81,7 +88,7 @@
     <p class="section-description">
       Outlined buttons have transparent backgrounds for secondary actions.
     </p>
-    <app-ds-preview title="Outlined Buttons" [showModeToggle]="false">
+    <app-ds-preview title="Outlined Buttons">
       <div class="button-row">
         <p-button label="Primary" [outlined]="true" />
         <p-button label="Secondary" severity="secondary" [outlined]="true" />
@@ -99,7 +106,7 @@
     <p class="section-description">
       Text buttons are used for low-emphasis actions.
     </p>
-    <app-ds-preview title="Text Buttons" [showModeToggle]="false">
+    <app-ds-preview title="Text Buttons">
       <div class="button-row">
         <p-button label="Primary" [text]="true" />
         <p-button label="Secondary" severity="secondary" [text]="true" />
@@ -117,7 +124,7 @@
     <p class="section-description">
       Raised buttons have a shadow to indicate elevated importance.
     </p>
-    <app-ds-preview title="Raised Buttons" [showModeToggle]="false">
+    <app-ds-preview title="Raised Buttons">
       <div class="button-row">
         <p-button label="Primary" [raised]="true" />
         <p-button label="Secondary" severity="secondary" [raised]="true" />
@@ -132,7 +139,7 @@
     <p class="section-description">
       Rounded buttons have pill-shaped corners.
     </p>
-    <app-ds-preview title="Rounded Buttons" [showModeToggle]="false">
+    <app-ds-preview title="Rounded Buttons">
       <div class="button-row">
         <p-button label="Primary" [rounded]="true" />
         <p-button label="Secondary" severity="secondary" [rounded]="true" />
@@ -149,7 +156,7 @@
     <p class="section-description">
       Buttons can include icons for better visual communication.
     </p>
-    <app-ds-preview title="Icon Buttons" [showModeToggle]="false">
+    <app-ds-preview title="Icon Buttons">
       <div class="button-row">
         <p-button icon="pi pi-check" />
         <p-button label="Submit" icon="pi pi-check" />
@@ -168,7 +175,7 @@
     <p class="section-description">
       Buttons come in small, normal, and large sizes.
     </p>
-    <app-ds-preview title="Button Sizes" [showModeToggle]="false">
+    <app-ds-preview title="Button Sizes">
       <div class="button-row align-center">
         <p-button label="Small" size="small" />
         <p-button label="Normal" />
@@ -188,7 +195,7 @@
     <p class="section-description">
       Loading state for asynchronous actions. Click the button to see the loading animation.
     </p>
-    <app-ds-preview title="Loading Buttons" [showModeToggle]="false">
+    <app-ds-preview title="Loading Buttons">
       <div class="button-row">
         <p-button label="Save" icon="pi pi-save" [loading]="isLoading()" (onClick)="simulateLoading()" />
         <p-button label="Loading" [loading]="true" />
@@ -204,7 +211,7 @@
     <p class="section-description">
       Disabled buttons cannot be interacted with.
     </p>
-    <app-ds-preview title="Disabled Buttons" [showModeToggle]="false">
+    <app-ds-preview title="Disabled Buttons">
       <div class="button-row">
         <p-button label="Disabled" [disabled]="true" />
         <p-button label="Disabled" severity="secondary" [disabled]="true" />
@@ -219,7 +226,7 @@
     <p class="section-description">
       Common button patterns used together.
     </p>
-    <app-ds-preview title="Button Patterns" [showModeToggle]="false">
+    <app-ds-preview title="Button Patterns">
       <div class="button-patterns">
         <div class="pattern-group">
           <span class="pattern-label">Form Actions:</span>
@@ -249,5 +256,20 @@
   <section class="section">
     <h2>Properties</h2>
     <app-ds-props-table [props]="buttonProps" />
+  </section>
+
+  <!-- Componentes que lo usan -->
+  <section class="section">
+    <app-ds-usage-list
+      title="Componentes que usan Buttons"
+      [items]="usageItems"
+      type="components"
+    />
+  </section>
+
+  <!-- Código -->
+  <section class="section">
+    <h2>Código</h2>
+    <app-ds-code-tabs [tabs]="codeTabs" />
   </section>
 </div>

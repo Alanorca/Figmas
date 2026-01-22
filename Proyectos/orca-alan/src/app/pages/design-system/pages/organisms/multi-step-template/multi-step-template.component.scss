@@ -123,19 +123,21 @@
 
 // ============================================
 // DEMO WIZARD
+// Replica la estructura de /proyectos/crear
 // ============================================
 .demo-wizard {
-  background: var(--surface-ground);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-4);
+  // No background here - let the preview panel handle it
+  // This represents the page content area
+  padding: 0;
 }
 
 .demo-header {
-  margin-bottom: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
 
   h3 {
     margin: 0;
-    font-size: var(--font-size-lg);
+    font-size: 1.5rem;
+    font-weight: 600;
     color: var(--text-color);
   }
 
@@ -147,30 +149,38 @@
 }
 
 .demo-content-card {
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-6);
+  // Transparent like the real content-card in proceso-crear
+  // The form fields have their own backgrounds
+  background: transparent;
+  border: none;
+  padding: 0;
   margin-bottom: var(--spacing-4);
-  min-height: 200px;
+  min-height: 180px;
 }
 
 .demo-step-content {
+  // Matches the step-panel styling in proceso-crear
+  max-width: 500px;
+
   h4 {
-    margin: 0 0 var(--spacing-4) 0;
+    margin: 0 0 var(--spacing-6) 0;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
     color: var(--text-color);
   }
 }
 
 .demo-form-field {
-  margin-bottom: var(--spacing-4);
+  // Matches .form-field in proceso-crear
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-5);
 
   label {
-    display: block;
     font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--text-color);
-    margin-bottom: var(--spacing-2);
   }
 
   input {
@@ -181,6 +191,7 @@
 .demo-options {
   display: flex;
   gap: var(--spacing-4);
+  margin-top: var(--spacing-4);
 }
 
 .demo-option {
@@ -189,9 +200,16 @@
   align-items: center;
   gap: var(--spacing-3);
   padding: var(--spacing-4);
-  background: var(--surface-ground);
+  background: var(--surface-card);
   border: 1px solid var(--surface-border);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary-color);
+    background: var(--surface-hover);
+  }
 
   i {
     font-size: 1.5rem;
@@ -210,60 +228,90 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: var(--spacing-6);
+  padding: var(--spacing-8);
+
+  i {
+    color: var(--green-500);
+  }
 
   p {
     margin: var(--spacing-4) 0 0 0;
     color: var(--text-color-secondary);
+    max-width: 300px;
   }
 }
 
 .demo-footer {
+  // Simulates the fixed footer from proceso-crear
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
   gap: var(--spacing-4);
-  padding-top: var(--spacing-4);
-  border-top: 1px solid var(--surface-border);
+  padding: var(--spacing-4) var(--spacing-6);
+  margin-top: var(--spacing-6);
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg);
 }
 
 // ============================================
-// STEPPER STYLES (reusable)
+// STEPPER STYLES (matches proceso-crear)
 // ============================================
 .stepper-container {
   display: flex;
   gap: 0;
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-4);
-  margin-bottom: var(--spacing-4);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-6);
 }
 
 .step-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
   flex: 1;
+  display: flex;
+  gap: var(--spacing-4);
 
   &.clickable {
     cursor: pointer;
+  }
+
+  &.active {
+    .step-icon {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      i { color: var(--surface-0); }
+    }
+    .step-label { color: var(--text-color); }
+  }
+
+  &.completed {
+    .step-icon {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      i { color: var(--surface-0); }
+    }
+    .step-line { background: var(--primary-color); }
+    .step-label { color: var(--primary-color); }
   }
 }
 
 .step-indicator {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: 0;
 }
 
 .step-icon {
   width: 32px;
   height: 32px;
-  border-radius: var(--border-radius-full, 50%);
+  border-radius: var(--border-radius-full);
+  // Use surface-ground for pending state (matches proceso-crear)
+  background: var(--surface-ground);
   border: 2px solid var(--surface-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-card);
   flex-shrink: 0;
   transition: all 0.2s ease;
 
@@ -272,20 +320,10 @@
     color: var(--text-color-secondary);
   }
 
-  .step-item.active &,
-  .step-item.completed & {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-
-    i {
-      color: var(--surface-0, #fff);
-    }
-  }
-
   // Estados para documentacion
   &.state-pending {
     border-color: var(--surface-border);
-    background: var(--surface-card);
+    background: var(--surface-ground);
 
     i {
       color: var(--text-color-secondary);
@@ -298,16 +336,18 @@
     border-color: var(--primary-color);
 
     i {
-      color: var(--surface-0, #fff);
+      color: var(--surface-0);
     }
   }
 }
 
 .step-line {
-  flex: 1;
+  width: 100%;
   height: 2px;
   background: var(--surface-border);
-  margin: 0 var(--spacing-2);
+  margin-top: 15px;
+  margin-left: var(--spacing-2);
+  min-width: 40px;
   transition: background 0.2s ease;
 
   &.completed {
@@ -318,23 +358,20 @@
 .step-content {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-1);
+  flex: 1;
 }
 
 .step-label {
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--text-color-secondary);
-
-  .step-item.active &,
-  .step-item.completed & {
-    color: var(--text-color);
-  }
 }
 
 .step-description {
   font-size: var(--font-size-xs);
-  color: var(--text-color-secondary);
+  color: var(--surface-400);
+  line-height: 1.4;
 }
 
 // ============================================
