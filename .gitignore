@@ -1,29 +1,60 @@
-# Dependencies
-node_modules/
-**/node_modules/
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# Database
-*.db
+# Use only for AI - Ignore
+.mcp.json
+docs/figma-views/*
 
-# Zone.Identifier files (Windows/WSL metadata)
-*:Zone.Identifier
+# Compiled output
+/dist
+libs/dist
+/tmp
+/out-tsc
+/bazel-out
+.playwright-mcp
 
-# OS generated files
+# Node
+/node_modules
+npm-debug.log
+yarn-error.log
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+./docs/components-references/*
+./docs/snapshots-references/*
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
+
+# System files
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
 
-# Temporary files
-*.tmp
-*.temp
-*~
+
+.nx/cache
+.nx/workspace-data
+graph.json
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+.angular
+.vercel
