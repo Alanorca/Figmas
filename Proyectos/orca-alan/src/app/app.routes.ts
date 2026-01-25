@@ -114,8 +114,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/cuestionario-crear/cuestionario-crear').then(m => m.CuestionarioCrearComponent)
   },
   {
+    path: 'cuestionarios/:id',
+    loadComponent: () => import('./pages/cuestionario-detalle/cuestionario-detalle').then(m => m.CuestionarioDetalleComponent)
+  },
+  {
     path: 'cumplimiento',
     loadComponent: () => import('./pages/cumplimiento/cumplimiento').then(m => m.CumplimientoComponent)
+  },
+  {
+    path: 'cumplimiento/revisiones/:id',
+    loadComponent: () => import('./pages/cumplimiento-revision-detalle/cumplimiento-revision-detalle').then(m => m.CumplimientoRevisionDetalleComponent)
   },
   {
     path: 'tabla-unificada',
@@ -128,6 +136,10 @@ export const routes: Routes = [
   {
     path: 'usuarios-roles',
     loadComponent: () => import('./pages/usuarios-roles/usuarios-roles').then(m => m.UsuariosRolesComponent)
+  },
+  {
+    path: 'usuarios/:id',
+    loadComponent: () => import('./pages/usuario-detalle/usuario-detalle').then(m => m.UsuarioDetalleComponent)
   },
   {
     path: 'asignacion-roles',

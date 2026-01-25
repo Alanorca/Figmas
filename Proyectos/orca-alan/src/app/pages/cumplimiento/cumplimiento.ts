@@ -2895,9 +2895,9 @@ export class CumplimientoComponent {
     }
   }
 
-  // Seleccionar revisión
+  // Seleccionar revisión - navega a la página de detalle
   seleccionarRevision(revisionId: string) {
-    this.revisionSeleccionadaId.set(revisionId);
+    this.router.navigate(['/cumplimiento/revisiones', revisionId]);
   }
 
   // Obtener archivos adjuntos para una pregunta específica

@@ -95,6 +95,17 @@ export class EventoSubtipoCrearComponent implements OnInit {
     { label: 'Propiedades' }
   ];
 
+  // Configuración del stepper custom
+  stepsConfig = [
+    { icon: 'pi pi-info-circle', label: 'Información Básica', descripcion: 'Define nombre y tipo de evento' },
+    { icon: 'pi pi-folder', label: 'Grupos', descripcion: 'Organiza las propiedades' },
+    { icon: 'pi pi-list', label: 'Propiedades', descripcion: 'Define campos personalizados' }
+  ];
+
+  getStepDescription(): string {
+    return this.stepsConfig[this.activeStep()]?.descripcion || '';
+  }
+
   // ============ Step 1: Info Básica ============
   name = signal('');
   code = signal('');

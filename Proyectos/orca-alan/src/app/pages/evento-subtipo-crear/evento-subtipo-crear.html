@@ -1,46 +1,51 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="evento-subtipo-crear-container">
-  <!-- Page Header -->
+<div class="crear-proceso-page">
+  <!-- Header dinamico -->
   <div class="page-header">
-    <div class="header-content">
-      <p-button
-        icon="pi pi-arrow-left"
-        severity="secondary"
-        [text]="true"
-        [rounded]="true"
-        (onClick)="cancel()"
-        pTooltip="Volver"
-      />
-      <div class="header-text">
-        <h1>{{ isEditMode() ? 'Editar' : 'Nueva' }} Plantilla de Evento</h1>
-        <p class="page-subtitle">
-          {{ isEditMode() ? 'Modifica los campos y propiedades de la plantilla' : 'Define los campos personalizados para este tipo de evento' }}
-        </p>
+    <h1>{{ isEditMode() ? 'Editar' : 'Nueva' }} Plantilla de Evento</h1>
+    <p class="page-subtitle">{{ steps[activeStep()].label }} - {{ getStepDescription() }}</p>
+  </div>
+
+  <!-- Stepper horizontal custom -->
+  <div class="stepper-container">
+    @for (step of stepsConfig; track $index; let i = $index) {
+      <div class="step-item"
+           [class.active]="i === activeStep()"
+           [class.completed]="i < activeStep()"
+           [class.clickable]="i < activeStep()"
+           (click)="goToStep(i)">
+        <div class="step-indicator">
+          <div class="step-icon">
+            @if (i < activeStep()) {
+              <i class="pi pi-check"></i>
+            } @else {
+              <i [class]="step.icon"></i>
+            }
+          </div>
+          @if (i < stepsConfig.length - 1) {
+            <div class="step-line" [class.completed]="i < activeStep()"></div>
+          }
+        </div>
+        <div class="step-content">
+          <span class="step-label">{{ step.label }}</span>
+          <span class="step-description">{{ step.descripcion }}</span>
+        </div>
       </div>
-    </div>
+    }
   </div>
 
-  <!-- Steps -->
-  <div class="steps-container">
-    <p-steps
-      [model]="steps"
-      [activeIndex]="activeStep()"
-      [readonly]="false"
-      (activeIndexChange)="goToStep($event)"
-    />
-  </div>
-
-  <!-- Content Card -->
-  <p-card>
+  <!-- Contenido del paso actual -->
+  <div class="content-card">
     <!-- Step 1: Información Básica -->
     @if (activeStep() === 0) {
-      <div class="step-content">
-        <h2 class="step-title">Información Básica</h2>
-        <p class="step-description">Define el nombre, código y tipo de evento para esta plantilla</p>
+      <div class="step-content-inner">
+        <div class="step-panel">
+          <h2 class="content-title">Información Básica</h2>
+          <p class="content-description">Define el nombre, código y tipo de evento para esta plantilla</p>
 
-        <div class="form-grid">
+          <div class="form-grid">
           <div class="field">
             <label for="eventType">Tipo de Evento *</label>
             <p-select
@@ -135,16 +140,17 @@
             </div>
           </div>
         </div>
+        </div>
       </div>
     }
 
     <!-- Step 2: Grupos -->
     @if (activeStep() === 1) {
-      <div class="step-content">
-        <div class="step-header">
+      <div class="step-content-inner">
+        <div class="content-header">
           <div>
-            <h2 class="step-title">Grupos de Propiedades</h2>
-            <p class="step-description">Organiza las propiedades en grupos (opcional)</p>
+            <h2 class="content-title">Grupos de Propiedades</h2>
+            <p class="content-description">Organiza las propiedades en grupos (opcional)</p>
           </div>
           <p-button
             label="Agregar Grupo"
@@ -154,7 +160,7 @@
         </div>
 
         @if (propertyGroups().length === 0) {
-          <div class="empty-state-small">
+          <div class="empty-state">
             <i class="pi pi-folder-open"></i>
             <p>No hay grupos definidos. Los grupos son opcionales y sirven para organizar las propiedades.</p>
           </div>
@@ -198,11 +204,11 @@
 
     <!-- Step 3: Propiedades -->
     @if (activeStep() === 2) {
-      <div class="step-content">
-        <div class="step-header">
+      <div class="step-content-inner">
+        <div class="content-header">
           <div>
-            <h2 class="step-title">Propiedades</h2>
-            <p class="step-description">Define los campos personalizados de esta plantilla</p>
+            <h2 class="content-title">Propiedades</h2>
+            <p class="content-description">Define los campos personalizados de esta plantilla</p>
           </div>
           <p-button
             label="Agregar Propiedad"
@@ -212,7 +218,7 @@
         </div>
 
         @if (properties().length === 0) {
-          <div class="empty-state-small">
+          <div class="empty-state">
             <i class="pi pi-list"></i>
             <p>No hay propiedades definidas. Agrega propiedades para capturar información específica del evento.</p>
           </div>
@@ -254,48 +260,35 @@
         }
       </div>
     }
+  </div>
 
-    <!-- Footer Actions -->
-    <p-divider />
-    <div class="form-actions">
-      <div class="left-actions">
-        @if (activeStep() > 0) {
-          <p-button
-            label="Anterior"
-            icon="pi pi-arrow-left"
-            severity="secondary"
-            [outlined]="true"
-            (onClick)="prevStep()"
-          />
-        }
-      </div>
-      <div class="right-actions">
-        <p-button
-          label="Cancelar"
-          severity="secondary"
-          [text]="true"
-          (onClick)="cancel()"
-        />
-        @if (activeStep() < 2) {
-          <p-button
-            label="Siguiente"
-            icon="pi pi-arrow-right"
-            iconPos="right"
-            (onClick)="nextStep()"
-            [disabled]="!isCurrentStepValid()"
-          />
-        } @else {
-          <p-button
-            [label]="isEditMode() ? 'Guardar Cambios' : 'Crear Plantilla'"
-            icon="pi pi-check"
-            (onClick)="save()"
-            [disabled]="!canSave()"
-            [loading]="saving()"
-          />
-        }
-      </div>
+  <!-- Footer fijo con navegacion -->
+  <div class="page-footer-fixed">
+    <div class="footer-content">
+      @if (activeStep() > 0) {
+        <button class="btn-atras" (click)="prevStep()">
+          <i class="pi pi-arrow-left"></i> Atrás
+        </button>
+      } @else {
+        <button class="btn-atras" (click)="cancel()">Cancelar</button>
+      }
+
+      @if (activeStep() < 2) {
+        <button class="btn-siguiente" (click)="nextStep()" [disabled]="!isCurrentStepValid()">
+          Siguiente <i class="pi pi-arrow-right"></i>
+        </button>
+      } @else {
+        <button class="btn-guardar" (click)="save()" [disabled]="!canSave() || saving()">
+          @if (saving()) {
+            <i class="pi pi-spin pi-spinner"></i>
+          } @else {
+            <i class="pi pi-check"></i>
+          }
+          {{ isEditMode() ? 'Guardar Cambios' : 'Crear Plantilla' }}
+        </button>
+      }
     </div>
-  </p-card>
+  </div>
 </div>
 
 <!-- Property Item Template -->

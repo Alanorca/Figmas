@@ -1,0 +1,296 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="revision-detalle-page">
+  @if (loading()) {
+    <div class="loading-container">
+      <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+      <p>Cargando revision...</p>
+    </div>
+  } @else if (revision()) {
+    <!-- Breadcrumb -->
+    <div class="page-breadcrumb">
+      <a routerLink="/cumplimiento" class="breadcrumb-link">
+        <i class="pi pi-clipboard"></i>
+        Cumplimiento
+      </a>
+      <i class="pi pi-chevron-right breadcrumb-separator"></i>
+      <span class="breadcrumb-current">Revision {{ revision()!.id }}</span>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="goBack()"
+          pTooltip="Volver"
+        />
+        <div class="header-info">
+          <h1>{{ revision()!.cuestionarioNombre }}</h1>
+          <div class="header-meta">
+            <p-tag [value]="estadoLabel()" [severity]="estadoSeverity()" />
+            <span class="meta-item">
+              <i class="pi pi-building"></i>
+              {{ revision()!.marcoNormativo }}
+            </span>
+            <span class="meta-item">
+              <i class="pi pi-calendar"></i>
+              Vence: {{ formatDate(revision()!.fechaVencimiento) }}
+            </span>
+            @if (diasRestantes() > 0) {
+              <span class="meta-item dias-restantes" [class.urgente]="diasRestantes() <= 7">
+                <i class="pi pi-clock"></i>
+                {{ diasRestantes() }} dias restantes
+              </span>
+            } @else {
+              <span class="meta-item dias-restantes vencido">
+                <i class="pi pi-exclamation-triangle"></i>
+                Vencido
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <p-button
+          label="Ver Cuestionario"
+          icon="pi pi-file"
+          [outlined]="true"
+          (onClick)="verCuestionario()"
+        />
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="menu.toggle($event)"
+        />
+        <p-menu #menu [model]="menuItems" [popup]="true" />
+      </div>
+    </div>
+
+    <!-- Progress Overview -->
+    <div class="progress-overview">
+      <div class="progress-card">
+        <div class="progress-header">
+          <span class="progress-label">Progreso General</span>
+          <span class="progress-value">{{ revision()!.progreso }}%</span>
+        </div>
+        <p-progressBar [value]="revision()!.progreso" [showValue]="false" />
+      </div>
+      @if (revision()!.puntuacion) {
+        <div class="score-card">
+          <span class="score-label">Puntuacion</span>
+          <span class="score-value">{{ revision()!.puntuacion }}%</span>
+          <p-tag [value]="revision()!.nivelCumplimiento!" severity="success" />
+        </div>
+      }
+      <div class="approvers-card">
+        <span class="approvers-label">Aprobaciones</span>
+        <span class="approvers-value">{{ aprobadoresCompletados() }} / {{ revision()!.aprobadores.length }}</span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="detail-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'resumen'"
+        (click)="activeTab.set('resumen')"
+      >
+        <i class="pi pi-info-circle"></i>
+        Resumen
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'respuestas'"
+        (click)="activeTab.set('respuestas')"
+      >
+        <i class="pi pi-list"></i>
+        Respuestas ({{ revision()!.respuestas.length }})
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'aprobadores'"
+        (click)="activeTab.set('aprobadores')"
+      >
+        <i class="pi pi-users"></i>
+        Aprobadores ({{ revision()!.aprobadores.length }})
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'historial'"
+        (click)="activeTab.set('historial')"
+      >
+        <i class="pi pi-history"></i>
+        Historial
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Resumen -->
+      @if (activeTab() === 'resumen') {
+        <div class="resumen-panel">
+          <div class="info-grid">
+            <!-- Asignado a -->
+            <div class="info-card">
+              <h3><i class="pi pi-user"></i> Asignado a</h3>
+              <div class="user-info">
+                <p-avatar
+                  [label]="getInitials(revision()!.asignadoA.nombre)"
+                  shape="circle"
+                  size="large"
+                />
+                <div class="user-details">
+                  <span class="user-name">{{ revision()!.asignadoA.nombre }}</span>
+                  <span class="user-email">{{ revision()!.asignadoA.email }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fechas -->
+            <div class="info-card">
+              <h3><i class="pi pi-calendar"></i> Fechas</h3>
+              <div class="dates-list">
+                <div class="date-item">
+                  <span class="date-label">Asignacion:</span>
+                  <span class="date-value">{{ formatDate(revision()!.fechaAsignacion) }}</span>
+                </div>
+                <div class="date-item">
+                  <span class="date-label">Vencimiento:</span>
+                  <span class="date-value">{{ formatDate(revision()!.fechaVencimiento) }}</span>
+                </div>
+                @if (revision()!.fechaCompletado) {
+                  <div class="date-item">
+                    <span class="date-label">Completado:</span>
+                    <span class="date-value">{{ formatDate(revision()!.fechaCompletado) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Marco Normativo -->
+            <div class="info-card">
+              <h3><i class="pi pi-building"></i> Marco Normativo</h3>
+              <div class="marco-info">
+                <p-chip [label]="revision()!.marcoNormativo" />
+                <p class="marco-cuestionario">{{ revision()!.cuestionarioNombre }}</p>
+              </div>
+            </div>
+
+            <!-- Estadisticas -->
+            <div class="info-card">
+              <h3><i class="pi pi-chart-bar"></i> Estadisticas</h3>
+              <div class="stats-list">
+                <div class="stat-item">
+                  <span class="stat-value">{{ revision()!.respuestas.length }}</span>
+                  <span class="stat-label">Respuestas</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-value">{{ revision()!.progreso }}%</span>
+                  <span class="stat-label">Completado</span>
+                </div>
+                @if (revision()!.puntuacion) {
+                  <div class="stat-item">
+                    <span class="stat-value">{{ revision()!.puntuacion }}%</span>
+                    <span class="stat-label">Puntuacion</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Respuestas -->
+      @if (activeTab() === 'respuestas') {
+        <div class="respuestas-panel">
+          <p-table [value]="revision()!.respuestas" styleClass="p-datatable-sm p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Seccion</th>
+                <th>Pregunta</th>
+                <th>Respuesta</th>
+                <th>Comentario</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-resp>
+              <tr>
+                <td><p-chip [label]="resp.seccion" /></td>
+                <td>{{ resp.pregunta }}</td>
+                <td>
+                  <strong>{{ getRespuestaDisplay(resp.respuesta) }}</strong>
+                </td>
+                <td>{{ resp.comentario || '-' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      }
+
+      <!-- Aprobadores -->
+      @if (activeTab() === 'aprobadores') {
+        <div class="aprobadores-panel">
+          @for (aprobador of revision()!.aprobadores; track aprobador.id) {
+            <div class="aprobador-card" [class.aprobado]="aprobador.aprobado">
+              <div class="aprobador-info">
+                <p-avatar
+                  [label]="getInitials(aprobador.nombre)"
+                  shape="circle"
+                />
+                <div class="aprobador-details">
+                  <span class="aprobador-nombre">{{ aprobador.nombre }}</span>
+                  <span class="aprobador-email">{{ aprobador.email }}</span>
+                </div>
+              </div>
+              <div class="aprobador-status">
+                @if (aprobador.aprobado) {
+                  <p-tag value="Aprobado" severity="success" icon="pi pi-check" />
+                  <span class="fecha-aprobacion">{{ formatDate(aprobador.fechaAccion) }}</span>
+                } @else {
+                  <p-tag value="Pendiente" severity="warn" icon="pi pi-clock" />
+                }
+              </div>
+              @if (aprobador.comentario) {
+                <div class="aprobador-comentario">
+                  <i class="pi pi-comment"></i>
+                  {{ aprobador.comentario }}
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Historial -->
+      @if (activeTab() === 'historial') {
+        <div class="historial-panel">
+          <p-timeline [value]="revision()!.historial">
+            <ng-template pTemplate="content" let-event>
+              <div class="timeline-event">
+                <span class="event-action">{{ event.accion }}</span>
+                <span class="event-user">{{ event.usuario }}</span>
+                @if (event.detalle) {
+                  <p class="event-detalle">{{ event.detalle }}</p>
+                }
+              </div>
+            </ng-template>
+            <ng-template pTemplate="opposite" let-event>
+              <span class="event-fecha">{{ formatDate(event.fecha) }}</span>
+            </ng-template>
+          </p-timeline>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="not-found">
+      <i class="pi pi-exclamation-circle"></i>
+      <h2>Revision no encontrada</h2>
+      <p>La revision solicitada no existe.</p>
+      <p-button label="Volver" icon="pi pi-arrow-left" (onClick)="goBack()" />
+    </div>
+  }
+</div>

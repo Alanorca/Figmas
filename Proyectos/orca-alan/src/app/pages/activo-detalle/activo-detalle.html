@@ -9,19 +9,6 @@
       <p>Cargando activo...</p>
     </div>
   } @else if (activo()) {
-    <!-- Breadcrumb -->
-    <div class="page-breadcrumb">
-      <i class="pi pi-home breadcrumb-home" (click)="goBack()"></i>
-      @for (parent of parentAssets(); track parent.id) {
-        <i class="pi pi-chevron-right breadcrumb-separator"></i>
-        <span class="breadcrumb-item" (click)="navigateToActivo(parent.id)">
-          {{ parent.nombre }}
-        </span>
-      }
-      <i class="pi pi-chevron-right breadcrumb-separator"></i>
-      <span class="breadcrumb-current">{{ activo()!.nombre }}</span>
-    </div>
-
     <!-- Header con titulo y navegacion principal -->
     <div class="page-header">
       <div class="header-left">

@@ -1,0 +1,339 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="cuestionario-detalle-page">
+  @if (loading()) {
+    <div class="loading-container">
+      <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+      <p>Cargando cuestionario...</p>
+    </div>
+  } @else if (cuestionario()) {
+    <!-- Breadcrumb -->
+    <div class="page-breadcrumb">
+      <a routerLink="/cuestionarios" class="breadcrumb-link">
+        <i class="pi pi-file-edit"></i>
+        Cuestionarios
+      </a>
+      <i class="pi pi-chevron-right breadcrumb-separator"></i>
+      <span class="breadcrumb-current">{{ cuestionario()!.nombre }}</span>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="goBack()"
+          pTooltip="Volver"
+        />
+        <div class="header-info">
+          <h1>{{ cuestionario()!.nombre }}</h1>
+          <div class="header-meta">
+            <p-tag [value]="estadoLabel()" [severity]="estadoSeverity()" />
+            <span class="meta-item">
+              <i class="pi pi-building"></i>
+              {{ cuestionario()!.marcoNormativo }}
+            </span>
+            <span class="meta-item">
+              <i class="pi pi-calendar"></i>
+              Modificado: {{ formatDate(cuestionario()!.fechaModificacion) }}
+            </span>
+            <span class="meta-item tipo-badge" [class.ia]="cuestionario()!.tipo === 'ia'">
+              <i [class]="cuestionario()!.tipo === 'ia' ? 'pi pi-sparkles' : 'pi pi-pencil'"></i>
+              {{ cuestionario()!.tipo === 'ia' ? 'Generado por IA' : 'Manual' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <p-button
+          label="Nueva Revision"
+          icon="pi pi-plus"
+          (onClick)="iniciarRevision()"
+        />
+        <p-button
+          label="Editar"
+          icon="pi pi-pencil"
+          [outlined]="true"
+          (onClick)="editarCuestionario()"
+        />
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="menu.toggle($event)"
+        />
+        <p-menu #menu [model]="menuItems" [popup]="true" />
+      </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-overview">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="pi pi-list"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ totalPreguntas() }}</span>
+          <span class="stat-label">Preguntas</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="pi pi-folder"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ cuestionario()!.secciones.length }}</span>
+          <span class="stat-label">Secciones</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ cuestionario()!.respuestas }}</span>
+          <span class="stat-label">Respuestas</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="pi pi-percentage"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ cuestionario()!.tasaCompletado }}%</span>
+          <span class="stat-label">Tasa Completado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="detail-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'informacion'"
+        (click)="activeTab.set('informacion')"
+      >
+        <i class="pi pi-info-circle"></i>
+        Informacion
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'secciones'"
+        (click)="activeTab.set('secciones')"
+      >
+        <i class="pi pi-list"></i>
+        Secciones y Preguntas
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'estadisticas'"
+        (click)="activeTab.set('estadisticas')"
+      >
+        <i class="pi pi-chart-bar"></i>
+        Estadisticas
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'historial'"
+        (click)="activeTab.set('historial')"
+      >
+        <i class="pi pi-history"></i>
+        Historial
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Informacion -->
+      @if (activeTab() === 'informacion') {
+        <div class="info-panel">
+          <div class="info-grid">
+            <!-- Descripcion -->
+            <div class="info-card full-width">
+              <h3><i class="pi pi-align-left"></i> Descripcion</h3>
+              <p class="descripcion-texto">{{ cuestionario()!.descripcion }}</p>
+            </div>
+
+            <!-- Configuracion -->
+            <div class="info-card">
+              <h3><i class="pi pi-cog"></i> Configuracion</h3>
+              <div class="config-list">
+                <div class="config-item">
+                  <span class="config-label">Marco Normativo:</span>
+                  <p-chip [label]="cuestionario()!.marcoNormativo" />
+                </div>
+                <div class="config-item">
+                  <span class="config-label">Tipo de Evaluacion:</span>
+                  <span class="config-value">{{ getTipoEvaluacionLabel(cuestionario()!.tipoEvaluacion) }}</span>
+                </div>
+                <div class="config-item">
+                  <span class="config-label">Periodicidad:</span>
+                  <span class="config-value">{{ getPeriodicidadLabel(cuestionario()!.periodicidad) }}</span>
+                </div>
+                <div class="config-item">
+                  <span class="config-label">Categoria:</span>
+                  <span class="config-value">{{ cuestionario()!.categoria | titlecase }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Areas Objetivo -->
+            <div class="info-card">
+              <h3><i class="pi pi-users"></i> Areas Objetivo</h3>
+              <div class="areas-list">
+                @for (area of cuestionario()!.areasObjetivo; track area) {
+                  <p-chip [label]="getAreaLabel(area)" />
+                }
+              </div>
+            </div>
+
+            <!-- Fechas -->
+            <div class="info-card">
+              <h3><i class="pi pi-calendar"></i> Fechas</h3>
+              <div class="dates-list">
+                <div class="date-item">
+                  <span class="date-label">Creacion:</span>
+                  <span class="date-value">{{ formatDate(cuestionario()!.fechaCreacion) }}</span>
+                </div>
+                <div class="date-item">
+                  <span class="date-label">Ultima Modificacion:</span>
+                  <span class="date-value">{{ formatDate(cuestionario()!.fechaModificacion) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Umbrales -->
+            <div class="info-card">
+              <h3><i class="pi pi-sliders-h"></i> Umbrales de Calificacion</h3>
+              <div class="umbrales-list">
+                <div class="umbral-item deficiente">
+                  <span class="umbral-label">Deficiente:</span>
+                  <span class="umbral-value">&lt; {{ cuestionario()!.umbrales.deficiente }}%</span>
+                </div>
+                <div class="umbral-item aceptable">
+                  <span class="umbral-label">Aceptable:</span>
+                  <span class="umbral-value">{{ cuestionario()!.umbrales.deficiente }}% - {{ cuestionario()!.umbrales.aceptable }}%</span>
+                </div>
+                <div class="umbral-item sobresaliente">
+                  <span class="umbral-label">Sobresaliente:</span>
+                  <span class="umbral-value">&gt; {{ cuestionario()!.umbrales.sobresaliente }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Secciones y Preguntas -->
+      @if (activeTab() === 'secciones') {
+        <div class="secciones-panel">
+          @for (seccion of cuestionario()!.secciones; track seccion.id; let i = $index) {
+            <div class="seccion-card">
+              <div class="seccion-header">
+                <div class="seccion-info">
+                  <span class="seccion-numero">Seccion {{ i + 1 }}</span>
+                  <h4>{{ seccion.nombre }}</h4>
+                  @if (seccion.descripcion) {
+                    <p class="seccion-descripcion">{{ seccion.descripcion }}</p>
+                  }
+                </div>
+                <div class="seccion-meta">
+                  <p-tag [value]="'Peso: ' + seccion.peso + '%'" severity="info" />
+                  <p-tag [value]="seccion.preguntas.length + ' preguntas'" severity="secondary" />
+                </div>
+              </div>
+              <div class="preguntas-list">
+                @for (pregunta of seccion.preguntas; track pregunta.id; let j = $index) {
+                  <div class="pregunta-item">
+                    <div class="pregunta-numero">{{ i + 1 }}.{{ j + 1 }}</div>
+                    <div class="pregunta-content">
+                      <span class="pregunta-texto">{{ pregunta.texto }}</span>
+                      <div class="pregunta-meta">
+                        <p-chip [label]="getTipoLabel(pregunta.tipo)" styleClass="chip-sm" />
+                        @if (pregunta.requerida) {
+                          <p-tag value="Requerida" severity="warn" />
+                        }
+                        @if (pregunta.requiereEvidencia) {
+                          <p-tag value="Evidencia" severity="info" icon="pi pi-paperclip" />
+                        }
+                        <span class="pregunta-peso">Peso: {{ pregunta.peso }}%</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Estadisticas -->
+      @if (activeTab() === 'estadisticas') {
+        <div class="estadisticas-panel">
+          <div class="stats-grid">
+            <div class="stats-card">
+              <h3>Distribucion por Tipo de Pregunta</h3>
+              <div class="stats-placeholder">
+                <i class="pi pi-chart-pie"></i>
+                <p>Grafico de distribucion</p>
+              </div>
+            </div>
+            <div class="stats-card">
+              <h3>Peso por Seccion</h3>
+              <div class="stats-placeholder">
+                <i class="pi pi-chart-bar"></i>
+                <p>Grafico de pesos</p>
+              </div>
+            </div>
+            <div class="stats-card full-width">
+              <h3>Historial de Respuestas</h3>
+              <div class="stats-placeholder">
+                <i class="pi pi-chart-line"></i>
+                <p>Tendencia de respuestas en el tiempo</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Historial -->
+      @if (activeTab() === 'historial') {
+        <div class="historial-panel">
+          <p-table [value]="[
+            { fecha: '2026-01-20', accion: 'Modificacion', usuario: 'Carlos Martinez', detalle: 'Actualizo preguntas de seccion 2' },
+            { fecha: '2026-01-15', accion: 'Revision completada', usuario: 'Ana Garcia', detalle: 'Revision trimestral completada' },
+            { fecha: '2024-11-20', accion: 'Modificacion', usuario: 'Carlos Martinez', detalle: 'Agrego nuevas preguntas' },
+            { fecha: '2024-01-15', accion: 'Creacion', usuario: 'Admin', detalle: 'Cuestionario creado' }
+          ]" styleClass="p-datatable-sm p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Fecha</th>
+                <th>Accion</th>
+                <th>Usuario</th>
+                <th>Detalle</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-evento>
+              <tr>
+                <td>{{ evento.fecha }}</td>
+                <td><p-tag [value]="evento.accion" /></td>
+                <td>{{ evento.usuario }}</td>
+                <td>{{ evento.detalle }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="not-found">
+      <i class="pi pi-exclamation-circle"></i>
+      <h2>Cuestionario no encontrado</h2>
+      <p>El cuestionario solicitado no existe.</p>
+      <p-button label="Volver" icon="pi pi-arrow-left" (onClick)="goBack()" />
+    </div>
+  }
+</div>

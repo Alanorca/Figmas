@@ -841,16 +841,11 @@ export class CuestionariosComponent {
   }
 
   verDetalleCuestionario(cuestionario: Cuestionario) {
-    this.cuestionarioSeleccionado.set(cuestionario);
-    this.editandoDetalle.set(false);
-    this.tabDetalleActivo.set('informacion');
-    this.vistaActual.set('detalle');
+    this.router.navigate(['/cuestionarios', cuestionario.id]);
   }
 
   irADetalle(cuestionario: Cuestionario) {
-    this.cuestionarioSeleccionado.set(cuestionario);
-    this.tabDetalleActivo.set('informacion');
-    this.vistaActual.set('detalle');
+    this.router.navigate(['/cuestionarios', cuestionario.id]);
   }
 
   volverADetalle() {

@@ -344,8 +344,7 @@ export class UsuariosRolesComponent {
   }
 
   verDetalleUsuario(usuario: Usuario): void {
-    this.usuarioSeleccionado.set(usuario);
-    this.showDrawerUsuario.set(true);
+    this.router.navigate(['/usuarios', usuario.id]);
   }
 
   editarUsuario(usuario: Usuario): void {

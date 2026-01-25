@@ -1,0 +1,319 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="usuario-detalle-page">
+  @if (loading()) {
+    <div class="loading-container">
+      <i class="pi pi-spin pi-spinner" style="font-size: 3rem"></i>
+      <p>Cargando usuario...</p>
+    </div>
+  } @else if (usuario()) {
+    <!-- Breadcrumb -->
+    <div class="page-breadcrumb">
+      <a routerLink="/usuarios-roles" class="breadcrumb-link">
+        <i class="pi pi-users"></i>
+        Usuarios y Roles
+      </a>
+      <i class="pi pi-chevron-right breadcrumb-separator"></i>
+      <span class="breadcrumb-current">{{ usuario()!.nombre }}</span>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="goBack()"
+          pTooltip="Volver"
+        />
+        <div class="user-profile">
+          <p-avatar
+            [label]="getInitials(usuario()!.nombre)"
+            shape="circle"
+            size="xlarge"
+            styleClass="user-avatar"
+          />
+          <div class="user-info">
+            <h1>{{ usuario()!.nombre }}</h1>
+            <div class="user-meta">
+              <p-tag [value]="estadoLabel()" [severity]="estadoSeverity()" />
+              <span class="meta-item">
+                <i class="pi pi-briefcase"></i>
+                {{ usuario()!.cargo }}
+              </span>
+              <span class="meta-item">
+                <i class="pi pi-building"></i>
+                {{ usuario()!.departamento }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <p-button
+          label="Enviar Correo"
+          icon="pi pi-envelope"
+          [outlined]="true"
+          (onClick)="enviarCorreo()"
+        />
+        <p-button
+          label="Editar"
+          icon="pi pi-pencil"
+          (onClick)="editarUsuario()"
+        />
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="menu.toggle($event)"
+        />
+        <p-menu #menu [model]="menuItems" [popup]="true" />
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="stat-item">
+        <i class="pi pi-shield"></i>
+        <div class="stat-content">
+          <span class="stat-value">{{ usuario()!.roles.length }}</span>
+          <span class="stat-label">Roles</span>
+        </div>
+      </div>
+      <div class="stat-item">
+        <i class="pi pi-key"></i>
+        <div class="stat-content">
+          <span class="stat-value">{{ usuario()!.permisos.length }}</span>
+          <span class="stat-label">Permisos</span>
+        </div>
+      </div>
+      <div class="stat-item">
+        <i class="pi pi-file-edit"></i>
+        <div class="stat-content">
+          <span class="stat-value">{{ usuario()!.asignaciones.length }}</span>
+          <span class="stat-label">Asignaciones</span>
+        </div>
+      </div>
+      <div class="stat-item">
+        <i class="pi pi-clock"></i>
+        <div class="stat-content">
+          <span class="stat-value">{{ formatDateTime(usuario()!.ultimoAcceso) }}</span>
+          <span class="stat-label">Ultimo Acceso</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="detail-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'informacion'"
+        (click)="activeTab.set('informacion')"
+      >
+        <i class="pi pi-user"></i>
+        Informacion
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'roles'"
+        (click)="activeTab.set('roles')"
+      >
+        <i class="pi pi-shield"></i>
+        Roles y Permisos
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'asignaciones'"
+        (click)="activeTab.set('asignaciones')"
+      >
+        <i class="pi pi-file-edit"></i>
+        Asignaciones ({{ usuario()!.asignaciones.length }})
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'actividad'"
+        (click)="activeTab.set('actividad')"
+      >
+        <i class="pi pi-history"></i>
+        Actividad
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Informacion -->
+      @if (activeTab() === 'informacion') {
+        <div class="info-panel">
+          <div class="info-grid">
+            <!-- Contacto -->
+            <div class="info-card">
+              <h3><i class="pi pi-id-card"></i> Informacion de Contacto</h3>
+              <div class="contact-list">
+                <div class="contact-item">
+                  <i class="pi pi-envelope"></i>
+                  <div class="contact-content">
+                    <span class="contact-label">Email</span>
+                    <a [href]="'mailto:' + usuario()!.email" class="contact-value">{{ usuario()!.email }}</a>
+                  </div>
+                </div>
+                @if (usuario()!.telefono) {
+                  <div class="contact-item">
+                    <i class="pi pi-phone"></i>
+                    <div class="contact-content">
+                      <span class="contact-label">Telefono</span>
+                      <span class="contact-value">{{ usuario()!.telefono }}</span>
+                    </div>
+                  </div>
+                }
+                <div class="contact-item">
+                  <i class="pi pi-briefcase"></i>
+                  <div class="contact-content">
+                    <span class="contact-label">Cargo</span>
+                    <span class="contact-value">{{ usuario()!.cargo }}</span>
+                  </div>
+                </div>
+                <div class="contact-item">
+                  <i class="pi pi-building"></i>
+                  <div class="contact-content">
+                    <span class="contact-label">Departamento</span>
+                    <span class="contact-value">{{ usuario()!.departamento }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cuenta -->
+            <div class="info-card">
+              <h3><i class="pi pi-cog"></i> Informacion de Cuenta</h3>
+              <div class="account-list">
+                <div class="account-item">
+                  <span class="account-label">Estado:</span>
+                  <p-tag [value]="estadoLabel()" [severity]="estadoSeverity()" />
+                </div>
+                <div class="account-item">
+                  <span class="account-label">Fecha de creacion:</span>
+                  <span class="account-value">{{ formatDate(usuario()!.fechaCreacion) }}</span>
+                </div>
+                <div class="account-item">
+                  <span class="account-label">Ultimo acceso:</span>
+                  <span class="account-value">{{ formatDateTime(usuario()!.ultimoAcceso) }}</span>
+                </div>
+                <div class="account-item">
+                  <span class="account-label">ID de usuario:</span>
+                  <span class="account-value id-value">{{ usuario()!.id }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Roles Rapido -->
+            <div class="info-card full-width">
+              <h3><i class="pi pi-shield"></i> Roles Asignados</h3>
+              <div class="roles-quick">
+                @for (rol of usuario()!.roles; track rol.id) {
+                  <div class="rol-badge" [style.background-color]="rol.color + '20'" [style.border-color]="rol.color">
+                    <span class="rol-indicator" [style.background-color]="rol.color"></span>
+                    {{ rol.nombre }}
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Roles y Permisos -->
+      @if (activeTab() === 'roles') {
+        <div class="roles-panel">
+          <div class="roles-section">
+            <h3>Roles Asignados</h3>
+            <div class="roles-list">
+              @for (rol of usuario()!.roles; track rol.id) {
+                <div class="rol-card" [style.border-left-color]="rol.color">
+                  <div class="rol-icon" [style.background-color]="rol.color">
+                    <i class="pi pi-shield"></i>
+                  </div>
+                  <div class="rol-info">
+                    <span class="rol-nombre">{{ rol.nombre }}</span>
+                    <span class="rol-descripcion">Rol con permisos especificos del sistema</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <p-divider />
+
+          <div class="permisos-section">
+            <h3>Permisos Efectivos</h3>
+            <div class="permisos-grid">
+              @for (modulo of ['cuestionarios', 'riesgos', 'reportes', 'usuarios', 'configuracion']; track modulo) {
+                <div class="permiso-modulo">
+                  <h4>{{ modulo | titlecase }}</h4>
+                  <div class="permiso-acciones">
+                    @for (permiso of usuario()!.permisos; track permiso) {
+                      @if (getPermisoModulo(permiso) === modulo) {
+                        <p-tag [value]="getPermisoAccion(permiso)" severity="info" />
+                      }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Asignaciones -->
+      @if (activeTab() === 'asignaciones') {
+        <div class="asignaciones-panel">
+          @for (asignacion of usuario()!.asignaciones; track $index) {
+            <div class="asignacion-card">
+              <div class="asignacion-icon">
+                <i [class]="getTipoAsignacionIcon(asignacion.tipo)"></i>
+              </div>
+              <div class="asignacion-info">
+                <p-tag [value]="asignacion.tipo" [severity]="getTipoAsignacionSeverity(asignacion.tipo)" />
+                <span class="asignacion-nombre">{{ asignacion.nombre }}</span>
+                <span class="asignacion-fecha">
+                  <i class="pi pi-calendar"></i>
+                  Asignado: {{ formatDate(asignacion.fecha) }}
+                </span>
+              </div>
+              <div class="asignacion-actions">
+                <p-button icon="pi pi-eye" [rounded]="true" [text]="true" pTooltip="Ver detalle" />
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Actividad -->
+      @if (activeTab() === 'actividad') {
+        <div class="actividad-panel">
+          <p-timeline [value]="usuario()!.actividad">
+            <ng-template pTemplate="content" let-event>
+              <div class="timeline-event">
+                <span class="event-accion">{{ event.accion }}</span>
+                @if (event.detalle) {
+                  <p class="event-detalle">{{ event.detalle }}</p>
+                }
+              </div>
+            </ng-template>
+            <ng-template pTemplate="opposite" let-event>
+              <span class="event-fecha">{{ formatDateTime(event.fecha) }}</span>
+            </ng-template>
+          </p-timeline>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="not-found">
+      <i class="pi pi-exclamation-circle"></i>
+      <h2>Usuario no encontrado</h2>
+      <p>El usuario solicitado no existe.</p>
+      <p-button label="Volver" icon="pi pi-arrow-left" (onClick)="goBack()" />
+    </div>
+  }
+</div>
