@@ -1,0 +1,337 @@
+<div class="guide-page">
+  <header class="page-header">
+    <h1>Plantilla de Detalle</h1>
+    <p class="subtitle">
+      Template para páginas de detalle de entidades (activos, procesos, riesgos, etc.).
+      Incluye header con tabs, layout de 2 columnas, y sidebar con estadísticas.
+      <strong>Usado en Detalle de Activo, Detalle de Proceso, etc.</strong>
+    </p>
+  </header>
+
+  <!-- Guidelines -->
+  <app-ds-guidelines
+    [dos]="guidelinesDos"
+    [donts]="guidelinesDonts"
+    [compact]="true"
+  />
+
+  <!-- Estructura del Layout -->
+  <section class="section">
+    <h2><i class="pi pi-th-large"></i> Estructura del Layout</h2>
+    <p class="section-description">
+      El template de detalle sigue una estructura de 2 columnas con header superior
+      que mantiene consistencia visual en todas las páginas de detalle.
+    </p>
+
+    <div class="layout-diagram">
+      <div class="layout-box layout-header full-width">
+        <span class="layout-label">page-header</span>
+        <span class="layout-desc">Título + Subtítulo | Tabs principales (derecha)</span>
+      </div>
+      <div class="layout-two-columns">
+        <div class="layout-column main">
+          <div class="layout-box layout-content">
+            <span class="layout-label">main-content</span>
+            <span class="layout-desc">Entity header + Secondary tabs + Tab content</span>
+          </div>
+        </div>
+        <div class="layout-column side">
+          <div class="layout-box layout-sidebar">
+            <span class="layout-label">sidebar</span>
+            <span class="layout-desc">Stats + Graph</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo Interactivo -->
+  <section class="section">
+    <h2><i class="pi pi-bolt"></i> Demo Interactivo</h2>
+    <p class="section-description">Navega entre los tabs para ver cómo funciona el template.</p>
+
+    <app-ds-preview title="Detail Template">
+      <div class="demo-detail">
+        <!-- Header -->
+        <div class="demo-header">
+          <div class="demo-header-left">
+            <h3>Detalle del Activo</h3>
+            <p>Visualiza y gestiona la información del activo</p>
+          </div>
+          <div class="demo-header-right">
+            @for (tab of mainTabs; track tab.id) {
+              <button
+                class="demo-main-tab"
+                [class.active]="mainTab() === tab.id"
+                (click)="mainTab.set(tab.id)">
+                <i [class]="tab.icon"></i>
+                {{ tab.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <p-divider />
+
+        <!-- Layout 2 columnas -->
+        <div class="demo-layout">
+          <!-- Main Content -->
+          <div class="demo-main-content">
+            <!-- Entity Header Row -->
+            <div class="demo-entity-row">
+              <div class="demo-entity-info">
+                <h4>Sistema GRC ACT-001 <span class="code">ACT-001</span></h4>
+                <p>El sistema GRC optimiza la gestión financiera mediante un enfoque integral.</p>
+              </div>
+              <div class="demo-status-card healthy">
+                <div class="status-header">
+                  <i class="pi pi-heart-fill"></i>
+                  <span>Salud del Activo</span>
+                  <p-tag value="Saludable" severity="success" />
+                </div>
+                <div class="status-progress">
+                  <span>Incidentes: 2 / 5</span>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: 40%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Secondary Tabs -->
+            <div class="demo-secondary-tabs">
+              @for (tab of secondaryTabs; track tab.id) {
+                <button
+                  class="secondary-tab-btn"
+                  [class.active]="secondaryTab() === tab.id"
+                  (click)="secondaryTab.set(tab.id)">
+                  <i [class]="tab.icon"></i>
+                  {{ tab.label }}
+                </button>
+              }
+            </div>
+
+            <!-- Tab Content -->
+            <div class="demo-tab-content">
+              @if (secondaryTab() === 'info') {
+                <div class="demo-info-grid">
+                  <div class="info-item">
+                    <label>Responsable</label>
+                    <div class="value with-avatar">
+                      <p-avatar label="AJ" shape="circle" />
+                      <span>Alice Johnson</span>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <label>Organización</label>
+                    <div class="value">Empresa ABC · Operaciones · IT</div>
+                  </div>
+                  <div class="info-item">
+                    <label>Última Revisión</label>
+                    <div class="value">15/01/2024</div>
+                  </div>
+                  <div class="info-item">
+                    <label>Estado</label>
+                    <div class="value">
+                      <p-tag value="Activo" severity="success" />
+                    </div>
+                  </div>
+                </div>
+              }
+              @if (secondaryTab() === 'salud') {
+                <div class="demo-health-panel">
+                  <p class="text-secondary">Panel de análisis de salud del activo...</p>
+                </div>
+              }
+              @if (secondaryTab() === 'config') {
+                <div class="demo-config-panel">
+                  <p class="text-secondary">Configuración de tolerancia a incidentes...</p>
+                </div>
+              }
+              @if (secondaryTab() === 'propiedades') {
+                <div class="demo-props-panel">
+                  <p class="text-secondary">Propiedades personalizadas del activo...</p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="demo-sidebar">
+            <div class="demo-stat-row">
+              <div class="demo-stat-card">
+                <div class="stat-indicator riesgos"></div>
+                <div class="stat-info">
+                  <span class="stat-label">Riesgos</span>
+                  <span class="stat-value">12</span>
+                </div>
+              </div>
+              <div class="demo-stat-card">
+                <div class="stat-indicator nivel"></div>
+                <div class="stat-info">
+                  <span class="stat-label">Criticidad</span>
+                  <span class="stat-value">Alta</span>
+                </div>
+              </div>
+            </div>
+            <div class="demo-stat-row">
+              <div class="demo-stat-card">
+                <div class="stat-indicator incidentes"></div>
+                <div class="stat-info">
+                  <span class="stat-label">Incidentes</span>
+                  <span class="stat-value">5</span>
+                </div>
+              </div>
+              <div class="demo-stat-card">
+                <div class="stat-indicator valor"></div>
+                <div class="stat-info">
+                  <span class="stat-label">Valor</span>
+                  <span class="stat-value">$50K</span>
+                </div>
+              </div>
+            </div>
+            <div class="demo-graph-card">
+              <div class="graph-header">
+                <span>Relaciones</span>
+                <i class="pi pi-expand"></i>
+              </div>
+              <div class="graph-placeholder">
+                <i class="pi pi-share-alt"></i>
+                <span>Grafo de relaciones</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Componentes del Header -->
+  <section class="section">
+    <h2><i class="pi pi-bookmark"></i> Header de Página</h2>
+    <p class="section-description">
+      El header contiene el título, subtítulo y los tabs de navegación principal.
+      Los tabs usan p-button para consistencia con el Design System.
+    </p>
+
+    <div class="info-card">
+      <h4><i class="pi pi-info-circle text-primary"></i> Tabs Principales vs Secundarios</h4>
+      <ul>
+        <li><strong>Tabs Principales (header):</strong> Navegación de alto nivel entre secciones mayores (Info, Reglas, Riesgos, Auditoría)</li>
+        <li><strong>Tabs Secundarios (content):</strong> Sub-navegación dentro de una sección (Info General, Salud, Config, Propiedades)</li>
+        <li>Usar <code>p-button</code> para tabs principales (más prominentes)</li>
+        <li>Usar <code>&lt;button class="tab-btn"&gt;</code> para tabs secundarios (más sutiles)</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Layout 2 Columnas -->
+  <section class="section">
+    <h2><i class="pi pi-objects-column"></i> Layout de 2 Columnas</h2>
+    <p class="section-description">
+      El contenido se divide en columna principal (información detallada) y sidebar (métricas y visualizaciones).
+    </p>
+
+    <div class="info-card">
+      <h4><i class="pi pi-exclamation-triangle text-orange-500"></i> Dimensiones Importantes</h4>
+      <ul>
+        <li><code>main-content</code>: Ocupa el espacio restante (<code>1fr</code>)</li>
+        <li><code>sidebar</code>: Ancho fijo de <code>380px</code> a <code>440px</code></li>
+        <li>En responsive (< 1200px): Se apila en una sola columna</li>
+        <li>El sidebar incluye: stats-section y graph-section</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Entity Header Row -->
+  <section class="section">
+    <h2><i class="pi pi-id-card"></i> Entity Header Row</h2>
+    <p class="section-description">
+      Primera sección del contenido que muestra el nombre de la entidad junto con su estado de salud.
+    </p>
+
+    <div class="entity-demo-row">
+      <div class="entity-demo-left">
+        <h4>Nombre de la Entidad <span class="code-badge">ACT-001</span></h4>
+        <p>Descripción breve de la entidad que proporciona contexto adicional sobre su propósito.</p>
+      </div>
+      <div class="entity-demo-right">
+        <div class="status-demo-card">
+          <span class="status-title"><i class="pi pi-heart-fill"></i> Estado</span>
+          <p-tag value="Saludable" severity="success" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Paginas que lo usan -->
+  <section class="section">
+    <h2><i class="pi pi-link"></i> Páginas que Usan este Template</h2>
+    <app-ds-usage-list
+      [items]="usageItems"
+      type="pages"
+    />
+  </section>
+
+  <!-- Props Tables -->
+  <section class="section">
+    <h2><i class="pi pi-list"></i> Clases CSS</h2>
+    <p class="section-description">Clases CSS utilizadas en este template.</p>
+
+    <h3>Layout Principal</h3>
+    <app-ds-props-table [props]="layoutProps" />
+
+    <h3>Header</h3>
+    <app-ds-props-table [props]="headerProps" />
+
+    <h3>Contenido</h3>
+    <app-ds-props-table [props]="contentProps" />
+
+    <h3>Sidebar</h3>
+    <app-ds-props-table [props]="sidebarProps" />
+  </section>
+
+  <!-- Design Tokens -->
+  <section class="section">
+    <h2><i class="pi pi-sliders-h"></i> Design Tokens</h2>
+    <p class="section-description">Tokens CSS utilizados por este template.</p>
+
+    <div class="tokens-grid">
+      @for (token of tokens; track token.name) {
+        <div class="token-item">
+          <div class="token-preview" [style.background]="token.value"></div>
+          <div class="token-info">
+            <code>{{ token.name }}</code>
+            <span>{{ token.description }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Codigo -->
+  <section class="section">
+    <h2><i class="pi pi-code"></i> Código</h2>
+    <p class="section-description">Código base para implementar este template.</p>
+    <app-ds-code-tabs [tabs]="codeTabs" />
+  </section>
+
+  <!-- Dark Mode -->
+  <section class="section">
+    <h2><i class="pi pi-moon"></i> Dark Mode</h2>
+    <p class="section-description">
+      El template usa tokens semánticos que se adaptan automáticamente a dark mode.
+    </p>
+
+    <div class="info-card">
+      <h4>Tokens que cambian en Dark Mode</h4>
+      <ul>
+        <li><code>--surface-ground</code> - Fondo de página</li>
+        <li><code>--surface-card</code> - Fondo de cards y contenido</li>
+        <li><code>--surface-border</code> - Bordes</li>
+        <li><code>--text-color</code> y <code>--text-color-secondary</code> - Texto</li>
+        <li><code>--primary-color</code> se mantiene pero sobre fondos oscuros</li>
+      </ul>
+    </div>
+  </section>
+</div>

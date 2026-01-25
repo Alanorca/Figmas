@@ -22,7 +22,7 @@ export class DsSidebarComponent {
   collapsed = input(false);
   toggleCollapse = output<void>();
 
-  expandedSections = signal<Set<string>>(new Set(['foundation', 'atoms', 'molecules', 'organisms', 'guides']));
+  expandedSection = signal<string | null>('foundation');
 
   navItems: NavItem[] = [
     {
@@ -49,7 +49,12 @@ export class DsSidebarComponent {
         { label: 'Inputs', route: '/design-system/atoms/inputs' },
         { label: 'Icons', route: '/design-system/atoms/icons' },
         { label: 'Badges', route: '/design-system/atoms/badges' },
-        { label: 'Chips', route: '/design-system/atoms/chips' }
+        { label: 'Chips', route: '/design-system/atoms/chips' },
+        { label: 'Checkboxes', route: '/design-system/atoms/checkboxes' },
+        { label: 'Sliders', route: '/design-system/atoms/sliders' },
+        { label: 'Progress', route: '/design-system/atoms/progress' },
+        { label: 'Avatars', route: '/design-system/atoms/avatars' },
+        { label: 'Dividers', route: '/design-system/atoms/dividers' }
       ]
     },
     {
@@ -61,7 +66,14 @@ export class DsSidebarComponent {
         { label: 'Menu Items', route: '/design-system/molecules/menu-items' },
         { label: 'Cards', route: '/design-system/molecules/cards' },
         { label: 'Selection Cards', route: '/design-system/molecules/selection-cards' },
-        { label: 'Upload Area', route: '/design-system/molecules/upload-area' }
+        { label: 'Upload Area', route: '/design-system/molecules/upload-area' },
+        { label: 'Accordions', route: '/design-system/molecules/accordions' },
+        { label: 'Tabs', route: '/design-system/molecules/tabs' },
+        { label: 'Tooltips', route: '/design-system/molecules/tooltips' },
+        { label: 'Messages', route: '/design-system/molecules/messages' },
+        { label: 'Steppers', route: '/design-system/molecules/steppers' },
+        { label: 'Timelines', route: '/design-system/molecules/timelines' },
+        { label: 'Splitters', route: '/design-system/molecules/splitters' }
       ]
     },
     {
@@ -71,7 +83,8 @@ export class DsSidebarComponent {
         { label: 'Tables', route: '/design-system/organisms/tables' },
         { label: 'Dialogs', route: '/design-system/organisms/dialogs' },
         { label: 'Forms', route: '/design-system/organisms/forms' },
-        { label: 'Multi-Step Template', route: '/design-system/organisms/multi-step-template' }
+        { label: 'Multi-Step Template', route: '/design-system/organisms/multi-step-template' },
+        { label: 'Detail Template', route: '/design-system/organisms/detail-template' }
       ]
     },
     {
@@ -84,18 +97,11 @@ export class DsSidebarComponent {
   ];
 
   toggleSection(section: string): void {
-    this.expandedSections.update(sections => {
-      const newSections = new Set(sections);
-      if (newSections.has(section)) {
-        newSections.delete(section);
-      } else {
-        newSections.add(section);
-      }
-      return newSections;
-    });
+    const key = section.toLowerCase();
+    this.expandedSection.update(current => current === key ? null : key);
   }
 
   isSectionExpanded(section: string): boolean {
-    return this.expandedSections().has(section.toLowerCase());
+    return this.expandedSection() === section.toLowerCase();
   }
 }

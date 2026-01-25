@@ -1,0 +1,175 @@
+<div class="sliders-page">
+  <header class="page-header">
+    <h1>Sliders & Range Controls</h1>
+    <p class="subtitle">
+      Range controls allow users to select values within a defined range. Includes Slider, Knob, and Rating components.
+      <strong>All controls below are interactive!</strong>
+    </p>
+  </header>
+
+  <app-ds-guidelines [dos]="guidelinesDos" [donts]="guidelinesDonts" [compact]="true" />
+
+  <!-- Interactive Demo -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Demo</h2>
+    <app-ds-preview title="Try It!">
+      <div class="interactive-demo">
+        <div class="demo-group">
+          <h4><i class="pi pi-sliders-h"></i> Slider: {{ sliderValue() }}</h4>
+          <p-slider [(ngModel)]="sliderValue" styleClass="w-full" />
+        </div>
+        <div class="demo-group">
+          <h4><i class="pi pi-circle"></i> Knob: {{ knobValue() }}%</h4>
+          <p-knob [(ngModel)]="knobValue" valueTemplate="{value}%" />
+        </div>
+        <div class="demo-group">
+          <h4><i class="pi pi-star"></i> Rating: {{ ratingValue() }} stars</h4>
+          <p-rating [(ngModel)]="ratingValue" />
+        </div>
+        <div class="demo-actions">
+          <p-button label="Reset All" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="resetAll()" />
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Slider Section -->
+  <section class="section">
+    <h2><i class="pi pi-sliders-h"></i> Slider</h2>
+    <p class="section-description">Slider component allows selecting a value from a range.</p>
+
+    <app-ds-preview title="Basic Slider">
+      <div class="slider-demo">
+        <p-slider [(ngModel)]="sliderValue" styleClass="w-full" />
+        <span class="value-display">Value: {{ sliderValue() }}</span>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="sliderCode" language="html" />
+
+    <app-ds-preview title="Range Slider">
+      <div class="slider-demo">
+        <p-slider [(ngModel)]="rangeValues" [range]="true" styleClass="w-full" />
+        <span class="value-display">Range: {{ rangeValues()[0] }} - {{ rangeValues()[1] }}</span>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="rangeCode" language="html" />
+
+    <app-ds-preview title="Slider States">
+      <div class="states-demo">
+        <div class="state-item">
+          <label>Normal</label>
+          <p-slider [ngModel]="50" styleClass="w-full" />
+        </div>
+        <div class="state-item">
+          <label class="text-color-secondary">Disabled</label>
+          <p-slider [ngModel]="50" [disabled]="true" styleClass="w-full" />
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="sliderProps" title="Slider Properties" />
+  </section>
+
+  <!-- Knob Section -->
+  <section class="section">
+    <h2><i class="pi pi-circle"></i> Knob</h2>
+    <p class="section-description">Circular control for selecting numeric values.</p>
+
+    <app-ds-preview title="Knob Variants">
+      <div class="knob-demo">
+        <div class="knob-item">
+          <p-knob [(ngModel)]="knobValue" />
+          <span>Default</span>
+        </div>
+        <div class="knob-item">
+          <p-knob [(ngModel)]="knobValue" valueTemplate="{value}%" />
+          <span>With Template</span>
+        </div>
+        <div class="knob-item">
+          <p-knob [(ngModel)]="temperatureValue" [min]="10" [max]="30" valueTemplate="{value}°C" />
+          <span>Temperature</span>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="knobCode" language="html" />
+
+    <app-ds-preview title="Knob Sizes">
+      <div class="knob-demo">
+        <div class="knob-item">
+          <p-knob [ngModel]="60" [size]="80" />
+          <span>Small (80px)</span>
+        </div>
+        <div class="knob-item">
+          <p-knob [ngModel]="60" [size]="100" />
+          <span>Medium (100px)</span>
+        </div>
+        <div class="knob-item">
+          <p-knob [ngModel]="60" [size]="150" />
+          <span>Large (150px)</span>
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-preview title="Knob States">
+      <div class="knob-demo">
+        <div class="knob-item">
+          <p-knob [ngModel]="60" />
+          <span>Normal</span>
+        </div>
+        <div class="knob-item">
+          <p-knob [ngModel]="60" [readonly]="true" />
+          <span>Read-only</span>
+        </div>
+        <div class="knob-item">
+          <p-knob [ngModel]="60" [disabled]="true" />
+          <span class="text-color-secondary">Disabled</span>
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="knobProps" title="Knob Properties" />
+  </section>
+
+  <!-- Rating Section -->
+  <section class="section">
+    <h2><i class="pi pi-star"></i> Rating</h2>
+    <p class="section-description">Star rating component for user feedback and ratings.</p>
+
+    <app-ds-preview title="Basic Rating">
+      <div class="rating-demo">
+        <p-rating [(ngModel)]="ratingValue" />
+        <span class="value-display">{{ ratingValue() }} of 5 stars</span>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="ratingCode" language="html" />
+
+    <app-ds-preview title="Rating Variants">
+      <div class="rating-variants">
+        <div class="rating-item">
+          <label>Editable</label>
+          <p-rating [(ngModel)]="ratingValue" />
+        </div>
+        <div class="rating-item">
+          <label>10 Stars</label>
+          <p-rating [(ngModel)]="ratingValue" [stars]="10" />
+        </div>
+        <div class="rating-item">
+          <label>Read-only</label>
+          <p-rating [ngModel]="readonlyRating()" [readonly]="true" />
+        </div>
+        <div class="rating-item">
+          <label class="text-color-secondary">Disabled</label>
+          <p-rating [ngModel]="3" [disabled]="true" />
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="ratingProps" title="Rating Properties" />
+  </section>
+
+  <!-- Code Examples -->
+  <section class="section">
+    <h2>Code Examples</h2>
+    <app-ds-code-tabs [tabs]="codeTabs" />
+  </section>
+</div>

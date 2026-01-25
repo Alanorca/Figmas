@@ -4,6 +4,9 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DsPreviewComponent } from '../../../components/ds-preview/ds-preview.component';
 import { DsCodeBlockComponent } from '../../../components/ds-code-block/ds-code-block.component';
+import { DsCodeTabsComponent, CodeTab } from '../../../components/ds-code-tabs/ds-code-tabs.component';
+import { DsGuidelinesComponent } from '../../../components/ds-guidelines/ds-guidelines.component';
+import { DsUsageListComponent, UsageItem } from '../../../components/ds-usage-list/ds-usage-list.component';
 import { DsPropsTableComponent, ComponentProp } from '../../../components/ds-props-table/ds-props-table.component';
 
 interface Step {
@@ -21,6 +24,9 @@ interface Step {
     InputTextModule,
     DsPreviewComponent,
     DsCodeBlockComponent,
+    DsCodeTabsComponent,
+    DsGuidelinesComponent,
+    DsUsageListComponent,
     DsPropsTableComponent
   ],
   templateUrl: './multi-step-template.component.html',
@@ -64,6 +70,13 @@ export class MultiStepTemplateComponent {
     { name: 'btn-guardar', type: 'class', description: 'Boton primario final (Guardar/Crear)' }
   ];
 
+  formWidthProps: ComponentProp[] = [
+    { name: 'step-panel', type: 'class', description: 'Contenedor del formulario con max-width: 50%' },
+    { name: 'form-content', type: 'class', description: 'Alternativa para contenido de formulario (max-width: 50%)' },
+    { name: 'max-width: 50%', type: 'css', description: 'Limita el formulario a la mitad del contenedor' },
+    { name: 'min-width: 500px', type: 'css', description: 'Evita que el formulario se comprima demasiado' }
+  ];
+
   // Tokens used
   tokens = [
     { name: '--surface-ground', value: 'var(--surface-ground)', description: 'Fondo de la pagina' },
@@ -74,6 +87,32 @@ export class MultiStepTemplateComponent {
     { name: '--primary-color', value: 'var(--primary-color)', description: 'Color de pasos activos y botones' },
     { name: '--primary-hover-color', value: 'var(--primary-hover-color)', description: 'Hover de botones primarios' },
     { name: '--shadow-sm', value: 'var(--shadow-sm)', description: 'Sombra del footer fixed' }
+  ];
+
+  // Guidelines
+  guidelinesDos = [
+    'Validar cada paso antes de avanzar',
+    'Permitir navegacion hacia atras sin perder datos',
+    'Mostrar descripcion clara del paso actual',
+    'Usar iconos representativos para cada paso',
+    'Deshabilitar "Siguiente" si faltan campos requeridos',
+    'Mostrar feedback con Toast para errores',
+    'Limitar formularios a max-width: 50% o 500px del contenedor'
+  ];
+
+  guidelinesDonts = [
+    'No permitir navegar a pasos futuros no completados',
+    'No usar mas de 5 pasos',
+    'No ocultar el footer o stepper durante el proceso',
+    'No usar z-index mayor a 10 en el footer',
+    'No olvidar el padding-bottom en el contenedor',
+    'No hacer formularios al 100% del ancho del content-card'
+  ];
+
+  // Usage items
+  usageItems: UsageItem[] = [
+    { title: 'Crear Proyecto', path: '/proyectos/crear', icon: 'pi pi-folder-plus', description: 'Wizard de creacion de proyectos' },
+    { title: 'Crear Cuestionario', path: '/cuestionarios/crear', icon: 'pi pi-file-edit', description: 'Wizard de creacion de cuestionarios' }
   ];
 
   // Navigation methods
@@ -100,7 +139,7 @@ export class MultiStepTemplateComponent {
   }
 
   // Code examples
-  htmlLayoutCode = `<!-- Estructura principal del template multi-pasos -->
+  htmlLayoutCode = `<!-- Estructura principal del template multi-pasos (Full Width) -->
 <div class="crear-proceso-page">
   <!-- Header dinamico -->
   <div class="page-header">
@@ -123,11 +162,16 @@ export class MultiStepTemplateComponent {
 
   <!-- Contenido del paso actual -->
   <div class="content-card">
-    @switch (pasoActual()) {
-      @case (0) { <app-paso-uno /> }
-      @case (1) { <app-paso-dos /> }
-      @case (2) { <app-paso-tres /> }
-    }
+    <div class="step-content-inner">
+      <!-- step-panel limita el formulario al 50% del ancho -->
+      <div class="step-panel">
+        @switch (pasoActual()) {
+          @case (0) { <app-paso-uno /> }
+          @case (1) { <app-paso-dos /> }
+          @case (2) { <app-paso-tres /> }
+        }
+      </div>
+    </div>
   </div>
 
   <!-- Footer fijo con navegacion -->
@@ -182,11 +226,12 @@ export class MultiStepTemplateComponent {
   }
 </div>`;
 
-  scssLayoutCode = `// ========== LAYOUT PRINCIPAL ==========
+  scssLayoutCode = `// ========== LAYOUT PRINCIPAL (Full Width) ==========
 .crear-proceso-page {
   min-height: 100vh;
   padding: var(--spacing-6) var(--spacing-8) 100px var(--spacing-8);
   background: var(--surface-ground);
+  // NO usar max-width - debe ser full width
 }
 
 // ========== HEADER ==========
@@ -216,6 +261,12 @@ export class MultiStepTemplateComponent {
   margin-bottom: var(--spacing-6);
 }
 
+// ========== STEP PANEL (Form Width 50%) ==========
+.step-panel {
+  max-width: 50%;
+  min-width: 500px;
+}
+
 // ========== FOOTER FIXED ==========
 .page-footer-fixed {
   position: fixed;
@@ -233,8 +284,6 @@ export class MultiStepTemplateComponent {
   display: flex;
   justify-content: center;
   gap: var(--spacing-4);
-  max-width: 1200px;
-  margin: 0 auto;
 }`;
 
   scssStepperCode = `// ========== STEPPER ==========
@@ -443,4 +492,14 @@ export class MiWizardComponent {
     // Navegar de vuelta o mostrar confirmacion
   }
 }`;
+
+  // Code tabs
+  codeTabs: CodeTab[] = [
+    { label: 'HTML', language: 'html', icon: 'pi pi-code', code: this.htmlLayoutCode },
+    { label: 'Stepper', language: 'html', icon: 'pi pi-sitemap', code: this.htmlStepperCode },
+    { label: 'SCSS Layout', language: 'scss', icon: 'pi pi-palette', code: this.scssLayoutCode },
+    { label: 'SCSS Stepper', language: 'scss', icon: 'pi pi-sliders-h', code: this.scssStepperCode },
+    { label: 'SCSS Buttons', language: 'scss', icon: 'pi pi-box', code: this.scssButtonsCode },
+    { label: 'TypeScript', language: 'typescript', icon: 'pi pi-file', code: this.typescriptCode }
+  ];
 }

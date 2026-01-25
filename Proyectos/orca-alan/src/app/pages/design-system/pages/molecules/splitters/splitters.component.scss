@@ -1,0 +1,190 @@
+.splitters-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .subtitle {
+    margin: 0;
+    color: var(--text-color-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
+
+    strong {
+      color: var(--primary-color);
+    }
+  }
+}
+
+.section {
+  margin-bottom: 2.5rem;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  .section-description {
+    margin: 0 0 1rem 0;
+    color: var(--text-color-secondary);
+  }
+}
+
+.panel-content {
+  padding: 1rem;
+  height: 100%;
+  box-sizing: border-box;
+
+  &.centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--text-color-secondary);
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-color-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+}
+
+.file-tree {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
+
+    i {
+      font-size: 0.9rem;
+      color: var(--text-color-secondary);
+
+      &.pi-folder {
+        color: var(--yellow-500);
+      }
+
+      &.pi-file {
+        color: var(--primary-color);
+      }
+    }
+  }
+}
+
+.code-preview {
+  margin: 0.5rem 0 0 0;
+  padding: 0.75rem;
+  background: var(--surface-ground);
+  border-radius: var(--border-radius);
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-color);
+  white-space: pre-wrap;
+}
+
+.terminal-text {
+  display: block;
+  margin-top: 0.5rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--green-400);
+}
+
+.scroll-content {
+  padding: 0.5rem;
+
+  h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-color);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-color-secondary);
+    line-height: 1.6;
+  }
+}
+
+:host ::ng-deep {
+  .splitter-demo {
+    border: 1px solid var(--surface-border);
+    border-radius: var(--border-radius);
+
+    .p-splitter-gutter {
+      background: var(--surface-ground);
+
+      &:hover {
+        background: var(--surface-hover);
+      }
+
+      .p-splitter-gutter-handle {
+        background: var(--surface-border);
+      }
+    }
+
+    .p-splitter-panel {
+      background: var(--surface-card);
+    }
+  }
+
+  .custom-scrollpanel {
+    border: 1px solid var(--surface-border);
+    border-radius: var(--border-radius);
+    background: var(--surface-card);
+
+    .p-scrollpanel-bar {
+      background: var(--primary-color);
+      opacity: 0.5;
+      transition: opacity 0.2s;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+}

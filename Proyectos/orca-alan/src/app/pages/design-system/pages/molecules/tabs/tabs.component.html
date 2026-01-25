@@ -1,0 +1,172 @@
+<div class="tabs-page">
+  <header class="page-header">
+    <h1>Tabs</h1>
+    <p class="subtitle">
+      Tabs organize content into separate views where only one view is visible at a time.
+      <strong>Click tabs to switch content!</strong>
+    </p>
+  </header>
+
+  <app-ds-guidelines [dos]="guidelinesDos" [donts]="guidelinesDonts" [compact]="true" />
+
+  <!-- Basic Tabs -->
+  <section class="section">
+    <h2><i class="pi pi-folder"></i> Basic Tabs</h2>
+    <p class="section-description">Simple tab navigation with content panels.</p>
+
+    <app-ds-preview title="Basic Example">
+      <p-tabs [value]="0">
+        <p-tablist>
+          <p-tab value="0">Overview</p-tab>
+          <p-tab value="1">Details</p-tab>
+          <p-tab value="2">Reviews</p-tab>
+        </p-tablist>
+        <p-tabpanels>
+          <p-tabpanel value="0">
+            <div class="tab-content">
+              <h4>Overview</h4>
+              <p>This is the overview tab content. It provides a summary of the main information.</p>
+            </div>
+          </p-tabpanel>
+          <p-tabpanel value="1">
+            <div class="tab-content">
+              <h4>Details</h4>
+              <p>This tab contains detailed information and specifications.</p>
+            </div>
+          </p-tabpanel>
+          <p-tabpanel value="2">
+            <div class="tab-content">
+              <h4>Reviews</h4>
+              <p>User reviews and ratings are displayed in this tab.</p>
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+  </section>
+
+  <!-- Tabs with Icons -->
+  <section class="section">
+    <h2>With Icons</h2>
+    <p class="section-description">Tabs with icons for better visual identification.</p>
+
+    <app-ds-preview title="Icon Tabs">
+      <p-tabs [value]="0">
+        <p-tablist>
+          <p-tab value="0">
+            <i class="pi pi-home mr-2"></i>
+            <span>Home</span>
+          </p-tab>
+          <p-tab value="1">
+            <i class="pi pi-user mr-2"></i>
+            <span>Profile</span>
+          </p-tab>
+          <p-tab value="2">
+            <i class="pi pi-cog mr-2"></i>
+            <span>Settings</span>
+          </p-tab>
+        </p-tablist>
+        <p-tabpanels>
+          <p-tabpanel value="0">
+            <div class="tab-content">
+              <p>Home dashboard content</p>
+            </div>
+          </p-tabpanel>
+          <p-tabpanel value="1">
+            <div class="tab-content">
+              <p>User profile content</p>
+            </div>
+          </p-tabpanel>
+          <p-tabpanel value="2">
+            <div class="tab-content">
+              <p>Application settings</p>
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </app-ds-preview>
+  </section>
+
+  <!-- Tabs with Badges -->
+  <section class="section">
+    <h2>With Badges</h2>
+    <p class="section-description">Tabs with notification badges.</p>
+
+    <app-ds-preview title="Badge Tabs">
+      <p-tabs [value]="0">
+        <p-tablist>
+          <p-tab value="0">
+            <span>Inbox</span>
+            <p-badge value="3" severity="danger" styleClass="ml-2" />
+          </p-tab>
+          <p-tab value="1">
+            <span>Sent</span>
+          </p-tab>
+          <p-tab value="2">
+            <span>Drafts</span>
+            <p-badge value="1" severity="secondary" styleClass="ml-2" />
+          </p-tab>
+        </p-tablist>
+        <p-tabpanels>
+          <p-tabpanel value="0">
+            <div class="tab-content">
+              <p>You have 3 unread messages</p>
+            </div>
+          </p-tabpanel>
+          <p-tabpanel value="1">
+            <div class="tab-content">
+              <p>Sent messages</p>
+            </div>
+          </p-tabpanel>
+          <p-tabpanel value="2">
+            <div class="tab-content">
+              <p>1 draft saved</p>
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </app-ds-preview>
+  </section>
+
+  <!-- Disabled Tab -->
+  <section class="section">
+    <h2>Disabled State</h2>
+    <p class="section-description">Tabs can be disabled to prevent interaction.</p>
+
+    <app-ds-preview title="Disabled Tab">
+      <p-tabs [value]="0">
+        <p-tablist>
+          <p-tab value="0">Active</p-tab>
+          <p-tab value="1">Available</p-tab>
+          <p-tab value="2" [disabled]="true">Disabled</p-tab>
+        </p-tablist>
+        <p-tabpanels>
+          <p-tabpanel value="0">
+            <div class="tab-content">
+              <p>Active tab content</p>
+            </div>
+          </p-tabpanel>
+          <p-tabpanel value="1">
+            <div class="tab-content">
+              <p>Available tab content</p>
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </app-ds-preview>
+  </section>
+
+  <!-- Properties -->
+  <section class="section">
+    <h2>Properties</h2>
+    <app-ds-props-table [props]="tabsProps" title="Tabs Properties" />
+    <app-ds-props-table [props]="tabListProps" title="Tab Properties" />
+  </section>
+
+  <!-- Code Examples -->
+  <section class="section">
+    <h2>Code Examples</h2>
+    <app-ds-code-tabs [tabs]="codeTabs" />
+  </section>
+</div>

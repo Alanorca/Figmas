@@ -1,0 +1,319 @@
+<div class="checkboxes-page">
+  <header class="page-header">
+    <h1>Checkboxes & Selection Controls</h1>
+    <p class="subtitle">
+      Selection controls allow users to make choices. Use Checkbox for multiple selections, RadioButton for single selection, and ToggleSwitch for on/off settings.
+      <strong>All controls below are interactive!</strong>
+    </p>
+  </header>
+
+  <!-- Guidelines -->
+  <app-ds-guidelines
+    [dos]="guidelinesDos"
+    [donts]="guidelinesDonts"
+    [compact]="true"
+  />
+
+  <!-- Interactive Demo Section -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Interactive Demo</h2>
+    <p class="section-description">
+      Try all the selection controls. Changes are reflected in real-time using Angular Signals.
+    </p>
+    <app-ds-preview title="Try It!">
+      <div class="interactive-demo">
+        <!-- Checkbox Demo -->
+        <div class="demo-group">
+          <h4><i class="pi pi-check-square"></i> Checkbox</h4>
+          <div class="flex align-items-center gap-2">
+            <p-checkbox [(ngModel)]="checked" [binary]="true" inputId="demo-check" />
+            <label for="demo-check">{{ checked() ? 'Checked!' : 'Click to check' }}</label>
+          </div>
+        </div>
+
+        <!-- Radio Demo -->
+        <div class="demo-group">
+          <h4><i class="pi pi-circle"></i> RadioButton</h4>
+          <div class="flex gap-4">
+            <div class="flex align-items-center gap-2">
+              <p-radiobutton [(ngModel)]="selectedOption" value="option1" inputId="demo-opt1" name="demo-options" />
+              <label for="demo-opt1">Option 1</label>
+            </div>
+            <div class="flex align-items-center gap-2">
+              <p-radiobutton [(ngModel)]="selectedOption" value="option2" inputId="demo-opt2" name="demo-options" />
+              <label for="demo-opt2">Option 2</label>
+            </div>
+            <div class="flex align-items-center gap-2">
+              <p-radiobutton [(ngModel)]="selectedOption" value="option3" inputId="demo-opt3" name="demo-options" />
+              <label for="demo-opt3">Option 3</label>
+            </div>
+          </div>
+          <span class="demo-result">Selected: {{ selectedOption() }}</span>
+        </div>
+
+        <!-- Toggle Demo -->
+        <div class="demo-group">
+          <h4><i class="pi pi-power-off"></i> ToggleSwitch</h4>
+          <div class="flex align-items-center gap-3">
+            <p-toggleswitch [(ngModel)]="darkMode" inputId="demo-toggle" />
+            <label for="demo-toggle">{{ darkMode() ? 'Dark Mode ON' : 'Dark Mode OFF' }}</label>
+          </div>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="demo-actions">
+          <p-button label="Reset All" icon="pi pi-refresh" severity="secondary" [outlined]="true" (onClick)="resetAll()" />
+        </div>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Checkbox Section -->
+  <section class="section">
+    <h2><i class="pi pi-check-square"></i> Checkbox</h2>
+    <p class="section-description">
+      Checkboxes allow users to select one or more items from a set.
+    </p>
+
+    <!-- Binary Checkbox -->
+    <app-ds-preview title="Binary Checkbox">
+      <div class="demo-row">
+        <div class="flex align-items-center gap-2">
+          <p-checkbox [(ngModel)]="checked" [binary]="true" inputId="binary" />
+          <label for="binary">Accept terms and conditions</label>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="checkboxBasicCode" language="html" />
+
+    <!-- Checkbox Group -->
+    <app-ds-preview title="Checkbox Group (Multiple Selection)">
+      <div class="demo-row">
+        <div class="flex flex-column gap-2">
+          @for (city of cities; track city.code) {
+            <div class="flex align-items-center gap-2">
+              <p-checkbox
+                [(ngModel)]="selectedCities"
+                [value]="city.code"
+                [inputId]="city.code" />
+              <label [for]="city.code">{{ city.name }}</label>
+            </div>
+          }
+        </div>
+        <div class="selection-result">
+          <strong>Selected:</strong>
+          @if (selectedCities().length > 0) {
+            {{ selectedCities().join(', ') }}
+          } @else {
+            <span class="text-color-secondary">None selected</span>
+          }
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="checkboxGroupCode" language="typescript" />
+
+    <!-- Checkbox States -->
+    <app-ds-preview title="Checkbox States">
+      <div class="demo-row">
+        <div class="flex gap-4">
+          <div class="flex align-items-center gap-2">
+            <p-checkbox [binary]="true" [ngModel]="true" inputId="checked-state" />
+            <label for="checked-state">Checked</label>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-checkbox [binary]="true" [ngModel]="false" inputId="unchecked-state" />
+            <label for="unchecked-state">Unchecked</label>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-checkbox [binary]="true" [ngModel]="true" [disabled]="true" inputId="disabled-checked" />
+            <label for="disabled-checked" class="text-color-secondary">Disabled Checked</label>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-checkbox [binary]="true" [ngModel]="false" [disabled]="true" inputId="disabled-unchecked" />
+            <label for="disabled-unchecked" class="text-color-secondary">Disabled Unchecked</label>
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="checkboxProps" title="Checkbox Properties" />
+  </section>
+
+  <!-- RadioButton Section -->
+  <section class="section">
+    <h2><i class="pi pi-circle"></i> RadioButton</h2>
+    <p class="section-description">
+      Radio buttons allow users to select exactly one option from a set of mutually exclusive choices.
+    </p>
+
+    <!-- Basic Radio Group -->
+    <app-ds-preview title="Basic Radio Group">
+      <div class="demo-row">
+        <div class="flex flex-column gap-2">
+          <div class="flex align-items-center gap-2">
+            <p-radiobutton [(ngModel)]="selectedOption" value="option1" inputId="opt1" name="basic-options" />
+            <label for="opt1">Option 1</label>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-radiobutton [(ngModel)]="selectedOption" value="option2" inputId="opt2" name="basic-options" />
+            <label for="opt2">Option 2</label>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-radiobutton [(ngModel)]="selectedOption" value="option3" inputId="opt3" name="basic-options" />
+            <label for="opt3">Option 3</label>
+          </div>
+        </div>
+        <div class="selection-result">
+          <strong>Selected:</strong> {{ selectedOption() }}
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="radioBasicCode" language="html" />
+
+    <!-- Horizontal Radio Group -->
+    <app-ds-preview title="Horizontal Radio Group">
+      <div class="demo-row">
+        <div class="flex gap-4">
+          @for (priority of priorities; track priority.value) {
+            <div class="flex align-items-center gap-2">
+              <p-radiobutton
+                [(ngModel)]="selectedPriority"
+                [value]="priority.value"
+                [inputId]="'priority-' + priority.value"
+                name="priority-options" />
+              <label [for]="'priority-' + priority.value">
+                <i [class]="priority.icon" class="mr-1"></i>
+                {{ priority.label }}
+              </label>
+            </div>
+          }
+        </div>
+        <div class="selection-result">
+          <strong>Priority:</strong> {{ selectedPriority() | titlecase }}
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <!-- Radio States -->
+    <app-ds-preview title="RadioButton States">
+      <div class="demo-row">
+        <div class="flex gap-4">
+          <div class="flex align-items-center gap-2">
+            <p-radiobutton [ngModel]="'selected'" value="selected" inputId="radio-selected" name="radio-states" />
+            <label for="radio-selected">Selected</label>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-radiobutton [ngModel]="'selected'" value="unselected" inputId="radio-unselected" name="radio-states" />
+            <label for="radio-unselected">Unselected</label>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-radiobutton [ngModel]="'disabled-sel'" value="disabled-sel" [disabled]="true" inputId="radio-dis-sel" name="radio-disabled" />
+            <label for="radio-dis-sel" class="text-color-secondary">Disabled Selected</label>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-radiobutton [ngModel]="'other'" value="disabled-unsel" [disabled]="true" inputId="radio-dis-unsel" name="radio-disabled" />
+            <label for="radio-dis-unsel" class="text-color-secondary">Disabled Unselected</label>
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="radioProps" title="RadioButton Properties" />
+  </section>
+
+  <!-- ToggleSwitch Section -->
+  <section class="section">
+    <h2><i class="pi pi-power-off"></i> ToggleSwitch</h2>
+    <p class="section-description">
+      Toggle switches are used for binary on/off settings that take effect immediately.
+    </p>
+
+    <!-- Basic Toggle -->
+    <app-ds-preview title="Basic Toggle">
+      <div class="demo-row">
+        <div class="flex align-items-center gap-2">
+          <p-toggleswitch [(ngModel)]="darkMode" inputId="toggle-basic" />
+          <label for="toggle-basic">Dark Mode</label>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="toggleSwitchCode" language="typescript" />
+
+    <!-- Settings Pattern -->
+    <app-ds-preview title="Settings Pattern">
+      <div class="settings-list">
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-label">
+              <i class="pi pi-moon mr-2"></i>
+              Dark Mode
+            </span>
+            <span class="setting-description">Use dark theme across the application</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="darkMode" />
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-label">
+              <i class="pi pi-bell mr-2"></i>
+              Notifications
+            </span>
+            <span class="setting-description">Receive push notifications</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="notifications" />
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <span class="setting-label">
+              <i class="pi pi-save mr-2"></i>
+              Auto-save
+            </span>
+            <span class="setting-description">Automatically save changes</span>
+          </div>
+          <p-toggleswitch [(ngModel)]="autoSave" />
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <!-- Toggle States -->
+    <app-ds-preview title="ToggleSwitch States">
+      <div class="demo-row">
+        <div class="flex gap-4">
+          <div class="flex align-items-center gap-2">
+            <p-toggleswitch [ngModel]="true" />
+            <span>On</span>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-toggleswitch [ngModel]="false" />
+            <span>Off</span>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-toggleswitch [ngModel]="true" [disabled]="true" />
+            <span class="text-color-secondary">Disabled On</span>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <p-toggleswitch [ngModel]="false" [disabled]="true" />
+            <span class="text-color-secondary">Disabled Off</span>
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="toggleSwitchProps" title="ToggleSwitch Properties" />
+  </section>
+
+  <!-- Usage -->
+  <section class="section">
+    <app-ds-usage-list
+      title="Componentes que usan Selection Controls"
+      [items]="usageItems"
+      type="components"
+    />
+  </section>
+
+  <!-- Code -->
+  <section class="section">
+    <h2>Code Examples</h2>
+    <app-ds-code-tabs [tabs]="codeTabs" />
+  </section>
+</div>

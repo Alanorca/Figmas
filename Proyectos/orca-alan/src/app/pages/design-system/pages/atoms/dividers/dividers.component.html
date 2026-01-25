@@ -1,0 +1,140 @@
+<div class="dividers-page">
+  <header class="page-header">
+    <h1>Dividers</h1>
+    <p class="subtitle">
+      Dividers separate content into clear groups. Use horizontal dividers between sections and vertical dividers in inline layouts.
+    </p>
+  </header>
+
+  <app-ds-guidelines [dos]="guidelinesDos" [donts]="guidelinesDonts" [compact]="true" />
+
+  <!-- Horizontal Dividers -->
+  <section class="section">
+    <h2><i class="pi pi-minus"></i> Horizontal Dividers</h2>
+    <p class="section-description">Separate content sections vertically.</p>
+
+    <app-ds-preview title="Basic Styles">
+      <div class="divider-demo">
+        <div class="content-block">
+          <span>Solid (default)</span>
+        </div>
+        <p-divider />
+        <div class="content-block">
+          <span>Dashed</span>
+        </div>
+        <p-divider type="dashed" />
+        <div class="content-block">
+          <span>Dotted</span>
+        </div>
+        <p-divider type="dotted" />
+        <div class="content-block">
+          <span>End</span>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+  </section>
+
+  <!-- With Content -->
+  <section class="section">
+    <h2>With Content</h2>
+    <p class="section-description">Dividers can include text or icons with different alignments.</p>
+
+    <app-ds-preview title="Text Alignment">
+      <div class="divider-demo">
+        <p-divider align="left">
+          <span class="text-color-secondary text-sm">Left aligned</span>
+        </p-divider>
+        <p-divider align="center">
+          <span class="text-color-secondary text-sm">Center aligned</span>
+        </p-divider>
+        <p-divider align="right">
+          <span class="text-color-secondary text-sm">Right aligned</span>
+        </p-divider>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-preview title="With Icons">
+      <div class="divider-demo">
+        <p-divider align="center">
+          <i class="pi pi-star text-color-secondary"></i>
+        </p-divider>
+        <p-divider align="center">
+          <span class="flex align-items-center gap-2 text-color-secondary">
+            <i class="pi pi-user"></i>
+            <span>Users</span>
+          </span>
+        </p-divider>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-preview title="Common Patterns">
+      <div class="divider-demo">
+        <p-divider align="center">
+          <span class="text-color-secondary font-semibold">OR</span>
+        </p-divider>
+        <p-divider align="center" type="dashed">
+          <span class="text-color-secondary text-sm">Continue reading</span>
+        </p-divider>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="withTextCode" language="html" />
+  </section>
+
+  <!-- Vertical Dividers -->
+  <section class="section">
+    <h2><i class="pi pi-ellipsis-v"></i> Vertical Dividers</h2>
+    <p class="section-description">Separate content horizontally in inline layouts.</p>
+
+    <app-ds-preview title="Basic Vertical">
+      <div class="vertical-demo">
+        <span>Item 1</span>
+        <p-divider layout="vertical" />
+        <span>Item 2</span>
+        <p-divider layout="vertical" />
+        <span>Item 3</span>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-preview title="With Content">
+      <div class="vertical-demo tall">
+        <div class="vertical-section">
+          <h4>Section A</h4>
+          <p>Content for section A</p>
+        </div>
+        <p-divider layout="vertical" align="center">
+          <i class="pi pi-arrow-right"></i>
+        </p-divider>
+        <div class="vertical-section">
+          <h4>Section B</h4>
+          <p>Content for section B</p>
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-preview title="Navigation Pattern">
+      <div class="nav-demo">
+        <a href="#" class="nav-link">Home</a>
+        <p-divider layout="vertical" />
+        <a href="#" class="nav-link">Products</a>
+        <p-divider layout="vertical" />
+        <a href="#" class="nav-link">About</a>
+        <p-divider layout="vertical" />
+        <a href="#" class="nav-link">Contact</a>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="verticalCode" language="html" />
+  </section>
+
+  <!-- Properties -->
+  <section class="section">
+    <h2>Properties</h2>
+    <app-ds-props-table [props]="dividerProps" title="Divider Properties" />
+  </section>
+
+  <!-- Code Examples -->
+  <section class="section">
+    <h2>Code Examples</h2>
+    <app-ds-code-tabs [tabs]="codeTabs" />
+  </section>
+</div>

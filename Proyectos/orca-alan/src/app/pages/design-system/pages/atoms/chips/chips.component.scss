@@ -70,7 +70,7 @@
   height: 1.75rem;
   border-radius: 50%;
   background: var(--primary-color);
-  color: white;
+  color: var(--primary-contrast-color, #ffffff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,28 +213,48 @@
   .chip-success {
     background: var(--green-100) !important;
     color: var(--green-700) !important;
+
+    .p-chip-icon, i {
+      color: var(--green-700) !important;
+    }
   }
 
   .chip-warning {
     background: var(--yellow-100) !important;
     color: var(--yellow-700) !important;
+
+    .p-chip-icon, i {
+      color: var(--yellow-700) !important;
+    }
   }
 
   .chip-danger {
     background: var(--red-100) !important;
     color: var(--red-700) !important;
+
+    .p-chip-icon, i {
+      color: var(--red-700) !important;
+    }
   }
 
   .chip-info {
     background: var(--cyan-100) !important;
     color: var(--cyan-700) !important;
+
+    .p-chip-icon, i {
+      color: var(--cyan-700) !important;
+    }
   }
 
   .chip-active {
     background: var(--primary-color) !important;
-    color: white !important;
+    color: var(--primary-contrast-color, #ffffff) !important;
     cursor: pointer;
     transition: all 0.2s;
+
+    .p-chip-icon, i {
+      color: var(--primary-contrast-color, #ffffff) !important;
+    }
 
     &:hover {
       background: var(--primary-600) !important;
@@ -247,17 +267,29 @@
     cursor: pointer;
     transition: all 0.2s;
 
+    .p-chip-icon, i {
+      color: var(--text-color-secondary) !important;
+    }
+
     &:hover {
       background: var(--surface-200) !important;
       color: var(--text-color) !important;
+
+      .p-chip-icon, i {
+        color: var(--text-color) !important;
+      }
     }
   }
 
   .chip-selected {
     background: var(--primary-color) !important;
-    color: white !important;
+    color: var(--primary-contrast-color, #ffffff) !important;
     cursor: pointer;
     transition: all 0.2s;
+
+    .p-chip-icon, i {
+      color: var(--primary-contrast-color, #ffffff) !important;
+    }
 
     &:hover {
       background: var(--primary-600) !important;
@@ -272,9 +304,17 @@
     transition: all 0.2s;
     border: 1px solid var(--surface-border) !important;
 
+    .p-chip-icon, i {
+      color: var(--text-color-secondary) !important;
+    }
+
     &:hover {
       background: var(--surface-200) !important;
       border-color: var(--primary-color) !important;
+
+      .p-chip-icon, i {
+        color: var(--text-color) !important;
+      }
     }
   }
 
@@ -282,23 +322,39 @@
     background: var(--primary-100) !important;
     color: var(--primary-700) !important;
     font-size: 0.75rem !important;
+
+    .p-chip-icon, i {
+      color: var(--primary-700) !important;
+    }
   }
 
   .chip-beginner {
     background: var(--orange-100) !important;
     color: var(--orange-700) !important;
     border-left: 3px solid var(--orange-500) !important;
+
+    .p-chip-icon, .p-chip-remove-icon, i {
+      color: var(--orange-700) !important;
+    }
   }
 
   .chip-intermediate {
     background: var(--cyan-100) !important;
     color: var(--cyan-700) !important;
     border-left: 3px solid var(--cyan-500) !important;
+
+    .p-chip-icon, .p-chip-remove-icon, i {
+      color: var(--cyan-700) !important;
+    }
   }
 
   .chip-advanced {
     background: var(--green-100) !important;
     color: var(--green-700) !important;
     border-left: 3px solid var(--green-500) !important;
+
+    .p-chip-icon, .p-chip-remove-icon, i {
+      color: var(--green-700) !important;
+    }
   }
 }

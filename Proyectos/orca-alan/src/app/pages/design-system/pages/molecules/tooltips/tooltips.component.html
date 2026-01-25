@@ -1,0 +1,107 @@
+<div class="tooltips-page">
+  <header class="page-header">
+    <h1>Tooltips & Popovers</h1>
+    <p class="subtitle">
+      Tooltips provide brief contextual information. Popovers display richer content in an overlay.
+      <strong>Hover over elements to see tooltips!</strong>
+    </p>
+  </header>
+
+  <app-ds-guidelines [dos]="guidelinesDos" [donts]="guidelinesDonts" [compact]="true" />
+
+  <!-- Tooltips -->
+  <section class="section">
+    <h2><i class="pi pi-info-circle"></i> Tooltip</h2>
+    <p class="section-description">Brief text that appears on hover.</p>
+
+    <app-ds-preview title="Basic Tooltip">
+      <div class="tooltip-demo">
+        <p-button label="Hover me" pTooltip="This is a tooltip" />
+      </div>
+    </app-ds-preview>
+
+    <app-ds-preview title="Positions">
+      <div class="tooltip-demo">
+        <p-button label="Top" pTooltip="Top tooltip" tooltipPosition="top" />
+        <p-button label="Bottom" pTooltip="Bottom tooltip" tooltipPosition="bottom" />
+        <p-button label="Left" pTooltip="Left tooltip" tooltipPosition="left" />
+        <p-button label="Right" pTooltip="Right tooltip" tooltipPosition="right" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="tooltipCode" language="html" />
+
+    <app-ds-preview title="On Icons">
+      <div class="tooltip-demo">
+        <span pTooltip="Edit item" tooltipPosition="top">
+          <i class="pi pi-pencil icon-btn"></i>
+        </span>
+        <span pTooltip="Delete item" tooltipPosition="top">
+          <i class="pi pi-trash icon-btn"></i>
+        </span>
+        <span pTooltip="Download file" tooltipPosition="top">
+          <i class="pi pi-download icon-btn"></i>
+        </span>
+        <span pTooltip="Share" tooltipPosition="top">
+          <i class="pi pi-share-alt icon-btn"></i>
+        </span>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-preview title="With Delay">
+      <div class="tooltip-demo">
+        <p-button label="Show after 500ms" pTooltip="Delayed tooltip" [showDelay]="500" />
+        <p-button label="Hide after 500ms" pTooltip="Sticky tooltip" [hideDelay]="500" />
+      </div>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="tooltipProps" title="Tooltip Properties" />
+  </section>
+
+  <!-- Popovers -->
+  <section class="section">
+    <h2><i class="pi pi-comment"></i> Popover</h2>
+    <p class="section-description">Rich content displayed in an overlay on click.</p>
+
+    <app-ds-preview title="Basic Popover">
+      <div class="popover-demo">
+        <p-button label="Click for details" (onClick)="basicPopover.toggle($event)" />
+        <p-popover #basicPopover>
+          <div class="popover-content">
+            <h4>Popover Title</h4>
+            <p>This is the popover content. It can contain any HTML.</p>
+          </div>
+        </p-popover>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-preview title="Popover with Actions">
+      <div class="popover-demo">
+        <p-button label="User info" icon="pi pi-user" (onClick)="userPopover.toggle($event)" />
+        <p-popover #userPopover>
+          <div class="popover-content user-popover">
+            <div class="user-header">
+              <div class="user-avatar">JD</div>
+              <div class="user-info">
+                <strong>John Doe</strong>
+                <span>john.doe&#64;example.com</span>
+              </div>
+            </div>
+            <div class="user-actions">
+              <p-button label="View Profile" [text]="true" size="small" />
+              <p-button label="Settings" [text]="true" size="small" />
+            </div>
+          </div>
+        </p-popover>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="popoverCode" language="html" />
+
+    <app-ds-props-table [props]="popoverProps" title="Popover Properties" />
+  </section>
+
+  <!-- Code Examples -->
+  <section class="section">
+    <h2>Code Examples</h2>
+    <app-ds-code-tabs [tabs]="codeTabs" />
+  </section>
+</div>

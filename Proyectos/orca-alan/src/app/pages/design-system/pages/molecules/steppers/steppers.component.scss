@@ -1,0 +1,96 @@
+.steppers-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .subtitle {
+    margin: 0;
+    color: var(--text-color-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
+
+    strong {
+      color: var(--primary-color);
+    }
+  }
+}
+
+.section {
+  margin-bottom: 2.5rem;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  .section-description {
+    margin: 0 0 1rem 0;
+    color: var(--text-color-secondary);
+  }
+}
+
+.steps-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  .steps-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+
+    .step-info {
+      color: var(--text-color-secondary);
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.stepper-demo {
+  padding: 1rem 0;
+}
+
+.step-content {
+  padding: 2rem;
+  min-height: 150px;
+
+  h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-color-secondary);
+  }
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-top: 1px solid var(--surface-border);
+}

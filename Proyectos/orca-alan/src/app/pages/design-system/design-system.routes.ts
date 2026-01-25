@@ -56,6 +56,26 @@ export const DESIGN_SYSTEM_ROUTES: Routes = [
         path: 'atoms/chips',
         loadComponent: () => import('./pages/atoms/chips/chips.component').then(m => m.ChipsComponent)
       },
+      {
+        path: 'atoms/checkboxes',
+        loadComponent: () => import('./pages/atoms/checkboxes/checkboxes.component').then(m => m.CheckboxesComponent)
+      },
+      {
+        path: 'atoms/sliders',
+        loadComponent: () => import('./pages/atoms/sliders/sliders.component').then(m => m.SlidersComponent)
+      },
+      {
+        path: 'atoms/progress',
+        loadComponent: () => import('./pages/atoms/progress/progress.component').then(m => m.ProgressComponent)
+      },
+      {
+        path: 'atoms/avatars',
+        loadComponent: () => import('./pages/atoms/avatars/avatars.component').then(m => m.AvatarsComponent)
+      },
+      {
+        path: 'atoms/dividers',
+        loadComponent: () => import('./pages/atoms/dividers/dividers.component').then(m => m.DividersComponent)
+      },
       // Molecules
       {
         path: 'molecules/form-fields',
@@ -81,6 +101,34 @@ export const DESIGN_SYSTEM_ROUTES: Routes = [
         path: 'molecules/upload-area',
         loadComponent: () => import('./pages/molecules/upload-area/upload-area.component').then(m => m.UploadAreaComponent)
       },
+      {
+        path: 'molecules/accordions',
+        loadComponent: () => import('./pages/molecules/accordions/accordions.component').then(m => m.AccordionsComponent)
+      },
+      {
+        path: 'molecules/tabs',
+        loadComponent: () => import('./pages/molecules/tabs/tabs.component').then(m => m.TabsComponent)
+      },
+      {
+        path: 'molecules/tooltips',
+        loadComponent: () => import('./pages/molecules/tooltips/tooltips.component').then(m => m.TooltipsComponent)
+      },
+      {
+        path: 'molecules/messages',
+        loadComponent: () => import('./pages/molecules/messages/messages.component').then(m => m.MessagesComponent)
+      },
+      {
+        path: 'molecules/steppers',
+        loadComponent: () => import('./pages/molecules/steppers/steppers.component').then(m => m.SteppersComponent)
+      },
+      {
+        path: 'molecules/timelines',
+        loadComponent: () => import('./pages/molecules/timelines/timelines.component').then(m => m.TimelinesComponent)
+      },
+      {
+        path: 'molecules/splitters',
+        loadComponent: () => import('./pages/molecules/splitters/splitters.component').then(m => m.SplittersComponent)
+      },
       // Organisms
       {
         path: 'organisms/tables',
@@ -97,6 +145,10 @@ export const DESIGN_SYSTEM_ROUTES: Routes = [
       {
         path: 'organisms/multi-step-template',
         loadComponent: () => import('./pages/organisms/multi-step-template/multi-step-template.component').then(m => m.MultiStepTemplateComponent)
+      },
+      {
+        path: 'organisms/detail-template',
+        loadComponent: () => import('./pages/organisms/detail-template/detail-template.component').then(m => m.DetailTemplateComponent)
       },
       // Guides
       {

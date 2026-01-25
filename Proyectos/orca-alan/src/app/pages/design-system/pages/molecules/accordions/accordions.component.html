@@ -1,0 +1,128 @@
+<div class="accordions-page">
+  <header class="page-header">
+    <h1>Accordions & Collapsible Panels</h1>
+    <p class="subtitle">
+      Collapsible components organize content into expandable sections. Includes Accordion, Panel, and Fieldset.
+      <strong>Click headers to expand/collapse!</strong>
+    </p>
+  </header>
+
+  <app-ds-guidelines [dos]="guidelinesDos" [donts]="guidelinesDonts" [compact]="true" />
+
+  <!-- Accordion Section -->
+  <section class="section">
+    <h2><i class="pi pi-list"></i> Accordion</h2>
+    <p class="section-description">Multiple collapsible panels with header-based navigation.</p>
+
+    <app-ds-preview title="Basic Accordion">
+      <p-accordion>
+        <p-accordion-panel header="Section 1">
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        </p-accordion-panel>
+        <p-accordion-panel header="Section 2">
+          <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </p-accordion-panel>
+        <p-accordion-panel header="Section 3">
+          <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        </p-accordion-panel>
+      </p-accordion>
+    </app-ds-preview>
+
+    <app-ds-preview title="Multiple Panels Open">
+      <p-accordion [multiple]="true">
+        <p-accordion-panel header="FAQ 1: What is PrimeNG?">
+          <p>PrimeNG is a rich set of open source UI Components for Angular.</p>
+        </p-accordion-panel>
+        <p-accordion-panel header="FAQ 2: Is it free?">
+          <p>Yes, PrimeNG is free and open source under the MIT license.</p>
+        </p-accordion-panel>
+        <p-accordion-panel header="FAQ 3: How do I get started?">
+          <p>Install via npm: npm install primeng</p>
+        </p-accordion-panel>
+      </p-accordion>
+    </app-ds-preview>
+    <app-ds-code-block [code]="accordionCode" language="html" />
+
+    <app-ds-props-table [props]="accordionProps" title="Accordion Properties" />
+  </section>
+
+  <!-- Panel Section -->
+  <section class="section">
+    <h2><i class="pi pi-window-maximize"></i> Panel</h2>
+    <p class="section-description">Single collapsible container with header and optional icons.</p>
+
+    <app-ds-preview title="Basic Panel">
+      <p-panel header="Panel Title">
+        <p>This is the panel content. Panels are great for grouping related content.</p>
+      </p-panel>
+    </app-ds-preview>
+
+    <app-ds-preview title="Toggleable Panel">
+      <p-panel header="Toggleable Panel" [toggleable]="true" [(collapsed)]="panelCollapsed">
+        <p>Click the header to collapse/expand this panel. Current state: {{ panelCollapsed() ? 'Collapsed' : 'Expanded' }}</p>
+      </p-panel>
+    </app-ds-preview>
+
+    <app-ds-preview title="Panel with Custom Icons">
+      <p-panel header="Settings">
+        <ng-template pTemplate="icons">
+          <p-button icon="pi pi-cog" [rounded]="true" [text]="true" size="small" />
+          <p-button icon="pi pi-refresh" [rounded]="true" [text]="true" size="small" />
+        </ng-template>
+        <p>Panel with action buttons in the header.</p>
+      </p-panel>
+    </app-ds-preview>
+    <app-ds-code-block [code]="panelCode" language="html" />
+
+    <app-ds-props-table [props]="panelProps" title="Panel Properties" />
+  </section>
+
+  <!-- Fieldset Section -->
+  <section class="section">
+    <h2><i class="pi pi-stop"></i> Fieldset</h2>
+    <p class="section-description">Grouping container with legend, ideal for form sections.</p>
+
+    <app-ds-preview title="Basic Fieldset">
+      <p-fieldset legend="Contact Information">
+        <div class="field-group">
+          <div class="field">
+            <label>Name</label>
+            <span class="value">John Doe</span>
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <span class="value">john.doe&#64;example.com</span>
+          </div>
+          <div class="field">
+            <label>Phone</label>
+            <span class="value">+1 (555) 123-4567</span>
+          </div>
+        </div>
+      </p-fieldset>
+    </app-ds-preview>
+
+    <app-ds-preview title="Toggleable Fieldset">
+      <p-fieldset legend="Advanced Options" [toggleable]="true" [collapsed]="true">
+        <div class="field-group">
+          <div class="field">
+            <label>Cache Duration</label>
+            <span class="value">24 hours</span>
+          </div>
+          <div class="field">
+            <label>Debug Mode</label>
+            <span class="value">Disabled</span>
+          </div>
+        </div>
+      </p-fieldset>
+    </app-ds-preview>
+    <app-ds-code-block [code]="fieldsetCode" language="html" />
+
+    <app-ds-props-table [props]="fieldsetProps" title="Fieldset Properties" />
+  </section>
+
+  <!-- Code Examples -->
+  <section class="section">
+    <h2>Code Examples</h2>
+    <app-ds-code-tabs [tabs]="codeTabs" />
+  </section>
+</div>

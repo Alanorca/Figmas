@@ -2,59 +2,65 @@
 // MULTI-STEP TEMPLATE - Design System Documentation
 // ============================================
 
-// Page layout
-.ds-page {
-  max-width: 1200px;
-  margin: 0 auto;
+// Page layout (same as documentation-guide)
+.guide-page {
+  max-width: 1000px;
 }
 
-.ds-page-header {
-  margin-bottom: var(--spacing-8, 2rem);
+.page-header {
+  margin-bottom: 2rem;
 
   h1 {
-    margin: 0 0 var(--spacing-2, 0.5rem) 0;
-    font-size: var(--font-size-2xl, 1.75rem);
-    font-weight: 600;
+    font-size: 2rem;
+    font-weight: 700;
     color: var(--text-color);
+    margin-bottom: 0.5rem;
   }
 
-  .ds-page-description {
-    margin: 0;
+  .subtitle {
+    font-size: 1rem;
     color: var(--text-color-secondary);
     line-height: 1.6;
-    max-width: 800px;
+
+    strong {
+      color: var(--primary-color);
+    }
   }
 }
 
-.ds-section {
-  margin-bottom: var(--spacing-10, 2.5rem);
+.section {
+  margin-bottom: 3rem;
 
   h2 {
-    font-size: var(--font-size-xl, 1.25rem);
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-color);
-    margin: 0 0 var(--spacing-4, 1rem) 0;
-    padding-bottom: var(--spacing-2, 0.5rem);
-    border-bottom: 1px solid var(--surface-border);
+    margin-bottom: 0.5rem;
+
+    i {
+      margin-right: 0.5rem;
+      color: var(--primary-color);
+    }
   }
 
   h3 {
-    font-size: var(--font-size-lg, 1.125rem);
+    font-size: 1.125rem;
     font-weight: 500;
     color: var(--text-color);
-    margin: var(--spacing-6, 1.5rem) 0 var(--spacing-3, 0.75rem) 0;
+    margin: 1.5rem 0 0.75rem 0;
   }
 
   h4 {
-    font-size: var(--font-size-md, 1rem);
+    font-size: 1rem;
     font-weight: 500;
     color: var(--text-color);
-    margin: 0 0 var(--spacing-2, 0.5rem) 0;
+    margin: 0 0 0.5rem 0;
   }
 
-  p {
+  .section-description {
+    font-size: 0.875rem;
     color: var(--text-color-secondary);
-    line-height: 1.6;
+    margin-bottom: 1.5rem;
   }
 
   code {
@@ -64,6 +70,28 @@
     font-family: 'Fira Code', 'Consolas', monospace;
     font-size: 0.875em;
     color: var(--primary-color);
+  }
+}
+
+// Info card (for notes/warnings)
+.info-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg, 0.75rem);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+
+  h4 {
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.25rem;
+    line-height: 1.8;
   }
 }
 
@@ -541,16 +569,47 @@
 // TOKENS GRID
 // ============================================
 .tokens-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
 }
 
 .token-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg, 0.75rem);
   transition: all 0.2s ease;
 
   &:hover {
     background: var(--surface-hover);
+  }
+
+  .token-preview {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--border-radius-md, 0.5rem);
+    border: 1px solid var(--surface-border);
+    flex-shrink: 0;
+  }
+
+  .token-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    code {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    span {
+      font-size: 0.875rem;
+      color: var(--text-color-secondary);
+    }
   }
 }
 
@@ -558,7 +617,7 @@
 // DARK MODE
 // ============================================
 @mixin dark-mode-styles {
-  .ds-section code {
+  .section code {
     background: var(--surface-700);
   }
 

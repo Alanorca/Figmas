@@ -1,0 +1,139 @@
+.timelines-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .subtitle {
+    margin: 0;
+    color: var(--text-color-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
+
+    strong {
+      color: var(--primary-color);
+    }
+  }
+}
+
+.section {
+  margin-bottom: 2.5rem;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  .section-description {
+    margin: 0 0 1rem 0;
+    color: var(--text-color-secondary);
+  }
+}
+
+.timeline-demo {
+  padding: 1rem;
+
+  &.alternate {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  &.horizontal {
+    overflow-x: auto;
+    padding-bottom: 1rem;
+  }
+}
+
+.event-status {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.event-date {
+  color: var(--text-color-secondary);
+}
+
+.custom-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  color: white;
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.horizontal-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+
+  strong {
+    color: var(--text-color);
+  }
+
+  small {
+    color: var(--text-color-secondary);
+  }
+}
+
+:host ::ng-deep {
+  .p-timeline {
+    .p-timeline-event-content {
+      line-height: 1.5;
+    }
+
+    .p-card {
+      margin-bottom: 0.5rem;
+
+      .p-card-body {
+        padding: 1rem;
+      }
+
+      .p-card-title {
+        font-size: 1rem;
+      }
+
+      .p-card-subtitle {
+        font-size: 0.85rem;
+      }
+
+      p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--text-color-secondary);
+      }
+    }
+  }
+
+  .p-timeline-horizontal {
+    .p-timeline-event {
+      min-width: 150px;
+    }
+  }
+}

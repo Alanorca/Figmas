@@ -324,7 +324,6 @@
                     icon="pi pi-ellipsis-v"
                     [rounded]="true"
                     [text]="true"
-                    severity="secondary"
                     size="small"
                     (onClick)="showColumnConfigDrawer.set(true)"
                     pTooltip="Configure columns" />
@@ -463,12 +462,6 @@
         <p-toolbar styleClass="table-toolbar">
           <ng-template pTemplate="left">
             <p-button
-              label="New"
-              icon="pi pi-plus"
-              (onClick)="addProduct()"
-              pTooltip="Add new product"
-            />
-            <p-button
               label="Delete"
               icon="pi pi-trash"
               severity="danger"
@@ -489,12 +482,6 @@
             }
           </ng-template>
           <ng-template pTemplate="right">
-            <p-button
-              icon="pi pi-download"
-              [outlined]="true"
-              (onClick)="exportData()"
-              pTooltip="Export to CSV"
-            />
             <p-iconField>
               <p-inputIcon styleClass="pi pi-search" />
               <input
@@ -504,6 +491,18 @@
                 (ngModelChange)="searchValue.set($event)"
               />
             </p-iconField>
+            <p-button
+              icon="pi pi-download"
+              [outlined]="true"
+              (onClick)="exportData()"
+              pTooltip="Export to CSV"
+            />
+            <p-button
+              label="New"
+              icon="pi pi-plus"
+              (onClick)="addProduct()"
+              pTooltip="Add new product"
+            />
           </ng-template>
         </p-toolbar>
 
@@ -536,7 +535,6 @@
                     icon="pi pi-ellipsis-v"
                     [rounded]="true"
                     [text]="true"
-                    severity="secondary"
                     size="small"
                     (onClick)="showColumnConfigDrawer.set(true)"
                     pTooltip="Configure" />
@@ -662,7 +660,12 @@
     <!-- Search -->
     <p-iconField class="mb-3">
       <p-inputIcon styleClass="pi pi-search" />
-      <input pInputText placeholder="Search columns..." class="w-full" />
+      <input
+        pInputText
+        placeholder="Search columns..."
+        class="w-full"
+        [ngModel]="columnSearchValue()"
+        (ngModelChange)="columnSearchValue.set($event)" />
     </p-iconField>
 
     <p class="text-color-secondary text-sm mb-3">
@@ -672,11 +675,18 @@
 
     <!-- Column list -->
     <div class="columnas-list">
-      @for (col of columnConfigs(); track col.field; let i = $index) {
-        <div class="columna-item">
+      @for (col of filteredColumnConfigs(); track col.field; let i = $index) {
+        <div
+          class="columna-item"
+          [class.dragging]="draggingColumnField() === col.field"
+          draggable="true"
+          (dragstart)="onColumnDragStart($event, col.field)"
+          (dragover)="onColumnDragOver($event, col.field)"
+          (drop)="onColumnDrop($event, col.field)"
+          (dragend)="onColumnDragEnd()">
           <div class="columna-item-content">
             <i class="pi pi-bars drag-handle-config"></i>
-            <span class="columna-orden-badge">{{ i + 1 }}</span>
+            <span class="columna-orden-badge">{{ getColumnIndex(col.field) + 1 }}</span>
             <p-checkbox
               [ngModel]="col.visible"
               (ngModelChange)="toggleColumnVisibility(col.field)"
@@ -687,12 +697,18 @@
           </div>
         </div>
       }
+      @if (filteredColumnConfigs().length === 0) {
+        <div class="text-center text-color-secondary py-3">
+          <i class="pi pi-search mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
+          <p class="m-0">No columns match "{{ columnSearchValue() }}"</p>
+        </div>
+      }
     </div>
   </div>
 
   <ng-template pTemplate="footer">
     <div class="flex justify-content-between w-full">
-      <p-button label="Reset" icon="pi pi-refresh" [text]="true" severity="secondary" />
+      <p-button label="Reset" icon="pi pi-refresh" [text]="true" severity="secondary" (onClick)="resetColumnConfig()" />
       <p-button label="Done" icon="pi pi-check" (onClick)="showColumnConfigDrawer.set(false)" />
     </div>
   </ng-template>

@@ -1,17 +1,24 @@
-<div class="ds-page">
-  <header class="ds-page-header">
+<div class="guide-page">
+  <header class="page-header">
     <h1>Plantilla Multi-Pasos</h1>
-    <p class="ds-page-description">
+    <p class="subtitle">
       Template para formularios de varios pasos (wizards). Incluye stepper horizontal,
-      header dinamico, area de contenido y barra de navegacion fija. Usado en paginas
-      como Crear Proyecto, Crear Cuestionario, etc.
+      header dinamico, area de contenido y barra de navegacion fija.
+      <strong>Usado en Crear Proyecto, Crear Cuestionario, etc.</strong>
     </p>
   </header>
 
-  <!-- Overview -->
-  <section class="ds-section">
-    <h2>Estructura del Layout</h2>
-    <p>
+  <!-- Guidelines -->
+  <app-ds-guidelines
+    [dos]="guidelinesDos"
+    [donts]="guidelinesDonts"
+    [compact]="true"
+  />
+
+  <!-- Estructura del Layout -->
+  <section class="section">
+    <h2><i class="pi pi-th-large"></i> Estructura del Layout</h2>
+    <p class="section-description">
       El template multi-pasos sigue una estructura de 4 secciones principales que
       mantienen consistencia visual y de navegacion en todas las paginas wizard.
     </p>
@@ -37,9 +44,9 @@
   </section>
 
   <!-- Demo Interactivo -->
-  <section class="ds-section">
-    <h2>Demo Interactivo</h2>
-    <p>Navega entre los pasos usando los botones o haciendo click en pasos completados:</p>
+  <section class="section">
+    <h2><i class="pi pi-bolt"></i> Demo Interactivo</h2>
+    <p class="section-description">Navega entre los pasos usando los botones o haciendo click en pasos completados.</p>
 
     <app-ds-preview title="Multi-Step Template">
       <div class="demo-wizard">
@@ -121,11 +128,11 @@
           }
         </div>
 
-        <!-- Footer Buttons (using p-button like the real app) -->
+        <!-- Footer Buttons -->
         <div class="demo-footer">
           @if (pasoActual() > 0) {
             <p-button
-              label="Atrás"
+              label="Atras"
               icon="pi pi-arrow-left"
               [outlined]="true"
               (onClick)="anterior()"
@@ -156,17 +163,16 @@
     </app-ds-preview>
   </section>
 
-  <!-- Stepper Component -->
-  <section class="ds-section">
-    <h2>Componente Stepper</h2>
-    <p>
+  <!-- Estados del Stepper -->
+  <section class="section">
+    <h2><i class="pi pi-sitemap"></i> Componente Stepper</h2>
+    <p class="section-description">
       El stepper muestra el progreso a traves de los pasos. Los pasos completados son
-      clickeables para navegar hacia atras. El paso actual y completados tienen estilo destacado.
+      clickeables para navegar hacia atras.
     </p>
 
     <h3>Estados del Stepper</h3>
     <div class="stepper-states">
-      <!-- Pending -->
       <div class="state-example">
         <h4>Pendiente</h4>
         <div class="step-icon state-pending">
@@ -175,7 +181,6 @@
         <p class="text-sm text-color-secondary">Borde gris, icono secundario</p>
       </div>
 
-      <!-- Active -->
       <div class="state-example">
         <h4>Activo</h4>
         <div class="step-icon state-active">
@@ -184,7 +189,6 @@
         <p class="text-sm text-color-secondary">Fondo primario, icono blanco</p>
       </div>
 
-      <!-- Completed -->
       <div class="state-example">
         <h4>Completado</h4>
         <div class="step-icon state-completed">
@@ -207,25 +211,46 @@
     </div>
   </section>
 
-  <!-- Footer Fixed -->
-  <section class="ds-section">
-    <h2>Barra de Navegacion Fija</h2>
-    <p>
-      El footer fijo permanece visible mientras se hace scroll. Respeta el ancho del
-      sidebar (<code>left: 64px</code>) y tiene <code>z-index: 5</code> para no
-      superponer elementos importantes.
+  <!-- Ancho del Formulario -->
+  <section class="section">
+    <h2><i class="pi pi-arrows-alt-h"></i> Ancho del Formulario</h2>
+    <p class="section-description">
+      Los formularios dentro del content-card deben ocupar maximo el 50% del ancho disponible
+      para mantener legibilidad y evitar lineas de texto muy largas.
     </p>
 
-    <div class="surface-card border-round p-4 mb-4">
-      <h4 class="mt-0 flex align-items-center gap-2">
-        <i class="pi pi-exclamation-triangle text-orange-500"></i>
-        Posicionamiento Importante
-      </h4>
-      <ul class="line-height-3 pl-3 m-0">
+    <div class="info-card">
+      <h4><i class="pi pi-check-circle text-green-500"></i> Regla de Ancho</h4>
+      <ul>
+        <li>El <strong>contenedor principal</strong> es full-width (max 1000px centrado)</li>
+        <li>Los <strong>formularios</strong> usan <code>max-width: 50%</code> o <code>500px</code></li>
+        <li>El <code>min-width: 500px</code> evita que se compriman demasiado</li>
+        <li>Esto mejora la experiencia de lectura y completado de formularios</li>
+      </ul>
+    </div>
+
+    <h3>Ejemplo de Implementacion</h3>
+    <app-ds-code-block
+      language="scss"
+      [code]="'.step-panel,\n.form-content {\n  max-width: 50%;\n  min-width: 500px;\n}'"
+    />
+  </section>
+
+  <!-- Barra de Navegacion -->
+  <section class="section">
+    <h2><i class="pi pi-arrows-h"></i> Barra de Navegacion Fija</h2>
+    <p class="section-description">
+      El footer fijo permanece visible mientras se hace scroll. Respeta el ancho del
+      sidebar y tiene z-index adecuado.
+    </p>
+
+    <div class="info-card">
+      <h4><i class="pi pi-exclamation-triangle text-orange-500"></i> Posicionamiento Importante</h4>
+      <ul>
         <li><code>position: fixed</code> con <code>bottom: 0</code></li>
         <li><code>left: 64px</code> para respetar el sidebar</li>
         <li><code>z-index: 5</code> (menor que sidebar z-index: 100)</li>
-        <li><code>padding-bottom: 100px</code> en el contenedor principal para dejar espacio</li>
+        <li><code>padding-bottom: 100px</code> en el contenedor principal</li>
       </ul>
     </div>
 
@@ -258,96 +283,67 @@
   </section>
 
   <!-- Paginas que lo usan -->
-  <section class="ds-section">
-    <h2>Paginas que Usan este Template</h2>
-    <div class="pages-grid">
-      <a href="/proyectos/crear" class="page-card" target="_blank">
-        <i class="pi pi-folder-plus"></i>
-        <div>
-          <strong>Crear Proyecto</strong>
-          <span>/proyectos/crear</span>
-        </div>
-      </a>
-      <a href="/cuestionarios/crear" class="page-card" target="_blank">
-        <i class="pi pi-file-edit"></i>
-        <div>
-          <strong>Crear Cuestionario</strong>
-          <span>/cuestionarios/crear</span>
-        </div>
-      </a>
-    </div>
+  <section class="section">
+    <h2><i class="pi pi-link"></i> Paginas que Usan este Template</h2>
+    <app-ds-usage-list
+      [items]="usageItems"
+      type="pages"
+    />
   </section>
 
   <!-- Props Tables -->
-  <section class="ds-section">
-    <h2>Clases CSS</h2>
+  <section class="section">
+    <h2><i class="pi pi-list"></i> Clases CSS</h2>
+    <p class="section-description">Clases CSS utilizadas en este template.</p>
 
     <h3>Layout Principal</h3>
-    <app-ds-props-table [props]="layoutProps" title="Layout Classes"></app-ds-props-table>
+    <app-ds-props-table [props]="layoutProps" />
 
-    <h3 class="mt-4">Stepper</h3>
-    <app-ds-props-table [props]="stepperProps" title="Stepper Classes"></app-ds-props-table>
+    <h3>Stepper</h3>
+    <app-ds-props-table [props]="stepperProps" />
 
-    <h3 class="mt-4">Footer / Botones</h3>
-    <app-ds-props-table [props]="footerProps" title="Footer Classes"></app-ds-props-table>
+    <h3>Footer / Botones</h3>
+    <app-ds-props-table [props]="footerProps" />
+
+    <h3>Ancho de Formularios</h3>
+    <app-ds-props-table [props]="formWidthProps" />
   </section>
 
   <!-- Design Tokens -->
-  <section class="ds-section">
-    <h2>Design Tokens</h2>
-    <p>Tokens CSS utilizados por este template:</p>
+  <section class="section">
+    <h2><i class="pi pi-sliders-h"></i> Design Tokens</h2>
+    <p class="section-description">Tokens CSS utilizados por este template.</p>
 
     <div class="tokens-grid">
       @for (token of tokens; track token.name) {
-        <div class="token-item surface-card border-round p-3">
-          <div class="flex align-items-center gap-3">
-            <div class="token-preview border-round"
-                 [style.background]="token.value"
-                 style="width: 40px; height: 40px; border: 1px solid var(--surface-border);"></div>
-            <div class="flex-1">
-              <code class="text-primary font-bold">{{ token.name }}</code>
-              <p class="text-sm text-color-secondary m-0 mt-1">{{ token.description }}</p>
-            </div>
+        <div class="token-item">
+          <div class="token-preview" [style.background]="token.value"></div>
+          <div class="token-info">
+            <code>{{ token.name }}</code>
+            <span>{{ token.description }}</span>
           </div>
         </div>
       }
     </div>
   </section>
 
-  <!-- Code Examples -->
-  <section class="ds-section">
-    <h2>Codigo</h2>
-
-    <h3>Estructura HTML Principal</h3>
-    <app-ds-code-block [code]="htmlLayoutCode" language="html"></app-ds-code-block>
-
-    <h3 class="mt-4">Stepper HTML</h3>
-    <app-ds-code-block [code]="htmlStepperCode" language="html"></app-ds-code-block>
-
-    <h3 class="mt-4">SCSS - Layout</h3>
-    <app-ds-code-block [code]="scssLayoutCode" language="scss"></app-ds-code-block>
-
-    <h3 class="mt-4">SCSS - Stepper</h3>
-    <app-ds-code-block [code]="scssStepperCode" language="scss"></app-ds-code-block>
-
-    <h3 class="mt-4">SCSS - Botones</h3>
-    <app-ds-code-block [code]="scssButtonsCode" language="scss"></app-ds-code-block>
-
-    <h3 class="mt-4">TypeScript</h3>
-    <app-ds-code-block [code]="typescriptCode" language="typescript"></app-ds-code-block>
+  <!-- Codigo -->
+  <section class="section">
+    <h2><i class="pi pi-code"></i> Codigo</h2>
+    <p class="section-description">Codigo base para implementar este template.</p>
+    <app-ds-code-tabs [tabs]="codeTabs" />
   </section>
 
   <!-- Dark Mode -->
-  <section class="ds-section">
-    <h2>Dark Mode</h2>
-    <p>
+  <section class="section">
+    <h2><i class="pi pi-moon"></i> Dark Mode</h2>
+    <p class="section-description">
       El template usa tokens semanticos que se adaptan automaticamente a dark mode.
-      Asegurate de usar variables CSS en lugar de valores hardcodeados.
     </p>
 
-    <div class="surface-card border-round p-4">
-      <h4 class="mt-0">Tokens que cambian en Dark Mode</h4>
-      <ul class="line-height-3 pl-3 m-0">
+    <div class="info-card">
+      <h4>Tokens que cambian en Dark Mode</h4>
+      <ul>
         <li><code>--surface-ground</code> - Fondo de pagina</li>
         <li><code>--surface-card</code> - Fondo de cards y footer</li>
         <li><code>--surface-border</code> - Bordes</li>
@@ -357,50 +353,13 @@
     </div>
   </section>
 
-  <!-- Usage Guidelines -->
-  <section class="ds-section">
-    <h2>Guias de Uso</h2>
-
-    <div class="grid">
-      <div class="col-12 md:col-6">
-        <div class="surface-card border-round p-4 h-full">
-          <h4 class="flex align-items-center gap-2 mt-0">
-            <i class="pi pi-check-circle text-green-500"></i>
-            Do's
-          </h4>
-          <ul class="line-height-3 pl-3">
-            <li>Validar cada paso antes de avanzar</li>
-            <li>Permitir navegacion hacia atras sin perder datos</li>
-            <li>Mostrar descripcion clara del paso actual</li>
-            <li>Usar iconos representativos para cada paso</li>
-            <li>Deshabilitar "Siguiente" si faltan campos requeridos</li>
-            <li>Mostrar feedback con Toast para errores de validacion</li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-12 md:col-6">
-        <div class="surface-card border-round p-4 h-full">
-          <h4 class="flex align-items-center gap-2 mt-0">
-            <i class="pi pi-times-circle text-red-500"></i>
-            Don'ts
-          </h4>
-          <ul class="line-height-3 pl-3">
-            <li>No permitir navegar a pasos futuros no completados</li>
-            <li>No usar mas de 5 pasos (dividir en sub-wizards si es necesario)</li>
-            <li>No ocultar el footer o stepper durante el proceso</li>
-            <li>No usar z-index mayor a 10 en el footer</li>
-            <li>No olvidar el padding-bottom en el contenedor principal</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- Accessibility -->
-  <section class="ds-section">
-    <h2>Accesibilidad</h2>
-    <div class="surface-card border-round p-4">
-      <ul class="line-height-3 pl-3 m-0">
+  <section class="section">
+    <h2><i class="pi pi-eye"></i> Accesibilidad</h2>
+    <p class="section-description">Consideraciones de accesibilidad para este template.</p>
+
+    <div class="info-card">
+      <ul>
         <li><strong>Keyboard:</strong> Todos los botones y pasos clickeables deben ser accesibles con Tab</li>
         <li><strong>Focus visible:</strong> Mantener outline visible en elementos focuseados</li>
         <li><strong>Screen readers:</strong> Anunciar cambios de paso y errores de validacion</li>

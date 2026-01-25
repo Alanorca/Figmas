@@ -1,0 +1,105 @@
+<div class="timelines-page">
+  <header class="page-header">
+    <h1>Timelines</h1>
+    <p class="subtitle">
+      Timelines display a sequence of events in chronological order.
+      <strong>Perfect for order tracking, activity logs, and milestones!</strong>
+    </p>
+  </header>
+
+  <app-ds-guidelines [dos]="guidelinesDos" [donts]="guidelinesDonts" [compact]="true" />
+
+  <!-- Basic Timeline -->
+  <section class="section">
+    <h2><i class="pi pi-clock"></i> Basic Timeline</h2>
+    <p class="section-description">Simple vertical timeline with content.</p>
+
+    <app-ds-preview title="Vertical Timeline">
+      <div class="timeline-demo">
+        <p-timeline [value]="events">
+          <ng-template pTemplate="content" let-event>
+            <p class="event-status">{{ event.status }}</p>
+            <small class="event-date">{{ event.date }}</small>
+          </ng-template>
+        </p-timeline>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="basicCode" language="html" />
+  </section>
+
+  <!-- Timeline with Custom Markers -->
+  <section class="section">
+    <h2><i class="pi pi-star"></i> Custom Markers</h2>
+    <p class="section-description">Timeline with custom icons and colors.</p>
+
+    <app-ds-preview title="Alternate Layout with Cards">
+      <div class="timeline-demo alternate">
+        <p-timeline [value]="events" align="alternate">
+          <ng-template pTemplate="marker" let-event>
+            <span class="custom-marker" [style.backgroundColor]="event.color">
+              <i [class]="event.icon"></i>
+            </span>
+          </ng-template>
+          <ng-template pTemplate="content" let-event>
+            <p-card [header]="event.status" [subheader]="event.date">
+              <p>{{ event.description }}</p>
+            </p-card>
+          </ng-template>
+        </p-timeline>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-preview title="Opposite Content">
+      <div class="timeline-demo">
+        <p-timeline [value]="events" align="alternate">
+          <ng-template pTemplate="marker" let-event>
+            <span class="custom-marker" [style.backgroundColor]="event.color">
+              <i [class]="event.icon"></i>
+            </span>
+          </ng-template>
+          <ng-template pTemplate="content" let-event>
+            <span class="event-status">{{ event.status }}</span>
+          </ng-template>
+          <ng-template pTemplate="opposite" let-event>
+            <small class="event-date">{{ event.date }}</small>
+          </ng-template>
+        </p-timeline>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Horizontal Timeline -->
+  <section class="section">
+    <h2><i class="pi pi-arrows-h"></i> Horizontal Timeline</h2>
+    <p class="section-description">Timeline in horizontal layout for milestones.</p>
+
+    <app-ds-preview title="Horizontal Layout">
+      <div class="timeline-demo horizontal">
+        <p-timeline [value]="horizontalEvents" layout="horizontal" align="bottom">
+          <ng-template pTemplate="marker" let-event>
+            <span class="custom-marker" [style.backgroundColor]="event.color">
+              <i [class]="event.icon"></i>
+            </span>
+          </ng-template>
+          <ng-template pTemplate="content" let-event>
+            <div class="horizontal-content">
+              <strong>{{ event.status }}</strong>
+              <small>{{ event.date }}</small>
+            </div>
+          </ng-template>
+        </p-timeline>
+      </div>
+    </app-ds-preview>
+  </section>
+
+  <!-- Properties -->
+  <section class="section">
+    <app-ds-props-table [props]="timelineProps" title="Timeline Properties" />
+  </section>
+
+  <!-- Code Examples -->
+  <section class="section">
+    <h2>Code Examples</h2>
+    <app-ds-code-tabs [tabs]="codeTabs" />
+  </section>
+</div>

@@ -1,0 +1,77 @@
+<div class="messages-page">
+  <p-toast />
+
+  <header class="page-header">
+    <h1>Messages & Toasts</h1>
+    <p class="subtitle">
+      Messages display inline feedback. Toasts show temporary notifications.
+      <strong>Click buttons to trigger toasts!</strong>
+    </p>
+  </header>
+
+  <app-ds-guidelines [dos]="guidelinesDos" [donts]="guidelinesDonts" [compact]="true" />
+
+  <!-- Message Section -->
+  <section class="section">
+    <h2><i class="pi pi-info-circle"></i> Message</h2>
+    <p class="section-description">Inline messages for contextual feedback.</p>
+
+    <app-ds-preview title="Severities">
+      <div class="message-demo">
+        <p-message severity="success" text="Success! Operation completed successfully." />
+        <p-message severity="info" text="Information: This is an informational message." />
+        <p-message severity="warn" text="Warning: Please review before continuing." />
+        <p-message severity="error" text="Error: Something went wrong. Please try again." />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="messageCode" language="html" />
+
+    <app-ds-preview title="Secondary & Contrast">
+      <div class="message-demo">
+        <p-message severity="secondary" text="Secondary message with neutral styling." />
+        <p-message severity="contrast" text="Contrast message for high visibility." />
+      </div>
+    </app-ds-preview>
+
+    <app-ds-preview title="Closable Messages">
+      <div class="message-demo">
+        <p-message severity="info" text="This message can be dismissed" [closable]="true" />
+        <p-message severity="warn" text="Click X to close" [closable]="true" />
+      </div>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="messageProps" title="Message Properties" />
+  </section>
+
+  <!-- Toast Section -->
+  <section class="section">
+    <h2><i class="pi pi-bell"></i> Toast</h2>
+    <p class="section-description">Temporary notification popups.</p>
+
+    <app-ds-preview title="Toast Severities">
+      <div class="toast-demo">
+        <p-button label="Success" severity="success" (onClick)="showToast('success', 'Success', 'Operation completed successfully!')" />
+        <p-button label="Info" severity="info" (onClick)="showToast('info', 'Info', 'Here is some information.')" />
+        <p-button label="Warning" severity="warn" (onClick)="showToast('warn', 'Warning', 'Please review before continuing.')" />
+        <p-button label="Error" severity="danger" (onClick)="showToast('error', 'Error', 'Something went wrong!')" />
+      </div>
+    </app-ds-preview>
+    <app-ds-code-block [code]="toastCode" language="typescript" />
+
+    <app-ds-preview title="Common Use Cases">
+      <div class="toast-demo">
+        <p-button icon="pi pi-save" label="Save" (onClick)="showToast('success', 'Saved', 'Your changes have been saved.')" />
+        <p-button icon="pi pi-trash" label="Delete" severity="danger" [outlined]="true" (onClick)="showToast('warn', 'Deleted', 'Item has been removed.')" />
+        <p-button icon="pi pi-download" label="Download" severity="secondary" (onClick)="showToast('info', 'Download Started', 'Your file is being downloaded.')" />
+      </div>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="toastProps" title="Toast Properties" />
+  </section>
+
+  <!-- Code Examples -->
+  <section class="section">
+    <h2>Code Examples</h2>
+    <app-ds-code-tabs [tabs]="codeTabs" />
+  </section>
+</div>

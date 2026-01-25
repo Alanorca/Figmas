@@ -316,20 +316,91 @@ deleteProduct(product: Product): void {
   // ============================================
   // COLUMN CONFIG
   // ============================================
-  columnConfigs = signal([
+  private readonly defaultColumnConfigs = [
     { field: 'name', header: 'Name', visible: true, sortable: true },
     { field: 'category', header: 'Category', visible: true, sortable: true },
     { field: 'price', header: 'Price', visible: true, sortable: true },
     { field: 'quantity', header: 'Quantity', visible: true, sortable: false },
     { field: 'status', header: 'Status', visible: true, sortable: true }
-  ]);
+  ];
+
+  columnConfigs = signal([...this.defaultColumnConfigs.map(c => ({ ...c }))]);
+  columnSearchValue = signal('');
+  draggingColumnField = signal<string | null>(null);
 
   visibleColumns = computed(() => this.columnConfigs().filter(c => c.visible));
+
+  filteredColumnConfigs = computed(() => {
+    const search = this.columnSearchValue().toLowerCase();
+    if (!search) return this.columnConfigs();
+    return this.columnConfigs().filter(c =>
+      c.header.toLowerCase().includes(search) ||
+      c.field.toLowerCase().includes(search)
+    );
+  });
 
   toggleColumnVisibility(field: string): void {
     this.columnConfigs.update(cols =>
       cols.map(c => c.field === field ? { ...c, visible: !c.visible } : c)
     );
+  }
+
+  getColumnIndex(field: string): number {
+    return this.columnConfigs().findIndex(c => c.field === field);
+  }
+
+  resetColumnConfig(): void {
+    this.columnConfigs.set([...this.defaultColumnConfigs.map(c => ({ ...c }))]);
+    this.columnSearchValue.set('');
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Columns Reset',
+      detail: 'Column configuration restored to default'
+    });
+  }
+
+  onColumnDragStart(event: DragEvent, field: string): void {
+    this.draggingColumnField.set(field);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', field);
+    }
+  }
+
+  onColumnDragOver(event: DragEvent, field: string): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onColumnDrop(event: DragEvent, targetField: string): void {
+    event.preventDefault();
+    const sourceField = this.draggingColumnField();
+    if (!sourceField || sourceField === targetField) return;
+
+    this.columnConfigs.update(cols => {
+      const newCols = [...cols];
+      const sourceIndex = newCols.findIndex(c => c.field === sourceField);
+      const targetIndex = newCols.findIndex(c => c.field === targetField);
+
+      if (sourceIndex !== -1 && targetIndex !== -1) {
+        const [removed] = newCols.splice(sourceIndex, 1);
+        newCols.splice(targetIndex, 0, removed);
+      }
+
+      return newCols;
+    });
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Column Moved',
+      detail: 'Column order updated'
+    });
+  }
+
+  onColumnDragEnd(): void {
+    this.draggingColumnField.set(null);
   }
 
   onColumnReorder(event: any): void {
@@ -580,28 +651,93 @@ th:hover .drag-handle-grip { opacity: 0.7; }`
   [(visible)]="showColumnConfigDrawer"
   position="right"
   [style]="{ width: '380px' }"
-  header="Configurar Columnas">
+  header="Configure Columns">
   <div class="columnas-drawer-content">
     <!-- Search -->
-    <p-iconfield class="mb-3">
-      <p-inputicon styleClass="pi pi-search" />
-      <input pInputText placeholder="Buscar columna..." class="w-full" />
-    </p-iconfield>
+    <p-iconField class="mb-3">
+      <p-inputIcon styleClass="pi pi-search" />
+      <input
+        pInputText
+        placeholder="Search columns..."
+        class="w-full"
+        [ngModel]="columnSearchValue()"
+        (ngModelChange)="columnSearchValue.set($event)" />
+    </p-iconField>
 
-    <!-- Column list -->
+    <!-- Column list with drag & drop -->
     <div class="columnas-list">
-      @for (col of columnConfigs(); track col.field; let i = $index) {
-        <div class="columna-item">
+      @for (col of filteredColumnConfigs(); track col.field) {
+        <div
+          class="columna-item"
+          [class.dragging]="draggingColumnField() === col.field"
+          draggable="true"
+          (dragstart)="onColumnDragStart($event, col.field)"
+          (dragover)="onColumnDragOver($event, col.field)"
+          (drop)="onColumnDrop($event, col.field)"
+          (dragend)="onColumnDragEnd()">
           <i class="pi pi-bars drag-handle-config"></i>
-          <span class="columna-orden-badge">{{ i + 1 }}</span>
+          <span class="columna-orden-badge">{{ getColumnIndex(col.field) + 1 }}</span>
           <p-checkbox [ngModel]="col.visible" (ngModelChange)="toggleColumnVisibility(col.field)" [binary]="true" />
           <label class="ml-2 flex-1">{{ col.header }}</label>
-          <i [class]="col.visible ? 'pi pi-eye text-primary' : 'pi pi-eye-slash text-secondary'"></i>
+          <i [class]="col.visible ? 'pi pi-eye text-primary' : 'pi pi-eye-slash text-color-secondary'"></i>
         </div>
       }
     </div>
   </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Reset" icon="pi pi-refresh" [text]="true" (onClick)="resetColumnConfig()" />
+    <p-button label="Done" icon="pi pi-check" (onClick)="showColumnConfigDrawer.set(false)" />
+  </ng-template>
 </p-drawer>`
+    },
+    {
+      label: 'TypeScript',
+      language: 'typescript',
+      icon: 'pi pi-file',
+      code: `// Column configuration with signals
+private readonly defaultColumnConfigs = [
+  { field: 'name', header: 'Name', visible: true, sortable: true },
+  { field: 'category', header: 'Category', visible: true, sortable: true },
+  // ...more columns
+];
+
+columnConfigs = signal([...this.defaultColumnConfigs.map(c => ({ ...c }))]);
+columnSearchValue = signal('');
+draggingColumnField = signal<string | null>(null);
+
+filteredColumnConfigs = computed(() => {
+  const search = this.columnSearchValue().toLowerCase();
+  if (!search) return this.columnConfigs();
+  return this.columnConfigs().filter(c =>
+    c.header.toLowerCase().includes(search)
+  );
+});
+
+// Drag & Drop handlers
+onColumnDragStart(event: DragEvent, field: string): void {
+  this.draggingColumnField.set(field);
+  event.dataTransfer?.setData('text/plain', field);
+}
+
+onColumnDrop(event: DragEvent, targetField: string): void {
+  event.preventDefault();
+  const sourceField = this.draggingColumnField();
+  if (!sourceField || sourceField === targetField) return;
+
+  this.columnConfigs.update(cols => {
+    const newCols = [...cols];
+    const sourceIndex = newCols.findIndex(c => c.field === sourceField);
+    const targetIndex = newCols.findIndex(c => c.field === targetField);
+    const [removed] = newCols.splice(sourceIndex, 1);
+    newCols.splice(targetIndex, 0, removed);
+    return newCols;
+  });
+}
+
+resetColumnConfig(): void {
+  this.columnConfigs.set([...this.defaultColumnConfigs.map(c => ({ ...c }))]);
+  this.columnSearchValue.set('');
+}`
     }
   ];
 
@@ -673,6 +809,10 @@ th:hover .drag-handle-grip { opacity: 0.7; }`
   columnConfigProps: ComponentProp[] = [
     { name: 'p-drawer', type: 'component', description: 'Panel lateral deslizable' },
     { name: 'position', type: "'left' | 'right'", default: "'left'", description: 'Posición del drawer' },
-    { name: '[(visible)]', type: 'boolean', description: 'Two-way binding para visibilidad' }
+    { name: '[(visible)]', type: 'boolean', description: 'Two-way binding para visibilidad' },
+    { name: 'columnSearchValue', type: 'Signal<string>', description: 'Signal para filtrar columnas por búsqueda' },
+    { name: 'filteredColumnConfigs', type: 'Signal<ColumnConfig[]>', description: 'Computed que filtra columnas según búsqueda' },
+    { name: 'draggable="true"', type: 'attribute', description: 'Habilita drag & drop en items de columna' },
+    { name: 'resetColumnConfig()', type: 'method', description: 'Restaura configuración de columnas al estado inicial' }
   ];
 }
