@@ -320,9 +320,10 @@ deleteProduct(product: Product): void {
   // GUIDELINES
   // ============================================
   guidelinesDos = [
+    'TOOLBAR: Acciones masivas SIEMPRE en extremo izquierdo (posicion 1)',
     'TOOLBAR: Orden en START: 1) Acciones masivas, 2) Buscador',
     'TOOLBAR: Acciones masivas con severity="success" y [outlined]="true"',
-    'TOOLBAR: Acciones masivas con icon="pi pi-check-square"',
+    'TOOLBAR: Acciones masivas con icon="pi pi-check-square" y badge con count',
     'TOOLBAR: Boton de crear en END (derecha) sin severity (= primario)',
     'TOOLBAR: Buscador con width: 280px y aria-label',
     'Usar footer de tabla para totales y agregados',
@@ -333,6 +334,7 @@ deleteProduct(product: Product): void {
   guidelinesDonts = [
     'NO colocar el buscador ANTES de acciones masivas',
     'NO colocar acciones masivas a la derecha del toolbar',
+    'NO colocar acciones masivas en el centro - siempre extremo izquierdo',
     'NO usar severity en boton de crear (debe ser primario por defecto)',
     'NO usar severity="secondary" en acciones masivas (usar "success")',
     'No poner summary cards arriba de la tabla (usar footer)',
@@ -847,5 +849,171 @@ resetColumnConfig(): void {
     { name: 'filteredColumnConfigs', type: 'Signal<ColumnConfig[]>', description: 'Computed que filtra columnas según búsqueda' },
     { name: 'draggable="true"', type: 'attribute', description: 'Habilita drag & drop en items de columna' },
     { name: 'resetColumnConfig()', type: 'method', description: 'Restaura configuración de columnas al estado inicial' }
+  ];
+
+  // ============================================
+  // FULL-FEATURED TABLE CODE
+  // ============================================
+  fullFeaturedCodeTabs: CodeTab[] = [
+    {
+      label: 'HTML',
+      language: 'html',
+      icon: 'pi pi-code',
+      code: `<!-- PATRON COMPLETO: Toolbar + Tabla con filtros + Footer -->
+<p-toolbar>
+  <ng-template pTemplate="start">
+    <div class="flex align-items-center gap-3">
+      <!-- 1. ACCIONES MASIVAS - SIEMPRE EXTREMO IZQUIERDO -->
+      @if (selectedProducts().length > 0) {
+        <p-button
+          label="Acciones masivas"
+          icon="pi pi-check-square"
+          [badge]="selectedProducts().length.toString()"
+          badgeSeverity="contrast"
+          severity="success"
+          [outlined]="true"
+          (onClick)="openBulkActions()" />
+      }
+      <!-- 2. BUSCADOR -->
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search" />
+        <input type="text" pInputText
+               placeholder="Buscar..."
+               aria-label="Buscar registros"
+               style="width: 280px"
+               #dtFilter
+               (input)="dt.filterGlobal(dtFilter.value, 'contains')" />
+      </p-iconfield>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="end">
+    <!-- BOTON CREAR - SIN SEVERITY (= PRIMARIO) -->
+    <p-button label="Crear Nuevo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
+  </ng-template>
+</p-toolbar>
+
+<p-table #dt [value]="products()" [(selection)]="selectedProducts"
+         dataKey="id" [paginator]="true" [rows]="10"
+         [globalFilterFields]="['name', 'category', 'status']">
+  <ng-template pTemplate="header">
+    <!-- Fila 1: Titulos con sort -->
+    <tr>
+      <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
+      <th pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
+      <th pSortableColumn="category">Categoria <p-sortIcon field="category" /></th>
+      <th pSortableColumn="status">Estado <p-sortIcon field="status" /></th>
+      <th style="width: 100px">Acciones</th>
+    </tr>
+    <!-- Fila 2: Filtros de columna -->
+    <tr>
+      <th></th>
+      <th>
+        <p-columnFilter type="text" field="name" [showMenu]="false">
+          <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+            <input pInputText [ngModel]="value" (ngModelChange)="filter($event)"
+                   placeholder="Buscar..." class="w-full" />
+          </ng-template>
+        </p-columnFilter>
+      </th>
+      <th>
+        <p-columnFilter field="category" matchMode="in" [showMenu]="false">
+          <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+            <p-multiSelect [ngModel]="value" (ngModelChange)="filter($event)"
+                           [options]="categories" placeholder="Todos"
+                           appendTo="body" styleClass="w-full" />
+          </ng-template>
+        </p-columnFilter>
+      </th>
+      <th>
+        <p-columnFilter field="status" matchMode="in" [showMenu]="false">
+          <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+            <p-multiSelect [ngModel]="value" (ngModelChange)="filter($event)"
+                           [options]="statuses" placeholder="Todos"
+                           appendTo="body" styleClass="w-full" />
+          </ng-template>
+        </p-columnFilter>
+      </th>
+      <th>
+        <p-button icon="pi pi-filter-slash" [text]="true" size="small"
+                  (onClick)="dt.clear()" pTooltip="Limpiar filtros" />
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-product>
+    <tr class="cursor-pointer hover:surface-hover"
+        (click)="navigateToDetail(product)">
+      <td (click)="$event.stopPropagation()">
+        <p-tableCheckbox [value]="product" />
+      </td>
+      <td>{{ product.name }}</td>
+      <td>{{ product.category }}</td>
+      <td><p-tag [value]="product.status" [severity]="getSeverity(product.status)" /></td>
+      <td (click)="$event.stopPropagation()">
+        <p-menu #menu [model]="getMenuItems(product)" [popup]="true" appendTo="body" />
+        <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
+                  (onClick)="menu.toggle($event)" />
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <tr class="font-semibold surface-ground">
+      <td></td>
+      <td>Totales</td>
+      <td>{{ products().length }} productos</td>
+      <td>
+        <div class="flex gap-1">
+          <p-tag [value]="lowStockCount().toString()" severity="warn" />
+          <p-tag [value]="inStockCount().toString()" severity="success" />
+        </div>
+      </td>
+      <td></td>
+    </tr>
+  </ng-template>
+</p-table>`
+    },
+    {
+      label: 'TypeScript',
+      language: 'typescript',
+      icon: 'pi pi-file',
+      code: `// Signals para estado
+products = signal<Product[]>([...]);
+selectedProducts = signal<Product[]>([]);
+
+// Computed para footer
+totalProducts = computed(() => this.products().length);
+lowStockCount = computed(() =>
+  this.products().filter(p => p.status === 'Low Stock').length
+);
+inStockCount = computed(() =>
+  this.products().filter(p => p.status === 'In Stock').length
+);
+
+// Opciones de filtros
+categories = [
+  { label: 'Electronics', value: 'Electronics' },
+  { label: 'Furniture', value: 'Furniture' }
+];
+
+statuses = [
+  { label: 'In Stock', value: 'In Stock' },
+  { label: 'Low Stock', value: 'Low Stock' },
+  { label: 'Out of Stock', value: 'Out of Stock' }
+];
+
+// Navegacion a detalle
+navigateToDetail(product: Product): void {
+  this.router.navigate(['/products', product.id]);
+}
+
+// Menu de acciones por fila
+getMenuItems(product: Product): MenuItem[] {
+  return [
+    { label: 'Ver', icon: 'pi pi-eye', command: () => this.viewDetail(product) },
+    { label: 'Editar', icon: 'pi pi-pencil', command: () => this.editProduct(product) },
+    { separator: true },
+    { label: 'Eliminar', icon: 'pi pi-trash', styleClass: 'text-red-500' }
+  ];
+}`
+    }
   ];
 }

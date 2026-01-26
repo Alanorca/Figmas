@@ -17,6 +17,176 @@
     [compact]="true"
   />
 
+  <!-- Full-Featured Table (Patron Completo) -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-bolt"></i> Full-Featured Table (Patron Completo)</h2>
+    <p class="section-description">
+      Ejemplo completo que combina: <strong>Toolbar con patron correcto</strong> (Acciones masivas en extremo izquierdo, buscador, boton crear), filtros de columna, seleccion, row menu, footer y paginacion.
+    </p>
+    <app-ds-preview title="Product Management">
+      <div class="interactive-table-demo">
+        <!-- Toolbar con PATRON CORRECTO -->
+        <p-toolbar styleClass="table-toolbar">
+          <ng-template pTemplate="start">
+            <div class="flex align-items-center gap-3">
+              <!-- 1. ACCIONES MASIVAS - SIEMPRE EXTREMO IZQUIERDO -->
+              @if (selectedProducts().length > 0) {
+                <p-button
+                  label="Acciones masivas"
+                  icon="pi pi-check-square"
+                  [badge]="selectedProducts().length.toString()"
+                  badgeSeverity="contrast"
+                  severity="success"
+                  [outlined]="true"
+                  styleClass="btn-acciones-masivas"
+                  (onClick)="showBulkActionsDrawer.set(true)" />
+              }
+              <!-- 2. BUSCADOR -->
+              <p-iconField>
+                <p-inputIcon styleClass="pi pi-search" />
+                <input
+                  pInputText
+                  placeholder="Buscar productos..."
+                  aria-label="Buscar productos"
+                  style="width: 280px"
+                  [ngModel]="searchValue()"
+                  (ngModelChange)="searchValue.set($event)" />
+              </p-iconField>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="end">
+            <!-- BOTON CREAR - SIN SEVERITY (= PRIMARIO) -->
+            <p-button
+              label="Nuevo Producto"
+              icon="pi pi-plus"
+              (onClick)="addProduct()"
+              pTooltip="Agregar nuevo producto" />
+          </ng-template>
+        </p-toolbar>
+
+        <!-- Table con filtros -->
+        <p-table
+          #dtFull
+          [value]="filteredProducts()"
+          [(selection)]="selectedProducts"
+          (selectionChange)="onSelectionChange($event)"
+          dataKey="id"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+          styleClass="p-datatable-sm"
+          [filterDelay]="300">
+          <ng-template pTemplate="header">
+            <!-- Row 1: Titulos con sort -->
+            <tr>
+              <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
+              <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+              <th pSortableColumn="category">Category <p-sortIcon field="category" /></th>
+              <th pSortableColumn="price">Price <p-sortIcon field="price" /></th>
+              <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+              <th style="width: 80px">
+                <div class="flex align-items-center justify-content-between">
+                  <span>Actions</span>
+                  <p-button
+                    icon="pi pi-filter-slash"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    (onClick)="dtFull.clear()"
+                    pTooltip="Clear filters" />
+                </div>
+              </th>
+            </tr>
+            <!-- Row 2: Filtros de columna -->
+            <tr>
+              <th></th>
+              <th>
+                <p-columnFilter type="text" field="name" [showMenu]="false">
+                  <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                    <input pInputText [ngModel]="value" (ngModelChange)="filter($event)" placeholder="Search..." class="w-full" />
+                  </ng-template>
+                </p-columnFilter>
+              </th>
+              <th>
+                <p-columnFilter field="category" matchMode="in" [showMenu]="false">
+                  <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                    <p-multiSelect
+                      [ngModel]="value"
+                      (ngModelChange)="filter($event)"
+                      [options]="categories"
+                      placeholder="All"
+                      appendTo="body"
+                      [showHeader]="false"
+                      styleClass="w-full" />
+                  </ng-template>
+                </p-columnFilter>
+              </th>
+              <th></th>
+              <th>
+                <p-columnFilter field="status" matchMode="in" [showMenu]="false">
+                  <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                    <p-multiSelect
+                      [ngModel]="value"
+                      (ngModelChange)="filter($event)"
+                      [options]="statuses"
+                      placeholder="All"
+                      appendTo="body"
+                      [showHeader]="false"
+                      styleClass="w-full" />
+                  </ng-template>
+                </p-columnFilter>
+              </th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr class="cursor-pointer hover:surface-hover">
+              <td (click)="$event.stopPropagation()">
+                <p-tableCheckbox [value]="product" />
+              </td>
+              <td><span class="product-name">{{ product.name }}</span></td>
+              <td>{{ product.category }}</td>
+              <td>{{ product.price | currency }}</td>
+              <td><p-tag [value]="product.status" [severity]="getSeverity(product.status)" /></td>
+              <td class="actions-cell" (click)="$event.stopPropagation()">
+                <p-menu #fullMenu [model]="getRowMenuItems(product)" [popup]="true" appendTo="body" />
+                <p-button
+                  icon="pi pi-ellipsis-v"
+                  [text]="true"
+                  size="small"
+                  (onClick)="fullMenu.toggle($event)" />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="footer">
+            <tr class="font-semibold surface-ground">
+              <td></td>
+              <td>Totales</td>
+              <td>{{ totalProducts() }} productos</td>
+              <td>{{ totalValue() | currency }}</td>
+              <td>
+                <div class="flex gap-1">
+                  <p-tag [value]="lowStockCount().toString()" severity="warn" pTooltip="Low/Out Stock" styleClass="text-xs" />
+                  <p-tag [value]="inStockCount().toString()" severity="success" pTooltip="In Stock" styleClass="text-xs" />
+                </div>
+              </td>
+              <td></td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="empty-message">
+                <i class="pi pi-inbox"></i>
+                <span>No products found</span>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-tabs [tabs]="fullFeaturedCodeTabs" />
+  </section>
+
   <!-- Basic Table -->
   <section class="section">
     <h2>Basic Table</h2>
@@ -447,155 +617,6 @@
         </p-table>
       </div>
     </app-ds-preview>
-  </section>
-
-  <!-- Full-Featured Table -->
-  <section class="section highlight-section">
-    <h2><i class="pi pi-bolt"></i> Full-Featured Table</h2>
-    <p class="section-description">
-      Complete example combining all features: footer, filters, selection, row menu, and pagination.
-      <strong>Note: Summary is in the footer, not at top.</strong>
-    </p>
-    <app-ds-preview title="Product Management">
-      <div class="interactive-table-demo">
-        <!-- Toolbar -->
-        <p-toolbar styleClass="table-toolbar">
-          <ng-template pTemplate="left">
-            <p-button
-              label="Delete"
-              icon="pi pi-trash"
-              severity="danger"
-              [outlined]="true"
-              (onClick)="deleteSelected()"
-              [disabled]="selectedProducts().length === 0"
-              pTooltip="Delete selected"
-            />
-            @if (selectedProducts().length > 0) {
-              <p-button
-                label="Bulk Actions"
-                icon="pi pi-check-square"
-                [badge]="selectedProducts().length.toString()"
-                badgeSeverity="contrast"
-                severity="success"
-                [outlined]="true"
-                (onClick)="showBulkActionsDrawer.set(true)" />
-            }
-          </ng-template>
-          <ng-template pTemplate="right">
-            <p-iconField>
-              <p-inputIcon styleClass="pi pi-search" />
-              <input
-                pInputText
-                placeholder="Search products..."
-                [ngModel]="searchValue()"
-                (ngModelChange)="searchValue.set($event)"
-              />
-            </p-iconField>
-            <p-button
-              icon="pi pi-download"
-              [outlined]="true"
-              (onClick)="exportData()"
-              pTooltip="Export to CSV"
-            />
-            <p-button
-              label="New"
-              icon="pi pi-plus"
-              (onClick)="addProduct()"
-              pTooltip="Add new product"
-            />
-          </ng-template>
-        </p-toolbar>
-
-        <!-- Table -->
-        <p-table
-          [value]="filteredProducts()"
-          [(selection)]="selectedProducts"
-          (selectionChange)="onSelectionChange($event)"
-          dataKey="id"
-          [paginator]="true"
-          [rows]="5"
-          [rowsPerPageOptions]="[5, 10, 20]"
-          styleClass="p-datatable-sm"
-          [globalFilterFields]="['name', 'category', 'status']"
-        >
-          <ng-template pTemplate="header">
-            <tr>
-              <th style="width: 3rem">
-                <p-tableHeaderCheckbox />
-              </th>
-              <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
-              <th pSortableColumn="category">Category <p-sortIcon field="category" /></th>
-              <th pSortableColumn="price">Price <p-sortIcon field="price" /></th>
-              <th pSortableColumn="quantity">Qty <p-sortIcon field="quantity" /></th>
-              <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
-              <th style="width: 5rem">
-                <div class="flex align-items-center justify-content-between">
-                  <span>Actions</span>
-                  <p-button
-                    icon="pi pi-ellipsis-v"
-                    [rounded]="true"
-                    [text]="true"
-                    size="small"
-                    (onClick)="showColumnConfigDrawer.set(true)"
-                    pTooltip="Configure" />
-                </div>
-              </th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-product>
-            <tr>
-              <td>
-                <p-tableCheckbox [value]="product" />
-              </td>
-              <td>
-                <span class="product-name">{{ product.name }}</span>
-              </td>
-              <td>{{ product.category }}</td>
-              <td>{{ product.price | currency }}</td>
-              <td>
-                <span [class.low-qty]="product.quantity <= 5">{{ product.quantity }}</span>
-              </td>
-              <td>
-                <p-tag [value]="product.status" [severity]="getSeverity(product.status)" />
-              </td>
-              <td class="actions-cell">
-                <p-menu #fullMenu [model]="getRowMenuItems(product)" [popup]="true" appendTo="body" />
-                <p-button
-                  icon="pi pi-ellipsis-v"
-                  [text]="true"
-                  size="small"
-                  (onClick)="fullMenu.toggle($event)" />
-              </td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="footer">
-            <tr class="font-semibold">
-              <td></td>
-              <td>Totales</td>
-              <td>{{ totalProducts() }} productos</td>
-              <td>{{ totalValue() | currency }}</td>
-              <td>{{ totalQuantity() }} units</td>
-              <td>
-                <div class="flex gap-1">
-                  <p-tag [value]="lowStockCount().toString()" severity="warn" pTooltip="Low/Out Stock" styleClass="text-xs" />
-                  <p-tag [value]="inStockCount().toString()" severity="success" pTooltip="In Stock" styleClass="text-xs" />
-                </div>
-              </td>
-              <td></td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="7" class="empty-message">
-                <i class="pi pi-inbox"></i>
-                <span>No products found</span>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-    </app-ds-preview>
-    <app-ds-code-block [code]="interactiveCode" language="typescript" />
   </section>
 </div>
 
