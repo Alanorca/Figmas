@@ -246,21 +246,49 @@ export class TablesComponent {
   ...
 </p-table>`;
 
-  toolbarCode = `<p-toolbar>
-  <ng-template pTemplate="left">
-    <p-button label="New" icon="pi pi-plus" />
-    <p-button label="Delete" icon="pi pi-trash" severity="danger" [outlined]="true" />
+  // ============================================
+  // PATRON DE TOOLBAR PARA LISTADOS
+  // ============================================
+  // ORDEN OBLIGATORIO:
+  //   START (izquierda):
+  //     1. Acciones masivas (si hay seleccion) - severity="success" outlined
+  //     2. Input de busqueda
+  //   END (derecha):
+  //     - Boton primario para crear (sin severity)
+  // ============================================
+  toolbarCode = `<!-- PATRON: Toolbar de Listado -->
+<p-toolbar>
+  <ng-template pTemplate="start">
+    <div class="flex align-items-center gap-3">
+      <!-- 1. Acciones masivas (aparece cuando hay seleccion) -->
+      @if (selectedItems().length > 0) {
+        <p-button
+          label="Acciones masivas"
+          icon="pi pi-check-square"
+          [badge]="selectedItems().length.toString()"
+          badgeSeverity="contrast"
+          severity="success"
+          [outlined]="true"
+          styleClass="btn-acciones-masivas"
+          (onClick)="openBulkActions()" />
+      }
+      <!-- 2. Input de busqueda -->
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search" />
+        <input type="text" pInputText
+               placeholder="Buscar..."
+               aria-label="Buscar registros"
+               style="width: 280px"
+               #dtFilter
+               (input)="dt.filterGlobal(dtFilter.value, 'contains')" />
+      </p-iconfield>
+    </div>
   </ng-template>
-  <ng-template pTemplate="right">
-    <p-iconField>
-      <p-inputIcon styleClass="pi pi-search" />
-      <input pInputText placeholder="Search..." />
-    </p-iconField>
+  <ng-template pTemplate="end">
+    <!-- Boton primario para crear (sin severity = primary por defecto) -->
+    <p-button label="Crear Nuevo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
   </ng-template>
-</p-toolbar>
-<p-table [value]="products">
-  ...
-</p-table>`;
+</p-toolbar>`;
 
   interactiveCode = `// Interactive table with signals
 products = signal<Product[]>([...]);
@@ -292,18 +320,23 @@ deleteProduct(product: Product): void {
   // GUIDELINES
   // ============================================
   guidelinesDos = [
+    'TOOLBAR: Orden en START: 1) Acciones masivas, 2) Buscador',
+    'TOOLBAR: Acciones masivas con severity="success" y [outlined]="true"',
+    'TOOLBAR: Acciones masivas con icon="pi pi-check-square"',
+    'TOOLBAR: Boton de crear en END (derecha) sin severity (= primario)',
+    'TOOLBAR: Buscador con width: 280px y aria-label',
     'Usar footer de tabla para totales y agregados',
     'Proveer filtros de columna para datasets grandes',
-    'Implementar acciones masivas con multi-selección',
-    'Agregar menú de acciones por fila para operaciones contextuales',
-    'Permitir reordenamiento y configuración de columnas'
+    'Filas clickeables deben usar hover con var(--highlight-bg)'
   ];
 
   guidelinesDonts = [
+    'NO colocar el buscador ANTES de acciones masivas',
+    'NO colocar acciones masivas a la derecha del toolbar',
+    'NO usar severity en boton de crear (debe ser primario por defecto)',
+    'NO usar severity="secondary" en acciones masivas (usar "success")',
     'No poner summary cards arriba de la tabla (usar footer)',
-    'No sobrecargar el header con demasiados filtros',
-    'No habilitar drag-and-drop sin feedback visual',
-    'No omitir estados de carga para operaciones async'
+    'No usar colores de hover muy oscuros (problemas en dark mode)'
   ];
 
   // ============================================

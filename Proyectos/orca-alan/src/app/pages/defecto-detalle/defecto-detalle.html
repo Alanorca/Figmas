@@ -1,0 +1,491 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="defecto-detalle-page">
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-container">
+      <p-progressSpinner strokeWidth="3" />
+      <p>Cargando defecto...</p>
+    </div>
+  } @else if (defecto()) {
+    <!-- Header con titulo y navegacion principal -->
+    <div class="page-header">
+      <div class="header-left">
+        <button class="back-btn" (click)="goBack()" pTooltip="Volver a defectos">
+          <i class="pi pi-arrow-left"></i>
+        </button>
+        <div class="page-title-section">
+          <h1 class="page-title">Detalle del Defecto</h1>
+          <span class="page-subtitle">Visualiza la informacion completa, activos afectados e historial del defecto</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="main-nav-tabs">
+          <p-button
+            label="Informacion General"
+            icon="pi pi-info-circle"
+            [outlined]="mainTab() !== 'general'"
+            [severity]="mainTab() === 'general' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('general')"
+          />
+          <p-button
+            label="Activos Afectados"
+            icon="pi pi-server"
+            [outlined]="mainTab() !== 'activos'"
+            [severity]="mainTab() === 'activos' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('activos')"
+          />
+          <p-button
+            label="Historial"
+            icon="pi pi-history"
+            [outlined]="mainTab() !== 'historial'"
+            [severity]="mainTab() === 'historial' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('historial')"
+          />
+        </div>
+
+        <p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [text]="true"
+          [rounded]="true"
+          (onClick)="showMenu(menu, $event)"
+        />
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- Layout Principal: Contenido + Sidebar -->
+    <div class="main-layout">
+      <!-- Contenido Principal -->
+      <div class="main-content">
+        <!-- Header del Defecto + Estado -->
+        <div class="defecto-header-row">
+          <!-- Info del defecto -->
+          <div class="defecto-header">
+            <div class="defecto-title-row">
+              <i class="pi pi-bug defecto-icon"></i>
+              <h2 class="defecto-titulo">{{ defecto()!.title }}</h2>
+              <span class="defecto-codigo">DEF-{{ defecto()!.id.slice(-6).toUpperCase() }}</span>
+            </div>
+            <p class="defecto-descripcion">{{ defecto()!.description }}</p>
+          </div>
+
+          <!-- Estado Card -->
+          <div class="status-card" [class]="defecto()!.eventStatus">
+            <div class="status-header">
+              <div class="status-title">
+                <i class="pi" [ngClass]="statusInfo().icon"></i>
+                <span>Estado del Defecto</span>
+              </div>
+              <p-tag [value]="statusInfo().label" [severity]="statusInfo().severity" />
+            </div>
+            <div class="status-details">
+              <div class="status-item">
+                <span class="label">Severidad</span>
+                <p-tag [value]="severityInfo().label" [severity]="severityInfo().severity" />
+              </div>
+              <div class="status-item">
+                <span class="label">Dias {{ defecto()!.resolvedAt ? 'abierto' : 'transcurridos' }}</span>
+                <span class="value">{{ diasAbierto() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Content: Informacion General -->
+        @if (mainTab() === 'general') {
+          <!-- Tabs Secundarios -->
+          <div class="secondary-tabs">
+            <button
+              class="tab-btn"
+              [class.active]="secondaryTab() === 'info'"
+              (click)="secondaryTab.set('info')"
+            >
+              <i class="pi pi-info-circle"></i>
+              Informacion General
+            </button>
+            <button
+              class="tab-btn"
+              [class.active]="secondaryTab() === 'solucion'"
+              (click)="secondaryTab.set('solucion')"
+            >
+              <i class="pi pi-check-square"></i>
+              Solucion
+            </button>
+            <button
+              class="tab-btn"
+              [class.active]="secondaryTab() === 'propiedades'"
+              (click)="secondaryTab.set('propiedades')"
+            >
+              <i class="pi pi-th-large"></i>
+              Propiedades
+            </button>
+          </div>
+
+          <div class="tab-content">
+            <!-- Tab: Informacion General -->
+            @if (secondaryTab() === 'info') {
+              <div class="tab-panel info-panel">
+                <div class="info-grid">
+                  <!-- Tipo de Evento -->
+                  <div class="info-item">
+                    <span class="info-label">Tipo de Evento</span>
+                    <div class="info-value">
+                      <p-tag value="Defecto" severity="info" icon="pi pi-bug" />
+                    </div>
+                  </div>
+
+                  <!-- Subtipo -->
+                  <div class="info-item">
+                    <span class="info-label">Subtipo</span>
+                    <span class="info-value">{{ defecto()!.eventSubType?.name || 'Sin subtipo' }}</span>
+                  </div>
+
+                  <!-- Fecha Inicial -->
+                  <div class="info-item">
+                    <span class="info-label">Fecha de Deteccion</span>
+                    <span class="info-value">{{ formatDate(defecto()!.initialDate) }}</span>
+                  </div>
+
+                  <!-- Fecha de Creacion -->
+                  <div class="info-item">
+                    <span class="info-label">Fecha de Registro</span>
+                    <span class="info-value">{{ formatDateTime(defecto()!.createdAt) }}</span>
+                  </div>
+
+                  <!-- Ultima Actualizacion -->
+                  <div class="info-item">
+                    <span class="info-label">Ultima Actualizacion</span>
+                    <span class="info-value">{{ formatDateTime(defecto()!.updatedAt) }}</span>
+                  </div>
+
+                  <!-- Fecha de Resolucion -->
+                  <div class="info-item">
+                    <span class="info-label">Fecha de Resolucion</span>
+                    <span class="info-value">{{ defecto()!.resolvedAt ? formatDate(defecto()!.resolvedAt) : 'Pendiente' }}</span>
+                  </div>
+
+                  <!-- Responsable -->
+                  <div class="info-item">
+                    <span class="info-label">Responsable</span>
+                    <div class="info-value with-avatar">
+                      <p-avatar
+                        [label]="getInitials(defecto()!.responsibleUserName || 'Usuario')"
+                        shape="circle"
+                        size="normal"
+                      />
+                      <span>{{ defecto()!.responsibleUserName || 'Sin asignar' }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Estado -->
+                  <div class="info-item">
+                    <span class="info-label">Estado</span>
+                    <div class="info-value">
+                      <p-tag [value]="statusInfo().label" [severity]="statusInfo().severity" />
+                    </div>
+                  </div>
+
+                  <!-- Descripcion completa -->
+                  <div class="info-item full-width">
+                    <span class="info-label">Descripcion Detallada</span>
+                    <div class="info-value description-box">
+                      {{ defecto()!.description || 'Sin descripcion adicional' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Tab: Solucion -->
+            @if (secondaryTab() === 'solucion') {
+              <div class="tab-panel solucion-panel">
+                @if (defecto()!.solution) {
+                  <div class="solution-content">
+                    <div class="solution-header">
+                      <i class="pi pi-check-circle"></i>
+                      <span>Solucion Aplicada</span>
+                    </div>
+                    <div class="solution-text">
+                      {{ defecto()!.solution }}
+                    </div>
+                    @if (defecto()!.resolvedAt) {
+                      <div class="solution-meta">
+                        <span>Resuelto el {{ formatDate(defecto()!.resolvedAt) }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-solution">
+                    <i class="pi pi-clock"></i>
+                    <h3>Pendiente de Solucion</h3>
+                    <p>Este defecto aun no ha sido resuelto. Una vez corregido, la solucion aplicada aparecera aqui.</p>
+                    <p-button
+                      label="Registrar Solucion"
+                      icon="pi pi-pencil"
+                      (onClick)="navigateToEdit()"
+                    />
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Tab: Propiedades -->
+            @if (secondaryTab() === 'propiedades') {
+              <div class="tab-panel properties-panel">
+                @if (defecto()!.propertyValues && defecto()!.propertyValues.length > 0) {
+                  <div class="properties-grid">
+                    @for (prop of defecto()!.propertyValues; track prop.propertyId) {
+                      <div class="property-item">
+                        <span class="property-label">{{ prop.propertyName || prop.propertyCode }}</span>
+                        <span class="property-value">{{ prop.value || '-' }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-properties">
+                    <i class="pi pi-th-large"></i>
+                    <p>No hay propiedades adicionales definidas para este defecto.</p>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Tab Content: Activos Afectados -->
+        @if (mainTab() === 'activos') {
+          <div class="tab-content">
+            <div class="tab-panel activos-panel">
+              @if (defecto()!.affectedAssetIds && defecto()!.affectedAssetIds!.length > 0) {
+                <p-table
+                  [value]="defecto()!.affectedAssetIds || []"
+                  [paginator]="true"
+                  [rows]="10"
+                  styleClass="p-datatable-sm p-datatable-striped"
+                >
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>ID Activo</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-assetId>
+                    <tr class="clickable-row" (click)="navigateToActivo(assetId)">
+                      <td>{{ assetId }}</td>
+                      <td>
+                        <p-button
+                          icon="pi pi-eye"
+                          [text]="true"
+                          [rounded]="true"
+                          pTooltip="Ver activo"
+                          (onClick)="navigateToActivo(assetId); $event.stopPropagation()"
+                        />
+                      </td>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                    <tr>
+                      <td colspan="2" class="text-center">
+                        <div class="empty-state">
+                          <i class="pi pi-server"></i>
+                          <p>No hay activos afectados registrados</p>
+                        </div>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              } @else {
+                <div class="empty-state-large">
+                  <i class="pi pi-server"></i>
+                  <h3>Sin Activos Afectados</h3>
+                  <p>No se han asociado activos a este defecto.</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Tab Content: Historial -->
+        @if (mainTab() === 'historial') {
+          <div class="tab-content">
+            <div class="tab-panel historial-panel">
+              <!-- Comentarios -->
+              <div class="comments-section">
+                <h3 class="section-title">
+                  <i class="pi pi-comments"></i>
+                  Comentarios ({{ comentarios().length }})
+                </h3>
+
+                <!-- Nuevo comentario -->
+                <div class="new-comment">
+                  <textarea
+                    pInputTextarea
+                    [ngModel]="newComment()"
+                    (ngModelChange)="newComment.set($event)"
+                    placeholder="Escribe un comentario..."
+                    rows="3"
+                  ></textarea>
+                  <p-button
+                    label="Agregar Comentario"
+                    icon="pi pi-send"
+                    [disabled]="!newComment().trim()"
+                    (onClick)="addComment()"
+                  />
+                </div>
+
+                <!-- Lista de comentarios -->
+                @if (comentarios().length > 0) {
+                  <div class="comments-list">
+                    @for (comment of comentarios(); track comment.id) {
+                      <div class="comment-item">
+                        <div class="comment-header">
+                          <p-avatar
+                            [label]="getInitials(comment.createdByName || 'U')"
+                            shape="circle"
+                            size="normal"
+                          />
+                          <div class="comment-meta">
+                            <span class="comment-author">{{ comment.createdByName || 'Usuario' }}</span>
+                            <span class="comment-date">{{ formatDateTime(comment.createdAt) }}</span>
+                          </div>
+                        </div>
+                        <div class="comment-content">
+                          {{ comment.content }}
+                        </div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-comments">
+                    <i class="pi pi-comments"></i>
+                    <p>No hay comentarios. Se el primero en comentar.</p>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Sidebar Derecho -->
+      <div class="sidebar">
+        <!-- Stats Cards -->
+        <div class="stats-section">
+          <!-- Severidad -->
+          <div class="stat-card" [class]="'severity-' + defecto()!.initialSeverity">
+            <div class="stat-indicator"></div>
+            <div class="stat-content">
+              <span class="stat-label">Severidad</span>
+              <span class="stat-value">{{ severityInfo().label }}</span>
+              <span class="stat-sublabel">Nivel de impacto</span>
+            </div>
+          </div>
+
+          <!-- Dias Abierto -->
+          <div class="stat-card">
+            <div class="stat-indicator dias"></div>
+            <div class="stat-content">
+              <span class="stat-label">{{ defecto()!.resolvedAt ? 'Tiempo de Resolucion' : 'Dias Abierto' }}</span>
+              <span class="stat-value">{{ diasAbierto() }}</span>
+              <span class="stat-sublabel">dias</span>
+            </div>
+          </div>
+
+          <!-- Activos Afectados -->
+          <div class="stat-card">
+            <div class="stat-indicator activos"></div>
+            <div class="stat-content">
+              <span class="stat-label">Activos Afectados</span>
+              <span class="stat-value">{{ activosAfectados() }}</span>
+              <span class="stat-sublabel">Activos</span>
+            </div>
+          </div>
+
+          <!-- Procesos Impactados -->
+          <div class="stat-card">
+            <div class="stat-indicator procesos"></div>
+            <div class="stat-content">
+              <span class="stat-label">Procesos Impactados</span>
+              <span class="stat-value">{{ procesosImpactados() }}</span>
+              <span class="stat-sublabel">Procesos</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline de Eventos -->
+        <div class="timeline-section">
+          <h4 class="section-title">
+            <i class="pi pi-clock"></i>
+            Linea de Tiempo
+          </h4>
+          <div class="timeline-events">
+            <!-- Evento: Creacion -->
+            <div class="timeline-item">
+              <div class="timeline-dot created"></div>
+              <div class="timeline-content">
+                <span class="timeline-title">Defecto registrado</span>
+                <span class="timeline-date">{{ formatDateTime(defecto()!.createdAt) }}</span>
+              </div>
+            </div>
+
+            <!-- Evento: Deteccion -->
+            @if (defecto()!.initialDate && defecto()!.initialDate !== defecto()!.createdAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot detected"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Fecha de deteccion</span>
+                  <span class="timeline-date">{{ formatDate(defecto()!.initialDate) }}</span>
+                </div>
+              </div>
+            }
+
+            <!-- Evento: Ultima actualizacion -->
+            @if (defecto()!.updatedAt !== defecto()!.createdAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot updated"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Ultima actualizacion</span>
+                  <span class="timeline-date">{{ formatDateTime(defecto()!.updatedAt) }}</span>
+                </div>
+              </div>
+            }
+
+            <!-- Evento: Resolucion -->
+            @if (defecto()!.resolvedAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot resolved"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Defecto resuelto</span>
+                  <span class="timeline-date">{{ formatDate(defecto()!.resolvedAt) }}</span>
+                </div>
+              </div>
+            }
+
+            <!-- Evento: Cierre -->
+            @if (defecto()!.closedAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot closed"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Defecto cerrado</span>
+                  <span class="timeline-date">{{ formatDate(defecto()!.closedAt) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="not-found">
+      <i class="pi pi-exclamation-circle"></i>
+      <h2>Defecto no encontrado</h2>
+      <p>El defecto solicitado no existe o no tienes permisos para verlo.</p>
+      <p-button label="Volver a defectos" icon="pi pi-arrow-left" (onClick)="goBack()" />
+    </div>
+  }
+</div>

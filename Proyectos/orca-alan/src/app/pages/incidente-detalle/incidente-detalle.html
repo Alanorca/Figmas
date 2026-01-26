@@ -1,0 +1,470 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="incidente-detalle-page">
+  @if (loading()) {
+    <div class="loading-container">
+      <p-progressSpinner strokeWidth="3" />
+      <p>Cargando incidente...</p>
+    </div>
+  } @else if (incidente()) {
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <button class="back-btn" (click)="goBack()" pTooltip="Volver a incidentes">
+          <i class="pi pi-arrow-left"></i>
+        </button>
+        <div class="page-title-section">
+          <h1 class="page-title">Detalle del Incidente</h1>
+          <span class="page-subtitle">Informacion del incidente, impacto y respuesta</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="main-nav-tabs">
+          <p-button
+            label="Informacion General"
+            icon="pi pi-info-circle"
+            [outlined]="mainTab() !== 'general'"
+            [severity]="mainTab() === 'general' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('general')"
+          />
+          <p-button
+            label="Impacto"
+            icon="pi pi-chart-bar"
+            [outlined]="mainTab() !== 'impacto'"
+            [severity]="mainTab() === 'impacto' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('impacto')"
+          />
+          <p-button
+            label="Historial"
+            icon="pi pi-history"
+            [outlined]="mainTab() !== 'historial'"
+            [severity]="mainTab() === 'historial' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('historial')"
+          />
+        </div>
+
+        <p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [text]="true"
+          [rounded]="true"
+          (onClick)="showMenu(menu, $event)"
+        />
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- Layout Principal -->
+    <div class="main-layout">
+      <!-- Contenido Principal -->
+      <div class="main-content">
+        <!-- Header del Incidente -->
+        <div class="incidente-header-row">
+          <div class="incidente-header">
+            <div class="incidente-title-row">
+              <i class="pi pi-bolt incidente-icon"></i>
+              <h2 class="incidente-titulo">{{ incidente()!.title }}</h2>
+              <span class="incidente-codigo">INC-{{ incidente()!.id.slice(-6).toUpperCase() }}</span>
+            </div>
+            <p class="incidente-descripcion">{{ incidente()!.description }}</p>
+          </div>
+
+          <!-- Estado Card -->
+          <div class="status-card" [class]="incidente()!.eventStatus">
+            <div class="status-header">
+              <div class="status-title">
+                <i class="pi" [ngClass]="statusInfo().icon"></i>
+                <span>Estado del Incidente</span>
+              </div>
+              <p-tag [value]="statusInfo().label" [severity]="statusInfo().severity" />
+            </div>
+            <div class="status-details">
+              <div class="status-item">
+                <span class="label">Severidad</span>
+                <p-tag [value]="severityInfo().label" [severity]="severityInfo().severity" />
+              </div>
+              <div class="status-item">
+                <span class="label">Tiempo de Respuesta</span>
+                <span class="value">{{ formatDuration(tiempoRespuesta()) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Content: Informacion General -->
+        @if (mainTab() === 'general') {
+          <div class="secondary-tabs">
+            <button class="tab-btn" [class.active]="secondaryTab() === 'info'" (click)="secondaryTab.set('info')">
+              <i class="pi pi-info-circle"></i>
+              Informacion General
+            </button>
+            <button class="tab-btn" [class.active]="secondaryTab() === 'respuesta'" (click)="secondaryTab.set('respuesta')">
+              <i class="pi pi-check-square"></i>
+              Respuesta y Solucion
+            </button>
+            <button class="tab-btn" [class.active]="secondaryTab() === 'propiedades'" (click)="secondaryTab.set('propiedades')">
+              <i class="pi pi-th-large"></i>
+              Propiedades
+            </button>
+          </div>
+
+          <div class="tab-content">
+            @if (secondaryTab() === 'info') {
+              <div class="tab-panel info-panel">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">Tipo de Evento</span>
+                    <div class="info-value">
+                      <p-tag value="Incidente" severity="danger" icon="pi pi-bolt" />
+                    </div>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Subtipo</span>
+                    <span class="info-value">{{ incidente()!.eventSubType?.name || 'Sin subtipo' }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Fecha de Ocurrencia</span>
+                    <span class="info-value">{{ formatDateTime(incidente()!.initialDate) }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Fecha de Deteccion</span>
+                    <span class="info-value">{{ incidente()!.detectedAt ? formatDateTime(incidente()!.detectedAt) : formatDateTime(incidente()!.createdAt) }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Fecha de Registro</span>
+                    <span class="info-value">{{ formatDateTime(incidente()!.createdAt) }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Fecha de Resolucion</span>
+                    <span class="info-value">{{ incidente()!.resolvedAt ? formatDateTime(incidente()!.resolvedAt) : 'Pendiente' }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Responsable</span>
+                    <div class="info-value with-avatar">
+                      <p-avatar [label]="getInitials(incidente()!.responsibleUserName || 'Usuario')" shape="circle" size="normal" />
+                      <span>{{ incidente()!.responsibleUserName || 'Sin asignar' }}</span>
+                    </div>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Estado</span>
+                    <div class="info-value">
+                      <p-tag [value]="statusInfo().label" [severity]="statusInfo().severity" />
+                    </div>
+                  </div>
+
+                  <div class="info-item full-width">
+                    <span class="info-label">Descripcion Detallada</span>
+                    <div class="info-value description-box">
+                      {{ incidente()!.description || 'Sin descripcion adicional' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (secondaryTab() === 'respuesta') {
+              <div class="tab-panel respuesta-panel">
+                <!-- Metricas de respuesta -->
+                <div class="response-metrics">
+                  <div class="metric-card">
+                    <div class="metric-icon detection">
+                      <i class="pi pi-eye"></i>
+                    </div>
+                    <div class="metric-content">
+                      <span class="metric-label">Tiempo de Deteccion</span>
+                      <span class="metric-value">{{ formatDuration(incidente()!.detectionTimeHours || 0) }}</span>
+                    </div>
+                  </div>
+                  <div class="metric-card">
+                    <div class="metric-icon acknowledgement">
+                      <i class="pi pi-user-plus"></i>
+                    </div>
+                    <div class="metric-content">
+                      <span class="metric-label">Tiempo de Reconocimiento</span>
+                      <span class="metric-value">{{ formatDuration(incidente()!.acknowledgementTimeHours || 0) }}</span>
+                    </div>
+                  </div>
+                  <div class="metric-card">
+                    <div class="metric-icon resolution">
+                      <i class="pi pi-check-circle"></i>
+                    </div>
+                    <div class="metric-content">
+                      <span class="metric-label">Tiempo de Resolucion</span>
+                      <span class="metric-value">{{ formatDuration(incidente()!.resolutionTimeHours || tiempoResolucion()) }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Solucion -->
+                @if (incidente()!.solution) {
+                  <div class="solution-content">
+                    <div class="solution-header">
+                      <i class="pi pi-check-circle"></i>
+                      <span>Solucion Aplicada</span>
+                    </div>
+                    <div class="solution-text">
+                      {{ incidente()!.solution }}
+                    </div>
+                    @if (incidente()!.resolvedAt) {
+                      <div class="solution-meta">
+                        <span>Resuelto el {{ formatDate(incidente()!.resolvedAt) }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-solution">
+                    <i class="pi pi-clock"></i>
+                    <h3>Pendiente de Resolucion</h3>
+                    <p>Este incidente aun no ha sido resuelto.</p>
+                    <p-button label="Registrar Solucion" icon="pi pi-pencil" (onClick)="navigateToEdit()" />
+                  </div>
+                }
+              </div>
+            }
+
+            @if (secondaryTab() === 'propiedades') {
+              <div class="tab-panel properties-panel">
+                @if (incidente()!.propertyValues && incidente()!.propertyValues.length > 0) {
+                  <div class="properties-grid">
+                    @for (prop of incidente()!.propertyValues; track prop.propertyId) {
+                      <div class="property-item">
+                        <span class="property-label">{{ prop.propertyName || prop.propertyCode }}</span>
+                        <span class="property-value">{{ prop.value || '-' }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-properties">
+                    <i class="pi pi-th-large"></i>
+                    <p>No hay propiedades adicionales definidas.</p>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Tab Content: Impacto -->
+        @if (mainTab() === 'impacto') {
+          <div class="tab-content">
+            <div class="tab-panel impacto-panel">
+              <h3 class="section-title">
+                <i class="pi pi-chart-bar"></i>
+                Metricas de Impacto
+              </h3>
+
+              <div class="impact-grid">
+                <div class="impact-card">
+                  <i class="pi pi-users"></i>
+                  <div class="impact-value">{{ usuariosAfectados() }}</div>
+                  <div class="impact-label">Usuarios Afectados</div>
+                </div>
+                <div class="impact-card">
+                  <i class="pi pi-server"></i>
+                  <div class="impact-value">{{ activosAfectados() }}</div>
+                  <div class="impact-label">Activos Afectados</div>
+                </div>
+                <div class="impact-card">
+                  <i class="pi pi-clock"></i>
+                  <div class="impact-value">{{ downtimeMinutes() }}</div>
+                  <div class="impact-label">Downtime (min)</div>
+                </div>
+                <div class="impact-card">
+                  <i class="pi pi-refresh"></i>
+                  <div class="impact-value">{{ incidente()!.reopenCount || 0 }}</div>
+                  <div class="impact-label">Reaperturas</div>
+                </div>
+              </div>
+
+              <!-- Lista de activos afectados -->
+              <h3 class="section-title mt-4">
+                <i class="pi pi-server"></i>
+                Activos Afectados
+              </h3>
+
+              @if (incidente()!.affectedAssetIds && incidente()!.affectedAssetIds!.length > 0) {
+                <p-table [value]="incidente()!.affectedAssetIds || []" [paginator]="true" [rows]="5" styleClass="p-datatable-sm p-datatable-striped">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>ID Activo</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-assetId>
+                    <tr class="clickable-row" (click)="navigateToActivo(assetId)">
+                      <td>{{ assetId }}</td>
+                      <td>
+                        <p-button icon="pi pi-eye" [text]="true" [rounded]="true" pTooltip="Ver activo" (onClick)="navigateToActivo(assetId); $event.stopPropagation()" />
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              } @else {
+                <div class="empty-state">
+                  <i class="pi pi-server"></i>
+                  <p>No hay activos afectados registrados</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Tab Content: Historial -->
+        @if (mainTab() === 'historial') {
+          <div class="tab-content">
+            <div class="tab-panel historial-panel">
+              <div class="comments-section">
+                <h3 class="section-title">
+                  <i class="pi pi-comments"></i>
+                  Comentarios ({{ comentarios().length }})
+                </h3>
+
+                <div class="new-comment">
+                  <textarea pInputTextarea [ngModel]="newComment()" (ngModelChange)="newComment.set($event)" placeholder="Escribe un comentario..." rows="3"></textarea>
+                  <p-button label="Agregar Comentario" icon="pi pi-send" [disabled]="!newComment().trim()" (onClick)="addComment()" />
+                </div>
+
+                @if (comentarios().length > 0) {
+                  <div class="comments-list">
+                    @for (comment of comentarios(); track comment.id) {
+                      <div class="comment-item">
+                        <div class="comment-header">
+                          <p-avatar [label]="getInitials(comment.createdByName || 'U')" shape="circle" size="normal" />
+                          <div class="comment-meta">
+                            <span class="comment-author">{{ comment.createdByName || 'Usuario' }}</span>
+                            <span class="comment-date">{{ formatDateTime(comment.createdAt) }}</span>
+                          </div>
+                        </div>
+                        <div class="comment-content">{{ comment.content }}</div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-comments">
+                    <i class="pi pi-comments"></i>
+                    <p>No hay comentarios.</p>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="stats-section">
+          <div class="stat-card" [class]="'severity-' + incidente()!.initialSeverity">
+            <div class="stat-indicator"></div>
+            <div class="stat-content">
+              <span class="stat-label">Severidad</span>
+              <span class="stat-value">{{ severityInfo().label }}</span>
+              <span class="stat-sublabel">Nivel de impacto</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-indicator tiempo"></div>
+            <div class="stat-content">
+              <span class="stat-label">Tiempo de Resolucion</span>
+              <span class="stat-value">{{ formatDuration(tiempoResolucion()) }}</span>
+              <span class="stat-sublabel">Total</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-indicator usuarios"></div>
+            <div class="stat-content">
+              <span class="stat-label">Usuarios Afectados</span>
+              <span class="stat-value">{{ usuariosAfectados() }}</span>
+              <span class="stat-sublabel">Usuarios</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-indicator activos"></div>
+            <div class="stat-content">
+              <span class="stat-label">Activos Afectados</span>
+              <span class="stat-value">{{ activosAfectados() }}</span>
+              <span class="stat-sublabel">Activos</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline-section">
+          <h4 class="section-title">
+            <i class="pi pi-clock"></i>
+            Linea de Tiempo
+          </h4>
+          <div class="timeline-events">
+            <div class="timeline-item">
+              <div class="timeline-dot created"></div>
+              <div class="timeline-content">
+                <span class="timeline-title">Incidente registrado</span>
+                <span class="timeline-date">{{ formatDateTime(incidente()!.createdAt) }}</span>
+              </div>
+            </div>
+
+            @if (incidente()!.detectedAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot detected"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Detectado</span>
+                  <span class="timeline-date">{{ formatDateTime(incidente()!.detectedAt) }}</span>
+                </div>
+              </div>
+            }
+
+            @if (incidente()!.acknowledgedAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot acknowledged"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Reconocido</span>
+                  <span class="timeline-date">{{ formatDateTime(incidente()!.acknowledgedAt) }}</span>
+                </div>
+              </div>
+            }
+
+            @if (incidente()!.resolvedAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot resolved"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Resuelto</span>
+                  <span class="timeline-date">{{ formatDateTime(incidente()!.resolvedAt) }}</span>
+                </div>
+              </div>
+            }
+
+            @if (incidente()!.closedAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot closed"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Cerrado</span>
+                  <span class="timeline-date">{{ formatDateTime(incidente()!.closedAt) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="not-found">
+      <i class="pi pi-exclamation-circle"></i>
+      <h2>Incidente no encontrado</h2>
+      <p>El incidente solicitado no existe.</p>
+      <p-button label="Volver a incidentes" icon="pi pi-arrow-left" (onClick)="goBack()" />
+    </div>
+  }
+</div>

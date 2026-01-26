@@ -1,21 +1,20 @@
-<div class="defectos-container">
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-container">
+  <!-- Descripcion oculta para accesibilidad -->
+  <span id="defectos-table-desc" class="sr-only">Tabla de defectos con opciones de filtrado, ordenamiento y acciones</span>
+
   <!-- Header -->
   <div class="page-header">
-    <h1>Gestión de Defectos</h1>
+    <h1>Gestion de Defectos</h1>
     <p class="page-subtitle">Registra y da seguimiento a defectos y no conformidades</p>
   </div>
 
   <!-- Toolbar -->
   <p-toolbar>
     <ng-template pTemplate="start">
-      <p-iconfield>
-        <p-inputicon styleClass="pi pi-search" />
-        <input type="text" pInputText placeholder="Buscar defectos..." #dtFilter
-               (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
-      </p-iconfield>
-    </ng-template>
-    <ng-template pTemplate="end">
-      <div class="flex gap-2">
+      <div class="flex align-items-center gap-3">
         @if (defectosSeleccionados().length > 0) {
           <p-button
             label="Acciones masivas"
@@ -27,75 +26,103 @@
             styleClass="btn-acciones-masivas"
             (onClick)="abrirAccionesMasivasDrawer()" />
         }
-        <p-button label="Registrar Defecto" icon="pi pi-plus" severity="help" (onClick)="openNewDialog()"></p-button>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input type="text" pInputText
+                 placeholder="Buscar defectos..."
+                 aria-label="Buscar defectos por titulo, descripcion o estado"
+                 style="width: 280px"
+                 #dtFilter
+                 (input)="dt.filterGlobal(dtFilter.value, 'contains')" />
+        </p-iconfield>
       </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Registrar Defecto" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
     </ng-template>
   </p-toolbar>
 
   <!-- Table Card -->
   <p-card styleClass="table-card">
-    <p-table #dt [value]="defectos()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+    <p-table #dt
+             [value]="defectos()"
+             [paginator]="true"
+             [rows]="10"
+             [showCurrentPageReport]="true"
              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} defectos"
              [globalFilterFields]="['id', 'title', 'description', 'eventStatus']"
              styleClass="p-datatable-striped"
-             [(selection)]="defectosSeleccionados"
+             [selection]="defectosSeleccionados()"
              (selectionChange)="onSelectionChange($event)"
-             dataKey="id">
+             dataKey="id"
+             aria-describedby="defectos-table-desc">
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 3rem">
+          <th scope="col" style="width: 3rem">
             <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
           </th>
-          <th pSortableColumn="title">Título <p-sortIcon field="title"></p-sortIcon></th>
-          <th pSortableColumn="description">Descripción <p-sortIcon field="description"></p-sortIcon></th>
-          <th pSortableColumn="initialSeverity">Severidad <p-sortIcon field="initialSeverity"></p-sortIcon></th>
-          <th pSortableColumn="eventStatus">Estado <p-sortIcon field="eventStatus"></p-sortIcon></th>
-          <th pSortableColumn="initialDate">Fecha <p-sortIcon field="initialDate"></p-sortIcon></th>
-          <th style="width: 100px">Acciones</th>
+          <th scope="col" pSortableColumn="title">Titulo <p-sortIcon field="title"></p-sortIcon></th>
+          <th scope="col" pSortableColumn="description">Descripcion <p-sortIcon field="description"></p-sortIcon></th>
+          <th scope="col" pSortableColumn="initialSeverity">Severidad <p-sortIcon field="initialSeverity"></p-sortIcon></th>
+          <th scope="col" pSortableColumn="eventStatus">Estado <p-sortIcon field="eventStatus"></p-sortIcon></th>
+          <th scope="col" pSortableColumn="initialDate">Fecha <p-sortIcon field="initialDate"></p-sortIcon></th>
+          <th scope="col" style="width: 100px">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-defecto>
-        <tr [class.row-editing]="estaEditando(defecto.id)">
-          <td>
+        <tr [class.row-editing]="estaEditando(defecto.id)"
+            class="cursor-pointer hover:surface-hover"
+            tabindex="0"
+            (click)="!estaEditando(defecto.id) && navigateToDetail(defecto)"
+            (keydown.enter)="!estaEditando(defecto.id) && navigateToDetail(defecto)">
+          <td (click)="$event.stopPropagation()">
             <p-tableCheckbox [value]="defecto"></p-tableCheckbox>
           </td>
-          <!-- Título -->
+          <!-- Titulo -->
           <td class="font-medium">
             @if (estaEditando(defecto.id)) {
-              <input pInputText [ngModel]="getValorEdicion('title')"
+              <input pInputText
+                     [ngModel]="getValorEdicion('title')"
                      (ngModelChange)="setValorEdicion('title', $event)"
-                     class="w-full" />
+                     [attr.aria-label]="'Editar titulo del defecto ' + defecto.title"
+                     class="w-full"
+                     (click)="$event.stopPropagation()" />
             } @else {
               {{ defecto.title }}
             }
           </td>
-          <!-- Descripción -->
+          <!-- Descripcion -->
           <td>
             @if (estaEditando(defecto.id)) {
-              <input pInputText [ngModel]="getValorEdicion('description')"
+              <input pInputText
+                     [ngModel]="getValorEdicion('description')"
                      (ngModelChange)="setValorEdicion('description', $event)"
-                     class="w-full" />
+                     [attr.aria-label]="'Editar descripcion del defecto ' + defecto.title"
+                     class="w-full"
+                     (click)="$event.stopPropagation()" />
             } @else {
               <span class="text-color-secondary">{{ defecto.description | slice:0:50 }}{{ defecto.description?.length > 50 ? '...' : '' }}</span>
             }
           </td>
           <!-- Severidad -->
-          <td>
+          <td (click)="$event.stopPropagation()">
             @if (estaEditando(defecto.id)) {
               <p-select [options]="severityOptions"
                         [ngModel]="getValorEdicion('initialSeverity')"
                         (ngModelChange)="setValorEdicion('initialSeverity', $event)"
+                        aria-label="Seleccionar severidad"
                         [style]="{width: '120px'}" />
             } @else {
               <p-tag [value]="getSeverityLabel(defecto.initialSeverity)" [severity]="getSeveritySeverity(defecto.initialSeverity)"></p-tag>
             }
           </td>
           <!-- Estado -->
-          <td>
+          <td (click)="$event.stopPropagation()">
             @if (estaEditando(defecto.id)) {
               <p-select [options]="statusOptions"
                         [ngModel]="getValorEdicion('eventStatus')"
                         (ngModelChange)="setValorEdicion('eventStatus', $event)"
+                        aria-label="Seleccionar estado"
                         [style]="{width: '100%'}" />
             } @else {
               <p-tag [value]="getEventStatusLabel(defecto.eventStatus)" [severity]="getEventStatusSeverity(defecto.eventStatus)"></p-tag>
@@ -106,7 +133,7 @@
             {{ formatDate(defecto.initialDate) }}
           </td>
           <!-- Acciones -->
-          <td class="actions-cell">
+          <td class="actions-cell" (click)="$event.stopPropagation()">
             @if (estaEditando(defecto.id)) {
               <div class="flex gap-1">
                 <p-button icon="pi pi-check" severity="success" [text]="true" size="small"
@@ -117,7 +144,11 @@
             } @else {
               <div class="flex justify-content-center">
                 <p-menu #menuDefecto [model]="getMenuItemsDefecto(defecto)" [popup]="true" appendTo="body"></p-menu>
-                <p-button icon="pi pi-ellipsis-v" [text]="true" size="small"
+                <p-button icon="pi pi-ellipsis-v"
+                          [text]="true"
+                          size="small"
+                          aria-haspopup="menu"
+                          pTooltip="Opciones"
                           (onClick)="menuDefecto.toggle($event)" />
               </div>
             }
@@ -144,7 +175,7 @@
           </td>
           <td>
             <div class="flex gap-1">
-              <p-tag [value]="defectosCriticos().toString()" severity="danger" styleClass="text-xs" pTooltip="Críticos" />
+              <p-tag [value]="defectosCriticos().toString()" severity="danger" styleClass="text-xs" pTooltip="Criticos" />
               <p-tag [value]="defectosAltos().toString()" severity="warn" styleClass="text-xs" pTooltip="Altos" />
             </div>
           </td>
@@ -166,33 +197,49 @@
 <p-dialog header="Registrar Defecto" [modal]="true" [(visible)]="showDialog" [style]="{width: '550px'}">
   <div class="flex flex-column gap-4">
     <div class="flex flex-column gap-2">
-      <label for="title" class="font-medium">Título *</label>
-      <input pInputText id="title" [(ngModel)]="nuevoDefecto().title" placeholder="Título del defecto" />
+      <label for="title" class="font-medium">Titulo *</label>
+      <input pInputText id="title"
+             [ngModel]="nuevoDefecto().title"
+             (ngModelChange)="updateNuevoDefectoField('title', $event)"
+             placeholder="Titulo del defecto" />
     </div>
     @if (subTypeOptions().length > 0) {
       <div class="flex flex-column gap-2">
         <label for="subtype" class="font-medium">Tipo de Defecto</label>
-        <p-select id="subtype" [options]="subTypeOptions()" [(ngModel)]="nuevoDefecto().eventSubTypeId"
-                    placeholder="Seleccionar tipo" [style]="{width: '100%'}"></p-select>
+        <p-select id="subtype"
+                  [options]="subTypeOptions()"
+                  [ngModel]="nuevoDefecto().eventSubTypeId"
+                  (ngModelChange)="updateNuevoDefectoField('eventSubTypeId', $event)"
+                  placeholder="Seleccionar tipo"
+                  [style]="{width: '100%'}"></p-select>
       </div>
     }
     <div class="flex flex-column gap-2">
-      <label for="descripcion" class="font-medium">Descripción del Defecto</label>
-      <textarea pTextarea id="descripcion" [(ngModel)]="nuevoDefecto().description" rows="3"
+      <label for="descripcion" class="font-medium">Descripcion del Defecto</label>
+      <textarea pTextarea id="descripcion"
+                [ngModel]="nuevoDefecto().description"
+                (ngModelChange)="updateNuevoDefectoField('description', $event)"
+                rows="3"
                 placeholder="Describe el defecto en detalle"></textarea>
     </div>
     <div class="grid">
-      <div class="col-6">
+      <div class="col-12 md:col-6">
         <div class="flex flex-column gap-2">
-          <label class="font-medium">Severidad</label>
-          <p-select [options]="severityOptions" [(ngModel)]="nuevoDefecto().initialSeverity"
+          <label for="severidad" class="font-medium">Severidad</label>
+          <p-select id="severidad"
+                    [options]="severityOptions"
+                    [ngModel]="nuevoDefecto().initialSeverity"
+                    (ngModelChange)="updateNuevoDefectoField('initialSeverity', $event)"
                     [style]="{width: '100%'}"></p-select>
         </div>
       </div>
-      <div class="col-6">
+      <div class="col-12 md:col-6">
         <div class="flex flex-column gap-2">
-          <label class="font-medium">Estado</label>
-          <p-select [options]="statusOptions" [(ngModel)]="nuevoDefecto().eventStatus"
+          <label for="estado" class="font-medium">Estado</label>
+          <p-select id="estado"
+                    [options]="statusOptions"
+                    [ngModel]="nuevoDefecto().eventStatus"
+                    (ngModelChange)="updateNuevoDefectoField('eventStatus', $event)"
                     [style]="{width: '100%'}"></p-select>
         </div>
       </div>
@@ -200,7 +247,7 @@
   </div>
   <ng-template pTemplate="footer">
     <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showDialog.set(false)"></p-button>
-    <p-button label="Registrar" icon="pi pi-check" severity="help" (onClick)="saveDefecto()"></p-button>
+    <p-button label="Registrar" icon="pi pi-check" severity="info" (onClick)="saveDefecto()"></p-button>
   </ng-template>
 </p-dialog>
 
@@ -211,15 +258,21 @@
 
     <!-- Severidad -->
     <div class="flex flex-column gap-2">
-      <label class="font-medium">Severidad</label>
-      <p-select [options]="severityOptions" placeholder="Sin cambios" [showClear]="true"
+      <label for="masiva-severidad" class="font-medium">Severidad</label>
+      <p-select id="masiva-severidad"
+                [options]="severityOptions"
+                placeholder="Sin cambios"
+                [showClear]="true"
                 [style]="{width: '100%'}" />
     </div>
 
     <!-- Estado -->
     <div class="flex flex-column gap-2">
-      <label class="font-medium">Estado</label>
-      <p-select [options]="statusOptions" placeholder="Sin cambios" [showClear]="true"
+      <label for="masiva-estado" class="font-medium">Estado</label>
+      <p-select id="masiva-estado"
+                [options]="statusOptions"
+                placeholder="Sin cambios"
+                [showClear]="true"
                 [style]="{width: '100%'}" />
     </div>
   </div>
@@ -233,6 +286,3 @@
     </div>
   </ng-template>
 </p-drawer>
-
-<p-confirmDialog></p-confirmDialog>
-<p-toast></p-toast>

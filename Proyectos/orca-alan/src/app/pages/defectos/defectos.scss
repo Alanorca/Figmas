@@ -1,81 +1,23 @@
-.defectos-container {
-  padding: 1.5rem;
-  max-width: 100%;
+// ============================================================================
+// DEFECTOS - Estilos de pagina
+// ============================================================================
+@use '../../../styles/page-common' as *;
+
+// Input de busqueda
+.search-input {
+  width: 100%;
+  max-width: 280px;
 }
 
-// Header
-.page-header {
-  margin-bottom: 1.5rem;
-
-  h1 {
-    margin: 0;
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: var(--text-color);
-  }
-
-  .page-subtitle {
-    margin: 0.25rem 0 0 0;
-    font-size: 0.9rem;
-    color: var(--text-color-secondary);
-  }
-}
-
-// Quitar separación entre toolbar y tabla
-:host ::ng-deep .p-toolbar {
-  margin-bottom: 0 !important;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-:host ::ng-deep .table-card {
-  .p-card {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-  }
-
-  .p-card-body {
-    padding: 0;
-  }
-
-  .p-card-content {
-    padding: 0;
-  }
-}
-
-.capitalize {
-  text-transform: capitalize;
-}
-
-// Botón de acciones masivas
-:host ::ng-deep .btn-acciones-masivas {
-  border-radius: 6px !important;
-
-  .p-button {
-    border-radius: 6px !important;
-  }
-}
-
-// Botón de editar
-:host ::ng-deep .btn-edit {
-  border-radius: 6px !important;
-
-  .p-button {
-    border-radius: 6px !important;
-  }
-}
-
-// Fila en modo edición
-.row-editing {
-  background: var(--primary-50) !important;
-
-  td {
-    padding: 0.5rem !important;
-  }
-}
-
-// Celda de acciones
-.actions-cell {
+// Texto oculto para lectores de pantalla
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
-  width: 100px;
+  border: 0;
 }

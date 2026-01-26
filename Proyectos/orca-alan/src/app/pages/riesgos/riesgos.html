@@ -1,4 +1,4 @@
-<div class="riesgos-container">
+<div class="page-container">
   <!-- Header -->
   <div class="page-header">
     <h1>Gestión de Riesgos</h1>
@@ -8,14 +8,7 @@
   <!-- Toolbar -->
   <p-toolbar>
     <ng-template pTemplate="start">
-      <p-iconfield>
-        <p-inputicon styleClass="pi pi-search" />
-        <input type="text" pInputText placeholder="Buscar riesgos..." #dtFilter
-               (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
-      </p-iconfield>
-    </ng-template>
-    <ng-template pTemplate="end">
-      <div class="flex gap-2">
+      <div class="flex align-items-center gap-3">
         @if (riesgosSeleccionados().length > 0) {
           <p-button
             label="Acciones masivas"
@@ -27,8 +20,19 @@
             styleClass="btn-acciones-masivas"
             (onClick)="abrirAccionesMasivasDrawer()" />
         }
-        <p-button label="Nuevo Riesgo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input type="text" pInputText
+                 placeholder="Buscar riesgos..."
+                 aria-label="Buscar riesgos por titulo, descripcion o estado"
+                 style="width: 280px"
+                 #dtFilter
+                 (input)="dt.filterGlobal(dtFilter.value, 'contains')" />
+        </p-iconfield>
       </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Nuevo Riesgo" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
     </ng-template>
   </p-toolbar>
 
@@ -57,8 +61,10 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-riesgo>
-        <tr [class.row-editing]="estaEditando(riesgo.id)">
-          <td>
+        <tr [class.row-editing]="estaEditando(riesgo.id)"
+            class="cursor-pointer hover:surface-hover"
+            (click)="!estaEditando(riesgo.id) && navigateToDetail(riesgo)">
+          <td (click)="$event.stopPropagation()">
             <p-tableCheckbox [value]="riesgo"></p-tableCheckbox>
           </td>
           <!-- Título -->
@@ -66,7 +72,7 @@
             @if (estaEditando(riesgo.id)) {
               <input pInputText [ngModel]="getValorEdicion('title')"
                      (ngModelChange)="setValorEdicion('title', $event)"
-                     class="w-full" />
+                     class="w-full" (click)="$event.stopPropagation()" />
             } @else {
               {{ riesgo.title }}
             }
@@ -76,13 +82,13 @@
             @if (estaEditando(riesgo.id)) {
               <input pInputText [ngModel]="getValorEdicion('description')"
                      (ngModelChange)="setValorEdicion('description', $event)"
-                     class="w-full" />
+                     class="w-full" (click)="$event.stopPropagation()" />
             } @else {
               <span class="text-color-secondary">{{ riesgo.description | slice:0:50 }}{{ riesgo.description?.length > 50 ? '...' : '' }}</span>
             }
           </td>
           <!-- Probabilidad -->
-          <td>
+          <td (click)="$event.stopPropagation()">
             @if (estaEditando(riesgo.id)) {
               <p-select [options]="probabilityOptions"
                         [ngModel]="getValorEdicion('probabilityLevel')"
@@ -98,7 +104,7 @@
             }
           </td>
           <!-- Impacto -->
-          <td>
+          <td (click)="$event.stopPropagation()">
             @if (estaEditando(riesgo.id)) {
               <p-select [options]="impactOptions"
                         [ngModel]="getValorEdicion('impactLevel')"
@@ -119,7 +125,7 @@
                    [severity]="getNivelSeverity(getNivelRiesgo(riesgo.probabilityLevel, riesgo.impactLevel))"></p-tag>
           </td>
           <!-- Estado -->
-          <td>
+          <td (click)="$event.stopPropagation()">
             @if (estaEditando(riesgo.id)) {
               <p-select [options]="statusOptions"
                         [ngModel]="getValorEdicion('eventStatus')"
@@ -134,7 +140,7 @@
             {{ formatDate(riesgo.initialDate) }}
           </td>
           <!-- Acciones -->
-          <td class="actions-cell">
+          <td class="actions-cell" (click)="$event.stopPropagation()">
             @if (estaEditando(riesgo.id)) {
               <div class="flex gap-1">
                 <p-button icon="pi pi-check" severity="success" [text]="true" size="small"

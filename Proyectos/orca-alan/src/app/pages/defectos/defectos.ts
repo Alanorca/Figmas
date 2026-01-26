@@ -339,4 +339,10 @@ export class DefectosComponent implements OnInit {
       year: 'numeric'
     });
   }
+
+  // ============ Actualizacion de nuevoDefecto ============
+
+  updateNuevoDefectoField(field: string, value: any): void {
+    this.nuevoDefecto.update(d => ({ ...d, [field]: value }));
+  }
 }

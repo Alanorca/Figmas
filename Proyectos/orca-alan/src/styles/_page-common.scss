@@ -1,7 +1,7 @@
 // ============================================================================
 // ORCA DESIGN SYSTEM - ESTILOS COMUNES DE PÁGINA
 // ============================================================================
-// Importar en cada página: @use 'styles/page-common' as *;
+// Importar en cada página: @use '../../../styles/page-common' as *;
 // ============================================================================
 
 // ----------------------------------------------------------------------------
@@ -36,7 +36,19 @@
 }
 
 // ----------------------------------------------------------------------------
-// TOOLBAR PEGADO A TABLA
+// TOOLBAR DE LISTADO
+// ----------------------------------------------------------------------------
+// PATRON OBLIGATORIO:
+//   - START (izquierda):
+//       1. Boton "Acciones masivas" (solo si hay seleccion)
+//          - severity="success"
+//          - [outlined]="true"
+//          - icon="pi pi-check-square"
+//          - [badge]="count.toString()"
+//          - badgeSeverity="contrast"
+//       2. Input de busqueda (width: 280px)
+//   - END (derecha):
+//       - Boton primario para crear (sin severity = primary por defecto)
 // ----------------------------------------------------------------------------
 
 :host ::ng-deep .p-toolbar {
@@ -75,6 +87,36 @@
 }
 
 // ----------------------------------------------------------------------------
+// TABLA - FILAS CLICKEABLES CON HOVER
+// ----------------------------------------------------------------------------
+// Colores que funcionan bien en light mode y dark mode
+// ----------------------------------------------------------------------------
+
+:host ::ng-deep .p-datatable {
+  .p-datatable-tbody > tr {
+    // Hover para filas clickeables
+    &.cursor-pointer:hover {
+      background: var(--highlight-bg) !important;
+
+      td {
+        background: transparent !important;
+      }
+    }
+
+    // Hover alternativo mas sutil
+    &.hover\:surface-hover:hover {
+      background: color-mix(in srgb, var(--primary-color) 8%, transparent) !important;
+    }
+  }
+
+  // Fila seleccionada
+  .p-datatable-tbody > tr.p-highlight {
+    background: var(--highlight-bg);
+    color: var(--highlight-text-color);
+  }
+}
+
+// ----------------------------------------------------------------------------
 // BOTONES COMUNES
 // ----------------------------------------------------------------------------
 
@@ -99,7 +141,7 @@
 // ----------------------------------------------------------------------------
 
 .row-editing {
-  background: var(--primary-50) !important;
+  background: var(--highlight-bg) !important;
 
   td {
     padding: 0.5rem !important;
@@ -122,4 +164,23 @@
 // ID en monospace
 .font-mono {
   font-family: 'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace;
+}
+
+// Input de busqueda responsive
+.search-input {
+  width: 100%;
+  max-width: 280px;
+}
+
+// Texto oculto para lectores de pantalla
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

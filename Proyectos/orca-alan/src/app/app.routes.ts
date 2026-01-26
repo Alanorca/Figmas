@@ -41,7 +41,7 @@ export const routes: Routes = [
   },
   {
     path: 'riesgos/:id',
-    loadComponent: () => import('./pages/eventos-detalle/eventos-detalle').then(m => m.EventosDetalleComponent)
+    loadComponent: () => import('./pages/riesgo-detalle/riesgo-detalle').then(m => m.RiesgoDetalleComponent)
   },
   {
     path: 'riesgos/:id/editar',
@@ -58,7 +58,7 @@ export const routes: Routes = [
   },
   {
     path: 'incidentes/:id',
-    loadComponent: () => import('./pages/eventos-detalle/eventos-detalle').then(m => m.EventosDetalleComponent)
+    loadComponent: () => import('./pages/incidente-detalle/incidente-detalle').then(m => m.IncidenteDetalleComponent)
   },
   {
     path: 'incidentes/:id/editar',
@@ -75,7 +75,7 @@ export const routes: Routes = [
   },
   {
     path: 'defectos/:id',
-    loadComponent: () => import('./pages/eventos-detalle/eventos-detalle').then(m => m.EventosDetalleComponent)
+    loadComponent: () => import('./pages/defecto-detalle/defecto-detalle').then(m => m.DefectoDetalleComponent)
   },
   {
     path: 'defectos/:id/editar',

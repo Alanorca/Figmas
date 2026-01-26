@@ -1,4 +1,4 @@
-<div class="incidentes-container">
+<div class="page-container">
   <!-- Header -->
   <div class="page-header">
     <h1>Gestión de Incidentes</h1>
@@ -8,14 +8,7 @@
   <!-- Toolbar -->
   <p-toolbar>
     <ng-template pTemplate="start">
-      <p-iconfield>
-        <p-inputicon styleClass="pi pi-search" />
-        <input type="text" pInputText placeholder="Buscar incidentes..." #dtFilter
-               (input)="dt.filterGlobal(dtFilter.value, 'contains')" style="width: 280px" />
-      </p-iconfield>
-    </ng-template>
-    <ng-template pTemplate="end">
-      <div class="flex gap-2">
+      <div class="flex align-items-center gap-3">
         @if (incidentesSeleccionados().length > 0) {
           <p-button
             label="Acciones masivas"
@@ -27,8 +20,19 @@
             styleClass="btn-acciones-masivas"
             (onClick)="abrirAccionesMasivasDrawer()" />
         }
-        <p-button label="Reportar Incidente" icon="pi pi-plus" severity="danger" (onClick)="openNewDialog()"></p-button>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
+          <input type="text" pInputText
+                 placeholder="Buscar incidentes..."
+                 aria-label="Buscar incidentes por titulo, descripcion o estado"
+                 style="width: 280px"
+                 #dtFilter
+                 (input)="dt.filterGlobal(dtFilter.value, 'contains')" />
+        </p-iconfield>
       </div>
+    </ng-template>
+    <ng-template pTemplate="end">
+      <p-button label="Reportar Incidente" icon="pi pi-plus" (onClick)="openNewDialog()"></p-button>
     </ng-template>
   </p-toolbar>
 
@@ -55,8 +59,10 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-incidente>
-        <tr [class.row-editing]="estaEditando(incidente.id)">
-          <td>
+        <tr [class.row-editing]="estaEditando(incidente.id)"
+            class="cursor-pointer hover:surface-hover"
+            (click)="!estaEditando(incidente.id) && navigateToDetail(incidente)">
+          <td (click)="$event.stopPropagation()">
             <p-tableCheckbox [value]="incidente"></p-tableCheckbox>
           </td>
           <!-- Título -->
@@ -64,7 +70,7 @@
             @if (estaEditando(incidente.id)) {
               <input pInputText [ngModel]="getValorEdicion('title')"
                      (ngModelChange)="setValorEdicion('title', $event)"
-                     class="w-full" />
+                     class="w-full" (click)="$event.stopPropagation()" />
             } @else {
               {{ incidente.title }}
             }
@@ -74,13 +80,13 @@
             @if (estaEditando(incidente.id)) {
               <input pInputText [ngModel]="getValorEdicion('description')"
                      (ngModelChange)="setValorEdicion('description', $event)"
-                     class="w-full" />
+                     class="w-full" (click)="$event.stopPropagation()" />
             } @else {
               <span class="text-color-secondary">{{ incidente.description | slice:0:50 }}{{ incidente.description?.length > 50 ? '...' : '' }}</span>
             }
           </td>
           <!-- Severidad -->
-          <td>
+          <td (click)="$event.stopPropagation()">
             @if (estaEditando(incidente.id)) {
               <p-select [options]="severityOptions"
                         [ngModel]="getValorEdicion('initialSeverity')"
@@ -91,7 +97,7 @@
             }
           </td>
           <!-- Estado -->
-          <td>
+          <td (click)="$event.stopPropagation()">
             @if (estaEditando(incidente.id)) {
               <p-select [options]="statusOptions"
                         [ngModel]="getValorEdicion('eventStatus')"
@@ -106,7 +112,7 @@
             {{ formatDate(incidente.initialDate) }}
           </td>
           <!-- Acciones -->
-          <td class="actions-cell">
+          <td class="actions-cell" (click)="$event.stopPropagation()">
             @if (estaEditando(incidente.id)) {
               <div class="flex gap-1">
                 <p-button icon="pi pi-check" severity="success" [text]="true" size="small"

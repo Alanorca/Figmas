@@ -1,0 +1,961 @@
+// =============================================
+// RIESGO DETALLE - Styles
+// =============================================
+
+.riesgo-detalle-page {
+  padding: 1.5rem 2rem;
+  background: var(--surface-ground);
+  min-height: 100vh;
+}
+
+// =============================================
+// LOADING STATE
+// =============================================
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+  color: var(--text-color-secondary);
+}
+
+// =============================================
+// PAGE HEADER
+// =============================================
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  .header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+
+    .back-btn {
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-color);
+
+      &:hover {
+        background: var(--surface-hover);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+      }
+    }
+
+    .page-title-section {
+      .page-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        color: var(--text-color);
+      }
+
+      .page-subtitle {
+        font-size: 0.875rem;
+        color: var(--text-color-secondary);
+        margin-top: 0.25rem;
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .main-nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+  }
+}
+
+// =============================================
+// MAIN LAYOUT
+// =============================================
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.5rem;
+  align-items: start;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.main-content {
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  overflow: hidden;
+}
+
+// =============================================
+// RIESGO HEADER ROW
+// =============================================
+.riesgo-header-row {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--surface-border);
+  align-items: stretch;
+
+  @media (max-width: 992px) {
+    flex-direction: column;
+  }
+
+  .riesgo-header {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    .riesgo-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+
+      .riesgo-icon {
+        font-size: 1.5rem;
+        color: #f59e0b;
+      }
+
+      .riesgo-titulo {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+        color: var(--text-color);
+      }
+
+      .riesgo-codigo {
+        font-size: 0.875rem;
+        color: var(--text-color-secondary);
+        background: var(--surface-100);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+      }
+    }
+
+    .riesgo-descripcion {
+      font-size: 0.9rem;
+      color: var(--text-color-secondary);
+      margin: 0;
+      line-height: 1.6;
+    }
+  }
+
+  .status-card {
+    flex: 1;
+    max-width: 50%;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    border: 2px solid;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    @media (max-width: 992px) {
+      max-width: 100%;
+    }
+
+    &.open {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    &.in_progress {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.03) 100%);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    &.resolved {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.03) 100%);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    &.closed, &.draft, &.cancelled {
+      background: linear-gradient(135deg, rgba(107, 114, 128, 0.08) 0%, rgba(107, 114, 128, 0.03) 100%);
+      border-color: rgba(107, 114, 128, 0.3);
+    }
+
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .status-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        color: var(--text-color);
+      }
+    }
+
+    .status-details {
+      display: flex;
+      gap: 1.5rem;
+
+      .status-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
+        .label {
+          font-size: 0.75rem;
+          color: var(--text-color-secondary);
+        }
+
+        .risk-badge {
+          color: #fff;
+          padding: 0.25rem 0.75rem;
+          border-radius: 4px;
+          font-size: 0.8rem;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+// =============================================
+// SECONDARY TABS
+// =============================================
+.secondary-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--surface-border);
+  overflow-x: auto;
+
+  .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+
+    &:hover {
+      color: var(--primary-color);
+      background: var(--surface-hover);
+    }
+
+    &.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+      font-weight: 500;
+    }
+  }
+}
+
+// =============================================
+// TAB CONTENT
+// =============================================
+.tab-content {
+  padding: 1.5rem;
+}
+
+.tab-panel {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: var(--text-color);
+
+  i {
+    color: var(--primary-color);
+  }
+
+  &.mt-4 {
+    margin-top: 2rem;
+  }
+}
+
+// =============================================
+// INFO PANEL
+// =============================================
+.info-panel {
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+
+    .info-item {
+      &.full-width {
+        grid-column: span 2;
+        @media (max-width: 768px) {
+          grid-column: span 1;
+        }
+      }
+
+      .info-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-color-secondary);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+      }
+
+      .info-value {
+        font-size: 0.9rem;
+        color: var(--text-color);
+
+        &.with-avatar {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        &.description-box {
+          background: var(--surface-ground);
+          padding: 1rem;
+          border-radius: 8px;
+          line-height: 1.6;
+
+          &.solution {
+            background: rgba(34, 197, 94, 0.05);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+          }
+        }
+      }
+    }
+  }
+}
+
+// =============================================
+// ANALISIS PANEL
+// =============================================
+.analisis-panel {
+  .risk-matrix-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+
+    .risk-card {
+      background: var(--surface-ground);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      min-width: 180px;
+      border: 2px solid var(--surface-border);
+
+      h4 {
+        margin: 0 0 0.75rem;
+        color: var(--text-color-secondary);
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+
+      .risk-score {
+        font-size: 3rem;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .risk-level {
+        display: inline-block;
+        color: #fff;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: 0.75rem;
+      }
+
+      .risk-formula {
+        margin-top: 0.75rem;
+        font-size: 0.75rem;
+        color: var(--text-color-secondary);
+
+        .operator {
+          margin: 0 0.25rem;
+        }
+      }
+    }
+
+    .risk-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+
+      .arrow-line {
+        width: 60px;
+        height: 2px;
+        background: var(--surface-border);
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          right: -4px;
+          top: -4px;
+          border: 5px solid transparent;
+          border-left-color: var(--surface-border);
+        }
+      }
+
+      .reduction-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: #22c55e;
+        color: #fff;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .controls-count {
+        font-size: 0.7rem;
+        color: var(--text-color-secondary);
+      }
+    }
+  }
+
+  .clickable-row {
+    cursor: pointer;
+    &:hover {
+      background: var(--surface-hover) !important;
+    }
+  }
+
+  .empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-color-secondary);
+    background: var(--surface-ground);
+    border-radius: 8px;
+
+    i {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+  }
+}
+
+// =============================================
+// PROPERTIES PANEL
+// =============================================
+.properties-panel {
+  .properties-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+
+    .property-item {
+      background: var(--surface-ground);
+      padding: 1rem;
+      border-radius: 8px;
+
+      .property-label {
+        display: block;
+        font-size: 0.75rem;
+        color: var(--text-color-secondary);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+      }
+
+      .property-value {
+        font-size: 0.9rem;
+        color: var(--text-color);
+        font-weight: 500;
+      }
+    }
+  }
+
+  .empty-properties {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-color-secondary);
+
+    i {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+  }
+}
+
+// =============================================
+// CONTROLES PANEL
+// =============================================
+.controles-panel {
+  .empty-state-large {
+    padding: 4rem 2rem;
+    text-align: center;
+    background: var(--surface-ground);
+    border-radius: 12px;
+    margin-bottom: 2rem;
+
+    i {
+      font-size: 4rem;
+      color: var(--text-color-secondary);
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      margin: 0 0 0.5rem;
+      color: var(--text-color);
+    }
+
+    p {
+      color: var(--text-color-secondary);
+      margin-bottom: 1.5rem;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  .effectiveness-summary {
+    background: var(--surface-ground);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+
+    h4 {
+      margin: 0 0 1rem;
+      color: var(--text-color);
+    }
+
+    .effectiveness-bar {
+      height: 8px;
+      background: var(--surface-border);
+      border-radius: 4px;
+      overflow: hidden;
+
+      .bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #22c55e, #10b981);
+        border-radius: 4px;
+        transition: width 0.5s ease;
+      }
+    }
+
+    .effectiveness-details {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text-color-secondary);
+    }
+  }
+}
+
+// =============================================
+// COSTOS PANEL
+// =============================================
+.costos-panel {
+  .costs-summary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+
+    .cost-total {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+      }
+
+      .value {
+        color: #fff;
+        font-size: 2.5rem;
+        font-weight: 700;
+      }
+    }
+  }
+
+  .costs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+
+    .cost-card {
+      background: var(--surface-ground);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+
+      i {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        margin-bottom: 0.75rem;
+      }
+
+      .cost-label {
+        font-size: 0.8rem;
+        color: var(--text-color-secondary);
+        margin-bottom: 0.25rem;
+      }
+
+      .cost-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      .cost-desc {
+        font-size: 0.7rem;
+        color: var(--text-color-secondary);
+        margin-top: 0.5rem;
+      }
+    }
+  }
+
+  h4.mt-4 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+  }
+}
+
+// =============================================
+// HISTORIAL PANEL
+// =============================================
+.historial-panel {
+  .comments-section {
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 1.5rem;
+      color: var(--text-color);
+
+      i {
+        color: var(--primary-color);
+      }
+    }
+
+    .new-comment {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+
+      textarea {
+        width: 100%;
+        resize: vertical;
+      }
+
+      p-button {
+        align-self: flex-end;
+      }
+    }
+
+    .comments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .comment-item {
+        background: var(--surface-ground);
+        border-radius: 8px;
+        padding: 1rem;
+
+        .comment-header {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+
+          .comment-meta {
+            display: flex;
+            flex-direction: column;
+
+            .comment-author {
+              font-weight: 500;
+              color: var(--text-color);
+            }
+
+            .comment-date {
+              font-size: 0.75rem;
+              color: var(--text-color-secondary);
+            }
+          }
+        }
+
+        .comment-content {
+          color: var(--text-color);
+          line-height: 1.6;
+          padding-left: 2.75rem;
+        }
+      }
+    }
+
+    .empty-comments {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-color-secondary);
+      background: var(--surface-ground);
+      border-radius: 8px;
+
+      i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+    }
+  }
+}
+
+// =============================================
+// SIDEBAR
+// =============================================
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  @media (max-width: 1200px) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stat-card {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 100px;
+
+    &.risk-level-card {
+      grid-column: span 2;
+      flex-direction: row;
+      align-items: center;
+      min-height: auto;
+
+      .risk-gauge {
+        flex-shrink: 0;
+      }
+    }
+
+    .stat-indicator {
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+
+      &.probability { background: var(--blue-500); }
+      &.impact { background: var(--red-500); }
+      &.controles { background: var(--green-500); }
+      &.activos { background: var(--cyan-500); }
+    }
+
+    .stat-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: center;
+      text-align: center;
+
+      .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-color-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        margin-bottom: 0.25rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-color);
+        line-height: 1.2;
+      }
+
+      .stat-sublabel {
+        font-size: 0.7rem;
+        color: var(--text-color-secondary);
+        margin-top: 0.125rem;
+      }
+    }
+  }
+}
+
+.timeline-section {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+    color: var(--text-color);
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  .timeline-events {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0.5rem;
+
+    .timeline-item {
+      display: flex;
+      gap: 1rem;
+      position: relative;
+      padding-bottom: 1.25rem;
+
+      &:last-child {
+        padding-bottom: 0;
+        &::before { display: none; }
+      }
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 14px;
+        bottom: -12px;
+        width: 2px;
+        background: var(--surface-border);
+      }
+
+      .timeline-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 2px;
+
+        &.created { background: #3b82f6; }
+        &.identified { background: #f59e0b; }
+        &.updated { background: #8b5cf6; }
+        &.mitigated { background: #22c55e; }
+        &.closed { background: #6b7280; }
+      }
+
+      .timeline-content {
+        display: flex;
+        flex-direction: column;
+
+        .timeline-title {
+          font-size: 0.85rem;
+          font-weight: 500;
+          color: var(--text-color);
+        }
+
+        .timeline-date {
+          font-size: 0.75rem;
+          color: var(--text-color-secondary);
+        }
+      }
+    }
+  }
+}
+
+// =============================================
+// NOT FOUND
+// =============================================
+.not-found {
+  text-align: center;
+  padding: 4rem 2rem;
+
+  i {
+    font-size: 4rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    margin: 0 0 0.5rem;
+    color: var(--text-color);
+  }
+
+  p {
+    color: var(--text-color-secondary);
+    margin-bottom: 1.5rem;
+  }
+}

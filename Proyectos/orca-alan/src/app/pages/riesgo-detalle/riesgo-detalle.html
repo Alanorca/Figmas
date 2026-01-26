@@ -1,0 +1,598 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="riesgo-detalle-page">
+  @if (loading()) {
+    <div class="loading-container">
+      <p-progressSpinner strokeWidth="3" />
+      <p>Cargando riesgo...</p>
+    </div>
+  } @else if (riesgo()) {
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <button class="back-btn" (click)="goBack()" pTooltip="Volver a riesgos">
+          <i class="pi pi-arrow-left"></i>
+        </button>
+        <div class="page-title-section">
+          <h1 class="page-title">Detalle del Riesgo</h1>
+          <span class="page-subtitle">Analisis de riesgo, controles asociados y costos</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="main-nav-tabs">
+          <p-button
+            label="Informacion General"
+            icon="pi pi-info-circle"
+            [outlined]="mainTab() !== 'general'"
+            [severity]="mainTab() === 'general' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('general')"
+          />
+          <p-button
+            label="Controles"
+            icon="pi pi-shield"
+            [outlined]="mainTab() !== 'controles'"
+            [severity]="mainTab() === 'controles' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('controles')"
+          />
+          <p-button
+            label="Costos"
+            icon="pi pi-dollar"
+            [outlined]="mainTab() !== 'costos'"
+            [severity]="mainTab() === 'costos' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('costos')"
+          />
+          <p-button
+            label="Historial"
+            icon="pi pi-history"
+            [outlined]="mainTab() !== 'historial'"
+            [severity]="mainTab() === 'historial' ? 'primary' : 'secondary'"
+            (onClick)="mainTab.set('historial')"
+          />
+        </div>
+
+        <p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [text]="true"
+          [rounded]="true"
+          (onClick)="showMenu(menu, $event)"
+        />
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- Layout Principal -->
+    <div class="main-layout">
+      <!-- Contenido Principal -->
+      <div class="main-content">
+        <!-- Header del Riesgo -->
+        <div class="riesgo-header-row">
+          <div class="riesgo-header">
+            <div class="riesgo-title-row">
+              <i class="pi pi-exclamation-triangle riesgo-icon"></i>
+              <h2 class="riesgo-titulo">{{ riesgo()!.title }}</h2>
+              <span class="riesgo-codigo">RSK-{{ riesgo()!.id.slice(-6).toUpperCase() }}</span>
+            </div>
+            <p class="riesgo-descripcion">{{ riesgo()!.description }}</p>
+          </div>
+
+          <!-- Status Card con nivel de riesgo -->
+          <div class="status-card" [class]="riesgo()!.eventStatus">
+            <div class="status-header">
+              <div class="status-title">
+                <i class="pi" [ngClass]="statusInfo().icon"></i>
+                <span>Estado del Riesgo</span>
+              </div>
+              <p-tag [value]="statusInfo().label" [severity]="statusInfo().severity" />
+            </div>
+            <div class="status-details">
+              <div class="status-item">
+                <span class="label">Riesgo Inherente</span>
+                <div class="risk-badge" [style.background]="nivelRiesgoInherente().color">
+                  {{ nivelRiesgoInherente().label }}
+                </div>
+              </div>
+              <div class="status-item">
+                <span class="label">Riesgo Residual</span>
+                <div class="risk-badge" [style.background]="nivelRiesgoResidual().color">
+                  {{ nivelRiesgoResidual().label }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Content: Informacion General -->
+        @if (mainTab() === 'general') {
+          <div class="secondary-tabs">
+            <button class="tab-btn" [class.active]="secondaryTab() === 'info'" (click)="secondaryTab.set('info')">
+              <i class="pi pi-info-circle"></i>
+              Informacion General
+            </button>
+            <button class="tab-btn" [class.active]="secondaryTab() === 'analisis'" (click)="secondaryTab.set('analisis')">
+              <i class="pi pi-chart-line"></i>
+              Analisis de Riesgo
+            </button>
+            <button class="tab-btn" [class.active]="secondaryTab() === 'propiedades'" (click)="secondaryTab.set('propiedades')">
+              <i class="pi pi-th-large"></i>
+              Propiedades
+            </button>
+          </div>
+
+          <div class="tab-content">
+            @if (secondaryTab() === 'info') {
+              <div class="tab-panel info-panel">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">Tipo de Evento</span>
+                    <div class="info-value">
+                      <p-tag value="Riesgo" severity="warn" icon="pi pi-exclamation-triangle" />
+                    </div>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Subtipo</span>
+                    <span class="info-value">{{ riesgo()!.eventSubType?.name || 'Sin subtipo' }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Probabilidad</span>
+                    <span class="info-value">{{ getProbabilityLabel(riesgo()!.probabilityLevel!) }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Impacto</span>
+                    <span class="info-value">{{ getImpactLabel(riesgo()!.impactLevel!) }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Fecha de Identificacion</span>
+                    <span class="info-value">{{ formatDate(riesgo()!.initialDate) }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Fecha de Registro</span>
+                    <span class="info-value">{{ formatDateTime(riesgo()!.createdAt) }}</span>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Responsable</span>
+                    <div class="info-value with-avatar">
+                      <p-avatar [label]="getInitials(riesgo()!.responsibleUserName || 'Usuario')" shape="circle" size="normal" />
+                      <span>{{ riesgo()!.responsibleUserName || 'Sin asignar' }}</span>
+                    </div>
+                  </div>
+
+                  <div class="info-item">
+                    <span class="info-label">Estado</span>
+                    <div class="info-value">
+                      <p-tag [value]="statusInfo().label" [severity]="statusInfo().severity" />
+                    </div>
+                  </div>
+
+                  <div class="info-item full-width">
+                    <span class="info-label">Descripcion Detallada</span>
+                    <div class="info-value description-box">
+                      {{ riesgo()!.description || 'Sin descripcion adicional' }}
+                    </div>
+                  </div>
+
+                  @if (riesgo()!.solution) {
+                    <div class="info-item full-width">
+                      <span class="info-label">Plan de Mitigacion / Solucion</span>
+                      <div class="info-value description-box solution">
+                        {{ riesgo()!.solution }}
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (secondaryTab() === 'analisis') {
+              <div class="tab-panel analisis-panel">
+                <!-- Matriz de riesgo visual -->
+                <div class="risk-analysis-section">
+                  <h3 class="section-title">
+                    <i class="pi pi-chart-line"></i>
+                    Analisis de Riesgo
+                  </h3>
+
+                  <div class="risk-matrix-container">
+                    <!-- Riesgo Inherente -->
+                    <div class="risk-card inherent">
+                      <h4>Riesgo Inherente</h4>
+                      <div class="risk-score" [style.color]="nivelRiesgoInherente().color">
+                        {{ riesgoInherente() }}
+                      </div>
+                      <div class="risk-level" [style.background]="nivelRiesgoInherente().color">
+                        {{ nivelRiesgoInherente().label }}
+                      </div>
+                      <div class="risk-formula">
+                        <span>Probabilidad ({{ probabilityScore() }})</span>
+                        <span class="operator">x</span>
+                        <span>Impacto ({{ impactScore() }})</span>
+                      </div>
+                    </div>
+
+                    <!-- Flecha de reduccion -->
+                    <div class="risk-arrow">
+                      <div class="arrow-line"></div>
+                      <div class="reduction-badge">
+                        <i class="pi pi-arrow-down"></i>
+                        {{ reduccionPorcentaje() }}%
+                      </div>
+                      <div class="controls-count">
+                        {{ controlesAsociados() }} controles
+                      </div>
+                    </div>
+
+                    <!-- Riesgo Residual -->
+                    <div class="risk-card residual">
+                      <h4>Riesgo Residual</h4>
+                      <div class="risk-score" [style.color]="nivelRiesgoResidual().color">
+                        {{ riesgoResidual() }}
+                      </div>
+                      <div class="risk-level" [style.background]="nivelRiesgoResidual().color">
+                        {{ nivelRiesgoResidual().label }}
+                      </div>
+                      <div class="risk-formula">
+                        <span>Despues de controles</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Activos afectados -->
+                <h3 class="section-title mt-4">
+                  <i class="pi pi-server"></i>
+                  Activos Afectados
+                </h3>
+
+                @if (riesgo()!.affectedAssetIds && riesgo()!.affectedAssetIds!.length > 0) {
+                  <p-table [value]="riesgo()!.affectedAssetIds || []" [paginator]="true" [rows]="5" styleClass="p-datatable-sm p-datatable-striped">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th>ID Activo</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-assetId>
+                      <tr class="clickable-row" (click)="navigateToActivo(assetId)">
+                        <td>{{ assetId }}</td>
+                        <td>
+                          <p-button icon="pi pi-eye" [text]="true" [rounded]="true" pTooltip="Ver activo" (onClick)="navigateToActivo(assetId); $event.stopPropagation()" />
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                } @else {
+                  <div class="empty-state">
+                    <i class="pi pi-server"></i>
+                    <p>No hay activos afectados registrados</p>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (secondaryTab() === 'propiedades') {
+              <div class="tab-panel properties-panel">
+                @if (riesgo()!.propertyValues && riesgo()!.propertyValues.length > 0) {
+                  <div class="properties-grid">
+                    @for (prop of riesgo()!.propertyValues; track prop.propertyId) {
+                      <div class="property-item">
+                        <span class="property-label">{{ prop.propertyName || prop.propertyCode }}</span>
+                        <span class="property-value">{{ prop.value || '-' }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-properties">
+                    <i class="pi pi-th-large"></i>
+                    <p>No hay propiedades adicionales definidas.</p>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Tab Content: Controles -->
+        @if (mainTab() === 'controles') {
+          <div class="tab-content">
+            <div class="tab-panel controles-panel">
+              <h3 class="section-title">
+                <i class="pi pi-shield"></i>
+                Controles Asociados ({{ controlesAsociados() }})
+              </h3>
+
+              @if (riesgo()!.linkedControlIds && riesgo()!.linkedControlIds!.length > 0) {
+                <p-table [value]="riesgo()!.linkedControlIds || []" [paginator]="true" [rows]="10" styleClass="p-datatable-sm p-datatable-striped">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>ID Control</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-controlId>
+                    <tr>
+                      <td>{{ controlId }}</td>
+                      <td>
+                        <p-tag value="Activo" severity="success" />
+                      </td>
+                      <td>
+                        <p-button icon="pi pi-eye" [text]="true" [rounded]="true" pTooltip="Ver control" />
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              } @else {
+                <div class="empty-state-large">
+                  <i class="pi pi-shield"></i>
+                  <h3>Sin Controles Asociados</h3>
+                  <p>Este riesgo no tiene controles de mitigacion asociados. Se recomienda agregar controles para reducir el nivel de riesgo residual.</p>
+                  <p-button label="Agregar Control" icon="pi pi-plus" (onClick)="navigateToEdit()" />
+                </div>
+              }
+
+              <!-- Resumen de efectividad -->
+              <div class="effectiveness-summary">
+                <h4>Efectividad de Controles</h4>
+                <div class="effectiveness-bar">
+                  <div class="bar-fill" [style.width.%]="reduccionPorcentaje()"></div>
+                </div>
+                <div class="effectiveness-details">
+                  <span>Reduccion de riesgo: {{ reduccionPorcentaje() }}%</span>
+                  <span>Score inherente: {{ riesgoInherente() }} → Residual: {{ riesgoResidual() }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Tab Content: Costos -->
+        @if (mainTab() === 'costos') {
+          <div class="tab-content">
+            <div class="tab-panel costos-panel">
+              <h3 class="section-title">
+                <i class="pi pi-dollar"></i>
+                Analisis de Costos
+              </h3>
+
+              <!-- Resumen de costos -->
+              <div class="costs-summary">
+                <div class="cost-total">
+                  <span class="label">Costo Total Estimado</span>
+                  <span class="value">{{ formatCurrency(costoTotal()) }}</span>
+                </div>
+              </div>
+
+              <!-- Desglose de costos -->
+              <div class="costs-grid">
+                <div class="cost-card">
+                  <i class="pi pi-exclamation-circle"></i>
+                  <span class="cost-label">Costo del Evento</span>
+                  <span class="cost-value">{{ formatCurrency(riesgo()!.costEvent || 0) }}</span>
+                  <span class="cost-desc">Impacto directo si se materializa</span>
+                </div>
+                <div class="cost-card">
+                  <i class="pi pi-wrench"></i>
+                  <span class="cost-label">Costo de Remediacion</span>
+                  <span class="cost-value">{{ formatCurrency(riesgo()!.costRemediation || 0) }}</span>
+                  <span class="cost-desc">Costo de corregir el problema</span>
+                </div>
+                <div class="cost-card">
+                  <i class="pi pi-clock"></i>
+                  <span class="cost-label">Costo por Downtime</span>
+                  <span class="cost-value">{{ formatCurrency(riesgo()!.costDowntime || 0) }}</span>
+                  <span class="cost-desc">Perdida por tiempo fuera de servicio</span>
+                </div>
+                <div class="cost-card">
+                  <i class="pi pi-shield"></i>
+                  <span class="cost-label">Costo de Mitigacion</span>
+                  <span class="cost-value">{{ formatCurrency(riesgo()!.costMitigation || 0) }}</span>
+                  <span class="cost-desc">Inversion en controles preventivos</span>
+                </div>
+              </div>
+
+              <!-- Tabla de detalles -->
+              @if (riesgo()!.costDetails && riesgo()!.costDetails!.length > 0) {
+                <h4 class="mt-4">Detalle de Costos</h4>
+                <p-table [value]="riesgo()!.costDetails || []" styleClass="p-datatable-sm p-datatable-striped">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>Categoria</th>
+                      <th>Descripcion</th>
+                      <th>Monto</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-cost>
+                    <tr>
+                      <td>{{ cost.category }}</td>
+                      <td>{{ cost.description }}</td>
+                      <td>{{ formatCurrency(cost.amount) }}</td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Tab Content: Historial -->
+        @if (mainTab() === 'historial') {
+          <div class="tab-content">
+            <div class="tab-panel historial-panel">
+              <div class="comments-section">
+                <h3 class="section-title">
+                  <i class="pi pi-comments"></i>
+                  Comentarios ({{ comentarios().length }})
+                </h3>
+
+                <div class="new-comment">
+                  <textarea pInputTextarea [ngModel]="newComment()" (ngModelChange)="newComment.set($event)" placeholder="Escribe un comentario..." rows="3"></textarea>
+                  <p-button label="Agregar Comentario" icon="pi pi-send" [disabled]="!newComment().trim()" (onClick)="addComment()" />
+                </div>
+
+                @if (comentarios().length > 0) {
+                  <div class="comments-list">
+                    @for (comment of comentarios(); track comment.id) {
+                      <div class="comment-item">
+                        <div class="comment-header">
+                          <p-avatar [label]="getInitials(comment.createdByName || 'U')" shape="circle" size="normal" />
+                          <div class="comment-meta">
+                            <span class="comment-author">{{ comment.createdByName || 'Usuario' }}</span>
+                            <span class="comment-date">{{ formatDateTime(comment.createdAt) }}</span>
+                          </div>
+                        </div>
+                        <div class="comment-content">{{ comment.content }}</div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="empty-comments">
+                    <i class="pi pi-comments"></i>
+                    <p>No hay comentarios.</p>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="stats-section">
+          <!-- Nivel de Riesgo -->
+          <div class="stat-card risk-level-card">
+            <div class="risk-gauge">
+              <p-knob
+                [(ngModel)]="riesgoInherente"
+                [readonly]="true"
+                [min]="1"
+                [max]="25"
+                [valueColor]="nivelRiesgoInherente().color"
+                [rangeColor]="'var(--surface-border)'"
+                [size]="80"
+              />
+            </div>
+            <div class="stat-content">
+              <span class="stat-label">Nivel de Riesgo</span>
+              <span class="stat-value" [style.color]="nivelRiesgoInherente().color">{{ nivelRiesgoInherente().label }}</span>
+              <span class="stat-sublabel">Score: {{ riesgoInherente() }} / 25</span>
+            </div>
+          </div>
+
+          <!-- Probabilidad -->
+          <div class="stat-card">
+            <div class="stat-indicator probability"></div>
+            <div class="stat-content">
+              <span class="stat-label">Probabilidad</span>
+              <span class="stat-value">{{ getProbabilityLabel(riesgo()!.probabilityLevel!) }}</span>
+              <span class="stat-sublabel">Score: {{ probabilityScore() }}</span>
+            </div>
+          </div>
+
+          <!-- Impacto -->
+          <div class="stat-card">
+            <div class="stat-indicator impact"></div>
+            <div class="stat-content">
+              <span class="stat-label">Impacto</span>
+              <span class="stat-value">{{ getImpactLabel(riesgo()!.impactLevel!) }}</span>
+              <span class="stat-sublabel">Score: {{ impactScore() }}</span>
+            </div>
+          </div>
+
+          <!-- Controles Activos -->
+          <div class="stat-card">
+            <div class="stat-indicator controles"></div>
+            <div class="stat-content">
+              <span class="stat-label">Controles Activos</span>
+              <span class="stat-value">{{ controlesAsociados() }}</span>
+              <span class="stat-sublabel">Controles</span>
+            </div>
+          </div>
+
+          <!-- Activos Afectados -->
+          <div class="stat-card">
+            <div class="stat-indicator activos"></div>
+            <div class="stat-content">
+              <span class="stat-label">Activos Afectados</span>
+              <span class="stat-value">{{ activosAfectados() }}</span>
+              <span class="stat-sublabel">Activos</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline-section">
+          <h4 class="section-title">
+            <i class="pi pi-clock"></i>
+            Linea de Tiempo
+          </h4>
+          <div class="timeline-events">
+            <div class="timeline-item">
+              <div class="timeline-dot created"></div>
+              <div class="timeline-content">
+                <span class="timeline-title">Riesgo registrado</span>
+                <span class="timeline-date">{{ formatDateTime(riesgo()!.createdAt) }}</span>
+              </div>
+            </div>
+
+            @if (riesgo()!.initialDate && riesgo()!.initialDate !== riesgo()!.createdAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot identified"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Fecha de identificacion</span>
+                  <span class="timeline-date">{{ formatDate(riesgo()!.initialDate) }}</span>
+                </div>
+              </div>
+            }
+
+            @if (riesgo()!.updatedAt !== riesgo()!.createdAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot updated"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Ultima actualizacion</span>
+                  <span class="timeline-date">{{ formatDateTime(riesgo()!.updatedAt) }}</span>
+                </div>
+              </div>
+            }
+
+            @if (riesgo()!.resolvedAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot mitigated"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Riesgo mitigado</span>
+                  <span class="timeline-date">{{ formatDate(riesgo()!.resolvedAt) }}</span>
+                </div>
+              </div>
+            }
+
+            @if (riesgo()!.closedAt) {
+              <div class="timeline-item">
+                <div class="timeline-dot closed"></div>
+                <div class="timeline-content">
+                  <span class="timeline-title">Riesgo aceptado/cerrado</span>
+                  <span class="timeline-date">{{ formatDate(riesgo()!.closedAt) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="not-found">
+      <i class="pi pi-exclamation-circle"></i>
+      <h2>Riesgo no encontrado</h2>
+      <p>El riesgo solicitado no existe.</p>
+      <p-button label="Volver a riesgos" icon="pi pi-arrow-left" (onClick)="goBack()" />
+    </div>
+  }
+</div>
