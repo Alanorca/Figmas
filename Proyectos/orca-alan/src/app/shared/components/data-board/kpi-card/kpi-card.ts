@@ -47,6 +47,7 @@ export interface KpiCardConfig {
       [class]="variantClass()"
       [class.clickable]="clickable()"
       [class.selected]="selected()"
+      [class]="cardColorClass()"
       (click)="onClick()">
 
       <!-- Header -->
@@ -169,6 +170,62 @@ export interface KpiCardConfig {
         .kpi-value { font-size: 3rem; }
         .kpi-icon { width: 48px; height: 48px; }
         .kpi-icon i { font-size: 1.5rem; }
+      }
+
+      /* Card color backgrounds */
+      &.card-primary {
+        background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+        border-color: var(--primary-200);
+
+        .kpi-icon {
+          background: var(--primary-100);
+          i { color: var(--primary-600); }
+        }
+        .kpi-value { color: var(--primary-700); }
+      }
+
+      &.card-success {
+        background: linear-gradient(135deg, var(--green-50) 0%, var(--green-100) 100%);
+        border-color: var(--green-200);
+
+        .kpi-icon {
+          background: var(--green-100);
+          i { color: var(--green-600); }
+        }
+        .kpi-value { color: var(--green-700); }
+      }
+
+      &.card-warning {
+        background: linear-gradient(135deg, var(--yellow-50) 0%, var(--yellow-100) 100%);
+        border-color: var(--yellow-200);
+
+        .kpi-icon {
+          background: var(--yellow-100);
+          i { color: var(--yellow-600); }
+        }
+        .kpi-value { color: var(--yellow-700); }
+      }
+
+      &.card-danger {
+        background: linear-gradient(135deg, var(--red-50) 0%, var(--red-100) 100%);
+        border-color: var(--red-200);
+
+        .kpi-icon {
+          background: var(--red-100);
+          i { color: var(--red-600); }
+        }
+        .kpi-value { color: var(--red-700); }
+      }
+
+      &.card-info {
+        background: linear-gradient(135deg, var(--blue-50) 0%, var(--blue-100) 100%);
+        border-color: var(--blue-200);
+
+        .kpi-icon {
+          background: var(--blue-100);
+          i { color: var(--blue-600); }
+        }
+        .kpi-value { color: var(--blue-700); }
       }
     }
 
@@ -370,6 +427,37 @@ export interface KpiCardConfig {
         &.selected {
           background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-900));
         }
+
+        /* Card color backgrounds in dark mode */
+        &.card-primary {
+          background: linear-gradient(135deg, color-mix(in srgb, var(--primary-500) 12%, var(--surface-900)) 0%, color-mix(in srgb, var(--primary-500) 8%, var(--surface-900)) 100%);
+          border-color: color-mix(in srgb, var(--primary-500) 25%, var(--surface-800));
+          .kpi-value { color: var(--primary-400); }
+        }
+
+        &.card-success {
+          background: linear-gradient(135deg, color-mix(in srgb, var(--green-500) 12%, var(--surface-900)) 0%, color-mix(in srgb, var(--green-500) 8%, var(--surface-900)) 100%);
+          border-color: color-mix(in srgb, var(--green-500) 25%, var(--surface-800));
+          .kpi-value { color: var(--green-400); }
+        }
+
+        &.card-warning {
+          background: linear-gradient(135deg, color-mix(in srgb, var(--yellow-500) 12%, var(--surface-900)) 0%, color-mix(in srgb, var(--yellow-500) 8%, var(--surface-900)) 100%);
+          border-color: color-mix(in srgb, var(--yellow-500) 25%, var(--surface-800));
+          .kpi-value { color: var(--yellow-400); }
+        }
+
+        &.card-danger {
+          background: linear-gradient(135deg, color-mix(in srgb, var(--red-500) 12%, var(--surface-900)) 0%, color-mix(in srgb, var(--red-500) 8%, var(--surface-900)) 100%);
+          border-color: color-mix(in srgb, var(--red-500) 25%, var(--surface-800));
+          .kpi-value { color: var(--red-400); }
+        }
+
+        &.card-info {
+          background: linear-gradient(135deg, color-mix(in srgb, var(--blue-500) 12%, var(--surface-900)) 0%, color-mix(in srgb, var(--blue-500) 8%, var(--surface-900)) 100%);
+          border-color: color-mix(in srgb, var(--blue-500) 25%, var(--surface-800));
+          .kpi-value { color: var(--blue-400); }
+        }
       }
 
       .kpi-icon {
@@ -419,6 +507,11 @@ export class KpiCardComponent {
   colorClass = computed(() => {
     const color = this.config().color;
     return color ? `color-${color}` : '';
+  });
+
+  cardColorClass = computed(() => {
+    const color = this.config().color;
+    return color ? `card-${color}` : '';
   });
 
   trendClass = computed(() => {
