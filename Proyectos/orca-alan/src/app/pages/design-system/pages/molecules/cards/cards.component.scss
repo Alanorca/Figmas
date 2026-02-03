@@ -270,53 +270,212 @@
     }
   }
 
-  // Color schemes
+  // Color schemes - usando variables CSS
   &.kpi-cyan {
     .kpi-icon {
-      background: rgba(6, 182, 212, 0.15);
-      i { color: #06b6d4; }
+      background: var(--cyan-100);
+      i { color: var(--cyan-500); }
     }
-    .kpi-value { color: #0891b2; }
+    .kpi-value { color: var(--cyan-600); }
   }
 
   &.kpi-orange {
     .kpi-icon {
-      background: rgba(249, 115, 22, 0.15);
-      i { color: #f97316; }
+      background: var(--orange-100);
+      i { color: var(--orange-500); }
     }
-    .kpi-value { color: #ea580c; }
+    .kpi-value { color: var(--orange-600); }
   }
 
   &.kpi-emerald {
     .kpi-icon {
-      background: rgba(16, 185, 129, 0.15);
-      i { color: #10b981; }
+      background: var(--green-100);
+      i { color: var(--green-500); }
     }
-    .kpi-value { color: #059669; }
+    .kpi-value { color: var(--green-600); }
   }
 
   &.kpi-violet {
     .kpi-icon {
-      background: rgba(139, 92, 246, 0.15);
-      i { color: #8b5cf6; }
+      background: var(--purple-100);
+      i { color: var(--purple-500); }
     }
-    .kpi-value { color: #7c3aed; }
+    .kpi-value { color: var(--purple-600); }
   }
 
   &.kpi-rose {
     .kpi-icon {
-      background: rgba(244, 63, 94, 0.15);
-      i { color: #f43f5e; }
+      background: var(--red-100);
+      i { color: var(--red-500); }
     }
-    .kpi-value { color: #e11d48; }
+    .kpi-value { color: var(--red-600); }
   }
 
   &.kpi-amber {
     .kpi-icon {
-      background: rgba(245, 158, 11, 0.15);
-      i { color: #f59e0b; }
+      background: var(--yellow-100);
+      i { color: var(--yellow-500); }
     }
-    .kpi-value { color: #d97706; }
+    .kpi-value { color: var(--yellow-600); }
+  }
+}
+
+// ============ DARK MODE SUPPORT ============
+:host-context(.ds-theme-dark),
+:host-context(body[data-ds-theme="dark"]) {
+  .cards-index {
+    background: var(--surface-800);
+  }
+
+  .index-item {
+    background: var(--surface-900);
+    border-color: var(--surface-700);
+
+    &:hover {
+      background: color-mix(in srgb, var(--primary-500) 15%, var(--surface-900));
+      border-color: var(--primary-700);
+    }
+  }
+
+  .variant-selector {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+
+    .variant-btn {
+      background: var(--surface-900);
+      border-color: var(--surface-700);
+
+      &:hover {
+        background: var(--surface-700);
+      }
+
+      &.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+      }
+    }
+  }
+
+  .highlight-subsection {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+  }
+
+  .accordion-body .section-description code {
+    background: var(--surface-800);
+  }
+
+  .widget-kpi-card {
+    background: var(--surface-900);
+    border-color: var(--surface-700);
+
+    .kpi-trend.positive {
+      background: color-mix(in srgb, var(--green-500) 15%, var(--surface-900));
+      color: var(--green-400);
+    }
+
+    .kpi-trend.negative {
+      background: color-mix(in srgb, var(--red-500) 15%, var(--surface-900));
+      color: var(--red-400);
+    }
+
+    // Dark mode color schemes
+    &.kpi-cyan {
+      .kpi-icon {
+        background: color-mix(in srgb, var(--cyan-500) 15%, var(--surface-900));
+        i { color: var(--cyan-400); }
+      }
+      .kpi-value { color: var(--cyan-400); }
+    }
+
+    &.kpi-orange {
+      .kpi-icon {
+        background: color-mix(in srgb, var(--orange-500) 15%, var(--surface-900));
+        i { color: var(--orange-400); }
+      }
+      .kpi-value { color: var(--orange-400); }
+    }
+
+    &.kpi-emerald {
+      .kpi-icon {
+        background: color-mix(in srgb, var(--green-500) 15%, var(--surface-900));
+        i { color: var(--green-400); }
+      }
+      .kpi-value { color: var(--green-400); }
+    }
+
+    &.kpi-violet {
+      .kpi-icon {
+        background: color-mix(in srgb, var(--purple-500) 15%, var(--surface-900));
+        i { color: var(--purple-400); }
+      }
+      .kpi-value { color: var(--purple-400); }
+    }
+
+    &.kpi-rose {
+      .kpi-icon {
+        background: color-mix(in srgb, var(--red-500) 15%, var(--surface-900));
+        i { color: var(--red-400); }
+      }
+      .kpi-value { color: var(--red-400); }
+    }
+
+    &.kpi-amber {
+      .kpi-icon {
+        background: color-mix(in srgb, var(--yellow-500) 15%, var(--surface-900));
+        i { color: var(--yellow-400); }
+      }
+      .kpi-value { color: var(--yellow-400); }
+    }
+  }
+
+  .chart-area {
+    background: var(--surface-900);
+    border-color: var(--surface-700);
+
+    .chart-header {
+      border-color: var(--surface-700);
+    }
+
+    .chart-placeholder {
+      background: var(--surface-800);
+      border-color: var(--surface-600);
+    }
+
+    .chart-footer {
+      background: var(--surface-800);
+      border-color: var(--surface-700);
+    }
+
+    .chart-summary .summary-trend {
+      &.positive {
+        background: color-mix(in srgb, var(--green-500) 15%, var(--surface-900));
+        color: var(--green-400);
+      }
+      &.negative {
+        background: color-mix(in srgb, var(--red-500) 15%, var(--surface-900));
+        color: var(--red-400);
+      }
+    }
+  }
+
+  .cart-summary {
+    background: var(--surface-900);
+    border-color: var(--surface-700);
+  }
+
+  .stat-icon {
+    background: var(--surface-800);
+
+    &.success {
+      background: color-mix(in srgb, var(--green-500) 15%, var(--surface-900));
+    }
+    &.info {
+      background: color-mix(in srgb, var(--cyan-500) 15%, var(--surface-900));
+    }
+    &.warning {
+      background: color-mix(in srgb, var(--yellow-500) 15%, var(--surface-900));
+    }
   }
 }
 

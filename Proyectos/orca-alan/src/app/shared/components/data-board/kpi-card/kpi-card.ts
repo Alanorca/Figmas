@@ -418,8 +418,9 @@ export interface KpiCardConfig {
       transition: all 0.2s ease;
     }
 
-    /* Dark mode */
-    :host-context(.dark) {
+    /* Dark mode - Design System */
+    :host-context(.ds-theme-dark),
+    :host-context(body[data-ds-theme="dark"]) {
       .kpi-card {
         background: var(--surface-900);
         border-color: var(--surface-700);
