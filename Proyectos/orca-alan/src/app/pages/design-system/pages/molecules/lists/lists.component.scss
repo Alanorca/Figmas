@@ -1,0 +1,721 @@
+// ============================================
+// LISTS - DESIGN SYSTEM COMPONENT
+// ============================================
+
+.ds-page {
+  padding: var(--spacing-6);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ds-header {
+  margin-bottom: var(--spacing-8);
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 var(--spacing-2) 0;
+  }
+
+  .ds-subtitle {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    margin: 0;
+    line-height: 1.6;
+    max-width: 800px;
+  }
+}
+
+.ds-section {
+  margin-bottom: var(--spacing-10);
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 var(--spacing-2) 0;
+    padding-bottom: var(--spacing-2);
+    border-bottom: 2px solid var(--primary-color);
+    display: inline-block;
+  }
+
+  .section-description {
+    font-size: 0.9375rem;
+    color: var(--text-color-secondary);
+    margin: var(--spacing-3) 0 var(--spacing-5) 0;
+    line-height: 1.6;
+    max-width: 700px;
+  }
+}
+
+// ============================================
+// ATOMIC DESIGN DIAGRAM
+// ============================================
+
+.atomic-diagram {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-6);
+}
+
+.atomic-level {
+  .level-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-4);
+  }
+
+  .level-badge {
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--border-radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    &.atoms {
+      background: var(--blue-100);
+      color: var(--blue-700);
+    }
+
+    &.molecules {
+      background: var(--green-100);
+      color: var(--green-700);
+    }
+
+    &.organisms {
+      background: var(--purple-100);
+      color: var(--purple-700);
+    }
+  }
+
+  .level-description {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+  }
+
+  .level-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-4);
+    padding: var(--spacing-4);
+    background: var(--surface-ground);
+    border-radius: var(--border-radius-lg);
+  }
+}
+
+.atomic-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3);
+  background: var(--surface-0);
+  border-radius: var(--border-radius-md);
+  min-width: 80px;
+
+  i {
+    font-size: 1.25rem;
+    color: var(--text-color);
+  }
+
+  span {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+.atomic-arrow {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-3) 0;
+
+  i {
+    font-size: 1.5rem;
+    color: var(--surface-400);
+  }
+}
+
+.progress-bar-mini {
+  width: 60px;
+  height: 6px;
+  background: var(--surface-200);
+  border-radius: 3px;
+  overflow: hidden;
+
+  .progress-fill-mini {
+    height: 100%;
+    border-radius: 3px;
+
+    &.success { background: var(--green-500); }
+    &.warn { background: var(--yellow-500); }
+    &.danger { background: var(--red-500); }
+  }
+}
+
+.molecules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-4);
+}
+
+.molecule-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3);
+  background: var(--surface-0);
+  border-radius: var(--border-radius-md);
+
+  .molecule-preview {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2);
+    background: var(--surface-50);
+    border-radius: var(--border-radius-sm);
+    min-height: 48px;
+
+    &.actions-preview {
+      gap: var(--spacing-1);
+    }
+  }
+
+  .molecule-text {
+    display: flex;
+    flex-direction: column;
+
+    .primary {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    .secondary {
+      font-size: 0.75rem;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .kpi-value {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .molecule-name {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    text-align: center;
+  }
+}
+
+.organisms-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.organism-tag {
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--purple-100);
+  color: var(--purple-700);
+  border-radius: var(--border-radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: monospace;
+}
+
+// ============================================
+// KPI ITEM STYLES
+// ============================================
+
+.kpis-demo-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.kpi-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  background: var(--surface-0);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg);
+  transition: all var(--transition-duration);
+
+  &:hover {
+    border-color: var(--surface-300);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &.has-alert {
+    border-left: 3px solid var(--red-500);
+    background: color-mix(in srgb, var(--red-50) 30%, var(--surface-0));
+  }
+
+  .kpi-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .kpi-nombre-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-2);
+    flex-wrap: wrap;
+  }
+
+  .kpi-nombre {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-color);
+  }
+
+  .kpi-direccion-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    padding: 2px 8px;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.6875rem;
+    font-weight: 500;
+
+    &.mayor_mejor {
+      background: var(--green-100);
+      color: var(--green-700);
+    }
+
+    &.menor_mejor {
+      background: var(--blue-100);
+      color: var(--blue-700);
+    }
+
+    i {
+      font-size: 0.625rem;
+    }
+  }
+
+  .kpi-alert-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    padding: 2px 8px;
+    background: var(--red-100);
+    color: var(--red-700);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.6875rem;
+    font-weight: 600;
+
+    i {
+      font-size: 0.625rem;
+    }
+  }
+
+  .kpi-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+
+    .progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--surface-200);
+      border-radius: 3px;
+      overflow: hidden;
+
+      .progress-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.4s ease;
+
+        &.success { background: var(--green-500); }
+        &.warn { background: var(--yellow-500); }
+        &.danger { background: var(--red-500); }
+      }
+    }
+
+    .progress-text {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-color-secondary);
+      white-space: nowrap;
+      min-width: 80px;
+      text-align: right;
+    }
+  }
+
+  .kpi-actions {
+    display: flex;
+    gap: var(--spacing-1);
+    flex-shrink: 0;
+  }
+}
+
+// ============================================
+// PERSONA MINI STYLES
+// ============================================
+
+.personas-demo-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-6);
+}
+
+.demo-column {
+  .demo-column-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 var(--spacing-3) 0;
+    padding-bottom: var(--spacing-2);
+    border-bottom: 1px solid var(--surface-border);
+  }
+}
+
+.personas-demo-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.persona-mini {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  background: var(--surface-0);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg);
+  transition: all var(--transition-duration);
+
+  &:hover {
+    border-color: var(--surface-300);
+    background: var(--surface-50);
+  }
+
+  &.persona-con-menu {
+    padding-right: var(--spacing-2);
+  }
+
+  .persona-mini-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    &.flex-1 {
+      flex: 1;
+    }
+  }
+
+  .persona-mini-nombre {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .persona-mini-email {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// ============================================
+// MODULO ITEM STYLES
+// ============================================
+
+.modulos-demo-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  background: var(--surface-ground);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-2);
+}
+
+.modulo-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: transparent;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all var(--transition-duration);
+
+  &:hover:not(.disabled) {
+    background: var(--surface-100);
+  }
+
+  &.active {
+    background: var(--primary-50);
+    border-left: 3px solid var(--primary-color);
+    margin-left: -3px;
+
+    .modulo-icon {
+      background: var(--primary-100);
+
+      i {
+        color: var(--primary-color);
+      }
+    }
+
+    .modulo-nombre {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+
+    .modulo-nombre,
+    .modulo-descripcion {
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .modulo-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-200);
+    border-radius: var(--border-radius-md);
+    flex-shrink: 0;
+    transition: all var(--transition-duration);
+
+    i {
+      font-size: 1.125rem;
+      color: var(--text-color-secondary);
+      transition: color var(--transition-duration);
+    }
+  }
+
+  .modulo-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .modulo-nombre {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-color);
+  }
+
+  .modulo-descripcion {
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+// ============================================
+// OBJETIVO ITEM STYLES
+// ============================================
+
+.objetivos-demo-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  max-width: 400px;
+}
+
+.objetivo-item {
+  padding: var(--spacing-4);
+  background: var(--surface-0);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-duration);
+
+  &:hover {
+    border-color: var(--surface-300);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 15%, transparent);
+  }
+
+  .objetivo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-2);
+  }
+
+  .objetivo-nombre {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-color);
+    line-height: 1.4;
+  }
+
+  .objetivo-tipo {
+    padding: 3px 10px;
+    border-radius: var(--border-radius-md);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+
+    &.estrategico {
+      background: var(--blue-100);
+      color: var(--blue-700);
+    }
+
+    &.operativo {
+      background: var(--orange-100);
+      color: var(--orange-700);
+    }
+  }
+
+  .objetivo-descripcion {
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+    margin: 0 0 var(--spacing-3) 0;
+    line-height: 1.5;
+  }
+
+  .objetivo-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+
+    .progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--surface-200);
+      border-radius: 3px;
+      overflow: hidden;
+
+      .progress-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.4s ease;
+
+        &.success { background: var(--green-500); }
+        &.warn { background: var(--yellow-500); }
+        &.danger { background: var(--red-500); }
+      }
+    }
+
+    .progress-value {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-color-secondary);
+      min-width: 40px;
+      text-align: right;
+    }
+  }
+}
+
+// ============================================
+// RULES GRID
+// ============================================
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+}
+
+.rule-card {
+  padding: var(--spacing-4);
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg);
+
+  .rule-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-bottom: var(--spacing-3);
+
+    &.correct {
+      background: var(--green-100);
+      color: var(--green-600);
+    }
+
+    &.incorrect {
+      background: var(--red-100);
+      color: var(--red-600);
+    }
+
+    i {
+      font-size: 1rem;
+    }
+  }
+
+  h4 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 var(--spacing-2) 0;
+  }
+
+  p {
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+    margin: 0;
+    line-height: 1.5;
+
+    code {
+      padding: 2px 6px;
+      background: var(--surface-100);
+      border-radius: var(--border-radius-sm);
+      font-size: 0.75rem;
+      color: var(--primary-color);
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+
+@media (max-width: 768px) {
+  .ds-page {
+    padding: var(--spacing-4);
+  }
+
+  .atomic-diagram {
+    padding: var(--spacing-4);
+  }
+
+  .personas-demo-container {
+    grid-template-columns: 1fr;
+  }
+
+  .rules-grid {
+    grid-template-columns: 1fr;
+  }
+}

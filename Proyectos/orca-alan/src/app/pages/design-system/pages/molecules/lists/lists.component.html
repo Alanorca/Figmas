@@ -1,0 +1,415 @@
+<p-toast />
+
+<div class="ds-page">
+  <header class="ds-header">
+    <h1>Lists</h1>
+    <p class="ds-subtitle">
+      Patrones de listas para mostrar colecciones de datos.
+      Combinan elementos atómicos (avatars, badges, icons) en estructuras moleculares reutilizables.
+    </p>
+  </header>
+
+  <!-- Atomic Design Principles -->
+  <section class="ds-section">
+    <h2>Principios de Composicion Atomica</h2>
+    <p class="section-description">
+      Las listas siguen el principio de Atomic Design, combinando elementos simples (atomos)
+      para formar estructuras mas complejas (moleculas y organismos).
+    </p>
+
+    <div class="atomic-diagram">
+      <div class="atomic-level">
+        <div class="level-header">
+          <span class="level-badge atoms">Atomos</span>
+          <span class="level-description">Elementos base indivisibles</span>
+        </div>
+        <div class="level-items">
+          <div class="atomic-item">
+            <p-avatar label="A" shape="circle" size="normal" />
+            <span>Avatar</span>
+          </div>
+          <div class="atomic-item">
+            <i class="pi pi-chart-line"></i>
+            <span>Icon</span>
+          </div>
+          <div class="atomic-item">
+            <p-tag value="Tag" />
+            <span>Tag</span>
+          </div>
+          <div class="atomic-item">
+            <p-badge value="3" />
+            <span>Badge</span>
+          </div>
+          <div class="atomic-item">
+            <div class="progress-bar-mini">
+              <div class="progress-fill-mini success"></div>
+            </div>
+            <span>Progress</span>
+          </div>
+          <div class="atomic-item">
+            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" />
+            <span>Button</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="atomic-arrow">
+        <i class="pi pi-arrow-down"></i>
+      </div>
+
+      <div class="atomic-level">
+        <div class="level-header">
+          <span class="level-badge molecules">Moleculas</span>
+          <span class="level-description">Combinacion de atomos con proposito</span>
+        </div>
+        <div class="level-items molecules-grid">
+          <div class="molecule-item">
+            <div class="molecule-preview">
+              <p-avatar label="M" shape="circle" size="normal" [style]="{'background-color': 'var(--primary-100)', 'color': 'var(--primary-color)'}" />
+              <div class="molecule-text">
+                <span class="primary">Maria Garcia</span>
+                <span class="secondary">maria&#64;email.com</span>
+              </div>
+            </div>
+            <span class="molecule-name">Info Container</span>
+          </div>
+          <div class="molecule-item">
+            <div class="molecule-preview">
+              <span class="kpi-value">85/100%</span>
+              <div class="progress-bar-mini">
+                <div class="progress-fill-mini success" style="width: 85%"></div>
+              </div>
+            </div>
+            <span class="molecule-name">KPI Progress</span>
+          </div>
+          <div class="molecule-item">
+            <div class="molecule-preview actions-preview">
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger" />
+            </div>
+            <span class="molecule-name">Action Buttons</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="atomic-arrow">
+        <i class="pi pi-arrow-down"></i>
+      </div>
+
+      <div class="atomic-level">
+        <div class="level-header">
+          <span class="level-badge organisms">Organismos</span>
+          <span class="level-description">Componentes de lista completos</span>
+        </div>
+        <div class="level-items organisms-list">
+          <span class="organism-tag">kpi-item</span>
+          <span class="organism-tag">persona-mini</span>
+          <span class="organism-tag">modulo-item</span>
+          <span class="organism-tag">objetivo-item</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KPI Items Section -->
+  <section class="ds-section">
+    <h2>KPI Item</h2>
+    <p class="section-description">
+      Elemento de lista para mostrar indicadores clave de desempeno (KPIs) con progreso visual,
+      valores actuales/meta y alertas por umbral.
+    </p>
+
+    <app-ds-preview title="KPI Items - Vista Interactiva">
+      <div class="kpis-demo-list">
+        @for (kpi of kpis(); track kpi.id) {
+          <div class="kpi-item" [class.has-alert]="tieneAlertaKPI(kpi)">
+            <div class="kpi-info">
+              <div class="kpi-nombre-row">
+                <span class="kpi-nombre">{{ kpi.nombre }}</span>
+                <span class="kpi-direccion-tag" [class]="kpi.direccion">
+                  <i [class]="kpi.direccion === 'mayor_mejor' ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
+                  {{ kpi.direccion === 'mayor_mejor' ? 'Mayor mejor' : 'Menor mejor' }}
+                </span>
+                @if (tieneAlertaKPI(kpi)) {
+                  <span class="kpi-alert-badge">
+                    <i class="pi pi-exclamation-triangle"></i>
+                    Alerta
+                  </span>
+                }
+              </div>
+              <div class="kpi-progress">
+                <div class="progress-bar">
+                  <div
+                    class="progress-fill"
+                    [class]="getKPIProgresoColor(kpi)"
+                    [style.width.%]="getKPIProgreso(kpi)">
+                  </div>
+                </div>
+                <span class="progress-text">{{ kpi.actual }}/{{ kpi.meta }} {{ kpi.escala }}</span>
+              </div>
+            </div>
+            <div class="kpi-actions">
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" pTooltip="Editar" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" />
+            </div>
+          </div>
+        }
+      </div>
+    </app-ds-preview>
+
+    <app-ds-code-block [code]="kpiItemCode" language="html" />
+    <app-ds-props-table [props]="kpiItemProps" />
+  </section>
+
+  <!-- Persona Mini Section -->
+  <section class="ds-section">
+    <h2>Persona Mini</h2>
+    <p class="section-description">
+      Elemento compacto para mostrar informacion de personas/usuarios.
+      Combina avatar, nombre, email y estado en un formato condensado.
+    </p>
+
+    <app-ds-preview title="Persona Mini - Variantes">
+      <div class="personas-demo-container">
+        <!-- Variante Simple -->
+        <div class="demo-column">
+          <h4 class="demo-column-title">Simple</h4>
+          <div class="personas-demo-list">
+            @for (persona of personas().slice(0, 2); track persona.id) {
+              <div class="persona-mini">
+                <p-avatar
+                  [label]="persona.nombre.charAt(0)"
+                  shape="circle"
+                  size="normal"
+                  [style]="getPersonaAvatarStyle(persona)"
+                />
+                <div class="persona-mini-info">
+                  <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Variante con Email -->
+        <div class="demo-column">
+          <h4 class="demo-column-title">Con Email</h4>
+          <div class="personas-demo-list">
+            @for (persona of personas().slice(0, 2); track persona.id) {
+              <div class="persona-mini">
+                <p-avatar
+                  [label]="persona.nombre.charAt(0)"
+                  shape="circle"
+                  size="normal"
+                  [style]="getPersonaAvatarStyle(persona)"
+                />
+                <div class="persona-mini-info">
+                  <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                  <span class="persona-mini-email">{{ persona.email }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Variante con Status -->
+        <div class="demo-column">
+          <h4 class="demo-column-title">Con Status Tag</h4>
+          <div class="personas-demo-list">
+            @for (persona of personas(); track persona.id) {
+              <div class="persona-mini">
+                <p-avatar
+                  [label]="persona.nombre.charAt(0)"
+                  shape="circle"
+                  size="normal"
+                  [style]="getPersonaAvatarStyle(persona)"
+                />
+                <div class="persona-mini-info">
+                  <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                </div>
+                <p-tag
+                  [value]="getPersonaStatusTag(persona).value"
+                  [severity]="getPersonaStatusTag(persona).severity"
+                  styleClass="text-xs"
+                />
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Variante con Menu -->
+        <div class="demo-column">
+          <h4 class="demo-column-title">Con Menu</h4>
+          <div class="personas-demo-list">
+            @for (persona of personas().slice(0, 2); track persona.id) {
+              <div class="persona-mini persona-con-menu">
+                <p-avatar
+                  [label]="persona.nombre.charAt(0)"
+                  shape="circle"
+                  size="normal"
+                  [style]="getPersonaAvatarStyle(persona)"
+                />
+                <div class="persona-mini-info flex-1">
+                  <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                  <span class="persona-mini-email">{{ persona.email }}</span>
+                </div>
+                <p-button
+                  icon="pi pi-ellipsis-v"
+                  [rounded]="true"
+                  [text]="true"
+                  size="small"
+                  severity="secondary"
+                />
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+
+    <app-ds-code-block [code]="personaMiniCode" language="html" />
+    <app-ds-props-table [props]="personaMiniProps" />
+  </section>
+
+  <!-- Modulo Item Section -->
+  <section class="ds-section">
+    <h2>Modulo Item</h2>
+    <p class="section-description">
+      Elemento de lista seleccionable para navegacion de modulos.
+      Soporta estados activo/inactivo, habilitado/deshabilitado y badges de notificacion.
+    </p>
+
+    <app-ds-preview title="Modulo Items - Lista Seleccionable">
+      <div class="modulos-demo-list">
+        @for (modulo of modulos(); track modulo.id) {
+          <div
+            class="modulo-item"
+            [class.active]="modulo.activo"
+            [class.habilitado]="modulo.habilitado"
+            [class.disabled]="!modulo.habilitado"
+            (click)="selectModulo(modulo)"
+          >
+            <div class="modulo-icon">
+              <i [class]="modulo.icono"></i>
+            </div>
+            <div class="modulo-info">
+              <span class="modulo-nombre">{{ modulo.nombre }}</span>
+              <span class="modulo-descripcion">{{ modulo.descripcion }}</span>
+            </div>
+            @if (modulo.notificaciones && modulo.notificaciones > 0) {
+              <p-badge [value]="modulo.notificaciones.toString()" severity="danger" />
+            }
+            <p-checkbox
+              [(ngModel)]="modulo.habilitado"
+              [binary]="true"
+              (onClick)="$event.stopPropagation()"
+            />
+          </div>
+        }
+      </div>
+    </app-ds-preview>
+
+    <app-ds-code-block [code]="moduloItemCode" language="html" />
+    <app-ds-props-table [props]="moduloItemProps" />
+  </section>
+
+  <!-- Objetivo Item Section -->
+  <section class="ds-section">
+    <h2>Objetivo Item</h2>
+    <p class="section-description">
+      Elemento de lista para objetivos con tipificacion (estrategico/operativo),
+      descripcion y barra de progreso. Ideal para vistas master-detail.
+    </p>
+
+    <app-ds-preview title="Objetivo Items - Master List">
+      <div class="objetivos-demo-list">
+        @for (objetivo of objetivos(); track objetivo.id) {
+          <div
+            class="objetivo-item"
+            [class.selected]="objetivo.selected"
+            (click)="selectObjetivo(objetivo)"
+          >
+            <div class="objetivo-header">
+              <span class="objetivo-nombre">{{ objetivo.nombre }}</span>
+              <span class="objetivo-tipo" [class]="objetivo.tipo">
+                {{ objetivo.tipo === 'estrategico' ? 'Estrategico' : 'Operativo' }}
+              </span>
+            </div>
+            @if (objetivo.descripcion) {
+              <p class="objetivo-descripcion">{{ objetivo.descripcion }}</p>
+            }
+            <div class="objetivo-progress">
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  [class]="getProgresoColor(objetivo.progreso)"
+                  [style.width.%]="objetivo.progreso">
+                </div>
+              </div>
+              <span class="progress-value">{{ objetivo.progreso }}%</span>
+            </div>
+          </div>
+        }
+      </div>
+    </app-ds-preview>
+
+    <app-ds-code-block [code]="objetivoItemCode" language="html" />
+  </section>
+
+  <!-- Best Practices -->
+  <section class="ds-section">
+    <h2>Reglas de Composicion</h2>
+
+    <div class="rules-grid">
+      <div class="rule-card">
+        <div class="rule-icon correct">
+          <i class="pi pi-check"></i>
+        </div>
+        <h4>Estructura Consistente</h4>
+        <p>Mantener el mismo orden de elementos: leading (avatar/icon) - content (info) - trailing (actions/badges)</p>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-icon correct">
+          <i class="pi pi-check"></i>
+        </div>
+        <h4>Variables CSS</h4>
+        <p>Usar siempre variables del design system: <code>var(--spacing-*)</code>, <code>var(--surface-*)</code>, <code>var(--text-color)</code></p>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-icon correct">
+          <i class="pi pi-check"></i>
+        </div>
+        <h4>Estados Visuales</h4>
+        <p>Implementar estados hover, selected, disabled con transiciones suaves</p>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-icon incorrect">
+          <i class="pi pi-times"></i>
+        </div>
+        <h4>Evitar Colores Hardcoded</h4>
+        <p>No usar <code>#333</code> o <code>white</code>. Siempre usar <code>var(--text-color)</code>, <code>var(--surface-0)</code></p>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-icon incorrect">
+          <i class="pi pi-times"></i>
+        </div>
+        <h4>Evitar HTML Nativo</h4>
+        <p>No usar <code>&lt;button&gt;</code> nativo. Usar <code>&lt;p-button&gt;</code> de PrimeNG</p>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-icon incorrect">
+          <i class="pi pi-times"></i>
+        </div>
+        <h4>Evitar Iconos Externos</h4>
+        <p>No usar FontAwesome u otras librerias. Solo PrimeIcons con prefijo <code>pi pi-*</code></p>
+      </div>
+    </div>
+
+    <app-ds-code-block [code]="atomicDesignCode" language="typescript" filename="Principios de Composicion" />
+  </section>
+</div>

@@ -48,18 +48,31 @@
   <!-- Demo Interactivo -->
   <section class="section">
     <h2><i class="pi pi-bolt"></i> Demo Interactivo</h2>
-    <p class="section-description">Navega entre los tabs para ver cómo funciona el template.</p>
+    <p class="section-description">Selecciona el tipo de entidad y navega entre los tabs para ver cómo funciona el template.</p>
 
-    <app-ds-preview title="Detail Template">
+    <!-- Entity Type Selector -->
+    <div class="entity-type-selector">
+      @for (entity of entityTypes; track entity.id) {
+        <button
+          class="entity-type-btn"
+          [class.active]="selectedEntityType() === entity.id"
+          (click)="onEntityTypeChange($any(entity.id))">
+          <i [class]="entity.icon"></i>
+          {{ entity.label }}
+        </button>
+      }
+    </div>
+
+    <app-ds-preview [title]="currentConfig().title">
       <div class="demo-detail">
         <!-- Header -->
         <div class="demo-header">
           <div class="demo-header-left">
-            <h3>Detalle del Activo</h3>
-            <p>Visualiza y gestiona la información del activo</p>
+            <h3>{{ currentConfig().title }}</h3>
+            <p>{{ currentConfig().subtitle }}</p>
           </div>
           <div class="demo-header-right">
-            @for (tab of mainTabs; track tab.id) {
+            @for (tab of currentConfig().mainTabs; track tab.id) {
               <button
                 class="demo-main-tab"
                 [class.active]="mainTab() === tab.id"
@@ -80,27 +93,45 @@
             <!-- Entity Header Row -->
             <div class="demo-entity-row">
               <div class="demo-entity-info">
-                <h4>Sistema GRC ACT-001 <span class="code">ACT-001</span></h4>
-                <p>El sistema GRC optimiza la gestión financiera mediante un enfoque integral.</p>
+                <h4>{{ currentConfig().description.substring(0, 40) }}... <span class="code">{{ currentConfig().code }}</span></h4>
+                <p>{{ currentConfig().description }}</p>
               </div>
-              <div class="demo-status-card healthy">
+              <div class="demo-status-card" [class]="currentConfig().statusCard.color">
                 <div class="status-header">
-                  <i class="pi pi-heart-fill"></i>
-                  <span>Salud del Activo</span>
-                  <p-tag value="Saludable" severity="success" />
+                  <i [class]="currentConfig().statusCard.icon"></i>
+                  <span>{{ currentConfig().statusCard.title }}</span>
+                  <p-tag [value]="currentConfig().statusCard.status" [severity]="currentConfig().statusCard.severity" />
                 </div>
-                <div class="status-progress">
-                  <span>Incidentes: 2 / 5</span>
-                  <div class="progress-bar">
-                    <div class="progress-fill" style="width: 40%"></div>
+                @if (selectedEntityType() === 'activo') {
+                  <div class="status-progress">
+                    <span>Incidentes: 2 / 5</span>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width: 40%"></div>
+                    </div>
                   </div>
-                </div>
+                }
+                @if (selectedEntityType() === 'riesgo') {
+                  <div class="status-metrics">
+                    <span class="metric">Inherente: <strong>16</strong></span>
+                    <span class="metric">Residual: <strong>8</strong></span>
+                  </div>
+                }
+                @if (selectedEntityType() === 'incidente') {
+                  <div class="status-metrics">
+                    <span class="metric">Severidad: <strong>Alta</strong></span>
+                  </div>
+                }
+                @if (selectedEntityType() === 'defecto') {
+                  <div class="status-metrics">
+                    <span class="metric">Prioridad: <strong>P1</strong></span>
+                  </div>
+                }
               </div>
             </div>
 
             <!-- Secondary Tabs -->
             <div class="demo-secondary-tabs">
-              @for (tab of secondaryTabs; track tab.id) {
+              @for (tab of currentConfig().secondaryTabs; track tab.id) {
                 <button
                   class="secondary-tab-btn"
                   [class.active]="secondaryTab() === tab.id"
@@ -115,42 +146,144 @@
             <div class="demo-tab-content">
               @if (secondaryTab() === 'info') {
                 <div class="demo-info-grid">
-                  <div class="info-item">
-                    <label>Responsable</label>
-                    <div class="value with-avatar">
-                      <p-avatar label="AJ" shape="circle" />
-                      <span>Alice Johnson</span>
+                  @if (selectedEntityType() === 'activo') {
+                    <div class="info-item">
+                      <label>Responsable</label>
+                      <div class="value with-avatar">
+                        <p-avatar label="AJ" shape="circle" />
+                        <span>Alice Johnson</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="info-item">
-                    <label>Organización</label>
-                    <div class="value">Empresa ABC · Operaciones · IT</div>
-                  </div>
-                  <div class="info-item">
-                    <label>Última Revisión</label>
-                    <div class="value">15/01/2024</div>
-                  </div>
-                  <div class="info-item">
-                    <label>Estado</label>
-                    <div class="value">
-                      <p-tag value="Activo" severity="success" />
+                    <div class="info-item">
+                      <label>Organización</label>
+                      <div class="value">Empresa ABC · Operaciones · IT</div>
                     </div>
-                  </div>
+                    <div class="info-item">
+                      <label>Última Revisión</label>
+                      <div class="value">15/01/2024</div>
+                    </div>
+                    <div class="info-item">
+                      <label>Estado</label>
+                      <div class="value">
+                        <p-tag value="Activo" severity="success" />
+                      </div>
+                    </div>
+                  }
+                  @if (selectedEntityType() === 'riesgo') {
+                    <div class="info-item">
+                      <label>Propietario del Riesgo</label>
+                      <div class="value with-avatar">
+                        <p-avatar label="MG" shape="circle" />
+                        <span>María García</span>
+                      </div>
+                    </div>
+                    <div class="info-item">
+                      <label>Categoría</label>
+                      <div class="value">Seguridad de la Información</div>
+                    </div>
+                    <div class="info-item">
+                      <label>Fecha Identificación</label>
+                      <div class="value">08/01/2024</div>
+                    </div>
+                    <div class="info-item">
+                      <label>Estado</label>
+                      <div class="value">
+                        <p-tag value="En Evaluación" severity="warn" />
+                      </div>
+                    </div>
+                  }
+                  @if (selectedEntityType() === 'incidente') {
+                    <div class="info-item">
+                      <label>Reportado por</label>
+                      <div class="value with-avatar">
+                        <p-avatar label="JL" shape="circle" />
+                        <span>Juan López</span>
+                      </div>
+                    </div>
+                    <div class="info-item">
+                      <label>Asignado a</label>
+                      <div class="value with-avatar">
+                        <p-avatar label="CR" shape="circle" />
+                        <span>Carlos Ruiz</span>
+                      </div>
+                    </div>
+                    <div class="info-item">
+                      <label>Fecha del Incidente</label>
+                      <div class="value">25/01/2024 14:32</div>
+                    </div>
+                    <div class="info-item">
+                      <label>Estado</label>
+                      <div class="value">
+                        <p-tag value="En Proceso" severity="warn" />
+                      </div>
+                    </div>
+                  }
+                  @if (selectedEntityType() === 'defecto') {
+                    <div class="info-item">
+                      <label>Descubierto por</label>
+                      <div class="value with-avatar">
+                        <p-avatar label="AP" shape="circle" />
+                        <span>Ana Pérez</span>
+                      </div>
+                    </div>
+                    <div class="info-item">
+                      <label>Tipo de Defecto</label>
+                      <div class="value">Vulnerabilidad de Seguridad</div>
+                    </div>
+                    <div class="info-item">
+                      <label>Fecha Descubrimiento</label>
+                      <div class="value">20/01/2024</div>
+                    </div>
+                    <div class="info-item">
+                      <label>Estado</label>
+                      <div class="value">
+                        <p-tag value="Abierto" severity="danger" />
+                      </div>
+                    </div>
+                  }
                 </div>
               }
-              @if (secondaryTab() === 'salud') {
+              @if (secondaryTab() === 'salud' || secondaryTab() === 'analisis') {
                 <div class="demo-health-panel">
-                  <p class="text-secondary">Panel de análisis de salud del activo...</p>
+                  @if (selectedEntityType() === 'activo') {
+                    <p class="text-secondary">Panel de análisis de salud del activo...</p>
+                  }
+                  @if (selectedEntityType() === 'riesgo') {
+                    <div class="risk-analysis-demo">
+                      <div class="analysis-row">
+                        <div class="analysis-item">
+                          <label>Probabilidad</label>
+                          <p-tag value="Alta (4)" severity="warn" />
+                        </div>
+                        <div class="analysis-item">
+                          <label>Impacto</label>
+                          <p-tag value="Mayor (4)" severity="warn" />
+                        </div>
+                        <div class="analysis-item">
+                          <label>Riesgo Inherente</label>
+                          <p-tag value="16 - Alto" severity="danger" />
+                        </div>
+                      </div>
+                    </div>
+                  }
                 </div>
               }
-              @if (secondaryTab() === 'config') {
+              @if (secondaryTab() === 'config' || secondaryTab() === 'respuesta' || secondaryTab() === 'solucion') {
                 <div class="demo-config-panel">
-                  <p class="text-secondary">Configuración de tolerancia a incidentes...</p>
+                  @if (selectedEntityType() === 'activo') {
+                    <p class="text-secondary">Configuración de tolerancia a incidentes...</p>
+                  }
+                  @if (selectedEntityType() === 'incidente') {
+                    <p class="text-secondary">Plan de respuesta y acciones tomadas...</p>
+                  }
+                  @if (selectedEntityType() === 'defecto') {
+                    <p class="text-secondary">Solución propuesta y pasos de remediación...</p>
+                  }
                 </div>
               }
               @if (secondaryTab() === 'propiedades') {
                 <div class="demo-props-panel">
-                  <p class="text-secondary">Propiedades personalizadas del activo...</p>
+                  <p class="text-secondary">Propiedades personalizadas de la entidad...</p>
                 </div>
               }
             </div>
@@ -160,44 +293,44 @@
           <div class="demo-sidebar">
             <div class="demo-stat-row">
               <div class="demo-stat-card">
-                <div class="stat-indicator riesgos"></div>
+                <div class="stat-indicator" [class]="currentConfig().stats[0].indicator"></div>
                 <div class="stat-info">
-                  <span class="stat-label">Riesgos</span>
-                  <span class="stat-value">12</span>
+                  <span class="stat-label">{{ currentConfig().stats[0].label }}</span>
+                  <span class="stat-value">{{ currentConfig().stats[0].value }}</span>
                 </div>
               </div>
               <div class="demo-stat-card">
-                <div class="stat-indicator nivel"></div>
+                <div class="stat-indicator" [class]="currentConfig().stats[1].indicator"></div>
                 <div class="stat-info">
-                  <span class="stat-label">Criticidad</span>
-                  <span class="stat-value">Alta</span>
+                  <span class="stat-label">{{ currentConfig().stats[1].label }}</span>
+                  <span class="stat-value">{{ currentConfig().stats[1].value }}</span>
                 </div>
               </div>
             </div>
             <div class="demo-stat-row">
               <div class="demo-stat-card">
-                <div class="stat-indicator incidentes"></div>
+                <div class="stat-indicator" [class]="currentConfig().stats[2].indicator"></div>
                 <div class="stat-info">
-                  <span class="stat-label">Incidentes</span>
-                  <span class="stat-value">5</span>
+                  <span class="stat-label">{{ currentConfig().stats[2].label }}</span>
+                  <span class="stat-value">{{ currentConfig().stats[2].value }}</span>
                 </div>
               </div>
               <div class="demo-stat-card">
-                <div class="stat-indicator valor"></div>
+                <div class="stat-indicator" [class]="currentConfig().stats[3].indicator"></div>
                 <div class="stat-info">
-                  <span class="stat-label">Valor</span>
-                  <span class="stat-value">$50K</span>
+                  <span class="stat-label">{{ currentConfig().stats[3].label }}</span>
+                  <span class="stat-value">{{ currentConfig().stats[3].value }}</span>
                 </div>
               </div>
             </div>
             <div class="demo-graph-card">
               <div class="graph-header">
-                <span>Relaciones</span>
+                <span>{{ selectedEntityType() === 'riesgo' ? 'Matriz de Riesgo' : 'Relaciones' }}</span>
                 <i class="pi pi-expand"></i>
               </div>
               <div class="graph-placeholder">
-                <i class="pi pi-share-alt"></i>
-                <span>Grafo de relaciones</span>
+                <i [class]="selectedEntityType() === 'riesgo' ? 'pi pi-th-large' : 'pi pi-share-alt'"></i>
+                <span>{{ selectedEntityType() === 'riesgo' ? 'Mapa de calor' : 'Grafo de relaciones' }}</span>
               </div>
             </div>
           </div>

@@ -11,7 +11,7 @@
   <!-- Main Card -->
   <p-card>
     <!-- Tabs -->
-    <p-tabs [(value)]="activeTab" scrollable>
+    <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)" scrollable>
       <p-tablist>
         <p-tab value="0">
           <i class="pi pi-exclamation-triangle mr-2"></i>

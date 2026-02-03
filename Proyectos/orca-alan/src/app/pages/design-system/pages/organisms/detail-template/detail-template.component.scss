@@ -153,6 +153,51 @@
 }
 
 // ============================================
+// ENTITY TYPE SELECTOR
+// ============================================
+.entity-type-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.entity-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg);
+  background: var(--surface-card);
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    background: var(--surface-hover);
+    color: var(--text-color);
+    border-color: var(--surface-300);
+  }
+
+  &.active {
+    background: var(--primary-color);
+    color: var(--primary-color-text);
+    border-color: var(--primary-color);
+
+    &:hover {
+      background: var(--primary-600);
+    }
+  }
+}
+
+// ============================================
 // DEMO DETAIL
 // ============================================
 .demo-detail {
@@ -277,6 +322,31 @@
       max-width: 100%;
     }
 
+    // Color variants
+    &.green {
+      background: var(--green-50);
+      border-color: var(--green-200);
+      .status-header i { color: var(--green-500); }
+    }
+
+    &.orange {
+      background: var(--orange-50);
+      border-color: var(--orange-200);
+      .status-header i { color: var(--orange-500); }
+    }
+
+    &.yellow {
+      background: var(--yellow-50);
+      border-color: var(--yellow-200);
+      .status-header i { color: var(--yellow-500); }
+    }
+
+    &.red {
+      background: var(--red-50);
+      border-color: var(--red-200);
+      .status-header i { color: var(--red-500); }
+    }
+
     .status-header {
       display: flex;
       align-items: center;
@@ -312,6 +382,21 @@
           height: 100%;
           background: var(--green-500);
           border-radius: 3px;
+        }
+      }
+    }
+
+    .status-metrics {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.25rem;
+
+      .metric {
+        font-size: 0.75rem;
+        color: var(--text-color-secondary);
+
+        strong {
+          color: var(--text-color);
         }
       }
     }
@@ -356,6 +441,26 @@
 .demo-tab-content {
   padding: 1rem;
   min-height: 100px;
+}
+
+.risk-analysis-demo {
+  .analysis-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+
+    .analysis-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-color-secondary);
+      }
+    }
+  }
 }
 
 .demo-info-grid {
@@ -416,10 +521,27 @@
     height: 32px;
     border-radius: 2px;
 
+    // Activo
     &.riesgos { background: var(--orange-500); }
     &.nivel { background: var(--red-500); }
     &.incidentes { background: var(--yellow-500); }
     &.valor { background: var(--green-500); }
+
+    // Riesgo
+    &.probabilidad { background: var(--blue-500); }
+    &.impacto { background: var(--purple-500); }
+    &.controles { background: var(--teal-500); }
+    &.activos { background: var(--cyan-500); }
+
+    // Incidente
+    &.tiempo { background: var(--indigo-500); }
+    &.downtime { background: var(--red-500); }
+    &.usuarios { background: var(--pink-500); }
+
+    // Defecto
+    &.dias { background: var(--orange-500); }
+    &.severidad { background: var(--red-500); }
+    &.procesos { background: var(--purple-500); }
   }
 
   .stat-info {
@@ -611,6 +733,12 @@
     background: var(--surface-700);
   }
 
+  .entity-type-btn {
+    &:hover {
+      background: var(--surface-700);
+    }
+  }
+
   .layout-header {
     background: rgba(59, 130, 246, 0.1);
     border-color: var(--blue-700);
@@ -627,8 +755,22 @@
   }
 
   .demo-status-card {
-    background: rgba(34, 197, 94, 0.1);
-    border-color: var(--green-700);
+    &.green {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: var(--green-700);
+    }
+    &.orange {
+      background: rgba(249, 115, 22, 0.1);
+      border-color: var(--orange-700);
+    }
+    &.yellow {
+      background: rgba(234, 179, 8, 0.1);
+      border-color: var(--yellow-700);
+    }
+    &.red {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--red-700);
+    }
   }
 
   .entity-demo-right .status-demo-card {

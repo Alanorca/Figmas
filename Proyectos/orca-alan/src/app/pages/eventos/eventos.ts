@@ -133,17 +133,55 @@ export class EventosComponent implements OnInit {
   // ============ Navegación ============
 
   navigateToCreate(): void {
-    this.router.navigate(['/eventos/crear'], {
-      queryParams: { type: this.currentEventType() }
-    });
+    // Navegar a la página de creación específica según el tipo de evento
+    switch (this.currentEventType()) {
+      case EventType.RISK:
+        this.router.navigate(['/riesgos/crear']);
+        break;
+      case EventType.INCIDENT:
+        this.router.navigate(['/incidentes/crear']);
+        break;
+      case EventType.DEFECT:
+        this.router.navigate(['/defectos/crear']);
+        break;
+      default:
+        this.router.navigate(['/eventos/crear'], {
+          queryParams: { type: this.currentEventType() }
+        });
+    }
   }
 
   navigateToDetail(event: Event): void {
-    this.router.navigate(['/eventos', event.id]);
+    switch (event.eventType) {
+      case EventType.RISK:
+        this.router.navigate(['/riesgos', event.id]);
+        break;
+      case EventType.INCIDENT:
+        this.router.navigate(['/incidentes', event.id]);
+        break;
+      case EventType.DEFECT:
+        this.router.navigate(['/defectos', event.id]);
+        break;
+      default:
+        this.router.navigate(['/eventos', event.id]);
+    }
   }
 
   navigateToEdit(event: Event): void {
-    this.router.navigate(['/eventos', event.id, 'editar']);
+    // Navegar a la página de edición específica según el tipo de evento
+    switch (event.eventType) {
+      case EventType.RISK:
+        this.router.navigate(['/riesgos', event.id, 'editar']);
+        break;
+      case EventType.INCIDENT:
+        this.router.navigate(['/incidentes', event.id, 'editar']);
+        break;
+      case EventType.DEFECT:
+        this.router.navigate(['/defectos', event.id, 'editar']);
+        break;
+      default:
+        this.router.navigate(['/eventos', event.id, 'editar']);
+    }
   }
 
   onRowClick(event: Event): void {
@@ -193,12 +231,20 @@ export class EventosComponent implements OnInit {
       {
         label: 'Ver detalle',
         icon: 'pi pi-eye',
-        command: () => this.navigateToDetail(event)
+        command: () => {
+          if (this.selectedEvent) {
+            this.navigateToDetail(this.selectedEvent);
+          }
+        }
       },
       {
         label: 'Editar',
         icon: 'pi pi-pencil',
-        command: () => this.navigateToEdit(event)
+        command: () => {
+          if (this.selectedEvent) {
+            this.navigateToEdit(this.selectedEvent);
+          }
+        }
       },
       { separator: true },
       {
@@ -206,7 +252,11 @@ export class EventosComponent implements OnInit {
         icon: 'pi pi-sync',
         items: EVENT_STATUS_OPTIONS.map(status => ({
           label: status.label,
-          command: () => this.changeStatus(event, status.value)
+          command: () => {
+            if (this.selectedEvent) {
+              this.changeStatus(this.selectedEvent, status.value);
+            }
+          }
         }))
       },
       { separator: true },
@@ -214,7 +264,11 @@ export class EventosComponent implements OnInit {
         label: 'Eliminar',
         icon: 'pi pi-trash',
         styleClass: 'text-red-500',
-        command: () => this.confirmDelete(event, clickEvent)
+        command: () => {
+          if (this.selectedEvent) {
+            this.confirmDelete(this.selectedEvent, clickEvent);
+          }
+        }
       }
     ];
     menu.toggle(clickEvent);
@@ -263,5 +317,9 @@ export class EventosComponent implements OnInit {
       case '2': return this.eventosService.defects().length;
       default: return 0;
     }
+  }
+
+  onTabChange(value: string | number | undefined): void {
+    this.activeTab.set(String(value ?? '0'));
   }
 }

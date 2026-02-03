@@ -35,6 +35,127 @@ export class DetailTemplateComponent {
   mainTab = signal<string>('general');
   secondaryTab = signal<string>('info');
 
+  // Entity type selector
+  selectedEntityType = signal<'activo' | 'riesgo' | 'incidente' | 'defecto'>('activo');
+
+  entityTypes = [
+    { id: 'activo', label: 'Activo', icon: 'pi pi-box' },
+    { id: 'riesgo', label: 'Riesgo', icon: 'pi pi-exclamation-triangle' },
+    { id: 'incidente', label: 'Incidente', icon: 'pi pi-bolt' },
+    { id: 'defecto', label: 'Defecto', icon: 'pi pi-wrench' }
+  ];
+
+  // Entity-specific configurations
+  entityConfigs: Record<string, {
+    title: string;
+    subtitle: string;
+    code: string;
+    description: string;
+    mainTabs: { id: string; label: string; icon: string }[];
+    secondaryTabs: { id: string; label: string; icon: string }[];
+    statusCard: { title: string; status: string; severity: 'success' | 'warn' | 'danger' | 'info'; icon: string; color: string };
+    stats: { label: string; value: string; indicator: string }[];
+  }> = {
+    activo: {
+      title: 'Detalle del Activo',
+      subtitle: 'Visualiza y gestiona la información del activo',
+      code: 'ACT-001',
+      description: 'El sistema GRC optimiza la gestión financiera mediante un enfoque integral.',
+      mainTabs: [
+        { id: 'general', label: 'Información general', icon: 'pi pi-info-circle' },
+        { id: 'reglas', label: 'Reglas', icon: 'pi pi-check-square' },
+        { id: 'riesgos', label: 'Riesgos', icon: 'pi pi-exclamation-triangle' },
+        { id: 'auditoria', label: 'Auditoría', icon: 'pi pi-history' }
+      ],
+      secondaryTabs: [
+        { id: 'info', label: 'Información General', icon: 'pi pi-info-circle' },
+        { id: 'salud', label: 'Estado de Salud', icon: 'pi pi-heart-fill' },
+        { id: 'config', label: 'Configuración', icon: 'pi pi-sliders-h' },
+        { id: 'propiedades', label: 'Propiedades', icon: 'pi pi-th-large' }
+      ],
+      statusCard: { title: 'Salud del Activo', status: 'Saludable', severity: 'success', icon: 'pi pi-heart-fill', color: 'green' },
+      stats: [
+        { label: 'Riesgos', value: '12', indicator: 'riesgos' },
+        { label: 'Criticidad', value: 'Alta', indicator: 'nivel' },
+        { label: 'Incidentes', value: '5', indicator: 'incidentes' },
+        { label: 'Valor', value: '$50K', indicator: 'valor' }
+      ]
+    },
+    riesgo: {
+      title: 'Detalle del Riesgo',
+      subtitle: 'Gestiona y evalúa el riesgo identificado',
+      code: 'RSK-042',
+      description: 'Riesgo de pérdida de datos sensibles por acceso no autorizado a sistemas críticos.',
+      mainTabs: [
+        { id: 'general', label: 'Información general', icon: 'pi pi-info-circle' },
+        { id: 'controles', label: 'Controles', icon: 'pi pi-shield' },
+        { id: 'costos', label: 'Costos', icon: 'pi pi-dollar' },
+        { id: 'historial', label: 'Historial', icon: 'pi pi-history' }
+      ],
+      secondaryTabs: [
+        { id: 'info', label: 'Información General', icon: 'pi pi-info-circle' },
+        { id: 'analisis', label: 'Análisis de Riesgo', icon: 'pi pi-chart-bar' },
+        { id: 'propiedades', label: 'Propiedades', icon: 'pi pi-th-large' }
+      ],
+      statusCard: { title: 'Nivel de Riesgo', status: 'Alto', severity: 'warn', icon: 'pi pi-exclamation-triangle', color: 'orange' },
+      stats: [
+        { label: 'Probabilidad', value: 'Alta', indicator: 'probabilidad' },
+        { label: 'Impacto', value: 'Mayor', indicator: 'impacto' },
+        { label: 'Controles', value: '4', indicator: 'controles' },
+        { label: 'Activos', value: '8', indicator: 'activos' }
+      ]
+    },
+    incidente: {
+      title: 'Detalle del Incidente',
+      subtitle: 'Gestiona la respuesta y resolución del incidente',
+      code: 'INC-127',
+      description: 'Interrupción del servicio de autenticación que afectó a múltiples usuarios.',
+      mainTabs: [
+        { id: 'general', label: 'General', icon: 'pi pi-info-circle' },
+        { id: 'impacto', label: 'Impacto', icon: 'pi pi-chart-line' },
+        { id: 'historial', label: 'Historial', icon: 'pi pi-history' }
+      ],
+      secondaryTabs: [
+        { id: 'info', label: 'Información', icon: 'pi pi-info-circle' },
+        { id: 'respuesta', label: 'Respuesta', icon: 'pi pi-reply' },
+        { id: 'propiedades', label: 'Propiedades', icon: 'pi pi-th-large' }
+      ],
+      statusCard: { title: 'Estado del Incidente', status: 'En Proceso', severity: 'warn', icon: 'pi pi-clock', color: 'yellow' },
+      stats: [
+        { label: 'Tiempo Resp.', value: '2h', indicator: 'tiempo' },
+        { label: 'Downtime', value: '45min', indicator: 'downtime' },
+        { label: 'Usuarios', value: '150', indicator: 'usuarios' },
+        { label: 'Activos', value: '3', indicator: 'activos' }
+      ]
+    },
+    defecto: {
+      title: 'Detalle del Defecto',
+      subtitle: 'Gestiona la corrección del defecto identificado',
+      code: 'DEF-089',
+      description: 'Vulnerabilidad en validación de entrada que permite inyección SQL.',
+      mainTabs: [
+        { id: 'general', label: 'General', icon: 'pi pi-info-circle' },
+        { id: 'activos', label: 'Activos', icon: 'pi pi-box' },
+        { id: 'historial', label: 'Historial', icon: 'pi pi-history' }
+      ],
+      secondaryTabs: [
+        { id: 'info', label: 'Información', icon: 'pi pi-info-circle' },
+        { id: 'solucion', label: 'Solución', icon: 'pi pi-check-circle' },
+        { id: 'propiedades', label: 'Propiedades', icon: 'pi pi-th-large' }
+      ],
+      statusCard: { title: 'Estado del Defecto', status: 'Abierto', severity: 'danger', icon: 'pi pi-exclamation-circle', color: 'red' },
+      stats: [
+        { label: 'Días Abierto', value: '12', indicator: 'dias' },
+        { label: 'Severidad', value: 'Crítico', indicator: 'severidad' },
+        { label: 'Activos', value: '5', indicator: 'activos' },
+        { label: 'Procesos', value: '2', indicator: 'procesos' }
+      ]
+    }
+  };
+
+  // Computed current config
+  currentConfig = () => this.entityConfigs[this.selectedEntityType()];
+
   mainTabs = [
     { id: 'general', label: 'Información general', icon: 'pi pi-info-circle' },
     { id: 'reglas', label: 'Reglas', icon: 'pi pi-check-square' },
@@ -48,6 +169,13 @@ export class DetailTemplateComponent {
     { id: 'config', label: 'Configuración', icon: 'pi pi-sliders-h' },
     { id: 'propiedades', label: 'Propiedades', icon: 'pi pi-th-large' }
   ];
+
+  // Reset tabs when entity type changes
+  onEntityTypeChange(type: 'activo' | 'riesgo' | 'incidente' | 'defecto') {
+    this.selectedEntityType.set(type);
+    this.mainTab.set('general');
+    this.secondaryTab.set('info');
+  }
 
   // Props documentation
   layoutProps: ComponentProp[] = [
@@ -104,8 +232,9 @@ export class DetailTemplateComponent {
   usageItems: UsageItem[] = [
     { title: 'Detalle de Activo', path: '/activos/:id/detalle', icon: 'pi pi-box', description: 'Vista detallada de activos' },
     { title: 'Detalle de Proceso', path: '/procesos/:id/detalle', icon: 'pi pi-sitemap', description: 'Vista detallada de procesos' },
-    { title: 'Detalle de Riesgo', path: '/riesgos/:id/detalle', icon: 'pi pi-exclamation-triangle', description: 'Vista detallada de riesgos' },
-    { title: 'Detalle de Incidente', path: '/incidentes/:id/detalle', icon: 'pi pi-bolt', description: 'Vista detallada de incidentes' }
+    { title: 'Detalle de Riesgo', path: '/riesgos/:id', icon: 'pi pi-exclamation-triangle', description: 'Vista detallada de riesgos' },
+    { title: 'Detalle de Incidente', path: '/incidentes/:id', icon: 'pi pi-bolt', description: 'Vista detallada de incidentes' },
+    { title: 'Detalle de Defecto', path: '/defectos/:id', icon: 'pi pi-wrench', description: 'Vista detallada de defectos' }
   ];
 
   // Tokens used
