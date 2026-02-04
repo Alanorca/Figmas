@@ -81,6 +81,7 @@
 // =========================================
 :host.ds-theme-dark {
   // Surface tokens (zinc-based - pure grays, no blue tint)
+  // IMPORTANTE: Usar zinc (#18181b), NO slate (#0f172a) que tiene tinte azul
   --surface-ground: #09090b;
   --surface-section: #18181b;
   --surface-card: #18181b;
@@ -94,6 +95,9 @@
   --surface-300: #52525b;
   --surface-400: #71717a;
   --surface-500: #a1a1aa;
+  // FIX: Override global --surface-900 que usa slate (#0f172a)
+  // Corregido a zinc-900 (#18181b) para mantener consistencia
+  --surface-900: #18181b;
 
   // Text tokens
   --text-color: #fafafa;
@@ -1446,6 +1450,79 @@
         color: #1e293b !important;
       }
     }
+
+    // ========== ACCORDION ==========
+    .p-accordion {
+      background: #ffffff !important;
+
+      .p-accordionpanel {
+        border-color: #e2e8f0 !important;
+        background: #ffffff !important;
+      }
+
+      .p-accordionheader {
+        background: #ffffff !important;
+        color: #1e293b !important;
+        border-color: #e2e8f0 !important;
+
+        &:hover {
+          background: #f8fafc !important;
+        }
+
+        .p-accordionheader-toggle-icon {
+          color: #64748b !important;
+        }
+      }
+
+      .p-accordioncontent,
+      .p-accordionpanel-content,
+      .p-toggleable-content {
+        background: #ffffff !important;
+        color: #1e293b !important;
+        border-color: #e2e8f0 !important;
+
+        > div {
+          background: #ffffff !important;
+        }
+      }
+
+      // Contenido personalizado de stats
+      .accordion-body {
+        background: #ffffff !important;
+        color: #1e293b !important;
+
+        .section-description {
+          color: #64748b !important;
+        }
+      }
+    }
+
+    // ========== DS-PROPS-TABLE ==========
+    app-ds-props-table,
+    .ds-props-table {
+      .p-datatable {
+        .p-datatable-thead > tr > th {
+          background: #f8fafc !important;
+          color: #1e293b !important;
+          border-color: #e2e8f0 !important;
+        }
+      }
+
+      .prop-name {
+        color: #10b981 !important;
+        background: #ecfdf5 !important;
+      }
+
+      .prop-type {
+        color: #7c3aed !important;
+        background: #f3e8ff !important;
+      }
+
+      .prop-default {
+        color: #64748b !important;
+        background: #f1f5f9 !important;
+      }
+    }
   }
 }
 
@@ -2505,6 +2582,79 @@
       .preview-panel {
         background: #18181b !important;
         color: #fafafa !important;
+      }
+    }
+
+    // ========== ACCORDION ==========
+    .p-accordion {
+      background: #18181b !important;
+
+      .p-accordionpanel {
+        border-color: #27272a !important;
+        background: #18181b !important;
+      }
+
+      .p-accordionheader {
+        background: #18181b !important;
+        color: #fafafa !important;
+        border-color: #27272a !important;
+
+        &:hover {
+          background: #27272a !important;
+        }
+
+        .p-accordionheader-toggle-icon {
+          color: #a1a1aa !important;
+        }
+      }
+
+      .p-accordioncontent,
+      .p-accordionpanel-content,
+      .p-toggleable-content {
+        background: #18181b !important;
+        color: #fafafa !important;
+        border-color: #27272a !important;
+
+        > div {
+          background: #18181b !important;
+        }
+      }
+
+      // Contenido personalizado de stats
+      .accordion-body {
+        background: #18181b !important;
+        color: #fafafa !important;
+
+        .section-description {
+          color: #a1a1aa !important;
+        }
+      }
+    }
+
+    // ========== DS-PROPS-TABLE ==========
+    app-ds-props-table,
+    .ds-props-table {
+      .p-datatable {
+        .p-datatable-thead > tr > th {
+          background: #27272a !important;
+          color: #fafafa !important;
+          border-color: #3f3f46 !important;
+        }
+      }
+
+      .prop-name {
+        color: #34d399 !important;
+        background: rgba(52, 211, 153, 0.16) !important;
+      }
+
+      .prop-type {
+        color: #c084fc !important;
+        background: rgba(168, 85, 247, 0.16) !important;
+      }
+
+      .prop-default {
+        color: #a1a1aa !important;
+        background: #27272a !important;
       }
     }
   }

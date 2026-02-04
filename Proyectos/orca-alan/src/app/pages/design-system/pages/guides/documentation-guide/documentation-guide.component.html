@@ -227,6 +227,59 @@ src/app/pages/design-system/
     </div>
   </section>
 
+  <!-- Accordion Pattern -->
+  <section class="section" id="accordion-pattern">
+    <h2><i class="pi pi-list"></i> Patrón de Acordeones</h2>
+    <p class="section-description">
+      Template para organizar secciones colapsables con header personalizado.
+      Usado en <a routerLink="/design-system/molecules/stats">Stats</a> para agrupar variantes de componentes.
+    </p>
+
+    <app-ds-preview title="Accordion con Header Personalizado">
+      <p-accordion [(value)]="demoAccordionValue">
+        <p-accordionpanel value="0">
+          <p-accordionheader>
+            <div class="accordion-header-content">
+              <i class="pi pi-palette"></i>
+              <span>Sección Ejemplo</span>
+              <p-tag value="3 items" severity="info" />
+            </div>
+          </p-accordionheader>
+          <p-accordioncontent>
+            <div class="accordion-body">
+              <p class="section-description">
+                Contenido de la sección con descripción y componentes.
+              </p>
+              <div class="demo-content">
+                Este es el contenido expandible del acordeón.
+              </div>
+            </div>
+          </p-accordioncontent>
+        </p-accordionpanel>
+
+        <p-accordionpanel value="1">
+          <p-accordionheader>
+            <div class="accordion-header-content">
+              <i class="pi pi-chart-bar"></i>
+              <span>Otra Sección</span>
+              <p-tag value="5 items" severity="success" />
+            </div>
+          </p-accordionheader>
+          <p-accordioncontent>
+            <div class="accordion-body">
+              <p class="section-description">
+                Cada sección puede tener diferentes tipos de contenido.
+              </p>
+            </div>
+          </p-accordioncontent>
+        </p-accordionpanel>
+      </p-accordion>
+    </app-ds-preview>
+
+    <app-ds-props-table [props]="accordionProps" />
+    <app-ds-code-tabs [tabs]="accordionCodeTabs" />
+  </section>
+
   <!-- Quick Reference -->
   <section class="section">
     <h2><i class="pi pi-bookmark"></i> Referencia Rápida</h2>

@@ -133,6 +133,10 @@ export const DESIGN_SYSTEM_ROUTES: Routes = [
         path: 'molecules/lists',
         loadComponent: () => import('./pages/molecules/lists/lists.component').then(m => m.ListsComponent)
       },
+      {
+        path: 'molecules/stats',
+        loadComponent: () => import('./pages/stats/stats.component').then(m => m.StatsComponent)
+      },
       // Organisms
       {
         path: 'organisms/tables',

@@ -1,0 +1,625 @@
+<div class="stats-page">
+  <!-- Header -->
+  <header class="page-header">
+    <h1>Stats</h1>
+    <p class="subtitle">
+      Componentes para mostrar metricas, KPIs y estadisticas clave de forma visual y compacta.
+      Ideales para dashboards y resumenes de datos.
+    </p>
+  </header>
+
+  <!-- Guidelines -->
+  <app-ds-guidelines
+    [dos]="guidelinesDos"
+    [donts]="guidelinesDonts"
+    [compact]="true"
+  />
+
+  <!-- ============ ACCORDION SECTIONS ============ -->
+  <p-accordion [(value)]="activeAccordion">
+
+    <!-- ============ COLORED & CENTERED ============ -->
+    <p-accordionpanel value="0">
+      <p-accordionheader>
+        <div class="accordion-header-content">
+          <i class="pi pi-palette"></i>
+          <span>Colored & Centered</span>
+          <p-tag value="4 cards" severity="info" />
+        </div>
+      </p-accordionheader>
+      <p-accordioncontent>
+        <div class="accordion-body">
+          <p class="section-description">
+            Stat cards con fondos de color tematico, icono destacado y timestamp.
+            Ideal para mostrar metricas con contexto temporal y categorias visuales claras.
+          </p>
+
+          <app-ds-preview title="Colored Stat Cards">
+            <div class="stat-cards-grid">
+              @for (stat of coloredCenteredStats(); track stat.id) {
+                <div class="stat-card-colored" [class]="'stat-' + stat.color">
+                  <div class="stat-header">
+                    <div class="stat-icon">
+                      <i [class]="stat.icon"></i>
+                    </div>
+                    <span class="stat-timestamp">{{ stat.timestamp }}</span>
+                  </div>
+                  <div class="stat-body">
+                    <span class="stat-label">{{ stat.label }}</span>
+                    <div class="stat-value">{{ stat.value }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          </app-ds-preview>
+
+          <app-ds-code-tabs [tabs]="coloredCodeTabs" />
+          <app-ds-props-table [props]="coloredCardProps" />
+        </div>
+      </p-accordioncontent>
+    </p-accordionpanel>
+
+    <!-- ============ ICONS & FOOTNOTES ============ -->
+    <p-accordionpanel value="1">
+      <p-accordionheader>
+        <div class="accordion-header-content">
+          <i class="pi pi-comment"></i>
+          <span>Icons & Footnotes</span>
+          <p-tag value="4 cards" severity="success" />
+        </div>
+      </p-accordionheader>
+      <p-accordioncontent>
+        <div class="accordion-body">
+          <p class="section-description">
+            Stat cards con fondo neutro, icono con gradiente y texto de pie de pagina.
+            Ideal para dashboards con informacion contextual adicional.
+          </p>
+
+          <app-ds-preview title="Icons & Footnotes Cards">
+            <div class="stat-cards-grid">
+              @for (stat of iconsFootnotesStats(); track stat.id) {
+                <div class="stat-card-footnote">
+                  <div class="stat-content">
+                    <div class="stat-info">
+                      <span class="stat-label">{{ stat.label }}</span>
+                      <div class="stat-value">{{ stat.value }}</div>
+                    </div>
+                    <div class="stat-icon-gradient" [class]="'icon-' + stat.color">
+                      <i [class]="stat.icon"></i>
+                    </div>
+                  </div>
+                  <div class="stat-footnote">
+                    @if (stat.footnoteHighlight) {
+                      <span class="footnote-highlight">{{ stat.footnoteHighlight }}</span>
+                    }
+                    <span class="footnote-text">{{ stat.footnote }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </app-ds-preview>
+
+          <app-ds-code-tabs [tabs]="footnoteCodeTabs" />
+          <app-ds-props-table [props]="footnoteCardProps" />
+        </div>
+      </p-accordioncontent>
+    </p-accordionpanel>
+
+    <!-- ============ CARDS WITH PROGRESS BAR ============ -->
+    <p-accordionpanel value="2">
+      <p-accordionheader>
+        <div class="accordion-header-content">
+          <i class="pi pi-chart-line"></i>
+          <span>Cards with Progress Bar</span>
+          <p-tag value="2 cards" severity="warn" />
+        </div>
+      </p-accordionheader>
+      <p-accordioncontent>
+        <div class="accordion-body">
+          <p class="section-description">
+            Stat cards con barra de progreso hacia una meta. Incluyen avatar/imagen,
+            titulo, subtitulo y descripcion del progreso actual.
+          </p>
+
+          <app-ds-preview title="Progress Bar Cards">
+            <div class="progress-cards-grid">
+              @for (stat of progressStats(); track stat.id) {
+                <div class="stat-card-progress">
+                  <div class="stat-header">
+                    <div class="stat-avatar">
+                      <i [class]="stat.image"></i>
+                    </div>
+                    <div class="stat-title-group">
+                      <span class="stat-title">{{ stat.title }}</span>
+                      <span class="stat-subtitle">{{ stat.subtitle }}</span>
+                    </div>
+                  </div>
+                  <div class="stat-progress-section">
+                    <div class="progress-header">
+                      <span class="progress-label">{{ stat.progressLabel }}</span>
+                      <span class="progress-value">{{ stat.progressValue }}%</span>
+                    </div>
+                    <p-progressbar [value]="stat.progressValue" [showValue]="false" styleClass="progress-bar-custom" />
+                    <p class="progress-description">
+                      <span class="desc-prefix">Currently at </span>
+                      <span class="desc-highlight">{{ stat.currentValue }}</span>
+                      <span class="desc-suffix"> {{ stat.description }}</span>
+                    </p>
+                  </div>
+                </div>
+              }
+            </div>
+          </app-ds-preview>
+
+          <app-ds-code-tabs [tabs]="progressCodeTabs" />
+          <app-ds-props-table [props]="progressCardProps" />
+        </div>
+      </p-accordioncontent>
+    </p-accordionpanel>
+
+    <!-- ============ DATE PICKER STATS ============ -->
+    <p-accordionpanel value="3">
+      <p-accordionheader>
+        <div class="accordion-header-content">
+          <i class="pi pi-calendar"></i>
+          <span>Date Picker Stats</span>
+          <p-tag value="4 metrics" severity="danger" />
+        </div>
+      </p-accordionheader>
+      <p-accordioncontent>
+        <div class="accordion-body">
+          <p class="section-description">
+            Stats card con selector de fecha interactivo y mini charts.
+            Ideal para dashboards que muestran metricas diarias con visualizacion de tendencias.
+          </p>
+
+          <app-ds-preview title="Date Picker Stats">
+            <div class="date-picker-card">
+              <!-- Date Navigation -->
+              <div class="date-nav">
+                <button class="date-nav-btn" (click)="prevDay()">
+                  <i class="pi pi-chevron-left"></i>
+                </button>
+
+                <div class="date-pills-container">
+                  <!-- Mobile: 1 date -->
+                  <div class="date-pills date-pills-mobile">
+                    <div class="date-pill active">
+                      <span class="date-day">{{ getDateByOffset(0).date }}</span>
+                      <span class="date-month">{{ getDateByOffset(0).month }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Tablet: 3 dates -->
+                  <div class="date-pills date-pills-tablet">
+                    @for (offset of [-1, 0, 1]; track offset) {
+                      <button
+                        class="date-pill"
+                        [class.active]="offset === 0"
+                        (click)="selectDateByOffset(offset)"
+                      >
+                        <span class="date-day">{{ getDateByOffset(offset).date }}</span>
+                        <span class="date-month">{{ getDateByOffset(offset).month }}</span>
+                      </button>
+                    }
+                  </div>
+
+                  <!-- Desktop: 7 dates -->
+                  <div class="date-pills date-pills-desktop">
+                    @for (offset of [-3, -2, -1, 0, 1, 2, 3]; track offset) {
+                      <button
+                        class="date-pill"
+                        [class.active]="offset === 0"
+                        (click)="selectDateByOffset(offset)"
+                      >
+                        <span class="date-day">{{ getDateByOffset(offset).date }}</span>
+                        <span class="date-month">{{ getDateByOffset(offset).month }}</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <button class="date-nav-btn" (click)="nextDay()">
+                  <i class="pi pi-chevron-right"></i>
+                </button>
+              </div>
+
+              <!-- Metrics Grid -->
+              <div class="metrics-container">
+                <!-- Row 1 -->
+                <div class="metrics-row">
+                  <div class="metric-item">
+                    <div class="metric-content">
+                      <div class="metric-info">
+                        <span class="metric-label">User Signups</span>
+                        <span class="metric-value">{{ metrics().signups }}</span>
+                      </div>
+                      <div class="metric-chart">
+                        @for (height of chartData().signupBars; track $index) {
+                          <div class="chart-bar" [style.height.px]="height"></div>
+                        }
+                        <div class="chart-bar chart-bar-current" [style.height.px]="chartData().signupCurrentBar"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="metric-divider-v"></div>
+
+                  <div class="metric-item">
+                    <div class="metric-content">
+                      <div class="metric-info">
+                        <span class="metric-label">API Requests</span>
+                        <span class="metric-value">{{ metrics().apiRequests }}</span>
+                      </div>
+                      <div class="metric-chart">
+                        @for (height of chartData().apiBars; track $index) {
+                          <div class="chart-bar" [style.height.px]="height"></div>
+                        }
+                        <div class="chart-bar chart-bar-current" [style.height.px]="chartData().apiCurrentBar"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="metric-divider-h"></div>
+
+                <!-- Row 2 -->
+                <div class="metrics-row">
+                  <div class="metric-item">
+                    <div class="metric-content">
+                      <div class="metric-info">
+                        <span class="metric-label">Tickets Resolved</span>
+                        <span class="metric-value">{{ metrics().ticketsResolved }}</span>
+                      </div>
+                      <div class="metric-chart">
+                        @for (height of chartData().ticketBars; track $index) {
+                          <div class="chart-bar" [style.height.px]="height"></div>
+                        }
+                        <div class="chart-bar chart-bar-current" [style.height.px]="chartData().ticketCurrentBar"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="metric-divider-v"></div>
+
+                  <div class="metric-item">
+                    <div class="metric-content">
+                      <div class="metric-info">
+                        <span class="metric-label">Subscription Renewals</span>
+                        <span class="metric-value">{{ metrics().subscriptionRenewals }}</span>
+                      </div>
+                      <div class="metric-chart">
+                        @for (height of chartData().subscriptionBars; track $index) {
+                          <div class="chart-bar" [style.height.px]="height"></div>
+                        }
+                        <div class="chart-bar chart-bar-current" [style.height.px]="chartData().subscriptionCurrentBar"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </app-ds-preview>
+
+          <app-ds-code-tabs [tabs]="datePickerCodeTabs" />
+          <app-ds-props-table [props]="datePickerCardProps" />
+        </div>
+      </p-accordioncontent>
+    </p-accordionpanel>
+
+    <!-- ============ PROGRESS BARS ============ -->
+    <p-accordionpanel value="4">
+      <p-accordionheader>
+        <div class="accordion-header-content">
+          <i class="pi pi-chart-bar"></i>
+          <span>Progress Bars</span>
+          <p-tag value="3 cards" severity="contrast" />
+        </div>
+      </p-accordionheader>
+      <p-accordioncontent>
+        <div class="accordion-body">
+          <p class="section-description">
+            Cards de usuario con barras de progreso para metricas de redes sociales.
+            Ideal para mostrar rendimiento por plataforma de cada miembro del equipo.
+          </p>
+
+          <app-ds-preview title="User Progress Cards">
+            <div class="user-progress-grid">
+              @for (user of userProgressCards(); track user.id) {
+                <div class="user-progress-card">
+                  <div class="user-header">
+                    <p-avatar [label]="user.avatar" size="large" shape="circle" />
+                    <div class="user-info">
+                      <span class="user-name">{{ user.name }}</span>
+                      <span class="user-role">{{ user.role }}</span>
+                    </div>
+                  </div>
+
+                  <div class="progress-list">
+                    @for (social of user.socials; track social.platform) {
+                      <div class="progress-item">
+                        <div class="progress-labels">
+                          <span class="progress-platform">{{ social.platform }}</span>
+                          <span class="progress-percentage">{{ social.percentage }}</span>
+                        </div>
+                        <p-progressbar
+                          [value]="social.value"
+                          [showValue]="false"
+                          styleClass="progress-bar-sm"
+                        />
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </app-ds-preview>
+
+          <app-ds-code-tabs [tabs]="progressBarsCodeTabs" />
+          <app-ds-props-table [props]="progressBarsCardProps" />
+        </div>
+      </p-accordioncontent>
+    </p-accordionpanel>
+
+    <!-- ============ QUARTER GOALS ============ -->
+    <p-accordionpanel value="5">
+      <p-accordionheader>
+        <div class="accordion-header-content">
+          <i class="pi pi-flag"></i>
+          <span>Quarter Goals</span>
+          <p-tag value="Meter Group" severity="secondary" />
+        </div>
+      </p-accordionheader>
+      <p-accordioncontent>
+        <div class="accordion-body">
+          <p class="section-description">
+            Card de metas trimestrales con barra de progreso segmentada (MeterGroup) y lista de detalles.
+            Ideal para mostrar progreso hacia multiples objetivos con un resumen visual.
+          </p>
+
+          <app-ds-preview title="Quarter Goals Card">
+            <div class="quarter-goals-card">
+              <span class="goals-title">Quarter Goals</span>
+
+              <div class="goals-summary">
+                <div class="goals-header">
+                  <span class="goals-percentage">{{ totalProgress().percentage }}%</span>
+                  <span class="goals-count">{{ totalProgress().current }} / {{ totalProgress().target }}</span>
+                </div>
+                <p-metergroup [value]="meterItems()">
+                  <ng-template #label></ng-template>
+                  <ng-template #meter let-value let-class="class">
+                    <span [class]="class" [style]="{ background: value.color, width: value.value + '%' }"></span>
+                  </ng-template>
+                </p-metergroup>
+              </div>
+
+              <div class="goals-details">
+                <span class="details-title">Details</span>
+                <div class="details-list">
+                  @for (detail of goalDetails(); track detail.label) {
+                    <div class="detail-item">
+                      <span class="detail-indicator" [class]="'indicator-' + detail.color"></span>
+                      <span class="detail-label">{{ detail.label }}</span>
+                      <span class="detail-value">{{ detail.current }} / {{ detail.target }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </app-ds-preview>
+
+          <app-ds-code-tabs [tabs]="quarterGoalsCodeTabs" />
+          <app-ds-props-table [props]="quarterGoalsCardProps" />
+        </div>
+      </p-accordioncontent>
+    </p-accordionpanel>
+
+    <!-- ============ CRYPTO CARDS WITH GRAPH ============ -->
+    <p-accordionpanel value="6">
+      <p-accordionheader>
+        <div class="accordion-header-content">
+          <i class="pi pi-bitcoin"></i>
+          <span>With Graph</span>
+          <p-tag value="4 cards" severity="info" />
+        </div>
+      </p-accordionheader>
+      <p-accordioncontent>
+        <div class="accordion-body">
+          <p class="section-description">
+            Cards de criptomonedas con graficos de area SVG integrados.
+            Ideal para dashboards financieros y seguimiento de activos.
+          </p>
+
+          <app-ds-preview title="Crypto Cards with Graph">
+            <div class="crypto-cards-grid">
+              <!-- Bitcoin -->
+              <div class="crypto-card">
+                <div class="crypto-header">
+                  <div class="crypto-info">
+                    <div class="crypto-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="14" viewBox="0 0 10 14" fill="none">
+                        <path d="M9.66729 9.1396C9.58204 8.12686 8.57123 7.44962 8.57123 7.44962C8.57123 7.44962 9.85971 7.09167 9.99246 5.52766C10.0765 4.52989 9.4627 3.48846 7.92211 3.0245L8.4531 0.970334L7.18897 0.62735L6.6592 2.67653L5.61064 2.39216L6.1404 0.342984L4.87384 0L4.34407 2.04918L2.30783 1.49666L1.97292 2.79002L3.21269 3.12552L1.59538 9.38281L0.355612 9.04481L0 10.4167L2.03625 10.9693L1.50648 13.0222L2.77792 13.3726L3.3089 11.3197L4.35747 11.6041L3.82161 13.6595L5.09183 14L5.62281 11.9471L5.91632 12.0257C8.39099 12.6617 9.81344 10.8857 9.66729 9.1396ZM5.30861 3.69425C5.30861 3.69425 5.82254 3.8302 6.56056 4.0335C7.26082 4.22682 7.79424 4.8604 7.62983 5.57506C7.46542 6.28971 6.73593 6.74494 5.9699 6.55038C5.2672 6.37078 4.66193 6.19617 4.66193 6.19617L5.30861 3.69425ZM5.36585 10.4055C4.63514 10.2234 3.6913 9.95154 3.6913 9.95154L4.36112 7.35359C4.36112 7.35359 5.21362 7.60303 5.97234 7.79011C6.87964 8.0196 7.43376 8.62949 7.23403 9.44641C7.0343 10.2633 6.35109 10.6512 5.36585 10.4055Z" class="crypto-svg-fill"/>
+                      </svg>
+                    </div>
+                    <span class="crypto-name">Bitcoin</span>
+                  </div>
+                  <span class="crypto-amount">0.0045 BTC</span>
+                </div>
+                <div class="crypto-chart">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 271 63" fill="none" preserveAspectRatio="none">
+                    <path d="M271 63.5H271.5V63V15.95V14.95L270.7 15.55L265.58 19.35L260.46 15.55L260.16 15.33L259.86 15.55L254.87 19.26L249.74 11.22L249.27 10.48L248.87 11.27L243.73 21.5L238.84 17.61L233.46 10.47L233.23 10.16L232.87 10.31L227.46 12.57L222.67 2.78L222.2 1.82L221.76 2.79L216.6 14.16L211.69 10.37L211.31 10.08L210.99 10.45L205.65 16.83L200.53 19.01L195.31 16.92L195.08 16.83L194.87 16.96L189.45 20.12L189.33 20.19L189.27 20.3L184.17 29.1L179.21 24.23L178.82 23.85L178.47 24.26L173.29 30.45L168.22 28.3L167.86 28.14L167.62 28.45L162.44 35.19L157.39 32.9L157.02 32.74L156.78 33.06L151.84 39.48L146.79 29.68L146.75 29.61L146.69 29.55L141.27 24.23L140.77 23.74L140.47 24.37L135.24 35.2L130.32 33.63L124.97 29.51L124.54 29.18L124.24 29.63L118.9 37.58L113.9 40.1L108.73 35.57L108.42 35.3L108.09 35.56L103.19 39.46L98.03 26.7L97.75 26.01L97.21 26.52L92.26 31.26L87.16 22.32L86.64 21.42L86.25 22.38L81.03 35.29L76.08 33.19L75.72 33.04L75.48 33.34L70.15 40.28L65.09 42.3L59.89 38.98L59.78 38.91L59.66 38.9L54.42 38.49L49.13 33.43L49.03 33.34L48.9 33.31L43.48 32.01L43.23 31.95L43.04 32.11L37.89 36.35L32.77 33.36L32.32 33.09L32.07 33.56L26.9 43.59L21.94 40.56L21.61 40.35L21.33 40.63L16.14 45.73L11.02 43.83L10.71 43.71L10.48 43.95L5.39 49.22L0.33 44.78L-0.5 44.05V45.16V63V63.5H0H271Z" fill="url(#btcGradient)" stroke="var(--primary-color)"/>
+                    <defs>
+                      <linearGradient id="btcGradient" x1="135.5" y1="-3.47" x2="135.5" y2="62.95" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="var(--primary-color)" stop-opacity="0.5"/>
+                        <stop offset="1" stop-color="var(--primary-color)" stop-opacity="0.1"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Stellar -->
+              <div class="crypto-card">
+                <div class="crypto-header">
+                  <div class="crypto-info">
+                    <div class="crypto-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 18 14" fill="none">
+                        <path d="M3.40878 7.61734C3.31806 6.83457 3.39435 6.04147 3.63262 5.29035C3.87089 4.53924 4.26571 3.84718 4.79105 3.25984C5.31639 2.6725 5.9603 2.20323 6.68029 1.88299C7.40029 1.56275 8.18001 1.39882 8.968 1.40201C9.89696 1.40098 10.8114 1.63263 11.6278 2.07581L13.0751 1.33769C12.0315 0.578658 10.7982 0.123186 9.51171 0.0216742C8.22524 -0.0798372 6.93578 0.176572 5.78601 0.762524C4.63625 1.34848 3.67102 2.24112 2.99716 3.34167C2.3233 4.44222 1.96708 5.70775 1.96792 6.99822C1.96792 7.20888 1.97757 7.41793 1.99526 7.62377C2.01538 7.82281 1.97466 8.02328 1.87848 8.1987C1.7823 8.37413 1.63518 8.51625 1.45654 8.60632L0.798828 8.92794V10.4991L17.2015 2.23983V0.668713L3.40878 7.61734Z" class="crypto-svg-fill"/>
+                        <path d="M17.2015 3.47644L0.798828 11.7389V13.31L14.5256 6.39515C14.5498 6.59528 14.5627 6.79661 14.5642 6.99819C14.5646 7.96708 14.3133 8.91946 13.835 9.76206C13.3568 10.6047 12.6678 11.3086 11.8358 11.805C11.0037 12.3014 10.0569 12.5731 9.08826 12.5937C8.11959 12.6142 7.16219 12.3828 6.30981 11.9222L4.86251 12.6603C5.84422 13.375 6.99509 13.8218 8.20188 13.9567C9.40868 14.0916 10.6298 13.9099 11.7451 13.4296C12.8603 12.9493 13.8313 12.1869 14.5625 11.2174C15.2937 10.2479 15.7598 9.10468 15.915 7.90034C15.9799 7.3915 15.9896 6.87713 15.944 6.36621C15.9265 6.16949 15.9689 5.97208 16.0656 5.79989C16.1623 5.6277 16.3088 5.48877 16.4859 5.40134L17.2015 5.04756V3.47644Z" class="crypto-svg-fill"/>
+                      </svg>
+                    </div>
+                    <span class="crypto-name">Stellar</span>
+                  </div>
+                  <span class="crypto-amount">40.9500 XLM</span>
+                </div>
+                <div class="crypto-chart">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 271 54" fill="none" preserveAspectRatio="none">
+                    <path d="M271.5 57H272V56.5V19.26V18.26L271.2 18.86L265.78 22.91L265.74 22.94L265.71 22.97L260.66 28.56L255.64 23L250.24 14.51L249.77 13.76L249.37 14.55L243.95 25.4L243.94 25.43L243.92 25.46L238.81 40.33L233.96 33.85L233.96 33.85L228.11 26.26L227.62 25.63L227.26 26.34L222.66 35.41L217.72 28.02L217.67 27.95L217.61 27.9L212.29 23.79L206.93 10.33L206.48 9.21L206 10.31L200.78 22.23L195.93 20.29L190.59 13.53L190.13 12.95L189.77 13.59L184.89 22.04L179.83 7.67L179.54 6.84L178.97 7.52L174.07 13.4L168.98 1.78L168.64 1L168.12 1.68L162.94 8.44L157.9 6.16L152.5 3.2L152.41 3.15L152.31 3.14L146.89 2.64L146.5 2.6L146.37 2.96L141.31 16.74L136.43 8.8L136.01 8.13L135.58 8.79L130.46 16.65L125.47 12.79L124.82 12.29L124.67 13.09L119.46 40.17L114.72 33.78L114.69 33.74L114.65 33.71L109.23 28.93L108.92 28.66L108.59 28.92L103.45 33.03L98.33 29.83L98.24 29.77L98.14 29.75L92.96 28.97L87.66 19.63L87.53 19.41L87.28 19.38L81.93 18.77L76.58 16.49L76.22 16.33L75.98 16.64L70.56 23.73L70.5 23.81L70.47 23.91L65.22 45.5L60.39 42.41L60.29 42.34L60.16 42.33L54.92 41.91L49.63 36.83L49.53 36.74L49.4 36.7L44.12 35.44L38.9 30.07L33.51 6.93L33.2 5.6L32.58 6.81L27.4 16.89L22.44 13.84L22.11 13.64L21.83 13.91L16.41 19.27L16.37 19.3L16.35 19.34L10.93 27.37L10.88 27.44L10.86 27.52L5.52 46.94L0.39 48.13L0 48.22V48.62V56.5V57H0.5H271.5Z" fill="url(#xlmGradient)" stroke="var(--primary-color)"/>
+                    <defs>
+                      <linearGradient id="xlmGradient" x1="136" y1="-3.8" x2="136" y2="56.5" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="var(--primary-color)" stop-opacity="0.5"/>
+                        <stop offset="1" stop-color="var(--primary-color)" stop-opacity="0.1"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Ethereum -->
+              <div class="crypto-card">
+                <div class="crypto-header">
+                  <div class="crypto-info">
+                    <div class="crypto-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="14" viewBox="0 0 10 14" fill="none">
+                        <path d="M0.589844 7.20263L4.99984 0L9.40984 7.20263L4.99984 9.77175L0.589844 7.20263Z" class="crypto-svg-fill"/>
+                        <path d="M5.00033 10.5811L9.2691 7.93091L5.00033 14L0.630859 7.93091L5.00033 10.5811Z" class="crypto-svg-fill"/>
+                      </svg>
+                    </div>
+                    <span class="crypto-name">Ethereum</span>
+                  </div>
+                  <span class="crypto-amount">3.0500 ETH</span>
+                </div>
+                <div class="crypto-chart">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 271 64" fill="none" preserveAspectRatio="none">
+                    <path d="M273.5 65H274V64.5V37.45V36.45L273.19 37.04L268.23 40.68L262.97 27.26L262.73 26.65L262.19 27.04L256.76 31.02L251.36 32.5L251.07 32.58L251 32.86L245.9 52.13L240.97 39.28L240.94 39.22L240.9 39.16L235.4 31.96L235.16 31.65L234.8 31.8L229.24 34.09L224.41 27.21L223.97 26.57L223.56 27.24L218.54 35.39L213.45 25.05L212.82 23.77L212.5 25.15L207.26 47.54L202.41 40.76L201.99 40.17L201.58 40.76L196.81 47.55L191.5 11.97L191.29 10.55L190.56 11.8L185.39 20.59L180.36 15.72L179.69 15.07L179.5 15.97L174.12 41.85L169.2 39.79L168.68 39.58L168.51 40.1L163.57 55.44L158.49 34.74L158.24 33.72L157.59 34.55L152.58 40.98L147.47 31.2L141.98 15.91L141.57 14.77L141.04 15.86L136.15 25.83L130.99 5.45L130.77 4.55L130.13 5.23L124.86 10.82L119.67 8.98L119.47 8.91L119.27 9.01L114.08 11.59L108.86 7.08L103.37 1.41L102.97 1L102.61 1.44L97.11 8.06L97.01 8.17L97 8.32L91.68 51.99L86.95 43.82L86.68 43.36L86.23 43.64L80.96 46.88L75.7 44.68L75.24 44.49L75.04 44.94L69.62 56.81L64.34 58.88L58.95 60.4L53.73 59.99L48.43 54.99L42.97 43.78L42.68 43.2L42.18 43.61L36.96 47.85L31.76 44.86L31.3 44.59L31.05 45.06L25.58 55.52L20.44 61.77L15.34 57.43L15.27 57.37L15.19 57.34L9.69 55.32L9.37 55.21L9.14 55.45L3.98 60.71L-1.15 56.28L-2 55.55V56.66V64.5V65H-1.49H273.5Z" fill="url(#ethGradient)" stroke="var(--primary-color)"/>
+                    <defs>
+                      <linearGradient id="ethGradient" x1="136" y1="4.49" x2="136" y2="64.5" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="var(--primary-color)" stop-opacity="0.5"/>
+                        <stop offset="1" stop-color="var(--primary-color)" stop-opacity="0.1"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Ripple -->
+              <div class="crypto-card">
+                <div class="crypto-header">
+                  <div class="crypto-info">
+                    <div class="crypto-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="14" viewBox="0 0 18 14" fill="none">
+                        <path d="M17.2527 0L14.6898 0.0349253L10.5803 4.14445C10.161 4.56287 9.59275 4.79786 9.00036 4.79786C8.40797 4.79786 7.83976 4.56287 7.42041 4.14445L3.31089 0.0349253L0.748047 0L5.84047 5.09242C6.67895 5.92966 7.81544 6.39992 9.00036 6.39992C10.1853 6.39992 11.3218 5.92966 12.1603 5.09242L17.2527 0Z" class="crypto-svg-fill"/>
+                        <path d="M0.748047 14L3.31089 13.9651L7.42041 9.85556C7.83976 9.43715 8.40797 9.20216 9.00036 9.20216C9.59275 9.20216 10.161 9.43715 10.5803 9.85556L14.6898 13.9651L17.2527 14L12.1603 8.9076C11.3218 8.07035 10.1853 7.6001 9.00036 7.6001C7.81544 7.6001 6.67895 8.07035 5.84047 8.9076L0.748047 14Z" class="crypto-svg-fill"/>
+                      </svg>
+                    </div>
+                    <span class="crypto-name">Ripple</span>
+                  </div>
+                  <span class="crypto-amount">90.6065 XRP</span>
+                </div>
+                <div class="crypto-chart">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 271 66" fill="none" preserveAspectRatio="none">
+                    <path d="M272.5 70H273V69.5V2V1L272.19 1.6L266.71 5.66L266.58 5.75L266.53 5.9L261.1 21.83L256.19 25.46L251 17.38L250.52 16.63L250.12 17.42L244.92 27.73L240.05 23.87L234.62 6.7L234.45 6.18L233.94 6.39L228.13 8.81L223.2 8.6L223.1 8.59L223 8.63L217.79 10.49L212.53 6.46L212.51 6.44L212.49 6.43L207.01 2.89L206.79 2.74L206.54 2.84L201.25 5.08L195.97 2.98L195.73 2.89L195.52 3.02L190.04 6.2L189.93 6.27L189.86 6.39L184.71 15.24L179.69 10.34L179.3 9.95L178.95 10.37L173.71 16.6L168.58 14.43L168.22 14.28L167.98 14.59L162.74 21.37L157.63 19.07L157.26 18.91L157.02 19.22L152.02 25.69L146.91 15.82L146.62 15.25L146.13 15.67L140.74 20.3L135.39 21.5L135.19 21.54L135.08 21.72L129.9 29.59L124.85 25.72L124.42 25.39L124.12 25.84L118.64 33.95L118.61 33.99L118.59 34.03L113.39 46.21L108.44 41.89L107.89 41.41L107.63 42.09L102.37 55.93L97.45 52.87L92.11 48.15L86.67 28.66L85.69 28.68L80.34 51.64L75.44 49.56L69.99 46.61L69.78 46.49L69.56 46.58L64.32 48.66L59.17 45.39L53.76 35.01L53.45 34.44L52.97 34.87L47.68 39.54L42.46 38.3L42.03 38.2L41.87 38.62L36.6 52.61L31.64 49.73L31.18 49.46L30.93 49.93L25.96 59.53L20.9 47.15L20.85 47.04L20.76 46.96L15.28 42.25L15.21 42.19L15.12 42.16L9.64 40.13L9.33 40.02L9.1 40.25L3.63 45.9L-1.85 51.18L-2 51.32V51.54V69.5V70H-1.49H272.5Z" fill="url(#xrpGradient)" stroke="var(--primary-color)"/>
+                    <defs>
+                      <linearGradient id="xrpGradient" x1="135.5" y1="9.1" x2="135.5" y2="69.5" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="var(--primary-color)" stop-opacity="0.5"/>
+                        <stop offset="1" stop-color="var(--primary-color)" stop-opacity="0.1"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </app-ds-preview>
+
+          <app-ds-code-tabs [tabs]="cryptoCardsCodeTabs" />
+          <app-ds-props-table [props]="cryptoCardProps" />
+        </div>
+      </p-accordioncontent>
+    </p-accordionpanel>
+
+    <!-- ============ STATUS BAR AND DETAILS ============ -->
+    <p-accordionpanel value="7">
+      <p-accordionheader>
+        <div class="accordion-header-content">
+          <i class="pi pi-sliders-h"></i>
+          <span>Status Bar & Details</span>
+          <p-tag value="3 cards" severity="success" />
+        </div>
+      </p-accordionheader>
+      <p-accordioncontent>
+        <div class="accordion-body">
+          <p class="section-description">
+            Cards con barra de progreso segmentada y seccion de detalles expandible.
+            Ideal para mostrar consumo de recursos, actividad de usuarios o estado del sistema.
+          </p>
+
+          <app-ds-preview title="Status Bar Cards">
+            <div class="status-bar-grid">
+              @for (card of statusBarCards(); track card.id) {
+                <p-accordion [value]="card.id" styleClass="status-bar-accordion">
+                  <p-accordionpanel [value]="card.id">
+                    <p-accordionheader>
+                      <div class="status-bar-header-content">
+                        <div class="status-bar-icon">
+                          <i [class]="card.icon"></i>
+                        </div>
+                        <div class="status-bar-titles">
+                          <span class="status-bar-title">{{ card.title }}</span>
+                          <span class="status-bar-subtitle">{{ card.subtitle }}</span>
+                        </div>
+                      </div>
+                    </p-accordionheader>
+                    <p-accordioncontent>
+                      <div class="status-bar-content">
+                        <div class="status-bar-summary">
+                          <div class="status-bar-values">
+                            <span class="value-current">{{ card.current }} </span>
+                            <span class="value-total">of {{ card.total }}</span>
+                          </div>
+                          <span class="value-unit">{{ card.unit }}</span>
+                        </div>
+                        <div class="status-bar-segments">
+                          @for (segment of [1,2,3,4,5]; track segment) {
+                            <div
+                              class="segment"
+                              [class.filled]="segment <= card.filledSegments"
+                            ></div>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="status-bar-details">
+                        <span class="details-title">Details</span>
+                        @for (detail of card.details; track detail.label) {
+                          <div class="detail-row">
+                            <span class="detail-label">{{ detail.label }}</span>
+                            <span class="detail-value">{{ detail.value }}</span>
+                          </div>
+                        }
+                      </div>
+                    </p-accordioncontent>
+                  </p-accordionpanel>
+                </p-accordion>
+              }
+            </div>
+          </app-ds-preview>
+
+          <app-ds-code-tabs [tabs]="statusBarCodeTabs" />
+          <app-ds-props-table [props]="statusBarCardProps" />
+        </div>
+      </p-accordioncontent>
+    </p-accordionpanel>
+
+  </p-accordion>
+</div>

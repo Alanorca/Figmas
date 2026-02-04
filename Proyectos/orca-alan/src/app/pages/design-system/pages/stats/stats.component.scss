@@ -1,0 +1,1392 @@
+.stats-page {
+  max-width: 1200px;
+}
+
+// ============ PAGE HEADER ============
+.page-header {
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+    line-height: 1.5;
+  }
+}
+
+// ============ ACCORDION STYLES ============
+.accordion-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+
+  i {
+    font-size: 1.125rem;
+    color: var(--primary-color);
+  }
+
+  span {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+}
+
+.accordion-body {
+  padding: 1.5rem 0;
+
+  .section-description {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+}
+
+// ============ STAT CARDS GRID ============
+.stat-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+// ============ COLORED STAT CARD ============
+.stat-card-colored {
+  padding: 1rem;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  .stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .stat-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 1rem;
+      color: var(--surface-0);
+      line-height: 1;
+    }
+  }
+
+  .stat-timestamp {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+
+  .stat-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.25;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+
+  // ============ COLOR VARIANTS - LIGHT MODE ============
+
+  // Cyan
+  &.stat-cyan {
+    background: var(--cyan-50);
+    border: 1px solid var(--cyan-200);
+
+    .stat-icon {
+      background: var(--cyan-500);
+    }
+
+    .stat-timestamp,
+    .stat-label {
+      color: var(--cyan-700);
+    }
+
+    .stat-value {
+      color: var(--cyan-900);
+    }
+  }
+
+  // Orange
+  &.stat-orange {
+    background: var(--orange-50);
+    border: 1px solid var(--orange-200);
+
+    .stat-icon {
+      background: var(--orange-500);
+    }
+
+    .stat-timestamp,
+    .stat-label {
+      color: var(--orange-700);
+    }
+
+    .stat-value {
+      color: var(--orange-900);
+    }
+  }
+
+  // Slate
+  &.stat-slate {
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+
+    .stat-icon {
+      background: var(--slate-500);
+    }
+
+    .stat-timestamp,
+    .stat-label {
+      color: var(--slate-700);
+    }
+
+    .stat-value {
+      color: var(--slate-900);
+    }
+  }
+
+  // Violet
+  &.stat-violet {
+    background: var(--violet-50);
+    border: 1px solid var(--violet-200);
+
+    .stat-icon {
+      background: var(--violet-500);
+    }
+
+    .stat-timestamp,
+    .stat-label {
+      color: var(--violet-700);
+    }
+
+    .stat-value {
+      color: var(--violet-900);
+    }
+  }
+
+  // Emerald
+  &.stat-emerald {
+    background: var(--emerald-50);
+    border: 1px solid var(--emerald-200);
+
+    .stat-icon {
+      background: var(--emerald-500);
+    }
+
+    .stat-timestamp,
+    .stat-label {
+      color: var(--emerald-700);
+    }
+
+    .stat-value {
+      color: var(--emerald-900);
+    }
+  }
+
+  // Rose
+  &.stat-rose {
+    background: var(--rose-50);
+    border: 1px solid var(--rose-200);
+
+    .stat-icon {
+      background: var(--rose-500);
+    }
+
+    .stat-timestamp,
+    .stat-label {
+      color: var(--rose-700);
+    }
+
+    .stat-value {
+      color: var(--rose-900);
+    }
+  }
+}
+
+// ============ ICONS & FOOTNOTES STAT CARD ============
+.stat-card-footnote {
+  background: var(--surface-card);
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem;
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .stat-content {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--text-color-secondary);
+    line-height: 1.25;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+    line-height: 1.25;
+  }
+
+  .stat-icon-gradient {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.25rem;
+      color: var(--surface-0);
+      line-height: 1;
+    }
+
+    // Gradient colors
+    &.icon-cyan {
+      background: linear-gradient(to bottom, var(--cyan-400), var(--cyan-600));
+    }
+
+    &.icon-orange {
+      background: linear-gradient(to bottom, var(--orange-400), var(--orange-600));
+    }
+
+    &.icon-slate {
+      background: linear-gradient(to bottom, var(--slate-400), var(--slate-600));
+    }
+
+    &.icon-violet {
+      background: linear-gradient(to bottom, var(--violet-400), var(--violet-600));
+    }
+  }
+
+  .stat-footnote {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    line-height: 1.25;
+
+    .footnote-highlight {
+      font-weight: 500;
+      color: var(--text-color-secondary);
+      margin-right: 0.25rem;
+    }
+
+    .footnote-text {
+      color: var(--text-color-secondary);
+    }
+  }
+}
+
+// ============ CARDS WITH PROGRESS BAR ============
+.progress-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.stat-card-progress {
+  background: var(--surface-card);
+  box-shadow: var(--shadow-sm);
+  border-radius: 1rem;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .stat-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .stat-avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--primary-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      color: var(--primary-500);
+      font-size: 1.25rem;
+    }
+  }
+
+  .stat-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .stat-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    line-height: 1.25;
+  }
+
+  .stat-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    line-height: 1.25;
+  }
+
+  .stat-progress-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .progress-label {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    line-height: 1.25;
+  }
+
+  .progress-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+    line-height: 1.25;
+  }
+
+  .progress-description {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+
+    .desc-prefix,
+    .desc-suffix {
+      color: var(--text-color-secondary);
+    }
+
+    .desc-highlight {
+      color: var(--primary-500);
+      font-weight: 600;
+    }
+  }
+}
+
+::ng-deep .progress-bar-custom {
+  height: 0.5rem;
+  border-radius: 0.25rem;
+
+  .p-progressbar-value {
+    border-radius: 0.25rem;
+  }
+}
+
+// ============ DATE PICKER STATS ============
+.date-picker-card {
+  background: var(--surface-card);
+  box-shadow: var(--shadow-sm);
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 48rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.date-nav-btn {
+  height: 4.5rem;
+  width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.5rem;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+
+  i {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+  }
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+}
+
+.date-pills-container {
+  flex: 1;
+  overflow: hidden;
+}
+
+.date-pills {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+// Responsive date pills
+.date-pills-mobile {
+  display: flex;
+
+  @media (min-width: 640px) {
+    display: none;
+  }
+}
+
+.date-pills-tablet {
+  display: none;
+
+  @media (min-width: 640px) {
+    display: flex;
+  }
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.date-pills-desktop {
+  display: none;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+}
+
+.date-pill {
+  min-width: 4.5rem;
+  width: 100%;
+  height: 4.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  background: transparent;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: var(--surface-hover);
+  }
+
+  &.active {
+    background: var(--primary-50);
+    border-color: var(--primary-500);
+
+    .date-day,
+    .date-month {
+      color: var(--primary-600);
+    }
+  }
+
+  .date-day {
+    font-size: 1rem;
+    line-height: 1.25;
+    color: var(--text-color-secondary);
+  }
+
+  .date-month {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--text-color);
+  }
+}
+
+.metrics-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.metrics-row {
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
+}
+
+.metric-item {
+  flex: 1;
+  padding: 1rem;
+
+  @media (min-width: 768px) {
+    &:first-child {
+      padding-right: 2rem;
+    }
+
+    &:last-child {
+      padding-left: 2rem;
+    }
+  }
+}
+
+.metric-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.metric-label {
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+  line-height: 1.25;
+}
+
+.metric-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.metric-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+
+  .chart-bar {
+    width: 6px;
+    background: var(--surface-200);
+    border-radius: 3.5px;
+    transition: height 0.3s ease;
+  }
+
+  .chart-bar-current {
+    background: var(--primary-color);
+  }
+}
+
+.metric-divider-v {
+  display: none;
+
+  @media (min-width: 768px) {
+    display: block;
+    width: 1px;
+    background: var(--surface-border);
+  }
+}
+
+.metric-divider-h {
+  height: 1px;
+  background: var(--surface-border);
+
+  @media (max-width: 767px) {
+    margin: 0.5rem 0;
+  }
+}
+
+// Mobile dividers between metric items
+@media (max-width: 767px) {
+  .metrics-row {
+    .metric-item:not(:last-child)::after {
+      content: '';
+      display: block;
+      height: 1px;
+      background: var(--surface-border);
+      margin: 0.5rem 0;
+    }
+  }
+}
+
+// ============ PROGRESS BARS STATS ============
+.user-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 2rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.user-progress-card {
+  background: var(--surface-card);
+  box-shadow: var(--shadow-sm);
+  border-radius: 1rem;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.user-name {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.user-role {
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+  line-height: 1.25;
+}
+
+.progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.progress-platform {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.progress-percentage {
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+  line-height: 1.25;
+}
+
+::ng-deep .progress-bar-sm {
+  height: 0.5rem;
+  border-radius: 0.25rem;
+
+  .p-progressbar-value {
+    border-radius: 0.25rem;
+  }
+}
+
+// ============ QUARTER GOALS ============
+.quarter-goals-card {
+  background: var(--surface-card);
+  box-shadow: var(--shadow-sm);
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 56rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.goals-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.goals-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.goals-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goals-percentage {
+  font-size: 2.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.goals-count {
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+  line-height: 1.25;
+}
+
+.goals-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.details-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.detail-indicator {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.indicator-cyan {
+    background: var(--cyan-500);
+  }
+
+  &.indicator-amber {
+    background: var(--amber-500);
+  }
+
+  &.indicator-violet {
+    background: var(--violet-500);
+  }
+
+  &.indicator-pink {
+    background: var(--pink-500);
+  }
+}
+
+.detail-label {
+  flex: 1;
+  font-size: 1rem;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.detail-value {
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+  line-height: 1.25;
+}
+
+// ============ CRYPTO CARDS WITH GRAPH ============
+.crypto-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 2rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.crypto-card {
+  background: var(--surface-card);
+  box-shadow: var(--shadow-sm);
+  border-radius: 1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.crypto-header {
+  flex: 1;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.crypto-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.crypto-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  background: var(--primary-500);
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 10px;
+    height: auto;
+  }
+}
+
+.crypto-svg-fill {
+  fill: var(--surface-0);
+}
+
+.crypto-name {
+  font-size: 0.875rem;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.crypto-amount {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.crypto-chart {
+  width: 100%;
+  overflow: hidden;
+
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+// ============ STATUS BAR AND DETAILS ============
+.status-bar-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 2rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+// Accordion customization for status bar cards
+::ng-deep .status-bar-accordion {
+  box-shadow: var(--shadow-sm);
+  border-radius: 1rem !important;
+  overflow: hidden;
+
+  .p-accordionpanel {
+    border: none !important;
+  }
+
+  .p-accordionheader {
+    border: none !important;
+    border-radius: 0 !important;
+
+    .p-accordionheader-toggle-icon {
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .p-accordionpanel-content {
+    padding: 0 !important;
+    border: none !important;
+  }
+}
+
+.status-bar-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.status-bar-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    color: var(--primary-contrast-color);
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+}
+
+.status-bar-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.status-bar-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.status-bar-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  line-height: 1.25;
+}
+
+.status-bar-content {
+  padding: 1rem 1rem 2rem;
+  border-top: 1px solid var(--surface-border);
+  border-bottom: 1px solid var(--surface-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.status-bar-summary {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.status-bar-values {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.value-current {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.value-total {
+  font-size: 1.5rem;
+  color: var(--text-color-secondary);
+  line-height: 1.25;
+}
+
+.value-unit {
+  font-size: 1rem;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.status-bar-segments {
+  display: flex;
+  gap: 0.5rem;
+
+  .segment {
+    flex: 1;
+    height: 0.5rem;
+    background: var(--surface-200);
+    border-radius: 0.25rem;
+    transition: background 0.2s ease;
+
+    &.filled {
+      background: var(--primary-500);
+    }
+  }
+}
+
+.status-bar-details {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.details-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.detail-label {
+  font-size: 1rem;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.detail-value {
+  font-size: 1rem;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+// ============ DARK MODE SUPPORT ============
+:host-context(.ds-theme-dark),
+:host-context(body[data-ds-theme="dark"]) {
+  // Colored cards - Dark Mode
+  .stat-card-colored {
+    // Cyan - Dark Mode
+    &.stat-cyan {
+      background: color-mix(in srgb, var(--cyan-400) 30%, var(--surface-900));
+      border-color: color-mix(in srgb, var(--cyan-400) 20%, transparent);
+
+      .stat-icon {
+        background: var(--cyan-600);
+      }
+
+      .stat-timestamp,
+      .stat-label {
+        color: var(--cyan-300);
+      }
+
+      .stat-value {
+        color: var(--cyan-100);
+      }
+    }
+
+    // Orange - Dark Mode
+    &.stat-orange {
+      background: color-mix(in srgb, var(--orange-400) 30%, var(--surface-900));
+      border-color: color-mix(in srgb, var(--orange-400) 20%, transparent);
+
+      .stat-icon {
+        background: var(--orange-600);
+      }
+
+      .stat-timestamp,
+      .stat-label {
+        color: var(--orange-300);
+      }
+
+      .stat-value {
+        color: var(--orange-100);
+      }
+    }
+
+    // Slate - Dark Mode
+    &.stat-slate {
+      background: color-mix(in srgb, var(--slate-400) 30%, var(--surface-900));
+      border-color: color-mix(in srgb, var(--slate-400) 20%, transparent);
+
+      .stat-icon {
+        background: var(--slate-600);
+      }
+
+      .stat-timestamp,
+      .stat-label {
+        color: var(--slate-300);
+      }
+
+      .stat-value {
+        color: var(--slate-100);
+      }
+    }
+
+    // Violet - Dark Mode
+    &.stat-violet {
+      background: color-mix(in srgb, var(--violet-400) 30%, var(--surface-900));
+      border-color: color-mix(in srgb, var(--violet-400) 20%, transparent);
+
+      .stat-icon {
+        background: var(--violet-600);
+      }
+
+      .stat-timestamp,
+      .stat-label {
+        color: var(--violet-300);
+      }
+
+      .stat-value {
+        color: var(--violet-100);
+      }
+    }
+
+    // Emerald - Dark Mode
+    &.stat-emerald {
+      background: color-mix(in srgb, var(--emerald-400) 30%, var(--surface-900));
+      border-color: color-mix(in srgb, var(--emerald-400) 20%, transparent);
+
+      .stat-icon {
+        background: var(--emerald-600);
+      }
+
+      .stat-timestamp,
+      .stat-label {
+        color: var(--emerald-300);
+      }
+
+      .stat-value {
+        color: var(--emerald-100);
+      }
+    }
+
+    // Rose - Dark Mode
+    &.stat-rose {
+      background: color-mix(in srgb, var(--rose-400) 30%, var(--surface-900));
+      border-color: color-mix(in srgb, var(--rose-400) 20%, transparent);
+
+      .stat-icon {
+        background: var(--rose-600);
+      }
+
+      .stat-timestamp,
+      .stat-label {
+        color: var(--rose-300);
+      }
+
+      .stat-value {
+        color: var(--rose-100);
+      }
+    }
+  }
+
+  // Icons & Footnotes - Dark Mode
+  .stat-card-footnote {
+    background: var(--surface-900);
+
+    .stat-icon-gradient {
+      &.icon-cyan {
+        background: linear-gradient(to bottom, var(--cyan-300), var(--cyan-500));
+      }
+
+      &.icon-orange {
+        background: linear-gradient(to bottom, var(--orange-300), var(--orange-500));
+      }
+
+      &.icon-slate {
+        background: linear-gradient(to bottom, var(--slate-300), var(--slate-500));
+      }
+
+      &.icon-violet {
+        background: linear-gradient(to bottom, var(--violet-300), var(--violet-500));
+      }
+
+      i {
+        color: var(--surface-900);
+      }
+    }
+
+    .stat-footnote {
+      .footnote-highlight {
+        color: var(--text-color-secondary);
+      }
+    }
+  }
+
+  // Cards with Progress Bar - Dark Mode
+  .stat-card-progress {
+    background: var(--surface-900);
+
+    .stat-avatar {
+      background: color-mix(in srgb, var(--primary-500) 20%, var(--surface-900));
+
+      i {
+        color: var(--primary-400);
+      }
+    }
+
+    .progress-description {
+      .desc-highlight {
+        color: var(--primary-400);
+      }
+    }
+  }
+
+  // Date Picker Stats - Dark Mode
+  .date-picker-card {
+    background: var(--surface-900);
+  }
+
+  .date-nav-btn {
+    border-color: var(--surface-700);
+
+    &:hover {
+      background: var(--surface-800);
+    }
+
+    i {
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .date-pill {
+    border-color: var(--surface-700);
+
+    &:hover {
+      background: var(--surface-800);
+    }
+
+    &.active {
+      background: color-mix(in srgb, var(--primary-400) 30%, transparent);
+      border-color: var(--primary-400);
+
+      .date-day,
+      .date-month {
+        color: var(--primary-200);
+      }
+    }
+
+    .date-day {
+      color: var(--text-color-secondary);
+    }
+
+    .date-month {
+      color: var(--text-color);
+    }
+  }
+
+  .metric-divider-v,
+  .metric-divider-h {
+    background: var(--surface-700);
+  }
+
+  .metric-chart {
+    .chart-bar {
+      background: var(--surface-700);
+    }
+  }
+
+  // Progress Bars - Dark Mode
+  .user-progress-card {
+    background: var(--surface-900);
+  }
+
+  // Quarter Goals - Dark Mode
+  .quarter-goals-card {
+    background: var(--surface-900);
+  }
+
+  // Crypto Cards - Dark Mode
+  .crypto-card {
+    background: var(--surface-900);
+  }
+
+  .crypto-svg-fill {
+    fill: var(--surface-900);
+  }
+
+  // Status Bar - Dark Mode
+  .status-bar-card {
+    background: var(--surface-900);
+  }
+
+  ::ng-deep .status-bar-accordion {
+    .p-accordionheader {
+      background: var(--surface-900) !important;
+    }
+
+    .p-accordionpanel-content {
+      background: var(--surface-900) !important;
+    }
+  }
+
+  .status-bar-content {
+    border-color: var(--surface-700);
+  }
+
+  .status-bar-segments {
+    .segment {
+      background: var(--surface-700);
+    }
+  }
+}

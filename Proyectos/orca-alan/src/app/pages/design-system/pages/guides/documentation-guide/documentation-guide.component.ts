@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { AccordionModule } from 'primeng/accordion';
+import { TagModule } from 'primeng/tag';
 import { DsPreviewComponent } from '../../../components/ds-preview/ds-preview.component';
 import { DsCodeBlockComponent } from '../../../components/ds-code-block/ds-code-block.component';
 import { DsCodeTabsComponent, CodeTab } from '../../../components/ds-code-tabs/ds-code-tabs.component';
@@ -12,6 +15,9 @@ import { DsPropsTableComponent, ComponentProp } from '../../../components/ds-pro
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
+    AccordionModule,
+    TagModule,
     DsPreviewComponent,
     DsCodeBlockComponent,
     DsCodeTabsComponent,
@@ -413,5 +419,120 @@ import { DsPropsTableComponent, ComponentProp } from '../../../components/ds-pro
       icon: 'pi pi-palette',
       code: this.cssVariablesCode
     }
+  ];
+
+  // ============ ACCORDION PATTERN ============
+  demoAccordionValue = signal<string | string[]>('0');
+
+  accordionProps: ComponentProp[] = [
+    { name: 'value', type: 'string | string[]', required: true, description: 'ID del panel activo. Usar signal para binding bidireccional.' },
+    { name: 'p-accordionpanel value', type: 'string', required: true, description: 'ID único para cada panel del acordeón.' },
+    { name: 'severity (p-tag)', type: "'info' | 'success' | 'warn' | 'danger' | 'contrast' | 'secondary'", description: 'Color del tag en el header.' }
+  ];
+
+  accordionHtmlCode = `<!-- Acordeón con secciones colapsables -->
+<p-accordion [(value)]="activeAccordion">
+
+  <!-- Sección 1 -->
+  <p-accordionpanel value="0">
+    <p-accordionheader>
+      <div class="accordion-header-content">
+        <i class="pi pi-palette"></i>
+        <span>Colored & Centered</span>
+        <p-tag value="4 cards" severity="info" />
+      </div>
+    </p-accordionheader>
+    <p-accordioncontent>
+      <div class="accordion-body">
+        <p class="section-description">
+          Descripción de la sección.
+        </p>
+
+        <app-ds-preview title="Preview">
+          <!-- Contenido del preview -->
+        </app-ds-preview>
+
+        <app-ds-code-tabs [tabs]="codeTabs" />
+        <app-ds-props-table [props]="props" />
+      </div>
+    </p-accordioncontent>
+  </p-accordionpanel>
+
+  <!-- Sección 2 -->
+  <p-accordionpanel value="1">
+    <p-accordionheader>
+      <div class="accordion-header-content">
+        <i class="pi pi-chart-bar"></i>
+        <span>Icons & Footnotes</span>
+        <p-tag value="4 cards" severity="success" />
+      </div>
+    </p-accordionheader>
+    <p-accordioncontent>
+      <div class="accordion-body">
+        <!-- Contenido -->
+      </div>
+    </p-accordioncontent>
+  </p-accordionpanel>
+
+</p-accordion>`;
+
+  accordionTsCode = `import { Component, signal } from '@angular/core';
+import { AccordionModule } from 'primeng/accordion';
+import { TagModule } from 'primeng/tag';
+
+@Component({
+  // ...
+  imports: [AccordionModule, TagModule, /* otros */]
+})
+export class MyComponent {
+  // Signal para controlar el panel activo
+  // Usar string para un solo panel abierto
+  // Usar string[] para múltiples paneles abiertos
+  activeAccordion = signal<string | string[]>('0');
+}`;
+
+  accordionScssCode = `// Estilos para el header del acordeón
+.accordion-header-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+
+  i {
+    font-size: 1.125rem;
+    color: var(--primary-color);
+  }
+
+  span {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+}
+
+// Estilos para el contenido del acordeón
+.accordion-body {
+  padding: 1.5rem 0;
+
+  .section-description {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+}
+
+// Demo content placeholder
+.demo-content {
+  padding: 1rem;
+  background: var(--surface-ground);
+  border-radius: 0.5rem;
+  color: var(--text-color-secondary);
+}`;
+
+  accordionCodeTabs: CodeTab[] = [
+    { label: 'HTML', language: 'html', icon: 'pi pi-code', code: this.accordionHtmlCode },
+    { label: 'TypeScript', language: 'typescript', icon: 'pi pi-file', code: this.accordionTsCode },
+    { label: 'SCSS', language: 'scss', icon: 'pi pi-palette', code: this.accordionScssCode }
   ];
 }

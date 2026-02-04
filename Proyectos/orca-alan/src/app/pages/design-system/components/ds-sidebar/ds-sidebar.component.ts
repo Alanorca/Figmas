@@ -74,7 +74,8 @@ export class DsSidebarComponent {
         { label: 'Steppers', route: '/design-system/molecules/steppers' },
         { label: 'Timelines', route: '/design-system/molecules/timelines' },
         { label: 'Splitters', route: '/design-system/molecules/splitters' },
-        { label: 'Lists', route: '/design-system/molecules/lists' }
+        { label: 'Lists', route: '/design-system/molecules/lists' },
+        { label: 'Stats', route: '/design-system/molecules/stats' }
       ]
     },
     {

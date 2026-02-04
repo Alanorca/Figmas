@@ -82,6 +82,7 @@ export class DesignSystemComponent implements OnDestroy {
     { label: 'Steppers', route: '/design-system/molecules/steppers', icon: 'pi pi-step-forward', category: 'Molecules' },
     { label: 'Timelines', route: '/design-system/molecules/timelines', icon: 'pi pi-clock', category: 'Molecules' },
     { label: 'Splitters', route: '/design-system/molecules/splitters', icon: 'pi pi-arrows-alt', category: 'Molecules' },
+    { label: 'Stats', route: '/design-system/molecules/stats', icon: 'pi pi-chart-bar', category: 'Molecules' },
     { label: 'Tables', route: '/design-system/organisms/tables', icon: 'pi pi-table', category: 'Organisms' },
     { label: 'Dialogs', route: '/design-system/organisms/dialogs', icon: 'pi pi-window-maximize', category: 'Organisms' },
     { label: 'Forms', route: '/design-system/organisms/forms', icon: 'pi pi-file-edit', category: 'Organisms' },

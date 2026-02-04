@@ -12,6 +12,8 @@ Este archivo contiene todos los bugs de tema/estilos encontrados y corregidos po
 - [Formularios e Inputs](#formularios-e-inputs)
 - [Tablas](#tablas)
 - [Cards](#cards)
+- [Acordeones](#acordeones)
+- [Paleta de Colores](#paleta-de-colores)
 - [Variables CSS Faltantes](#variables-css-faltantes)
 - [Selectores Incorrectos](#selectores-incorrectos)
 
@@ -372,6 +374,47 @@ body[data-ds-theme="light"] {
 
 ---
 
+## Paleta de Colores
+
+### BUG-013: --surface-900 usa slate (#0f172a) en lugar de zinc (#18181b)
+**Fecha**: 2026-02
+**Componente**: Variables CSS globales, afecta dark mode de todo el DS
+**Sintoma**: Los fondos de contenedores en dark mode tienen un tinte azulado en lugar de ser grises puros. El color `#0f172a` (slate-900) aparece en lugar de `#18181b` (zinc-900).
+**Causa Raiz**: En `_design-tokens.scss` línea 291:
+```scss
+--surface-900: var(--slate-900);  // #0f172a - INCORRECTO (tinte azul)
+```
+Esto afecta a todos los componentes que usan `var(--surface-900)` en dark mode, incluyendo stats cards con `color-mix()`.
+
+**Solucion**:
+Añadir override en `design-system.component.scss` dentro del bloque `:host.ds-theme-dark`:
+```scss
+:host.ds-theme-dark {
+  // ... otras variables ...
+
+  // FIX: Override global --surface-900 que usa slate (#0f172a)
+  // Corregido a zinc-900 (#18181b) para mantener consistencia
+  --surface-900: #18181b;
+}
+```
+**Archivos Modificados**: `src/app/pages/design-system/design-system.component.scss`
+**Patron CLAVE - Paleta Zinc vs Slate**:
+| Variable | Slate (INCORRECTO) | Zinc (CORRECTO) |
+|----------|-------------------|-----------------|
+| 900 | #0f172a (azulado) | #18181b (gris puro) |
+| 800 | #1e293b (azulado) | #27272a (gris puro) |
+| 700 | #334155 (azulado) | #3f3f46 (gris puro) |
+| 600 | #475569 (azulado) | #52525b (gris puro) |
+
+**REGLA**: En dark mode del DS, SIEMPRE usar paleta **zinc** (grises puros), NUNCA **slate** (tiene tinte azul).
+
+**Componentes Afectados por este bug**:
+- Stats cards (usan `color-mix(in srgb, var(--surface-900), transparent 50%)`)
+- Cualquier componente que use `var(--surface-900)` para fondos en dark mode
+- Contenedores con gradientes o backgrounds oscuros
+
+---
+
 ## Variables CSS Faltantes
 
 ### BUG-009: Variable --orange-600 no definida
@@ -439,6 +482,105 @@ body[data-ds-theme="light"] {
 
 ---
 
+## Acordeones
+
+### BUG-012: p-accordion no responde al tema dark mode
+**Fecha**: 2026-02
+**Componente**: `p-accordion`, `p-accordionpanel`, `p-accordionheader`, `p-accordioncontent`
+**Sintoma**: Los headers y contenido de los acordeones permanecen con fondo blanco en dark mode. La tabla de propiedades (ds-props-table) dentro de las secciones también queda en light mode.
+**Causa Raiz**: Faltaban estilos para el componente `p-accordion` en `design-system.component.scss`. PrimeNG usa estilos por defecto (fondo blanco) que no respetan las variables CSS del DS theme. Además, PrimeNG genera múltiples contenedores internos (`.p-accordioncontent`, `.p-toggleable-content`, divs wrapper) que también necesitan estilos.
+**Solucion**:
+```scss
+// Light mode
+:host.ds-theme-light {
+  ::ng-deep {
+    .p-accordion {
+      background: #ffffff !important;
+
+      .p-accordionpanel {
+        border-color: #e2e8f0 !important;
+        background: #ffffff !important;
+      }
+
+      .p-accordionheader {
+        background: #ffffff !important;
+        color: #1e293b !important;
+        border-color: #e2e8f0 !important;
+
+        &:hover { background: #f8fafc !important; }
+        .p-accordionheader-toggle-icon { color: #64748b !important; }
+      }
+
+      // IMPORTANTE: Cubrir TODOS los contenedores internos
+      .p-accordioncontent,
+      .p-accordionpanel-content,
+      .p-toggleable-content {
+        background: #ffffff !important;
+        color: #1e293b !important;
+        border-color: #e2e8f0 !important;
+
+        > div { background: #ffffff !important; }
+      }
+
+      // Contenido personalizado de la página
+      .accordion-body {
+        background: #ffffff !important;
+        color: #1e293b !important;
+        .section-description { color: #64748b !important; }
+      }
+    }
+  }
+}
+
+// Dark mode
+:host.ds-theme-dark {
+  ::ng-deep {
+    .p-accordion {
+      background: #18181b !important;
+
+      .p-accordionpanel {
+        border-color: #27272a !important;
+        background: #18181b !important;
+      }
+
+      .p-accordionheader {
+        background: #18181b !important;
+        color: #fafafa !important;
+        border-color: #27272a !important;
+
+        &:hover { background: #27272a !important; }
+        .p-accordionheader-toggle-icon { color: #a1a1aa !important; }
+      }
+
+      .p-accordioncontent,
+      .p-accordionpanel-content,
+      .p-toggleable-content {
+        background: #18181b !important;
+        color: #fafafa !important;
+        border-color: #27272a !important;
+
+        > div { background: #18181b !important; }
+      }
+
+      .accordion-body {
+        background: #18181b !important;
+        color: #fafafa !important;
+        .section-description { color: #a1a1aa !important; }
+      }
+    }
+  }
+}
+```
+**Archivos Modificados**: `src/app/pages/design-system/design-system.component.scss`
+**Patron CLAVE**:
+1. El acordeón principal `.p-accordion` necesita background
+2. Cubrir TODOS los contenedores internos: `.p-accordioncontent`, `.p-accordionpanel-content`, `.p-toggleable-content`
+3. Usar `> div` para cubrir wrappers generados por PrimeNG
+4. Incluir clases personalizadas de la página (`.accordion-body`)
+5. Los componentes DS (ds-props-table) necesitan override cuando están fuera de ds-preview
+
+---
+
 ## Estadisticas
 
 | Categoria | Bugs Encontrados | Bugs Corregidos |
@@ -448,9 +590,11 @@ body[data-ds-theme="light"] {
 | Formularios | 2 | 2 |
 | Tablas | 1 | 1 |
 | Cards | 1 | 1 |
+| Acordeones | 1 | 1 |
+| Paleta de Colores | 1 | 1 |
 | Variables | 1 | 1 |
 | Selectores | 1 | 1 |
-| **Total** | **13** | **13** |
+| **Total** | **14** | **14** |
 
 ---
 
