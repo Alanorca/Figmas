@@ -10,6 +10,7 @@ import { BadgeModule } from 'primeng/badge';
 import { MenuItem, MessageService } from 'primeng/api';
 import { DsPreviewComponent } from '../../../components/ds-preview/ds-preview.component';
 import { DsCodeBlockComponent } from '../../../components/ds-code-block/ds-code-block.component';
+import { DsCodeTabsComponent, CodeTab } from '../../../components/ds-code-tabs/ds-code-tabs.component';
 
 interface BreadcrumbLevel {
   label: string;
@@ -22,7 +23,7 @@ interface BreadcrumbLevel {
   imports: [
     CommonModule, MenuModule, MenubarModule, BreadcrumbModule,
     ContextMenuModule, ButtonModule, ToastModule, BadgeModule,
-    DsPreviewComponent, DsCodeBlockComponent
+    DsPreviewComponent, DsCodeBlockComponent, DsCodeTabsComponent
   ],
   providers: [MessageService],
   templateUrl: './menu-items.component.html',
@@ -285,4 +286,208 @@ onMenuSelect(item: string): void {
     detail: \`You selected: \${item}\`
   });
 }`;
+
+  // ============ Multi Colored Sidebar ============
+  activeIconTab = signal<number>(0);
+  activeFavorite = signal<string>('account');
+  sidebarExpanded = signal<boolean>(true);
+
+  iconMenuItems = [
+    { icon: 'pi pi-home', label: 'Home' },
+    { icon: 'pi pi-bookmark', label: 'Bookmarks' },
+    { icon: 'pi pi-users', label: 'Users' },
+    { icon: 'pi pi-comments', label: 'Messages' },
+    { icon: 'pi pi-calendar', label: 'Calendar' }
+  ];
+
+  favoriteItems = [
+    { id: 'account', icon: 'pi pi-user', label: 'Account' },
+    { id: 'permissions', icon: 'pi pi-lock', label: 'Permissions' },
+    { id: 'profiles', icon: 'pi pi-user', label: 'Saved Profiles' },
+    { id: 'privacy', icon: 'pi pi-eye', label: 'Privacy' }
+  ];
+
+  selectIconTab(index: number): void {
+    this.activeIconTab.set(index);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Tab Selected',
+      detail: `Selected: ${this.iconMenuItems[index].label}`
+    });
+  }
+
+  selectFavorite(id: string): void {
+    this.activeFavorite.set(id);
+    const item = this.favoriteItems.find(f => f.id === id);
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Favorite Selected',
+      detail: `Selected: ${item?.label}`
+    });
+  }
+
+  multiColoredCodeTabs: CodeTab[] = [
+    {
+      label: 'HTML',
+      language: 'html',
+      icon: 'pi pi-code',
+      code: `<div class="multi-colored-sidebar">
+  <!-- Icon Bar (Primary Dark) -->
+  <div class="icon-bar">
+    <div class="logo">
+      <i class="pi pi-prime"></i>
+    </div>
+    <nav class="icon-nav">
+      @for (item of iconMenuItems; track item.icon; let i = $index) {
+        <a
+          class="icon-item"
+          [class.active]="activeIconTab() === i"
+          (click)="selectIconTab(i)"
+        >
+          <i [class]="item.icon"></i>
+        </a>
+      }
+    </nav>
+    <div class="icon-footer">
+      <img src="avatar.png" class="user-avatar" />
+    </div>
+  </div>
+
+  <!-- Favorites Panel (Primary Medium) -->
+  <div class="favorites-panel">
+    <h3>Favorites</h3>
+    <nav class="favorites-nav">
+      @for (item of favoriteItems; track item.id) {
+        <a
+          class="favorite-item"
+          [class.active]="activeFavorite() === item.id"
+          (click)="selectFavorite(item.id)"
+        >
+          <i [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  </div>
+</div>`
+    },
+    {
+      label: 'TypeScript',
+      language: 'typescript',
+      icon: 'pi pi-file',
+      code: `import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-multi-colored-sidebar',
+  templateUrl: './multi-colored-sidebar.component.html',
+  styleUrl: './multi-colored-sidebar.component.scss'
+})
+export class MultiColoredSidebarComponent {
+  activeIconTab = signal<number>(0);
+  activeFavorite = signal<string>('account');
+
+  iconMenuItems = [
+    { icon: 'pi pi-home', label: 'Home' },
+    { icon: 'pi pi-bookmark', label: 'Bookmarks' },
+    { icon: 'pi pi-users', label: 'Users' },
+    { icon: 'pi pi-comments', label: 'Messages' },
+    { icon: 'pi pi-calendar', label: 'Calendar' }
+  ];
+
+  favoriteItems = [
+    { id: 'account', icon: 'pi pi-user', label: 'Account' },
+    { id: 'permissions', icon: 'pi pi-lock', label: 'Permissions' },
+    { id: 'profiles', icon: 'pi pi-user', label: 'Saved Profiles' },
+    { id: 'privacy', icon: 'pi pi-eye', label: 'Privacy' }
+  ];
+
+  selectIconTab(index: number): void {
+    this.activeIconTab.set(index);
+  }
+
+  selectFavorite(id: string): void {
+    this.activeFavorite.set(id);
+  }
+}`
+    },
+    {
+      label: 'SCSS',
+      language: 'scss',
+      icon: 'pi pi-palette',
+      code: `.multi-colored-sidebar {
+  display: flex;
+  height: 400px;
+}
+
+// Icon Bar - Primary Dark
+.icon-bar {
+  display: flex;
+  flex-direction: column;
+  background: var(--primary-700);
+  padding: 1rem 0;
+
+  .dark-mode & {
+    background: var(--primary-500);
+  }
+}
+
+.icon-item {
+  padding: 0.5rem 1rem;
+  color: var(--primary-contrast-color);
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  margin: 0.25rem 0.5rem;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--primary-600);
+  }
+
+  &.active {
+    background: var(--primary-600);
+  }
+
+  .dark-mode &:hover,
+  .dark-mode &.active {
+    background: var(--primary-400);
+  }
+}
+
+// Favorites Panel - Primary Medium
+.favorites-panel {
+  background: var(--primary-500);
+  padding: 1rem;
+  width: 200px;
+  color: var(--primary-contrast-color);
+
+  .dark-mode & {
+    background: var(--primary-400);
+  }
+}
+
+.favorite-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  color: var(--primary-contrast-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--primary-600);
+  }
+
+  &.active {
+    background: var(--primary-600);
+  }
+
+  .dark-mode &:hover,
+  .dark-mode &.active {
+    background: var(--primary-300);
+  }
+}`
+    }
+  ];
 }

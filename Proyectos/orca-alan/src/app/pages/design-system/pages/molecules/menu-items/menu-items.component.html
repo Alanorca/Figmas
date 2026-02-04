@@ -107,6 +107,84 @@
     </app-ds-preview>
   </section>
 
+  <!-- Multi Colored Sidebar -->
+  <section class="section highlight-section">
+    <h2><i class="pi pi-th-large"></i> Multi Colored Sidebar</h2>
+    <p class="section-description">
+      Sidebar con dos niveles de navegación usando diferentes tonos del color primario.
+      Ideal para aplicaciones con navegación jerárquica. <strong>Usa los tokens de color del Design System.</strong>
+    </p>
+    <app-ds-preview title="Multi Colored Navigation">
+      <div class="multi-colored-sidebar">
+        <!-- Icon Bar (Primary Dark) -->
+        <div class="icon-bar">
+          <div class="icon-logo">
+            <i class="pi pi-prime"></i>
+          </div>
+          <nav class="icon-nav">
+            @for (item of iconMenuItems; track item.icon; let i = $index) {
+              <a
+                class="icon-item"
+                [class.active]="activeIconTab() === i"
+                (click)="selectIconTab(i)"
+                [title]="item.label"
+              >
+                <i [class]="item.icon"></i>
+              </a>
+            }
+          </nav>
+          <div class="icon-footer">
+            <div class="divider"></div>
+            <img
+              src="https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/avatar-amyels.png"
+              class="user-avatar"
+              alt="User"
+            />
+          </div>
+        </div>
+
+        <!-- Favorites Panel (Primary Medium) -->
+        <div class="favorites-panel">
+          <h3 class="panel-title">Favorites</h3>
+          <nav class="favorites-nav">
+            @for (item of favoriteItems; track item.id) {
+              <a
+                class="favorite-item"
+                [class.active]="activeFavorite() === item.id"
+                (click)="selectFavorite(item.id)"
+              >
+                <i [class]="item.icon"></i>
+                <span>{{ item.label }}</span>
+              </a>
+            }
+          </nav>
+        </div>
+
+        <!-- Content Area Preview -->
+        <div class="content-preview">
+          <div class="content-header">
+            <i class="pi pi-bars menu-toggle"></i>
+            <div class="header-icons">
+              <i class="pi pi-inbox"></i>
+              <i class="pi pi-sparkles"></i>
+              <i class="pi pi-address-book"></i>
+            </div>
+            <img
+              src="https://fqjltiegiezfetthbags.supabase.co/storage/v1/render/image/public/block.images/blocks/avatars/avatar-amyels.png"
+              class="header-avatar"
+              alt="User"
+            />
+          </div>
+          <div class="content-body">
+            <div class="content-placeholder"></div>
+            <div class="content-placeholder"></div>
+          </div>
+        </div>
+      </div>
+    </app-ds-preview>
+    <app-ds-code-tabs [tabs]="multiColoredCodeTabs" />
+  </section>
+
   <section class="section">
     <h2>Basic Menu</h2>
     <p class="section-description">
