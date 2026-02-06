@@ -18,346 +18,825 @@
     </p>
 
     <div class="atomic-diagram">
-      <div class="atomic-level">
-        <div class="level-header">
-          <span class="level-badge atoms">Atomos</span>
-          <span class="level-description">Elementos base indivisibles</span>
+      <div class="atomic-diagram-toggle" (click)="atomicDiagramOpen.set(!atomicDiagramOpen())">
+        <div class="atomic-diagram-toggle-left">
+          <i class="pi pi-sitemap"></i>
+          <span>Diagrama Atomic Design</span>
         </div>
-        <div class="level-items">
-          <div class="atomic-item">
-            <p-avatar label="A" shape="circle" size="normal" />
-            <span>Avatar</span>
-          </div>
-          <div class="atomic-item">
-            <i class="pi pi-chart-line"></i>
-            <span>Icon</span>
-          </div>
-          <div class="atomic-item">
-            <p-tag value="Tag" />
-            <span>Tag</span>
-          </div>
-          <div class="atomic-item">
-            <p-badge value="3" />
-            <span>Badge</span>
-          </div>
-          <div class="atomic-item">
-            <div class="progress-bar-mini">
-              <div class="progress-fill-mini success"></div>
+        <i class="pi" [class.pi-chevron-down]="!atomicDiagramOpen()" [class.pi-chevron-up]="atomicDiagramOpen()"></i>
+      </div>
+
+      @if (atomicDiagramOpen()) {
+        <div class="atomic-diagram-content">
+          <div class="atomic-level">
+            <div class="level-header">
+              <span class="level-badge atoms">Atomos</span>
+              <span class="level-description">Elementos base indivisibles</span>
             </div>
-            <span>Progress</span>
-          </div>
-          <div class="atomic-item">
-            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" />
-            <span>Button</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="atomic-arrow">
-        <i class="pi pi-arrow-down"></i>
-      </div>
-
-      <div class="atomic-level">
-        <div class="level-header">
-          <span class="level-badge molecules">Moleculas</span>
-          <span class="level-description">Combinacion de atomos con proposito</span>
-        </div>
-        <div class="level-items molecules-grid">
-          <div class="molecule-item">
-            <div class="molecule-preview">
-              <p-avatar label="M" shape="circle" size="normal" [style]="{'background-color': 'var(--primary-100)', 'color': 'var(--primary-color)'}" />
-              <div class="molecule-text">
-                <span class="primary">Maria Garcia</span>
-                <span class="secondary">maria&#64;email.com</span>
+            <div class="level-items">
+              <div class="atomic-item">
+                <p-avatar label="A" shape="circle" size="normal" />
+                <span>Avatar</span>
+              </div>
+              <div class="atomic-item">
+                <i class="pi pi-chart-line"></i>
+                <span>Icon</span>
+              </div>
+              <div class="atomic-item">
+                <p-tag value="Tag" />
+                <span>Tag</span>
+              </div>
+              <div class="atomic-item">
+                <p-badge value="3" />
+                <span>Badge</span>
+              </div>
+              <div class="atomic-item">
+                <div class="progress-bar-mini">
+                  <div class="progress-fill-mini success"></div>
+                </div>
+                <span>Progress</span>
+              </div>
+              <div class="atomic-item">
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" />
+                <span>Button</span>
               </div>
             </div>
-            <span class="molecule-name">Info Container</span>
           </div>
-          <div class="molecule-item">
-            <div class="molecule-preview">
-              <span class="kpi-value">85/100%</span>
-              <div class="progress-bar-mini">
-                <div class="progress-fill-mini success" style="width: 85%"></div>
+
+          <div class="atomic-arrow">
+            <i class="pi pi-arrow-down"></i>
+          </div>
+
+          <div class="atomic-level">
+            <div class="level-header">
+              <span class="level-badge molecules">Moleculas</span>
+              <span class="level-description">Combinacion de atomos con proposito</span>
+            </div>
+            <div class="level-items molecules-grid">
+              <div class="molecule-item">
+                <div class="molecule-preview">
+                  <p-avatar label="M" shape="circle" size="normal" [style]="{'background-color': 'var(--primary-100)', 'color': 'var(--primary-color)'}" />
+                  <div class="molecule-text">
+                    <span class="primary">Maria Garcia</span>
+                    <span class="secondary">maria&#64;email.com</span>
+                  </div>
+                </div>
+                <span class="molecule-name">Info Container</span>
+              </div>
+              <div class="molecule-item">
+                <div class="molecule-preview">
+                  <span class="kpi-value">85/100%</span>
+                  <div class="progress-bar-mini">
+                    <div class="progress-fill-mini success" style="width: 85%"></div>
+                  </div>
+                </div>
+                <span class="molecule-name">KPI Progress</span>
+              </div>
+              <div class="molecule-item">
+                <div class="molecule-preview actions-preview">
+                  <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" />
+                  <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger" />
+                </div>
+                <span class="molecule-name">Action Buttons</span>
               </div>
             </div>
-            <span class="molecule-name">KPI Progress</span>
           </div>
-          <div class="molecule-item">
-            <div class="molecule-preview actions-preview">
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" />
-              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger" />
+
+          <div class="atomic-arrow">
+            <i class="pi pi-arrow-down"></i>
+          </div>
+
+          <div class="atomic-level">
+            <div class="level-header">
+              <span class="level-badge organisms">Organismos</span>
+              <span class="level-description">Componentes de lista completos</span>
             </div>
-            <span class="molecule-name">Action Buttons</span>
+            <div class="level-items organisms-list">
+              <span class="organism-tag">kpi-item</span>
+              <span class="organism-tag">persona-mini</span>
+              <span class="organism-tag">modulo-item</span>
+              <span class="organism-tag">objetivo-item</span>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="atomic-arrow">
-        <i class="pi pi-arrow-down"></i>
-      </div>
-
-      <div class="atomic-level">
-        <div class="level-header">
-          <span class="level-badge organisms">Organismos</span>
-          <span class="level-description">Componentes de lista completos</span>
-        </div>
-        <div class="level-items organisms-list">
-          <span class="organism-tag">kpi-item</span>
-          <span class="organism-tag">persona-mini</span>
-          <span class="organism-tag">modulo-item</span>
-          <span class="organism-tag">objetivo-item</span>
-        </div>
-      </div>
+      }
     </div>
   </section>
 
-  <!-- KPI Items Section -->
+  <!-- ============ ALL LIST VARIANTS (Accordion) ============ -->
   <section class="ds-section">
-    <h2>KPI Item</h2>
+    <h2>Variantes de Listas</h2>
     <p class="section-description">
-      Elemento de lista para mostrar indicadores clave de desempeno (KPIs) con progreso visual,
-      valores actuales/meta y alertas por umbral.
+      Todos los patrones de lista disponibles organizados por tipo.
+      Cada variante combina elementos atómicos en estructuras reutilizables.
     </p>
 
-    <app-ds-preview title="KPI Items - Vista Interactiva">
-      <div class="kpis-demo-list">
-        @for (kpi of kpis(); track kpi.id) {
-          <div class="kpi-item" [class.has-alert]="tieneAlertaKPI(kpi)">
-            <div class="kpi-info">
-              <div class="kpi-nombre-row">
-                <span class="kpi-nombre">{{ kpi.nombre }}</span>
-                <span class="kpi-direccion-tag" [class]="kpi.direccion">
-                  <i [class]="kpi.direccion === 'mayor_mejor' ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
-                  {{ kpi.direccion === 'mayor_mejor' ? 'Mayor mejor' : 'Menor mejor' }}
-                </span>
-                @if (tieneAlertaKPI(kpi)) {
-                  <span class="kpi-alert-badge">
-                    <i class="pi pi-exclamation-triangle"></i>
-                    Alerta
-                  </span>
+    <p-accordion [(value)]="listsAccordion">
+
+      <!-- 0: KPI Items -->
+      <p-accordionpanel value="0">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-chart-line"></i>
+            <span>KPI Items</span>
+            <p-tag value="4 items" severity="info" />
+          </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Elemento de lista para mostrar indicadores clave de desempeno (KPIs) con progreso visual,
+              valores actuales/meta y alertas por umbral.
+            </p>
+
+            <app-ds-preview title="KPI Items - Vista Interactiva">
+              <div class="kpis-demo-list">
+                @for (kpi of kpis(); track kpi.id) {
+                  <div class="kpi-item" [class.has-alert]="tieneAlertaKPI(kpi)">
+                    <div class="kpi-info">
+                      <div class="kpi-nombre-row">
+                        <span class="kpi-nombre">{{ kpi.nombre }}</span>
+                        <span class="kpi-direccion-tag" [class]="kpi.direccion">
+                          <i [class]="kpi.direccion === 'mayor_mejor' ? 'pi pi-arrow-up' : 'pi pi-arrow-down'"></i>
+                          {{ kpi.direccion === 'mayor_mejor' ? 'Mayor mejor' : 'Menor mejor' }}
+                        </span>
+                        @if (tieneAlertaKPI(kpi)) {
+                          <span class="kpi-alert-badge">
+                            <i class="pi pi-exclamation-triangle"></i>
+                            Alerta
+                          </span>
+                        }
+                      </div>
+                      <div class="kpi-progress">
+                        <div class="progress-bar">
+                          <div
+                            class="progress-fill"
+                            [class]="getKPIProgresoColor(kpi)"
+                            [style.width.%]="getKPIProgreso(kpi)">
+                          </div>
+                        </div>
+                        <span class="progress-text">{{ kpi.actual }}/{{ kpi.meta }} {{ kpi.escala }}</span>
+                      </div>
+                    </div>
+                    <div class="kpi-actions">
+                      <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" pTooltip="Editar" />
+                      <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" />
+                    </div>
+                  </div>
                 }
               </div>
-              <div class="kpi-progress">
-                <div class="progress-bar">
-                  <div
-                    class="progress-fill"
-                    [class]="getKPIProgresoColor(kpi)"
-                    [style.width.%]="getKPIProgreso(kpi)">
+            </app-ds-preview>
+
+            <app-ds-code-block [code]="kpiItemCode" language="html" />
+            <app-ds-props-table [props]="kpiItemProps" />
+          </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
+
+      <!-- 1: Persona Mini -->
+      <p-accordionpanel value="1">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-user"></i>
+            <span>Persona Mini</span>
+            <p-tag value="4 variantes" severity="success" />
+          </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Elemento compacto para mostrar informacion de personas/usuarios.
+              Combina avatar, nombre, email y estado en un formato condensado.
+            </p>
+
+            <app-ds-preview title="Persona Mini - Variantes">
+              <div class="personas-demo-container">
+                <!-- Variante Simple -->
+                <div class="demo-column">
+                  <h4 class="demo-column-title">Simple</h4>
+                  <div class="personas-demo-list">
+                    @for (persona of personas().slice(0, 2); track persona.id) {
+                      <div class="persona-mini">
+                        <p-avatar
+                          [label]="persona.nombre.charAt(0)"
+                          shape="circle"
+                          size="normal"
+                          [style]="getPersonaAvatarStyle(persona)"
+                        />
+                        <div class="persona-mini-info">
+                          <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                        </div>
+                      </div>
+                    }
                   </div>
                 </div>
-                <span class="progress-text">{{ kpi.actual }}/{{ kpi.meta }} {{ kpi.escala }}</span>
-              </div>
-            </div>
-            <div class="kpi-actions">
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" pTooltip="Editar" />
-              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" />
-            </div>
-          </div>
-        }
-      </div>
-    </app-ds-preview>
 
-    <app-ds-code-block [code]="kpiItemCode" language="html" />
-    <app-ds-props-table [props]="kpiItemProps" />
-  </section>
+                <!-- Variante con Email -->
+                <div class="demo-column">
+                  <h4 class="demo-column-title">Con Email</h4>
+                  <div class="personas-demo-list">
+                    @for (persona of personas().slice(0, 2); track persona.id) {
+                      <div class="persona-mini">
+                        <p-avatar
+                          [label]="persona.nombre.charAt(0)"
+                          shape="circle"
+                          size="normal"
+                          [style]="getPersonaAvatarStyle(persona)"
+                        />
+                        <div class="persona-mini-info">
+                          <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                          <span class="persona-mini-email">{{ persona.email }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
 
-  <!-- Persona Mini Section -->
-  <section class="ds-section">
-    <h2>Persona Mini</h2>
-    <p class="section-description">
-      Elemento compacto para mostrar informacion de personas/usuarios.
-      Combina avatar, nombre, email y estado en un formato condensado.
-    </p>
+                <!-- Variante con Status -->
+                <div class="demo-column">
+                  <h4 class="demo-column-title">Con Status Tag</h4>
+                  <div class="personas-demo-list">
+                    @for (persona of personas(); track persona.id) {
+                      <div class="persona-mini">
+                        <p-avatar
+                          [label]="persona.nombre.charAt(0)"
+                          shape="circle"
+                          size="normal"
+                          [style]="getPersonaAvatarStyle(persona)"
+                        />
+                        <div class="persona-mini-info">
+                          <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                        </div>
+                        <p-tag
+                          [value]="getPersonaStatusTag(persona).value"
+                          [severity]="getPersonaStatusTag(persona).severity"
+                          styleClass="text-xs"
+                        />
+                      </div>
+                    }
+                  </div>
+                </div>
 
-    <app-ds-preview title="Persona Mini - Variantes">
-      <div class="personas-demo-container">
-        <!-- Variante Simple -->
-        <div class="demo-column">
-          <h4 class="demo-column-title">Simple</h4>
-          <div class="personas-demo-list">
-            @for (persona of personas().slice(0, 2); track persona.id) {
-              <div class="persona-mini">
-                <p-avatar
-                  [label]="persona.nombre.charAt(0)"
-                  shape="circle"
-                  size="normal"
-                  [style]="getPersonaAvatarStyle(persona)"
-                />
-                <div class="persona-mini-info">
-                  <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                <!-- Variante con Menu -->
+                <div class="demo-column">
+                  <h4 class="demo-column-title">Con Menu</h4>
+                  <div class="personas-demo-list">
+                    @for (persona of personas().slice(0, 2); track persona.id) {
+                      <div class="persona-mini persona-con-menu">
+                        <p-avatar
+                          [label]="persona.nombre.charAt(0)"
+                          shape="circle"
+                          size="normal"
+                          [style]="getPersonaAvatarStyle(persona)"
+                        />
+                        <div class="persona-mini-info flex-1">
+                          <span class="persona-mini-nombre">{{ persona.nombre }}</span>
+                          <span class="persona-mini-email">{{ persona.email }}</span>
+                        </div>
+                        <p-button
+                          icon="pi pi-ellipsis-v"
+                          [rounded]="true"
+                          [text]="true"
+                          size="small"
+                          severity="secondary"
+                        />
+                      </div>
+                    }
+                  </div>
                 </div>
               </div>
-            }
-          </div>
-        </div>
+            </app-ds-preview>
 
-        <!-- Variante con Email -->
-        <div class="demo-column">
-          <h4 class="demo-column-title">Con Email</h4>
-          <div class="personas-demo-list">
-            @for (persona of personas().slice(0, 2); track persona.id) {
-              <div class="persona-mini">
-                <p-avatar
-                  [label]="persona.nombre.charAt(0)"
-                  shape="circle"
-                  size="normal"
-                  [style]="getPersonaAvatarStyle(persona)"
-                />
-                <div class="persona-mini-info">
-                  <span class="persona-mini-nombre">{{ persona.nombre }}</span>
-                  <span class="persona-mini-email">{{ persona.email }}</span>
+            <app-ds-code-block [code]="personaMiniCode" language="html" />
+            <app-ds-props-table [props]="personaMiniProps" />
+          </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
+
+      <!-- 2: Modulo Items -->
+      <p-accordionpanel value="2">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-th-large"></i>
+            <span>Modulo Items</span>
+            <p-tag value="4 items" severity="warn" />
+          </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Elemento de lista seleccionable para navegacion de modulos.
+              Soporta estados activo/inactivo, habilitado/deshabilitado y badges de notificacion.
+            </p>
+
+            <app-ds-preview title="Modulo Items - Lista Seleccionable">
+              <div class="modulos-demo-list">
+                @for (modulo of modulos(); track modulo.id) {
+                  <div
+                    class="modulo-item"
+                    [class.active]="modulo.activo"
+                    [class.habilitado]="modulo.habilitado"
+                    [class.disabled]="!modulo.habilitado"
+                    (click)="selectModulo(modulo)"
+                  >
+                    <div class="modulo-icon">
+                      <i [class]="modulo.icono"></i>
+                    </div>
+                    <div class="modulo-info">
+                      <span class="modulo-nombre">{{ modulo.nombre }}</span>
+                      <span class="modulo-descripcion">{{ modulo.descripcion }}</span>
+                    </div>
+                    @if (modulo.notificaciones && modulo.notificaciones > 0) {
+                      <p-badge [value]="modulo.notificaciones.toString()" severity="danger" />
+                    }
+                    <p-checkbox
+                      [(ngModel)]="modulo.habilitado"
+                      [binary]="true"
+                      (onClick)="$event.stopPropagation()"
+                    />
+                  </div>
+                }
+              </div>
+            </app-ds-preview>
+
+            <app-ds-code-block [code]="moduloItemCode" language="html" />
+            <app-ds-props-table [props]="moduloItemProps" />
+          </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
+
+      <!-- 3: Objetivo Items -->
+      <p-accordionpanel value="3">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-flag"></i>
+            <span>Objetivo Items</span>
+            <p-tag value="3 items" severity="contrast" />
+          </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Elemento de lista para objetivos con tipificacion (estrategico/operativo),
+              descripcion y barra de progreso. Ideal para vistas master-detail.
+            </p>
+
+            <app-ds-preview title="Objetivo Items - Master List">
+              <div class="objetivos-demo-list">
+                @for (objetivo of objetivos(); track objetivo.id) {
+                  <div
+                    class="objetivo-item"
+                    [class.selected]="objetivo.selected"
+                    (click)="selectObjetivo(objetivo)"
+                  >
+                    <div class="objetivo-header">
+                      <span class="objetivo-nombre">{{ objetivo.nombre }}</span>
+                      <span class="objetivo-tipo" [class]="objetivo.tipo">
+                        {{ objetivo.tipo === 'estrategico' ? 'Estrategico' : 'Operativo' }}
+                      </span>
+                    </div>
+                    @if (objetivo.descripcion) {
+                      <p class="objetivo-descripcion">{{ objetivo.descripcion }}</p>
+                    }
+                    <div class="objetivo-progress">
+                      <div class="progress-bar">
+                        <div
+                          class="progress-fill"
+                          [class]="getProgresoColor(objetivo.progreso)"
+                          [style.width.%]="objetivo.progreso">
+                        </div>
+                      </div>
+                      <span class="progress-value">{{ objetivo.progreso }}%</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </app-ds-preview>
+
+            <app-ds-code-block [code]="objetivoItemCode" language="html" />
+          </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
+
+      <!-- 4: Avatars with Links -->
+      <p-accordionpanel value="4">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-users"></i>
+            <span>Avatars with Links</span>
+            <p-tag value="5 members" severity="secondary" />
+          </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Lista de miembros del equipo con avatar, nombre, rol y estado de conexion (online/last active).
+            </p>
+
+            <app-ds-preview title="Team Members">
+              <div class="avatars-links-demo">
+                <div class="avatars-links-card">
+                  <div class="avatars-links-title">Team Members</div>
+                  <div class="avatars-links-list">
+                    @for (member of teamMembers(); track member.name) {
+                      <div class="avatars-links-item">
+                        <div class="avatars-links-left">
+                          <img [src]="member.avatar" class="avatars-links-avatar" />
+                          <div class="avatars-links-info">
+                            <div class="avatars-links-name">{{ member.name }}</div>
+                            <div class="avatars-links-role">{{ member.role }}</div>
+                          </div>
+                        </div>
+                        <div class="avatars-links-status">
+                          <div class="avatars-links-status-label">Last Active</div>
+                          @if (member.isOnline) {
+                            <div class="avatars-links-online">
+                              <span class="online-dot"></span>
+                              <span class="online-text">Online</span>
+                            </div>
+                          }
+                          @if (!member.isOnline) {
+                            <div class="avatars-links-last-active">{{ member.lastActive }}</div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
                 </div>
               </div>
-            }
+            </app-ds-preview>
+
+            <app-ds-code-tabs [tabs]="avatarsWithLinksCodeTabs" />
+            <app-ds-props-table [props]="avatarsWithLinksProps" />
           </div>
-        </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
 
-        <!-- Variante con Status -->
-        <div class="demo-column">
-          <h4 class="demo-column-title">Con Status Tag</h4>
-          <div class="personas-demo-list">
-            @for (persona of personas(); track persona.id) {
-              <div class="persona-mini">
-                <p-avatar
-                  [label]="persona.nombre.charAt(0)"
-                  shape="circle"
-                  size="normal"
-                  [style]="getPersonaAvatarStyle(persona)"
-                />
-                <div class="persona-mini-info">
-                  <span class="persona-mini-nombre">{{ persona.nombre }}</span>
-                </div>
-                <p-tag
-                  [value]="getPersonaStatusTag(persona).value"
-                  [severity]="getPersonaStatusTag(persona).severity"
-                  styleClass="text-xs"
-                />
-              </div>
-            }
+      <!-- 5: Colored Rows (Invoices) -->
+      <p-accordionpanel value="5">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-file-edit"></i>
+            <span>Colored Rows</span>
+            <p-tag value="4 invoices" severity="success" />
           </div>
-        </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Lista de facturas con barra lateral de color segun estado (paid/pending/unpaid),
+              tag de severidad, monto y moneda.
+            </p>
 
-        <!-- Variante con Menu -->
-        <div class="demo-column">
-          <h4 class="demo-column-title">Con Menu</h4>
-          <div class="personas-demo-list">
-            @for (persona of personas().slice(0, 2); track persona.id) {
-              <div class="persona-mini persona-con-menu">
-                <p-avatar
-                  [label]="persona.nombre.charAt(0)"
-                  shape="circle"
-                  size="normal"
-                  [style]="getPersonaAvatarStyle(persona)"
-                />
-                <div class="persona-mini-info flex-1">
-                  <span class="persona-mini-nombre">{{ persona.nombre }}</span>
-                  <span class="persona-mini-email">{{ persona.email }}</span>
-                </div>
-                <p-button
-                  icon="pi pi-ellipsis-v"
-                  [rounded]="true"
-                  [text]="true"
-                  size="small"
-                  severity="secondary"
-                />
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-    </app-ds-preview>
-
-    <app-ds-code-block [code]="personaMiniCode" language="html" />
-    <app-ds-props-table [props]="personaMiniProps" />
-  </section>
-
-  <!-- Modulo Item Section -->
-  <section class="ds-section">
-    <h2>Modulo Item</h2>
-    <p class="section-description">
-      Elemento de lista seleccionable para navegacion de modulos.
-      Soporta estados activo/inactivo, habilitado/deshabilitado y badges de notificacion.
-    </p>
-
-    <app-ds-preview title="Modulo Items - Lista Seleccionable">
-      <div class="modulos-demo-list">
-        @for (modulo of modulos(); track modulo.id) {
-          <div
-            class="modulo-item"
-            [class.active]="modulo.activo"
-            [class.habilitado]="modulo.habilitado"
-            [class.disabled]="!modulo.habilitado"
-            (click)="selectModulo(modulo)"
-          >
-            <div class="modulo-icon">
-              <i [class]="modulo.icono"></i>
-            </div>
-            <div class="modulo-info">
-              <span class="modulo-nombre">{{ modulo.nombre }}</span>
-              <span class="modulo-descripcion">{{ modulo.descripcion }}</span>
-            </div>
-            @if (modulo.notificaciones && modulo.notificaciones > 0) {
-              <p-badge [value]="modulo.notificaciones.toString()" severity="danger" />
-            }
-            <p-checkbox
-              [(ngModel)]="modulo.habilitado"
-              [binary]="true"
-              (onClick)="$event.stopPropagation()"
-            />
-          </div>
-        }
-      </div>
-    </app-ds-preview>
-
-    <app-ds-code-block [code]="moduloItemCode" language="html" />
-    <app-ds-props-table [props]="moduloItemProps" />
-  </section>
-
-  <!-- Objetivo Item Section -->
-  <section class="ds-section">
-    <h2>Objetivo Item</h2>
-    <p class="section-description">
-      Elemento de lista para objetivos con tipificacion (estrategico/operativo),
-      descripcion y barra de progreso. Ideal para vistas master-detail.
-    </p>
-
-    <app-ds-preview title="Objetivo Items - Master List">
-      <div class="objetivos-demo-list">
-        @for (objetivo of objetivos(); track objetivo.id) {
-          <div
-            class="objetivo-item"
-            [class.selected]="objetivo.selected"
-            (click)="selectObjetivo(objetivo)"
-          >
-            <div class="objetivo-header">
-              <span class="objetivo-nombre">{{ objetivo.nombre }}</span>
-              <span class="objetivo-tipo" [class]="objetivo.tipo">
-                {{ objetivo.tipo === 'estrategico' ? 'Estrategico' : 'Operativo' }}
-              </span>
-            </div>
-            @if (objetivo.descripcion) {
-              <p class="objetivo-descripcion">{{ objetivo.descripcion }}</p>
-            }
-            <div class="objetivo-progress">
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  [class]="getProgresoColor(objetivo.progreso)"
-                  [style.width.%]="objetivo.progreso">
+            <app-ds-preview title="Recent Invoices">
+              <div class="colored-rows-demo">
+                <div class="colored-rows-card">
+                  <div class="colored-rows-title">Recent Invoices</div>
+                  <div class="colored-rows-list">
+                    @for (invoice of invoices(); track invoice.company) {
+                      <div class="colored-row-item">
+                        <div class="colored-row-bar" [class]="getStatusColorClass(invoice.status)"></div>
+                        <div class="colored-row-content">
+                          <div class="colored-row-info">
+                            <div class="colored-row-company">{{ invoice.company }}</div>
+                            <div class="colored-row-due">Due {{ invoice.dueDate }}</div>
+                          </div>
+                          <div class="colored-row-right">
+                            <p-tag [severity]="getTagSeverity(invoice.status)" [value]="invoice.status" />
+                            <div class="colored-row-amount">
+                              <div class="colored-row-value">{{ invoice.amount }}</div>
+                              <div class="colored-row-currency">{{ invoice.currency }}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
                 </div>
               </div>
-              <span class="progress-value">{{ objetivo.progreso }}%</span>
-            </div>
-          </div>
-        }
-      </div>
-    </app-ds-preview>
+            </app-ds-preview>
 
-    <app-ds-code-block [code]="objetivoItemCode" language="html" />
+            <app-ds-code-tabs [tabs]="coloredRowsCodeTabs" />
+            <app-ds-props-table [props]="coloredRowsProps" />
+          </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
+
+      <!-- 10: With Graph (Browsers) -->
+      <p-accordionpanel value="10">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-chart-pie"></i>
+            <span>With Graph</span>
+            <p-tag value="5 browsers" severity="info" />
+          </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Lista de navegadores con logo, nombre, porcentaje de uso y mini grafico knob circular.
+              Incluye menu contextual con opciones.
+            </p>
+
+            <app-ds-preview title="Browser Distributions">
+              <div class="with-graph-demo">
+                <div class="with-graph-card">
+                  <div class="with-graph-header">
+                    <span class="with-graph-title">Browser Distributions</span>
+                    <div>
+                      <button pButton [text]="true" [rounded]="true" severity="secondary" (click)="browserMenu.toggle($event)">
+                        <i pButtonIcon class="pi pi-ellipsis-v"></i>
+                      </button>
+                      <p-menu #browserMenu [popup]="true" [model]="browserMenuItems()" [appendTo]="'body'" />
+                    </div>
+                  </div>
+                  <ul class="with-graph-list">
+                    @for (browser of browsers(); track browser.name; let isLast = $last) {
+                      <li class="with-graph-item" [class.with-graph-item-border]="!isLast">
+                        <div class="with-graph-item-left">
+                          <img [src]="browser.logo" class="with-graph-logo" [alt]="browser.name" />
+                          <span class="with-graph-name">{{ browser.name }}</span>
+                        </div>
+                        <div class="with-graph-item-right">
+                          <span class="with-graph-percentage">%{{ browser.percentage }}</span>
+                          <p-knob [ngModel]="browser.percentage" [readonly]="true" [size]="32" valueColor="#10B981" [showValue]="false" [class.opacity-70]="browser.opacity === 0.7" />
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              </div>
+            </app-ds-preview>
+
+            <app-ds-code-tabs [tabs]="withGraphCodeTabs" />
+            <app-ds-props-table [props]="withGraphProps" />
+          </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
+
+      <!-- 9: With Filters (Projects) -->
+      <p-accordionpanel value="9">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-github"></i>
+            <span>With Filters</span>
+            <p-tag value="4 projects" severity="contrast" />
+          </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Lista de proyectos agrupados por organizacion con barra de busqueda, filtros,
+              ordenamiento, iconos SVG personalizados, estado, timestamp y menu contextual.
+            </p>
+
+            <app-ds-preview title="Projects with Filters">
+              <div class="with-filters-demo">
+                <div class="with-filters-card">
+                  <!-- Search Bar -->
+                  <div class="with-filters-search-bar">
+                    <div class="with-filters-search-input">
+                      <i class="pi pi-search"></i>
+                      <input type="text" placeholder="Search" [(ngModel)]="projectSearchTerm" />
+                    </div>
+                    <button class="with-filters-search-btn">
+                      <i class="pi pi-filter"></i>
+                      <span>Filter</span>
+                    </button>
+                    <button class="with-filters-search-btn">
+                      <span>Sort</span>
+                      <i class="pi pi-chevron-down"></i>
+                    </button>
+                  </div>
+
+                  <!-- Grouped Projects -->
+                  <div class="with-filters-groups">
+                    @for (group of projectGroups(); track group.orgName; let groupIndex = $index) {
+                      <div class="with-filters-group">
+                        <div class="with-filters-org">
+                          <i class="pi pi-github"></i>
+                          <span>{{ group.orgName }}</span>
+                        </div>
+
+                        @for (project of group.projects; track project.name; let projectIndex = $index) {
+                          <div class="with-filters-project">
+                            <div class="with-filters-project-inner">
+                              <div class="with-filters-project-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="33" height="32" viewBox="0 0 33 32" fill="none">
+                                  <path fill-rule="evenodd" clip-rule="evenodd" [attr.d]="project.svgPath" class="with-filters-svg-path" />
+                                </svg>
+                              </div>
+                              <div class="with-filters-project-info">
+                                <h5>{{ project.name }}</h5>
+                                <p>{{ project.description }}</p>
+                              </div>
+                              <div class="with-filters-project-status">
+                                <div class="with-filters-status-text">{{ project.status }}</div>
+                                <div class="with-filters-timestamp">{{ project.timestamp }}</div>
+                              </div>
+                              <div class="with-filters-project-menu">
+                                <button pButton [text]="true" severity="secondary" (click)="toggleMenu($event, getMenuIndex(groupIndex, projectIndex))">
+                                  <i pButtonIcon class="pi pi-ellipsis-v"></i>
+                                </button>
+                                <p-menu [popup]="true" [model]="projectMenuItems()" [appendTo]="'body'" />
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </app-ds-preview>
+
+            <app-ds-code-tabs [tabs]="withFiltersCodeTabs" />
+            <app-ds-props-table [props]="withFiltersProps" />
+          </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
+
+      <!-- 8: Images Tags and Actions with Search -->
+      <p-accordionpanel value="8">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-image"></i>
+            <span>Images Tags and Actions with Search</span>
+            <p-tag value="3 pages" severity="secondary" />
+          </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Lista de landing pages con imagen de preview, titulo, fecha, estado (published/draft),
+              barra de busqueda con filtro y ordenamiento.
+            </p>
+
+            <app-ds-preview title="Landing Pages with Search">
+              <div class="images-tags-search-demo">
+                <div class="images-tags-search-card">
+                  <!-- Search Bar -->
+                  <div class="images-tags-search-bar">
+                    <div class="images-tags-search-input">
+                      <i class="pi pi-search"></i>
+                      <input type="text" placeholder="Search" [(ngModel)]="searchTerm" />
+                    </div>
+                    <button class="images-tags-search-btn">
+                      <i class="pi pi-filter"></i>
+                      <span>Filter</span>
+                    </button>
+                    <button class="images-tags-search-btn">
+                      <span>Sort</span>
+                      <i class="pi pi-chevron-down"></i>
+                    </button>
+                  </div>
+
+                  <!-- Results -->
+                  <div class="images-tags-search-results">
+                    <div class="images-tags-search-count">Displaying {{ landingPages().length }} Landing Pages</div>
+                    <div class="images-tags-search-list">
+                      @for (item of landingPages(); track item.title) {
+                        <div class="images-tags-search-item">
+                          <div class="images-tags-search-thumb">
+                            <img [src]="item.image" alt="" />
+                          </div>
+                          <div class="images-tags-search-content">
+                            <div class="images-tags-search-info">
+                              <div class="images-tags-search-title-row">
+                                <h4>{{ item.title }}</h4>
+                                <i class="pi pi-link"></i>
+                              </div>
+                              <p class="images-tags-search-date">{{ item.date }}</p>
+                            </div>
+                            <p-tag [severity]="getLandingPageTagSeverity(item.status)" [value]="item.status === 'published' ? 'Published' : 'Draft'" />
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </app-ds-preview>
+
+            <app-ds-code-tabs [tabs]="imagesTagsSearchCodeTabs" />
+            <app-ds-props-table [props]="imagesTagsSearchProps" />
+          </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
+
+      <!-- 7: Image Meta and Rating -->
+      <p-accordionpanel value="7">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-star"></i>
+            <span>Image Meta and Rating</span>
+            <p-tag value="5 apps" severity="warn" />
+          </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Lista de aplicaciones con logo, nombre, tienda, calificacion por estrellas y cantidad de reviews.
+              Ideal para mostrar rankings o top downloads.
+            </p>
+
+            <app-ds-preview title="Top Downloads">
+              <div class="image-meta-rating-demo">
+                <div class="image-meta-rating-card">
+                  <div class="image-meta-rating-title">Top Downloads</div>
+                  <div class="image-meta-rating-list">
+                    @for (app of apps(); track app.name) {
+                      <div class="image-meta-rating-item">
+                        <div class="image-meta-rating-logo">
+                          <img [src]="app.logo" alt="" />
+                        </div>
+                        <div class="image-meta-rating-info">
+                          <div class="image-meta-rating-name">{{ app.name }}</div>
+                          <div class="image-meta-rating-store">{{ app.store }}</div>
+                        </div>
+                        <div class="image-meta-rating-right">
+                          <div class="image-meta-rating-stars">
+                            @for (n of getRatingArray(app.rating); track n) {
+                              <i class="pi pi-star-fill"></i>
+                            }
+                          </div>
+                          <div class="image-meta-rating-reviews">{{ app.reviews }} Reviews</div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </app-ds-preview>
+
+            <app-ds-code-tabs [tabs]="imageMetaRatingCodeTabs" />
+            <app-ds-props-table [props]="imageMetaRatingProps" />
+          </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
+
+      <!-- 6: Content Links with Actions -->
+      <p-accordionpanel value="6">
+        <p-accordionheader>
+          <div class="accordion-header-content">
+            <i class="pi pi-megaphone"></i>
+            <span>Content Links with Actions</span>
+            <p-tag value="3 updates" severity="info" />
+          </div>
+        </p-accordionheader>
+        <p-accordioncontent>
+          <div class="accordion-body">
+            <p class="section-description">
+              Lista de actualizaciones con titulo, descripcion, fecha y botones de accion.
+              Incluye separadores y tag de periodo.
+            </p>
+
+            <app-ds-preview title="Recent Platform Updates">
+              <div class="content-links-demo">
+                <div class="content-links-card">
+                  <div class="content-links-header">
+                    <div class="content-links-title">Recent Platform Updates</div>
+                    <p-tag icon="pi pi-calendar" value="Q4 2026" />
+                  </div>
+
+                  <div class="content-links-list">
+                    @for (update of updates(); track update.title; let index = $index) {
+                      <div class="content-links-item">
+                        <div class="content-links-item-title">{{ update.title }}</div>
+                        <div class="content-links-item-body">
+                          <p class="content-links-item-desc">{{ update.description }}</p>
+                          <span class="content-links-item-date">{{ update.date }}</span>
+                        </div>
+                        @if (index < updates().length - 1) {
+                          <div class="content-links-divider"></div>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <div class="content-links-actions">
+                    <button pButton class="flex-1" severity="secondary">
+                      <span pButtonLabel>View All Updates</span>
+                    </button>
+                    <button pButton class="flex-1">
+                      <span pButtonLabel>Subscribe to Updates</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </app-ds-preview>
+
+            <app-ds-code-tabs [tabs]="contentLinksCodeTabs" />
+            <app-ds-props-table [props]="contentLinksProps" />
+          </div>
+        </p-accordioncontent>
+      </p-accordionpanel>
+
+    </p-accordion>
   </section>
 
   <!-- Best Practices -->
-  <section class="ds-section">
+  <section class="ds-section rules-section">
     <h2>Reglas de Composicion</h2>
 
     <div class="rules-grid">
