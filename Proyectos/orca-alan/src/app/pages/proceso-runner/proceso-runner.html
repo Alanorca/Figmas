@@ -94,6 +94,89 @@
     </div>
   }
 
+  <!-- Estadísticas de Ejecución (Desplegable) -->
+  @if (executionStats()) {
+    <div class="stats-section mx-6 mt-4" [class.collapsed]="!statsExpanded()">
+      <div class="stats-header" (click)="statsExpanded.set(!statsExpanded())">
+        <div class="stats-title">
+          <span class="material-icons stats-title-icon">bar_chart</span>
+          <span>Estadísticas de Ejecución</span>
+          <i class="pi stats-chevron" [class.pi-chevron-down]="!statsExpanded()" [class.pi-chevron-up]="statsExpanded()"></i>
+        </div>
+        <div class="stats-total-time">
+          Tiempo Total: <strong>{{ executionStats()!.totalTime }}</strong>
+        </div>
+      </div>
+      @if (statsExpanded()) {
+      <div class="stats-cards">
+        <!-- Nodos -->
+        <div class="stat-card">
+          <div class="stat-icon nodos">
+            <span class="material-icons">hub</span>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">NODOS</div>
+            <div class="stat-value">{{ executionStats()!.nodesExecuted }} <span class="stat-unit">ejecutados</span></div>
+            <div class="stat-detail">Promedio: {{ formatDuration(executionStats()!.nodesAvg) }}</div>
+          </div>
+        </div>
+        <!-- Webhooks -->
+        <div class="stat-card">
+          <div class="stat-icon webhooks">
+            <span class="material-icons">webhook</span>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">WEBHOOKS</div>
+            <div class="stat-value">{{ executionStats()!.webhooksCalled }} <span class="stat-unit">llamadas</span></div>
+            <div class="stat-detail">Total: {{ formatDuration(executionStats()!.webhooksTotal) }}</div>
+            <div class="stat-detail">Promedio: {{ formatDuration(executionStats()!.webhooksAvg) }}</div>
+          </div>
+        </div>
+        <!-- Contexto -->
+        <div class="stat-card">
+          <div class="stat-icon contexto">
+            <span class="material-icons">storage</span>
+          </div>
+          <div class="stat-content">
+            <div class="stat-label">CONTEXTO</div>
+            <div class="stat-value">{{ executionStats()!.contextSize }} <span class="stat-unit">datos</span></div>
+            <div class="stat-detail">{{ executionStats()!.contextVars }} variables</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desglose por Tipo de Nodo -->
+      @if (nodeTypeBreakdown().length > 0) {
+        <div class="breakdown-section">
+          <div class="breakdown-title">
+            <span class="material-icons">list</span>
+            <span>Desglose por Tipo de Nodo</span>
+          </div>
+          <div class="breakdown-list">
+            @for (item of nodeTypeBreakdown(); track item.type) {
+              <div class="breakdown-item">
+                <div class="breakdown-label">
+                  <span class="material-icons" [style.color]="item.iconColor">{{ item.icon }}</span>
+                  <span>{{ item.typeName }}</span>
+                </div>
+                <div class="breakdown-bar-container">
+                  <div class="breakdown-bar" [style.width.%]="item.percentage" [style.background]="item.iconColor"></div>
+                  <div class="breakdown-bar-bg"></div>
+                </div>
+                <div class="breakdown-stats">
+                  <span class="breakdown-time">{{ formatDuration(item.totalTime) }}</span>
+                  <span class="breakdown-pct">({{ item.percentage | number:'1.1-1' }}%)</span>
+                  <span class="breakdown-detail">[{{ item.count }}x, avg {{ formatDuration(item.avg) }}]</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+      }
+    </div>
+  }
+
   <!-- Flow Visualization -->
   <div class="flow-section mx-6 mt-4">
     <div class="flow-header">
@@ -217,17 +300,19 @@
         <!-- Tab: Resultado Actual -->
         <p-tabpanel [value]="0">
           <div class="results-panel">
-            <!-- Panel Header con Exportar -->
+            <!-- Panel Header con Descargar -->
             <div class="panel-toolbar">
               <p-button
                 icon="pi pi-download"
-                label="Exportar"
+                [rounded]="true"
                 [text]="true"
                 severity="secondary"
                 size="small"
+                pTooltip="Descargar"
                 [disabled]="outputVariables().length === 0"
-                (onClick)="exportCurrentResults()"
+                (onClick)="resultsMenu.toggle($event)"
               />
+              <p-menu #resultsMenu [model]="resultsDownloadItems" [popup]="true" />
             </div>
 
             <div class="results-grid">
@@ -297,17 +382,11 @@
                     <span class="detail-type-badge">{{ selectedVariable()!.typeLabel }}</span>
                   </div>
                   <div class="detail-content">
-                    <pre>{{ formatValue(selectedVariable()!.value) }}</pre>
-                  </div>
-                  <div class="detail-footer">
-                    <p-button
-                      icon="pi pi-download"
-                      label="Descargar JSON"
-                      [text]="true"
-                      severity="secondary"
-                      size="small"
-                      (onClick)="downloadVariableJson(selectedVariable()!)"
-                    />
+                    <div class="dv-container">
+                      <ng-container
+                        *ngTemplateOutlet="dataViewer; context: { value: selectedVariable()!.value, path: 'var' }"
+                      />
+                    </div>
                   </div>
                 } @else {
                   <div class="empty-state">
@@ -417,17 +496,23 @@
                   </div>
                   <div class="detail-section-title">VARIABLES DEL CONTEXTO</div>
                   <div class="detail-content">
-                    <pre>{{ formatValue(currentExecution()!.context) }}</pre>
+                    <div class="dv-container">
+                      <ng-container
+                        *ngTemplateOutlet="dataViewer; context: { value: currentExecution()!.context, path: 'ctx' }"
+                      />
+                    </div>
                   </div>
                   <div class="detail-footer">
                     <p-button
                       icon="pi pi-download"
-                      label="Descargar JSON"
+                      [rounded]="true"
                       [text]="true"
                       severity="secondary"
                       size="small"
-                      (onClick)="downloadExecutionJson(currentExecution()!)"
+                      pTooltip="Descargar"
+                      (onClick)="execMenu.toggle($event)"
                     />
+                    <p-menu #execMenu [model]="executionDownloadItems" [popup]="true" />
                   </div>
                 } @else {
                   <div class="empty-state">
@@ -729,3 +814,118 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<!-- Data Viewer Template (reutilizable y recursivo) -->
+<ng-template #dataViewer let-value="value" let-path="path">
+  @switch (getValueDisplayType(value)) {
+    @case ('null') {
+      <span class="dv-primitive dv-null">-</span>
+    }
+    @case ('string') {
+      <span class="dv-primitive dv-string">{{ formatPrimitive(value) }}</span>
+    }
+    @case ('number') {
+      <span class="dv-primitive dv-number">{{ formatPrimitive(value) }}</span>
+    }
+    @case ('boolean') {
+      <span class="dv-primitive dv-boolean">
+        <i class="pi" [class.pi-check-circle]="value" [class.pi-times-circle]="!value"></i>
+        {{ formatPrimitive(value) }}
+      </span>
+    }
+    @case ('flat-object') {
+      <div class="dv-properties-grid">
+        @for (entry of value | keyvalue; track entry.key) {
+          <div class="dv-property-item">
+            <span class="dv-property-label">{{ entry.key }}</span>
+            <span class="dv-property-value" [class]="getTypeBadgeClass(entry.value)">
+              {{ formatPrimitive(entry.value) }}
+            </span>
+          </div>
+        }
+      </div>
+    }
+    @case ('array-primitives') {
+      @if (value.length === 0) {
+        <span class="dv-primitive dv-null">Lista vacia</span>
+      } @else {
+        <div class="dv-chips-list">
+          @for (item of value; track $index) {
+            <span class="dv-chip" [class]="getTypeBadgeClass(item)">
+              {{ formatPrimitive(item) }}
+            </span>
+          }
+        </div>
+      }
+    }
+    @case ('array-objects') {
+      <div class="dv-table-wrapper">
+        <div class="dv-table-scroll">
+          <table class="dv-table">
+            <thead>
+              <tr>
+                @for (col of getArrayObjectKeys(value); track col) {
+                  <th>{{ col }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of (isArrayExpanded(path) ? value : value.slice(0, 3)); track $index) {
+                <tr>
+                  @for (col of getArrayObjectKeys(value); track col) {
+                    <td>
+                      @if (isObject(getObjectValue(row, col))) {
+                        <ng-container
+                          *ngTemplateOutlet="dataViewer; context: { value: getObjectValue(row, col), path: path + '.' + $index + '.' + col }"
+                        />
+                      } @else {
+                        {{ formatPrimitive(getObjectValue(row, col)) }}
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (value.length > 3) {
+          <button class="dv-show-more" (click)="toggleArrayExpand(path)">
+            @if (!isArrayExpanded(path)) {
+              <i class="pi pi-chevron-down"></i>
+              Mostrar {{ value.length - 3 }} mas
+            } @else {
+              <i class="pi pi-chevron-up"></i>
+              Mostrar menos
+            }
+          </button>
+        }
+      </div>
+    }
+    @case ('nested-object') {
+      <div class="dv-nested">
+        @for (entry of value | keyvalue; track entry.key) {
+          <div class="dv-nested-section">
+            <div class="dv-nested-header" (click)="toggleSection(path + '.' + entry.key)">
+              <i
+                class="pi"
+                [class.pi-chevron-right]="!isSectionExpanded(path + '.' + entry.key)"
+                [class.pi-chevron-down]="isSectionExpanded(path + '.' + entry.key)"
+              ></i>
+              <span class="dv-nested-key">{{ entry.key }}</span>
+              <span class="dv-type-badge" [class]="getTypeBadgeClass(entry.value)">
+                {{ getTypeLabel(entry.value) }}
+              </span>
+            </div>
+            @if (isSectionExpanded(path + '.' + entry.key)) {
+              <div class="dv-nested-content">
+                <ng-container
+                  *ngTemplateOutlet="dataViewer; context: { value: entry.value, path: path + '.' + entry.key }"
+                />
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+</ng-template>

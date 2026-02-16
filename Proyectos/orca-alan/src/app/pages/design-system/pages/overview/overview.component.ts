@@ -25,21 +25,21 @@ export class OverviewComponent {
       description: 'Basic UI building blocks: buttons, inputs, icons, and more.',
       icon: 'pi pi-circle',
       route: '/design-system/atoms/buttons',
-      items: ['Buttons', 'Inputs', 'Icons', 'Badges', 'Chips']
+      items: ['Buttons', 'Inputs', 'Icons', 'Badges', 'Chips', 'Checkboxes', 'Sliders', 'Progress', 'Avatars', 'Dividers']
     },
     {
       title: 'Molecules',
       description: 'Combinations of atoms forming functional UI patterns.',
       icon: 'pi pi-objects-column',
       route: '/design-system/molecules/form-fields',
-      items: ['Form Fields', 'Search Box', 'Menu Items', 'Cards']
+      items: ['Form Fields', 'Search Box', 'Menu Items', 'Cards', 'Selection Cards', 'Upload Area', 'Accordions', 'Tabs', 'Tooltips', 'Messages', 'Steppers', 'Timelines', 'Splitters', 'Lists', 'Stats']
     },
     {
       title: 'Organisms',
       description: 'Complex UI components built from molecules and atoms.',
       icon: 'pi pi-th-large',
       route: '/design-system/organisms/tables',
-      items: ['Tables', 'Dialogs', 'Forms']
+      items: ['Tables', 'Dialogs', 'Forms', 'Multi-Step Template', 'Detail Template']
     }
   ];
 }

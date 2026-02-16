@@ -22,6 +22,8 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 
 // Services
 import { ProcessService } from '../../services/process.service';
@@ -80,7 +82,8 @@ interface FlowNodeItem {
     ToastModule,
     ConfirmDialogModule,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    MenuModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './proceso-runner.html',
@@ -129,6 +132,10 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
   entityConfigs = signal<EntityCreationConfig[]>([]);
   saveConfigActiveTab = signal(0);
 
+  // Data Viewer - estado colapsable
+  expandedSections = signal<Set<string>>(new Set());
+  expandedArrays = signal<Set<string>>(new Set());
+
   // Variables disponibles para templates (extraídas de los nodos del proceso)
   availableVariables = computed(() => {
     const proc = this.proceso();
@@ -170,6 +177,9 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
 
     return variables;
   });
+
+  // Stats collapsible
+  statsExpanded = signal(false);
 
   // Tabs
   activeTabIndex = signal(0);
@@ -254,6 +264,90 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
     return storage + entities;
   });
 
+  // Estadísticas de Ejecución
+  executionStats = computed(() => {
+    const exec = this.currentExecution();
+    if (!exec) return null;
+
+    const completedNodes = exec.nodes.filter(n => n.status === 'completed');
+    const totalDuration = exec.duration || 0;
+
+    // Contar webhooks (nodos tipo webhook o activo con llamadas externas)
+    const webhookNodes = exec.nodes.filter(n =>
+      n.nodeType === 'activo' || n.nodeType === 'llm'
+    );
+    const webhookTotal = webhookNodes.reduce((sum, n) => sum + (n.duration || 0), 0);
+    const webhookAvg = webhookNodes.length > 0 ? Math.round(webhookTotal / webhookNodes.length) : 0;
+
+    // Calcular tamaño del contexto
+    const contextStr = JSON.stringify(exec.context || {});
+    const contextSize = new Blob([contextStr]).size;
+    const contextVars = Object.keys(exec.context || {}).length;
+
+    return {
+      nodesExecuted: completedNodes.length,
+      nodesAvg: completedNodes.length > 0
+        ? Math.round(completedNodes.reduce((s, n) => s + (n.duration || 0), 0) / completedNodes.length)
+        : 0,
+      webhooksCalled: webhookNodes.length,
+      webhooksTotal: webhookTotal,
+      webhooksAvg: webhookAvg,
+      contextSize: this.formatBytes(contextSize),
+      contextVars,
+      totalTime: this.formatDuration(totalDuration)
+    };
+  });
+
+  // Desglose por tipo de nodo
+  nodeTypeBreakdown = computed(() => {
+    const exec = this.currentExecution();
+    if (!exec) return [];
+
+    const totalDuration = exec.nodes.reduce((s, n) => s + (n.duration || 0), 0);
+    const typeMap = new Map<string, { type: string; typeName: string; icon: string; iconColor: string; totalTime: number; count: number }>();
+
+    exec.nodes.forEach(node => {
+      const metadata = NODE_TYPES_METADATA.find(m => m.type === node.nodeType);
+      const key = node.nodeType;
+      if (!typeMap.has(key)) {
+        typeMap.set(key, {
+          type: key,
+          typeName: metadata?.title || key,
+          icon: metadata?.icon || 'help',
+          iconColor: metadata?.iconColor || '#666',
+          totalTime: 0,
+          count: 0
+        });
+      }
+      const entry = typeMap.get(key)!;
+      entry.totalTime += node.duration || 0;
+      entry.count++;
+    });
+
+    return Array.from(typeMap.values())
+      .map(entry => ({
+        ...entry,
+        percentage: totalDuration > 0 ? (entry.totalTime / totalDuration) * 100 : 0,
+        avg: entry.count > 0 ? Math.round(entry.totalTime / entry.count) : 0
+      }))
+      .sort((a, b) => b.totalTime - a.totalTime);
+  });
+
+  // Nodo actual / estado del proceso
+  processCompletionStatus = computed(() => {
+    const exec = this.currentExecution();
+    if (!exec) return 'idle';
+    if (exec.statusCode === 'COMPLETED') return 'completed';
+    if (exec.statusCode === 'FAILED') return 'failed';
+    if (exec.statusCode === 'RUNNING' || exec.statusCode === 'PENDING') return 'running';
+    return 'idle';
+  });
+
+  currentRunningNode = computed(() => {
+    const nodes = this.flowNodes();
+    return nodes.find(n => n.status === 'running') || null;
+  });
+
   // Opciones para filtros
   statusOptions = [
     { label: 'Todos', value: 'all' },
@@ -269,6 +363,52 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
     { label: 'Booleano', value: 'boolean' },
     { label: 'Lista', value: 'array' },
     { label: 'Objeto', value: 'object' }
+  ];
+
+  // Menú contextual principal de descarga (Resultado Actual)
+  downloadMenuItems: MenuItem[] = [
+    {
+      label: 'Exportar CSV',
+      icon: 'pi pi-file',
+      command: () => this.exportResultsCsv()
+    },
+    {
+      label: 'Descargar JSON',
+      icon: 'pi pi-file-export',
+      command: () => this.exportCurrentResults()
+    },
+    {
+      separator: true
+    },
+    {
+      label: 'Reporte PDF',
+      icon: 'pi pi-file-pdf',
+      command: () => this.exportReportPdf()
+    }
+  ];
+
+  // Menú contextual de descarga para variables
+  variableDownloadItems: MenuItem[] = [
+    { label: 'Exportar CSV', icon: 'pi pi-file', command: () => this.exportVariableCsv() },
+    { label: 'Descargar JSON', icon: 'pi pi-file-export', command: () => this.downloadSelectedVariableJson() },
+    { separator: true },
+    { label: 'Reporte PDF', icon: 'pi pi-file-pdf', command: () => this.exportReportPdf() }
+  ];
+
+  // Menú contextual de descarga para resultados
+  resultsDownloadItems: MenuItem[] = [
+    { label: 'Exportar CSV', icon: 'pi pi-file', command: () => this.exportResultsCsv() },
+    { label: 'Descargar JSON', icon: 'pi pi-file-export', command: () => this.exportCurrentResults() },
+    { separator: true },
+    { label: 'Reporte PDF', icon: 'pi pi-file-pdf', command: () => this.exportReportPdf() }
+  ];
+
+  // Menú contextual de descarga para ejecuciones del historial
+  executionDownloadItems: MenuItem[] = [
+    { label: 'Exportar CSV', icon: 'pi pi-file', command: () => this.exportExecutionCsv() },
+    { label: 'Descargar JSON', icon: 'pi pi-file-export', command: () => { const exec = this.currentExecution(); if (exec) this.downloadExecutionJson(exec); } },
+    { separator: true },
+    { label: 'Reporte PDF', icon: 'pi pi-file-pdf', command: () => this.exportReportPdf() }
   ];
 
   ngOnInit(): void {
@@ -405,13 +545,17 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
     this.currentExecution.set(execution);
     const vars = this.processService.extractOutputVariables(execution);
     this.outputVariables.set(vars);
-    this.activeTabIndex.set(0); // Cambiar a tab de resultado
+    this.activeTabIndex.set(0);
+    this.expandedSections.set(new Set());
+    this.expandedArrays.set(new Set());
   }
 
   // ============ Variables ============
 
   selectVariable(variable: OutputVariable): void {
     this.selectedVariable.set(variable);
+    this.expandedSections.set(new Set());
+    this.expandedArrays.set(new Set());
   }
 
   getVariableIcon(type: string): string {
@@ -432,6 +576,98 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
       return JSON.stringify(value, null, 2);
     }
     return String(value);
+  }
+
+  // ============ Data Viewer ============
+
+  toggleSection(key: string): void {
+    this.expandedSections.update(set => {
+      const next = new Set(set);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
+  isSectionExpanded(key: string): boolean {
+    return this.expandedSections().has(key);
+  }
+
+  toggleArrayExpand(key: string): void {
+    this.expandedArrays.update(set => {
+      const next = new Set(set);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
+  isArrayExpanded(key: string): boolean {
+    return this.expandedArrays().has(key);
+  }
+
+  getValueDisplayType(value: unknown): string {
+    if (value === null || value === undefined) return 'null';
+    if (typeof value === 'string') return 'string';
+    if (typeof value === 'number') return 'number';
+    if (typeof value === 'boolean') return 'boolean';
+    if (Array.isArray(value)) {
+      if (value.length === 0) return 'array-primitives';
+      const allPrimitives = value.every(v => v === null || typeof v !== 'object');
+      return allPrimitives ? 'array-primitives' : 'array-objects';
+    }
+    if (typeof value === 'object') {
+      const vals = Object.values(value as Record<string, unknown>);
+      const isFlat = vals.every(v => v === null || typeof v !== 'object');
+      return isFlat ? 'flat-object' : 'nested-object';
+    }
+    return 'string';
+  }
+
+  getTypeBadgeClass(value: unknown): string {
+    if (value === null || value === undefined) return 'type-null';
+    if (typeof value === 'string') return 'type-string';
+    if (typeof value === 'number') return 'type-number';
+    if (typeof value === 'boolean') return 'type-boolean';
+    if (Array.isArray(value)) return 'type-array';
+    if (typeof value === 'object') return 'type-object';
+    return 'type-string';
+  }
+
+  getTypeLabel(value: unknown): string {
+    if (value === null || value === undefined) return 'Nulo';
+    if (typeof value === 'string') return 'Texto';
+    if (typeof value === 'number') return 'Numero';
+    if (typeof value === 'boolean') return 'Booleano';
+    if (Array.isArray(value)) return `Lista (${value.length})`;
+    if (typeof value === 'object') return `Objeto (${Object.keys(value as object).length})`;
+    return 'Texto';
+  }
+
+  getArrayObjectKeys(arr: unknown[]): string[] {
+    const keySet = new Set<string>();
+    const limit = Math.min(arr.length, 5);
+    for (let i = 0; i < limit; i++) {
+      if (arr[i] && typeof arr[i] === 'object' && !Array.isArray(arr[i])) {
+        Object.keys(arr[i] as Record<string, unknown>).forEach(k => keySet.add(k));
+      }
+    }
+    return Array.from(keySet);
+  }
+
+  formatPrimitive(value: unknown): string {
+    if (value === null) return 'null';
+    if (value === undefined) return '-';
+    if (typeof value === 'boolean') return value ? 'Verdadero' : 'Falso';
+    if (typeof value === 'number') return value.toLocaleString('es-MX');
+    const str = String(value);
+    return str.length > 300 ? str.substring(0, 300) + '...' : str;
+  }
+
+  isObject(value: unknown): boolean {
+    return value !== null && value !== undefined && typeof value === 'object';
+  }
+
+  getObjectValue(obj: unknown, key: string): unknown {
+    return (obj as Record<string, unknown>)?.[key];
   }
 
   // ============ Exportacion ============
@@ -476,6 +712,140 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
       severity: 'success',
       summary: 'Descargado',
       detail: `Variable ${variable.key} descargada como JSON`
+    });
+  }
+
+  // ============ Exportacion CSV ============
+
+  private downloadFile(content: string, filename: string, type: string): void {
+    const blob = new Blob([content], { type });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  exportVariableCsv(): void {
+    const variable = this.selectedVariable();
+    if (!variable) return;
+
+    let csv = '';
+    if (variable.type === 'array' && Array.isArray(variable.value)) {
+      const arr = variable.value as Record<string, unknown>[];
+      if (arr.length > 0 && typeof arr[0] === 'object') {
+        const headers = Object.keys(arr[0]);
+        csv = headers.join(',') + '\n';
+        csv += arr.map(row => headers.map(h => JSON.stringify(row[h] ?? '')).join(',')).join('\n');
+      } else {
+        csv = 'value\n' + arr.map(v => JSON.stringify(v)).join('\n');
+      }
+    } else if (variable.type === 'object' && typeof variable.value === 'object') {
+      csv = 'key,value\n';
+      csv += Object.entries(variable.value as Record<string, unknown>)
+        .map(([k, v]) => `${k},${JSON.stringify(v ?? '')}`)
+        .join('\n');
+    } else {
+      csv = 'key,value\n' + `${variable.key},${JSON.stringify(variable.value)}`;
+    }
+
+    this.downloadFile(csv, `variable-${variable.key}.csv`, 'text/csv');
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Exportado',
+      detail: `Variable ${variable.key} exportada como CSV`
+    });
+  }
+
+  downloadSelectedVariableJson(): void {
+    const variable = this.selectedVariable();
+    if (variable) this.downloadVariableJson(variable);
+  }
+
+  exportResultsCsv(): void {
+    const vars = this.outputVariables();
+    if (vars.length === 0) return;
+
+    let csv = 'key,type,nodeName,preview\n';
+    csv += vars.map(v =>
+      `${v.key},${v.type},${v.nodeName},${JSON.stringify(v.preview)}`
+    ).join('\n');
+
+    this.downloadFile(csv, `resultados-${this.procesoId()}.csv`, 'text/csv');
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Exportado',
+      detail: 'Resultados exportados como CSV'
+    });
+  }
+
+  exportExecutionCsv(): void {
+    const exec = this.currentExecution();
+    if (!exec) return;
+
+    let csv = 'nodeId,nodeName,nodeType,status,duration,executionOrder\n';
+    csv += exec.nodes.map(n =>
+      `${n.nodeId},${n.nodeName},${n.nodeType},${n.status},${n.duration || 0},${n.executionOrder}`
+    ).join('\n');
+
+    this.downloadFile(csv, `ejecucion-${exec.id}.csv`, 'text/csv');
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Exportado',
+      detail: 'Ejecucion exportada como CSV'
+    });
+  }
+
+  // ============ Reporte PDF ============
+
+  exportReportPdf(): void {
+    const exec = this.currentExecution();
+    if (!exec) return;
+
+    // Generar contenido del reporte
+    const stats = this.executionStats();
+    const vars = this.outputVariables();
+    const breakdown = this.nodeTypeBreakdown();
+
+    const reportContent = [
+      `REPORTE DE EJECUCIÓN - ${this.proceso()?.nombre || 'Proceso'}`,
+      `${'='.repeat(60)}`,
+      ``,
+      `ID Ejecución: ${exec.id}`,
+      `Estado: ${exec.statusName}`,
+      `Inicio: ${this.formatDate(exec.startTime)}`,
+      `Duración: ${this.formatDuration(exec.duration)}`,
+      ``,
+      `ESTADÍSTICAS`,
+      `${'-'.repeat(40)}`,
+      stats ? `Nodos ejecutados: ${stats.nodesExecuted} (Promedio: ${this.formatDuration(stats.nodesAvg)})` : '',
+      stats ? `Webhooks: ${stats.webhooksCalled} llamadas (Total: ${this.formatDuration(stats.webhooksTotal)})` : '',
+      stats ? `Contexto: ${stats.contextSize} - ${stats.contextVars} variables` : '',
+      stats ? `Tiempo Total: ${stats.totalTime}` : '',
+      ``,
+      `DESGLOSE POR TIPO DE NODO`,
+      `${'-'.repeat(40)}`,
+      ...breakdown.map(b => `${b.typeName}: ${this.formatDuration(b.totalTime)} (${b.percentage.toFixed(1)}%) [${b.count}x, avg ${this.formatDuration(b.avg)}]`),
+      ``,
+      `NODOS EJECUTADOS`,
+      `${'-'.repeat(40)}`,
+      ...exec.nodes.map(n => `${n.executionOrder}. ${n.nodeName} (${n.nodeType}) - ${n.status} - ${this.formatDuration(n.duration)}`),
+      ``,
+      `VARIABLES DE SALIDA (${vars.length})`,
+      `${'-'.repeat(40)}`,
+      ...vars.map(v => `${v.key} [${v.typeLabel}] → ${v.preview}`),
+      ``,
+      `CONTEXTO`,
+      `${'-'.repeat(40)}`,
+      JSON.stringify(exec.context, null, 2)
+    ].join('\n');
+
+    this.downloadFile(reportContent, `reporte-ejecucion-${exec.id}.pdf.txt`, 'text/plain');
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Reporte generado',
+      detail: 'Reporte de ejecución descargado'
     });
   }
 
@@ -559,11 +929,19 @@ export class ProcesoRunnerComponent implements OnInit, OnDestroy {
   formatDuration(ms: number | undefined): string {
     if (!ms) return '-';
     if (ms < 1000) return `${ms}ms`;
-    const seconds = Math.floor(ms / 1000);
-    if (seconds < 60) return `${seconds}s`;
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+    const seconds = (ms / 1000).toFixed(2);
+    if (ms < 60000) return `${seconds}s`;
+    const minutes = Math.floor(ms / 60000);
+    const remainingSeconds = ((ms % 60000) / 1000).toFixed(0);
     return `${minutes}m ${remainingSeconds}s`;
+  }
+
+  formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
   // Catálogos para entidades

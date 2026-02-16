@@ -231,8 +231,8 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
   {
     type: 'csv',
     icon: 'description',
-    iconColor: '#ef6c00',
-    bgColor: '#fff3e0',
+    iconColor: '#f97316',   // --orange-500
+    bgColor: '#fff7ed',     // --orange-50
     title: 'Archivo CSV/Excel',
     descripcion: 'Carga datos desde archivos CSV o Excel',
     categoria: 'datos'
@@ -240,8 +240,8 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
   {
     type: 'activo',
     icon: 'inventory_2',
-    iconColor: '#2e7d32',
-    bgColor: '#e8f5e9',
+    iconColor: '#10b981',   // --emerald-500 (primary)
+    bgColor: '#ecfdf5',     // --emerald-50
     title: 'Activo',
     descripcion: 'Expone propiedades, custom props y arrays de riesgos/incidentes filtrados',
     categoria: 'datos'
@@ -249,8 +249,8 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
   {
     type: 'transformacion',
     icon: 'transform',
-    iconColor: '#7b1fa2',
-    bgColor: '#f3e5f5',
+    iconColor: '#a855f7',   // --purple-500
+    bgColor: '#faf5ff',     // --purple-50
     title: 'Transformación',
     descripcion: 'Mapea, filtra o agrega datos',
     categoria: 'procesamiento'
@@ -258,8 +258,8 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
   {
     type: 'condicional',
     icon: 'call_split',
-    iconColor: '#1976d2',
-    bgColor: '#e3f2fd',
+    iconColor: '#3b82f6',   // --blue-500
+    bgColor: '#eff6ff',     // --blue-50
     title: 'Condicional',
     descripcion: 'Ramifica el flujo según condiciones',
     categoria: 'logica'
@@ -267,8 +267,8 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
   {
     type: 'llm',
     icon: 'psychology',
-    iconColor: '#00838f',
-    bgColor: '#e0f7fa',
+    iconColor: '#06b6d4',   // --cyan-500
+    bgColor: '#ecfeff',     // --cyan-50
     title: 'Prompt LLM',
     descripcion: 'Procesa con modelos de lenguaje (Groq, OpenAI)',
     categoria: 'ia'
@@ -276,8 +276,8 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
   {
     type: 'branching',
     icon: 'account_tree',
-    iconColor: '#22543d',
-    bgColor: '#c6f6d5',
+    iconColor: '#22c55e',   // --green-500
+    bgColor: '#f0fdf4',     // --green-50
     title: 'Branching',
     descripcion: 'Crea flujos paralelos o secuenciales',
     categoria: 'logica'
@@ -285,8 +285,8 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
   {
     type: 'estado',
     icon: 'flag',
-    iconColor: '#5e35b1',
-    bgColor: '#ede7f6',
+    iconColor: '#8b5cf6',   // --violet-500
+    bgColor: '#f5f3ff',     // --violet-50
     title: 'Cambio de Estado',
     descripcion: 'Actualiza el estado del proceso',
     categoria: 'estado'
@@ -294,8 +294,8 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
   {
     type: 'matematico',
     icon: 'calculate',
-    iconColor: '#c05621',
-    bgColor: '#feebc8',
+    iconColor: '#f97316',   // --orange-500
+    bgColor: '#fff7ed',     // --orange-50
     title: 'Matemático',
     descripcion: 'Realiza cálculos y fórmulas',
     categoria: 'procesamiento'
@@ -303,8 +303,8 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
   {
     type: 'ml',
     icon: 'model_training',
-    iconColor: '#234e52',
-    bgColor: '#b2f5ea',
+    iconColor: '#06b6d4',   // --cyan-500
+    bgColor: '#ecfeff',     // --cyan-50
     title: 'Machine Learning',
     descripcion: 'Ejecuta modelos de ML',
     categoria: 'ia'
@@ -312,8 +312,8 @@ export const NODE_TYPES_METADATA: NodeTypeMetadata[] = [
   {
     type: 'kpi',
     icon: 'speed',
-    iconColor: '#0d9488',
-    bgColor: '#ccfbf1',
+    iconColor: '#0ea5e9',   // --sky-500
+    bgColor: '#f0f9ff',     // --sky-50
     title: 'Actualizar KPI',
     descripcion: 'Actualiza el valor de un KPI del proceso',
     categoria: 'estado'
