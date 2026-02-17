@@ -106,7 +106,7 @@
   <div class="dashboard-grid" [class.editing]="modoEdicion()">
     <gridster [options]="gridsterOptions()">
       @for (widget of widgets(); track trackByWidgetId($index, widget)) {
-        <gridster-item [item]="widget" (click)="onWidgetClick(widget)" [attr.data-widget-id]="widget.id" [attr.data-widget-type]="widget.tipo">
+        <gridster-item [item]="widget" (click)="onWidgetClick(widget)" [attr.data-widget-id]="widget.id" [attr.data-widget-type]="widget.tipo" [attr.data-widget-cols]="widget.cols">
           <app-dashboard-widget
             [widget]="widget"
             (onEdit)="editarWidget($event)"

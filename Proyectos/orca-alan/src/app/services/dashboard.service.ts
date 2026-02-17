@@ -33,7 +33,8 @@ const VALID_WIDGET_TYPES: TipoWidget[] = [
   'graficas-guardadas',
   'table-mini',
   'actividad-reciente',
-  'calendario'
+  'calendario',
+  'analisis-inteligente'
 ];
 
 // Migración de tipos de widget antiguos a los nuevos
@@ -130,7 +131,7 @@ export class DashboardService {
 
     return {
       gridType: GridType.VerticalFixed,
-      displayGrid: modoEdicion ? DisplayGrid.Always : DisplayGrid.None,
+      displayGrid: modoEdicion ? DisplayGrid.OnDragAndResize : DisplayGrid.None,
       compactType: CompactType.None,
 
       // Dimensiones
@@ -151,15 +152,26 @@ export class DashboardService {
       outerMarginBottom: config?.gap || 16,
       outerMarginLeft: config?.gap || 16,
 
+      // Límites globales per-item
+      minItemCols: 1,
+      minItemRows: 1,
+      maxItemCols: 4,
+      maxItemRows: 8,
+
       // Comportamiento
       pushItems: true,
-      swap: false,
+      pushDirections: { north: true, south: true, east: true, west: true },
+      swap: true,
+      swapWhileDragging: true,
+      disableScrollHorizontal: true,
+      scrollToNewItems: true,
       draggable: {
         enabled: modoEdicion,
         ignoreContentClass: 'widget-content',
         ignoreContent: false,
         dragHandleClass: 'drag-handle',
-        dropOverItems: false
+        dropOverItems: true,
+        delayStart: 100
       },
       resizable: {
         enabled: modoEdicion,
@@ -275,11 +287,28 @@ export class DashboardService {
               }
               return isValid;
             })
-            .map(w => ({
-              ...w,
-              createdAt: w.createdAt ? new Date(w.createdAt) : undefined,
-              updatedAt: w.updatedAt ? new Date(w.updatedAt) : undefined
-            }))
+            .map(w => {
+              // Inyectar constraints per-item desde el catálogo si no existen
+              if (!w.minItemCols || !w.minItemRows || !w.maxItemCols || !w.maxItemRows) {
+                const catalogEntry = WIDGET_CATALOG.find(c => c.tipo === w.tipo);
+                if (catalogEntry) {
+                  return {
+                    ...w,
+                    minItemCols: w.minItemCols ?? catalogEntry.minCols,
+                    minItemRows: w.minItemRows ?? catalogEntry.minRows,
+                    maxItemCols: w.maxItemCols ?? catalogEntry.maxCols,
+                    maxItemRows: w.maxItemRows ?? catalogEntry.maxRows,
+                    createdAt: w.createdAt ? new Date(w.createdAt) : undefined,
+                    updatedAt: w.updatedAt ? new Date(w.updatedAt) : undefined
+                  };
+                }
+              }
+              return {
+                ...w,
+                createdAt: w.createdAt ? new Date(w.createdAt) : undefined,
+                updatedAt: w.updatedAt ? new Date(w.updatedAt) : undefined
+              };
+            })
         }));
       }
 

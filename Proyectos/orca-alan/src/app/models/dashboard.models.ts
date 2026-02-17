@@ -316,7 +316,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     icono: 'pi pi-chart-bar',
     categoria: 'graficas',
     tamanoDefault: 'large',
-    minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
+    minCols: 1, minRows: 2, maxCols: 4, maxRows: 4,
     configDefault: { showHeader: false }
   },
 
@@ -328,7 +328,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     icono: 'pi pi-chart-line',
     categoria: 'indicadores',
     tamanoDefault: 'small',
-    minCols: 1, minRows: 1, maxCols: 2, maxRows: 2,
+    minCols: 1, minRows: 1, maxCols: 4, maxRows: 2,
     configDefault: { showHeader: true, showActions: true }
   },
   {
@@ -338,7 +338,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     icono: 'pi pi-th-large',
     categoria: 'indicadores',
     tamanoDefault: 'wide',
-    minCols: 2, minRows: 1, maxCols: 4, maxRows: 2,
+    minCols: 1, minRows: 1, maxCols: 4, maxRows: 2,
     configDefault: { showHeader: true }
   },
 
@@ -350,7 +350,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     icono: 'pi pi-bookmark',
     categoria: 'graficas',
     tamanoDefault: 'medium',
-    minCols: 2, minRows: 2, maxCols: 3, maxRows: 4,
+    minCols: 1, minRows: 2, maxCols: 4, maxRows: 4,
     configDefault: { showHeader: true, listLimit: 10 }
   },
 
@@ -362,7 +362,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     icono: 'pi pi-table',
     categoria: 'datos',
     tamanoDefault: 'large',
-    minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
+    minCols: 1, minRows: 2, maxCols: 4, maxRows: 4,
     configDefault: { tableLimit: 10, showHeader: true }
   },
 
@@ -374,7 +374,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     icono: 'pi pi-clock',
     categoria: 'actividad',
     tamanoDefault: 'medium',
-    minCols: 2, minRows: 2, maxCols: 3, maxRows: 4,
+    minCols: 1, minRows: 2, maxCols: 4, maxRows: 4,
     configDefault: { listLimit: 10, showHeader: true }
   },
 
@@ -386,7 +386,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     icono: 'pi pi-calendar',
     categoria: 'planificacion',
     tamanoDefault: 'medium',
-    minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
+    minCols: 1, minRows: 2, maxCols: 4, maxRows: 4,
     configDefault: { showHeader: true }
   },
 
@@ -398,7 +398,7 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     icono: 'pi pi-sparkles',
     categoria: 'graficas',
     tamanoDefault: 'large',
-    minCols: 2, minRows: 2, maxCols: 4, maxRows: 4,
+    minCols: 1, minRows: 2, maxCols: 4, maxRows: 4,
     configDefault: { showHeader: false }
   }
 ];
@@ -421,6 +421,7 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       titulo: 'Cumplimiento General',
       icono: 'pi pi-percentage',
       x: 0, y: 0, cols: 1, rows: 1,
+      minItemCols: 1, minItemRows: 1, maxItemCols: 4, maxItemRows: 2,
       config: { kpiType: 'cumplimiento', showHeader: true, showActions: true }
     },
     {
@@ -429,6 +430,7 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       titulo: 'Procesos Activos',
       icono: 'pi pi-cog',
       x: 1, y: 0, cols: 1, rows: 1,
+      minItemCols: 1, minItemRows: 1, maxItemCols: 4, maxItemRows: 2,
       config: { kpiType: 'procesos', showHeader: true, showActions: true }
     },
     {
@@ -437,6 +439,7 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       titulo: 'Alertas Activas',
       icono: 'pi pi-exclamation-triangle',
       x: 2, y: 0, cols: 1, rows: 1,
+      minItemCols: 1, minItemRows: 1, maxItemCols: 4, maxItemRows: 2,
       config: { kpiType: 'alertas', showHeader: true, showActions: true }
     },
     {
@@ -445,6 +448,7 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       titulo: 'Objetivos Cumplidos',
       icono: 'pi pi-check-circle',
       x: 3, y: 0, cols: 1, rows: 1,
+      minItemCols: 1, minItemRows: 1, maxItemCols: 4, maxItemRows: 2,
       config: { kpiType: 'objetivos', showHeader: true, showActions: true }
     },
 
@@ -455,6 +459,7 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       titulo: 'Gráficas Interactivas',
       icono: 'pi pi-chart-bar',
       x: 0, y: 1, cols: 2, rows: 2,
+      minItemCols: 1, minItemRows: 2, maxItemCols: 4, maxItemRows: 4,
       config: { showHeader: false }
     },
     {
@@ -463,16 +468,18 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       titulo: 'Procesos',
       icono: 'pi pi-table',
       x: 2, y: 1, cols: 2, rows: 2,
+      minItemCols: 1, minItemRows: 2, maxItemCols: 4, maxItemRows: 4,
       config: { tableDataSource: 'procesos', tableLimit: 5, showHeader: true }
     },
 
-    // Fila 3: Actividades (W4), Calendario (W6), Gráficas Guardadas (W2)
+    // Fila 3: Actividades (W4), Calendario (W6)
     {
       id: 'widget-actividades',
       tipo: 'actividad-reciente',
       titulo: 'Últimas Actividades',
       icono: 'pi pi-clock',
       x: 0, y: 3, cols: 2, rows: 2,
+      minItemCols: 1, minItemRows: 2, maxItemCols: 4, maxItemRows: 4,
       config: { listLimit: 10, showHeader: true }
     },
     {
@@ -481,6 +488,7 @@ export const DEFAULT_DASHBOARD_CONFIG: DashboardConfig = {
       titulo: 'Calendario',
       icono: 'pi pi-calendar',
       x: 2, y: 3, cols: 2, rows: 2,
+      minItemCols: 1, minItemRows: 2, maxItemCols: 4, maxItemRows: 4,
       config: { showHeader: true }
     }
   ],
@@ -603,6 +611,10 @@ export function createWidgetFromCatalog(
     y: position.y,
     cols: size.cols,
     rows: size.rows,
+    minItemCols: catalogItem.minCols,
+    minItemRows: catalogItem.minRows,
+    maxItemCols: catalogItem.maxCols,
+    maxItemRows: catalogItem.maxRows,
     config: { ...catalogItem.configDefault },
     canResize: true,
     canDrag: true,

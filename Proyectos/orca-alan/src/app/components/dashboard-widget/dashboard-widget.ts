@@ -97,19 +97,25 @@ import { DashboardService } from '../../services/dashboard.service';
         </div>
       }
 
-      <!-- Menú flotante para widgets sin header (solo en modo edición) -->
+      <!-- Barra de edición para widgets sin header (solo en modo edición) -->
       @if (widget.config.showHeader === false && modoEdicion()) {
-        <div class="floating-menu">
-          <p-button
-            icon="pi pi-ellipsis-h"
-            [rounded]="true"
-            [text]="true"
-            size="small"
-            severity="secondary"
-            (onClick)="floatingMenu.toggle($event)"
-            pTooltip="Opciones">
-          </p-button>
-          <p-menu #floatingMenu [model]="menuItems()" [popup]="true" appendTo="body"></p-menu>
+        <div class="floating-edit-bar drag-handle">
+          <div class="drag-grip">
+            <i class="pi pi-ellipsis-v"></i>
+            <i class="pi pi-ellipsis-v"></i>
+          </div>
+          <div class="floating-edit-actions">
+            <p-button
+              icon="pi pi-ellipsis-h"
+              [rounded]="true"
+              [text]="true"
+              size="small"
+              severity="secondary"
+              (onClick)="floatingMenu.toggle($event)"
+              pTooltip="Opciones">
+            </p-button>
+            <p-menu #floatingMenu [model]="menuItems()" [popup]="true" appendTo="body"></p-menu>
+          </div>
         </div>
       }
 
@@ -364,29 +370,44 @@ import { DashboardService } from '../../services/dashboard.service';
       border-color: transparent transparent var(--primary-400) transparent;
     }
 
-    // Menú flotante para widgets sin header
-    .floating-menu {
-      position: absolute;
-      top: 8px;
-      right: 8px;
+    // Barra de edición para widgets sin header (modo edición)
+    .floating-edit-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-1) var(--spacing-3);
+      background: var(--surface-100);
+      border-bottom: 1px solid var(--surface-border);
+      cursor: grab;
+      min-height: 32px;
       z-index: 10;
-      opacity: 0;
-      transition: opacity 0.2s ease;
 
-      :host ::ng-deep .p-button {
-        background: var(--surface-card);
-        border: 1px solid var(--surface-border);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      &:active {
+        cursor: grabbing;
+      }
 
-        &:hover {
-          background: var(--surface-100);
+      .drag-grip {
+        display: flex;
+        gap: 1px;
+        color: var(--text-color-secondary);
+        opacity: 0.5;
+
+        i {
+          font-size: var(--font-size-2xs);
         }
+      }
+
+      .floating-edit-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-1);
       }
     }
 
-    .widget-container:hover .floating-menu,
-    .widget-container.widget-selected .floating-menu {
-      opacity: 1;
+    :host-context(:root.dark-mode) .floating-edit-bar,
+    :host-context([data-theme="dark"]) .floating-edit-bar {
+      background: var(--surface-700);
+      border-bottom-color: var(--surface-600);
     }
   `]
 })

@@ -92,25 +92,33 @@
 
   .gridster-item-moving {
     z-index: 1000;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    opacity: 0.92;
+    transition: box-shadow 0.2s ease, opacity 0.2s ease;
   }
 
   .gridster-item-resizing {
     z-index: 1000;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
   }
 
   .gridster-preview {
-    background: var(--primary-100) !important;
+    background: rgba(var(--primary-500-rgb, 59, 130, 246), 0.08) !important;
     border: 2px dashed var(--primary-400) !important;
     border-radius: var(--border-radius-lg);
+    transition: all 0.15s ease;
   }
 
   // Dark mode - preview con colores oscuros
   :root.dark-mode &,
   [data-theme="dark"] & {
     .gridster-preview {
-      background: rgba(var(--primary-500-rgb), 0.2) !important;
-      border-color: var(--primary-500) !important;
+      background: rgba(var(--primary-500-rgb), 0.15) !important;
+      border-color: var(--primary-400) !important;
+    }
+
+    .gridster-item-moving {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25) !important;
     }
   }
 
@@ -484,6 +492,13 @@
 
   &:hover .kpi-menu-btn {
     opacity: 1;
+  }
+}
+
+// Widget en 1 columna: kpi-grid apila verticalmente
+:host ::ng-deep gridster-item[data-widget-cols="1"] {
+  .widget-kpi-grid {
+    grid-template-columns: 1fr;
   }
 }
 
