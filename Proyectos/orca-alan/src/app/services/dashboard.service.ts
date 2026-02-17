@@ -168,7 +168,7 @@ export class DashboardService {
       draggable: {
         enabled: modoEdicion,
         ignoreContentClass: 'widget-content',
-        ignoreContent: false,
+        ignoreContent: true,
         dragHandleClass: 'drag-handle',
         dropOverItems: true,
         delayStart: 100

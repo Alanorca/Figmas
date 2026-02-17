@@ -107,6 +107,13 @@
     <gridster [options]="gridsterOptions()">
       @for (widget of widgets(); track trackByWidgetId($index, widget)) {
         <gridster-item [item]="widget" (click)="onWidgetClick(widget)" [attr.data-widget-id]="widget.id" [attr.data-widget-type]="widget.tipo" [attr.data-widget-cols]="widget.cols">
+          <!-- External drag handle for KPI types (outside widget-content for gridster compatibility) -->
+          @if (modoEdicion() && (widget.tipo === 'kpi-card' || widget.tipo === 'kpi-grid')) {
+            <div class="kpi-drag-overlay drag-handle">
+              <i class="pi pi-ellipsis-v"></i>
+              <i class="pi pi-ellipsis-v"></i>
+            </div>
+          }
           <app-dashboard-widget
             [widget]="widget"
             (onEdit)="editarWidget($event)"
@@ -118,8 +125,14 @@
             @switch (widget.tipo) {
               @case ('kpi-card') {
                 <div class="widget-kpi-card" [ngClass]="getKPIColorClass(widget.config.kpiType || 'cumplimiento')">
-                  <!-- Header: Icono + Tendencia + Menú -->
+                  <!-- Header: Drag(edit) + Icono + Tendencia + Menú -->
                   <div class="kpi-header">
+                    @if (modoEdicion()) {
+                      <span class="kpi-drag-handle">
+                        <i class="pi pi-ellipsis-v"></i>
+                        <i class="pi pi-ellipsis-v"></i>
+                      </span>
+                    }
                     <div class="kpi-icon">
                       <i [class]="widget.config.kpiConfig?.icono || 'pi pi-chart-line'"></i>
                     </div>
@@ -151,6 +164,12 @@
               @case ('kpi-grid') {
                 <div class="widget-kpi-grid-container">
                   <div class="kpi-grid-header">
+                    @if (modoEdicion()) {
+                      <span class="kpi-grid-drag-handle">
+                        <i class="pi pi-ellipsis-v"></i>
+                        <i class="pi pi-ellipsis-v"></i>
+                      </span>
+                    }
                     <span class="kpi-grid-title">{{ widget.titulo }}</span>
                     <button class="kpi-menu-btn" (click)="toggleKpiMenu($event, widget); $event.stopPropagation()">
                       <i class="pi pi-ellipsis-v"></i>

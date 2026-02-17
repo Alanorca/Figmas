@@ -1442,27 +1442,41 @@ export class DashboardCustomizableComponent implements OnInit {
 
   /** Obtiene items del menú para KPI cards */
   getKpiMenuItems(widget: DashboardWidget): any[] {
-    return [
-      {
-        label: 'Editar',
-        icon: 'pi pi-pencil',
-        command: () => this.editarWidget(widget)
-      },
-      {
-        label: 'Descargar',
-        icon: 'pi pi-download',
-        command: () => this.abrirExportModal(widget)
-      },
-      {
-        separator: true
-      },
-      {
-        label: 'Eliminar',
-        icon: 'pi pi-trash',
-        styleClass: 'menu-item-danger',
-        command: () => this.eliminarWidget(widget)
-      }
-    ];
+    const items: any[] = [];
+
+    // Configurar widget (siempre disponible)
+    items.push({
+      label: 'Configurar',
+      icon: 'pi pi-cog',
+      command: () => this.editarWidget(widget)
+    });
+
+    // Opciones de edición solo en modo edición
+    if (this.modoEdicion()) {
+      items.push({
+        label: 'Duplicar',
+        icon: 'pi pi-copy',
+        command: () => this.duplicarWidget(widget)
+      });
+    }
+
+    items.push({
+      label: 'Descargar',
+      icon: 'pi pi-download',
+      command: () => this.abrirExportModal(widget)
+    });
+
+    items.push({ separator: true });
+
+    items.push({
+      label: 'Eliminar',
+      icon: 'pi pi-trash',
+      styleClass: 'menu-item-danger',
+      command: () => this.eliminarWidget(widget),
+      visible: this.modoEdicion()
+    });
+
+    return items;
   }
 
   /** Obtiene las alertas ordenadas por severidad */
