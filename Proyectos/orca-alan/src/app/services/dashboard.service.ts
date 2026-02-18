@@ -5,9 +5,10 @@
 // Incluye persistencia en localStorage y gestión de widgets
 // ============================================================================
 
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { TenantService } from './tenant.service';
 import {
   DashboardConfig,
   DashboardState,
@@ -22,8 +23,8 @@ import {
 } from '../models/dashboard.models';
 import { GridsterConfig, GridsterItem, DisplayGrid, CompactType, GridType } from 'angular-gridster2';
 
-const STORAGE_KEY = 'orca_dashboard_config';
-const STORAGE_STATE_KEY = 'orca_dashboard_state';
+const STORAGE_KEY_PREFIX = 'orca_dashboard_config';
+const STORAGE_STATE_KEY_PREFIX = 'orca_dashboard_state';
 
 // Tipos de widget válidos para validación
 const VALID_WIDGET_TYPES: TipoWidget[] = [
@@ -51,6 +52,10 @@ const WIDGET_TYPE_MIGRATION: Record<string, TipoWidget> = {
   providedIn: 'root'
 })
 export class DashboardService {
+  private tenantService = inject(TenantService);
+  private get tenantId(): string { return this.tenantService.selectedTenant()?.id || 'tenant-001'; }
+  private get STORAGE_KEY(): string { return `${STORAGE_KEY_PREFIX}_${this.tenantId}`; }
+  private get STORAGE_STATE_KEY(): string { return `${STORAGE_STATE_KEY_PREFIX}_${this.tenantId}`; }
 
   // ==================== ESTADO ====================
 
@@ -202,6 +207,12 @@ export class DashboardService {
 
   // ==================== CONSTRUCTOR ====================
 
+  private tenantChangeEffect = effect(() => {
+    // React to tenant changes - reload dashboard config for new tenant
+    this.tenantService.selectedTenant();
+    this.cargarConfiguracion();
+  });
+
   constructor() {
     this.cargarConfiguracion();
     this.initDebounceSubscriptions();
@@ -245,7 +256,7 @@ export class DashboardService {
   private cargarConfiguracion(): void {
     try {
       // Cargar configuraciones guardadas
-      const savedConfigs = localStorage.getItem(STORAGE_KEY);
+      const savedConfigs = localStorage.getItem(this.STORAGE_KEY);
       let configuraciones: DashboardConfig[] = [];
 
       if (savedConfigs) {
@@ -323,7 +334,7 @@ export class DashboardService {
       }
 
       // Cargar el estado guardado (última configuración usada)
-      const savedState = localStorage.getItem(STORAGE_STATE_KEY);
+      const savedState = localStorage.getItem(this.STORAGE_STATE_KEY);
       let configActualId = 'default';
 
       if (savedState) {
@@ -381,8 +392,8 @@ export class DashboardService {
         }
 
         // Guardar en localStorage
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedConfigs));
-        localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify({ lastConfigId: configActual.id }));
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(updatedConfigs));
+        localStorage.setItem(this.STORAGE_STATE_KEY, JSON.stringify({ lastConfigId: configActual.id }));
 
         this.estado.update(s => ({
           ...s,
@@ -601,7 +612,7 @@ export class DashboardService {
       }));
 
       // Guardar última configuración usada
-      localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify({ lastConfigId: configId }));
+      localStorage.setItem(this.STORAGE_STATE_KEY, JSON.stringify({ lastConfigId: configId }));
     }
   }
 
@@ -631,7 +642,7 @@ export class DashboardService {
     }));
 
     // Guardar cambios
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(nuevasConfigs));
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(nuevasConfigs));
   }
 
   /** Renombrar configuración */

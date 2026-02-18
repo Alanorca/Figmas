@@ -3,12 +3,8 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'dashboard',
+    redirectTo: 'dashboard-custom',
     pathMatch: 'full'
-  },
-  {
-    path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.DashboardComponent)
   },
   {
     path: 'dashboard-custom',
@@ -242,6 +238,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'dashboard'
+    redirectTo: 'dashboard-custom'
   }
 ];

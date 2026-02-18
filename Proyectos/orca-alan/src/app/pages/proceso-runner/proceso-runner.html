@@ -101,10 +101,12 @@
         <div class="stats-title">
           <span class="material-icons stats-title-icon">bar_chart</span>
           <span>Estadísticas de Ejecución</span>
-          <i class="pi stats-chevron" [class.pi-chevron-down]="!statsExpanded()" [class.pi-chevron-up]="statsExpanded()"></i>
         </div>
-        <div class="stats-total-time">
-          Tiempo Total: <strong>{{ executionStats()!.totalTime }}</strong>
+        <div class="stats-header-right">
+          <div class="stats-total-time">
+            Tiempo Total: <strong>{{ executionStats()!.totalTime }}</strong>
+          </div>
+          <i class="pi stats-chevron" [class.pi-chevron-down]="!statsExpanded()" [class.pi-chevron-up]="statsExpanded()"></i>
         </div>
       </div>
       @if (statsExpanded()) {
@@ -539,21 +541,22 @@
   [contentStyle]="{ overflow: 'auto' }"
   [draggable]="false"
   [resizable]="false"
+  styleClass="save-config-dialog"
 >
   <p-tabs [(value)]="saveConfigActiveTab">
     <p-tablist>
       <p-tab [value]="0">
-        <i class="pi pi-table mr-2"></i>
+        <i class="pi pi-table save-tab-icon"></i>
         Variables de Salida
         @if (outputVariables().length > 0) {
-          <p-badge [value]="outputVariables().length.toString()" severity="info" class="ml-2" />
+          <p-badge [value]="outputVariables().length.toString()" severity="info" styleClass="save-tab-badge" />
         }
       </p-tab>
       <p-tab [value]="1">
-        <i class="pi pi-plus-circle mr-2"></i>
+        <i class="pi pi-plus-circle save-tab-icon"></i>
         Crear Entidades al Finalizar
         @if (entityConfigs().length > 0) {
-          <p-badge [value]="entityConfigs().length.toString()" severity="info" class="ml-2" />
+          <p-badge [value]="entityConfigs().length.toString()" severity="info" styleClass="save-tab-badge" />
         }
       </p-tab>
     </p-tablist>
@@ -561,28 +564,28 @@
     <p-tabpanels>
       <!-- Variables de Salida -->
       <p-tabpanel [value]="0">
-        <div class="py-4">
-          <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+        <div class="save-tab-body">
+          <p class="save-description">
             Variables de salida disponibles del proceso. Puedes usarlas en los templates de entidades.
           </p>
 
           @if (outputVariables().length === 0) {
-            <div class="text-center py-8 text-zinc-500 dark:text-zinc-400">
-              <i class="pi pi-cog text-4xl mb-2"></i>
+            <div class="save-empty-state">
+              <i class="pi pi-cog"></i>
               <p>Ejecuta el proceso primero para ver las variables disponibles</p>
             </div>
           } @else {
-            <div class="grid grid-cols-2 gap-4">
+            <div class="save-variables-grid">
               @for (variable of outputVariables(); track variable.key) {
-                <div class="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                  <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                    <i [class]="getVariableIcon(variable.type)" class="text-emerald-600 dark:text-emerald-400"></i>
+                <div class="save-variable-card">
+                  <div class="save-variable-icon">
+                    <i [class]="getVariableIcon(variable.type)"></i>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="font-medium text-zinc-800 dark:text-white text-sm">{{ variable.key }}</div>
-                    <div class="text-xs text-zinc-500 dark:text-zinc-400 truncate">{{ variable.preview }}</div>
+                  <div class="save-variable-info">
+                    <span class="save-variable-key">{{ variable.key }}</span>
+                    <span class="save-variable-preview">{{ variable.preview }}</span>
                   </div>
-                  <p-tag [value]="variable.typeLabel" severity="secondary" [rounded]="true" styleClass="text-xs" />
+                  <p-tag [value]="variable.typeLabel" severity="secondary" [rounded]="true" />
                 </div>
               }
             </div>
@@ -592,9 +595,9 @@
 
       <!-- Crear Entidades -->
       <p-tabpanel [value]="1">
-        <div class="py-4">
-          <div class="flex items-center justify-between mb-4">
-            <p class="text-sm text-zinc-500 dark:text-zinc-400">
+        <div class="save-tab-body">
+          <div class="save-entities-header">
+            <p class="save-description">
               Configura entidades que se crearan automaticamente al finalizar la ejecucion.
             </p>
             <p-button
@@ -607,17 +610,17 @@
           </div>
 
           @if (entityConfigs().length === 0) {
-            <div class="text-center py-8 text-zinc-500 dark:text-zinc-400 border-2 border-dashed border-zinc-300 dark:border-zinc-600 rounded-lg">
-              <i class="pi pi-box text-4xl mb-2"></i>
+            <div class="save-empty-state save-empty-state--dashed">
+              <i class="pi pi-box"></i>
               <p>No hay entidades configuradas</p>
-              <p class="text-sm">Haz clic en "Agregar" para configurar una entidad</p>
+              <p class="save-empty-hint">Haz clic en "Agregar" para configurar una entidad</p>
             </div>
           }
 
           @for (config of entityConfigs(); track config.id) {
-            <div class="entity-config-card border border-zinc-200 dark:border-zinc-600 rounded-lg p-4 mb-4">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-3">
+            <div class="entity-config-card">
+              <div class="entity-config-row entity-config-row--between">
+                <div class="entity-config-row">
                   <p-checkbox
                     [(ngModel)]="config.enabled"
                     [binary]="true"
@@ -643,19 +646,19 @@
                 />
               </div>
 
-              <div class="flex items-center gap-2 mb-4">
+              <div class="entity-config-row entity-config-conditional">
                 <p-checkbox
                   [(ngModel)]="config.createConditionally"
                   [binary]="true"
                 />
-                <label class="text-sm text-zinc-600 dark:text-zinc-400">
+                <label class="entity-config-label">
                   Crear condicionalmente
                 </label>
               </div>
 
-              <div class="grid grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Subtipo</label>
+              <div class="entity-config-fields">
+                <div class="entity-config-field">
+                  <label class="entity-config-field-label">Subtipo</label>
                   <p-select
                     [options]="getEntityCatalogs(config.entityType).subtipos"
                     optionLabel="label"
@@ -665,8 +668,8 @@
                     [style]="{ width: '100%' }"
                   />
                 </div>
-                <div>
-                  <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Estado</label>
+                <div class="entity-config-field">
+                  <label class="entity-config-field-label">Estado</label>
                   <p-select
                     [options]="getEntityCatalogs(config.entityType).estados"
                     optionLabel="label"
@@ -676,8 +679,8 @@
                     [style]="{ width: '100%' }"
                   />
                 </div>
-                <div>
-                  <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Severidad</label>
+                <div class="entity-config-field">
+                  <label class="entity-config-field-label">Severidad</label>
                   <p-select
                     [options]="getEntityCatalogs(config.entityType).severidades"
                     optionLabel="label"
@@ -690,9 +693,9 @@
               </div>
 
               @if (config.entityType === 'risk') {
-                <div class="grid grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Propagacion</label>
+                <div class="entity-config-fields">
+                  <div class="entity-config-field">
+                    <label class="entity-config-field-label">Propagacion</label>
                     <p-select
                       [options]="getRiskCatalogs().propagaciones"
                       optionLabel="label"
@@ -702,8 +705,8 @@
                       [style]="{ width: '100%' }"
                     />
                   </div>
-                  <div>
-                    <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Probabilidad</label>
+                  <div class="entity-config-field">
+                    <label class="entity-config-field-label">Probabilidad</label>
                     <p-select
                       [options]="getRiskCatalogs().probabilidades"
                       optionLabel="label"
@@ -713,8 +716,8 @@
                       [style]="{ width: '100%' }"
                     />
                   </div>
-                  <div>
-                    <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">Impacto</label>
+                  <div class="entity-config-field">
+                    <label class="entity-config-field-label">Impacto</label>
                     <p-select
                       [options]="getRiskCatalogs().impactos"
                       optionLabel="label"
@@ -728,23 +731,21 @@
               }
 
               <!-- Titulo con variables clicables -->
-              <div class="mb-4">
-                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                  Titulo
-                </label>
+              <div class="entity-config-template">
+                <label class="entity-config-field-label">Titulo</label>
                 <input
                   type="text"
                   pInputText
                   [(ngModel)]="config.titleTemplate"
                   placeholder="Ej: Riesgo detectado"
-                  class="w-full mb-2"
+                  class="entity-config-input"
                 />
-                <div class="flex flex-wrap gap-1">
-                  <span class="text-xs text-zinc-500 dark:text-zinc-400 mr-1">Variables:</span>
+                <div class="entity-config-variables">
+                  <span class="entity-config-variables-label">Variables:</span>
                   @for (variable of availableVariables(); track variable.key) {
                     <p-chip
                       [label]="variable.key"
-                      styleClass="text-xs cursor-pointer bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-800/50"
+                      styleClass="entity-config-chip"
                       (click)="insertVariableInTitle(config, variable.key)"
                     />
                   }
@@ -752,23 +753,21 @@
               </div>
 
               <!-- Descripcion con variables clicables -->
-              <div class="mb-4">
-                <label class="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
-                  Descripcion
-                </label>
+              <div class="entity-config-template">
+                <label class="entity-config-field-label">Descripcion</label>
                 <textarea
                   pTextarea
                   [(ngModel)]="config.descriptionTemplate"
                   placeholder="Descripcion del evento..."
-                  class="w-full mb-2"
+                  class="entity-config-input"
                   rows="3"
                 ></textarea>
-                <div class="flex flex-wrap gap-1">
-                  <span class="text-xs text-zinc-500 dark:text-zinc-400 mr-1">Variables:</span>
+                <div class="entity-config-variables">
+                  <span class="entity-config-variables-label">Variables:</span>
                   @for (variable of availableVariables(); track variable.key) {
                     <p-chip
                       [label]="variable.key"
-                      styleClass="text-xs cursor-pointer bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-800/50"
+                      styleClass="entity-config-chip"
                       (click)="insertVariableInDescription(config, variable.key)"
                     />
                   }
@@ -776,11 +775,9 @@
               </div>
 
               <!-- Campos adicionales -->
-              <div class="border-t border-zinc-200 dark:border-zinc-600 pt-4">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                    Campos adicionales
-                  </span>
+              <div class="entity-config-extra">
+                <div class="entity-config-row entity-config-row--between">
+                  <span class="entity-config-field-label">Campos adicionales</span>
                   <p-button
                     icon="pi pi-plus"
                     label="Campo"
@@ -798,7 +795,7 @@
   </p-tabs>
 
   <ng-template pTemplate="footer">
-    <div class="flex justify-end gap-2">
+    <div class="save-dialog-footer">
       <p-button
         label="Cancelar"
         [outlined]="true"

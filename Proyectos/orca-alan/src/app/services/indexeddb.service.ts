@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { TENANT_SCOPED_STORES } from '../models/tenant.models';
 
 // Utility to generate unique IDs
 function generateId(): string {
@@ -16,7 +17,7 @@ interface DBStore {
 })
 export class IndexedDBService {
   private dbName = 'OrcaDB';
-  private dbVersion = 3; // Incrementado para agregar stores de eventos
+  private dbVersion = 4; // Bumped for tenant indexes
   private db: IDBDatabase | null = null;
 
   // Store definitions matching Prisma schema
@@ -31,18 +32,18 @@ export class IndexedDBService {
     { name: 'logs_auditoria', keyPath: 'id', indexes: [{ name: 'usuarioId', keyPath: 'usuarioId' }] },
     { name: 'activos_acceso', keyPath: 'id', indexes: [{ name: 'padreId', keyPath: 'padreId' }] },
     { name: 'plantillas_activo', keyPath: 'id' },
-    { name: 'activos', keyPath: 'id', indexes: [{ name: 'tipo', keyPath: 'tipo' }] },
-    { name: 'riesgos', keyPath: 'id', indexes: [{ name: 'activoId', keyPath: 'activoId' }] },
-    { name: 'incidentes', keyPath: 'id', indexes: [{ name: 'activoId', keyPath: 'activoId' }] },
-    { name: 'defectos', keyPath: 'id', indexes: [{ name: 'activoId', keyPath: 'activoId' }] },
-    { name: 'organigramas', keyPath: 'id' },
-    { name: 'nodos_organigrama', keyPath: 'id', indexes: [{ name: 'organigramaId', keyPath: 'organigramaId' }] },
-    { name: 'marcos_normativos', keyPath: 'id' },
-    { name: 'requisitos_normativos', keyPath: 'id', indexes: [{ name: 'marcoId', keyPath: 'marcoId' }] },
-    { name: 'cuestionarios', keyPath: 'id' },
-    { name: 'secciones', keyPath: 'id', indexes: [{ name: 'cuestionarioId', keyPath: 'cuestionarioId' }] },
-    { name: 'preguntas', keyPath: 'id', indexes: [{ name: 'seccionId', keyPath: 'seccionId' }] },
-    { name: 'asignaciones_cuestionario', keyPath: 'id' },
+    { name: 'activos', keyPath: 'id', indexes: [{ name: 'tipo', keyPath: 'tipo' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'riesgos', keyPath: 'id', indexes: [{ name: 'activoId', keyPath: 'activoId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'incidentes', keyPath: 'id', indexes: [{ name: 'activoId', keyPath: 'activoId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'defectos', keyPath: 'id', indexes: [{ name: 'activoId', keyPath: 'activoId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'organigramas', keyPath: 'id', indexes: [{ name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'nodos_organigrama', keyPath: 'id', indexes: [{ name: 'organigramaId', keyPath: 'organigramaId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'marcos_normativos', keyPath: 'id', indexes: [{ name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'requisitos_normativos', keyPath: 'id', indexes: [{ name: 'marcoId', keyPath: 'marcoId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'cuestionarios', keyPath: 'id', indexes: [{ name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'secciones', keyPath: 'id', indexes: [{ name: 'cuestionarioId', keyPath: 'cuestionarioId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'preguntas', keyPath: 'id', indexes: [{ name: 'seccionId', keyPath: 'seccionId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'asignaciones_cuestionario', keyPath: 'id', indexes: [{ name: 'tenantId', keyPath: 'tenantId' }] },
     { name: 'evaluados_externos', keyPath: 'id', indexes: [{ name: 'asignacionId', keyPath: 'asignacionId' }] },
     { name: 'respuestas_cuestionario', keyPath: 'id', indexes: [{ name: 'asignacionId', keyPath: 'asignacionId' }] },
     { name: 'respuestas_pregunta', keyPath: 'id' },
@@ -50,27 +51,27 @@ export class IndexedDBService {
     { name: 'hallazgos', keyPath: 'id' },
     { name: 'mensajes_chat', keyPath: 'id' },
     { name: 'alertas_cumplimiento', keyPath: 'id' },
-    { name: 'procesos', keyPath: 'id' },
-    { name: 'process_nodes', keyPath: 'id', indexes: [{ name: 'procesoId', keyPath: 'procesoId' }] },
-    { name: 'process_edges', keyPath: 'id', indexes: [{ name: 'procesoId', keyPath: 'procesoId' }] },
-    { name: 'objetivos_proceso', keyPath: 'id', indexes: [{ name: 'procesoId', keyPath: 'procesoId' }] },
-    { name: 'kpis_proceso', keyPath: 'id', indexes: [{ name: 'procesoId', keyPath: 'procesoId' }] },
+    { name: 'procesos', keyPath: 'id', indexes: [{ name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'process_nodes', keyPath: 'id', indexes: [{ name: 'procesoId', keyPath: 'procesoId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'process_edges', keyPath: 'id', indexes: [{ name: 'procesoId', keyPath: 'procesoId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'objetivos_proceso', keyPath: 'id', indexes: [{ name: 'procesoId', keyPath: 'procesoId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'kpis_proceso', keyPath: 'id', indexes: [{ name: 'procesoId', keyPath: 'procesoId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
     { name: 'kpi_historico', keyPath: 'id', indexes: [{ name: 'kpiId', keyPath: 'kpiId' }] },
-    { name: 'dashboard_configs', keyPath: 'id' },
-    { name: 'dashboard_widgets', keyPath: 'id', indexes: [{ name: 'dashboardId', keyPath: 'dashboardId' }] },
+    { name: 'dashboard_configs', keyPath: 'id', indexes: [{ name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'dashboard_widgets', keyPath: 'id', indexes: [{ name: 'dashboardId', keyPath: 'dashboardId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
     { name: 'catalogos', keyPath: 'id', indexes: [{ name: 'tipo_codigo', keyPath: ['tipo', 'codigo'], unique: true }] },
-    { name: 'notification_rules', keyPath: 'id' },
-    { name: 'alert_rules', keyPath: 'id' },
-    { name: 'expiration_rules', keyPath: 'id' },
-    { name: 'notifications', keyPath: 'id', indexes: [{ name: 'usuarioId', keyPath: 'usuarioId' }] },
+    { name: 'notification_rules', keyPath: 'id', indexes: [{ name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'alert_rules', keyPath: 'id', indexes: [{ name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'expiration_rules', keyPath: 'id', indexes: [{ name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'notifications', keyPath: 'id', indexes: [{ name: 'usuarioId', keyPath: 'usuarioId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
     { name: 'user_notification_preferences', keyPath: 'id', indexes: [{ name: 'usuarioId', keyPath: 'usuarioId', unique: true }] },
     { name: 'notification_logs', keyPath: 'id' },
     { name: 'notification_profiles', keyPath: 'id' },
-    { name: 'projects', keyPath: 'id' },
-    { name: 'project_objectives', keyPath: 'id', indexes: [{ name: 'projectId', keyPath: 'projectId' }] },
-    { name: 'project_kpis', keyPath: 'id', indexes: [{ name: 'projectId', keyPath: 'projectId' }] },
-    { name: 'project_phases', keyPath: 'id', indexes: [{ name: 'projectId', keyPath: 'projectId' }] },
-    { name: 'tasks', keyPath: 'id', indexes: [{ name: 'projectId', keyPath: 'projectId' }, { name: 'phaseId', keyPath: 'phaseId' }] },
+    { name: 'projects', keyPath: 'id', indexes: [{ name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'project_objectives', keyPath: 'id', indexes: [{ name: 'projectId', keyPath: 'projectId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'project_kpis', keyPath: 'id', indexes: [{ name: 'projectId', keyPath: 'projectId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'project_phases', keyPath: 'id', indexes: [{ name: 'projectId', keyPath: 'projectId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
+    { name: 'tasks', keyPath: 'id', indexes: [{ name: 'projectId', keyPath: 'projectId' }, { name: 'phaseId', keyPath: 'phaseId' }, { name: 'tenantId', keyPath: 'tenantId' }] },
     { name: 'task_evidences', keyPath: 'id', indexes: [{ name: 'taskId', keyPath: 'taskId' }] },
     { name: 'task_history', keyPath: 'id', indexes: [{ name: 'taskId', keyPath: 'taskId' }] },
     { name: '_meta', keyPath: 'key' }, // For storing metadata like seeded flag
@@ -78,16 +79,19 @@ export class IndexedDBService {
     { name: 'radios', keyPath: 'id', indexes: [
       { name: 'connectorType', keyPath: 'connectorType' },
       { name: 'status', keyPath: 'status' },
-      { name: 'category', keyPath: 'category' }
+      { name: 'category', keyPath: 'category' },
+      { name: 'tenantId', keyPath: 'tenantId' }
     ]},
     { name: 'pulses', keyPath: 'id', indexes: [
       { name: 'radioId', keyPath: 'radioId' },
       { name: 'status', keyPath: 'status' },
-      { name: 'receivedAt', keyPath: 'receivedAt' }
+      { name: 'receivedAt', keyPath: 'receivedAt' },
+      { name: 'tenantId', keyPath: 'tenantId' }
     ]},
     { name: 'radio_sync_logs', keyPath: 'id', indexes: [
       { name: 'radioId', keyPath: 'radioId' },
-      { name: 'startedAt', keyPath: 'startedAt' }
+      { name: 'startedAt', keyPath: 'startedAt' },
+      { name: 'tenantId', keyPath: 'tenantId' }
     ]},
     // Eventos - Subtipos y Eventos
     { name: 'event_subtypes', keyPath: 'id', indexes: [
@@ -100,7 +104,8 @@ export class IndexedDBService {
       { name: 'eventSubTypeId', keyPath: 'eventSubType.id' },
       { name: 'eventStatus', keyPath: 'eventStatus' },
       { name: 'initialSeverity', keyPath: 'initialSeverity' },
-      { name: 'createdAt', keyPath: 'createdAt' }
+      { name: 'createdAt', keyPath: 'createdAt' },
+      { name: 'tenantId', keyPath: 'tenantId' }
     ]},
     { name: 'event_comments', keyPath: 'id', indexes: [
       { name: 'eventId', keyPath: 'eventId' }
@@ -118,16 +123,24 @@ export class IndexedDBService {
       request.onsuccess = async () => {
         this.db = request.result;
         // Check if we need to seed
-        const seeded = await this.get('_meta', 'seeded');
+        const seeded = await this.get('_meta', 'seeded_v2');
         if (!seeded) {
+          // Clear all stores and reseed with tenant data
+          for (const store of this.stores) {
+            if (store.name !== '_meta') {
+              try { await this.clear(store.name); } catch { /* ignore */ }
+            }
+          }
           await this.seedDatabase();
-          await this.put('_meta', { key: 'seeded', value: true, timestamp: new Date().toISOString() });
+          await this.put('_meta', { key: 'seeded_v2', value: true, timestamp: new Date().toISOString() });
         }
         resolve();
       };
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+        const tx = (event.target as IDBOpenDBRequest).transaction!;
+        const oldVersion = event.oldVersion;
 
         for (const store of this.stores) {
           if (!db.objectStoreNames.contains(store.name)) {
@@ -139,10 +152,26 @@ export class IndexedDBService {
                 objectStore.createIndex(index.name, index.keyPath, { unique: index.unique || false });
               }
             }
+          } else if (oldVersion < 4) {
+            // Migration: add tenantId index to existing tenant-scoped stores
+            if (TENANT_SCOPED_STORES.includes(store.name)) {
+              const objectStore = tx.objectStore(store.name);
+              if (!objectStore.indexNames.contains('tenantId')) {
+                objectStore.createIndex('tenantId', 'tenantId', { unique: false });
+              }
+            }
           }
         }
       };
     });
+  }
+
+  // Tenant-aware getAll: returns filtered records for tenant-scoped stores
+  async getAllForTenant<T>(storeName: string, tenantId: string): Promise<T[]> {
+    if (!TENANT_SCOPED_STORES.includes(storeName)) {
+      return this.getAll<T>(storeName);
+    }
+    return this.getByIndex<T>(storeName, 'tenantId', tenantId);
   }
 
   // Generic CRUD operations
@@ -262,7 +291,7 @@ export class IndexedDBService {
 
   // Seed the database with initial data
   private async seedDatabase(): Promise<void> {
-    console.log('🌱 Seeding IndexedDB database...');
+    console.log('🌱 Seeding IndexedDB database (v2 with tenantId)...');
 
     // Import seed data
     const seedData = await import('./seed-data');
@@ -364,7 +393,7 @@ export class IndexedDBService {
     await this.bulkPut('tasks', seedData.tasks);
     console.log(`✓ ${seedData.tasks.length} tareas`);
 
-    console.log('✅ Database seeded successfully!');
+    console.log('✅ Database seeded successfully (v2 with tenantId)!');
   }
 
   // Reset database (for development)
@@ -375,8 +404,9 @@ export class IndexedDBService {
       }
     }
     await this.delete('_meta', 'seeded');
+    await this.delete('_meta', 'seeded_v2');
     await this.seedDatabase();
-    await this.put('_meta', { key: 'seeded', value: true, timestamp: new Date().toISOString() });
+    await this.put('_meta', { key: 'seeded_v2', value: true, timestamp: new Date().toISOString() });
   }
 }
 

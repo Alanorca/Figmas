@@ -1,5 +1,6 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { ApiService } from './api.service';
+import { TenantService } from './tenant.service';
 import { Activo } from '../models';
 import {
   RegistroUnificado,
@@ -20,6 +21,8 @@ import {
 })
 export class TablaUnificadaService {
   private api = inject(ApiService);
+  private tenantService = inject(TenantService);
+  private get tenantId(): string { return this.tenantService.selectedTenant()?.id || 'tenant-001'; }
 
   // Data cargada desde API
   private activosData = signal<Activo[]>([]);
@@ -30,11 +33,11 @@ export class TablaUnificadaService {
   private revisionesData = signal<any[]>([]);
   private cumplimientoData = signal<any[]>([]);
 
-  // Storage keys
-  private readonly WIDGETS_KEY = 'tabla-unificada-widgets';
-  private readonly EXPORTS_KEY = 'tabla-unificada-exports';
-  private readonly ALERTS_KEY = 'tabla-unificada-alerts';
-  private readonly VIEWS_KEY = 'tabla-unificada-views';
+  // Storage keys (namespaced by tenant)
+  private get WIDGETS_KEY(): string { return `tabla-unificada-widgets_${this.tenantId}`; }
+  private get EXPORTS_KEY(): string { return `tabla-unificada-exports_${this.tenantId}`; }
+  private get ALERTS_KEY(): string { return `tabla-unificada-alerts_${this.tenantId}`; }
+  private get VIEWS_KEY(): string { return `tabla-unificada-views_${this.tenantId}`; }
 
   // Signals para nuevas funcionalidades
   widgets = signal<WidgetGrafica[]>([]);
@@ -45,6 +48,13 @@ export class TablaUnificadaService {
   constructor() {
     this.cargarDatos();
     this.cargarDatosLocales();
+
+    // React to tenant changes - reload all data for new tenant
+    effect(() => {
+      this.tenantService.selectedTenant();
+      this.cargarDatos();
+      this.cargarDatosLocales();
+    });
   }
 
   private cargarDatosLocales(): void {

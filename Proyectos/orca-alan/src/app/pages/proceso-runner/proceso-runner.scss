@@ -203,6 +203,12 @@
   }
 }
 
+.stats-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .stats-total-time {
   font-size: 0.875rem;
   color: var(--text-color-secondary);
@@ -1442,14 +1448,265 @@
     background: color-mix(in srgb, var(--blue-500) 20%, var(--surface-card));
     color: var(--blue-400);
   }
+
+  // Save Config Modal - dark overrides
+  .save-variable-card {
+    &:hover {
+      border-color: var(--primary-400);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-400) 20%, transparent);
+    }
+  }
+
+  .save-variable-icon {
+    background: color-mix(in srgb, var(--green-400) 15%, transparent);
+
+    i {
+      color: var(--green-400);
+    }
+  }
+
+  ::ng-deep .entity-config-chip {
+    background: color-mix(in srgb, var(--green-400) 15%, transparent) !important;
+    color: var(--green-300) !important;
+
+    &:hover {
+      background: color-mix(in srgb, var(--green-400) 25%, transparent) !important;
+    }
+  }
 }
 
 // ============================================
-// Entity Config Card (Modal)
+// Save Config Modal
 // ============================================
+.save-tab-icon {
+  margin-right: 0.5rem;
+}
+
+.save-tab-badge {
+  margin-left: 0.5rem;
+}
+
+.save-tab-body {
+  padding: 1.25rem 0;
+}
+
+.save-description {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.save-empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-color-secondary);
+
+  i {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+
+  &--dashed {
+    border: 2px dashed var(--surface-border);
+    border-radius: var(--border-radius-lg);
+  }
+}
+
+.save-empty-hint {
+  font-size: 0.8125rem !important;
+  margin-top: 0.25rem !important;
+  opacity: 0.7;
+}
+
+// --- Variables Grid ---
+.save-variables-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.save-variable-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--border-radius-lg);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--primary-200);
+    box-shadow: 0 0 0 1px var(--primary-100);
+  }
+}
+
+.save-variable-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--green-500) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    font-size: 1rem;
+    color: var(--green-600);
+    line-height: 1;
+  }
+}
+
+.save-variable-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.save-variable-key {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-color);
+  line-height: 1.3;
+}
+
+.save-variable-preview {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// --- Entities Tab ---
+.save-entities-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  .save-description {
+    margin-bottom: 0;
+  }
+}
+
+// --- Entity Config Card ---
 .entity-config-card {
   background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
   border-radius: var(--border-radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.entity-config-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &--between {
+    justify-content: space-between;
+  }
+}
+
+.entity-config-conditional {
+  gap: 0.5rem;
+}
+
+.entity-config-label {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.entity-config-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.entity-config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.entity-config-field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  line-height: 1.3;
+}
+
+.entity-config-template {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.entity-config-input {
+  width: 100%;
+}
+
+.entity-config-variables {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+
+.entity-config-variables-label {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  margin-right: 0.125rem;
+}
+
+::ng-deep .entity-config-chip {
+  font-size: 0.75rem !important;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--green-500) 12%, transparent) !important;
+  color: var(--green-700) !important;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--green-500) 22%, transparent) !important;
+  }
+}
+
+.entity-config-extra {
+  border-top: 1px solid var(--surface-border);
+  padding-top: 1rem;
+}
+
+// --- Dialog Footer ---
+.save-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 // ============================================

@@ -1,6 +1,7 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { IndexedDBService } from './indexeddb.service';
 import { EventoSubtiposService } from './evento-subtipos.service';
+import { TenantService } from './tenant.service';
 import {
   Event,
   EventType,
@@ -24,11 +25,21 @@ import {
 export class EventosService {
   private db = inject(IndexedDBService);
   private subTypesService = inject(EventoSubtiposService);
+  private tenantService = inject(TenantService);
+  private get tenantId(): string { return this.tenantService.selectedTenant()?.id || 'tenant-001'; }
 
   // ============ Estado Reactivo ============
   events = signal<Event[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      // React to tenant changes - reload events for new tenant
+      this.tenantService.selectedTenant();
+      this.loadEvents();
+    });
+  }
 
   // ============ Contadores por Tipo ============
   riskCount = computed(() =>
@@ -85,19 +96,19 @@ export class EventosService {
     this.loading.set(true);
     this.error.set(null);
     try {
-      let data = await this.db.getAll<Event>('events');
+      let data = await this.db.getAllForTenant<Event>('events', this.tenantId);
 
       // Seed demo data if empty or incomplete
       if (data.length === 0) {
         await this.forceSeedEvents();
-        data = await this.db.getAll<Event>('events');
+        data = await this.db.getAllForTenant<Event>('events', this.tenantId);
       } else {
         // Check if data is incomplete (missing defects or too few records)
         const hasDefects = data.some(e => e.eventType === EventType.DEFECT);
         const hasEnoughData = data.length >= 30; // We expect 37 records total
         if (!hasDefects || !hasEnoughData) {
           await this.forceSeedEvents();
-          data = await this.db.getAll<Event>('events');
+          data = await this.db.getAllForTenant<Event>('events', this.tenantId);
         }
       }
 
@@ -197,6 +208,7 @@ export class EventosService {
 
     const newEvent: Event = {
       id: generateEventId(),
+      tenantId: this.tenantId,
       title: request.title,
       description: request.description,
       eventType: request.eventType,
@@ -215,7 +227,7 @@ export class EventosService {
       comments: [],
       createdAt: now,
       updatedAt: now
-    };
+    } as any;
 
     await this.db.add('events', newEvent);
     this.events.update(list => [newEvent, ...list]);
@@ -562,7 +574,7 @@ export class EventosService {
   // ============ Seed Data ============
 
   async seedSampleEvents(): Promise<void> {
-    const existing = await this.db.getAll<Event>('events');
+    const existing = await this.db.getAllForTenant<Event>('events', this.tenantId);
     if (existing.length > 0) return;
 
     await this.forceSeedEvents();
@@ -1031,8 +1043,9 @@ export class EventosService {
     ];
 
     for (const eventData of sampleEvents) {
-      const event: Event = {
+      const event: any = {
         id: generateEventId(),
+        tenantId: this.tenantId,
         title: eventData.title!,
         description: eventData.description!,
         eventType: eventData.eventType!,

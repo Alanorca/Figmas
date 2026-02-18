@@ -1,5 +1,6 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { IndexedDBService } from './indexeddb.service';
+import { TenantService } from './tenant.service';
 import {
   Radio,
   Pulse,
@@ -23,6 +24,8 @@ import {
 })
 export class IntegracionesService {
   private db = inject(IndexedDBService);
+  private tenantService = inject(TenantService);
+  private get tenantId(): string { return this.tenantService.selectedTenant()?.id || 'tenant-001'; }
 
   // Signals for reactive state
   radios = signal<Radio[]>([]);
@@ -54,13 +57,21 @@ export class IntegracionesService {
     configuring: this.radios().filter(r => r.status === RadioStatus.CONFIGURING).length
   }));
 
+  constructor() {
+    effect(() => {
+      // React to tenant changes - reload radios for new tenant
+      this.tenantService.selectedTenant();
+      this.loadRadios();
+    });
+  }
+
   // ==================== RADIOS CRUD ====================
 
   async loadRadios(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const radios = await this.db.getAll<Radio>('radios');
+      const radios = await this.db.getAllForTenant<Radio>('radios', this.tenantId);
       this.radios.set(radios.sort((a, b) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       ));
@@ -99,6 +110,7 @@ export class IntegracionesService {
 
     const radio: Radio = {
       id,
+      tenantId: this.tenantId,
       name: data.name || 'Nuevo Radio',
       description: data.description,
       connectorType: data.connectorType || ConnectorType.WEBHOOK,
@@ -114,7 +126,7 @@ export class IntegracionesService {
       createdAt: now,
       createdBy: data.createdBy || 'usr-admin',
       updatedAt: now
-    };
+    } as any;
 
     await this.db.add('radios', radio);
     await this.loadRadios();
@@ -744,7 +756,7 @@ export class IntegracionesService {
 
   async seedData(): Promise<void> {
     // Check if data already exists
-    const existingRadios = await this.db.getAll<Radio>('radios');
+    const existingRadios = await this.db.getAllForTenant<Radio>('radios', this.tenantId);
     if (existingRadios.length > 0) {
       console.log('Seed data already exists');
       return;

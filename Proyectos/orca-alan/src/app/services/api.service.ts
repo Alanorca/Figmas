@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, from, of } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 import { IndexedDBService } from './indexeddb.service';
+import { TenantService } from './tenant.service';
 
 const API_URL = 'http://localhost:3000/api';
 
@@ -15,6 +16,11 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export class ApiService {
   private db = inject(IndexedDBService);
   private http = inject(HttpClient);
+  private tenantService = inject(TenantService);
+
+  private get tenantId(): string {
+    return this.tenantService.selectedTenant()?.id || 'tenant-001';
+  }
 
   constructor() {
     // Initialize IndexedDB on service creation
@@ -411,9 +417,10 @@ export class ApiService {
         incidentes: a.incidentes || [],
         defectos: a.defectos || []
       }))),
+      map(activos => activos.filter(a => !a.tenantId || a.tenantId === this.tenantId)),
       catchError(err => {
-        console.error('Error cargando activos desde backend:', err);
-        return of([]);
+        console.error('Error cargando activos desde backend, usando IndexedDB:', err);
+        return from(this.db.getAllForTenant<any>('activos', this.tenantId));
       })
     );
   }
@@ -465,9 +472,9 @@ export class ApiService {
   // ============================================================
 
   getRiesgos(): Observable<any[]> {
-    return from(this.db.getAll<any>('riesgos')).pipe(
+    return from(this.db.getAllForTenant<any>('riesgos', this.tenantId)).pipe(
       switchMap(async riesgos => {
-        const activos = await this.db.getAll<any>('activos');
+        const activos = await this.db.getAllForTenant<any>('activos', this.tenantId);
         return riesgos.map(r => ({
           ...r,
           activo: activos.find(a => a.id === r.activoId)
@@ -477,7 +484,7 @@ export class ApiService {
   }
 
   getRiesgosByActivo(activoId: string): Observable<any[]> {
-    return from(this.db.getAll<any>('riesgos')).pipe(
+    return from(this.db.getAllForTenant<any>('riesgos', this.tenantId)).pipe(
       map(riesgos => riesgos.filter(r => r.activoId === activoId))
     );
   }
@@ -486,6 +493,7 @@ export class ApiService {
     const riesgo = {
       ...data,
       id: 'rsk-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString()
     };
     return from(this.db.add('riesgos', riesgo));
@@ -509,9 +517,9 @@ export class ApiService {
   // ============================================================
 
   getIncidentes(): Observable<any[]> {
-    return from(this.db.getAll<any>('incidentes')).pipe(
+    return from(this.db.getAllForTenant<any>('incidentes', this.tenantId)).pipe(
       switchMap(async incidentes => {
-        const activos = await this.db.getAll<any>('activos');
+        const activos = await this.db.getAllForTenant<any>('activos', this.tenantId);
         return incidentes.map(i => ({
           ...i,
           activo: activos.find(a => a.id === i.activoId)
@@ -521,7 +529,7 @@ export class ApiService {
   }
 
   getIncidentesByActivo(activoId: string): Observable<any[]> {
-    return from(this.db.getAll<any>('incidentes')).pipe(
+    return from(this.db.getAllForTenant<any>('incidentes', this.tenantId)).pipe(
       map(incidentes => incidentes.filter(i => i.activoId === activoId))
     );
   }
@@ -530,6 +538,7 @@ export class ApiService {
     const incidente = {
       ...data,
       id: 'inc-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString()
     };
     return from(this.db.add('incidentes', incidente));
@@ -553,9 +562,9 @@ export class ApiService {
   // ============================================================
 
   getDefectos(): Observable<any[]> {
-    return from(this.db.getAll<any>('defectos')).pipe(
+    return from(this.db.getAllForTenant<any>('defectos', this.tenantId)).pipe(
       switchMap(async defectos => {
-        const activos = await this.db.getAll<any>('activos');
+        const activos = await this.db.getAllForTenant<any>('activos', this.tenantId);
         return defectos.map(d => ({
           ...d,
           activo: activos.find(a => a.id === d.activoId)
@@ -565,7 +574,7 @@ export class ApiService {
   }
 
   getDefectosByActivo(activoId: string): Observable<any[]> {
-    return from(this.db.getAll<any>('defectos')).pipe(
+    return from(this.db.getAllForTenant<any>('defectos', this.tenantId)).pipe(
       map(defectos => defectos.filter(d => d.activoId === activoId))
     );
   }
@@ -574,6 +583,7 @@ export class ApiService {
     const defecto = {
       ...data,
       id: 'def-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString()
     };
     return from(this.db.add('defectos', defecto));
@@ -597,12 +607,12 @@ export class ApiService {
   // ============================================================
 
   getProcesos(): Observable<any[]> {
-    return from(this.db.getAll<any>('procesos')).pipe(
+    return from(this.db.getAllForTenant<any>('procesos', this.tenantId)).pipe(
       switchMap(async procesos => {
-        const nodes = await this.db.getAll<any>('process_nodes');
-        const edges = await this.db.getAll<any>('process_edges');
-        const objetivos = await this.db.getAll<any>('objetivos_proceso');
-        const kpis = await this.db.getAll<any>('kpis_proceso');
+        const nodes = await this.db.getAllForTenant<any>('process_nodes', this.tenantId);
+        const edges = await this.db.getAllForTenant<any>('process_edges', this.tenantId);
+        const objetivos = await this.db.getAllForTenant<any>('objetivos_proceso', this.tenantId);
+        const kpis = await this.db.getAllForTenant<any>('kpis_proceso', this.tenantId);
 
         return procesos.map(p => ({
           ...p,
@@ -619,10 +629,10 @@ export class ApiService {
     return from(this.db.get<any>('procesos', id)).pipe(
       switchMap(async proceso => {
         if (!proceso) return null;
-        const nodes = await this.db.getAll<any>('process_nodes');
-        const edges = await this.db.getAll<any>('process_edges');
-        const objetivos = await this.db.getAll<any>('objetivos_proceso');
-        const kpis = await this.db.getAll<any>('kpis_proceso');
+        const nodes = await this.db.getAllForTenant<any>('process_nodes', this.tenantId);
+        const edges = await this.db.getAllForTenant<any>('process_edges', this.tenantId);
+        const objetivos = await this.db.getAllForTenant<any>('objetivos_proceso', this.tenantId);
+        const kpis = await this.db.getAllForTenant<any>('kpis_proceso', this.tenantId);
 
         return {
           ...proceso,
@@ -639,6 +649,7 @@ export class ApiService {
     const proceso = {
       ...data,
       id: 'prc-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString()
     };
     return from(this.db.add('procesos', proceso));
@@ -660,7 +671,8 @@ export class ApiService {
   addNodoProceso(data: any): Observable<any> {
     const node = {
       ...data,
-      id: 'pn-' + Math.random().toString(36).substring(2, 9)
+      id: 'pn-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('process_nodes', node));
   }
@@ -681,7 +693,8 @@ export class ApiService {
   addEdgeProceso(data: any): Observable<any> {
     const edge = {
       ...data,
-      id: 'pe-' + Math.random().toString(36).substring(2, 9)
+      id: 'pe-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('process_edges', edge));
   }
@@ -691,7 +704,7 @@ export class ApiService {
   }
 
   getKpisProceso(procesoId: string): Observable<any[]> {
-    return from(this.db.getAll<any>('kpis_proceso')).pipe(
+    return from(this.db.getAllForTenant<any>('kpis_proceso', this.tenantId)).pipe(
       map(kpis => kpis.filter(k => k.procesoId === procesoId))
     );
   }
@@ -699,7 +712,8 @@ export class ApiService {
   createKpiProceso(data: any): Observable<any> {
     const kpi = {
       ...data,
-      id: 'kpi-' + Math.random().toString(36).substring(2, 9)
+      id: 'kpi-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('kpis_proceso', kpi));
   }
@@ -722,7 +736,7 @@ export class ApiService {
   // ============================================================
 
   getMarcosNormativos(): Observable<any[]> {
-    return from(this.db.getAll<any>('marcos_normativos'));
+    return from(this.db.getAllForTenant<any>('marcos_normativos', this.tenantId));
   }
 
   getMarcoNormativoById(id: string): Observable<any> {
@@ -732,7 +746,8 @@ export class ApiService {
   createMarcoNormativo(data: any): Observable<any> {
     const marco = {
       ...data,
-      id: 'marco-' + Math.random().toString(36).substring(2, 9)
+      id: 'marco-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('marcos_normativos', marco));
   }
@@ -751,11 +766,11 @@ export class ApiService {
   }
 
   getCuestionarios(): Observable<any[]> {
-    return from(this.db.getAll<any>('cuestionarios')).pipe(
+    return from(this.db.getAllForTenant<any>('cuestionarios', this.tenantId)).pipe(
       switchMap(async cuestionarios => {
-        const marcos = await this.db.getAll<any>('marcos_normativos');
-        const secciones = await this.db.getAll<any>('secciones');
-        const preguntas = await this.db.getAll<any>('preguntas');
+        const marcos = await this.db.getAllForTenant<any>('marcos_normativos', this.tenantId);
+        const secciones = await this.db.getAllForTenant<any>('secciones', this.tenantId);
+        const preguntas = await this.db.getAllForTenant<any>('preguntas', this.tenantId);
 
         return cuestionarios.map(c => ({
           ...c,
@@ -773,9 +788,9 @@ export class ApiService {
     return from(this.db.get<any>('cuestionarios', id)).pipe(
       switchMap(async cuestionario => {
         if (!cuestionario) return null;
-        const marcos = await this.db.getAll<any>('marcos_normativos');
-        const secciones = await this.db.getAll<any>('secciones');
-        const preguntas = await this.db.getAll<any>('preguntas');
+        const marcos = await this.db.getAllForTenant<any>('marcos_normativos', this.tenantId);
+        const secciones = await this.db.getAllForTenant<any>('secciones', this.tenantId);
+        const preguntas = await this.db.getAllForTenant<any>('preguntas', this.tenantId);
 
         return {
           ...cuestionario,
@@ -793,6 +808,7 @@ export class ApiService {
     const cuestionario = {
       ...data,
       id: 'cst-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString()
     };
     return from(this.db.add('cuestionarios', cuestionario));
@@ -814,7 +830,8 @@ export class ApiService {
   addSeccionCuestionario(data: any): Observable<any> {
     const seccion = {
       ...data,
-      id: 'sec-' + Math.random().toString(36).substring(2, 9)
+      id: 'sec-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('secciones', seccion));
   }
@@ -835,7 +852,8 @@ export class ApiService {
   addPreguntaSeccion(data: any): Observable<any> {
     const pregunta = {
       ...data,
-      id: 'prg-' + Math.random().toString(36).substring(2, 9)
+      id: 'prg-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('preguntas', pregunta));
   }
@@ -854,9 +872,9 @@ export class ApiService {
   }
 
   getAsignacionesCuestionario(): Observable<any[]> {
-    return from(this.db.getAll<any>('asignaciones_cuestionario')).pipe(
+    return from(this.db.getAllForTenant<any>('asignaciones_cuestionario', this.tenantId)).pipe(
       switchMap(async asignaciones => {
-        const cuestionarios = await this.db.getAll<any>('cuestionarios');
+        const cuestionarios = await this.db.getAllForTenant<any>('cuestionarios', this.tenantId);
         return asignaciones.map(a => ({
           ...a,
           cuestionario: cuestionarios.find(c => c.id === a.cuestionarioId)
@@ -873,6 +891,7 @@ export class ApiService {
     const asignacion = {
       ...data,
       id: 'asig-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString()
     };
     return from(this.db.add('asignaciones_cuestionario', asignacion));
@@ -911,9 +930,9 @@ export class ApiService {
   // ============================================================
 
   getOrganigramas(): Observable<any[]> {
-    return from(this.db.getAll<any>('organigramas')).pipe(
+    return from(this.db.getAllForTenant<any>('organigramas', this.tenantId)).pipe(
       switchMap(async organigramas => {
-        const nodos = await this.db.getAll<any>('nodos_organigrama');
+        const nodos = await this.db.getAllForTenant<any>('nodos_organigrama', this.tenantId);
         // Devolver el array plano de nodos para que el componente construya el árbol
         return organigramas.map(o => ({
           ...o,
@@ -943,7 +962,7 @@ export class ApiService {
     return from(this.db.get<any>('organigramas', id)).pipe(
       switchMap(async organigrama => {
         if (!organigrama) return null;
-        const nodos = await this.db.getAll<any>('nodos_organigrama');
+        const nodos = await this.db.getAllForTenant<any>('nodos_organigrama', this.tenantId);
         // Devolver el array plano de nodos para que el componente construya el árbol
         return {
           ...organigrama,
@@ -957,6 +976,7 @@ export class ApiService {
     const organigrama = {
       ...data,
       id: 'org-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString()
     };
     return from(this.db.add('organigramas', organigrama));
@@ -978,7 +998,8 @@ export class ApiService {
   addNodoOrganigrama(data: any): Observable<any> {
     const nodo = {
       ...data,
-      id: 'norg-' + Math.random().toString(36).substring(2, 9)
+      id: 'norg-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('nodos_organigrama', nodo));
   }
@@ -1024,11 +1045,11 @@ export class ApiService {
   // ============================================================
 
   getDashboardConfigs(): Observable<any[]> {
-    return from(this.db.getAll<any>('dashboard_configs'));
+    return from(this.db.getAllForTenant<any>('dashboard_configs', this.tenantId));
   }
 
   getDashboardDefault(): Observable<any> {
-    return from(this.db.getAll<any>('dashboard_configs')).pipe(
+    return from(this.db.getAllForTenant<any>('dashboard_configs', this.tenantId)).pipe(
       switchMap(async configs => {
         let defaultConfig = configs.find(c => c.isDefault);
         if (!defaultConfig && configs.length > 0) {
@@ -1043,11 +1064,12 @@ export class ApiService {
             columns: 12,
             rowHeight: 50,
             gap: 10,
+            tenantId: this.tenantId,
             createdAt: new Date().toISOString()
           };
           await this.db.add('dashboard_configs', defaultConfig);
         }
-        const widgets = await this.db.getAll<any>('dashboard_widgets');
+        const widgets = await this.db.getAllForTenant<any>('dashboard_widgets', this.tenantId);
         return {
           ...defaultConfig,
           widgets: widgets.filter(w => w.dashboardId === defaultConfig.id)
@@ -1060,7 +1082,7 @@ export class ApiService {
     return from(this.db.get<any>('dashboard_configs', id)).pipe(
       switchMap(async config => {
         if (!config) return null;
-        const widgets = await this.db.getAll<any>('dashboard_widgets');
+        const widgets = await this.db.getAllForTenant<any>('dashboard_widgets', this.tenantId);
         return {
           ...config,
           widgets: widgets.filter(w => w.dashboardId === config.id)
@@ -1073,6 +1095,7 @@ export class ApiService {
     const config = {
       ...data,
       id: 'dash-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString()
     };
     return from(this.db.add('dashboard_configs', config));
@@ -1094,7 +1117,8 @@ export class ApiService {
   addDashboardWidget(data: any): Observable<any> {
     const widget = {
       ...data,
-      id: 'dw-' + Math.random().toString(36).substring(2, 9)
+      id: 'dw-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('dashboard_widgets', widget));
   }
@@ -1158,9 +1182,9 @@ export class ApiService {
       this.db.getAll<any>('usuarios'),
       this.db.getAll<any>('roles'),
       this.db.getAll<any>('permisos'),
-      this.db.getAll<any>('riesgos'),
-      this.db.getAll<any>('incidentes'),
-      this.db.getAll<any>('procesos')
+      this.db.getAllForTenant<any>('riesgos', this.tenantId),
+      this.db.getAllForTenant<any>('incidentes', this.tenantId),
+      this.db.getAllForTenant<any>('procesos', this.tenantId)
     ])).pipe(
       map(([usuarios, roles, permisos, riesgos, incidentes, procesos]) => ({
         usuarios: {
@@ -1196,7 +1220,7 @@ export class ApiService {
   // ============================================================
 
   getNotificationRules(): Observable<any[]> {
-    return from(this.db.getAll<any>('notification_rules'));
+    return from(this.db.getAllForTenant<any>('notification_rules', this.tenantId));
   }
 
   getNotificationRuleById(id: string): Observable<any> {
@@ -1206,7 +1230,8 @@ export class ApiService {
   createNotificationRule(data: any): Observable<any> {
     const rule = {
       ...data,
-      id: 'nr-' + Math.random().toString(36).substring(2, 9)
+      id: 'nr-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('notification_rules', rule));
   }
@@ -1225,13 +1250,14 @@ export class ApiService {
   }
 
   getAlertRules(): Observable<any[]> {
-    return from(this.db.getAll<any>('alert_rules'));
+    return from(this.db.getAllForTenant<any>('alert_rules', this.tenantId));
   }
 
   createAlertRule(data: any): Observable<any> {
     const rule = {
       ...data,
-      id: 'ar-' + Math.random().toString(36).substring(2, 9)
+      id: 'ar-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('alert_rules', rule));
   }
@@ -1250,13 +1276,14 @@ export class ApiService {
   }
 
   getExpirationRules(): Observable<any[]> {
-    return from(this.db.getAll<any>('expiration_rules'));
+    return from(this.db.getAllForTenant<any>('expiration_rules', this.tenantId));
   }
 
   createExpirationRule(data: any): Observable<any> {
     const rule = {
       ...data,
-      id: 'er-' + Math.random().toString(36).substring(2, 9)
+      id: 'er-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId
     };
     return from(this.db.add('expiration_rules', rule));
   }
@@ -1275,7 +1302,7 @@ export class ApiService {
   }
 
   getNotificationsInbox(params?: any): Observable<any> {
-    return from(this.db.getAll<any>('notifications')).pipe(
+    return from(this.db.getAllForTenant<any>('notifications', this.tenantId)).pipe(
       map(notifications => {
         let filtered = notifications;
         if (params) {
@@ -1344,7 +1371,7 @@ export class ApiService {
   }
 
   markAllNotificationsAsRead(): Observable<any> {
-    return from(this.db.getAll<any>('notifications')).pipe(
+    return from(this.db.getAllForTenant<any>('notifications', this.tenantId)).pipe(
       switchMap(async notifications => {
         for (const n of notifications) {
           if (!n.leida) {
@@ -1360,6 +1387,7 @@ export class ApiService {
     const notification = {
       ...data,
       id: 'ntf-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString(),
       leida: false
     };
@@ -1385,7 +1413,7 @@ export class ApiService {
   }
 
   getNotificationStats(): Observable<any> {
-    return from(this.db.getAll<any>('notifications')).pipe(
+    return from(this.db.getAllForTenant<any>('notifications', this.tenantId)).pipe(
       map(notifications => ({
         total: notifications.length,
         noLeidas: notifications.filter(n => !n.leida).length,
@@ -1405,10 +1433,10 @@ export class ApiService {
   // ============================================================
 
   getProjects(params?: Record<string, string>): Observable<any[]> {
-    return from(this.db.getAll<any>('projects')).pipe(
+    return from(this.db.getAllForTenant<any>('projects', this.tenantId)).pipe(
       switchMap(async projects => {
-        const phases = await this.db.getAll<any>('project_phases');
-        const tasks = await this.db.getAll<any>('tasks');
+        const phases = await this.db.getAllForTenant<any>('project_phases', this.tenantId);
+        const tasks = await this.db.getAllForTenant<any>('tasks', this.tenantId);
         const usuarios = await this.db.getAll<any>('usuarios');
 
         let filtered = projects;
@@ -1438,8 +1466,8 @@ export class ApiService {
     return from(this.db.get<any>('projects', id)).pipe(
       switchMap(async project => {
         if (!project) return null;
-        const phases = await this.db.getAll<any>('project_phases');
-        const tasks = await this.db.getAll<any>('tasks');
+        const phases = await this.db.getAllForTenant<any>('project_phases', this.tenantId);
+        const tasks = await this.db.getAllForTenant<any>('tasks', this.tenantId);
         const usuarios = await this.db.getAll<any>('usuarios');
 
         return {
@@ -1459,6 +1487,7 @@ export class ApiService {
     const project = {
       ...data,
       id: 'prj-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString(),
       progress: 0
     };
@@ -1483,7 +1512,7 @@ export class ApiService {
   }
 
   getProjectObjectives(projectId: string): Observable<any[]> {
-    return from(this.db.getAll<any>('project_objectives')).pipe(
+    return from(this.db.getAllForTenant<any>('project_objectives', this.tenantId)).pipe(
       map(objectives => objectives.filter(o => o.projectId === projectId))
     );
   }
@@ -1492,6 +1521,7 @@ export class ApiService {
     const objective = {
       ...data,
       id: 'pobj-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       projectId
     };
     return from(this.db.add('project_objectives', objective));
@@ -1511,7 +1541,7 @@ export class ApiService {
   }
 
   getProjectKPIs(projectId: string): Observable<any[]> {
-    return from(this.db.getAll<any>('project_kpis')).pipe(
+    return from(this.db.getAllForTenant<any>('project_kpis', this.tenantId)).pipe(
       map(kpis => kpis.filter(k => k.projectId === projectId))
     );
   }
@@ -1520,6 +1550,7 @@ export class ApiService {
     const kpi = {
       ...data,
       id: 'pkpi-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       projectId
     };
     return from(this.db.add('project_kpis', kpi));
@@ -1539,7 +1570,7 @@ export class ApiService {
   }
 
   getProjectPhases(projectId: string): Observable<any[]> {
-    return from(this.db.getAll<any>('project_phases')).pipe(
+    return from(this.db.getAllForTenant<any>('project_phases', this.tenantId)).pipe(
       map(phases => phases.filter(p => p.projectId === projectId).sort((a, b) => a.orderNum - b.orderNum))
     );
   }
@@ -1548,6 +1579,7 @@ export class ApiService {
     const phase = {
       ...data,
       id: 'phase-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       projectId
     };
     return from(this.db.add('project_phases', phase));
@@ -1601,7 +1633,7 @@ export class ApiService {
   }
 
   getProjectCalendar(projectId: string, params?: { start?: string; end?: string }): Observable<any[]> {
-    return from(this.db.getAll<any>('tasks')).pipe(
+    return from(this.db.getAllForTenant<any>('tasks', this.tenantId)).pipe(
       map(tasks => {
         let filtered = tasks.filter(t => t.projectId === projectId);
         if (params?.start) {
@@ -1626,11 +1658,11 @@ export class ApiService {
   // ============================================================
 
   getTasks(params?: Record<string, string>): Observable<any[]> {
-    return from(this.db.getAll<any>('tasks')).pipe(
+    return from(this.db.getAllForTenant<any>('tasks', this.tenantId)).pipe(
       switchMap(async tasks => {
         const usuarios = await this.db.getAll<any>('usuarios');
-        const projects = await this.db.getAll<any>('projects');
-        const phases = await this.db.getAll<any>('project_phases');
+        const projects = await this.db.getAllForTenant<any>('projects', this.tenantId);
+        const phases = await this.db.getAllForTenant<any>('project_phases', this.tenantId);
 
         let filtered = tasks;
         if (params) {
@@ -1683,6 +1715,7 @@ export class ApiService {
     const task = {
       ...data,
       id: 'task-' + Math.random().toString(36).substring(2, 9),
+      tenantId: this.tenantId,
       createdAt: new Date().toISOString(),
       status: data.status || 'pending',
       progress: data.progress || 0
@@ -1740,7 +1773,7 @@ export class ApiService {
   }
 
   getMyTasks(userId: string, params?: { start?: string; end?: string }): Observable<any[]> {
-    return from(this.db.getAll<any>('tasks')).pipe(
+    return from(this.db.getAllForTenant<any>('tasks', this.tenantId)).pipe(
       map(tasks => {
         let filtered = tasks.filter(t => t.assignedTo === userId);
         if (params?.start) {

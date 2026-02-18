@@ -1,4 +1,5 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, effect } from '@angular/core';
+import { TenantService } from './tenant.service';
 import {
   Proceso,
   ProcessNode,
@@ -50,16 +51,22 @@ export interface ProcessExecution {
   context: Record<string, unknown>;
 }
 
-const STORAGE_KEY = 'orca_procesos';
-const EXECUTIONS_KEY = 'orca_executions';
-const RUNNER_CONFIG_KEY = 'orca_runner_config';
-const FULL_EXECUTIONS_KEY = 'orca_full_executions';
+const STORAGE_KEY_PREFIX = 'orca_procesos';
+const EXECUTIONS_KEY_PREFIX = 'orca_executions';
+const RUNNER_CONFIG_KEY_PREFIX = 'orca_runner_config';
+const FULL_EXECUTIONS_KEY_PREFIX = 'orca_full_executions';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProcessService {
   private groqService = inject(GroqService);
+  private tenantService = inject(TenantService);
+  private get tenantId(): string { return this.tenantService.selectedTenant()?.id || 'tenant-001'; }
+  private get STORAGE_KEY(): string { return `${STORAGE_KEY_PREFIX}_${this.tenantId}`; }
+  private get EXECUTIONS_KEY(): string { return `${EXECUTIONS_KEY_PREFIX}_${this.tenantId}`; }
+  private get RUNNER_CONFIG_KEY(): string { return `${RUNNER_CONFIG_KEY_PREFIX}_${this.tenantId}`; }
+  private get FULL_EXECUTIONS_KEY(): string { return `${FULL_EXECUTIONS_KEY_PREFIX}_${this.tenantId}`; }
 
   // Procesos guardados
   private _procesos = signal<Proceso[]>([]);
@@ -109,6 +116,17 @@ export class ProcessService {
     if (procesos.length > 0 && !this._currentProceso()) {
       this.loadProceso(procesos[0].id);
     }
+
+    // React to tenant changes - reload process data for new tenant
+    effect(() => {
+      this.tenantService.selectedTenant();
+      this.loadFromStorage();
+      this.ensureDemoProcessesExist();
+      const procs = this._procesos();
+      if (procs.length > 0) {
+        this.loadProceso(procs[0].id);
+      }
+    });
   }
 
   // Verificar que los procesos de demo existan
@@ -142,8 +160,8 @@ export class ProcessService {
 
   // Método para limpiar todo el localStorage y empezar de nuevo
   clearAllData(): void {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(EXECUTIONS_KEY);
+    localStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.EXECUTIONS_KEY);
     this._procesos.set([]);
     this._currentProceso.set(null);
     this._nodes.set([]);
@@ -1125,7 +1143,7 @@ export class ProcessService {
 
   private loadFromStorage(): void {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const data = JSON.parse(stored) as Proceso[];
         // Convertir fechas de string a Date
@@ -1143,7 +1161,7 @@ export class ProcessService {
 
   private saveToStorage(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this._procesos()));
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this._procesos()));
     } catch (e) {
       console.error('Error saving to localStorage:', e);
     }
@@ -1790,12 +1808,12 @@ export class ProcessService {
 
   private saveExecution(execution: ProcessExecution): void {
     try {
-      const stored = localStorage.getItem(EXECUTIONS_KEY);
+      const stored = localStorage.getItem(this.EXECUTIONS_KEY);
       const executions: ProcessExecution[] = stored ? JSON.parse(stored) : [];
       executions.unshift(execution);
       // Mantener solo las últimas 50 ejecuciones
       const trimmed = executions.slice(0, 50);
-      localStorage.setItem(EXECUTIONS_KEY, JSON.stringify(trimmed));
+      localStorage.setItem(this.EXECUTIONS_KEY, JSON.stringify(trimmed));
     } catch (e) {
       console.error('Error saving execution:', e);
     }
@@ -1803,7 +1821,7 @@ export class ProcessService {
 
   getExecutionHistory(): ProcessExecution[] {
     try {
-      const stored = localStorage.getItem(EXECUTIONS_KEY);
+      const stored = localStorage.getItem(this.EXECUTIONS_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -2031,7 +2049,7 @@ export class ProcessService {
    */
   getFullExecutionHistory(procesoId: string): ProcessExecutionFull[] {
     try {
-      const stored = localStorage.getItem(FULL_EXECUTIONS_KEY);
+      const stored = localStorage.getItem(this.FULL_EXECUTIONS_KEY);
       const all: ProcessExecutionFull[] = stored ? JSON.parse(stored) : [];
       return all
         .filter(e => e.procesoId === procesoId)
@@ -2046,7 +2064,7 @@ export class ProcessService {
    */
   getExecutionById(executionId: string): ProcessExecutionFull | null {
     try {
-      const stored = localStorage.getItem(FULL_EXECUTIONS_KEY);
+      const stored = localStorage.getItem(this.FULL_EXECUTIONS_KEY);
       const all: ProcessExecutionFull[] = stored ? JSON.parse(stored) : [];
       return all.find(e => e.id === executionId) || null;
     } catch {
@@ -2056,12 +2074,12 @@ export class ProcessService {
 
   private saveFullExecution(execution: ProcessExecutionFull): void {
     try {
-      const stored = localStorage.getItem(FULL_EXECUTIONS_KEY);
+      const stored = localStorage.getItem(this.FULL_EXECUTIONS_KEY);
       const executions: ProcessExecutionFull[] = stored ? JSON.parse(stored) : [];
       executions.unshift(execution);
       // Mantener solo las últimas 100 ejecuciones
       const trimmed = executions.slice(0, 100);
-      localStorage.setItem(FULL_EXECUTIONS_KEY, JSON.stringify(trimmed));
+      localStorage.setItem(this.FULL_EXECUTIONS_KEY, JSON.stringify(trimmed));
     } catch (e) {
       console.error('Error saving full execution:', e);
     }
@@ -2147,10 +2165,10 @@ export class ProcessService {
 
     // Guardar todas las ejecuciones demo
     try {
-      const stored = localStorage.getItem(FULL_EXECUTIONS_KEY);
+      const stored = localStorage.getItem(this.FULL_EXECUTIONS_KEY);
       const allExecutions: ProcessExecutionFull[] = stored ? JSON.parse(stored) : [];
       const combined = [...demoExecutions, ...allExecutions].slice(0, 100);
-      localStorage.setItem(FULL_EXECUTIONS_KEY, JSON.stringify(combined));
+      localStorage.setItem(this.FULL_EXECUTIONS_KEY, JSON.stringify(combined));
     } catch (e) {
       console.error('Error seeding demo executions:', e);
     }
@@ -2293,7 +2311,7 @@ export class ProcessService {
    */
   saveRunnerConfig(procesoId: string, storageConfigs: OutputStorageConfig[], entityConfigs: EntityCreationConfig[]): void {
     try {
-      const stored = localStorage.getItem(RUNNER_CONFIG_KEY);
+      const stored = localStorage.getItem(this.RUNNER_CONFIG_KEY);
       const allConfigs: Record<string, ProcessRunnerConfig> = stored ? JSON.parse(stored) : {};
 
       allConfigs[procesoId] = {
@@ -2303,7 +2321,7 @@ export class ProcessService {
         lastUpdated: new Date()
       };
 
-      localStorage.setItem(RUNNER_CONFIG_KEY, JSON.stringify(allConfigs));
+      localStorage.setItem(this.RUNNER_CONFIG_KEY, JSON.stringify(allConfigs));
     } catch (e) {
       console.error('Error saving runner config:', e);
     }
@@ -2314,7 +2332,7 @@ export class ProcessService {
    */
   getRunnerConfig(procesoId: string): ProcessRunnerConfig | null {
     try {
-      const stored = localStorage.getItem(RUNNER_CONFIG_KEY);
+      const stored = localStorage.getItem(this.RUNNER_CONFIG_KEY);
       const allConfigs: Record<string, ProcessRunnerConfig> = stored ? JSON.parse(stored) : {};
       return allConfigs[procesoId] || null;
     } catch {
@@ -2435,7 +2453,7 @@ export class ProcessService {
 
   private saveCreatedEntity(entityType: string, entity: Record<string, unknown>): void {
     try {
-      const key = `orca_created_${entityType}s`;
+      const key = `orca_created_${entityType}s_${this.tenantId}`;
       const stored = localStorage.getItem(key);
       const entities: Record<string, unknown>[] = stored ? JSON.parse(stored) : [];
       entities.unshift(entity);

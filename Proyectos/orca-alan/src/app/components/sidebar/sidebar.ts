@@ -1,11 +1,19 @@
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Component, inject, signal, computed, OnDestroy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { StyleClassModule } from 'primeng/styleclass';
 import { TooltipModule } from 'primeng/tooltip';
 import { ButtonModule } from 'primeng/button';
+import { SelectModule } from 'primeng/select';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
+import { FloatLabelModule } from 'primeng/floatlabel';
 import { NotificationsComponent } from '../notifications/notifications';
 import { ThemeService } from '../../services/theme.service';
+import { TenantService } from '../../services/tenant.service';
+import { Tenant } from '../../models/tenant.models';
 import { FeatureFlagsService } from '../../services/feature-flags.service';
 import { filter } from 'rxjs/operators';
 
@@ -31,7 +39,7 @@ interface BreadcrumbItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, StyleClassModule, TooltipModule, ButtonModule, NotificationsComponent],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, StyleClassModule, TooltipModule, ButtonModule, NotificationsComponent, FormsModule, SelectModule, DialogModule, InputTextModule, TagModule, FloatLabelModule],
   template: `
     <div class="app-layout">
       <!-- Sidebar Container -->
@@ -185,6 +193,7 @@ interface BreadcrumbItem {
 
         <!-- Top Header -->
         <header class="top-header">
+          <!-- Breadcrumbs (left) -->
           <nav class="breadcrumb-nav">
             @for (item of breadcrumbs; track $index; let last = $last) {
               @if (item.icon) {
@@ -201,7 +210,39 @@ interface BreadcrumbItem {
               }
             }
           </nav>
+          <!-- Actions (right): Tenant Selector + Theme + Notifications + Dev -->
           <div class="header-actions">
+            <p-select
+              [options]="tenantService.activeTenants()"
+              [ngModel]="tenantService.selectedTenant()"
+              (ngModelChange)="onTenantChange($event)"
+              optionLabel="name"
+              placeholder="Seleccionar Tenant"
+              class="tenant-select"
+            >
+              <ng-template #selectedItem let-selected>
+                <div class="tenant-selected-item">
+                  <p-tag [value]="selected.code" severity="success" class="tenant-code-tag" />
+                  <span class="tenant-name">{{ selected.name }}</span>
+                </div>
+              </ng-template>
+              <ng-template #item let-tenant>
+                <div class="tenant-dropdown-item">
+                  <p-tag [value]="tenant.code" severity="info" class="tenant-code-tag" />
+                  <div class="tenant-info">
+                    <span class="tenant-name">{{ tenant.name }}</span>
+                    <span class="tenant-industry">{{ tenant.industry }}</span>
+                  </div>
+                </div>
+              </ng-template>
+              <ng-template #footer>
+                <div class="tenant-footer">
+                  <button pButton label="Gestionar Tenants" icon="pi pi-cog"
+                    class="p-button-text p-button-sm" (click)="openTenantDialog()"></button>
+                </div>
+              </ng-template>
+            </p-select>
+            <span class="tenant-separator">|</span>
             <button
               pButton
               type="button"
@@ -224,6 +265,70 @@ interface BreadcrumbItem {
             ></button>
           </div>
         </header>
+
+        <!-- Tenant CRUD Dialog -->
+        <p-dialog
+          header="Gestionar Tenants"
+          [(visible)]="tenantDialogVisible"
+          [modal]="true"
+          [style]="{ width: '600px' }"
+          [dismissableMask]="true"
+        >
+          @if (!tenantFormVisible()) {
+            <div class="tenant-list">
+              @for (tenant of tenantService.tenants(); track tenant.id) {
+                <div class="tenant-list-item">
+                  <div class="tenant-list-info">
+                    <p-tag [value]="tenant.code" [severity]="tenant.status === 'active' ? 'success' : 'warn'" />
+                    <span class="tenant-list-name">{{ tenant.name }}</span>
+                    <span class="tenant-list-industry">{{ tenant.industry }}</span>
+                  </div>
+                  <div class="tenant-list-actions">
+                    <button pButton icon="pi pi-pencil" class="p-button-text p-button-sm p-button-info"
+                      (click)="editTenant(tenant)" pTooltip="Editar"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
+                      (click)="deleteTenant(tenant)" pTooltip="Eliminar"></button>
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="tenant-dialog-footer">
+              <button pButton label="Nuevo Tenant" icon="pi pi-plus"
+                class="p-button-outlined p-button-sm" (click)="showNewTenantForm()"></button>
+            </div>
+          } @else {
+            <div class="tenant-form">
+              <h4>{{ editingTenant() ? 'Editar Tenant' : 'Nuevo Tenant' }}</h4>
+              <div class="tenant-form-grid">
+                <p-floatlabel variant="on">
+                  <input pInputText id="tenantName" [(ngModel)]="tenantFormName" />
+                  <label for="tenantName">Nombre</label>
+                </p-floatlabel>
+                <p-floatlabel variant="on">
+                  <input pInputText id="tenantCode" [(ngModel)]="tenantFormCode" />
+                  <label for="tenantCode">Codigo</label>
+                </p-floatlabel>
+                <p-floatlabel variant="on">
+                  <input pInputText id="tenantIndustry" [(ngModel)]="tenantFormIndustry" />
+                  <label for="tenantIndustry">Industria</label>
+                </p-floatlabel>
+                <p-select
+                  [options]="tenantStatusOptions"
+                  [(ngModel)]="tenantFormStatus"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Estado"
+                />
+              </div>
+              <div class="tenant-form-actions">
+                <button pButton label="Cancelar" icon="pi pi-times"
+                  class="p-button-text p-button-sm" (click)="resetTenantForm()"></button>
+                <button pButton label="Guardar" icon="pi pi-check"
+                  class="p-button-sm" (click)="saveTenant()"></button>
+              </div>
+            </div>
+          }
+        </p-dialog>
 
         <!-- Content Area -->
         <div class="content-area">
@@ -812,6 +917,113 @@ interface BreadcrumbItem {
       }
     }
 
+    /* ===== Tenant Selector ===== */
+    .tenant-select {
+      min-width: 200px;
+    }
+
+    .tenant-separator {
+      color: var(--surface-300);
+      font-size: var(--font-size-lg);
+      font-weight: 200;
+    }
+
+    .tenant-selected-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+
+    .tenant-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-1) 0;
+    }
+
+    .tenant-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tenant-name {
+      font-weight: var(--font-weight-medium);
+      font-size: var(--font-size-sm);
+    }
+
+    .tenant-industry {
+      font-size: var(--font-size-xs);
+      color: var(--text-color-secondary);
+    }
+
+    .tenant-footer {
+      padding: var(--spacing-2);
+      border-top: 1px solid var(--surface-border);
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Tenant Dialog */
+    .tenant-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+    }
+
+    .tenant-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-3);
+      border: 1px solid var(--surface-border);
+      border-radius: var(--border-radius);
+      background: var(--surface-card);
+    }
+
+    .tenant-list-info {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+
+    .tenant-list-name {
+      font-weight: var(--font-weight-medium);
+    }
+
+    .tenant-list-industry {
+      color: var(--text-color-secondary);
+      font-size: var(--font-size-sm);
+    }
+
+    .tenant-list-actions {
+      display: flex;
+      gap: var(--spacing-1);
+    }
+
+    .tenant-dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: var(--spacing-4);
+    }
+
+    .tenant-form h4 {
+      margin: 0 0 var(--spacing-4) 0;
+      color: var(--text-color);
+    }
+
+    .tenant-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-4);
+    }
+
+    .tenant-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-2);
+      margin-top: var(--spacing-4);
+    }
+
     /* ===== Content Area ===== */
     .content-area {
       flex: 1;
@@ -858,6 +1070,20 @@ export class SidebarComponent implements OnDestroy {
   private router = inject(Router);
   themeService = inject(ThemeService);
   featureFlags = inject(FeatureFlagsService);
+  tenantService = inject(TenantService);
+
+  // --- Tenant Selector ---
+  tenantDialogVisible = signal(false);
+  tenantFormVisible = signal(false);
+  editingTenant = signal<Tenant | null>(null);
+  tenantFormName = signal('');
+  tenantFormCode = signal('');
+  tenantFormIndustry = signal('');
+  tenantFormStatus = signal<'active' | 'inactive'>('active');
+  tenantStatusOptions = [
+    { label: 'Activo', value: 'active' as const },
+    { label: 'Inactivo', value: 'inactive' as const },
+  ];
 
   // Estado de expansión del menú (colapsado por defecto)
   isExpanded = signal<boolean>(false);
@@ -887,7 +1113,6 @@ export class SidebarComponent implements OnDestroy {
       icon: 'pi pi-home',
       expanded: true,
       items: [
-        { label: 'Dashboard General', icon: 'pi pi-chart-bar', routerLink: '/dashboard' },
         { label: 'Dashboard Custom', icon: 'pi pi-th-large', routerLink: '/dashboard-custom' },
         { label: 'Tabla Unificada', icon: 'pi pi-table', routerLink: '/tabla-unificada' }
       ]
@@ -981,7 +1206,6 @@ export class SidebarComponent implements OnDestroy {
 
   // Route to label mapping
   private routeLabels: Record<string, string> = {
-    'dashboard': 'Dashboard General',
     'dashboard-custom': 'Dashboard Custom',
     'activos': 'Activos',
     'organigramas': 'Organigrama',
@@ -1114,6 +1338,66 @@ export class SidebarComponent implements OnDestroy {
     }
   }
 
+  // --- Tenant CRUD Methods ---
+  onTenantChange(tenant: Tenant): void {
+    if (tenant) {
+      this.tenantService.selectTenant(tenant);
+    }
+  }
+
+  openTenantDialog(): void {
+    this.tenantDialogVisible.set(true);
+    this.resetTenantForm();
+  }
+
+  showNewTenantForm(): void {
+    this.editingTenant.set(null);
+    this.tenantFormName.set('');
+    this.tenantFormCode.set('');
+    this.tenantFormIndustry.set('');
+    this.tenantFormStatus.set('active');
+    this.tenantFormVisible.set(true);
+  }
+
+  editTenant(tenant: Tenant): void {
+    this.editingTenant.set(tenant);
+    this.tenantFormName.set(tenant.name);
+    this.tenantFormCode.set(tenant.code);
+    this.tenantFormIndustry.set(tenant.industry);
+    this.tenantFormStatus.set(tenant.status);
+    this.tenantFormVisible.set(true);
+  }
+
+  saveTenant(): void {
+    const name = this.tenantFormName().trim();
+    const code = this.tenantFormCode().trim().toUpperCase();
+    const industry = this.tenantFormIndustry().trim();
+    const status = this.tenantFormStatus();
+
+    if (!name || !code || !industry) return;
+
+    const editing = this.editingTenant();
+    if (editing) {
+      this.tenantService.updateTenant(editing.id, { name, code, industry, status });
+    } else {
+      this.tenantService.createTenant({ name, code, industry, status });
+    }
+    this.resetTenantForm();
+  }
+
+  deleteTenant(tenant: Tenant): void {
+    this.tenantService.deleteTenant(tenant.id);
+  }
+
+  resetTenantForm(): void {
+    this.tenantFormVisible.set(false);
+    this.editingTenant.set(null);
+    this.tenantFormName.set('');
+    this.tenantFormCode.set('');
+    this.tenantFormIndustry.set('');
+    this.tenantFormStatus.set('active');
+  }
+
   ngOnDestroy(): void {
     this.cancelCollapseTimeout();
   }
@@ -1122,7 +1406,7 @@ export class SidebarComponent implements OnDestroy {
     const segments = url.split('/').filter(s => s && !s.startsWith('?'));
 
     this.breadcrumbs = [
-      { icon: 'pi pi-home', routerLink: '/dashboard' }
+      { icon: 'pi pi-home', routerLink: '/dashboard-custom' }
     ];
 
     let currentPath = '';
