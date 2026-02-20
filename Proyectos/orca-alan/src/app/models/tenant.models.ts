@@ -72,4 +72,9 @@ export const TENANT_SCOPED_STORES: string[] = [
   'radios',
   'pulses',
   'radio_sync_logs',
+  'tprm_quarterly_metrics',
+  'tprm_service_impacts',
+  'tprm_business_objectives',
+  'tprm_remediation_actions',
+  'tprm_controls',
 ];

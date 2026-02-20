@@ -17,7 +17,7 @@ interface DBStore {
 })
 export class IndexedDBService {
   private dbName = 'OrcaDB';
-  private dbVersion = 4; // Bumped for tenant indexes
+  private dbVersion = 5; // Bumped for TPRM dashboard stores
   private db: IDBDatabase | null = null;
 
   // Store definitions matching Prisma schema
@@ -110,6 +110,28 @@ export class IndexedDBService {
     { name: 'event_comments', keyPath: 'id', indexes: [
       { name: 'eventId', keyPath: 'eventId' }
     ]},
+    // TPRM Dashboard stores
+    { name: 'tprm_quarterly_metrics', keyPath: 'id', indexes: [
+      { name: 'providerId', keyPath: 'providerId' },
+      { name: 'quarter', keyPath: 'quarter' },
+      { name: 'tenantId', keyPath: 'tenantId' }
+    ]},
+    { name: 'tprm_service_impacts', keyPath: 'id', indexes: [
+      { name: 'providerId', keyPath: 'providerId' },
+      { name: 'tenantId', keyPath: 'tenantId' }
+    ]},
+    { name: 'tprm_business_objectives', keyPath: 'id', indexes: [
+      { name: 'tenantId', keyPath: 'tenantId' }
+    ]},
+    { name: 'tprm_remediation_actions', keyPath: 'id', indexes: [
+      { name: 'providerId', keyPath: 'providerId' },
+      { name: 'status', keyPath: 'status' },
+      { name: 'tenantId', keyPath: 'tenantId' }
+    ]},
+    { name: 'tprm_controls', keyPath: 'id', indexes: [
+      { name: 'providerId', keyPath: 'providerId' },
+      { name: 'tenantId', keyPath: 'tenantId' }
+    ]},
   ];
 
   async init(): Promise<void> {
@@ -123,7 +145,7 @@ export class IndexedDBService {
       request.onsuccess = async () => {
         this.db = request.result;
         // Check if we need to seed
-        const seeded = await this.get('_meta', 'seeded_v2');
+        const seeded = await this.get('_meta', 'seeded_v4');
         if (!seeded) {
           // Clear all stores and reseed with tenant data
           for (const store of this.stores) {
@@ -132,7 +154,7 @@ export class IndexedDBService {
             }
           }
           await this.seedDatabase();
-          await this.put('_meta', { key: 'seeded_v2', value: true, timestamp: new Date().toISOString() });
+          await this.put('_meta', { key: 'seeded_v4', value: true, timestamp: new Date().toISOString() });
         }
         resolve();
       };
@@ -393,6 +415,28 @@ export class IndexedDBService {
     await this.bulkPut('tasks', seedData.tasks);
     console.log(`✓ ${seedData.tasks.length} tareas`);
 
+    // TPRM Dashboard data
+    if (seedData.tprmQuarterlyMetrics) {
+      await this.bulkPut('tprm_quarterly_metrics', seedData.tprmQuarterlyMetrics);
+      console.log(`✓ ${seedData.tprmQuarterlyMetrics.length} métricas trimestrales TPRM`);
+    }
+    if (seedData.tprmServiceImpacts) {
+      await this.bulkPut('tprm_service_impacts', seedData.tprmServiceImpacts);
+      console.log(`✓ ${seedData.tprmServiceImpacts.length} impactos de servicio TPRM`);
+    }
+    if (seedData.tprmBusinessObjectives) {
+      await this.bulkPut('tprm_business_objectives', seedData.tprmBusinessObjectives);
+      console.log(`✓ ${seedData.tprmBusinessObjectives.length} objetivos de negocio TPRM`);
+    }
+    if (seedData.tprmRemediationActions) {
+      await this.bulkPut('tprm_remediation_actions', seedData.tprmRemediationActions);
+      console.log(`✓ ${seedData.tprmRemediationActions.length} acciones de remediación TPRM`);
+    }
+    if (seedData.tprmControls) {
+      await this.bulkPut('tprm_controls', seedData.tprmControls);
+      console.log(`✓ ${seedData.tprmControls.length} controles TPRM`);
+    }
+
     console.log('✅ Database seeded successfully (v2 with tenantId)!');
   }
 
@@ -405,8 +449,9 @@ export class IndexedDBService {
     }
     await this.delete('_meta', 'seeded');
     await this.delete('_meta', 'seeded_v2');
+    await this.delete('_meta', 'seeded_v4');
     await this.seedDatabase();
-    await this.put('_meta', { key: 'seeded_v2', value: true, timestamp: new Date().toISOString() });
+    await this.put('_meta', { key: 'seeded_v4', value: true, timestamp: new Date().toISOString() });
   }
 }
 

@@ -11,6 +11,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/dashboard-customizable/dashboard-customizable').then(m => m.DashboardCustomizableComponent)
   },
   {
+    path: 'dashboard-tprm',
+    loadComponent: () => import('./pages/dashboard-tprm/dashboard-tprm').then(m => m.DashboardTprmComponent)
+  },
+  {
     path: 'activos',
     loadComponent: () => import('./pages/activos/activos').then(m => m.ActivosComponent)
   },

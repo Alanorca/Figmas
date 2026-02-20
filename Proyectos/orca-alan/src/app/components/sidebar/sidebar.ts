@@ -217,6 +217,7 @@ interface BreadcrumbItem {
               [ngModel]="tenantService.selectedTenant()"
               (ngModelChange)="onTenantChange($event)"
               optionLabel="name"
+              dataKey="id"
               placeholder="Seleccionar Tenant"
               class="tenant-select"
             >

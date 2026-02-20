@@ -195,23 +195,11 @@ export const plantillasActivo = [
 // Activos
 // ============================================================
 export const activos = [
-  { id: 'act-001', nombre: 'Core Banking System (CBS)', descripcion: 'Sistema central de operaciones bancarias que procesa todas las transacciones financieras del banco', tipo: 'software', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'TI', plantillaId: 'plt-001', propiedadesCustom: JSON.stringify([{ propiedadId: 'cb-1', campo: 'version', valor: '12.5.3' }, { propiedadId: 'cb-2', campo: 'proveedor', valor: 'Temenos' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-002', nombre: 'Sistema de Banca en Línea', descripcion: 'Plataforma de banca digital para clientes (web y móvil)', tipo: 'software', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'TI', plantillaId: 'plt-001', propiedadesCustom: JSON.stringify([{ propiedadId: 'cb-1', campo: 'version', valor: '8.2.1' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-003', nombre: 'Sistema SPEI/SPID', descripcion: 'Sistema de pagos electrónicos interbancarios', tipo: 'software', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'Tesorería', propiedadesCustom: '[]', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-004', nombre: 'Sistema Anti-Lavado (AML)', descripcion: 'Sistema de detección y prevención de lavado de dinero', tipo: 'software', criticidad: 'alta', responsable: 'Patricia Reyes Solís', departamento: 'PLD/AML', propiedadesCustom: '[]', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-005', nombre: 'Sistema de Gestión de Créditos', descripcion: 'Plataforma para originación y gestión del ciclo de crédito', tipo: 'software', criticidad: 'alta', responsable: 'Carlos Hernández Mora', departamento: 'Crédito', propiedadesCustom: '[]', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-006', nombre: 'Base de Datos de Clientes', descripcion: 'Repositorio central de información de clientes (KYC)', tipo: 'datos', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'TI', plantillaId: 'plt-003', propiedadesCustom: JSON.stringify([{ propiedadId: 'db-1', campo: 'motorBD', valor: 'Oracle 19c' }, { propiedadId: 'db-2', campo: 'clasificacion', valor: 'Confidencial' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-007', nombre: 'Base de Datos de Transacciones', descripcion: 'Almacén de todas las transacciones financieras', tipo: 'datos', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'TI', plantillaId: 'plt-003', propiedadesCustom: JSON.stringify([{ propiedadId: 'db-1', campo: 'motorBD', valor: 'Oracle 19c' }, { propiedadId: 'db-2', campo: 'clasificacion', valor: 'Restringido' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-008', nombre: 'Data Warehouse Analítico', descripcion: 'Almacén de datos para análisis y reportes regulatorios', tipo: 'datos', criticidad: 'alta', responsable: 'Ana Patricia López García', departamento: 'Riesgos', plantillaId: 'plt-003', propiedadesCustom: JSON.stringify([{ propiedadId: 'db-1', campo: 'motorBD', valor: 'Teradata' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-009', nombre: 'Servidor Principal Core Banking', descripcion: 'Servidor de producción del sistema core bancario', tipo: 'hardware', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'TI', plantillaId: 'plt-004', propiedadesCustom: JSON.stringify([{ propiedadId: 'srv-1', campo: 'marca', valor: 'IBM' }, { propiedadId: 'srv-2', campo: 'modelo', valor: 'Power9' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-010', nombre: 'Servidor de Contingencia', descripcion: 'Servidor de respaldo para continuidad de negocio', tipo: 'hardware', criticidad: 'alta', responsable: 'Roberto Torres Ramírez', departamento: 'TI', plantillaId: 'plt-004', propiedadesCustom: JSON.stringify([{ propiedadId: 'srv-5', campo: 'ambiente', valor: 'DR' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-011', nombre: 'Red de Cajeros Automáticos', descripcion: 'Flota de 450 cajeros automáticos a nivel nacional', tipo: 'hardware', criticidad: 'alta', responsable: 'Jorge Vargas Luna', departamento: 'Operaciones', plantillaId: 'plt-002', propiedadesCustom: JSON.stringify([{ propiedadId: 'atm-1', campo: 'marca', valor: 'NCR' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-012', nombre: 'Servicio de Transferencias Internacionales', descripcion: 'Servicio SWIFT para transferencias internacionales', tipo: 'servicios', criticidad: 'alta', responsable: 'Carlos Hernández Mora', departamento: 'Tesorería', propiedadesCustom: '[]', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-013', nombre: 'Servicio de Pagos con Tarjeta', descripcion: 'Procesamiento de pagos con tarjetas de crédito y débito', tipo: 'servicios', criticidad: 'critica', responsable: 'Jorge Vargas Luna', departamento: 'Operaciones', propiedadesCustom: '[]', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-014', nombre: 'Red WAN Corporativa', descripcion: 'Red de área amplia que conecta sucursales y data centers', tipo: 'red', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'TI', propiedadesCustom: '[]', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'act-015', nombre: 'Firewall Perimetral', descripcion: 'Sistema de protección perimetral de la red bancaria', tipo: 'red', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'Seguridad', propiedadesCustom: '[]', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
+  // === TPRM: Programa Paraguas ===
+  { id: 'act-tprm-000', nombre: 'Programa TPRM - Embozado de Tarjetas', descripcion: 'Programa de gestión de riesgo de terceros (TPRM) para proveedores de embozado, personalización y distribución de tarjetas bancarias. Agrupa 8 proveedores críticos con operaciones en México, Colombia, Brasil y Perú.', tipo: 'servicios', criticidad: 'critica', responsable: 'Ana Patricia López García', departamento: 'Riesgos', tenantId: 'tenant-005', createdAt: '2023-01-15T10:00:00Z' },
+
   // === TPRM: Proveedores de Embozado de Tarjetas ===
-  { id: 'act-tprm-001', nombre: 'CPI Card Group México', descripcion: 'Proveedor principal de embozado, encoding de banda magnética y grabado de chip EMV para tarjetas de crédito y débito. Opera planta en Querétaro con capacidad de 2M tarjetas/mes.', tipo: 'servicios', criticidad: 'critica', responsable: 'Jorge Vargas Luna', departamento: 'Operaciones', plantillaId: 'plt-005', propiedadesCustom: JSON.stringify([
+  { id: 'act-tprm-001', nombre: 'CPI Card Group México', descripcion: 'Proveedor principal de embozado, encoding de banda magnética y grabado de chip EMV para tarjetas de crédito y débito. Opera planta en Querétaro con capacidad de 2M tarjetas/mes.', tipo: 'servicios', criticidad: 'critica', responsable: 'Jorge Vargas Luna', departamento: 'Operaciones', plantillaId: 'plt-005', parentAssetId: 'act-tprm-000', propiedadesCustom: JSON.stringify([
     { propiedadId: 'emb-1', campo: 'pci_version', valor: 'PCI-DSS v4.0' },
     { propiedadId: 'emb-2', campo: 'pais_operacion', valor: 'México' },
     { propiedadId: 'emb-3', campo: 'volumen_anual', valor: 18000000 },
@@ -223,7 +211,7 @@ export const activos = [
     { propiedadId: 'emb-9', campo: 'bcp_probado', valor: true },
     { propiedadId: 'emb-10', campo: 'subcontrata', valor: false }
   ]), tenantId: 'tenant-005', createdAt: new Date().toISOString() },
-  { id: 'act-tprm-002', nombre: 'IDEMIA México (ex-Oberthur)', descripcion: 'Proveedor alternativo de chips EMV, personalización de tarjetas contactless y fulfilment. Planta en CDMX con capacidad de 800K tarjetas/mes.', tipo: 'servicios', criticidad: 'alta', responsable: 'Jorge Vargas Luna', departamento: 'Operaciones', plantillaId: 'plt-005', propiedadesCustom: JSON.stringify([
+  { id: 'act-tprm-002', nombre: 'IDEMIA México (ex-Oberthur)', descripcion: 'Proveedor alternativo de chips EMV, personalización de tarjetas contactless y fulfilment. Planta en CDMX con capacidad de 800K tarjetas/mes.', tipo: 'servicios', criticidad: 'alta', responsable: 'Jorge Vargas Luna', departamento: 'Operaciones', plantillaId: 'plt-005', parentAssetId: 'act-tprm-000', propiedadesCustom: JSON.stringify([
     { propiedadId: 'emb-1', campo: 'pci_version', valor: 'PCI-DSS v4.0' },
     { propiedadId: 'emb-2', campo: 'pais_operacion', valor: 'México' },
     { propiedadId: 'emb-3', campo: 'volumen_anual', valor: 7000000 },
@@ -235,7 +223,7 @@ export const activos = [
     { propiedadId: 'emb-9', campo: 'bcp_probado', valor: true },
     { propiedadId: 'emb-10', campo: 'subcontrata', valor: false }
   ]), tenantId: 'tenant-005', createdAt: new Date().toISOString() },
-  { id: 'act-tprm-003', nombre: 'Thales DIS México', descripcion: 'Proveedor de personalización de tarjetas premium y soluciones de seguridad digital. Subcontrata impresión a tercero local.', tipo: 'servicios', criticidad: 'alta', responsable: 'Carlos Hernández Mora', departamento: 'Cumplimiento', plantillaId: 'plt-005', propiedadesCustom: JSON.stringify([
+  { id: 'act-tprm-003', nombre: 'Thales DIS México', descripcion: 'Proveedor de personalización de tarjetas premium y soluciones de seguridad digital. Subcontrata impresión a tercero local.', tipo: 'servicios', criticidad: 'alta', responsable: 'Carlos Hernández Mora', departamento: 'Cumplimiento', plantillaId: 'plt-005', parentAssetId: 'act-tprm-000', propiedadesCustom: JSON.stringify([
     { propiedadId: 'emb-1', campo: 'pci_version', valor: 'PCI-DSS v3.2.1 (en migración a v4.0)' },
     { propiedadId: 'emb-2', campo: 'pais_operacion', valor: 'México / Francia' },
     { propiedadId: 'emb-3', campo: 'volumen_anual', valor: 3500000 },
@@ -246,7 +234,7 @@ export const activos = [
     { propiedadId: 'emb-9', campo: 'bcp_probado', valor: false },
     { propiedadId: 'emb-10', campo: 'subcontrata', valor: true }
   ]), tenantId: 'tenant-005', createdAt: new Date().toISOString() },
-  { id: 'act-tprm-004', nombre: 'Entrust Datacard Colombia', descripcion: 'Proveedor regional de personalización de tarjetas para operaciones en Latinoamérica. Atiende emisión de tarjetas para clientes corporativos y gobierno. Planta en Bogotá.', tipo: 'servicios', criticidad: 'alta', responsable: 'Ana Patricia López García', departamento: 'Riesgos', plantillaId: 'plt-005', propiedadesCustom: JSON.stringify([
+  { id: 'act-tprm-004', nombre: 'Entrust Datacard Colombia', descripcion: 'Proveedor regional de personalización de tarjetas para operaciones en Latinoamérica. Atiende emisión de tarjetas para clientes corporativos y gobierno. Planta en Bogotá.', tipo: 'servicios', criticidad: 'alta', responsable: 'Ana Patricia López García', departamento: 'Riesgos', plantillaId: 'plt-005', parentAssetId: 'act-tprm-000', propiedadesCustom: JSON.stringify([
     { propiedadId: 'emb-1', campo: 'pci_version', valor: 'PCI-DSS v4.0' },
     { propiedadId: 'emb-2', campo: 'pais_operacion', valor: 'Colombia' },
     { propiedadId: 'emb-3', campo: 'volumen_anual', valor: 5200000 },
@@ -258,7 +246,7 @@ export const activos = [
     { propiedadId: 'emb-9', campo: 'bcp_probado', valor: true },
     { propiedadId: 'emb-10', campo: 'subcontrata', valor: false }
   ]), tenantId: 'tenant-005', createdAt: '2024-03-15T10:00:00Z' },
-  { id: 'act-tprm-005', nombre: 'Matica Technologies Brasil', descripcion: 'Proveedor de soluciones de personalización de bajo costo para tarjetas de débito y prepago. Opera planta en São Paulo con equipo propio de desarrollo de firmware.', tipo: 'servicios', criticidad: 'media', responsable: 'Jorge Vargas Luna', departamento: 'Operaciones', plantillaId: 'plt-005', propiedadesCustom: JSON.stringify([
+  { id: 'act-tprm-005', nombre: 'Matica Technologies Brasil', descripcion: 'Proveedor de soluciones de personalización de bajo costo para tarjetas de débito y prepago. Opera planta en São Paulo con equipo propio de desarrollo de firmware.', tipo: 'servicios', criticidad: 'media', responsable: 'Jorge Vargas Luna', departamento: 'Operaciones', plantillaId: 'plt-005', parentAssetId: 'act-tprm-000', propiedadesCustom: JSON.stringify([
     { propiedadId: 'emb-1', campo: 'pci_version', valor: 'PCI-DSS v4.0' },
     { propiedadId: 'emb-2', campo: 'pais_operacion', valor: 'Brasil' },
     { propiedadId: 'emb-3', campo: 'volumen_anual', valor: 12000000 },
@@ -270,7 +258,7 @@ export const activos = [
     { propiedadId: 'emb-9', campo: 'bcp_probado', valor: true },
     { propiedadId: 'emb-10', campo: 'subcontrata', valor: false }
   ]), tenantId: 'tenant-005', createdAt: '2024-06-20T14:00:00Z' },
-  { id: 'act-tprm-006', nombre: 'Giesecke+Devrient (G+D) México', descripcion: 'Corporativo alemán, proveedor global de tarjetas y soluciones de seguridad. Planta de alta seguridad en Guadalajara con capacidad dual-site. Principal competidor de CPI.', tipo: 'servicios', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'Seguridad', plantillaId: 'plt-005', propiedadesCustom: JSON.stringify([
+  { id: 'act-tprm-006', nombre: 'Giesecke+Devrient (G+D) México', descripcion: 'Corporativo alemán, proveedor global de tarjetas y soluciones de seguridad. Planta de alta seguridad en Guadalajara con capacidad dual-site. Principal competidor de CPI.', tipo: 'servicios', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'Seguridad', plantillaId: 'plt-005', parentAssetId: 'act-tprm-000', propiedadesCustom: JSON.stringify([
     { propiedadId: 'emb-1', campo: 'pci_version', valor: 'PCI-DSS v4.0' },
     { propiedadId: 'emb-2', campo: 'pais_operacion', valor: 'México / Alemania' },
     { propiedadId: 'emb-3', campo: 'volumen_anual', valor: 25000000 },
@@ -282,7 +270,7 @@ export const activos = [
     { propiedadId: 'emb-9', campo: 'bcp_probado', valor: true },
     { propiedadId: 'emb-10', campo: 'subcontrata', valor: false }
   ]), tenantId: 'tenant-005', createdAt: '2023-11-01T09:00:00Z' },
-  { id: 'act-tprm-007', nombre: 'Valid S.A. (ex-Gemalto LATAM)', descripcion: 'Proveedor brasileño con presencia en toda Latinoamérica. Especializado en tarjetas con biometría integrada y soluciones de identidad digital. Planta en CDMX y São Paulo.', tipo: 'servicios', criticidad: 'alta', responsable: 'Carlos Hernández Mora', departamento: 'Cumplimiento', plantillaId: 'plt-005', propiedadesCustom: JSON.stringify([
+  { id: 'act-tprm-007', nombre: 'Valid S.A. (ex-Gemalto LATAM)', descripcion: 'Proveedor brasileño con presencia en toda Latinoamérica. Especializado en tarjetas con biometría integrada y soluciones de identidad digital. Planta en CDMX y São Paulo.', tipo: 'servicios', criticidad: 'alta', responsable: 'Carlos Hernández Mora', departamento: 'Cumplimiento', plantillaId: 'plt-005', parentAssetId: 'act-tprm-000', propiedadesCustom: JSON.stringify([
     { propiedadId: 'emb-1', campo: 'pci_version', valor: 'PCI-DSS v4.0' },
     { propiedadId: 'emb-2', campo: 'pais_operacion', valor: 'México / Brasil' },
     { propiedadId: 'emb-3', campo: 'volumen_anual', valor: 9500000 },
@@ -294,7 +282,7 @@ export const activos = [
     { propiedadId: 'emb-9', campo: 'bcp_probado', valor: true },
     { propiedadId: 'emb-10', campo: 'subcontrata', valor: true }
   ]), tenantId: 'tenant-005', createdAt: '2024-01-10T11:00:00Z' },
-  { id: 'act-tprm-008', nombre: 'Cardtec Perú', descripcion: 'Proveedor local peruano de bajo volumen. Especializado en tarjetas prepago y gift cards. Planta pequeña en Lima con controles de seguridad básicos. En evaluación para offboarding.', tipo: 'servicios', criticidad: 'media', responsable: 'Fernando Castillo Núñez', departamento: 'Cumplimiento', plantillaId: 'plt-005', propiedadesCustom: JSON.stringify([
+  { id: 'act-tprm-008', nombre: 'Cardtec Perú', descripcion: 'Proveedor local peruano de bajo volumen. Especializado en tarjetas prepago y gift cards. Planta pequeña en Lima con controles de seguridad básicos. En evaluación para offboarding.', tipo: 'servicios', criticidad: 'media', responsable: 'Fernando Castillo Núñez', departamento: 'Cumplimiento', plantillaId: 'plt-005', parentAssetId: 'act-tprm-000', propiedadesCustom: JSON.stringify([
     { propiedadId: 'emb-1', campo: 'pci_version', valor: 'PCI-DSS v3.2.1 (expirada)' },
     { propiedadId: 'emb-2', campo: 'pais_operacion', valor: 'Perú' },
     { propiedadId: 'emb-3', campo: 'volumen_anual', valor: 800000 },
@@ -305,30 +293,34 @@ export const activos = [
     { propiedadId: 'emb-9', campo: 'bcp_probado', valor: false },
     { propiedadId: 'emb-10', campo: 'subcontrata', valor: true }
   ]), tenantId: 'tenant-005', createdAt: '2023-06-15T08:00:00Z' },
-  // === Tenant: Seguros del Norte (tenant-002) ===
-  { id: 'act-sdn-001', nombre: 'Sistema de Pólizas', descripcion: 'Plataforma central de emisión y administración de pólizas de seguros', tipo: 'software', criticidad: 'critica', responsable: 'Laura Martínez', departamento: 'TI', propiedadesCustom: '[]', tenantId: 'tenant-002', createdAt: new Date().toISOString() },
-  { id: 'act-sdn-002', nombre: 'Portal de Asegurados', descripcion: 'Portal web de autoservicio para asegurados con consulta de pólizas, pagos y reportes de siniestros', tipo: 'software', criticidad: 'alta', responsable: 'Laura Martínez', departamento: 'TI', propiedadesCustom: '[]', tenantId: 'tenant-002', createdAt: new Date().toISOString() },
-  { id: 'act-sdn-003', nombre: 'Motor de Siniestros', descripcion: 'Sistema de gestión del ciclo de vida de siniestros: reporte, evaluación, ajuste y pago', tipo: 'software', criticidad: 'critica', responsable: 'Ricardo Navarro', departamento: 'Siniestros', propiedadesCustom: '[]', tenantId: 'tenant-002', createdAt: new Date().toISOString() },
-  // === Tenant: Fintech Solutions (tenant-003) ===
-  { id: 'act-fts-001', nombre: 'Plataforma de Pagos', descripcion: 'Plataforma de procesamiento de pagos digitales con integración a múltiples métodos de pago y pasarelas', tipo: 'software', criticidad: 'critica', responsable: 'Diego Fernández', departamento: 'Ingeniería', propiedadesCustom: '[]', tenantId: 'tenant-003', createdAt: new Date().toISOString() },
-  { id: 'act-fts-002', nombre: 'Sistema de Préstamos P2P', descripcion: 'Plataforma de préstamos peer-to-peer con scoring crediticio basado en machine learning', tipo: 'software', criticidad: 'alta', responsable: 'Diego Fernández', departamento: 'Ingeniería', propiedadesCustom: '[]', tenantId: 'tenant-003', createdAt: new Date().toISOString() },
-  { id: 'act-fts-003', nombre: 'App Móvil Fintech', descripcion: 'Aplicación móvil para usuarios finales con wallet digital, pagos QR y gestión de préstamos', tipo: 'software', criticidad: 'critica', responsable: 'María Soledad Ríos', departamento: 'Producto', propiedadesCustom: '[]', tenantId: 'tenant-003', createdAt: new Date().toISOString() },
+
+  // === TPRM: Sub-activos de infraestructura y servicios de proveedores ===
+  // CPI Card Group - sub-activos
+  { id: 'act-tprm-001-hsm', nombre: 'CPI - Sistema HSM Embozado', descripcion: 'Hardware Security Module utilizado por CPI Card Group para cifrado de PAN, CVV y datos de banda magnética durante el proceso de embozado. Modelo Thales payShield 10K.', tipo: 'hardware', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'Seguridad', parentAssetId: 'act-tprm-001', tenantId: 'tenant-005', createdAt: '2023-11-20T10:00:00Z' },
+  { id: 'act-tprm-001-planta', nombre: 'CPI - Planta Querétaro', descripcion: 'Planta principal de embozado y personalización en Querétaro. Capacidad instalada: 2M tarjetas/mes. Sala limpia con controles ambientales.', tipo: 'infraestructura', criticidad: 'critica', responsable: 'Jorge Vargas Luna', departamento: 'Operaciones', parentAssetId: 'act-tprm-001', tenantId: 'tenant-005', createdAt: '2023-11-20T10:00:00Z' },
+  { id: 'act-tprm-001-sftp', nombre: 'CPI - Canal SFTP Personalización', descripcion: 'Canal seguro SFTP para transmisión de archivos de personalización al proveedor. Actualmente con TLS 1.1 (pendiente migración a 1.3).', tipo: 'software', criticidad: 'alta', responsable: 'Roberto Torres Ramírez', departamento: 'Seguridad', parentAssetId: 'act-tprm-001', tenantId: 'tenant-005', createdAt: '2024-02-10T09:00:00Z' },
+  { id: 'act-tprm-001-siem', nombre: 'CPI - Monitoreo SIEM', descripcion: 'Sistema SIEM contratado por CPI para monitoreo 24/7 de eventos de seguridad en planta de embozado. Correlación de eventos y alertas en tiempo real.', tipo: 'software', criticidad: 'alta', responsable: 'Roberto Torres Ramírez', departamento: 'Seguridad', parentAssetId: 'act-tprm-001', tenantId: 'tenant-005', createdAt: '2024-03-05T11:00:00Z' },
+
+  // Thales DIS - sub-activos
+  { id: 'act-tprm-003-sub', nombre: 'Thales - Subcontratista Impresión', descripcion: 'Subcontratista local de impresión contratado por Thales DIS. Sin certificación PCI verificada. Sujeto a auditoría 4th party.', tipo: 'servicios', criticidad: 'alta', responsable: 'Carlos Hernández Mora', departamento: 'Cumplimiento', parentAssetId: 'act-tprm-003', tenantId: 'tenant-005', createdAt: '2024-06-15T10:00:00Z' },
+  { id: 'act-tprm-003-premium', nombre: 'Thales - Línea Metal Cards', descripcion: 'Línea de producción especializada en tarjetas metálicas premium. Incluye grabado láser y NFC embedding. 8% de falla en antena NFC reportada.', tipo: 'hardware', criticidad: 'alta', responsable: 'Jorge Vargas Luna', departamento: 'Operaciones', parentAssetId: 'act-tprm-003', tenantId: 'tenant-005', createdAt: '2024-04-20T09:00:00Z' },
+
+  // G+D - sub-activos
+  { id: 'act-tprm-006-gdl', nombre: 'G+D - Planta Guadalajara', descripcion: 'Planta principal de G+D en México. Alta seguridad, capacidad dual-site con failover automático a planta CDMX.', tipo: 'infraestructura', criticidad: 'critica', responsable: 'Roberto Torres Ramírez', departamento: 'Seguridad', parentAssetId: 'act-tprm-006', tenantId: 'tenant-005', createdAt: '2023-11-01T09:00:00Z' },
+  { id: 'act-tprm-006-cdmx', nombre: 'G+D - Planta CDMX (DR)', descripcion: 'Planta secundaria de G+D en CDMX. Sitio de disaster recovery con capacidad de asumir 100% de producción en caso de falla de Guadalajara.', tipo: 'infraestructura', criticidad: 'alta', responsable: 'Roberto Torres Ramírez', departamento: 'Seguridad', parentAssetId: 'act-tprm-006', tenantId: 'tenant-005', createdAt: '2023-11-01T09:00:00Z' },
+
+  // Valid S.A. - sub-activos
+  { id: 'act-tprm-007-bio', nombre: 'Valid - Módulo Biométrico', descripcion: 'Módulo de personalización de tarjetas con sensor de huella dactilar integrado. Algoritmo propietario no certificado NIST. Falla en humedad >80%.', tipo: 'hardware', criticidad: 'alta', responsable: 'Roberto Torres Ramírez', departamento: 'Seguridad', parentAssetId: 'act-tprm-007', tenantId: 'tenant-005', createdAt: '2024-07-08T10:00:00Z' },
+
+  // Cardtec Perú - sub-activos
+  { id: 'act-tprm-008-almacen', nombre: 'Cardtec - Almacén Subcontratado Lima', descripcion: 'Bodega subcontratada para almacenamiento de plásticos blancos y hologramas. Sin controles de seguridad física adecuados. Robo de 3,000 plásticos reportado.', tipo: 'infraestructura', criticidad: 'alta', responsable: 'Fernando Castillo Núñez', departamento: 'Cumplimiento', parentAssetId: 'act-tprm-008', tenantId: 'tenant-005', createdAt: '2024-11-01T09:00:00Z' },
+  { id: 'act-tprm-008-tintas', nombre: 'Cardtec - Insumos UV No Certificados', descripcion: 'Tintas UV de proveedor no certificado por Visa/Mastercard para impresión de elementos de seguridad. Incumple especificaciones de marca.', tipo: 'datos', criticidad: 'media', responsable: 'Carlos Hernández Mora', departamento: 'Cumplimiento', parentAssetId: 'act-tprm-008', tenantId: 'tenant-005', createdAt: '2025-01-28T11:00:00Z' },
 ];
 
 // ============================================================
 // Riesgos
 // ============================================================
 export const riesgos = [
-  { id: 'rsk-001', activoId: 'act-001', descripcion: 'Falla crítica del sistema core banking que impida operaciones', probabilidad: 2, impacto: 5, estado: 'mitigado', responsable: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'rsk-002', activoId: 'act-001', descripcion: 'Acceso no autorizado a funciones administrativas del core', probabilidad: 3, impacto: 5, estado: 'en_tratamiento', responsable: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'rsk-003', activoId: 'act-002', descripcion: 'Ataque de phishing dirigido a clientes de banca en línea', probabilidad: 4, impacto: 4, estado: 'en_tratamiento', responsable: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'rsk-004', activoId: 'act-002', descripcion: 'Vulnerabilidad XSS en portal de banca en línea', probabilidad: 3, impacto: 4, estado: 'mitigado', responsable: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'rsk-005', activoId: 'act-003', descripcion: 'Interrupción de conexión con Banco de México', probabilidad: 2, impacto: 5, estado: 'mitigado', responsable: 'Carlos Hernández Mora', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'rsk-006', activoId: 'act-004', descripcion: 'Falla en detección de operaciones inusuales', probabilidad: 3, impacto: 5, estado: 'en_tratamiento', responsable: 'Patricia Reyes Solís', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'rsk-007', activoId: 'act-006', descripcion: 'Fuga de datos personales de clientes (datos KYC)', probabilidad: 2, impacto: 5, estado: 'en_tratamiento', responsable: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'rsk-008', activoId: 'act-011', descripcion: 'Skimming de tarjetas en red de ATMs', probabilidad: 3, impacto: 4, estado: 'en_tratamiento', responsable: 'Jorge Vargas Luna', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'rsk-009', activoId: 'act-014', descripcion: 'Ataque DDoS contra infraestructura bancaria', probabilidad: 3, impacto: 4, estado: 'mitigado', responsable: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'rsk-010', activoId: 'act-015', descripcion: 'Intrusión a través de vulnerabilidad en firewall', probabilidad: 2, impacto: 5, estado: 'en_tratamiento', responsable: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
   // === TPRM: Riesgos de Proveedores de Embozado ===
   { id: 'rsk-tprm-001', activoId: 'act-tprm-001', descripcion: 'Fuga de datos de tarjetahabientes (PAN, CVV) durante proceso de embozado por acceso no autorizado a sistemas del proveedor', probabilidad: 2, impacto: 5, estado: 'en_tratamiento', responsable: 'Roberto Torres Ramírez', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
   { id: 'rsk-tprm-002', activoId: 'act-tprm-001', descripcion: 'Incumplimiento de certificación PCI-DSS por el proveedor principal de embozado, exponiendo al banco a sanciones de las marcas (Visa/Mastercard)', probabilidad: 3, impacto: 5, estado: 'identificado', responsable: 'Carlos Hernández Mora', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
@@ -355,26 +347,12 @@ export const riesgos = [
   { id: 'rsk-tprm-021', activoId: 'act-tprm-001', descripcion: 'Vulnerabilidad en API de envío de archivos de personalización (CVE-2024-3456). Parcheado en 48hrs.', probabilidad: 3, impacto: 5, estado: 'mitigado', responsable: 'Roberto Torres Ramírez', tenantId: 'tenant-005', createdAt: '2024-04-15T08:00:00Z' },
   { id: 'rsk-tprm-022', activoId: 'act-tprm-002', descripcion: 'Cambio de dirección general en IDEMIA generó incertidumbre sobre continuidad de compromisos contractuales', probabilidad: 3, impacto: 3, estado: 'mitigado', responsable: 'Ana Patricia López García', tenantId: 'tenant-005', createdAt: '2024-07-20T10:00:00Z' },
   { id: 'rsk-tprm-023', activoId: 'act-tprm-006', descripcion: 'Huelga en planta de G+D Guadalajara por negociación laboral. Riesgo de interrupción de 2 semanas.', probabilidad: 3, impacto: 4, estado: 'mitigado', responsable: 'Jorge Vargas Luna', tenantId: 'tenant-005', createdAt: '2024-11-05T09:00:00Z' },
-  // === Tenant: Seguros del Norte (tenant-002) ===
-  { id: 'rsk-sdn-001', activoId: 'act-sdn-001', descripcion: 'Falla en cálculo de primas que genere pérdidas actuariales significativas', probabilidad: 2, impacto: 5, estado: 'en_tratamiento', responsable: 'Laura Martínez', tenantId: 'tenant-002', createdAt: new Date().toISOString() },
-  { id: 'rsk-sdn-002', activoId: 'act-sdn-003', descripcion: 'Fraude en reclamaciones de siniestros por validación insuficiente de documentación', probabilidad: 3, impacto: 4, estado: 'evaluado', responsable: 'Ricardo Navarro', tenantId: 'tenant-002', createdAt: new Date().toISOString() },
-  // === Tenant: Fintech Solutions (tenant-003) ===
-  { id: 'rsk-fts-001', activoId: 'act-fts-001', descripcion: 'Vulnerabilidad en API de pagos que permita transacciones no autorizadas o duplicadas', probabilidad: 3, impacto: 5, estado: 'en_tratamiento', responsable: 'Diego Fernández', tenantId: 'tenant-003', createdAt: new Date().toISOString() },
-  { id: 'rsk-fts-002', activoId: 'act-fts-002', descripcion: 'Sesgo en modelo de scoring crediticio ML que genere discriminación o pérdidas por mora', probabilidad: 3, impacto: 4, estado: 'evaluado', responsable: 'Diego Fernández', tenantId: 'tenant-003', createdAt: new Date().toISOString() },
 ];
 
 // ============================================================
 // Incidentes
 // ============================================================
 export const incidentes = [
-  { id: 'inc-001', activoId: 'act-002', titulo: 'Ataque de phishing masivo a clientes', descripcion: 'Se detectaron más de 500 intentos de phishing dirigidos a clientes de banca en línea', severidad: 'alta', estado: 'resuelto', reportadoPor: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'inc-002', activoId: 'act-001', titulo: 'Degradación de rendimiento en Core Banking', descripcion: 'El sistema core experimentó lentitud durante 3 horas debido a un proceso batch mal configurado', severidad: 'media', estado: 'cerrado', reportadoPor: 'Ana Patricia López García', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'inc-003', activoId: 'act-011', titulo: 'Dispositivo de skimming detectado', descripcion: 'Se encontró un dispositivo de clonación de tarjetas en ATM de sucursal Polanco', severidad: 'alta', estado: 'cerrado', reportadoPor: 'Jorge Vargas Luna', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'inc-004', activoId: 'act-003', titulo: 'Intermitencia en conexión SPEI', descripcion: 'Conexión intermitente con Banco de México durante ventana de operación matutina', severidad: 'critica', estado: 'cerrado', reportadoPor: 'Carlos Hernández Mora', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'inc-005', activoId: 'act-006', titulo: 'Acceso no autorizado detectado', descripcion: 'Se detectó intento de acceso no autorizado a base de datos de clientes desde IP externa', severidad: 'critica', estado: 'en_investigacion', reportadoPor: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'inc-006', activoId: 'act-004', titulo: 'Falla en generación de alertas AML', descripcion: 'El sistema AML no generó alertas durante 2 horas por error en servicio de monitoreo', severidad: 'alta', estado: 'resuelto', reportadoPor: 'Patricia Reyes Solís', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'inc-007', activoId: 'act-013', titulo: 'Transacciones fraudulentas con tarjeta', descripcion: 'Se detectaron 25 transacciones fraudulentas en un período de 30 minutos', severidad: 'alta', estado: 'en_contencion', reportadoPor: 'Patricia Reyes Solís', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'inc-008', activoId: 'act-014', titulo: 'Caída de enlace principal WAN', descripcion: 'Pérdida de conectividad con 15 sucursales por falla en enlace de proveedor', severidad: 'alta', estado: 'resuelto', reportadoPor: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
   // === TPRM: Incidentes con Proveedores de Embozado ===
   { id: 'inc-tprm-001', activoId: 'act-tprm-001', titulo: 'Lote de 15,000 tarjetas con chip EMV defectuoso', descripcion: 'CPI Card Group entregó lote de tarjetas con error en encoding del chip EMV, provocando rechazo de transacciones en POS. Se detectó en pruebas de calidad previo a distribución. Impacto: retraso de 5 días en emisión.', severidad: 'alta', estado: 'resuelto', reportadoPor: 'Jorge Vargas Luna', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
   { id: 'inc-tprm-002', activoId: 'act-tprm-001', titulo: 'Acceso no autorizado detectado en planta de embozado', descripcion: 'Auditoría de seguridad reveló que un ex-empleado de CPI conservaba credenciales activas de acceso al sistema de personalización. Se bloqueó inmediatamente y se solicitó análisis forense.', severidad: 'critica', estado: 'en_investigacion', reportadoPor: 'Roberto Torres Ramírez', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
@@ -400,11 +378,6 @@ export const incidentes = [
 // Defectos
 // ============================================================
 export const defectos = [
-  { id: 'def-001', activoId: 'act-001', titulo: 'Error en cálculo de intereses moratorios', descripcion: 'El módulo de créditos calcula incorrectamente los intereses moratorios para créditos con pagos parciales', tipo: 'funcional', prioridad: 'alta', estado: 'en_correccion', detectadoPor: 'Ana Patricia López García', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'def-002', activoId: 'act-002', titulo: 'Timeout en consulta de movimientos', descripcion: 'La consulta de movimientos en banca en línea presenta timeout cuando hay más de 500 registros', tipo: 'rendimiento', prioridad: 'media', estado: 'confirmado', detectadoPor: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'def-003', activoId: 'act-002', titulo: 'Vulnerabilidad en autenticación de app móvil', descripcion: 'Se identificó vulnerabilidad que permite bypass de segundo factor en ciertas condiciones', tipo: 'seguridad', prioridad: 'critica', estado: 'en_correccion', detectadoPor: 'Roberto Torres Ramírez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'def-004', activoId: 'act-004', titulo: 'Falsos positivos excesivos en alertas', descripcion: 'El sistema genera demasiados falsos positivos en alertas de operaciones inusuales', tipo: 'funcional', prioridad: 'media', estado: 'confirmado', detectadoPor: 'Patricia Reyes Solís', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'def-005', activoId: 'act-005', titulo: 'Error en workflow de aprobación de crédito', descripcion: 'El flujo de aprobación no notifica correctamente al siguiente aprobador', tipo: 'funcional', prioridad: 'alta', estado: 'corregido', detectadoPor: 'Fernando Castillo Núñez', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
   // === TPRM: Defectos en Servicios de Embozado ===
   { id: 'def-tprm-001', activoId: 'act-tprm-001', titulo: 'Defecto en calidad de impresión de datos en tarjeta', descripcion: 'Impresión del nombre del tarjetahabiente desalineada en 3% de las tarjetas del lote mensual. Fuera de tolerancia de calidad del SLA.', tipo: 'funcional', prioridad: 'media', estado: 'en_correccion', detectadoPor: 'Jorge Vargas Luna', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
   { id: 'def-tprm-002', activoId: 'act-tprm-001', titulo: 'Vulnerabilidad en canal de transmisión de datos de personalización', descripcion: 'Canal SFTP usado para enviar archivos de personalización al proveedor usa cifrado TLS 1.1 (deprecated). Requiere actualización a TLS 1.3.', tipo: 'seguridad', prioridad: 'critica', estado: 'en_correccion', detectadoPor: 'Roberto Torres Ramírez', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
@@ -426,11 +399,6 @@ export const defectos = [
 // Procesos
 // ============================================================
 export const procesos = [
-  { id: 'prc-001', nombre: 'Conoce a tu Cliente (KYC)', descripcion: 'Proceso de identificación y verificación de clientes para cumplimiento regulatorio', version: '2.1', estado: 'activo', createdBy: 'usr-003', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prc-002', nombre: 'Prevención de Lavado de Dinero (AML)', descripcion: 'Proceso de monitoreo y detección de operaciones inusuales y sospechosas', version: '3.0', estado: 'activo', createdBy: 'usr-009', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prc-003', nombre: 'Originación de Crédito', descripcion: 'Proceso end-to-end para la solicitud, evaluación y otorgamiento de créditos', version: '1.5', estado: 'activo', createdBy: 'usr-003', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prc-004', nombre: 'Apertura de Cuenta', descripcion: 'Proceso de apertura de cuentas de captación para personas físicas y morales', version: '2.0', estado: 'activo', createdBy: 'usr-008', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prc-005', nombre: 'Gestión de Incidentes de Seguridad', descripcion: 'Proceso de detección, respuesta y recuperación ante incidentes de seguridad', version: '1.2', estado: 'activo', createdBy: 'usr-004', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
   // === TPRM: Procesos del ciclo de gestión de terceros ===
   { id: 'prc-tprm-001', nombre: 'TPRM - Due Diligence de Embozadores', descripcion: 'Proceso de evaluación inicial (onboarding) de proveedores de embozado de tarjetas. Evalúa solvencia financiera, certificaciones PCI-DSS, seguridad física/lógica, modelo operativo, BCP/DRP y capacidad productiva.', version: '1.0', estado: 'activo', createdBy: 'usr-003', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
   { id: 'prc-tprm-002', nombre: 'TPRM - Gestión de Contratos con Embozadores', descripcion: 'Proceso de gestión contractual con proveedores de embozado. Incluye definición de SLAs, cláusulas de auditoría, responsabilidades ante incidentes, protección de datos financieros y penalizaciones.', version: '1.0', estado: 'activo', createdBy: 'usr-003', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
@@ -438,18 +406,9 @@ export const procesos = [
   { id: 'prc-tprm-004', nombre: 'TPRM - Gestión de Desempeño de Embozadores', descripcion: 'Proceso de evaluación del desempeño operativo de proveedores de embozado. Mide cumplimiento de SLA, calidad de producción, defectos, tiempos de entrega y capacidad de respuesta.', version: '1.0', estado: 'activo', createdBy: 'usr-008', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
   { id: 'prc-tprm-005', nombre: 'TPRM - Gestión de Incidentes con Embozadores', descripcion: 'Proceso de respuesta a incidentes originados en proveedores de embozado. Evalúa capacidad de respuesta, tiempo de detección, coordinación con el banco, impacto y tiempo de recuperación.', version: '1.0', estado: 'activo', createdBy: 'usr-004', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
   { id: 'prc-tprm-006', nombre: 'TPRM - Terminación / Offboarding de Embozadores', descripcion: 'Proceso de terminación controlada de relación con proveedores de embozado. Asegura eliminación segura de datos, transferencia operativa, cumplimiento de obligaciones finales y mitigación de riesgos residuales.', version: '1.0', estado: 'activo', createdBy: 'usr-003', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
-  // === Tenant: Seguros del Norte (tenant-002) ===
-  { id: 'prc-sdn-001', nombre: 'Gestión de Siniestros', descripcion: 'Proceso end-to-end de gestión de siniestros: recepción del reporte, asignación de ajustador, evaluación de daños, dictamen y pago al asegurado', version: '1.0', estado: 'activo', createdBy: 'usr-001', tenantId: 'tenant-002', createdAt: new Date().toISOString() },
-  // === Tenant: Fintech Solutions (tenant-003) ===
-  { id: 'prc-fts-001', nombre: 'Proceso de Onboarding Digital', descripcion: 'Proceso de alta de nuevos usuarios en la plataforma fintech: verificación de identidad digital (eKYC), validación biométrica, scoring inicial y activación de cuenta', version: '2.0', estado: 'activo', createdBy: 'usr-001', tenantId: 'tenant-003', createdAt: new Date().toISOString() },
 ];
 
 export const processNodes = [
-  { id: 'pn-001', procesoId: 'prc-001', nodeId: 'node-1', type: 'start', label: 'Inicio', position: JSON.stringify({ x: 100, y: 100 }), tenantId: 'tenant-001' },
-  { id: 'pn-002', procesoId: 'prc-001', nodeId: 'node-2', type: 'task', label: 'Recepción de documentos', position: JSON.stringify({ x: 250, y: 100 }), tenantId: 'tenant-001' },
-  { id: 'pn-003', procesoId: 'prc-001', nodeId: 'node-3', type: 'task', label: 'Verificación de identidad', position: JSON.stringify({ x: 400, y: 100 }), tenantId: 'tenant-001' },
-  { id: 'pn-004', procesoId: 'prc-001', nodeId: 'node-4', type: 'decision', label: 'Aprobado?', position: JSON.stringify({ x: 550, y: 100 }), tenantId: 'tenant-001' },
-  { id: 'pn-005', procesoId: 'prc-001', nodeId: 'node-5', type: 'end', label: 'Fin', position: JSON.stringify({ x: 700, y: 100 }), tenantId: 'tenant-001' },
   // === TPRM: Nodos del proceso Due Diligence ===
   { id: 'pn-tprm-001', procesoId: 'prc-tprm-001', nodeId: 'tprm-node-1', type: 'start', label: 'Solicitud de Onboarding', position: JSON.stringify({ x: 50, y: 100 }), tenantId: 'tenant-005' },
   { id: 'pn-tprm-002', procesoId: 'prc-tprm-001', nodeId: 'tprm-node-2', type: 'task', label: 'Evaluación de Solvencia Financiera', position: JSON.stringify({ x: 200, y: 100 }), tenantId: 'tenant-005' },
@@ -464,10 +423,6 @@ export const processNodes = [
 ];
 
 export const processEdges = [
-  { id: 'pe-001', procesoId: 'prc-001', edgeId: 'edge-1', source: 'node-1', target: 'node-2', tenantId: 'tenant-001' },
-  { id: 'pe-002', procesoId: 'prc-001', edgeId: 'edge-2', source: 'node-2', target: 'node-3', tenantId: 'tenant-001' },
-  { id: 'pe-003', procesoId: 'prc-001', edgeId: 'edge-3', source: 'node-3', target: 'node-4', tenantId: 'tenant-001' },
-  { id: 'pe-004', procesoId: 'prc-001', edgeId: 'edge-4', source: 'node-4', target: 'node-5', tenantId: 'tenant-001' },
   // === TPRM: Edges del proceso Due Diligence ===
   { id: 'pe-tprm-001', procesoId: 'prc-tprm-001', edgeId: 'tprm-edge-1', source: 'tprm-node-1', target: 'tprm-node-2', tenantId: 'tenant-005' },
   { id: 'pe-tprm-002', procesoId: 'prc-tprm-001', edgeId: 'tprm-edge-2', source: 'tprm-node-2', target: 'tprm-node-3', tenantId: 'tenant-005' },
@@ -481,8 +436,6 @@ export const processEdges = [
 ];
 
 export const objetivosProceso = [
-  { id: 'obj-001', procesoId: 'prc-001', nombre: 'Reducir tiempo de onboarding', descripcion: 'Reducir el tiempo promedio de alta de clientes a 24 horas', progreso: 75, tenantId: 'tenant-001' },
-  { id: 'obj-002', procesoId: 'prc-002', nombre: 'Detectar operaciones sospechosas', descripcion: 'Detectar el 95% de operaciones sospechosas en tiempo real', progreso: 88, tenantId: 'tenant-001' },
   // === TPRM: Objetivos ===
   { id: 'obj-tprm-001', procesoId: 'prc-tprm-001', nombre: 'Due Diligence completo antes de contratación', descripcion: 'Completar evaluación integral del 100% de proveedores de embozado antes de firmar contrato', progreso: 67, tenantId: 'tenant-005' },
   { id: 'obj-tprm-002', procesoId: 'prc-tprm-003', nombre: 'Monitoreo continuo de riesgo de terceros', descripcion: 'Mantener risk score actualizado de todos los proveedores con evaluación trimestral', progreso: 80, tenantId: 'tenant-005' },
@@ -490,9 +443,6 @@ export const objetivosProceso = [
 ];
 
 export const kpisProceso = [
-  { id: 'kpi-001', procesoId: 'prc-001', nombre: 'Tiempo promedio de verificación', valorActual: 18, valorMeta: 24, unidad: 'horas', estado: 'verde', tenantId: 'tenant-001' },
-  { id: 'kpi-002', procesoId: 'prc-002', nombre: 'Tasa de detección', valorActual: 92, valorMeta: 95, unidad: '%', estado: 'amarillo', tenantId: 'tenant-001' },
-  { id: 'kpi-003', procesoId: 'prc-003', nombre: 'Tiempo de aprobación', valorActual: 72, valorMeta: 48, unidad: 'horas', estado: 'rojo', tenantId: 'tenant-001' },
   // === TPRM: KPIs ===
   { id: 'kpi-tprm-001', procesoId: 'prc-tprm-004', nombre: 'SLA Compliance Rate', valorActual: 87, valorMeta: 95, unidad: '%', estado: 'amarillo', tenantId: 'tenant-005' },
   { id: 'kpi-tprm-002', procesoId: 'prc-tprm-004', nombre: 'Tiempo promedio entrega de tarjetas', valorActual: 6.2, valorMeta: 5, unidad: 'días', estado: 'rojo', tenantId: 'tenant-005' },
@@ -507,11 +457,6 @@ export const kpisProceso = [
 // Marcos Normativos
 // ============================================================
 export const marcosNormativos = [
-  { id: 'marco-001', nombre: 'Disposiciones de Carácter General aplicables a Instituciones de Crédito', acronimo: 'CUB', version: '2024', fechaVigencia: '2024-01-01', descripcion: 'Circular Única de Bancos emitida por la CNBV', activo: true, tenantId: 'tenant-001' },
-  { id: 'marco-002', nombre: 'Disposiciones de Prevención de Lavado de Dinero', acronimo: 'PLD/FT', version: '2023', fechaVigencia: '2023-07-01', descripcion: 'Normatividad para la prevención de lavado de dinero', activo: true, tenantId: 'tenant-001' },
-  { id: 'marco-003', nombre: 'Payment Card Industry Data Security Standard', acronimo: 'PCI-DSS', version: '4.0', fechaVigencia: '2024-03-31', descripcion: 'Estándar de seguridad de datos para tarjetas de pago', activo: true, tenantId: 'tenant-001' },
-  { id: 'marco-004', nombre: 'Sistema de Gestión de Seguridad de la Información', acronimo: 'ISO 27001', version: '2022', fechaVigencia: '2022-10-25', descripcion: 'Estándar internacional para la gestión de seguridad', activo: true, tenantId: 'tenant-001' },
-  { id: 'marco-005', nombre: 'Ley Federal de Protección de Datos Personales', acronimo: 'LFPDPPP', version: '2024', fechaVigencia: '2010-07-05', descripcion: 'Ley que regula el tratamiento de datos personales', activo: true, tenantId: 'tenant-001' },
   // === TPRM: Marcos Normativos ===
   { id: 'marco-tprm-001', nombre: 'Disposiciones CNBV sobre Servicios de Terceros', acronimo: 'CNBV-TPRM', version: '2024', fechaVigencia: '2024-01-01', descripcion: 'Disposiciones de la CNBV relativas a la contratación de servicios con terceros por parte de instituciones de crédito, incluyendo due diligence, monitoreo y offboarding', activo: true, tenantId: 'tenant-005' },
   { id: 'marco-tprm-002', nombre: 'Circular Banxico sobre Riesgo Operacional de Terceros', acronimo: 'BX-RO-3ROS', version: '2023', fechaVigencia: '2023-06-15', descripcion: 'Circular de Banco de México que establece requisitos de gestión de riesgo operacional derivado de la dependencia en proveedores terceros de servicios críticos', activo: true, tenantId: 'tenant-005' },
@@ -521,19 +466,12 @@ export const marcosNormativos = [
 // Cuestionarios
 // ============================================================
 export const cuestionarios = [
-  { id: 'cst-001', nombre: 'Autoevaluación PCI-DSS v4.0', descripcion: 'Cuestionario de autoevaluación para cumplimiento del estándar PCI-DSS', categoria: 'seguridad', tipo: 'manual', tipoEvaluacion: 'autoevaluacion', estado: 'activo', marcoNormativoId: 'marco-003', periodicidad: 'trimestral', umbrales: JSON.stringify({ deficiente: 60, aceptable: 80, sobresaliente: 95 }), areasObjetivo: JSON.stringify(['TI', 'Seguridad']), responsables: JSON.stringify(['usr-004']), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'cst-002', nombre: 'Evaluación de Controles AML/PLD', descripcion: 'Evaluación de controles de prevención de lavado de dinero', categoria: 'cumplimiento', tipo: 'manual', tipoEvaluacion: 'auditoria_externa', estado: 'activo', marcoNormativoId: 'marco-002', periodicidad: 'semestral', umbrales: JSON.stringify({ deficiente: 70, aceptable: 85, sobresaliente: 95 }), areasObjetivo: JSON.stringify(['Cumplimiento', 'PLD/AML']), responsables: JSON.stringify(['usr-009']), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'cst-003', nombre: 'Auditoría Interna ISO 27001', descripcion: 'Revisión de controles del SGSI según ISO 27001:2022', categoria: 'seguridad', tipo: 'manual', tipoEvaluacion: 'revision_controles', estado: 'activo', marcoNormativoId: 'marco-004', periodicidad: 'anual', umbrales: JSON.stringify({ deficiente: 65, aceptable: 80, sobresaliente: 92 }), areasObjetivo: JSON.stringify(['Seguridad', 'TI', 'Riesgos']), responsables: JSON.stringify(['usr-004', 'usr-010']), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
   // === TPRM: Cuestionarios ===
   { id: 'cst-tprm-001', nombre: 'Due Diligence - Proveedor de Embozado', descripcion: 'Cuestionario de evaluación integral para onboarding de proveedores de embozado de tarjetas. Cubre seguridad física, PCI-DSS, BCP, subcontratistas y protección de datos de tarjetahabientes.', categoria: 'seguridad', tipo: 'manual', tipoEvaluacion: 'auditoria_externa', estado: 'activo', marcoNormativoId: 'marco-003', periodicidad: 'anual', umbrales: JSON.stringify({ deficiente: 70, aceptable: 85, sobresaliente: 95 }), areasObjetivo: JSON.stringify(['Operaciones', 'Seguridad', 'Cumplimiento', 'Riesgos']), responsables: JSON.stringify(['usr-004', 'usr-003']), tenantId: 'tenant-005', createdAt: new Date().toISOString() },
   { id: 'cst-tprm-002', nombre: 'Evaluación de Desempeño Trimestral - Embozador', descripcion: 'Cuestionario de evaluación periódica del desempeño operativo de proveedores de embozado. Mide SLAs, calidad, incidentes y capacidad de respuesta.', categoria: 'operacional', tipo: 'manual', tipoEvaluacion: 'revision_controles', estado: 'activo', marcoNormativoId: 'marco-tprm-001', periodicidad: 'trimestral', umbrales: JSON.stringify({ deficiente: 60, aceptable: 80, sobresaliente: 95 }), areasObjetivo: JSON.stringify(['Operaciones', 'Riesgos']), responsables: JSON.stringify(['usr-008']), tenantId: 'tenant-005', createdAt: new Date().toISOString() },
 ];
 
 export const secciones = [
-  { id: 'sec-001', cuestionarioId: 'cst-001', nombre: 'Protección de datos del titular de tarjeta', descripcion: 'Controles para proteger los datos del titular', orden: 1, tenantId: 'tenant-001' },
-  { id: 'sec-002', cuestionarioId: 'cst-001', nombre: 'Mantenimiento de un programa de seguridad', descripcion: 'Controles de seguridad de la información', orden: 2, tenantId: 'tenant-001' },
-  { id: 'sec-003', cuestionarioId: 'cst-002', nombre: 'Identificación del cliente', descripcion: 'Controles KYC y debida diligencia', orden: 1, tenantId: 'tenant-001' },
-  { id: 'sec-004', cuestionarioId: 'cst-002', nombre: 'Monitoreo de transacciones', descripcion: 'Controles de monitoreo y alertas', orden: 2, tenantId: 'tenant-001' },
   // === TPRM: Secciones del cuestionario Due Diligence ===
   { id: 'sec-tprm-001', cuestionarioId: 'cst-tprm-001', nombre: 'Seguridad Física de Instalaciones', descripcion: 'Controles de seguridad física en la planta de personalización de tarjetas', orden: 1, tenantId: 'tenant-005' },
   { id: 'sec-tprm-002', cuestionarioId: 'cst-tprm-001', nombre: 'Controles PCI-DSS del Proveedor', descripcion: 'Verificación de cumplimiento PCI-DSS v4.0 obligatorio para embozadores', orden: 2, tenantId: 'tenant-005' },
@@ -548,11 +486,6 @@ export const secciones = [
 ];
 
 export const preguntas = [
-  { id: 'prg-001', seccionId: 'sec-001', texto: '¿Se cifran los datos del titular de tarjeta durante la transmisión?', tipo: 'si_no', requerida: true, orden: 1, tenantId: 'tenant-001' },
-  { id: 'prg-002', seccionId: 'sec-001', texto: '¿Se utiliza cifrado fuerte para almacenar datos del titular?', tipo: 'si_no', requerida: true, orden: 2, tenantId: 'tenant-001' },
-  { id: 'prg-003', seccionId: 'sec-002', texto: '¿Existe un programa de concientización de seguridad?', tipo: 'si_no', requerida: true, orden: 1, tenantId: 'tenant-001' },
-  { id: 'prg-004', seccionId: 'sec-003', texto: '¿Se verifica la identidad del cliente al momento del alta?', tipo: 'si_no', requerida: true, orden: 1, tenantId: 'tenant-001' },
-  { id: 'prg-005', seccionId: 'sec-004', texto: '¿Cuántas alertas de operaciones inusuales se generan en promedio por día?', tipo: 'numero', requerida: false, orden: 1, tenantId: 'tenant-001' },
   // === TPRM: Preguntas Due Diligence ===
   { id: 'prg-tprm-001', seccionId: 'sec-tprm-001', texto: '¿Las instalaciones de personalización cuentan con control de acceso biométrico y CCTV 24/7?', tipo: 'si_no', requerida: true, orden: 1, tenantId: 'tenant-005' },
   { id: 'prg-tprm-002', seccionId: 'sec-tprm-001', texto: '¿Existe separación física entre las áreas de almacenamiento de plásticos, personalización y despacho?', tipo: 'si_no', requerida: true, orden: 2, tenantId: 'tenant-005' },
@@ -578,9 +511,6 @@ export const preguntas = [
 ];
 
 export const asignaciones = [
-  { id: 'asig-001', cuestionarioId: 'cst-001', titulo: 'Revisión Trimestral PCI-DSS Q4 2024', descripcion: 'Autoevaluación de cumplimiento PCI-DSS para el cuarto trimestre', tipoRevision: 'interna', usuariosAsignados: JSON.stringify(['usr-004']), usuariosAsignadosNombres: JSON.stringify(['Roberto Torres Ramírez']), areaId: 'seguridad', areaNombre: 'Seguridad de Información', responsableId: 'usr-004', responsableNombre: 'Roberto Torres Ramírez', fechaInicio: new Date().toISOString(), fechaVencimiento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), estado: 'en_progreso', progreso: 45, tenantId: 'tenant-001' },
-  { id: 'asig-002', cuestionarioId: 'cst-002', titulo: 'Auditoría AML/PLD Semestral 2024-H2', descripcion: 'Evaluación de controles anti lavado de dinero segundo semestre', tipoRevision: 'externa', usuariosAsignados: JSON.stringify(['usr-009', 'usr-006']), usuariosAsignadosNombres: JSON.stringify(['Patricia Reyes Solís', 'Fernando Castillo Núñez']), areaId: 'cumplimiento', areaNombre: 'Cumplimiento Normativo', responsableId: 'usr-009', responsableNombre: 'Patricia Reyes Solís', fechaInicio: new Date().toISOString(), fechaVencimiento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), estado: 'en_progreso', progreso: 78, tenantId: 'tenant-001' },
-  { id: 'asig-003', cuestionarioId: 'cst-003', titulo: 'Auditoría Interna SGSI 2024', descripcion: 'Revisión anual del Sistema de Gestión de Seguridad de la Información', tipoRevision: 'interna', usuariosAsignados: JSON.stringify(['usr-007']), usuariosAsignadosNombres: JSON.stringify(['Laura Mendoza Díaz']), areaId: 'auditoria', areaNombre: 'Auditoría Interna', responsableId: 'usr-007', responsableNombre: 'Laura Mendoza Díaz', fechaInicio: new Date().toISOString(), fechaVencimiento: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), estado: 'pendiente', progreso: 0, tenantId: 'tenant-001' },
   // === TPRM: Asignaciones de cuestionarios ===
   { id: 'asig-tprm-001', cuestionarioId: 'cst-tprm-001', titulo: 'Due Diligence Anual CPI Card Group 2026', descripcion: 'Evaluación integral anual del proveedor principal de embozado CPI Card Group', tipoRevision: 'externa', usuariosAsignados: JSON.stringify(['usr-004', 'usr-003']), usuariosAsignadosNombres: JSON.stringify(['Roberto Torres Ramírez', 'Carlos Hernández Mora']), areaId: 'seguridad', areaNombre: 'Seguridad de Información', responsableId: 'usr-004', responsableNombre: 'Roberto Torres Ramírez', fechaInicio: new Date().toISOString(), fechaVencimiento: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(), estado: 'en_progreso', progreso: 35, tenantId: 'tenant-005' },
   { id: 'asig-tprm-002', cuestionarioId: 'cst-tprm-002', titulo: 'Evaluación Desempeño Q1 2026 - IDEMIA', descripcion: 'Evaluación trimestral de desempeño del proveedor alternativo IDEMIA', tipoRevision: 'interna', usuariosAsignados: JSON.stringify(['usr-008']), usuariosAsignadosNombres: JSON.stringify(['Jorge Vargas Luna']), areaId: 'operaciones', areaNombre: 'Operaciones', responsableId: 'usr-008', responsableNombre: 'Jorge Vargas Luna', fechaInicio: new Date().toISOString(), fechaVencimiento: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(), estado: 'en_progreso', progreso: 60, tenantId: 'tenant-005' },
@@ -601,618 +531,367 @@ export const asignaciones = [
 // Organigramas
 // ============================================================
 export const organigramas = [
-  { id: 'org-001', nombre: 'Grupo Financiero Atlas', descripcion: 'Estructura organizacional integral del grupo financiero con enfoque en GRC', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
+  { id: 'org-tprm-001', nombre: 'Banco Emisor - Programa TPRM Embozadores', descripcion: 'Estructura organizacional del programa de gestión de riesgo de terceros (TPRM) para proveedores de embozado de tarjetas', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
 ];
 
 export const nodosOrganigrama = [
   // ============================================================
-  // NIVEL 1: ORGANIZATION (Raíz)
+  // NIVEL 1: ORGANIZATION (Raíz) - TPRM
   // ============================================================
   {
-    id: 'norg-001',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Grupo Financiero Atlas S.A. de C.V.',
-    descripcion: 'Holding financiero líder en servicios bancarios, inversiones y seguros con presencia en Latinoamérica. Comprometidos con la excelencia operativa, cumplimiento regulatorio y gestión integral de riesgos.',
-    cargo: 'Director General (CEO)',
-    departamento: 'Dirección General',
-    email: 'direccion@gfatlas.mx',
-    telefono: '+52 55 5000 0001',
+    id: 'norg-tprm-root',
+    organigramaId: 'org-tprm-001', tenantId: 'tenant-005',
+    nombre: 'Programa TPRM Embozadores',
+    descripcion: 'Programa integral de gestión de riesgo de terceros (TPRM) para proveedores de embozado de tarjetas bancarias. Cubre el ciclo completo de vida del proveedor: due diligence, onboarding, gestión contractual, monitoreo continuo, evaluación de desempeño, gestión de incidentes y offboarding.',
+    cargo: 'Director del Programa TPRM',
+    departamento: 'Gestión de Riesgos',
+    email: 'tprm@bancoglobal.mx',
+    telefono: '+52 55 1234 0020',
     padreId: null,
     tipo: 'ORGANIZATION',
-    icono: 'pi pi-building',
-    responsable: { id: 'usr-001', nombre: 'Ricardo Salinas Pliego', email: 'rsalinas@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
+    icono: 'pi pi-sitemap',
+    responsable: { id: 'usr-002', nombre: 'María Elena Gutiérrez Vega', email: 'mgutierrez@bancoglobal.mx', avatar: 'https://randomuser.me/api/portraits/women/2.jpg' },
     propiedadesCustom: [
-      { id: 'pc-001', nombre: 'RFC', tipo: 'TEXT', valor: 'GFA920101ABC', requerido: true },
-      { id: 'pc-002', nombre: 'Empleados totales', tipo: 'NUMBER', valor: 15000, requerido: false },
-      { id: 'pc-003', nombre: 'Activos totales (USD MM)', tipo: 'NUMBER', valor: 45000, requerido: true },
-      { id: 'pc-004', nombre: 'Fundación', tipo: 'TEXT', valor: '1992', requerido: false }
+      { id: 'pc-tprm-r01', nombre: 'Proveedores gestionados', tipo: 'NUMBER', valor: 8, requerido: true },
+      { id: 'pc-tprm-r02', nombre: 'Proveedores críticos', tipo: 'NUMBER', valor: 2, requerido: true },
+      { id: 'pc-tprm-r03', nombre: 'Metodología', tipo: 'TEXT', valor: 'ISO 27036 / NIST SP 800-161 / PCI-DSS v4.0', requerido: true },
+      { id: 'pc-tprm-r04', nombre: 'Volumen total tarjetas/año', tipo: 'NUMBER', valor: 81000000, requerido: false }
     ],
     apetitoRiesgo: {
       probabilidad: 2,
-      impacto: 3,
-      nivelTolerancia: 'moderado',
-      descripcion: 'Tolerancia moderada con enfoque en protección del capital y reputación institucional'
-    },
-    objetivosNegocio: [
-      {
-        id: 'obj-org-001',
-        nombre: 'Excelencia en Gestión de Riesgos',
-        descripcion: 'Mantener un marco robusto de gestión de riesgos que proteja los activos y la reputación del grupo',
-        kpis: [
-          { id: 'kpi-001', nombre: 'Índice de Riesgo Operacional', valor: 2.8, meta: 2.0, unidad: 'índice', umbralMaximo: 3.5, canales: ['in-app', 'email'], frecuencia: 'semanal' },
-          { id: 'kpi-002', nombre: 'Pérdidas Operacionales vs Ingresos', valor: 0.15, meta: 0.10, unidad: '%', umbralMaximo: 0.25, canales: ['in-app'], frecuencia: 'mensual' }
-        ]
-      },
-      {
-        id: 'obj-org-002',
-        nombre: 'Cumplimiento Regulatorio Integral',
-        descripcion: 'Asegurar adherencia total a regulaciones CNBV, Banxico, CONDUSEF y estándares internacionales',
-        kpis: [
-          { id: 'kpi-003', nombre: 'Cumplimiento Normativo General', valor: 94, meta: 100, unidad: '%', umbralMaximo: 85, canales: ['in-app', 'email'], frecuencia: 'mensual' },
-          { id: 'kpi-004', nombre: 'Observaciones Regulatorias Abiertas', valor: 3, meta: 0, unidad: 'cantidad', umbralMaximo: 10, canales: ['in-app', 'email', 'webhook'], frecuencia: 'semanal' }
-        ]
-      },
-      {
-        id: 'obj-org-003',
-        nombre: 'Ciberseguridad y Protección de Datos',
-        descripcion: 'Proteger los activos de información y datos de clientes contra amenazas cibernéticas',
-        kpis: [
-          { id: 'kpi-005', nombre: 'Incidentes de Seguridad Críticos', valor: 0, meta: 0, unidad: 'cantidad', umbralMaximo: 2, canales: ['in-app', 'email', 'webhook'], frecuencia: 'diaria' },
-          { id: 'kpi-006', nombre: 'Tiempo Medio de Respuesta (MTTR)', valor: 45, meta: 30, unidad: 'minutos', umbralMaximo: 60, canales: ['in-app'], frecuencia: 'semanal' }
-        ]
-      },
-      {
-        id: 'obj-org-004',
-        nombre: 'Eficiencia Operativa',
-        descripcion: 'Optimizar procesos para maximizar la productividad y reducir costos operacionales',
-        kpis: [
-          { id: 'kpi-007', nombre: 'Ratio de Eficiencia', valor: 52, meta: 45, unidad: '%', umbralMaximo: 60, canales: ['in-app'], frecuencia: 'mensual' },
-          { id: 'kpi-008', nombre: 'Automatización de Procesos', valor: 68, meta: 80, unidad: '%', umbralMaximo: 50, canales: ['in-app'], frecuencia: 'trimestral' }
-        ]
-      }
-    ]
-  },
-
-  // ============================================================
-  // NIVEL 2: ÁREAS (4 áreas principales)
-  // ============================================================
-
-  // ÁREA 1: Dirección de Riesgos
-  {
-    id: 'norg-002',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Dirección de Riesgos',
-    descripcion: 'Área responsable de la identificación, evaluación, mitigación y monitoreo de todos los riesgos del grupo financiero incluyendo riesgos operacionales, crediticios, de mercado y de liquidez.',
-    cargo: 'Directora de Riesgos (CRO)',
-    departamento: 'Gestión de Riesgos',
-    email: 'riesgos@gfatlas.mx',
-    telefono: '+52 55 5000 0002',
-    padreId: 'norg-001',
-    tipo: 'AREA',
-    icono: 'pi pi-exclamation-triangle',
-    responsable: { id: 'usr-002', nombre: 'María Elena Gutiérrez Vega', email: 'mgutierrez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/2.jpg' },
-    propiedadesCustom: [
-      { id: 'pc-005', nombre: 'Código de área', tipo: 'TEXT', valor: 'RISK-001', requerido: true },
-      { id: 'pc-006', nombre: 'Personal asignado', tipo: 'NUMBER', valor: 85, requerido: false },
-      { id: 'pc-007', nombre: 'Presupuesto anual (MXN)', tipo: 'NUMBER', valor: 45000000, requerido: true },
-      { id: 'pc-008', nombre: 'Metodología', tipo: 'TEXT', valor: 'COSO ERM / ISO 31000', requerido: true }
-    ],
-    apetitoRiesgo: {
-      probabilidad: 2,
-      impacto: 2,
+      impacto: 4,
       nivelTolerancia: 'bajo',
-      descripcion: 'Tolerancia baja - El área de riesgos debe mantener los más altos estándares de control'
+      descripcion: 'Tolerancia baja a riesgos de proveedores que puedan afectar operación de tarjetas, datos de clientes o certificaciones PCI-DSS'
     },
     objetivosNegocio: [
       {
-        id: 'obj-risk-001',
-        nombre: 'Reducción de Riesgo Operacional',
-        descripcion: 'Minimizar pérdidas por fallas en procesos, personas, sistemas o eventos externos',
+        id: 'obj-tprm-root-001',
+        nombre: 'Gestión Integral de Riesgo de Embozadores',
+        descripcion: 'Mantener un programa robusto de gestión de riesgo de terceros que proteja al banco de exposiciones derivadas de proveedores de embozado',
         kpis: [
-          { id: 'kpi-r001', nombre: 'Índice de Riesgo Operacional', valor: 2.5, meta: 2.0, unidad: 'índice', umbralMaximo: 3.0, canales: ['in-app', 'email'], frecuencia: 'semanal' },
-          { id: 'kpi-r002', nombre: 'Eventos de Pérdida', valor: 12, meta: 5, unidad: 'cantidad', umbralMaximo: 20, canales: ['in-app'], frecuencia: 'mensual' }
-        ]
-      },
-      {
-        id: 'obj-risk-002',
-        nombre: 'Gestión de Riesgo Crediticio',
-        descripcion: 'Mantener la calidad de la cartera crediticia dentro de los límites establecidos',
-        kpis: [
-          { id: 'kpi-r003', nombre: 'Índice de Morosidad', valor: 2.8, meta: 2.0, unidad: '%', umbralMaximo: 4.0, canales: ['in-app', 'email'], frecuencia: 'semanal' },
-          { id: 'kpi-r004', nombre: 'Cobertura de Provisiones', valor: 145, meta: 150, unidad: '%', umbralMaximo: 120, canales: ['in-app'], frecuencia: 'mensual' }
+          { id: 'kpi-tprm-r001', nombre: 'Risk Score Promedio Proveedores', valor: 61.6, meta: 50, unidad: 'puntos', umbralMaximo: 75, canales: ['in-app', 'email'], frecuencia: 'mensual' },
+          { id: 'kpi-tprm-r002', nombre: 'SLA Compliance Rate Global', valor: 87, meta: 95, unidad: '%', umbralMaximo: 80, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-tprm-r003', nombre: 'Proveedores con PCI vigente', valor: 6, meta: 8, unidad: 'cantidad', umbralMaximo: 6, canales: ['in-app', 'email', 'webhook'], frecuencia: 'mensual' },
+          { id: 'kpi-tprm-r004', nombre: 'Concentración máxima en un proveedor', valor: 65, meta: 40, unidad: '%', umbralMaximo: 50, canales: ['in-app', 'email'], frecuencia: 'trimestral' }
         ]
       }
     ]
   },
 
-  // ÁREA 2: Dirección de Cumplimiento
+  // ============================================================
+  // NIVEL 2: ÁREAS (4 áreas)
+  // ============================================================
+
+  // ÁREA 1: Due Diligence y Onboarding
   {
-    id: 'norg-003',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Dirección de Cumplimiento',
-    descripcion: 'Área encargada de asegurar el cumplimiento de todas las regulaciones bancarias, prevención de lavado de dinero, protección al consumidor y normativas internacionales.',
-    cargo: 'Director de Cumplimiento (CCO)',
-    departamento: 'Cumplimiento Normativo',
-    email: 'cumplimiento@gfatlas.mx',
-    telefono: '+52 55 5000 0003',
-    padreId: 'norg-001',
+    id: 'norg-tprm-area-001',
+    organigramaId: 'org-tprm-001', tenantId: 'tenant-005',
+    nombre: 'Due Diligence y Onboarding',
+    descripcion: 'Área responsable de la evaluación integral de proveedores de embozado antes de su contratación. Cubre solvencia financiera, certificaciones PCI-DSS, seguridad física/lógica, BCP/DRP, capacidad productiva y gestión de subcontratistas.',
+    cargo: 'Gerente de Due Diligence TPRM',
+    departamento: 'Due Diligence',
+    email: 'tprm.dd@bancoglobal.mx',
+    telefono: '+52 55 1234 0021',
+    padreId: 'norg-tprm-root',
     tipo: 'AREA',
-    icono: 'pi pi-check-circle',
-    responsable: { id: 'usr-003', nombre: 'Carlos Hernández Mora', email: 'chernandez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/3.jpg' },
+    icono: 'pi pi-search',
+    responsable: { id: 'usr-003', nombre: 'Carlos Hernández Mora', email: 'chernandez@bancoglobal.mx', avatar: 'https://randomuser.me/api/portraits/men/3.jpg' },
     propiedadesCustom: [
-      { id: 'pc-009', nombre: 'Código de área', tipo: 'TEXT', valor: 'COMP-001', requerido: true },
-      { id: 'pc-010', nombre: 'Personal asignado', tipo: 'NUMBER', valor: 62, requerido: false },
-      { id: 'pc-011', nombre: 'Reguladores supervisores', tipo: 'TEXT', valor: 'CNBV, Banxico, CONDUSEF, UIF', requerido: true }
+      { id: 'pc-tprm-a101', nombre: 'Código de área', tipo: 'TEXT', valor: 'TPRM-DD-001', requerido: true },
+      { id: 'pc-tprm-a102', nombre: 'Analistas asignados', tipo: 'NUMBER', valor: 4, requerido: false },
+      { id: 'pc-tprm-a103', nombre: 'Evaluaciones en curso', tipo: 'NUMBER', valor: 3, requerido: false },
+      { id: 'pc-tprm-a104', nombre: 'Frecuencia de evaluación', tipo: 'TEXT', valor: 'Anual + ad-hoc para nuevos proveedores', requerido: true }
     ],
     apetitoRiesgo: {
       probabilidad: 1,
       impacto: 4,
       nivelTolerancia: 'muy bajo',
-      descripcion: 'Cero tolerancia a incumplimientos regulatorios que afecten licencias o reputación'
+      descripcion: 'Cero tolerancia a la contratación de proveedores sin evaluación completa de due diligence'
     },
     objetivosNegocio: [
       {
-        id: 'obj-comp-001',
-        nombre: 'Cumplimiento Regulatorio CNBV',
-        descripcion: 'Asegurar adherencia total a disposiciones de la Comisión Nacional Bancaria',
+        id: 'obj-tprm-dd-001',
+        nombre: 'Evaluación Rigurosa de Proveedores',
+        descripcion: 'Completar due diligence integral del 100% de proveedores antes de contratación y renovación anual',
         kpis: [
-          { id: 'kpi-c001', nombre: '% Cumplimiento CNBV', valor: 96, meta: 100, unidad: '%', umbralMaximo: 90, canales: ['in-app', 'email'], frecuencia: 'mensual' },
-          { id: 'kpi-c002', nombre: 'Observaciones CNBV Abiertas', valor: 2, meta: 0, unidad: 'cantidad', umbralMaximo: 5, canales: ['in-app', 'email', 'webhook'], frecuencia: 'semanal' }
-        ]
-      },
-      {
-        id: 'obj-comp-002',
-        nombre: 'Prevención de Lavado de Dinero',
-        descripcion: 'Mantener controles efectivos para prevenir operaciones con recursos ilícitos',
-        kpis: [
-          { id: 'kpi-c003', nombre: 'Alertas PLD Procesadas', valor: 95, meta: 100, unidad: '%', umbralMaximo: 85, canales: ['in-app'], frecuencia: 'semanal' },
-          { id: 'kpi-c004', nombre: 'Tiempo Promedio de Análisis', valor: 48, meta: 24, unidad: 'horas', umbralMaximo: 72, canales: ['in-app'], frecuencia: 'semanal' }
+          { id: 'kpi-tprm-dd001', nombre: 'Due Diligence Completados a Tiempo', valor: 67, meta: 100, unidad: '%', umbralMaximo: 80, canales: ['in-app', 'email'], frecuencia: 'trimestral' },
+          { id: 'kpi-tprm-dd002', nombre: 'Proveedores con DD vigente', valor: 7, meta: 8, unidad: 'cantidad', umbralMaximo: 6, canales: ['in-app'], frecuencia: 'mensual' }
         ]
       }
     ]
   },
 
-  // ÁREA 3: Dirección de Seguridad de la Información
+  // ÁREA 2: Gestión de Contratos y SLAs
   {
-    id: 'norg-004',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Dirección de Seguridad de la Información',
-    descripcion: 'Área responsable de la estrategia de ciberseguridad, protección de datos, respuesta a incidentes y continuidad del negocio tecnológico.',
-    cargo: 'Director de Seguridad (CISO)',
-    departamento: 'Seguridad de la Información',
-    email: 'seguridad@gfatlas.mx',
-    telefono: '+52 55 5000 0004',
-    padreId: 'norg-001',
+    id: 'norg-tprm-area-002',
+    organigramaId: 'org-tprm-001', tenantId: 'tenant-005',
+    nombre: 'Gestión de Contratos y SLAs',
+    descripcion: 'Área encargada de la gestión contractual con proveedores de embozado. Incluye definición de SLAs, cláusulas de auditoría, esquemas de penalización, protección de datos financieros y obligaciones de reporting.',
+    cargo: 'Gerente de Contratos TPRM',
+    departamento: 'Contratos y SLAs',
+    email: 'tprm.contratos@bancoglobal.mx',
+    telefono: '+52 55 1234 0022',
+    padreId: 'norg-tprm-root',
     tipo: 'AREA',
-    icono: 'pi pi-shield',
-    responsable: { id: 'usr-004', nombre: 'Roberto Torres Ramírez', email: 'rtorres@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/4.jpg' },
+    icono: 'pi pi-file',
+    responsable: { id: 'usr-007', nombre: 'Laura Mendoza Díaz', email: 'lmendoza@bancoglobal.mx', avatar: 'https://randomuser.me/api/portraits/women/7.jpg' },
     propiedadesCustom: [
-      { id: 'pc-012', nombre: 'Código de área', tipo: 'TEXT', valor: 'SEC-001', requerido: true },
-      { id: 'pc-013', nombre: 'Personal asignado', tipo: 'NUMBER', valor: 78, requerido: false },
-      { id: 'pc-014', nombre: 'Certificaciones', tipo: 'TEXT', valor: 'ISO 27001, PCI-DSS, SOC2', requerido: true },
-      { id: 'pc-015', nombre: 'Presupuesto anual (MXN)', tipo: 'NUMBER', valor: 95000000, requerido: true }
-    ],
-    apetitoRiesgo: {
-      probabilidad: 1,
-      impacto: 4,
-      nivelTolerancia: 'muy bajo',
-      descripcion: 'Tolerancia mínima a brechas de seguridad y exposición de datos sensibles'
-    },
-    objetivosNegocio: [
-      {
-        id: 'obj-sec-001',
-        nombre: 'Protección contra Ciberataques',
-        descripcion: 'Prevenir, detectar y responder efectivamente a amenazas cibernéticas',
-        kpis: [
-          { id: 'kpi-s001', nombre: 'Incidentes Críticos', valor: 0, meta: 0, unidad: 'cantidad', umbralMaximo: 1, canales: ['in-app', 'email', 'webhook'], frecuencia: 'diaria' },
-          { id: 'kpi-s002', nombre: 'Tiempo de Detección (MTTD)', valor: 15, meta: 10, unidad: 'minutos', umbralMaximo: 30, canales: ['in-app'], frecuencia: 'semanal' }
-        ]
-      },
-      {
-        id: 'obj-sec-002',
-        nombre: 'Madurez de Seguridad',
-        descripcion: 'Elevar el nivel de madurez en controles de seguridad según NIST CSF',
-        kpis: [
-          { id: 'kpi-s003', nombre: 'Nivel de Madurez NIST', valor: 3.2, meta: 4.0, unidad: 'nivel', umbralMaximo: 2.5, canales: ['in-app'], frecuencia: 'trimestral' },
-          { id: 'kpi-s004', nombre: 'Vulnerabilidades Críticas Abiertas', valor: 5, meta: 0, unidad: 'cantidad', umbralMaximo: 10, canales: ['in-app', 'email'], frecuencia: 'semanal' }
-        ]
-      }
-    ]
-  },
-
-  // ÁREA 4: Dirección de Tecnología
-  {
-    id: 'norg-005',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Dirección de Tecnología',
-    descripcion: 'Área responsable de la infraestructura tecnológica, desarrollo de sistemas, operaciones de TI y transformación digital del grupo financiero.',
-    cargo: 'Director de Tecnología (CTO)',
-    departamento: 'Tecnología de la Información',
-    email: 'tecnologia@gfatlas.mx',
-    telefono: '+52 55 5000 0005',
-    padreId: 'norg-001',
-    tipo: 'AREA',
-    icono: 'pi pi-server',
-    responsable: { id: 'usr-005', nombre: 'Jorge Méndez Fuentes', email: 'jmendez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/5.jpg' },
-    propiedadesCustom: [
-      { id: 'pc-016', nombre: 'Código de área', tipo: 'TEXT', valor: 'TECH-001', requerido: true },
-      { id: 'pc-017', nombre: 'Personal asignado', tipo: 'NUMBER', valor: 245, requerido: false },
-      { id: 'pc-018', nombre: 'Presupuesto anual (MXN)', tipo: 'NUMBER', valor: 320000000, requerido: true },
-      { id: 'pc-019', nombre: 'Data Centers', tipo: 'NUMBER', valor: 3, requerido: false }
+      { id: 'pc-tprm-a201', nombre: 'Código de área', tipo: 'TEXT', valor: 'TPRM-CTR-001', requerido: true },
+      { id: 'pc-tprm-a202', nombre: 'Contratos vigentes', tipo: 'NUMBER', valor: 7, requerido: false },
+      { id: 'pc-tprm-a203', nombre: 'Contratos por vencer (6 meses)', tipo: 'NUMBER', valor: 2, requerido: false },
+      { id: 'pc-tprm-a204', nombre: 'SLA estándar entrega', tipo: 'TEXT', valor: '5 días hábiles', requerido: true }
     ],
     apetitoRiesgo: {
       probabilidad: 2,
       impacto: 3,
-      nivelTolerancia: 'moderado',
-      descripcion: 'Tolerancia moderada balanceando innovación con estabilidad operacional'
+      nivelTolerancia: 'bajo',
+      descripcion: 'Tolerancia baja a cláusulas contractuales débiles que expongan al banco ante incumplimientos del proveedor'
     },
     objetivosNegocio: [
       {
-        id: 'obj-tech-001',
-        nombre: 'Disponibilidad de Servicios',
-        descripcion: 'Garantizar alta disponibilidad de sistemas críticos bancarios',
+        id: 'obj-tprm-ctr-001',
+        nombre: 'Cumplimiento Contractual y SLAs',
+        descripcion: 'Asegurar que todos los contratos incluyan cláusulas robustas y que los SLAs se cumplan consistentemente',
         kpis: [
-          { id: 'kpi-t001', nombre: 'Uptime Servicios Críticos', valor: 99.92, meta: 99.99, unidad: '%', umbralMaximo: 99.5, canales: ['in-app', 'email', 'webhook'], frecuencia: 'diaria' },
-          { id: 'kpi-t002', nombre: 'Incidentes P1', valor: 2, meta: 0, unidad: 'cantidad', umbralMaximo: 5, canales: ['in-app', 'email'], frecuencia: 'semanal' }
-        ]
-      },
-      {
-        id: 'obj-tech-002',
-        nombre: 'Transformación Digital',
-        descripcion: 'Acelerar la digitalización de procesos y servicios bancarios',
-        kpis: [
-          { id: 'kpi-t003', nombre: 'Procesos Digitalizados', valor: 72, meta: 85, unidad: '%', umbralMaximo: 60, canales: ['in-app'], frecuencia: 'mensual' },
-          { id: 'kpi-t004', nombre: 'Adopción Banca Digital', valor: 68, meta: 80, unidad: '%', umbralMaximo: 50, canales: ['in-app'], frecuencia: 'mensual' }
+          { id: 'kpi-tprm-ctr001', nombre: 'SLA Compliance Rate', valor: 87, meta: 95, unidad: '%', umbralMaximo: 80, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-tprm-ctr002', nombre: 'Contratos con cláusula right-to-audit', valor: 6, meta: 8, unidad: 'cantidad', umbralMaximo: 6, canales: ['in-app'], frecuencia: 'trimestral' }
         ]
       }
     ]
   },
 
-  // ============================================================
-  // NIVEL 3: SUBÁREAS (8 subáreas - 2 por cada área)
-  // ============================================================
-
-  // SUBÁREAS de Riesgos (norg-002)
+  // ÁREA 3: Monitoreo Continuo y Riesgos
   {
-    id: 'norg-006',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Riesgos Operacionales',
-    descripcion: 'Subárea especializada en la identificación, medición y control de riesgos derivados de procesos, personas, sistemas y eventos externos.',
-    cargo: 'Gerente de Riesgos Operacionales',
-    departamento: 'Riesgo Operacional',
-    email: 'riesgo.operacional@gfatlas.mx',
-    telefono: '+52 55 5000 0006',
-    padreId: 'norg-002',
-    tipo: 'SUBAREA',
+    id: 'norg-tprm-area-003',
+    organigramaId: 'org-tprm-001', tenantId: 'tenant-005',
+    nombre: 'Monitoreo Continuo y Riesgos',
+    descripcion: 'Área responsable del monitoreo continuo de exposición al riesgo de proveedores de embozado. Evalúa risk scores, cambios en certificaciones PCI, postura de seguridad, riesgos emergentes y concentración operacional.',
+    cargo: 'Gerente de Monitoreo de Riesgos TPRM',
+    departamento: 'Monitoreo de Riesgos',
+    email: 'tprm.riesgos@bancoglobal.mx',
+    telefono: '+52 55 1234 0023',
+    padreId: 'norg-tprm-root',
+    tipo: 'AREA',
+    icono: 'pi pi-chart-line',
+    responsable: { id: 'usr-005', nombre: 'Ana Patricia López García', email: 'alopez@bancoglobal.mx', avatar: 'https://randomuser.me/api/portraits/women/5.jpg' },
+    propiedadesCustom: [
+      { id: 'pc-tprm-a301', nombre: 'Código de área', tipo: 'TEXT', valor: 'TPRM-MON-001', requerido: true },
+      { id: 'pc-tprm-a302', nombre: 'Riesgos activos', tipo: 'NUMBER', valor: 23, requerido: false },
+      { id: 'pc-tprm-a303', nombre: 'Hallazgos abiertos', tipo: 'NUMBER', valor: 12, requerido: false },
+      { id: 'pc-tprm-a304', nombre: 'Frecuencia de monitoreo', tipo: 'TEXT', valor: 'Continuo + evaluación trimestral', requerido: true }
+    ],
+    apetitoRiesgo: {
+      probabilidad: 2,
+      impacto: 3,
+      nivelTolerancia: 'bajo',
+      descripcion: 'Monitoreo proactivo de riesgos con tolerancia baja a exposiciones no detectadas'
+    },
+    objetivosNegocio: [
+      {
+        id: 'obj-tprm-mon-001',
+        nombre: 'Control de Riesgo de Embozadores',
+        descripcion: 'Mantener risk score de todos los proveedores dentro de umbrales aceptables y detectar riesgos emergentes',
+        kpis: [
+          { id: 'kpi-tprm-mon001', nombre: 'Risk Score Promedio', valor: 61.6, meta: 50, unidad: 'puntos', umbralMaximo: 75, canales: ['in-app', 'email'], frecuencia: 'mensual' },
+          { id: 'kpi-tprm-mon002', nombre: 'Hallazgos Críticos Abiertos', valor: 3, meta: 0, unidad: 'cantidad', umbralMaximo: 5, canales: ['in-app', 'email', 'webhook'], frecuencia: 'semanal' },
+          { id: 'kpi-tprm-mon003', nombre: 'Evaluaciones trimestrales al día', valor: 80, meta: 100, unidad: '%', umbralMaximo: 75, canales: ['in-app'], frecuencia: 'trimestral' }
+        ]
+      }
+    ]
+  },
+
+  // ÁREA 4: Operaciones y Desempeño
+  {
+    id: 'norg-tprm-area-004',
+    organigramaId: 'org-tprm-001', tenantId: 'tenant-005',
+    nombre: 'Operaciones y Desempeño',
+    descripcion: 'Área responsable del seguimiento operativo de proveedores de embozado. Mide cumplimiento de SLAs, calidad de producción, tasas de defectos, tiempos de entrega, capacidad de respuesta y gestión de incidentes operativos.',
+    cargo: 'Gerente de Operaciones TPRM',
+    departamento: 'Operaciones TPRM',
+    email: 'tprm.operaciones@bancoglobal.mx',
+    telefono: '+52 55 1234 0024',
+    padreId: 'norg-tprm-root',
+    tipo: 'AREA',
     icono: 'pi pi-cog',
-    responsable: { id: 'usr-006', nombre: 'Ana Patricia López García', email: 'alopez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/6.jpg' },
+    responsable: { id: 'usr-008', nombre: 'Jorge Vargas Luna', email: 'jvargas@bancoglobal.mx', avatar: 'https://randomuser.me/api/portraits/men/8.jpg' },
     propiedadesCustom: [
-      { id: 'pc-020', nombre: 'Metodología', tipo: 'TEXT', valor: 'Basel III - AMA', requerido: true },
-      { id: 'pc-021', nombre: 'Analistas', tipo: 'NUMBER', valor: 18, requerido: false },
-      { id: 'pc-022', nombre: 'Procesos mapeados', tipo: 'NUMBER', valor: 450, requerido: false }
-    ],
-    apetitoRiesgo: {
-      probabilidad: 2,
-      impacto: 2,
-      nivelTolerancia: 'bajo',
-      descripcion: 'Enfoque preventivo con tolerancia limitada a fallas operacionales'
-    },
-    objetivosNegocio: [
-      {
-        id: 'obj-rop-001',
-        nombre: 'Control de Eventos de Pérdida',
-        descripcion: 'Reducir frecuencia e impacto de eventos de pérdida operacional',
-        kpis: [
-          { id: 'kpi-ro001', nombre: 'Eventos de Pérdida Mensuales', valor: 8, meta: 3, unidad: 'cantidad', umbralMaximo: 15, canales: ['in-app', 'email'], frecuencia: 'semanal' },
-          { id: 'kpi-ro002', nombre: 'Pérdida Acumulada (MXN M)', valor: 2.5, meta: 1.0, unidad: 'millones', umbralMaximo: 5.0, canales: ['in-app', 'email'], frecuencia: 'mensual' }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: 'norg-007',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Riesgos de Crédito',
-    descripcion: 'Subárea dedicada a la evaluación, seguimiento y control del riesgo crediticio en todas las líneas de negocio.',
-    cargo: 'Gerente de Riesgos de Crédito',
-    departamento: 'Riesgo de Crédito',
-    email: 'riesgo.credito@gfatlas.mx',
-    telefono: '+52 55 5000 0007',
-    padreId: 'norg-002',
-    tipo: 'SUBAREA',
-    icono: 'pi pi-credit-card',
-    responsable: { id: 'usr-007', nombre: 'Fernando Vega Soto', email: 'fvega@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/7.jpg' },
-    propiedadesCustom: [
-      { id: 'pc-023', nombre: 'Cartera administrada (MXN MM)', tipo: 'NUMBER', valor: 85000, requerido: true },
-      { id: 'pc-024', nombre: 'Modelos de scoring', tipo: 'NUMBER', valor: 12, requerido: false },
-      { id: 'pc-025', nombre: 'Analistas de crédito', tipo: 'NUMBER', valor: 35, requerido: false }
+      { id: 'pc-tprm-a401', nombre: 'Código de área', tipo: 'TEXT', valor: 'TPRM-OPS-001', requerido: true },
+      { id: 'pc-tprm-a402', nombre: 'Incidentes activos', tipo: 'NUMBER', valor: 4, requerido: false },
+      { id: 'pc-tprm-a403', nombre: 'Defectos en seguimiento', tipo: 'NUMBER', valor: 13, requerido: false },
+      { id: 'pc-tprm-a404', nombre: 'MTTR objetivo', tipo: 'TEXT', valor: '4 horas', requerido: true }
     ],
     apetitoRiesgo: {
       probabilidad: 3,
       impacto: 3,
       nivelTolerancia: 'moderado',
-      descripcion: 'Balance entre crecimiento de cartera y calidad crediticia'
+      descripcion: 'Tolerancia moderada a incidentes operativos menores, pero baja para incidentes que afecten datos de tarjetahabientes'
     },
     objetivosNegocio: [
       {
-        id: 'obj-rcr-001',
-        nombre: 'Calidad de Cartera',
-        descripcion: 'Mantener indicadores de morosidad dentro de límites aceptables',
+        id: 'obj-tprm-ops-001',
+        nombre: 'Excelencia Operativa de Embozadores',
+        descripcion: 'Asegurar que proveedores cumplan SLAs, mantengan calidad de producción y respondan oportunamente a incidentes',
         kpis: [
-          { id: 'kpi-rc001', nombre: 'Índice de Morosidad 90+ días', valor: 2.8, meta: 2.0, unidad: '%', umbralMaximo: 4.0, canales: ['in-app', 'email'], frecuencia: 'semanal' },
-          { id: 'kpi-rc002', nombre: 'Cobertura de Reservas', valor: 148, meta: 150, unidad: '%', umbralMaximo: 120, canales: ['in-app'], frecuencia: 'mensual' }
+          { id: 'kpi-tprm-ops001', nombre: 'Tiempo promedio entrega tarjetas', valor: 6.2, meta: 5, unidad: 'días', umbralMaximo: 7, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-tprm-ops002', nombre: 'Tasa de defectos producción', valor: 1.8, meta: 1.0, unidad: '%', umbralMaximo: 2.5, canales: ['in-app'], frecuencia: 'mensual' },
+          { id: 'kpi-tprm-ops003', nombre: 'MTTR incidentes proveedor', valor: 8, meta: 4, unidad: 'horas', umbralMaximo: 12, canales: ['in-app', 'email'], frecuencia: 'semanal' }
         ]
       }
     ]
   },
 
-  // SUBÁREAS de Cumplimiento (norg-003)
+  // ============================================================
+  // NIVEL 3: SUBÁREAS (4 subáreas - 1 por cada área)
+  // ============================================================
+
+  // SUBÁREA 1: Evaluación de Proveedores (bajo Due Diligence)
   {
-    id: 'norg-008',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Cumplimiento Regulatorio',
-    descripcion: 'Subárea responsable del seguimiento y cumplimiento de disposiciones regulatorias de CNBV, Banxico y otras autoridades.',
-    cargo: 'Gerente de Cumplimiento Regulatorio',
-    departamento: 'Regulación Bancaria',
-    email: 'regulatorio@gfatlas.mx',
-    telefono: '+52 55 5000 0008',
-    padreId: 'norg-003',
+    id: 'norg-tprm-sub-001',
+    organigramaId: 'org-tprm-001', tenantId: 'tenant-005',
+    nombre: 'Evaluación de Proveedores',
+    descripcion: 'Subárea especializada en la ejecución de evaluaciones de due diligence, cuestionarios PCI-DSS, verificación de certificaciones, auditoría de controles de seguridad y análisis de capacidad operativa de embozadores.',
+    cargo: 'Coordinador de Evaluaciones TPRM',
+    departamento: 'Evaluaciones',
+    email: 'tprm.evaluaciones@bancoglobal.mx',
+    telefono: '+52 55 1234 0025',
+    padreId: 'norg-tprm-area-001',
     tipo: 'SUBAREA',
-    icono: 'pi pi-book',
-    responsable: { id: 'usr-008', nombre: 'Sofía Delgado Cruz', email: 'sdelgado@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/8.jpg' },
+    icono: 'pi pi-list',
+    responsable: { id: 'usr-006', nombre: 'Fernando Castillo Núñez', email: 'fcastillo@bancoglobal.mx', avatar: 'https://randomuser.me/api/portraits/men/6.jpg' },
     propiedadesCustom: [
-      { id: 'pc-026', nombre: 'Regulaciones monitoreadas', tipo: 'NUMBER', valor: 85, requerido: false },
-      { id: 'pc-027', nombre: 'Reportes regulatorios mensuales', tipo: 'NUMBER', valor: 42, requerido: true },
-      { id: 'pc-028', nombre: 'Especialistas', tipo: 'NUMBER', valor: 22, requerido: false }
+      { id: 'pc-tprm-s101', nombre: 'Cuestionarios activos', tipo: 'NUMBER', valor: 2, requerido: false },
+      { id: 'pc-tprm-s102', nombre: 'Evaluaciones completadas 2025', tipo: 'NUMBER', valor: 12, requerido: false },
+      { id: 'pc-tprm-s103', nombre: 'Framework', tipo: 'TEXT', valor: 'PCI-DSS v4.0 / ISO 27036', requerido: true }
     ],
     apetitoRiesgo: {
       probabilidad: 1,
       impacto: 4,
       nivelTolerancia: 'muy bajo',
-      descripcion: 'Sin tolerancia a incumplimientos que generen sanciones regulatorias'
+      descripcion: 'Sin tolerancia a evaluaciones incompletas o sesgadas que permitan onboarding de proveedores riesgosos'
     },
     objetivosNegocio: [
       {
-        id: 'obj-creg-001',
-        nombre: 'Reportería Regulatoria',
-        descripcion: 'Entregar todos los reportes regulatorios en tiempo y forma',
+        id: 'obj-tprm-eval-001',
+        nombre: 'Calidad de Evaluaciones',
+        descripcion: 'Ejecutar evaluaciones rigurosas y completas que identifiquen todos los riesgos relevantes del proveedor',
         kpis: [
-          { id: 'kpi-cr001', nombre: 'Reportes Entregados a Tiempo', valor: 98, meta: 100, unidad: '%', umbralMaximo: 95, canales: ['in-app', 'email'], frecuencia: 'semanal' },
-          { id: 'kpi-cr002', nombre: 'Errores en Reportes', valor: 2, meta: 0, unidad: 'cantidad', umbralMaximo: 5, canales: ['in-app'], frecuencia: 'mensual' }
+          { id: 'kpi-tprm-eval001', nombre: 'Cobertura de controles evaluados', valor: 92, meta: 100, unidad: '%', umbralMaximo: 85, canales: ['in-app'], frecuencia: 'trimestral' },
+          { id: 'kpi-tprm-eval002', nombre: 'Hallazgos detectados por evaluación', valor: 4.2, meta: 5, unidad: 'promedio', umbralMaximo: 2, canales: ['in-app'], frecuencia: 'trimestral' }
         ]
       }
     ]
   },
 
+  // SUBÁREA 2: Cumplimiento Contractual (bajo Gestión de Contratos)
   {
-    id: 'norg-009',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Prevención de Lavado de Dinero (PLD/AML)',
-    descripcion: 'Subárea especializada en prevención, detección y reporte de operaciones con recursos de procedencia ilícita.',
-    cargo: 'Oficial PLD/AML',
-    departamento: 'PLD/AML',
-    email: 'pld@gfatlas.mx',
-    telefono: '+52 55 5000 0009',
-    padreId: 'norg-003',
+    id: 'norg-tprm-sub-002',
+    organigramaId: 'org-tprm-001', tenantId: 'tenant-005',
+    nombre: 'Cumplimiento Contractual',
+    descripcion: 'Subárea dedicada al seguimiento del cumplimiento de obligaciones contractuales, penalizaciones por incumplimiento de SLA, vigencia de contratos y renovaciones.',
+    cargo: 'Coordinador de Cumplimiento Contractual',
+    departamento: 'Cumplimiento Contractual',
+    email: 'tprm.cumplimiento.contractual@bancoglobal.mx',
+    telefono: '+52 55 1234 0026',
+    padreId: 'norg-tprm-area-002',
     tipo: 'SUBAREA',
-    icono: 'pi pi-search',
-    responsable: { id: 'usr-009', nombre: 'Patricia Reyes Solís', email: 'preyes@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/9.jpg' },
+    icono: 'pi pi-check-square',
+    responsable: { id: 'usr-013', nombre: 'Sofía Delgado Cruz', email: 'sdelgado@bancoglobal.mx', avatar: 'https://randomuser.me/api/portraits/women/13.jpg' },
     propiedadesCustom: [
-      { id: 'pc-029', nombre: 'Marco normativo', tipo: 'TEXT', valor: 'Ley Federal PLD / FATF', requerido: true },
-      { id: 'pc-030', nombre: 'Alertas mensuales promedio', tipo: 'NUMBER', valor: 2500, requerido: false },
-      { id: 'pc-031', nombre: 'Analistas PLD', tipo: 'NUMBER', valor: 28, requerido: false }
+      { id: 'pc-tprm-s201', nombre: 'Penalizaciones aplicadas YTD', tipo: 'NUMBER', valor: 3, requerido: false },
+      { id: 'pc-tprm-s202', nombre: 'Contratos con cláusula PCI', tipo: 'NUMBER', valor: 7, requerido: true },
+      { id: 'pc-tprm-s203', nombre: 'Renovaciones pendientes', tipo: 'NUMBER', valor: 2, requerido: false }
     ],
     apetitoRiesgo: {
-      probabilidad: 1,
-      impacto: 4,
-      nivelTolerancia: 'muy bajo',
-      descripcion: 'Cero tolerancia a operaciones con recursos ilícitos'
+      probabilidad: 2,
+      impacto: 3,
+      nivelTolerancia: 'bajo',
+      descripcion: 'Tolerancia baja a incumplimientos contractuales que afecten la seguridad de datos de tarjetahabientes'
     },
     objetivosNegocio: [
       {
-        id: 'obj-pld-001',
-        nombre: 'Efectividad en Detección',
-        descripcion: 'Mantener sistemas efectivos de detección de operaciones inusuales',
+        id: 'obj-tprm-cc-001',
+        nombre: 'Gestión Contractual Efectiva',
+        descripcion: 'Mantener contratos actualizados con cláusulas robustas y monitorear su cumplimiento',
         kpis: [
-          { id: 'kpi-pld001', nombre: 'Alertas Procesadas', valor: 96, meta: 100, unidad: '%', umbralMaximo: 90, canales: ['in-app', 'email'], frecuencia: 'semanal' },
-          { id: 'kpi-pld002', nombre: 'Tiempo de Análisis Promedio', valor: 36, meta: 24, unidad: 'horas', umbralMaximo: 72, canales: ['in-app'], frecuencia: 'semanal' },
-          { id: 'kpi-pld003', nombre: 'ROIs Presentados', valor: 45, meta: 50, unidad: 'cantidad', umbralMaximo: 30, canales: ['in-app'], frecuencia: 'mensual' }
+          { id: 'kpi-tprm-cc001', nombre: 'Contratos con cláusulas actualizadas', valor: 6, meta: 8, unidad: 'cantidad', umbralMaximo: 5, canales: ['in-app'], frecuencia: 'trimestral' },
+          { id: 'kpi-tprm-cc002', nombre: 'Tiempo de resolución de incumplimientos', valor: 15, meta: 10, unidad: 'días', umbralMaximo: 30, canales: ['in-app', 'email'], frecuencia: 'mensual' }
         ]
       }
     ]
   },
 
-  // SUBÁREAS de Seguridad (norg-004)
+  // SUBÁREA 3: Inteligencia de Riesgos de Terceros (bajo Monitoreo Continuo)
   {
-    id: 'norg-010',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Ciberseguridad',
-    descripcion: 'Subárea dedicada a la protección de infraestructura tecnológica y datos contra amenazas cibernéticas.',
-    cargo: 'Gerente de Ciberseguridad',
-    departamento: 'Ciberseguridad',
-    email: 'ciberseguridad@gfatlas.mx',
-    telefono: '+52 55 5000 0010',
-    padreId: 'norg-004',
-    tipo: 'SUBAREA',
-    icono: 'pi pi-lock',
-    responsable: { id: 'usr-010', nombre: 'Miguel Ángel Ruiz', email: 'maruiz@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/10.jpg' },
-    propiedadesCustom: [
-      { id: 'pc-032', nombre: 'Certificaciones equipo', tipo: 'TEXT', valor: 'CISSP, CEH, OSCP', requerido: true },
-      { id: 'pc-033', nombre: 'Herramientas de seguridad', tipo: 'NUMBER', valor: 35, requerido: false },
-      { id: 'pc-034', nombre: 'Especialistas', tipo: 'NUMBER', valor: 32, requerido: false }
-    ],
-    apetitoRiesgo: {
-      probabilidad: 1,
-      impacto: 4,
-      nivelTolerancia: 'muy bajo',
-      descripcion: 'Tolerancia mínima a brechas de seguridad y accesos no autorizados'
-    },
-    objetivosNegocio: [
-      {
-        id: 'obj-cyber-001',
-        nombre: 'Prevención de Intrusiones',
-        descripcion: 'Prevenir accesos no autorizados y ataques cibernéticos exitosos',
-        kpis: [
-          { id: 'kpi-cy001', nombre: 'Intentos de Intrusión Bloqueados', valor: 99.8, meta: 100, unidad: '%', umbralMaximo: 99, canales: ['in-app', 'email'], frecuencia: 'diaria' },
-          { id: 'kpi-cy002', nombre: 'Vulnerabilidades Críticas', valor: 3, meta: 0, unidad: 'cantidad', umbralMaximo: 10, canales: ['in-app', 'email', 'webhook'], frecuencia: 'semanal' }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: 'norg-011',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Centro de Operaciones de Seguridad (SOC)',
-    descripcion: 'Centro de monitoreo 24/7 para detección, análisis y respuesta a incidentes de seguridad.',
-    cargo: 'Gerente del SOC',
-    departamento: 'SOC',
-    email: 'soc@gfatlas.mx',
-    telefono: '+52 55 5000 0011',
-    padreId: 'norg-004',
+    id: 'norg-tprm-sub-003',
+    organigramaId: 'org-tprm-001', tenantId: 'tenant-005',
+    nombre: 'Inteligencia de Riesgos de Terceros',
+    descripcion: 'Subárea especializada en la recopilación y análisis de inteligencia de riesgos de proveedores: monitoreo de certificaciones, cambios regulatorios, riesgos geopolíticos, estabilidad financiera y amenazas emergentes.',
+    cargo: 'Coordinador de Inteligencia de Riesgos',
+    departamento: 'Inteligencia de Riesgos',
+    email: 'tprm.inteligencia@bancoglobal.mx',
+    telefono: '+52 55 1234 0027',
+    padreId: 'norg-tprm-area-003',
     tipo: 'SUBAREA',
     icono: 'pi pi-eye',
-    responsable: { id: 'usr-011', nombre: 'Sandra Pérez Luna', email: 'sperez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/11.jpg' },
+    responsable: { id: 'usr-010', nombre: 'Miguel Ángel Ruiz', email: 'maruiz@bancoglobal.mx', avatar: 'https://randomuser.me/api/portraits/men/10.jpg' },
     propiedadesCustom: [
-      { id: 'pc-035', nombre: 'Operación', tipo: 'TEXT', valor: '24x7x365', requerido: true },
-      { id: 'pc-036', nombre: 'Alertas diarias promedio', tipo: 'NUMBER', valor: 15000, requerido: false },
-      { id: 'pc-037', nombre: 'Analistas por turno', tipo: 'NUMBER', valor: 8, requerido: true }
+      { id: 'pc-tprm-s301', nombre: 'Fuentes de inteligencia', tipo: 'NUMBER', valor: 12, requerido: false },
+      { id: 'pc-tprm-s302', nombre: 'Alertas generadas/mes', tipo: 'NUMBER', valor: 8, requerido: false },
+      { id: 'pc-tprm-s303', nombre: 'Herramientas de monitoreo', tipo: 'TEXT', valor: 'BitSight, SecurityScorecard, Moody\'s', requerido: true }
     ],
     apetitoRiesgo: {
       probabilidad: 2,
       impacto: 3,
       nivelTolerancia: 'bajo',
-      descripcion: 'Respuesta rápida y efectiva a todos los eventos de seguridad'
+      descripcion: 'Detección temprana de riesgos para prevenir materialización de amenazas'
     },
     objetivosNegocio: [
       {
-        id: 'obj-soc-001',
-        nombre: 'Respuesta a Incidentes',
-        descripcion: 'Detectar y responder rápidamente a eventos de seguridad',
+        id: 'obj-tprm-intel-001',
+        nombre: 'Detección Temprana de Riesgos',
+        descripcion: 'Identificar y comunicar riesgos emergentes de proveedores antes de que impacten la operación',
         kpis: [
-          { id: 'kpi-soc001', nombre: 'MTTD (Tiempo de Detección)', valor: 12, meta: 5, unidad: 'minutos', umbralMaximo: 30, canales: ['in-app', 'email'], frecuencia: 'diaria' },
-          { id: 'kpi-soc002', nombre: 'MTTR (Tiempo de Respuesta)', valor: 45, meta: 30, unidad: 'minutos', umbralMaximo: 60, canales: ['in-app', 'email'], frecuencia: 'diaria' },
-          { id: 'kpi-soc003', nombre: 'Incidentes Contenidos en SLA', valor: 94, meta: 98, unidad: '%', umbralMaximo: 85, canales: ['in-app'], frecuencia: 'semanal' }
+          { id: 'kpi-tprm-int001', nombre: 'Tiempo de detección de riesgos', valor: 5, meta: 2, unidad: 'días', umbralMaximo: 10, canales: ['in-app', 'email'], frecuencia: 'semanal' },
+          { id: 'kpi-tprm-int002', nombre: 'Riesgos identificados proactivamente', valor: 70, meta: 90, unidad: '%', umbralMaximo: 50, canales: ['in-app'], frecuencia: 'mensual' }
         ]
       }
     ]
   },
 
-  // SUBÁREAS de Tecnología (norg-005)
+  // SUBÁREA 4: Gestión de Incidentes y Offboarding (bajo Operaciones)
   {
-    id: 'norg-012',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Infraestructura y Operaciones TI',
-    descripcion: 'Subárea responsable de la gestión de data centers, servidores, redes y operaciones de TI.',
-    cargo: 'Gerente de Infraestructura',
-    departamento: 'Infraestructura TI',
-    email: 'infraestructura@gfatlas.mx',
-    telefono: '+52 55 5000 0012',
-    padreId: 'norg-005',
+    id: 'norg-tprm-sub-004',
+    organigramaId: 'org-tprm-001', tenantId: 'tenant-005',
+    nombre: 'Gestión de Incidentes y Offboarding',
+    descripcion: 'Subárea encargada de la respuesta a incidentes originados en proveedores de embozado y de la terminación controlada de relaciones comerciales. Coordina contención, análisis forense, comunicación a reguladores y transferencia operativa.',
+    cargo: 'Coordinador de Incidentes y Offboarding',
+    departamento: 'Incidentes y Offboarding',
+    email: 'tprm.incidentes@bancoglobal.mx',
+    telefono: '+52 55 1234 0028',
+    padreId: 'norg-tprm-area-004',
     tipo: 'SUBAREA',
-    icono: 'pi pi-database',
-    responsable: { id: 'usr-012', nombre: 'Eduardo Sánchez Mora', email: 'esanchez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/men/12.jpg' },
+    icono: 'pi pi-exclamation-triangle',
+    responsable: { id: 'usr-004', nombre: 'Roberto Torres Ramírez', email: 'rtorres@bancoglobal.mx', avatar: 'https://randomuser.me/api/portraits/men/4.jpg' },
     propiedadesCustom: [
-      { id: 'pc-038', nombre: 'Servidores físicos', tipo: 'NUMBER', valor: 450, requerido: false },
-      { id: 'pc-039', nombre: 'VMs activas', tipo: 'NUMBER', valor: 2800, requerido: false },
-      { id: 'pc-040', nombre: 'SLA Uptime', tipo: 'TEXT', valor: '99.99%', requerido: true }
+      { id: 'pc-tprm-s401', nombre: 'Incidentes activos', tipo: 'NUMBER', valor: 4, requerido: false },
+      { id: 'pc-tprm-s402', nombre: 'Offboardings en proceso', tipo: 'NUMBER', valor: 1, requerido: false },
+      { id: 'pc-tprm-s403', nombre: 'SLA notificación incidente', tipo: 'TEXT', valor: '2 horas', requerido: true }
     ],
     apetitoRiesgo: {
       probabilidad: 2,
-      impacto: 3,
+      impacto: 4,
       nivelTolerancia: 'bajo',
-      descripcion: 'Prioridad máxima a disponibilidad y continuidad de servicios'
+      descripcion: 'Respuesta rápida y efectiva a todos los incidentes de proveedores que afecten datos o servicios'
     },
     objetivosNegocio: [
       {
-        id: 'obj-infra-001',
-        nombre: 'Disponibilidad de Infraestructura',
-        descripcion: 'Garantizar operación continua de la infraestructura tecnológica',
+        id: 'obj-tprm-inc-001',
+        nombre: 'Respuesta Efectiva a Incidentes',
+        descripcion: 'Contener y resolver incidentes de proveedores minimizando impacto al banco y tarjetahabientes',
         kpis: [
-          { id: 'kpi-inf001', nombre: 'Uptime General', valor: 99.95, meta: 99.99, unidad: '%', umbralMaximo: 99.5, canales: ['in-app', 'email', 'webhook'], frecuencia: 'diaria' },
-          { id: 'kpi-inf002', nombre: 'Incidentes de Infraestructura P1', valor: 1, meta: 0, unidad: 'cantidad', umbralMaximo: 3, canales: ['in-app', 'email'], frecuencia: 'semanal' }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: 'norg-013',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Desarrollo de Sistemas',
-    descripcion: 'Subárea de desarrollo de aplicaciones bancarias, APIs y sistemas de integración.',
-    cargo: 'Gerente de Desarrollo',
-    departamento: 'Desarrollo de Software',
-    email: 'desarrollo@gfatlas.mx',
-    telefono: '+52 55 5000 0013',
-    padreId: 'norg-005',
-    tipo: 'SUBAREA',
-    icono: 'pi pi-code',
-    responsable: { id: 'usr-013', nombre: 'Diana Torres Campos', email: 'dtorres@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/13.jpg' },
-    propiedadesCustom: [
-      { id: 'pc-041', nombre: 'Desarrolladores', tipo: 'NUMBER', valor: 85, requerido: false },
-      { id: 'pc-042', nombre: 'Stack principal', tipo: 'TEXT', valor: 'Java, Angular, React Native', requerido: true },
-      { id: 'pc-043', nombre: 'Releases mensuales', tipo: 'NUMBER', valor: 12, requerido: false }
-    ],
-    apetitoRiesgo: {
-      probabilidad: 3,
-      impacto: 2,
-      nivelTolerancia: 'moderado',
-      descripcion: 'Balance entre velocidad de desarrollo y calidad de código'
-    },
-    objetivosNegocio: [
-      {
-        id: 'obj-dev-001',
-        nombre: 'Calidad de Software',
-        descripcion: 'Mantener altos estándares de calidad en el desarrollo de aplicaciones',
-        kpis: [
-          { id: 'kpi-dev001', nombre: 'Cobertura de Pruebas', valor: 78, meta: 85, unidad: '%', umbralMaximo: 70, canales: ['in-app'], frecuencia: 'semanal' },
-          { id: 'kpi-dev002', nombre: 'Defectos en Producción', valor: 5, meta: 2, unidad: 'cantidad', umbralMaximo: 10, canales: ['in-app', 'email'], frecuencia: 'semanal' },
-          { id: 'kpi-dev003', nombre: 'Lead Time to Production', valor: 12, meta: 7, unidad: 'días', umbralMaximo: 21, canales: ['in-app'], frecuencia: 'mensual' }
-        ]
-      }
-    ]
-  },
-
-  // ============================================================
-  // TPRM: Subárea de Gestión de Riesgo de Terceros (bajo Riesgos)
-  // ============================================================
-  {
-    id: 'norg-tprm-001',
-    organigramaId: 'org-001', tenantId: 'tenant-001',
-    nombre: 'Gestión de Riesgo de Terceros (TPRM)',
-    descripcion: 'Subárea especializada en la gestión integral del riesgo de proveedores terceros críticos, con enfoque en embozadores de tarjetas. Responsable del ciclo completo: Due Diligence, gestión contractual, monitoreo continuo, desempeño, incidentes y offboarding.',
-    cargo: 'Gerente de Riesgo de Terceros',
-    departamento: 'TPRM',
-    email: 'tprm@gfatlas.mx',
-    telefono: '+52 55 5000 0020',
-    padreId: 'norg-002',
-    tipo: 'SUBAREA',
-    icono: 'pi pi-link',
-    responsable: { id: 'usr-005', nombre: 'Ana Patricia López García', email: 'alopez@gfatlas.mx', avatar: 'https://randomuser.me/api/portraits/women/6.jpg' },
-    propiedadesCustom: [
-      { id: 'pc-tprm-001', nombre: 'Proveedores gestionados', tipo: 'NUMBER', valor: 8, requerido: false },
-      { id: 'pc-tprm-002', nombre: 'Proveedores críticos', tipo: 'NUMBER', valor: 2, requerido: true },
-      { id: 'pc-tprm-003', nombre: 'Metodología', tipo: 'TEXT', valor: 'ISO 27036 / NIST SP 800-161', requerido: true },
-      { id: 'pc-tprm-004', nombre: 'Analistas TPRM', tipo: 'NUMBER', valor: 6, requerido: false }
-    ],
-    apetitoRiesgo: {
-      probabilidad: 2,
-      impacto: 3,
-      nivelTolerancia: 'bajo',
-      descripcion: 'Tolerancia baja a riesgos de proveedores que puedan afectar operación de tarjetas y datos de clientes'
-    },
-    objetivosNegocio: [
-      {
-        id: 'obj-tprm-org-001',
-        nombre: 'Control de Riesgo de Embozadores',
-        descripcion: 'Mantener risk score de proveedores de embozado dentro de umbrales aceptables y asegurar cumplimiento PCI-DSS',
-        kpis: [
-          { id: 'kpi-tprm-org001', nombre: 'Risk Score Promedio Proveedores', valor: 66, meta: 50, unidad: 'puntos', umbralMaximo: 75, canales: ['in-app', 'email'], frecuencia: 'mensual' },
-          { id: 'kpi-tprm-org002', nombre: 'SLA Compliance Rate Global', valor: 87, meta: 95, unidad: '%', umbralMaximo: 80, canales: ['in-app', 'email'], frecuencia: 'semanal' },
-          { id: 'kpi-tprm-org003', nombre: 'Hallazgos Críticos Abiertos', valor: 3, meta: 0, unidad: 'cantidad', umbralMaximo: 5, canales: ['in-app', 'email', 'webhook'], frecuencia: 'semanal' },
-          { id: 'kpi-tprm-org004', nombre: 'Due Diligence Completados a Tiempo', valor: 67, meta: 100, unidad: '%', umbralMaximo: 80, canales: ['in-app'], frecuencia: 'trimestral' }
+          { id: 'kpi-tprm-inc001', nombre: 'MTTR incidentes proveedor', valor: 8, meta: 4, unidad: 'horas', umbralMaximo: 12, canales: ['in-app', 'email', 'webhook'], frecuencia: 'semanal' },
+          { id: 'kpi-tprm-inc002', nombre: 'Incidentes con causa raíz', valor: 78, meta: 95, unidad: '%', umbralMaximo: 70, canales: ['in-app'], frecuencia: 'mensual' },
+          { id: 'kpi-tprm-inc003', nombre: 'Offboardings completados sin fuga', valor: 100, meta: 100, unidad: '%', umbralMaximo: 100, canales: ['in-app', 'email'], frecuencia: 'trimestral' }
         ]
       }
     ]
@@ -1223,42 +902,39 @@ export const nodosOrganigrama = [
 // Dashboard
 // ============================================================
 export const dashboardConfigs = [
-  { id: 'dash-001', nombre: 'Dashboard Principal', descripcion: 'Panel de control GRC bancario', isDefault: true, columns: 12, rowHeight: 50, gap: 10, tenantId: 'tenant-001', createdAt: new Date().toISOString() },
+  { id: 'dash-tprm-001', nombre: 'Dashboard TPRM Embozadores', descripcion: 'Panel de monitoreo de proveedores de embozado de tarjetas', isDefault: true, columns: 12, rowHeight: 50, gap: 10, tenantId: 'tenant-005', createdAt: new Date().toISOString() },
 ];
 
 export const dashboardWidgets = [
-  { id: 'dw-001', dashboardId: 'dash-001', tipo: 'kpi-card', titulo: 'Cumplimiento General', config: JSON.stringify({ kpiType: 'cumplimiento', color: 'cyan' }), x: 0, y: 0, cols: 3, rows: 2, tenantId: 'tenant-001' },
-  { id: 'dw-002', dashboardId: 'dash-001', tipo: 'kpi-card', titulo: 'Procesos Activos', config: JSON.stringify({ kpiType: 'procesos', color: 'purple' }), x: 3, y: 0, cols: 3, rows: 2, tenantId: 'tenant-001' },
-  { id: 'dw-003', dashboardId: 'dash-001', tipo: 'kpi-card', titulo: 'Alertas Activas', config: JSON.stringify({ kpiType: 'alertas', color: 'orange' }), x: 6, y: 0, cols: 3, rows: 2, tenantId: 'tenant-001' },
-  { id: 'dw-004', dashboardId: 'dash-001', tipo: 'kpi-card', titulo: 'Objetivos Cumplidos', config: JSON.stringify({ kpiType: 'objetivos', color: 'emerald' }), x: 9, y: 0, cols: 3, rows: 2, tenantId: 'tenant-001' },
-  { id: 'dw-005', dashboardId: 'dash-001', tipo: 'graficas-interactivas', titulo: 'Gráficas Interactivas', subtitulo: 'Análisis visual de métricas', config: JSON.stringify({ chartType: 'donut' }), x: 0, y: 2, cols: 6, rows: 5, tenantId: 'tenant-001' },
-  { id: 'dw-006', dashboardId: 'dash-001', tipo: 'table-mini', titulo: 'Procesos', config: JSON.stringify({ entity: 'procesos' }), x: 6, y: 2, cols: 6, rows: 5, tenantId: 'tenant-001' },
-  { id: 'dw-007', dashboardId: 'dash-001', tipo: 'actividad-enhanced', titulo: 'Últimas Actividades', config: JSON.stringify({}), x: 0, y: 7, cols: 6, rows: 4, tenantId: 'tenant-001' },
-  { id: 'dw-008', dashboardId: 'dash-001', tipo: 'calendario', titulo: 'Calendario', config: JSON.stringify({}), x: 6, y: 7, cols: 6, rows: 4, tenantId: 'tenant-001' },
+  { id: 'dw-tprm-001', dashboardId: 'dash-tprm-001', tipo: 'kpi-card', titulo: 'Risk Score Promedio', config: JSON.stringify({ kpiType: 'risk_score', color: 'orange' }), x: 0, y: 0, cols: 3, rows: 2, tenantId: 'tenant-005' },
+  { id: 'dw-tprm-002', dashboardId: 'dash-tprm-001', tipo: 'kpi-card', titulo: 'SLA Compliance Rate', config: JSON.stringify({ kpiType: 'sla_compliance', color: 'cyan' }), x: 3, y: 0, cols: 3, rows: 2, tenantId: 'tenant-005' },
+  { id: 'dw-tprm-003', dashboardId: 'dash-tprm-001', tipo: 'kpi-card', titulo: 'Incidentes Activos', config: JSON.stringify({ kpiType: 'incidents', color: 'red' }), x: 6, y: 0, cols: 3, rows: 2, tenantId: 'tenant-005' },
+  { id: 'dw-tprm-004', dashboardId: 'dash-tprm-001', tipo: 'kpi-card', titulo: 'Hallazgos Abiertos', config: JSON.stringify({ kpiType: 'findings', color: 'purple' }), x: 9, y: 0, cols: 3, rows: 2, tenantId: 'tenant-005' },
+  { id: 'dw-tprm-005', dashboardId: 'dash-tprm-001', tipo: 'graficas-interactivas', titulo: 'Riesgo por Proveedor', subtitulo: 'Risk score y tendencia por embozador', config: JSON.stringify({ chartType: 'bar' }), x: 0, y: 2, cols: 6, rows: 5, tenantId: 'tenant-005' },
+  { id: 'dw-tprm-006', dashboardId: 'dash-tprm-001', tipo: 'table-mini', titulo: 'Proveedores', config: JSON.stringify({ entity: 'activos' }), x: 6, y: 2, cols: 6, rows: 5, tenantId: 'tenant-005' },
+  { id: 'dw-tprm-007', dashboardId: 'dash-tprm-001', tipo: 'actividad-enhanced', titulo: 'Últimas Actividades TPRM', config: JSON.stringify({}), x: 0, y: 7, cols: 6, rows: 4, tenantId: 'tenant-005' },
+  { id: 'dw-tprm-008', dashboardId: 'dash-tprm-001', tipo: 'calendario', titulo: 'Vencimientos y Evaluaciones', config: JSON.stringify({}), x: 6, y: 7, cols: 6, rows: 4, tenantId: 'tenant-005' },
 ];
 
 // ============================================================
 // Notificaciones
 // ============================================================
 export const notificationRules = [
-  { id: 'nr-001', nombre: 'Nuevo riesgo crítico creado', descripcion: 'Notifica cuando se crea un riesgo con nivel crítico', entidadTipo: 'RISK', eventoTipo: 'CREATE', activo: true, notificarCreador: false, notificarResponsable: true, notificarAprobadores: false, rolesDestino: JSON.stringify(['Director', 'Gestor Áreas']), enviarInApp: true, enviarEmail: false, plantillaMensaje: 'Se ha identificado un nuevo riesgo crítico: {nombre}', severidad: 'critical', tenantId: 'tenant-001' },
-  { id: 'nr-002', nombre: 'Incidente de seguridad reportado', descripcion: 'Notifica cuando se reporta un nuevo incidente', entidadTipo: 'INCIDENT', eventoTipo: 'CREATE', activo: true, notificarResponsable: true, rolesDestino: JSON.stringify(['Director', 'Coordinador', 'Gestor Áreas']), enviarInApp: true, enviarEmail: false, plantillaMensaje: 'Se ha reportado un incidente de seguridad: {titulo}', severidad: 'warning', tenantId: 'tenant-001' },
-  { id: 'nr-003', nombre: 'Cuestionario asignado', descripcion: 'Notifica cuando se asigna un cuestionario para revisión', entidadTipo: 'QUESTIONNAIRE', eventoTipo: 'CREATE', activo: true, notificarResponsable: true, enviarInApp: true, enviarEmail: false, plantillaMensaje: 'Se te ha asignado el cuestionario: {nombre}', severidad: 'info', tenantId: 'tenant-001' },
-  { id: 'nr-004', nombre: 'Defecto crítico reportado', descripcion: 'Notifica cuando se reporta un defecto con prioridad crítica', entidadTipo: 'DEFECT', eventoTipo: 'CREATE', activo: true, notificarResponsable: true, rolesDestino: JSON.stringify(['Coordinador', 'Gestor Áreas']), enviarInApp: true, severidad: 'critical', tenantId: 'tenant-001' },
+  // === TPRM: Reglas de notificación ===
+  { id: 'nr-tprm-001', nombre: 'Certificación PCI-DSS próxima a vencer', descripcion: 'Notifica cuando la certificación PCI-DSS de un proveedor de embozado está a 90 días de expirar', entidadTipo: 'RISK', eventoTipo: 'EXPIRATION', activo: true, notificarCreador: false, notificarResponsable: true, notificarAprobadores: true, rolesDestino: JSON.stringify(['Director', 'Gestor Áreas', 'Coordinador']), enviarInApp: true, enviarEmail: true, plantillaMensaje: 'ALERTA: La certificación PCI-DSS del proveedor {nombre} vence en {dias} días. Se requiere iniciar proceso de renovación o evaluación de alternativas.', severidad: 'warning', tenantId: 'tenant-005' },
+  { id: 'nr-tprm-002', nombre: 'Evaluación de Due Diligence completada', descripcion: 'Notifica cuando se completa una evaluación de due diligence de un proveedor de embozado', entidadTipo: 'QUESTIONNAIRE', eventoTipo: 'COMPLETE', activo: true, notificarCreador: true, notificarResponsable: true, notificarAprobadores: false, rolesDestino: JSON.stringify(['Director', 'Gestor Áreas']), enviarInApp: true, enviarEmail: false, plantillaMensaje: 'Se ha completado la evaluación de Due Diligence del proveedor de embozado: {nombre}. Resultado: {resultado}/100.', severidad: 'info', tenantId: 'tenant-005' },
+  { id: 'nr-tprm-003', nombre: 'Incidente de proveedor reportado', descripcion: 'Notifica cuando se reporta un incidente originado en un proveedor de embozado de tarjetas', entidadTipo: 'INCIDENT', eventoTipo: 'CREATE', activo: true, notificarResponsable: true, notificarAprobadores: false, rolesDestino: JSON.stringify(['Director', 'Coordinador', 'Gestor Áreas']), enviarInApp: true, enviarEmail: true, plantillaMensaje: 'Se ha reportado un incidente del proveedor de embozado: {titulo}. Severidad: {severidad}. Se requiere acción inmediata.', severidad: 'critical', tenantId: 'tenant-005' },
+  { id: 'nr-tprm-004', nombre: 'SLA compliance bajo umbral', descripcion: 'Notifica cuando el cumplimiento de SLA de un proveedor de embozado cae por debajo del 80%', entidadTipo: 'RISK', eventoTipo: 'THRESHOLD', activo: true, notificarCreador: false, notificarResponsable: true, notificarAprobadores: false, rolesDestino: JSON.stringify(['Director', 'Coordinador']), enviarInApp: true, enviarEmail: false, plantillaMensaje: 'ALERTA: El cumplimiento de SLA del proveedor {nombre} ha caído a {valor}%, por debajo del umbral mínimo del 80%.', severidad: 'warning', tenantId: 'tenant-005' },
 ];
 
 export const alertRules = [
-  { id: 'ar-001', nombre: 'Riesgos críticos exceden umbral', descripcion: 'Alerta cuando hay más de 5 riesgos en estado crítico', entidadTipo: 'RISK', metricaNombre: 'count_critical', operador: 'GT', valorUmbral: 5, tipoAgregacion: 'COUNT', activo: true, rolesDestino: JSON.stringify(['Director', 'Gestor Áreas']), enviarInApp: true, severidad: 'critical', cooldownMinutos: 1440, tenantId: 'tenant-001' },
-  { id: 'ar-002', nombre: 'Incidentes sin resolver', descripcion: 'Alerta cuando hay más de 3 incidentes sin resolver en 48h', entidadTipo: 'INCIDENT', metricaNombre: 'unresolved_48h', operador: 'GT', valorUmbral: 3, tipoAgregacion: 'COUNT', activo: true, rolesDestino: JSON.stringify(['Coordinador']), enviarInApp: true, severidad: 'warning', cooldownMinutos: 720, tenantId: 'tenant-001' },
-  { id: 'ar-003', nombre: 'Cumplimiento bajo umbral', descripcion: 'Alerta cuando el cumplimiento general baja del 80%', entidadTipo: 'COMPLIANCE_REVIEW', metricaNombre: 'compliance_percentage', operador: 'LT', valorUmbral: 80, tipoAgregacion: 'AVG', activo: true, rolesDestino: JSON.stringify(['Director']), enviarInApp: true, enviarEmail: false, severidad: 'warning', cooldownMinutos: 2880, tenantId: 'tenant-001' },
+  // === TPRM: Reglas de alerta ===
+  { id: 'ar-tprm-001', nombre: 'Risk score excede umbral', descripcion: 'Alerta cuando el risk score de un proveedor de embozado supera 75 puntos', entidadTipo: 'RISK', metricaNombre: 'vendor_risk_score', operador: 'GT', valorUmbral: 75, tipoAgregacion: 'MAX', activo: true, rolesDestino: JSON.stringify(['Director', 'Gestor Áreas']), enviarInApp: true, enviarEmail: true, severidad: 'critical', cooldownMinutos: 1440, tenantId: 'tenant-005' },
+  { id: 'ar-tprm-002', nombre: 'SLA compliance bajo 80%', descripcion: 'Alerta cuando el cumplimiento de SLA de proveedores de embozado cae por debajo del 80%', entidadTipo: 'RISK', metricaNombre: 'sla_compliance_rate', operador: 'LT', valorUmbral: 80, tipoAgregacion: 'AVG', activo: true, rolesDestino: JSON.stringify(['Director', 'Coordinador']), enviarInApp: true, enviarEmail: false, severidad: 'warning', cooldownMinutos: 2880, tenantId: 'tenant-005' },
+  { id: 'ar-tprm-003', nombre: 'Incidentes críticos abiertos >48h', descripcion: 'Alerta cuando hay incidentes críticos de proveedores de embozado sin resolver por más de 48 horas', entidadTipo: 'INCIDENT', metricaNombre: 'critical_unresolved_48h', operador: 'GT', valorUmbral: 0, tipoAgregacion: 'COUNT', activo: true, rolesDestino: JSON.stringify(['Director', 'Gestor Áreas', 'Coordinador']), enviarInApp: true, enviarEmail: true, severidad: 'critical', cooldownMinutos: 720, tenantId: 'tenant-005' },
 ];
 
 export const notifications = [
-  { id: 'ntf-001', usuarioId: 'usr-004', tipo: 'NOTIFICATION', titulo: 'Nuevo riesgo crítico identificado', mensaje: 'Se ha identificado un nuevo riesgo crítico en el Core Banking System.', severidad: 'critical', entidadTipo: 'RISK', entidadId: 'rsk-002', entidadNombre: 'Acceso no autorizado a CBS', leida: false, acciones: JSON.stringify([{ tipo: 'primary', label: 'Ver riesgo', url: '/riesgos/rsk-002' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'ntf-002', usuarioId: 'usr-004', tipo: 'ALERT', titulo: 'Incidentes sin resolver exceden umbral', mensaje: 'Hay 5 incidentes que llevan más de 48 horas sin resolver.', severidad: 'warning', entidadTipo: 'INCIDENT', leida: false, acciones: JSON.stringify([{ tipo: 'primary', label: 'Ver incidentes', url: '/incidentes?estado=abierto' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'ntf-003', usuarioId: 'usr-009', tipo: 'EXPIRATION_REMINDER', titulo: 'Cuestionario AML próximo a vencer', mensaje: 'El cuestionario "Auditoría AML/PLD Semestral 2024-H2" vence en 7 días.', severidad: 'warning', entidadTipo: 'QUESTIONNAIRE', entidadNombre: 'Auditoría AML/PLD Semestral', leida: false, acciones: JSON.stringify([{ tipo: 'primary', label: 'Completar cuestionario', url: '/cumplimiento/cuestionarios/aml-2024-h2' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'ntf-004', usuarioId: 'usr-003', tipo: 'APPROVAL_REQUEST', titulo: 'Respuesta pendiente de aprobación', mensaje: 'Patricia Reyes Solís ha completado el cuestionario AML y requiere tu aprobación.', severidad: 'info', entidadTipo: 'QUESTIONNAIRE', entidadNombre: 'Evaluación KYC Reforzado', leida: false, acciones: JSON.stringify([{ tipo: 'primary', label: 'Aprobar', action: 'approve' }, { tipo: 'danger', label: 'Rechazar', action: 'reject' }]), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'ntf-005', usuarioId: 'usr-004', tipo: 'NOTIFICATION', titulo: 'Incidente de seguridad resuelto', mensaje: 'El incidente "Ataque de phishing masivo a clientes" ha sido resuelto exitosamente.', severidad: 'info', entidadTipo: 'INCIDENT', entidadNombre: 'Ataque de phishing masivo', leida: true, fechaLeida: new Date(Date.now() - 3600000).toISOString(), tenantId: 'tenant-001', createdAt: new Date().toISOString() },
   // === TPRM: Notificaciones ===
   { id: 'ntf-tprm-001', usuarioId: 'usr-004', tipo: 'ALERT', titulo: 'Subcontratista de Thales sin PCI vigente', mensaje: 'ALERTA CRÍTICA: Se detectó que el subcontratista de impresión de Thales DIS no tiene certificación PCI-DSS vigente. Se requiere acción inmediata.', severidad: 'critical', entidadTipo: 'INCIDENT', entidadId: 'inc-tprm-004', entidadNombre: 'Subcontratista sin PCI', leida: false, acciones: JSON.stringify([{ tipo: 'primary', label: 'Ver incidente', url: '/incidentes/inc-tprm-004' }]), tenantId: 'tenant-005', createdAt: new Date().toISOString() },
   { id: 'ntf-tprm-002', usuarioId: 'usr-008', tipo: 'NOTIFICATION', titulo: 'Lote defectuoso de CPI Card Group', mensaje: 'CPI Card Group reportó un lote de 15,000 tarjetas con chip EMV defectuoso. El proveedor está procesando reposición.', severidad: 'warning', entidadTipo: 'INCIDENT', entidadId: 'inc-tprm-001', entidadNombre: 'Lote defectuoso', leida: false, acciones: JSON.stringify([{ tipo: 'primary', label: 'Ver detalle', url: '/incidentes/inc-tprm-001' }]), tenantId: 'tenant-005', createdAt: new Date().toISOString() },
@@ -1273,32 +949,11 @@ export const notifications = [
 // Proyectos
 // ============================================================
 export const projects = [
-  { id: 'prj-001', name: 'Implementación ISO 27001', description: 'Proyecto de certificación del Sistema de Gestión de Seguridad de la Información bajo la norma ISO 27001:2022', startDate: '2024-01-15', endDate: '2025-06-30', responsibleUserId: 'usr-004', priority: 'critical', status: 'in_progress', progress: 45, reminderDays: JSON.stringify([30, 15, 7, 1]), createdBy: 'usr-001', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prj-002', name: 'Migración Core Banking a Nube', description: 'Migración del sistema Core Banking a infraestructura cloud con alta disponibilidad', startDate: '2024-03-01', endDate: '2025-03-31', responsibleUserId: 'usr-005', priority: 'high', status: 'in_progress', progress: 30, reminderDays: JSON.stringify([15, 7, 3]), createdBy: 'usr-001', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prj-003', name: 'Actualización Política AML/PLD', description: 'Revisión y actualización de políticas de Prevención de Lavado de Dinero', startDate: '2024-06-01', endDate: '2024-12-31', responsibleUserId: 'usr-009', priority: 'high', status: 'in_progress', progress: 65, reminderDays: JSON.stringify([15, 7, 1]), createdBy: 'usr-003', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prj-004', name: 'Plan de Continuidad de Negocio 2025', description: 'Desarrollo e implementación del Plan de Continuidad de Negocio', startDate: '2024-09-01', endDate: '2025-02-28', responsibleUserId: 'usr-004', priority: 'medium', status: 'planning', progress: 15, reminderDays: JSON.stringify([7, 3, 1]), createdBy: 'usr-001', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prj-005', name: 'Automatización Reportes Regulatorios', description: 'Automatización de la generación de reportes regulatorios', startDate: '2024-04-15', endDate: '2024-10-30', responsibleUserId: 'usr-003', priority: 'medium', status: 'completed', progress: 100, reminderDays: JSON.stringify([7, 3]), createdBy: 'usr-001', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prj-006', name: 'Certificación PCI-DSS v4.0', description: 'Actualización de controles y recertificación bajo el nuevo estándar PCI-DSS versión 4.0', startDate: '2024-04-01', endDate: '2024-12-31', responsibleUserId: 'usr-004', priority: 'critical', status: 'in_progress', progress: 75, reminderDays: JSON.stringify([30, 15, 7, 1]), createdBy: 'usr-001', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prj-007', name: 'Sistema Antifraude Tiempo Real', description: 'Implementación de sistema de detección de fraude en tiempo real', startDate: '2024-06-15', endDate: '2025-01-15', responsibleUserId: 'usr-005', priority: 'critical', status: 'in_progress', progress: 70, reminderDays: JSON.stringify([30, 15, 7]), createdBy: 'usr-004', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'prj-008', name: 'Modernización Banca Móvil', description: 'Rediseño completo de la aplicación de banca móvil', startDate: '2024-10-01', endDate: '2025-06-30', responsibleUserId: 'usr-005', priority: 'critical', status: 'in_progress', progress: 20, reminderDays: JSON.stringify([30, 15, 7, 1]), createdBy: 'usr-001', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
   // === TPRM: Proyecto de implementación ===
   { id: 'prj-tprm-001', name: 'Implementación Programa TPRM - Embozadores', description: 'Implementación del programa integral de gestión de riesgo de terceros (TPRM) enfocado en proveedores de embozado de tarjetas. Incluye Due Diligence, gestión contractual, monitoreo continuo, evaluación de desempeño, gestión de incidentes y proceso de offboarding.', startDate: '2025-02-06', endDate: '2025-12-31', responsibleUserId: 'usr-005', priority: 'critical', status: 'in_progress', progress: 35, reminderDays: JSON.stringify([30, 15, 7, 1]), createdBy: 'usr-002', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
 ];
 
 export const projectPhases = [
-  { id: 'phase-001', projectId: 'prj-001', name: 'Análisis de Brechas', description: 'Evaluación inicial del estado actual vs requisitos ISO 27001', orderNum: 1, startDate: '2024-01-15', endDate: '2024-03-31', status: 'completed', weight: 20, progress: 100, tenantId: 'tenant-001' },
-  { id: 'phase-002', projectId: 'prj-001', name: 'Diseño del SGSI', description: 'Diseño del Sistema de Gestión de Seguridad de la Información', orderNum: 2, startDate: '2024-04-01', endDate: '2024-07-31', status: 'completed', weight: 25, progress: 100, tenantId: 'tenant-001' },
-  { id: 'phase-003', projectId: 'prj-001', name: 'Implementación de Controles', description: 'Implementación de controles del Anexo A', orderNum: 3, startDate: '2024-08-01', endDate: '2025-02-28', status: 'in_progress', weight: 35, progress: 40, tenantId: 'tenant-001' },
-  { id: 'phase-004', projectId: 'prj-001', name: 'Auditoría Interna', description: 'Auditoría interna pre-certificación', orderNum: 4, startDate: '2025-03-01', endDate: '2025-04-30', status: 'pending', weight: 10, progress: 0, tenantId: 'tenant-001' },
-  { id: 'phase-005', projectId: 'prj-001', name: 'Certificación', description: 'Auditoría de certificación por organismo acreditado', orderNum: 5, startDate: '2025-05-01', endDate: '2025-06-30', status: 'pending', weight: 10, progress: 0, tenantId: 'tenant-001' },
-  { id: 'phase-006', projectId: 'prj-002', name: 'Evaluación y Planeación', description: 'Assessment de infraestructura actual y plan de migración', orderNum: 1, startDate: '2024-03-01', endDate: '2024-05-31', status: 'completed', weight: 15, progress: 100, tenantId: 'tenant-001' },
-  { id: 'phase-007', projectId: 'prj-002', name: 'Arquitectura Cloud', description: 'Diseño de arquitectura cloud segura y escalable', orderNum: 2, startDate: '2024-06-01', endDate: '2024-08-31', status: 'completed', weight: 20, progress: 100, tenantId: 'tenant-001' },
-  { id: 'phase-008', projectId: 'prj-002', name: 'Migración Ambiente Dev/QA', description: 'Migración de ambientes de desarrollo y pruebas', orderNum: 3, startDate: '2024-09-01', endDate: '2024-12-31', status: 'in_progress', weight: 25, progress: 45, tenantId: 'tenant-001' },
-  { id: 'phase-009', projectId: 'prj-002', name: 'Migración Producción', description: 'Migración del ambiente productivo', orderNum: 4, startDate: '2025-01-01', endDate: '2025-02-28', status: 'pending', weight: 30, progress: 0, tenantId: 'tenant-001' },
-  { id: 'phase-010', projectId: 'prj-003', name: 'Análisis Regulatorio', description: 'Revisión de nueva regulación y análisis de impacto', orderNum: 1, startDate: '2024-06-01', endDate: '2024-07-15', status: 'completed', weight: 20, progress: 100, tenantId: 'tenant-001' },
-  { id: 'phase-011', projectId: 'prj-003', name: 'Actualización de Políticas', description: 'Redacción de nuevas políticas y procedimientos', orderNum: 2, startDate: '2024-07-16', endDate: '2024-09-30', status: 'completed', weight: 30, progress: 100, tenantId: 'tenant-001' },
-  { id: 'phase-012', projectId: 'prj-003', name: 'Capacitación', description: 'Capacitación al personal en nuevas políticas', orderNum: 3, startDate: '2024-10-01', endDate: '2024-11-15', status: 'in_progress', weight: 25, progress: 60, tenantId: 'tenant-001' },
-  { id: 'phase-013', projectId: 'prj-003', name: 'Implementación Sistemas', description: 'Actualización de sistemas de monitoreo AML', orderNum: 4, startDate: '2024-11-16', endDate: '2024-12-31', status: 'pending', weight: 25, progress: 0, tenantId: 'tenant-001' },
   // === TPRM: Fases del proyecto ===
   { id: 'phase-tprm-001', projectId: 'prj-tprm-001', name: 'Due Diligence Inicial de Proveedores', description: 'Evaluación integral de los 3 proveedores actuales de embozado: CPI Card Group, IDEMIA y Thales DIS', orderNum: 1, startDate: '2025-02-06', endDate: '2025-04-30', status: 'in_progress', weight: 25, progress: 55, tenantId: 'tenant-005' },
   { id: 'phase-tprm-002', projectId: 'prj-tprm-001', name: 'Definición de Contratos y SLAs', description: 'Revisión y actualización de contratos con cláusulas de auditoría, SLAs, penalizaciones y obligaciones de reporting', orderNum: 2, startDate: '2025-05-01', endDate: '2025-07-31', status: 'pending', weight: 20, progress: 0, tenantId: 'tenant-005' },
@@ -1307,16 +962,6 @@ export const projectPhases = [
 ];
 
 export const tasks = [
-  { id: 'task-001', projectId: 'prj-001', phaseId: 'phase-003', title: 'Implementar control A.5.1 - Políticas de seguridad', description: 'Desarrollar y documentar las políticas de seguridad de la información', type: 'implementation', priority: 'high', status: 'in_progress', progress: 60, assignedTo: 'usr-004', startDate: '2024-08-01', dueDate: '2024-09-15', estimatedHours: 40, actualHours: 28, createdBy: 'usr-004', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'task-002', projectId: 'prj-001', phaseId: 'phase-003', title: 'Implementar control A.8.2 - Clasificación de información', description: 'Establecer esquema de clasificación de información', type: 'implementation', priority: 'medium', status: 'pending', progress: 0, assignedTo: 'usr-005', startDate: '2024-09-16', dueDate: '2024-10-31', estimatedHours: 32, createdBy: 'usr-004', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'task-003', projectId: 'prj-001', phaseId: 'phase-003', title: 'Configurar controles de acceso lógico', description: 'Implementar controles de acceso basados en roles', type: 'implementation', priority: 'critical', status: 'in_progress', progress: 75, assignedTo: 'usr-004', startDate: '2024-08-15', dueDate: '2024-09-30', estimatedHours: 48, actualHours: 36, createdBy: 'usr-004', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'task-004', projectId: 'prj-002', phaseId: 'phase-008', title: 'Migrar base de datos de desarrollo', description: 'Migrar BD de desarrollo a instancia cloud', type: 'migration', priority: 'high', status: 'completed', progress: 100, assignedTo: 'usr-010', startDate: '2024-09-01', dueDate: '2024-09-30', estimatedHours: 24, actualHours: 20, createdBy: 'usr-005', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'task-005', projectId: 'prj-002', phaseId: 'phase-008', title: 'Configurar pipeline CI/CD', description: 'Establecer pipeline de integración continua en cloud', type: 'configuration', priority: 'high', status: 'in_progress', progress: 50, assignedTo: 'usr-010', startDate: '2024-10-01', dueDate: '2024-11-15', estimatedHours: 40, actualHours: 18, createdBy: 'usr-005', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'task-006', projectId: 'prj-003', phaseId: 'phase-012', title: 'Desarrollar material de capacitación', description: 'Crear presentaciones y guías para capacitación AML', type: 'documentation', priority: 'medium', status: 'completed', progress: 100, assignedTo: 'usr-009', startDate: '2024-10-01', dueDate: '2024-10-15', estimatedHours: 16, actualHours: 14, createdBy: 'usr-009', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'task-007', projectId: 'prj-003', phaseId: 'phase-012', title: 'Impartir capacitación a personal de cumplimiento', description: 'Sesiones de capacitación para el área de cumplimiento', type: 'training', priority: 'high', status: 'in_progress', progress: 70, assignedTo: 'usr-009', startDate: '2024-10-16', dueDate: '2024-10-31', estimatedHours: 24, actualHours: 16, createdBy: 'usr-009', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'task-008', projectId: 'prj-006', phaseId: null, title: 'Auditoría interna de controles PCI', description: 'Realizar auditoría interna de cumplimiento PCI-DSS', type: 'audit', priority: 'critical', status: 'in_progress', progress: 40, assignedTo: 'usr-007', startDate: '2024-11-01', dueDate: '2024-11-30', estimatedHours: 60, actualHours: 24, createdBy: 'usr-004', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'task-009', projectId: 'prj-007', phaseId: null, title: 'Integrar motor de reglas antifraude', description: 'Configurar e integrar motor de detección en tiempo real', type: 'integration', priority: 'critical', status: 'in_progress', progress: 65, assignedTo: 'usr-010', startDate: '2024-10-15', dueDate: '2024-12-15', estimatedHours: 80, actualHours: 52, createdBy: 'usr-005', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
-  { id: 'task-010', projectId: 'prj-008', phaseId: null, title: 'Diseñar nuevo flujo de login', description: 'Diseñar experiencia de usuario para nuevo proceso de autenticación', type: 'design', priority: 'high', status: 'completed', progress: 100, assignedTo: 'usr-006', startDate: '2024-10-01', dueDate: '2024-10-20', estimatedHours: 20, actualHours: 18, createdBy: 'usr-005', tenantId: 'tenant-001', createdAt: new Date().toISOString() },
   // === TPRM: Tareas del proyecto ===
   { id: 'task-tprm-001', projectId: 'prj-tprm-001', phaseId: 'phase-tprm-001', title: 'Completar Due Diligence de CPI Card Group', description: 'Ejecutar cuestionario completo de evaluación: seguridad física, PCI-DSS, BCP, datos de tarjetahabientes', type: 'audit', priority: 'critical', status: 'in_progress', progress: 35, assignedTo: 'usr-004', startDate: '2025-02-10', dueDate: '2025-03-15', estimatedHours: 60, actualHours: 22, createdBy: 'usr-002', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
   { id: 'task-tprm-002', projectId: 'prj-tprm-001', phaseId: 'phase-tprm-001', title: 'Evaluación de riesgo de concentración en CPI', description: 'Analizar nivel de concentración del 65% del volumen en CPI y definir plan de mitigación', type: 'analysis', priority: 'high', status: 'in_progress', progress: 50, assignedTo: 'usr-005', startDate: '2025-02-15', dueDate: '2025-03-30', estimatedHours: 24, actualHours: 12, createdBy: 'usr-002', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
@@ -1335,4 +980,128 @@ export const tasks = [
   // === TPRM: Tareas Fase 4 - Incidentes y Offboarding ===
   { id: 'task-tprm-013', projectId: 'prj-tprm-001', phaseId: 'phase-tprm-004', title: 'Documentar playbook de respuesta a incidentes de proveedores', description: 'Crear guía paso a paso de respuesta ante incidentes originados en embozadores: escalamiento, contención, comunicación a reguladores, plan de remediación', type: 'documentation', priority: 'high', status: 'pending', progress: 0, assignedTo: 'usr-004', startDate: '2025-11-01', dueDate: '2025-11-30', estimatedHours: 32, createdBy: 'usr-002', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
   { id: 'task-tprm-014', projectId: 'prj-tprm-001', phaseId: 'phase-tprm-004', title: 'Crear checklist de offboarding seguro de embozadores', description: 'Definir proceso de terminación controlada: destrucción de datos, revocación de accesos, transferencia operativa, retención documental', type: 'documentation', priority: 'medium', status: 'pending', progress: 0, assignedTo: 'usr-003', startDate: '2025-12-01', dueDate: '2025-12-31', estimatedHours: 20, createdBy: 'usr-002', tenantId: 'tenant-005', createdAt: new Date().toISOString() },
+];
+
+// ============================================================
+// TPRM Dashboard - Métricas Trimestrales
+// ============================================================
+export const tprmQuarterlyMetrics = [
+  // CPI Card Group - Q4-2025
+  { id: 'tqm-001', providerId: 'act-tprm-001', providerName: 'CPI Card Group', quarter: 'Q4-2025', incidents: 3, defects: 5, avgRiskScore: 78, slaCompliance: 82, volume: 1950000, tenantId: 'tenant-005' },
+  // CPI Card Group - Q1-2026
+  { id: 'tqm-002', providerId: 'act-tprm-001', providerName: 'CPI Card Group', quarter: 'Q1-2026', incidents: 4, defects: 7, avgRiskScore: 85, slaCompliance: 76, volume: 2100000, tenantId: 'tenant-005' },
+  // IDEMIA - Q4-2025
+  { id: 'tqm-003', providerId: 'act-tprm-002', providerName: 'IDEMIA', quarter: 'Q4-2025', incidents: 1, defects: 2, avgRiskScore: 42, slaCompliance: 94, volume: 780000, tenantId: 'tenant-005' },
+  // IDEMIA - Q1-2026
+  { id: 'tqm-004', providerId: 'act-tprm-002', providerName: 'IDEMIA', quarter: 'Q1-2026', incidents: 0, defects: 1, avgRiskScore: 35, slaCompliance: 97, volume: 800000, tenantId: 'tenant-005' },
+  // Thales DIS - Q4-2025
+  { id: 'tqm-005', providerId: 'act-tprm-003', providerName: 'Thales DIS', quarter: 'Q4-2025', incidents: 2, defects: 4, avgRiskScore: 68, slaCompliance: 85, volume: 600000, tenantId: 'tenant-005' },
+  // Thales DIS - Q1-2026
+  { id: 'tqm-006', providerId: 'act-tprm-003', providerName: 'Thales DIS', quarter: 'Q1-2026', incidents: 3, defects: 6, avgRiskScore: 74, slaCompliance: 79, volume: 580000, tenantId: 'tenant-005' },
+  // Entrust Datacard - Q4-2025
+  { id: 'tqm-007', providerId: 'act-tprm-004', providerName: 'Entrust Datacard', quarter: 'Q4-2025', incidents: 1, defects: 1, avgRiskScore: 45, slaCompliance: 91, volume: 420000, tenantId: 'tenant-005' },
+  // Entrust Datacard - Q1-2026
+  { id: 'tqm-008', providerId: 'act-tprm-004', providerName: 'Entrust Datacard', quarter: 'Q1-2026', incidents: 1, defects: 2, avgRiskScore: 48, slaCompliance: 89, volume: 430000, tenantId: 'tenant-005' },
+  // Matica Tech - Q4-2025
+  { id: 'tqm-009', providerId: 'act-tprm-005', providerName: 'Matica Tech', quarter: 'Q4-2025', incidents: 2, defects: 3, avgRiskScore: 55, slaCompliance: 87, volume: 350000, tenantId: 'tenant-005' },
+  // Matica Tech - Q1-2026
+  { id: 'tqm-010', providerId: 'act-tprm-005', providerName: 'Matica Tech', quarter: 'Q1-2026', incidents: 1, defects: 1, avgRiskScore: 44, slaCompliance: 93, volume: 360000, tenantId: 'tenant-005' },
+  // G+D - Q4-2025
+  { id: 'tqm-011', providerId: 'act-tprm-006', providerName: 'G+D', quarter: 'Q4-2025', incidents: 0, defects: 1, avgRiskScore: 22, slaCompliance: 98, volume: 500000, tenantId: 'tenant-005' },
+  // G+D - Q1-2026
+  { id: 'tqm-012', providerId: 'act-tprm-006', providerName: 'G+D', quarter: 'Q1-2026', incidents: 0, defects: 0, avgRiskScore: 18, slaCompliance: 99, volume: 520000, tenantId: 'tenant-005' },
+  // Valid S.A. - Q4-2025
+  { id: 'tqm-013', providerId: 'act-tprm-007', providerName: 'Valid S.A.', quarter: 'Q4-2025', incidents: 1, defects: 2, avgRiskScore: 50, slaCompliance: 90, volume: 300000, tenantId: 'tenant-005' },
+  // Valid S.A. - Q1-2026
+  { id: 'tqm-014', providerId: 'act-tprm-007', providerName: 'Valid S.A.', quarter: 'Q1-2026', incidents: 2, defects: 3, avgRiskScore: 58, slaCompliance: 84, volume: 310000, tenantId: 'tenant-005' },
+  // Cardtec Perú - Q4-2025 only (offboarding)
+  { id: 'tqm-015', providerId: 'act-tprm-008', providerName: 'Cardtec Perú', quarter: 'Q4-2025', incidents: 4, defects: 8, avgRiskScore: 92, slaCompliance: 62, volume: 150000, tenantId: 'tenant-005' },
+];
+
+// ============================================================
+// TPRM Dashboard - Impacto en Servicios Internos
+// ============================================================
+export const tprmServiceImpacts = [
+  { id: 'tsi-001', providerId: 'act-tprm-001', providerName: 'CPI Card Group', contractedService: 'Embozado y personalización de tarjetas', internalServices: [
+    { name: 'Entrega producto Volaris', businessArea: 'Comercial', criticality: 'alta' },
+    { name: 'Programa lealtad BBVA', businessArea: 'Marketing', criticality: 'alta' },
+    { name: 'Emisión tarjetas débito estándar', businessArea: 'Operaciones', criticality: 'critica' },
+    { name: 'Reposición tarjetas pérdida/robo', businessArea: 'Atención al Cliente', criticality: 'critica' }
+  ], tenantId: 'tenant-005' },
+  { id: 'tsi-002', providerId: 'act-tprm-002', providerName: 'IDEMIA', contractedService: 'Chips EMV y personalización contactless', internalServices: [
+    { name: 'Tarjetas contactless premium', businessArea: 'Productos', criticality: 'alta' },
+    { name: 'Migración chip EMV dual', businessArea: 'Tecnología', criticality: 'media' }
+  ], tenantId: 'tenant-005' },
+  { id: 'tsi-003', providerId: 'act-tprm-003', providerName: 'Thales DIS', contractedService: 'Personalización tarjetas premium', internalServices: [
+    { name: 'Tarjetas Infinite/Signature', businessArea: 'Banca Premium', criticality: 'alta' },
+    { name: 'Tarjetas corporativas empresariales', businessArea: 'Banca Empresas', criticality: 'media' }
+  ], tenantId: 'tenant-005' },
+  { id: 'tsi-004', providerId: 'act-tprm-004', providerName: 'Entrust Datacard', contractedService: 'Personalización tarjetas LATAM', internalServices: [
+    { name: 'Emisión tarjetas Colombia', businessArea: 'Operaciones LATAM', criticality: 'media' },
+    { name: 'Tarjetas gobierno convenio', businessArea: 'Sector Público', criticality: 'baja' }
+  ], tenantId: 'tenant-005' },
+  { id: 'tsi-005', providerId: 'act-tprm-005', providerName: 'Matica Tech', contractedService: 'Tarjetas débito y prepago bajo costo', internalServices: [
+    { name: 'Tarjetas prepago nómina', businessArea: 'Productos Masivos', criticality: 'media' },
+    { name: 'Gift cards y tarjetas regalo', businessArea: 'Comercial', criticality: 'baja' }
+  ], tenantId: 'tenant-005' },
+  { id: 'tsi-006', providerId: 'act-tprm-006', providerName: 'G+D', contractedService: 'Embozado y seguridad avanzada', internalServices: [
+    { name: 'Tarjetas alta seguridad gobierno', businessArea: 'Sector Público', criticality: 'critica' },
+    { name: 'Backup embozado emergencia', businessArea: 'Continuidad', criticality: 'critica' }
+  ], tenantId: 'tenant-005' },
+  { id: 'tsi-007', providerId: 'act-tprm-007', providerName: 'Valid S.A.', contractedService: 'Tarjetas biométricas e identidad', internalServices: [
+    { name: 'Tarjeta biométrica BBVA piloto', businessArea: 'Innovación', criticality: 'alta' },
+    { name: 'Soluciones identidad digital', businessArea: 'Digital', criticality: 'media' }
+  ], tenantId: 'tenant-005' },
+  { id: 'tsi-008', providerId: 'act-tprm-008', providerName: 'Cardtec Perú', contractedService: 'Tarjetas prepago y gift cards Perú', internalServices: [
+    { name: 'Operación tarjetas Perú', businessArea: 'Operaciones LATAM', criticality: 'alta' },
+    { name: 'Expansión mercado peruano', businessArea: 'Estrategia', criticality: 'alta' }
+  ], tenantId: 'tenant-005' },
+];
+
+// ============================================================
+// TPRM Dashboard - Objetivos de Negocio
+// ============================================================
+export const tprmBusinessObjectives = [
+  { id: 'tbo-001', name: 'Crecimiento 20% Volaris', description: 'Incrementar volumen de tarjetas co-branded Volaris en 20% vs año anterior', targetValue: 20, currentValue: 13, unit: '%', linkedProviders: ['act-tprm-001'], riskLevel: 'alto', riskDescription: 'CPI concentra 65% del volumen. Incidentes recurrentes amenazan entrega.', tenantId: 'tenant-005' },
+  { id: 'tbo-002', name: 'Lanzamiento tarjeta biométrica BBVA', description: 'Lanzar piloto de tarjeta con autenticación biométrica integrada para clientes BBVA', targetValue: 100, currentValue: 45, unit: '%', linkedProviders: ['act-tprm-007'], riskLevel: 'medio', riskDescription: 'Valid S.A. presenta incremento de incidentes en Q1-2026.', tenantId: 'tenant-005' },
+  { id: 'tbo-003', name: 'Reducción costos embozado 15%', description: 'Reducir costo unitario de embozado un 15% mediante negociación y diversificación de proveedores', targetValue: 15, currentValue: 8, unit: '%', linkedProviders: ['act-tprm-001', 'act-tprm-002', 'act-tprm-003', 'act-tprm-005', 'act-tprm-006'], riskLevel: 'medio', riskDescription: 'Concentración en CPI limita poder de negociación.', tenantId: 'tenant-005' },
+  { id: 'tbo-004', name: 'Expansión operación Perú', description: 'Establecer operación de emisión de tarjetas en mercado peruano', targetValue: 100, currentValue: 0, unit: '%', linkedProviders: ['act-tprm-008', 'act-tprm-006'], riskLevel: 'critico', riskDescription: 'BLOQUEADO: Cardtec en offboarding. G+D activado como alterno.', tenantId: 'tenant-005' },
+];
+
+// ============================================================
+// TPRM Dashboard - Acciones de Remediación
+// ============================================================
+export const tprmRemediationActions = [
+  { id: 'tra-001', type: 'penalization', providerId: 'act-tprm-001', providerName: 'CPI Card Group', status: 'in_progress', description: 'Penalización contractual por incidente de acceso no autorizado a sistema de embozado detectado en Q4-2025', linkedIncidentId: 'inc-tprm-001', linkedRiskId: 'rsk-tprm-001', expectedImpact: 'Reducción 5% facturación mensual durante 3 meses', createdAt: '2025-11-15T10:00:00Z', dueDate: '2026-02-28', tenantId: 'tenant-005' },
+  { id: 'tra-002', type: 'stop_payment', providerId: 'act-tprm-003', providerName: 'Thales DIS', status: 'pending', description: 'Detener pago parcial (30%) hasta completar auditoría de subcontratista de impresión sin PCI verificado', linkedIncidentId: null, linkedRiskId: 'rsk-tprm-007', expectedImpact: 'Retención $180K USD hasta remediación', createdAt: '2026-01-10T09:00:00Z', dueDate: '2026-03-31', tenantId: 'tenant-005' },
+  { id: 'tra-003', type: 'cancel_contract', providerId: 'act-tprm-008', providerName: 'Cardtec Perú', status: 'in_progress', description: 'Cancelación de contrato por PCI-DSS expirado y score de due diligence de 45/100. Offboarding controlado en proceso.', linkedIncidentId: null, linkedRiskId: 'rsk-tprm-016', expectedImpact: 'Eliminación de riesgo regulatorio en operación Perú', createdAt: '2025-12-01T08:00:00Z', dueDate: '2026-05-31', tenantId: 'tenant-005' },
+  { id: 'tra-004', type: 'activate_alternate', providerId: 'act-tprm-006', providerName: 'G+D', status: 'in_progress', description: 'Activar G+D como proveedor alterno para Perú, reemplazando a Cardtec. Incluye setup operativo y validación PCI.', linkedIncidentId: null, linkedRiskId: 'rsk-tprm-016', expectedImpact: 'Continuidad de operación Perú con proveedor Tier-1', createdAt: '2026-01-15T10:00:00Z', dueDate: '2026-04-30', tenantId: 'tenant-005' },
+  { id: 'tra-005', type: 'penalization', providerId: 'act-tprm-005', providerName: 'Matica Tech', status: 'completed', description: 'Penalización aplicada por error en segregación de datos de tarjetahabientes entre clientes en Q4-2025', linkedIncidentId: 'inc-tprm-005', linkedRiskId: null, expectedImpact: 'Descuento 3% aplicado y controles reforzados', createdAt: '2025-10-20T11:00:00Z', dueDate: '2026-01-31', tenantId: 'tenant-005' },
+];
+
+// ============================================================
+// TPRM Dashboard - Controles y Reducción de Riesgo
+// ============================================================
+export const tprmControls = [
+  // CPI Card Group
+  { id: 'tc-001', providerId: 'act-tprm-001', providerName: 'CPI Card Group', controlName: 'Cifrado HSM de datos de tarjeta', inherentRisk: 9, residualRisk: 3, effectiveness: 67, description: 'Hardware Security Module para cifrado de PAN, CVV y datos de banda magnética durante el proceso de embozado', tenantId: 'tenant-005' },
+  { id: 'tc-002', providerId: 'act-tprm-001', providerName: 'CPI Card Group', controlName: 'Monitoreo SIEM 24/7', inherentRisk: 8, residualRisk: 4, effectiveness: 50, description: 'Centro de operaciones de seguridad con correlación de eventos y alertas en tiempo real', tenantId: 'tenant-005' },
+  { id: 'tc-003', providerId: 'act-tprm-001', providerName: 'CPI Card Group', controlName: 'Control acceso biométrico', inherentRisk: 7, residualRisk: 2, effectiveness: 71, description: 'Acceso a zona de embozado exclusivamente con autenticación biométrica y doble factor', tenantId: 'tenant-005' },
+  // Thales DIS
+  { id: 'tc-004', providerId: 'act-tprm-003', providerName: 'Thales DIS', controlName: 'PCI-DSS v4.0 (parcial)', inherentRisk: 8, residualRisk: 5, effectiveness: 38, description: 'Migración parcial a PCI-DSS v4.0. Pendientes: gestión de vulnerabilidades y MFA en accesos.', tenantId: 'tenant-005' },
+  { id: 'tc-005', providerId: 'act-tprm-003', providerName: 'Thales DIS', controlName: 'Auditoría 4th party', inherentRisk: 9, residualRisk: 6, effectiveness: 33, description: 'Auditoría a subcontratista de impresión. Deficiencias encontradas en segregación de ambiente y acceso físico.', tenantId: 'tenant-005' },
+  // IDEMIA
+  { id: 'tc-006', providerId: 'act-tprm-002', providerName: 'IDEMIA', controlName: 'Certificación PCI-DSS v4.0 completa', inherentRisk: 7, residualRisk: 2, effectiveness: 71, description: 'Certificación PCI-DSS v4.0 vigente con QSA acreditado. Próxima auditoría: Sep 2026.', tenantId: 'tenant-005' },
+  { id: 'tc-007', providerId: 'act-tprm-002', providerName: 'IDEMIA', controlName: 'Seguro cibernético', inherentRisk: 8, residualRisk: 3, effectiveness: 63, description: 'Póliza de seguro cibernético con cobertura de $5M USD para incidentes de datos de tarjetas.', tenantId: 'tenant-005' },
+  // G+D
+  { id: 'tc-008', providerId: 'act-tprm-006', providerName: 'G+D', controlName: 'Dual-site redundancia', inherentRisk: 8, residualRisk: 2, effectiveness: 75, description: 'Capacidad dual-site con failover automático entre plantas Guadalajara y CDMX.', tenantId: 'tenant-005' },
+  { id: 'tc-009', providerId: 'act-tprm-006', providerName: 'G+D', controlName: 'ISO 27001 + PCI-DSS v4.0', inherentRisk: 7, residualRisk: 2, effectiveness: 71, description: 'Doble certificación ISO 27001:2022 y PCI-DSS v4.0 vigente. Máximo nivel de madurez.', tenantId: 'tenant-005' },
+  // Cardtec Perú - Sin controles efectivos
+  { id: 'tc-010', providerId: 'act-tprm-008', providerName: 'Cardtec Perú', controlName: 'Controles básicos (deficientes)', inherentRisk: 9, residualRisk: 8, effectiveness: 11, description: 'PCI-DSS expirado, sin SIEM, control de acceso básico con tarjeta. Score DD: 45/100.', tenantId: 'tenant-005' },
+  // Valid S.A.
+  { id: 'tc-011', providerId: 'act-tprm-007', providerName: 'Valid S.A.', controlName: 'Tokenización de datos', inherentRisk: 7, residualRisk: 3, effectiveness: 57, description: 'Sistema de tokenización propio para protección de datos sensibles durante el proceso de personalización.', tenantId: 'tenant-005' },
+  // Entrust Datacard
+  { id: 'tc-012', providerId: 'act-tprm-004', providerName: 'Entrust Datacard', controlName: 'Cifrado end-to-end', inherentRisk: 7, residualRisk: 3, effectiveness: 57, description: 'Cifrado punto a punto en toda la cadena de personalización de tarjetas.', tenantId: 'tenant-005' },
+  // Matica Tech
+  { id: 'tc-013', providerId: 'act-tprm-005', providerName: 'Matica Tech', controlName: 'Segregación de datos mejorada', inherentRisk: 8, residualRisk: 4, effectiveness: 50, description: 'Post-incidente: segregación reforzada de datos entre clientes con auditoría trimestral.', tenantId: 'tenant-005' },
 ];

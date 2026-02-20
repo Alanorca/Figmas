@@ -437,8 +437,24 @@ export class ApiService {
         defectos: activo.defectos || []
       })),
       catchError(err => {
-        console.error('Error cargando activo:', err);
-        return of(null);
+        console.error('Error cargando activo desde backend, usando IndexedDB:', err);
+        return from(this.db.get<any>('activos', id)).pipe(
+          switchMap(async activo => {
+            if (!activo) return null;
+            const riesgos = await this.db.getAllForTenant<any>('riesgos', this.tenantId);
+            const incidentes = await this.db.getAllForTenant<any>('incidentes', this.tenantId);
+            const defectos = await this.db.getAllForTenant<any>('defectos', this.tenantId);
+            return {
+              ...activo,
+              propiedadesCustom: typeof activo.propiedadesCustom === 'string'
+                ? JSON.parse(activo.propiedadesCustom || '[]')
+                : (activo.propiedadesCustom || []),
+              riesgos: riesgos.filter(r => r.activoId === id),
+              incidentes: incidentes.filter(i => i.activoId === id),
+              defectos: defectos.filter(d => d.activoId === id),
+            };
+          })
+        );
       })
     );
   }
@@ -1812,11 +1828,31 @@ export class ApiService {
   // ============================================================
 
   getActivoChildren(id: string): Observable<any[]> {
-    return this.http.get<any[]>(`${API_URL}/activos/${id}/children`);
+    return this.http.get<any[]>(`${API_URL}/activos/${id}/children`).pipe(
+      catchError(() => {
+        return from(this.db.getAllForTenant<any>('activos', this.tenantId)).pipe(
+          map(activos => activos
+            .filter(a => a.parentAssetId === id)
+            .map(a => ({ id: a.id, nombre: a.nombre, tipo: a.tipo, criticidad: a.criticidad }))
+          )
+        );
+      })
+    );
   }
 
   getActivoParents(id: string): Observable<any[]> {
-    return this.http.get<any[]>(`${API_URL}/activos/${id}/parents`);
+    return this.http.get<any[]>(`${API_URL}/activos/${id}/parents`).pipe(
+      catchError(() => {
+        return from(this.db.getAllForTenant<any>('activos', this.tenantId)).pipe(
+          map(activos => {
+            const current = activos.find(a => a.id === id);
+            if (!current?.parentAssetId) return [];
+            const parent = activos.find(a => a.id === current.parentAssetId);
+            return parent ? [{ id: parent.id, nombre: parent.nombre, tipo: parent.tipo, criticidad: parent.criticidad }] : [];
+          })
+        );
+      })
+    );
   }
 
   // ============================================================
@@ -1848,6 +1884,55 @@ export class ApiService {
   // ============================================================
 
   getActivoGraph(id: string): Observable<any> {
-    return this.http.get<any>(`${API_URL}/activos/${id}/graph`);
+    return this.http.get<any>(`${API_URL}/activos/${id}/graph`).pipe(
+      catchError(() => {
+        return from(this.db.getAllForTenant<any>('activos', this.tenantId)).pipe(
+          map(activos => {
+            const current = activos.find(a => a.id === id);
+            if (!current) return { nodes: [], edges: [] };
+            const nodes: any[] = [{ id: current.id, label: current.nombre, type: current.tipo }];
+            const edges: any[] = [];
+            // Add parent
+            if (current.parentAssetId) {
+              const parent = activos.find(a => a.id === current.parentAssetId);
+              if (parent) {
+                nodes.push({ id: parent.id, label: parent.nombre, type: parent.tipo });
+                edges.push({ source: parent.id, target: current.id, label: 'contiene' });
+              }
+            }
+            // Add children
+            activos.filter(a => a.parentAssetId === id).forEach(child => {
+              nodes.push({ id: child.id, label: child.nombre, type: child.tipo });
+              edges.push({ source: current.id, target: child.id, label: 'contiene' });
+            });
+            return { nodes, edges };
+          })
+        );
+      })
+    );
+  }
+
+  // ============================================================
+  // TPRM Dashboard
+  // ============================================================
+
+  getTprmQuarterlyMetrics(): Observable<any[]> {
+    return from(this.db.getAllForTenant<any>('tprm_quarterly_metrics', this.tenantId));
+  }
+
+  getTprmServiceImpacts(): Observable<any[]> {
+    return from(this.db.getAllForTenant<any>('tprm_service_impacts', this.tenantId));
+  }
+
+  getTprmBusinessObjectives(): Observable<any[]> {
+    return from(this.db.getAllForTenant<any>('tprm_business_objectives', this.tenantId));
+  }
+
+  getTprmRemediationActions(): Observable<any[]> {
+    return from(this.db.getAllForTenant<any>('tprm_remediation_actions', this.tenantId));
+  }
+
+  getTprmControls(): Observable<any[]> {
+    return from(this.db.getAllForTenant<any>('tprm_controls', this.tenantId));
   }
 }

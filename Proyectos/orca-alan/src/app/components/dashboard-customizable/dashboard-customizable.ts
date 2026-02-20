@@ -8,6 +8,7 @@
 
 import { Component, inject, signal, computed, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { GridsterModule } from 'angular-gridster2';
 import { ButtonModule } from 'primeng/button';
@@ -146,6 +147,7 @@ export class DashboardCustomizableComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
   private themeService = inject(ThemeService);
+  private router = inject(Router);
   dashboardService = inject(DashboardService);
   dataService = inject(DashboardDataService);
   private exportService = inject(ExportService);
@@ -3569,6 +3571,12 @@ export class DashboardCustomizableComponent implements OnInit {
         detail: 'Se cambió al dashboard seleccionado'
       });
     }
+  }
+
+  /** Navegar al dashboard TPRM ejecutivo */
+  navegarDashboardTprm(): void {
+    this.showDashboardsDrawer.set(false);
+    this.router.navigate(['/dashboard-tprm']);
   }
 
   /** Iniciar edición del nombre de un dashboard */
