@@ -98,8 +98,19 @@ import { GraficasGuardadasWidgetComponent, GraficaGuardada } from '../graficas-g
 import { GraficaWizardComponent } from '../grafica-wizard/grafica-wizard';
 import { GraficaWizardResult, CATEGORIAS_GRAFICAS, PALETAS_COLORES, TipoGraficaWizard } from '../../models/grafica-wizard.models';
 import { AnalisisInteligenteWidgetComponent } from '../analisis-inteligente-widget/analisis-inteligente-widget';
+import { TprmPanelComponent } from '../tprm-panel/tprm-panel';
 import { ResultadoAnalisis, TipoVisualizacion } from '../../models/analisis-inteligente.models';
 import { AnalisisInteligenteService } from '../../services/analisis-inteligente.service';
+import {
+  TprmDataService,
+  TprmSupplier,
+  TprmTimelineEvent,
+  TprmResumenInteligente,
+  TprmCostoAcumulado,
+  AccionSugerida,
+  TprmAction,
+  TipoAccionTprm
+} from '../../services/tprm-data.service';
 
 @Component({
   selector: 'app-dashboard-customizable',
@@ -137,7 +148,8 @@ import { AnalisisInteligenteService } from '../../services/analisis-inteligente.
     CalendarioWidgetComponent,
     GraficasGuardadasWidgetComponent,
     GraficaWizardComponent,
-    AnalisisInteligenteWidgetComponent
+    AnalisisInteligenteWidgetComponent,
+    TprmPanelComponent
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './dashboard-customizable.html',
@@ -151,6 +163,7 @@ export class DashboardCustomizableComponent implements OnInit {
   dashboardService = inject(DashboardService);
   dataService = inject(DashboardDataService);
   private exportService = inject(ExportService);
+  tprmDataService = inject(TprmDataService);
 
   // Estado local
   showCatalogoDrawer = signal(false);
@@ -193,6 +206,42 @@ export class DashboardCustomizableComponent implements OnInit {
   desgloseOptions = [
     { label: 'Por KPIs', value: 'kpis' },
     { label: 'Por Objetivos', value: 'objetivos' }
+  ];
+
+  // ==================== TPRM DRILLDOWN SIGNALS ====================
+  showSupplierDrilldown = signal(false);
+  supplierDrilldownData = signal<TprmSupplier | null>(null);
+  supplierDrilldownLevel = signal<1 | 2 | 3>(1);
+  supplierDrilldownEvento = signal<TprmTimelineEvent | null>(null);
+  supplierDrilldownResumen = signal<TprmResumenInteligente | null>(null);
+  supplierDrilldownTimeline = signal<TprmTimelineEvent[]>([]);
+  supplierDrilldownCosto = signal<TprmCostoAcumulado | null>(null);
+  supplierDrilldownSugerencias = signal<AccionSugerida[]>([]);
+
+  // ==================== TOMAR ACCION SIGNALS ====================
+  showTomarAccion = signal(false);
+  tomarAccionSupplier = signal<TprmSupplier | null>(null);
+  tomarAccionEvento = signal<TprmTimelineEvent | null>(null);
+  tomarAccionSugerencias = signal<AccionSugerida[]>([]);
+  tomarAccionFormData = signal<Partial<TprmAction>>({});
+
+  tiposAccionOptions = [
+    { label: 'Penalizacion', value: 'penalizacion' },
+    { label: 'Detener Pago', value: 'detener_pago' },
+    { label: 'Plan Remediacion', value: 'plan_remediacion' },
+    { label: 'Escalamiento', value: 'escalamiento' },
+    { label: 'Activar Alterno', value: 'activar_alterno' },
+    { label: 'Auditar', value: 'auditar' },
+    { label: 'Cancelar Contrato', value: 'cancelar_contrato' },
+    { label: 'Crear Control', value: 'crear_control' },
+    { label: 'Notificar', value: 'notificar' }
+  ];
+
+  prioridadOptions = [
+    { label: 'Critica', value: 'critica' },
+    { label: 'Alta', value: 'alta' },
+    { label: 'Media', value: 'media' },
+    { label: 'Baja', value: 'baja' }
   ];
 
   // Selectores del servicio
@@ -3642,5 +3691,165 @@ export class DashboardCustomizableComponent implements OnInit {
       month: 'short',
       year: 'numeric'
     });
+  }
+
+  // ==================== TPRM SUPPLIER DRILLDOWN ====================
+
+  abrirSupplierDrilldown(supplier: TprmSupplier): void {
+    this.supplierDrilldownData.set(supplier);
+    this.supplierDrilldownLevel.set(1);
+    this.supplierDrilldownEvento.set(null);
+    this.supplierDrilldownResumen.set(this.tprmDataService.generarResumen(supplier.id));
+    this.supplierDrilldownTimeline.set(this.tprmDataService.getTimelineForSupplier(supplier.id));
+    this.supplierDrilldownCosto.set(this.tprmDataService.getCostoForSupplier(supplier.id) || null);
+    this.supplierDrilldownSugerencias.set(this.tprmDataService.sugerirAcciones(supplier));
+    this.showSupplierDrilldown.set(true);
+  }
+
+  supplierDrilldownGoToLevel(level: 1 | 2 | 3): void {
+    if (level < this.supplierDrilldownLevel()) {
+      this.supplierDrilldownLevel.set(level);
+      if (level === 1) this.supplierDrilldownEvento.set(null);
+    }
+  }
+
+  supplierDrilldownGoToTimeline(): void {
+    this.supplierDrilldownLevel.set(2);
+  }
+
+  supplierDrilldownSelectEvento(evento: TprmTimelineEvent): void {
+    this.supplierDrilldownEvento.set(evento);
+    this.supplierDrilldownLevel.set(3);
+  }
+
+  supplierDrilldownGetRisks() {
+    const supplier = this.supplierDrilldownData();
+    if (!supplier) return [];
+    return this.tprmDataService.risks().filter(r => r.supplierId === supplier.id);
+  }
+
+  supplierDrilldownGetImpacts() {
+    const supplier = this.supplierDrilldownData();
+    if (!supplier) return [];
+    return this.tprmDataService.serviceImpacts().filter(i => i.supplierId === supplier.id);
+  }
+
+  supplierDrilldownGetActions() {
+    const supplier = this.supplierDrilldownData();
+    if (!supplier) return [];
+    return this.tprmDataService.actions().filter(a => a.supplierId === supplier.id);
+  }
+
+  getTimelineEventIcon(tipo: string): string {
+    const map: Record<string, string> = {
+      incidente: 'pi-exclamation-triangle',
+      auditoria: 'pi-search',
+      penalizacion: 'pi-ban',
+      cambio_sla: 'pi-sliders-h',
+      alerta: 'pi-bell',
+      remediacion: 'pi-wrench'
+    };
+    return 'pi ' + (map[tipo] || 'pi-circle');
+  }
+
+  getTimelineEventColor(tipo: string): string {
+    const map: Record<string, string> = {
+      incidente: '#ef4444',
+      auditoria: '#3b82f6',
+      penalizacion: '#f59e0b',
+      cambio_sla: '#8b5cf6',
+      alerta: '#ec4899',
+      remediacion: '#22c55e'
+    };
+    return map[tipo] || '#64748b';
+  }
+
+  getSeveridadClass(severidad: string): string {
+    const map: Record<string, string> = { critica: 'critico', alta: 'alto', media: 'medio', baja: 'bajo' };
+    return map[severidad] || 'bajo';
+  }
+
+  // ==================== TOMAR ACCION ====================
+
+  abrirTomarAccion(supplier: TprmSupplier, evento?: TprmTimelineEvent): void {
+    this.tomarAccionSupplier.set(supplier);
+    this.tomarAccionEvento.set(evento || null);
+    this.tomarAccionSugerencias.set(this.tprmDataService.sugerirAcciones(supplier, evento));
+    this.tomarAccionFormData.set({
+      supplierId: supplier.id,
+      supplierNombre: supplier.nombre,
+      tipo: 'plan_remediacion',
+      descripcion: '',
+      estado: 'pendiente',
+      fechaLimite: '',
+      responsable: '',
+      prioridad: 'media',
+      areaResponsable: ''
+    });
+    this.showTomarAccion.set(true);
+  }
+
+  seleccionarAccionSugerida(sugerencia: AccionSugerida): void {
+    const supplier = this.tomarAccionSupplier();
+    if (!supplier) return;
+    this.tomarAccionFormData.set({
+      supplierId: supplier.id,
+      supplierNombre: supplier.nombre,
+      tipo: sugerencia.tipo,
+      descripcion: sugerencia.descripcion,
+      estado: 'pendiente',
+      fechaLimite: sugerencia.fechaLimiteSugerida,
+      responsable: sugerencia.responsableSugerido,
+      prioridad: sugerencia.prioridadSugerida,
+      areaResponsable: ''
+    });
+  }
+
+  updateTomarAccionField(field: string, value: any): void {
+    this.tomarAccionFormData.update(data => ({ ...data, [field]: value }));
+  }
+
+  confirmarAccion(): void {
+    const formData = this.tomarAccionFormData();
+    if (!formData.tipo || !formData.descripcion) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Completa tipo y descripcion de la accion' });
+      return;
+    }
+
+    const newAction: TprmAction = {
+      id: `act-${Date.now()}`,
+      supplierId: formData.supplierId || '',
+      supplierNombre: formData.supplierNombre || '',
+      tipo: formData.tipo as TipoAccionTprm,
+      descripcion: formData.descripcion || '',
+      estado: 'pendiente',
+      fechaLimite: formData.fechaLimite || new Date().toISOString().slice(0, 10),
+      responsable: formData.responsable || 'Sin asignar',
+      prioridad: (formData.prioridad as any) || 'media',
+      areaResponsable: formData.areaResponsable || ''
+    };
+
+    this.tprmDataService.addAction(newAction);
+    this.showTomarAccion.set(false);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Accion registrada',
+      detail: `Accion "${newAction.tipo}" creada para ${newAction.supplierNombre}`
+    });
+  }
+
+  formatTipoAccion(tipo: string): string {
+    const map: Record<string, string> = {
+      penalizacion: 'Penalizacion', detener_pago: 'Detener Pago',
+      plan_remediacion: 'Plan Remediacion', escalamiento: 'Escalamiento',
+      activar_alterno: 'Activar Alterno', auditar: 'Auditar',
+      cancelar_contrato: 'Cancelar Contrato', crear_control: 'Crear Control',
+      notificar: 'Notificar'
+    };
+    return map[tipo] || tipo;
+  }
+
+  formatCurrency(value: number): string {
+    return '$' + (value / 1000).toFixed(0) + 'K';
   }
 }

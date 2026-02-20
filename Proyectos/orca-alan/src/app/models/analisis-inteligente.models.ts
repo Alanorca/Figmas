@@ -31,7 +31,9 @@ export type TipoVisualizacion =
   | 'radar'
   | 'funnel'
   | 'treemap'
-  | 'table';
+  | 'table'
+  | 'sankey'
+  | 'gauge';
 
 // Horizonte de predicción
 export type HorizontePrediccion = 1 | 3 | 6 | 12; // meses
@@ -272,6 +274,192 @@ export interface AnalisisInteligenteState {
   feedbackActual: string;
 }
 
+// ==================== V2: DATA SOURCING (Capa 1) ====================
+
+// Categoría de fuente de datos
+export type CategoriaFuente = 'grc' | 'seguridad' | 'cumplimiento' | 'operaciones';
+
+// Fuente de datos disponible para análisis
+export interface FuenteDatos {
+  id: string;
+  nombre: string;
+  categoria: CategoriaFuente;
+  entidad: EntidadAnalisis;
+  conteoRegistros: number;
+  ultimaActualizacion: Date;
+  relaciones: string[]; // IDs de fuentes relacionadas
+  icono: string;
+}
+
+// Filtro de extracción dinámico
+export interface FiltroExtraccion {
+  rangoFechas?: { desde: Date; hasta: Date };
+  atributos: Record<string, string | number | boolean>;
+  estado?: string;
+  categoria?: string;
+  entidades: EntidadAnalisis[];
+}
+
+// Resumen de alcance antes de ejecutar análisis
+export interface ResumenAlcance {
+  totalRegistros: number;
+  fuentesSeleccionadas: number;
+  periodo: string;
+  filtrosAplicados: string[];
+  entidades: EntidadAnalisis[];
+}
+
+// ==================== V2: IA INSIGHTS (Capa 6) ====================
+
+// Severidad de hallazgo
+export type SeveridadInsight = 'critica' | 'alta' | 'media' | 'baja';
+
+// Hallazgo generado por IA
+export interface InsightIA {
+  id: string;
+  titulo: string;
+  descripcion: string;
+  severidad: SeveridadInsight;
+  datoEstadistico: string; // Ej: "45% de incremento"
+  entidadRelacionada?: EntidadAnalisis;
+  accionado: boolean;
+}
+
+// ==================== V2: ACCIONES ASISTIDAS (Capa 7) ====================
+
+// Tipo de entidad a crear desde un hallazgo
+export type TipoAccionEntidad =
+  | 'riesgo'
+  | 'incidente'
+  | 'control'
+  | 'mitigacion'
+  | 'oportunidad'
+  | 'proyecto'
+  | 'activo';
+
+// Acción sugerida por la IA
+export interface AccionSugerida {
+  id: string;
+  tipo: TipoAccionEntidad;
+  titulo: string;
+  descripcion: string;
+  prioridad: 'alta' | 'media' | 'baja';
+  datosPreCargados: Record<string, any>;
+  insightOrigenId: string;
+  ejecutada: boolean;
+  entidadCreadaId?: string;
+}
+
+// ==================== V2: RESPUESTA LLM ESTRUCTURADA ====================
+
+// Respuesta estructurada del LLM
+export interface RespuestaIA {
+  chartType: TipoVisualizacion;
+  titulo: string;
+  data: {
+    labels: string[];
+    series: number[];
+    datasets?: { name: string; data: number[] }[];
+  };
+  insights: InsightIA[];
+  actions: AccionSugerida[];
+  resumenEjecutivo: string;
+}
+
+// ==================== V2: DRILL DOWN (Capa 5) ====================
+
+// Nivel individual del drill-down
+export interface NivelDrillDown {
+  nivel: number;
+  titulo: string;
+  tipoGrafico: TipoVisualizacion;
+  datos: {
+    labels: string[];
+    series: number[];
+    registros?: any[];
+  };
+  elementoSeleccionado?: string;
+  filtroAplicado?: string;
+}
+
+// Estado completo del drill-down
+export interface EstadoDrillDown {
+  niveles: NivelDrillDown[];
+  nivelActual: number;
+  breadcrumb: string[];
+  entidadBase: EntidadAnalisis;
+}
+
+// ==================== V2: INSIGHT DRAWER (Capa 6) ====================
+
+// Comparativo benchmark (MoM, QoQ, YoY)
+export interface ComparativoBenchmark {
+  tipo: 'MoM' | 'QoQ' | 'YoY';
+  etiqueta: string;
+  valorAnterior: number;
+  valorActual: number;
+  porcentajeCambio: number;
+  direccion: 'up' | 'down' | 'stable';
+}
+
+// Contenido completo del Insight Drawer
+export interface ContenidoInsightDrawer {
+  resumenEjecutivo: string;
+  hallazgos: InsightIA[];
+  comparativos: ComparativoBenchmark[];
+  acciones: AccionSugerida[];
+  fuentesAnalizadas: string[];
+  periodoAnalisis: string;
+  fechaGeneracion: Date;
+}
+
+// ==================== V2: PROGRESO Y ESTADOS (Capa 8) ====================
+
+// Etapa del proceso de análisis
+export type EtapaProgreso = 'extrayendo' | 'transformando' | 'analizando' | 'generando';
+
+// Registro de auditoría de acciones ejecutadas
+export interface AuditLogEntry {
+  id: string;
+  fecha: Date;
+  accionId: string;
+  tipoEntidad: TipoAccionEntidad;
+  entidadCreadaId: string;
+  usuario: string;
+  contextoAnalisis: string;
+  detalles: Record<string, any>;
+}
+
+// Jerarquía de drill-down por entidad
+export type JerarquiaDrillDown = {
+  nivel1: string;
+  nivel2: string;
+  nivel3: string;
+};
+
+export const JERARQUIAS_DRILL_DOWN: Record<string, JerarquiaDrillDown> = {
+  riesgos: { nivel1: 'Categoría', nivel2: 'Estado', nivel3: 'Registros individuales' },
+  incidentes: { nivel1: 'Severidad', nivel2: 'Temporal', nivel3: 'Registros individuales' },
+  activos: { nivel1: 'Tipo', nivel2: 'Estado', nivel3: 'Registros individuales' },
+  controles: { nivel1: 'Tipo', nivel2: 'Efectividad', nivel3: 'Registros individuales' },
+  cumplimiento: { nivel1: 'Regulación', nivel2: 'Estado', nivel3: 'Registros individuales' },
+  procesos: { nivel1: 'Estado', nivel2: 'Cumplimiento', nivel3: 'Registros individuales' },
+  areas: { nivel1: 'Departamento', nivel2: 'Riesgos', nivel3: 'Registros individuales' },
+  objetivos: { nivel1: 'Estado', nivel2: 'Progreso', nivel3: 'Registros individuales' }
+};
+
+// Fuentes de datos predefinidas
+export const FUENTES_DATOS_DISPONIBLES: FuenteDatos[] = [
+  { id: 'riesgos', nombre: 'Registro de Riesgos', categoria: 'grc', entidad: 'riesgos', conteoRegistros: 156, ultimaActualizacion: new Date(), relaciones: ['controles', 'incidentes'], icono: 'pi pi-shield' },
+  { id: 'controles', nombre: 'Controles Implementados', categoria: 'grc', entidad: 'controles', conteoRegistros: 89, ultimaActualizacion: new Date(), relaciones: ['riesgos'], icono: 'pi pi-check-square' },
+  { id: 'incidentes', nombre: 'Incidentes de Seguridad', categoria: 'seguridad', entidad: 'incidentes', conteoRegistros: 234, ultimaActualizacion: new Date(), relaciones: ['riesgos', 'activos'], icono: 'pi pi-exclamation-triangle' },
+  { id: 'activos', nombre: 'Inventario de Activos', categoria: 'seguridad', entidad: 'activos', conteoRegistros: 312, ultimaActualizacion: new Date(), relaciones: ['incidentes'], icono: 'pi pi-box' },
+  { id: 'cumplimiento', nombre: 'Estado de Cumplimiento', categoria: 'cumplimiento', entidad: 'cumplimiento', conteoRegistros: 45, ultimaActualizacion: new Date(), relaciones: ['procesos'], icono: 'pi pi-verified' },
+  { id: 'procesos', nombre: 'Procesos de Negocio', categoria: 'operaciones', entidad: 'procesos', conteoRegistros: 67, ultimaActualizacion: new Date(), relaciones: ['cumplimiento', 'objetivos'], icono: 'pi pi-cog' },
+  { id: 'areas', nombre: 'Áreas Organizativas', categoria: 'operaciones', entidad: 'areas', conteoRegistros: 28, ultimaActualizacion: new Date(), relaciones: ['riesgos', 'activos'], icono: 'pi pi-sitemap' },
+  { id: 'objetivos', nombre: 'Objetivos Estratégicos', categoria: 'operaciones', entidad: 'objetivos', conteoRegistros: 18, ultimaActualizacion: new Date(), relaciones: ['procesos'], icono: 'pi pi-flag' }
+];
+
 // ==================== EJEMPLOS Y SUGERENCIAS ====================
 
 // Ejemplo de consulta sugerida
@@ -358,7 +546,7 @@ export const ATRIBUTOS_ENTIDADES: Record<EntidadAnalisis, { campo: string; etiqu
 
 // Visualizaciones recomendadas por tipo de análisis
 export const VISUALIZACIONES_POR_TIPO: Record<TipoAnalisis, TipoVisualizacion[]> = {
-  descriptivo: ['bar', 'pie', 'donut', 'table', 'treemap', 'funnel'],
-  predictivo: ['line', 'area'],
+  descriptivo: ['bar', 'pie', 'donut', 'table', 'treemap', 'funnel', 'gauge'],
+  predictivo: ['line', 'area', 'sankey'],
   correlacion: ['scatter', 'heatmap', 'radar']
 };

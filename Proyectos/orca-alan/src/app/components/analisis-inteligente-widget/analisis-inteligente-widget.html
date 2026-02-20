@@ -1,29 +1,48 @@
 <!-- ============================================================================
-     WIDGET DE ANÁLISIS INTELIGENTE
-     Con configuración en drawer multistep y preview
+     WIDGET DE ANALISIS INTELIGENTE v2
+     Drawer 4 pasos: Fuentes -> Filtros -> Consulta -> Preview
+     Integracion con Groq LLM, drill-down, insight drawer, acciones asistidas
      ============================================================================ -->
 
 <div class="analisis-inteligente-container" [class.modo-widget]="modoWidget">
-  <!-- Estado: Sin configurar -->
+
+  <!-- ====================================================================
+       ESTADO VACIO: Sin resultado configurado
+       Muestra 3 prompts sugeridos clicables + boton de configurar
+       ==================================================================== -->
   @if (!resultado()) {
     <div class="widget-empty-state">
       <div class="empty-icon">
         <i class="pi pi-sparkles"></i>
       </div>
-      <h3>Análisis Inteligente</h3>
+      <h3>Analisis Inteligente</h3>
       <p>Genera visualizaciones mediante consultas en lenguaje natural</p>
+
+      <!-- Prompts sugeridos -->
+      <div class="empty-prompts">
+        @for (prompt of promptsSugeridos; track prompt) {
+          <button class="prompt-suggestion-btn" (click)="usarPromptSugerido(prompt)">
+            <i class="pi pi-sparkles"></i>
+            <span>{{ prompt }}</span>
+          </button>
+        }
+      </div>
+
       <p-button
-        label="Configurar Análisis"
+        label="Configurar Analisis"
         icon="pi pi-cog"
         (onClick)="abrirConfiguracion()"
-        styleClass="p-button-rounded">
+        styleClass="p-button-rounded mt-3">
       </p-button>
     </div>
   }
 
-  <!-- Estado: Con resultado -->
+  <!-- ====================================================================
+       ESTADO CON RESULTADO: Widget con grafica + header + badges
+       ==================================================================== -->
   @if (resultado(); as res) {
-    <!-- Header del widget - Solo mostrar cuando NO está en modo widget (el parent ya provee el header) -->
+
+    <!-- Header del widget (solo cuando NO esta en modo widget, el parent provee header) -->
     @if (!modoWidget) {
       <div class="widget-result-header">
         <div class="result-title-section">
@@ -34,8 +53,23 @@
               <span class="result-subtitle">{{ res.configuracionVisualizacion.subtitulo }}</span>
             }
           </div>
+          <p-tag
+            [value]="getTipoAnalisisLabel()"
+            [severity]="getTagSeverity(res.tipoAnalisis)"
+            size="small">
+          </p-tag>
         </div>
         <div class="result-actions">
+          <!-- Boton IA Insights (icon + label desktop, icon-only mobile) -->
+          <p-button
+            icon="pi pi-sparkles"
+            label="Insights IA"
+            [text]="true"
+            severity="help"
+            (onClick)="toggleInsightDrawer()"
+            styleClass="ia-header-btn">
+          </p-button>
+          <!-- Reconfigurar -->
           <p-button
             icon="pi pi-refresh"
             [rounded]="true"
@@ -44,6 +78,7 @@
             pTooltip="Reconfigurar"
             (onClick)="abrirConfiguracion()">
           </p-button>
+          <!-- Menu de exportacion -->
           <p-menu #exportMenuWidget [model]="exportMenuItems" [popup]="true" appendTo="body"></p-menu>
           <p-button
             icon="pi pi-download"
@@ -57,33 +92,113 @@
       </div>
     }
 
-    <!-- Gráfica -->
+    <!-- Contenedor de la grafica con overlay IA y selector de tipo -->
     <div class="widget-chart-container">
-      <apx-chart
-        [series]="chartSeries()"
-        [chart]="chartOptions().chart"
-        [xaxis]="chartOptions().xaxis"
-        [yaxis]="chartOptions().yaxis"
-        [dataLabels]="chartOptions().dataLabels"
-        [stroke]="chartOptions().stroke"
-        [legend]="chartOptions().legend"
-        [fill]="chartOptions().fill"
-        [grid]="chartOptions().grid"
-        [labels]="chartOptions().labels"
-        [theme]="chartOptions().theme">
-      </apx-chart>
+      <!-- Toolbar IA (modo widget): siempre visible, icon + label desktop, icon-only mobile -->
+      @if (modoWidget) {
+        <div class="widget-mode-toolbar">
+          <p-button
+            icon="pi pi-sparkles"
+            label="Insights IA"
+            severity="help"
+            [text]="true"
+            size="small"
+            (onClick)="toggleInsightDrawer()"
+            styleClass="ia-header-btn">
+          </p-button>
+        </div>
+      }
+
+      <!-- Selector de tipo de grafica (dropdown overlay) -->
+      @if (chartTypeOverlayVisible()) {
+        <div class="chart-type-overlay">
+          <div class="chart-type-overlay-content">
+            <span class="chart-type-overlay-title">Cambiar tipo de grafica</span>
+            @for (vis of visualizacionesSugeridas(); track vis.tipo) {
+              <button
+                class="chart-type-option"
+                [class.active]="res.configuracionVisualizacion.tipo === vis.tipo"
+                (click)="cambiarTipoGrafica(vis.tipo)">
+                <i [class]="getVisualizacionIcon(vis.tipo)"></i>
+                <span>{{ vis.nombre }}</span>
+              </button>
+            }
+          </div>
+          <div class="chart-type-overlay-backdrop" (click)="chartTypeOverlayVisible.set(false)"></div>
+        </div>
+      }
+
+      <!-- Grafica ApexCharts (con validacion de datos suficientes) -->
+      @if (!drillDownActivo()) {
+        @if (hasSufficientChartData()) {
+          <apx-chart
+            [series]="chartSeries()"
+            [chart]="chartOptions().chart"
+            [xaxis]="chartOptions().xaxis"
+            [yaxis]="chartOptions().yaxis"
+            [dataLabels]="chartOptions().dataLabels"
+            [stroke]="chartOptions().stroke"
+            [legend]="chartOptions().legend"
+            [fill]="chartOptions().fill"
+            [grid]="chartOptions().grid"
+            [labels]="chartOptions().labels"
+            [theme]="chartOptions().theme"
+            [tooltip]="chartOptions().tooltip">
+          </apx-chart>
+        } @else {
+          <!-- Estado vacio: datos insuficientes para graficar -->
+          <div class="chart-empty-state">
+            <div class="chart-empty-icon">
+              <i class="pi pi-chart-bar"></i>
+            </div>
+            <h4>Datos insuficientes para esta visualizacion</h4>
+            <p>{{ getChartEmptySuggestion() }}</p>
+            <p-button
+              label="Reconfigurar analisis"
+              icon="pi pi-refresh"
+              severity="secondary"
+              [text]="true"
+              (onClick)="abrirConfiguracion()">
+            </p-button>
+          </div>
+        }
+      }
+
+      <!-- Drill-Down Navigator -->
+      @if (drillDownActivo() && drillDownState()) {
+        <app-drill-down-navigator
+          [state]="drillDownState()!"
+          (onDrill)="onDrillDown($event)"
+          (onSubirNivel)="onSubirNivel()">
+        </app-drill-down-navigator>
+      }
     </div>
 
-    <!-- Info adicional según tipo -->
+    <!-- Boton para cambiar tipo de grafica (debajo del chart) -->
+    @if (!modoWidget && !drillDownActivo()) {
+      <div class="widget-chart-actions">
+        <p-button
+          [label]="getVisualizacionLabel()"
+          [icon]="getVisualizacionIcon(res.configuracionVisualizacion.tipo)"
+          [text]="true"
+          size="small"
+          severity="secondary"
+          (onClick)="chartTypeOverlayVisible.set(!chartTypeOverlayVisible())">
+        </p-button>
+      </div>
+    }
+
+    <!-- Info badges segun tipo de analisis -->
     @if (res.tipoAnalisis === 'predictivo' && res.datosPredictivos) {
       <div class="widget-info-badge predictivo">
         <i class="pi pi-chart-line"></i>
-        <span>Predicción {{ res.datosPredictivos.horizonteMeses }} meses</span>
+        <span>Prediccion {{ res.datosPredictivos.horizonteMeses }} meses</span>
         <p-tag
           [value]="res.datosPredictivos.nivelConfianza"
           [severity]="$any(getNivelConfianzaColor(res.datosPredictivos.nivelConfianza))"
           size="small">
         </p-tag>
+        <span class="badge-detail">Tendencia: {{ res.datosPredictivos.tendencia }}</span>
       </div>
     }
 
@@ -91,43 +206,65 @@
       <div class="widget-info-badge correlacion">
         <i class="pi pi-share-alt"></i>
         <span>{{ res.datosCorrelacion.pares.length }} correlaciones</span>
+        @for (par of res.datosCorrelacion.pares.slice(0, 2); track par.variable1) {
+          <p-tag
+            [value]="par.variable1 + ' / ' + par.variable2"
+            size="small"
+            [style]="{ 'background-color': getCorrelacionColor(par.coeficiente), color: 'white' }">
+          </p-tag>
+        }
+      </div>
+    }
+
+    @if (res.tipoAnalisis === 'descriptivo' && res.datosDescriptivos?.estadisticas) {
+      <div class="widget-info-badge descriptivo">
+        <i class="pi pi-chart-bar"></i>
+        <span>Total: {{ res.datosDescriptivos?.total }}</span>
+        <span class="badge-detail">Prom: {{ res.datosDescriptivos?.estadisticas?.promedio | number:'1.0-1' }}</span>
+        <span class="badge-detail">Min: {{ res.datosDescriptivos?.estadisticas?.min }} / Max: {{ res.datosDescriptivos?.estadisticas?.max }}</span>
       </div>
     }
   }
 </div>
 
+
 <!-- ============================================================================
-     DRAWER DE CONFIGURACIÓN MULTISTEP
+     DRAWER DE CONFIGURACION - 4 PASOS
+     Paso 0: Fuentes | Paso 1: Filtros | Paso 2: Consulta | Paso 3: Preview
      ============================================================================ -->
 <p-drawer
   [(visible)]="showConfigDrawer"
   position="right"
-  [style]="{width: '50vw'}"
-  styleClass="analisis-config-drawer">
+  [style]="{ width: '50vw' }"
+  styleClass="analisis-config-drawer"
+  [modal]="true"
+  [dismissible]="true"
+  (onHide)="cerrarConfiguracion()">
 
+  <!-- Header del drawer -->
   <ng-template pTemplate="header">
     <div class="drawer-header">
       <div class="drawer-header-left">
         @if (pasoActual() > 0) {
-          <button class="drawer-back-btn" (click)="pasoAnterior()">
+          <button class="drawer-back-btn" (click)="pasoAnterior()" aria-label="Paso anterior">
             <i class="pi pi-arrow-left"></i>
           </button>
         }
         <div class="drawer-header-info">
           <i class="pi pi-sparkles"></i>
           <div>
-            <span class="drawer-title">Análisis Inteligente</span>
-            <span class="drawer-subtitle">{{ getTituloPaso() }}</span>
+            <span class="drawer-title">Analisis Inteligente</span>
+            <span class="drawer-subtitle">Paso {{ pasoActual() + 1 }} de {{ pasosConfig.length }}: {{ getTituloPaso() }}</span>
           </div>
         </div>
       </div>
-      <button class="drawer-close-btn" (click)="cerrarConfiguracion()">
+      <button class="drawer-close-btn" (click)="cerrarConfiguracion()" aria-label="Cerrar">
         <i class="pi pi-times"></i>
       </button>
     </div>
   </ng-template>
 
-  <!-- Stepper Visual -->
+  <!-- Stepper Visual (4 pasos) -->
   <div class="config-stepper">
     @for (paso of pasosConfig; track paso.id; let i = $index) {
       <div
@@ -155,18 +292,224 @@
 
   <!-- Contenido del drawer -->
   <div class="drawer-content">
-    <!-- Error Message -->
+
+    <!-- Mensaje de error -->
     @if (error()) {
       <p-message severity="error" [text]="error()!" styleClass="mb-3 w-full" />
     }
 
-    <!-- ==================== PASO 1: CONSULTA ==================== -->
+
+    <!-- ================================================================
+         PASO 0: FUENTES DE DATOS
+         Chips agrupados por categoria con seleccion multiple
+         ================================================================ -->
     @if (pasoActual() === 0) {
       <div class="config-step-content">
         <div class="step-section">
           <label class="section-label">
+            <i class="pi pi-database"></i>
+            Selecciona las fuentes de datos para el analisis
+          </label>
+          <p class="section-hint">
+            Elige una o mas fuentes. Cada fuente aporta registros al analisis.
+          </p>
+        </div>
+
+        <!-- Fuentes por categoria -->
+        @for (catEntry of fuentesPorCategoria() | keyvalue; track catEntry.key) {
+          <div class="fuente-categoria-group">
+            <div class="fuente-categoria-header">
+              <div class="fuente-categoria-title">
+                <span class="categoria-label">{{ categoriaLabels[catEntry.key] || (catEntry.key | titlecase) }}</span>
+                <p-badge
+                  [value]="getCategoriaSeleccionadaCount(catEntry.key) + '/' + catEntry.value.length"
+                  [severity]="getCategoriaSeleccionadaCount(catEntry.key) > 0 ? 'success' : 'secondary'">
+                </p-badge>
+              </div>
+              <p-button
+                [label]="getCategoriaSeleccionadaCount(catEntry.key) === catEntry.value.length ? 'Deseleccionar todas' : 'Seleccionar todas'"
+                [text]="true"
+                size="small"
+                (onClick)="seleccionarTodasCategoria(catEntry.key)">
+              </p-button>
+            </div>
+
+            <div class="fuente-chips-row">
+              @for (fuente of catEntry.value; track fuente.id) {
+                <div
+                  class="fuente-chip"
+                  [class.selected]="isFuenteSeleccionada(fuente)"
+                  (click)="toggleFuente(fuente)">
+                  <i [class]="fuente.icono"></i>
+                  <div class="fuente-chip-info">
+                    <span class="fuente-chip-nombre">{{ fuente.nombre }}</span>
+                    <span class="fuente-chip-count">{{ fuente.conteoRegistros | number }} registros</span>
+                  </div>
+                  @if (isFuenteSeleccionada(fuente)) {
+                    <i class="pi pi-check-circle fuente-check"></i>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Resumen de seleccion -->
+        @if (fuentesSeleccionadas().length > 0) {
+          <div class="fuentes-resumen">
+            <i class="pi pi-info-circle"></i>
+            <span>
+              {{ fuentesSeleccionadas().length }} fuente(s) seleccionada(s) -
+              <strong>{{ getTotalRegistrosSeleccionados() | number }}</strong> registros totales
+            </span>
+          </div>
+        }
+      </div>
+    }
+
+
+    <!-- ================================================================
+         PASO 1: FILTROS
+         DatePicker rango, estado dropdown, categoria, resumen alcance
+         ================================================================ -->
+    @if (pasoActual() === 1) {
+      <div class="config-step-content">
+        <div class="step-section">
+          <label class="section-label">
+            <i class="pi pi-filter"></i>
+            Filtros opcionales
+          </label>
+          <p class="section-hint">
+            Acota el alcance del analisis. Puedes omitir filtros para analizar todos los datos.
+          </p>
+        </div>
+
+        <!-- Rango de fechas -->
+        <div class="step-section">
+          <label class="section-label">Rango de fechas</label>
+          <p-datepicker
+            [ngModel]="filtroRangoFechas()"
+            (ngModelChange)="filtroRangoFechas.set($event)"
+            selectionMode="range"
+            [readonlyInput]="true"
+            [showIcon]="true"
+            [showButtonBar]="true"
+            dateFormat="dd/mm/yy"
+            placeholder="Selecciona un rango de fechas"
+            styleClass="w-full"
+            [showClear]="true">
+          </p-datepicker>
+        </div>
+
+        <!-- Estado -->
+        <div class="step-section">
+          <label class="section-label">Estado</label>
+          <p-select
+            [options]="estadoOptions"
+            [ngModel]="filtroEstado()"
+            (ngModelChange)="filtroEstado.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los estados"
+            styleClass="w-full">
+          </p-select>
+        </div>
+
+        <!-- Categoria -->
+        <div class="step-section">
+          <label class="section-label">Categoria</label>
+          <p-select
+            [options]="[
+              { label: 'Todas', value: '' },
+              { label: 'GRC', value: 'grc' },
+              { label: 'Seguridad', value: 'seguridad' },
+              { label: 'Cumplimiento', value: 'cumplimiento' },
+              { label: 'Operaciones', value: 'operaciones' }
+            ]"
+            [ngModel]="filtroCategoria()"
+            (ngModelChange)="filtroCategoria.set($event)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las categorias"
+            styleClass="w-full">
+          </p-select>
+        </div>
+
+        <p-divider />
+
+        <!-- Resumen de alcance -->
+        @if (resumenAlcance(); as alcance) {
+          <div class="alcance-resumen">
+            <h5>
+              <i class="pi pi-chart-pie"></i>
+              Resumen de alcance
+            </h5>
+            <div class="alcance-grid">
+              <div class="alcance-item">
+                <span class="alcance-value">{{ alcance.fuentesSeleccionadas }}</span>
+                <span class="alcance-label">Fuentes</span>
+              </div>
+              <div class="alcance-item">
+                <span class="alcance-value">{{ alcance.totalRegistros | number }}</span>
+                <span class="alcance-label">Registros</span>
+              </div>
+              <div class="alcance-item">
+                <span class="alcance-value">{{ alcance.entidades.length }}</span>
+                <span class="alcance-label">Entidades</span>
+              </div>
+            </div>
+            <div class="alcance-detail">
+              <span><strong>Periodo:</strong> {{ alcance.periodo }}</span>
+              @if (alcance.filtrosAplicados.length > 0) {
+                <div class="alcance-filtros">
+                  @for (filtro of alcance.filtrosAplicados; track filtro) {
+                    <p-tag [value]="filtro" size="small" severity="secondary" />
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="alcance-resumen empty">
+            <i class="pi pi-info-circle"></i>
+            <span>Selecciona fuentes en el paso anterior para ver el resumen de alcance.</span>
+          </div>
+        }
+      </div>
+    }
+
+
+    <!-- ================================================================
+         PASO 2: CONSULTA
+         AutoComplete, tipo analisis, ejemplos, historial, resumen alcance
+         ================================================================ -->
+    @if (pasoActual() === 2) {
+      <div class="config-step-content">
+
+        <!-- Resumen de alcance compacto (arriba de la consulta) -->
+        @if (resumenAlcance(); as alcance) {
+          <div class="alcance-resumen-compact">
+            <i class="pi pi-database"></i>
+            <span>
+              {{ alcance.fuentesSeleccionadas }} fuentes &middot;
+              {{ alcance.totalRegistros | number }} registros &middot;
+              {{ alcance.periodo }}
+            </span>
+            @if (alcance.filtrosAplicados.length > 0) {
+              <span class="alcance-filtros-compact">
+                @for (filtro of alcance.filtrosAplicados; track filtro) {
+                  <p-tag [value]="filtro" size="small" severity="secondary" />
+                }
+              </span>
+            }
+          </div>
+        }
+
+        <!-- Input de consulta -->
+        <div class="step-section">
+          <label class="section-label">
             <i class="pi pi-question-circle"></i>
-            ¿Qué deseas analizar?
+            Que deseas analizar?
           </label>
           <p-autoComplete
             [ngModel]="consultaTexto()"
@@ -175,14 +518,15 @@
             (completeMethod)="onConsultaInput($event)"
             [dropdown]="false"
             [forceSelection]="false"
-            placeholder="Ej: Tendencia de incidentes críticos por área..."
+            placeholder="Ej: Tendencia de incidentes criticos por area..."
             styleClass="config-query-input"
             inputStyleClass="config-query-text">
           </p-autoComplete>
         </div>
 
+        <!-- Tipo de analisis (3 cards) -->
         <div class="step-section">
-          <label class="section-label">Tipo de análisis</label>
+          <label class="section-label">Tipo de analisis</label>
           <div class="analysis-type-cards">
             @for (tipo of tiposAnalisisOptions; track tipo.value) {
               <div
@@ -197,6 +541,34 @@
           </div>
         </div>
 
+        <!-- Opciones de prediccion (solo si predictivo) -->
+        @if (tipoAnalisisSeleccionado() === 'predictivo') {
+          <div class="step-section prediction-options">
+            <label class="section-label">Opciones de prediccion</label>
+            <div class="options-row">
+              <div class="option-field">
+                <label>Horizonte</label>
+                <p-select
+                  [options]="horizonteOptions"
+                  [ngModel]="horizontePrediccion()"
+                  (ngModelChange)="horizontePrediccion.set($event)"
+                  optionLabel="label"
+                  optionValue="value"
+                  [style]="{ width: '140px' }">
+                </p-select>
+              </div>
+              <div class="option-field">
+                <label>Intervalo de confianza</label>
+                <p-toggleSwitch
+                  [ngModel]="mostrarIntervaloConfianza()"
+                  (ngModelChange)="mostrarIntervaloConfianza.set($event)">
+                </p-toggleSwitch>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Ejemplos de consultas -->
         <div class="step-section">
           <label class="section-label">
             <i class="pi pi-lightbulb"></i>
@@ -205,6 +577,7 @@
           <div class="examples-grid">
             @for (ejemplo of ejemplosActuales().slice(0, 4); track ejemplo.texto) {
               <button class="example-btn" (click)="usarEjemplo(ejemplo.texto)">
+                <i class="pi pi-arrow-right example-arrow"></i>
                 {{ ejemplo.texto }}
               </button>
             }
@@ -219,7 +592,7 @@
               Consultas recientes
             </label>
             <div class="history-list">
-              @for (consulta of historialConsultas().slice(0, 3); track consulta.id) {
+              @for (consulta of historialConsultas().slice(0, 5); track consulta.id) {
                 <button class="history-btn" (click)="usarConsultaHistorial(consulta)">
                   <span>{{ consulta.texto }}</span>
                   <p-tag
@@ -235,131 +608,32 @@
       </div>
     }
 
-    <!-- ==================== PASO 2: CONFIGURAR ==================== -->
-    @if (pasoActual() === 1) {
-      <div class="config-step-content">
-        @if (interpretacion(); as interp) {
-          <!-- Resumen de interpretación -->
-          <div class="interp-summary">
-            <div class="interp-header">
-              <i class="pi pi-check-circle"></i>
-              <span>Interpretación de tu consulta</span>
-              <p-tag
-                [value]="'Confianza: ' + interp.confianzaInterpretacion + '%'"
-                [severity]="interp.confianzaInterpretacion >= 80 ? 'success' : interp.confianzaInterpretacion >= 50 ? 'warn' : 'danger'"
-                size="small">
-              </p-tag>
-            </div>
-            <p class="interp-query">"{{ interp.consultaOriginal }}"</p>
-          </div>
 
-          <!-- Entidades detectadas -->
-          <div class="step-section">
-            <label class="section-label">Entidades detectadas</label>
-            <div class="entities-row">
-              @for (entidad of entidadesEditables(); track entidad) {
-                <p-chip
-                  [label]="getEntidadLabel(entidad)"
-                  [icon]="getEntidadIcon(entidad)"
-                  [removable]="entidadesEditables().length > 1"
-                  (onRemove)="eliminarEntidad(entidad)"
-                  styleClass="entity-chip">
-                </p-chip>
-              }
-              @if (entidadesEditables().length < 4) {
-                <p-menu #addEntityMenu [model]="getEntidadesDisponiblesMenu()" [popup]="true" appendTo="body"></p-menu>
-                <p-button
-                  icon="pi pi-plus"
-                  [rounded]="true"
-                  [text]="true"
-                  size="small"
-                  (onClick)="addEntityMenu.toggle($event)"
-                  pTooltip="Agregar entidad">
-                </p-button>
-              }
-            </div>
-          </div>
-
-          <!-- Filtros detectados -->
-          @if (interp.filtrosImplicitos.length > 0) {
-            <div class="step-section">
-              <label class="section-label">Filtros detectados</label>
-              <div class="filters-row">
-                @for (filtro of interp.filtrosImplicitos; track filtro.campo) {
-                  <p-chip [label]="filtro.etiqueta" styleClass="filter-chip" />
-                }
-              </div>
-            </div>
-          }
-
-          <!-- Opciones de predicción -->
-          @if (tipoAnalisisSeleccionado() === 'predictivo') {
-            <div class="step-section prediction-options">
-              <label class="section-label">Opciones de predicción</label>
-              <div class="options-row">
-                <div class="option-field">
-                  <label>Horizonte</label>
-                  <p-select
-                    [options]="horizonteOptions"
-                    [ngModel]="horizontePrediccion()"
-                    (ngModelChange)="horizontePrediccion.set($event)"
-                    optionLabel="label"
-                    optionValue="value"
-                    [style]="{ width: '140px' }">
-                  </p-select>
-                </div>
-                <div class="option-field">
-                  <label>Intervalo de confianza</label>
-                  <p-toggleSwitch
-                    [ngModel]="mostrarIntervaloConfianza()"
-                    (ngModelChange)="mostrarIntervaloConfianza.set($event)">
-                  </p-toggleSwitch>
-                </div>
-              </div>
-            </div>
-          }
-
-          <p-divider />
-
-          <!-- Selección de visualización -->
-          <div class="step-section">
-            <label class="section-label">Tipo de visualización</label>
-            <div class="visualization-grid">
-              @for (vis of visualizacionesSugeridas(); track vis.tipo) {
-                <div
-                  class="vis-card"
-                  [class.selected]="visualizacionSeleccionada() === vis.tipo"
-                  [class.recommended]="vis.recomendado"
-                  (click)="seleccionarVisualizacion(vis.tipo)">
-                  <i [class]="getVisualizacionIcon(vis.tipo)"></i>
-                  <span class="vis-name">{{ vis.nombre }}</span>
-                  @if (vis.recomendado) {
-                    <span class="vis-badge">Recomendado</span>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-        }
-      </div>
-    }
-
-    <!-- ==================== PASO 3: PREVIEW ==================== -->
-    @if (pasoActual() === 2) {
+    <!-- ================================================================
+         PASO 3: PREVIEW
+         Vista previa del widget, resumen config, insights, progreso
+         ================================================================ -->
+    @if (pasoActual() === 3) {
       <div class="config-step-content preview-step">
+
         @if (resultadoPreview(); as preview) {
           <!-- Preview Header -->
           <div class="preview-header">
             <h4>Vista Previa</h4>
-            <span class="preview-hint">Así se verá el widget en el dashboard</span>
+            <span class="preview-hint">Asi se vera el widget en el dashboard</span>
           </div>
 
-          <!-- Preview Container -->
+          <!-- Preview Container (mock del widget) -->
           <div class="preview-container">
             <div class="preview-widget-mock">
               <div class="preview-widget-header">
                 <i class="pi pi-sparkles"></i>
                 <span>{{ preview.configuracionVisualizacion.titulo }}</span>
+                <p-tag
+                  [value]="getTipoAnalisisLabel()"
+                  [severity]="getTagSeverity(preview.tipoAnalisis)"
+                  size="small">
+                </p-tag>
               </div>
               <div class="preview-chart">
                 <apx-chart
@@ -373,15 +647,16 @@
                   [fill]="previewChartOptions().fill"
                   [grid]="previewChartOptions().grid"
                   [labels]="previewChartOptions().labels"
-                  [theme]="previewChartOptions().theme">
+                  [theme]="previewChartOptions().theme"
+                  [tooltip]="previewChartOptions().tooltip">
                 </apx-chart>
               </div>
             </div>
           </div>
 
-          <!-- Resumen de configuración -->
+          <!-- Resumen de configuracion -->
           <div class="config-summary">
-            <h5>Resumen de Configuración</h5>
+            <h5>Resumen de Configuracion</h5>
             <ul>
               <li>
                 <i class="pi pi-chart-bar"></i>
@@ -389,12 +664,26 @@
               </li>
               <li>
                 <i [class]="getVisualizacionIcon(visualizacionSeleccionada()!)"></i>
-                <span>Visualización: <strong>{{ getVisualizacionLabel() }}</strong></span>
+                <span>Visualizacion: <strong>{{ getVisualizacionLabel() }}</strong></span>
+              </li>
+              <li>
+                <i class="pi pi-database"></i>
+                <span>Fuentes: <strong>{{ fuentesSeleccionadas().length }}</strong></span>
               </li>
               <li>
                 <i class="pi pi-box"></i>
                 <span>Entidades: <strong>{{ entidadesEditables().length }}</strong></span>
               </li>
+              @if (resumenAlcance(); as alcance) {
+                <li>
+                  <i class="pi pi-list"></i>
+                  <span>Registros: <strong>{{ alcance.totalRegistros | number }}</strong></span>
+                </li>
+                <li>
+                  <i class="pi pi-calendar"></i>
+                  <span>Periodo: <strong>{{ alcance.periodo }}</strong></span>
+                </li>
+              }
               @if (tipoAnalisisSeleccionado() === 'predictivo') {
                 <li>
                   <i class="pi pi-calendar"></i>
@@ -404,6 +693,57 @@
             </ul>
           </div>
 
+          <!-- Entidades detectadas (chips) -->
+          @if (entidadesEditables().length > 0) {
+            <div class="preview-entities">
+              <label class="section-label">Entidades detectadas</label>
+              <div class="entities-row">
+                @for (entidad of entidadesEditables(); track entidad) {
+                  <p-chip
+                    [label]="getEntidadLabel(entidad)"
+                    [icon]="getEntidadIcon(entidad)"
+                    [removable]="entidadesEditables().length > 1"
+                    (onRemove)="eliminarEntidad(entidad)"
+                    styleClass="entity-chip">
+                  </p-chip>
+                }
+                @if (entidadesEditables().length < 4) {
+                  <p-menu #addEntityMenuPreview [model]="getEntidadesDisponiblesMenu()" [popup]="true" appendTo="body"></p-menu>
+                  <p-button
+                    icon="pi pi-plus"
+                    [rounded]="true"
+                    [text]="true"
+                    size="small"
+                    (onClick)="addEntityMenuPreview.toggle($event)"
+                    pTooltip="Agregar entidad">
+                  </p-button>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Seleccion de visualizacion -->
+          @if (visualizacionesSugeridas().length > 0) {
+            <div class="step-section">
+              <label class="section-label">Tipo de visualizacion</label>
+              <div class="visualization-grid">
+                @for (vis of visualizacionesSugeridas(); track vis.tipo) {
+                  <div
+                    class="vis-card"
+                    [class.selected]="visualizacionSeleccionada() === vis.tipo"
+                    [class.recommended]="vis.recomendado"
+                    (click)="seleccionarVisualizacion(vis.tipo)">
+                    <i [class]="getVisualizacionIcon(vis.tipo)"></i>
+                    <span class="vis-name">{{ vis.nombre }}</span>
+                    @if (vis.recomendado) {
+                      <span class="vis-badge">Recomendado</span>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
           <!-- Info predictivo -->
           @if (preview.tipoAnalisis === 'predictivo' && preview.datosPredictivos) {
             <div class="preview-info-box">
@@ -411,29 +751,119 @@
               <div>
                 <strong>{{ preview.datosPredictivos.tendencia | titlecase }}</strong>
                 <p>{{ preview.datosPredictivos.resumenTexto }}</p>
+                <div class="preview-info-meta">
+                  <p-tag
+                    [value]="'Confianza: ' + preview.datosPredictivos.porcentajeConfianza + '%'"
+                    [severity]="$any(getNivelConfianzaColor(preview.datosPredictivos.nivelConfianza))"
+                    size="small">
+                  </p-tag>
+                  <span>{{ preview.datosPredictivos.disclaimer }}</span>
+                </div>
               </div>
             </div>
           }
 
-          <!-- Info correlación -->
+          <!-- Info correlacion -->
           @if (preview.tipoAnalisis === 'correlacion' && preview.datosCorrelacion) {
             <div class="preview-info-box">
               <i class="pi pi-info-circle"></i>
               <div>
-                <strong>Análisis de Correlación</strong>
+                <strong>Analisis de Correlacion</strong>
                 <p>{{ preview.datosCorrelacion.interpretacionGeneral }}</p>
+                @if (preview.datosCorrelacion.pares.length > 0) {
+                  <div class="correlacion-pares">
+                    @for (par of preview.datosCorrelacion.pares.slice(0, 3); track par.variable1) {
+                      <div class="correlacion-par">
+                        <span>{{ par.variable1 }} / {{ par.variable2 }}</span>
+                        <p-tag
+                          [value]="par.coeficiente.toFixed(2)"
+                          size="small"
+                          [style]="{ 'background-color': getCorrelacionColor(par.coeficiente), color: 'white' }">
+                        </p-tag>
+                        <span class="correlacion-fuerza">{{ par.fuerza }} {{ par.direccion }}</span>
+                      </div>
+                    }
+                  </div>
+                }
               </div>
             </div>
           }
+
+          <!-- Insights summary (si interpretacion disponible) -->
+          @if (interpretacion(); as interp) {
+            <div class="interp-summary">
+              <div class="interp-header">
+                <i class="pi pi-check-circle"></i>
+                <span>Interpretacion de tu consulta</span>
+                <p-tag
+                  [value]="'Confianza: ' + interp.confianzaInterpretacion + '%'"
+                  [severity]="interp.confianzaInterpretacion >= 80 ? 'success' : interp.confianzaInterpretacion >= 50 ? 'warn' : 'danger'"
+                  size="small">
+                </p-tag>
+              </div>
+              <p class="interp-query">"{{ interp.consultaOriginal }}"</p>
+
+              <!-- Filtros detectados -->
+              @if (interp.filtrosImplicitos.length > 0) {
+                <div class="interp-filtros">
+                  @for (filtro of interp.filtrosImplicitos; track filtro.campo) {
+                    <p-chip [label]="filtro.etiqueta" styleClass="filter-chip" />
+                  }
+                </div>
+              }
+            </div>
+          }
+
         } @else {
-          <!-- Loading preview -->
-          <div class="preview-loading">
-            <p-progressSpinner strokeWidth="3" styleClass="preview-spinner" />
-            <span>Generando vista previa...</span>
-          </div>
+
+          <!-- Estado de carga / procesando con barra de progreso -->
+          @if (isProcessing()) {
+            <div class="preview-loading">
+              <div class="preview-loading-header">
+                <i class="pi pi-microchip-ai loading-pulse"></i>
+                <span class="loading-title">Procesando analisis...</span>
+              </div>
+
+              <!-- Barra de progreso -->
+              <div class="progreso-container">
+                <p-progressbar
+                  [value]="getProgresoPercent()"
+                  [showValue]="false"
+                  styleClass="progreso-bar">
+                </p-progressbar>
+                <span class="progreso-label">{{ getProgresoLabel() }}</span>
+              </div>
+
+              <!-- Etapas de progreso -->
+              <div class="progreso-etapas">
+                @for (etapa of etapasProgreso; track etapa.etapa) {
+                  <div
+                    class="progreso-etapa"
+                    [class.active]="estadoProgreso() === etapa.etapa"
+                    [class.completed]="isEtapaCompleted(etapa)">
+                    <div class="etapa-icon">
+                      @if (isEtapaCompleted(etapa)) {
+                        <i class="pi pi-check"></i>
+                      } @else {
+                        <i [class]="etapa.icon"></i>
+                      }
+                    </div>
+                    <span class="etapa-label">{{ etapa.label }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <!-- Placeholder cuando no hay preview ni esta procesando -->
+            <div class="preview-loading">
+              <i class="pi pi-eye" style="font-size: 2.5rem; color: var(--text-color-secondary);"></i>
+              <span>La vista previa se generara automaticamente al procesar la consulta.</span>
+            </div>
+          }
         }
       </div>
     }
+
   </div>
 
   <!-- Footer del drawer -->
@@ -449,15 +879,17 @@
 
       <div class="footer-right">
         @if (pasoActual() < pasosConfig.length - 1) {
+          <!-- Boton siguiente / analizar -->
           <p-button
-            [label]="pasoActual() === 0 ? 'Analizar' : 'Siguiente'"
-            [icon]="pasoActual() === 0 ? 'pi pi-sparkles' : 'pi pi-arrow-right'"
+            [label]="pasoActual() === 2 ? 'Analizar' : 'Siguiente'"
+            [icon]="pasoActual() === 2 ? 'pi pi-sparkles' : 'pi pi-arrow-right'"
             iconPos="right"
             (onClick)="siguientePaso()"
             [disabled]="!puedeAvanzar() || isProcessing()"
             [loading]="isProcessing()">
           </p-button>
         } @else {
+          <!-- Boton guardar widget (paso 3) -->
           <p-button
             label="Guardar Widget"
             icon="pi pi-check"
@@ -469,4 +901,19 @@
       </div>
     </div>
   </ng-template>
+
 </p-drawer>
+
+
+<!-- ============================================================================
+     INSIGHT DRAWER (sub-componente)
+     Muestra hallazgos IA, resumen ejecutivo, comparativos, acciones sugeridas
+     ============================================================================ -->
+@if (insightDrawerVisible()) {
+  <app-insight-drawer
+    [visible]="insightDrawerVisible()"
+    [contenido]="contenidoInsights()"
+    (onClose)="onInsightDrawerClose()"
+    (onAccionEjecutada)="onAccionEjecutada($event)">
+  </app-insight-drawer>
+}

@@ -1,6 +1,6 @@
 // ============================================================================
-// WIDGET DE ANÁLISIS INTELIGENTE - ESTILOS
-// Con drawer multistep y preview
+// WIDGET DE ANÁLISIS INTELIGENTE v2 - ESTILOS
+// Drawer 4-step wizard, fuentes, filtros, drill-down, insight drawer
 // ============================================================================
 
 // ==================== WIDGET CONTAINER ====================
@@ -13,13 +13,12 @@
   border-radius: 12px;
   overflow: hidden;
 
-  // En modo widget, el parent app-dashboard-widget ya provee el contenedor
   &.modo-widget {
     background: transparent;
     border: none;
     border-radius: 0;
     flex: 1;
-    min-height: 0; // Permite que flexbox calcule correctamente
+    min-height: 0;
   }
 }
 
@@ -65,6 +64,35 @@
   }
 }
 
+// ==================== PROMPTS SUGERIDOS (empty state) ====================
+
+.prompts-sugeridos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  width: 100%;
+  max-width: 360px;
+
+  .prompt-sugerido-btn {
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--surface-300);
+    border-radius: 10px;
+    background: var(--surface-ground);
+    color: var(--text-color);
+    font-size: 0.8rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--primary-50);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+  }
+}
+
 // ==================== WIDGET WITH RESULT ====================
 
 .widget-result-header {
@@ -106,26 +134,142 @@
   }
 }
 
+// ==================== CHART CONTAINER + IA OVERLAY ====================
+
 .widget-chart-container {
   flex: 1;
   padding: 0.5rem 1rem;
   min-height: 250px;
   display: flex;
   flex-direction: column;
+  position: relative;
 
-  // En modo widget, el chart ocupa todo el espacio disponible
   .modo-widget & {
     padding: 0;
     min-height: 0;
     height: 100%;
 
-    // ApexCharts debe ocupar todo el espacio
     apx-chart {
       flex: 1;
       min-height: 0;
     }
   }
 }
+
+// Botón IA sparkles overlay en la gráfica
+.chart-ia-overlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ia-trigger-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  background: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// Selector de tipo de gráfica (dropdown overlay)
+.chart-type-selector {
+  position: relative;
+
+  .chart-type-trigger {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--surface-300);
+    border-radius: 10px;
+    background: var(--surface-card);
+    color: var(--text-color-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+      background: var(--primary-50);
+    }
+  }
+
+  .chart-type-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    min-width: 160px;
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    padding: 0.5rem;
+    z-index: 20;
+
+    .chart-type-option {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-color);
+      font-size: 0.8125rem;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      transition: background-color 0.15s ease;
+
+      i {
+        color: var(--text-color-secondary);
+        width: 20px;
+        text-align: center;
+      }
+
+      &:hover {
+        background: var(--surface-100);
+      }
+
+      &.active {
+        background: var(--primary-50);
+        color: var(--primary-color);
+
+        i {
+          color: var(--primary-color);
+        }
+      }
+    }
+  }
+}
+
+// ==================== INFO BADGE ====================
 
 .widget-info-badge {
   display: flex;
@@ -150,6 +294,10 @@
   &.correlacion {
     background: var(--green-50);
     i { color: var(--green-500); }
+  }
+
+  &.descriptivo {
+    background: var(--surface-ground);
   }
 }
 
@@ -257,7 +405,7 @@
   }
 }
 
-// ==================== STEPPER ====================
+// ==================== STEPPER (4 pasos) ====================
 
 .config-stepper {
   display: flex;
@@ -273,7 +421,7 @@
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    min-width: 80px;
+    min-width: 70px;
 
     .stepper-indicator {
       display: flex;
@@ -293,10 +441,10 @@
       }
 
       .stepper-line {
-        width: 60px;
+        width: 40px;
         height: 2px;
         background: var(--surface-300);
-        margin: 0 0.5rem;
+        margin: 0 0.35rem;
         transition: all 0.3s ease;
 
         &.completed {
@@ -306,7 +454,7 @@
     }
 
     .stepper-label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 500;
       color: var(--text-color-secondary);
       text-align: center;
@@ -376,7 +524,174 @@
   }
 }
 
-// Query input
+// ==================== PASO 1: FUENTES ====================
+
+.fuentes-por-categoria {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.categoria-group {
+  .categoria-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+
+    .categoria-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-color);
+      text-transform: capitalize;
+    }
+
+    .categoria-count {
+      font-size: 0.6875rem;
+      color: var(--text-color-secondary);
+      background: var(--surface-100);
+      padding: 0.125rem 0.5rem;
+      border-radius: 10px;
+    }
+
+    .categoria-select-all {
+      font-size: 0.75rem;
+      color: var(--primary-color);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .fuentes-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+.fuente-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border: 2px solid var(--surface-300);
+  border-radius: 10px;
+  background: var(--surface-card);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.8125rem;
+  color: var(--text-color);
+
+  .fuente-icon {
+    font-size: 1rem;
+    color: var(--text-color-secondary);
+  }
+
+  .fuente-nombre {
+    font-weight: 500;
+  }
+
+  .fuente-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--surface-200);
+    border-radius: 9px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--text-color-secondary);
+  }
+
+  &:hover {
+    border-color: var(--primary-300);
+    background: var(--primary-50);
+  }
+
+  &.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-50);
+
+    .fuente-icon {
+      color: var(--primary-color);
+    }
+
+    .fuente-badge {
+      background: var(--primary-color);
+      color: white;
+    }
+  }
+}
+
+// ==================== PASO 2: FILTROS ====================
+
+.filtros-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .filtro-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+  }
+
+  .filtro-row {
+    display: flex;
+    gap: 1rem;
+
+    .filtro-field {
+      flex: 1;
+    }
+  }
+}
+
+// ==================== RESUMEN DE ALCANCE ====================
+
+.alcance-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--blue-50);
+  border: 1px solid var(--blue-200);
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  color: var(--blue-700);
+
+  .alcance-icon {
+    font-size: 1.125rem;
+    color: var(--blue-500);
+  }
+
+  .alcance-text {
+    flex: 1;
+
+    strong {
+      color: var(--blue-800);
+    }
+  }
+}
+
+// ==================== PASO 3: CONSULTA (Query input) ====================
+
 :host ::ng-deep .config-query-input {
   width: 100%;
 
@@ -503,7 +818,534 @@
   }
 }
 
-// ==================== PASO 2: CONFIGURAR ====================
+// ==================== EMPTY STATE PROMPTS ====================
+
+.empty-prompts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  width: 100%;
+  max-width: 360px;
+}
+
+.prompt-suggestion-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--surface-300);
+  border-radius: 10px;
+  background: var(--surface-ground);
+  color: var(--text-color);
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  i {
+    font-size: 0.75rem;
+    color: var(--primary-color);
+  }
+
+  &:hover {
+    background: var(--primary-50);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+}
+
+.section-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+  line-height: 1.5;
+}
+
+// ==================== FUENTE CATEGORIA GROUPS ====================
+
+.fuente-categoria-group {
+  margin-bottom: 1rem;
+}
+
+.fuente-categoria-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.fuente-categoria-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .categoria-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+}
+
+.fuente-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.fuente-chip-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.fuente-chip-nombre {
+  font-weight: 500;
+  font-size: 0.8125rem;
+}
+
+.fuente-chip-count {
+  font-size: 0.6875rem;
+  color: var(--text-color-secondary);
+}
+
+.fuente-check {
+  color: var(--primary-color);
+  font-size: 0.875rem;
+}
+
+.fuentes-resumen {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: var(--blue-50);
+  border: 1px solid var(--blue-200);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  color: var(--blue-700);
+
+  i {
+    color: var(--blue-500);
+  }
+}
+
+// ==================== ALCANCE RESUMEN ====================
+
+.alcance-resumen {
+  padding: 1rem;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+
+  h5 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+
+  &.empty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+
+    i {
+      color: var(--text-color-secondary);
+    }
+  }
+}
+
+.alcance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.alcance-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  background: var(--surface-card);
+  border-radius: 8px;
+}
+
+.alcance-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.alcance-label {
+  font-size: 0.6875rem;
+  color: var(--text-color-secondary);
+}
+
+.alcance-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+}
+
+.alcance-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.alcance-resumen-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  flex-wrap: wrap;
+
+  i {
+    color: var(--primary-color);
+  }
+}
+
+.alcance-filtros-compact {
+  display: flex;
+  gap: 0.25rem;
+}
+
+// ==================== CHART OVERLAY ACTIONS ====================
+
+.chart-overlay-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+}
+
+.chart-type-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+}
+
+.chart-type-overlay-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.chart-type-overlay-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 1rem;
+  min-width: 200px;
+  max-width: 300px;
+  z-index: 101;
+
+  .chart-type-overlay-title {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.75rem;
+  }
+
+  .chart-type-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-color);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background 0.15s ease;
+
+    i {
+      color: var(--text-color-secondary);
+      width: 20px;
+      text-align: center;
+    }
+
+    &:hover {
+      background: var(--surface-100);
+    }
+
+    &.active {
+      background: var(--primary-50);
+      color: var(--primary-color);
+
+      i { color: var(--primary-color); }
+    }
+  }
+}
+
+// ==================== CHART EMPTY STATE ====================
+
+.chart-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  min-height: 250px;
+
+  .chart-empty-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-100);
+    border-radius: 50%;
+    margin-bottom: 1rem;
+
+    i {
+      font-size: 1.75rem;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  p {
+    margin: 0 0 1rem 0;
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+    max-width: 320px;
+    line-height: 1.5;
+  }
+}
+
+// ==================== WIDGET MODE TOOLBAR (IA button) ====================
+
+.widget-mode-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.25rem 0.5rem;
+}
+
+// IA header button: icon + label on desktop, icon-only on mobile
+:host ::ng-deep .ia-header-btn {
+  .p-button-label {
+    display: inline;
+  }
+}
+
+@media (max-width: 768px) {
+  :host ::ng-deep .ia-header-btn {
+    .p-button-label {
+      display: none !important;
+    }
+  }
+}
+
+// ==================== WIDGET CHART ACTIONS ====================
+
+.widget-chart-actions {
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem 0.5rem;
+}
+
+.badge-detail {
+  font-size: 0.6875rem;
+  color: var(--text-color-secondary);
+  margin-left: 0.25rem;
+}
+
+// ==================== INTERPRETATION FILTROS ====================
+
+.interp-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+// ==================== PREVIEW EXTRAS ====================
+
+.preview-entities {
+  margin-top: 0.75rem;
+}
+
+.preview-info-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+.correlacion-pares {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.correlacion-par {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--text-color);
+}
+
+.correlacion-fuerza {
+  font-size: 0.6875rem;
+  color: var(--text-color-secondary);
+  font-style: italic;
+}
+
+// ==================== LOADING / PROGRESS ====================
+
+.preview-loading-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.loading-pulse {
+  font-size: 2rem;
+  color: var(--primary-color);
+  animation: pulse-icon 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.loading-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.progreso-container {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 1rem;
+}
+
+:host ::ng-deep .progreso-bar {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.progreso-label {
+  display: block;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  margin-top: 0.5rem;
+}
+
+.progreso-etapas {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+}
+
+.progreso-etapa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+
+  .etapa-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--surface-200);
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .etapa-label {
+    font-size: 0.625rem;
+    color: var(--text-color-secondary);
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  &.active {
+    .etapa-icon {
+      background: var(--primary-color);
+      color: white;
+      box-shadow: 0 0 0 4px var(--primary-100);
+      animation: etapa-pulse 1s ease-in-out infinite;
+    }
+
+    .etapa-label {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+  }
+
+  &.completed {
+    .etapa-icon {
+      background: var(--green-500);
+      color: white;
+    }
+
+    .etapa-label {
+      color: var(--green-600);
+    }
+  }
+}
+
+// ==================== INTERPRETACIÓN SUMMARY ====================
 
 .interp-summary {
   padding: 1rem;
@@ -640,7 +1482,7 @@
   }
 }
 
-// ==================== PASO 3: PREVIEW ====================
+// ==================== PASO 4: PREVIEW ====================
 
 .preview-step {
   .preview-header {
@@ -762,6 +1604,89 @@
   }
 }
 
+// ==================== PROGRESO POR ETAPAS ====================
+
+.progress-etapas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  gap: 1.5rem;
+
+  .progress-bar-container {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .etapas-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .etapa-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 1;
+
+    .etapa-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--surface-300);
+      transition: all 0.3s ease;
+    }
+
+    .etapa-label {
+      font-size: 0.625rem;
+      color: var(--text-color-secondary);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    &.etapa-active {
+      .etapa-dot {
+        background: var(--primary-color);
+        box-shadow: 0 0 0 4px var(--primary-100);
+        animation: etapa-pulse 1s ease-in-out infinite;
+      }
+
+      .etapa-label {
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+    }
+
+    &.etapa-completed {
+      .etapa-dot {
+        background: var(--green-500);
+      }
+
+      .etapa-label {
+        color: var(--green-600);
+      }
+    }
+  }
+
+  .progress-message {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    text-align: center;
+  }
+}
+
+@keyframes etapa-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+// Skeleton / preview loading
 .preview-loading {
   display: flex;
   flex-direction: column;
@@ -781,6 +1706,15 @@
   }
 }
 
+// ==================== DRILL-DOWN INTEGRATION ====================
+
+.drill-down-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 // ==================== DRAWER FOOTER ====================
 
 .drawer-footer {
@@ -791,6 +1725,108 @@
   .footer-right {
     display: flex;
     gap: 0.75rem;
+  }
+}
+
+// ==================== ERROR / EMPTY STATES ====================
+
+.state-datos-insuficientes,
+.state-prompt-invalido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  gap: 1rem;
+
+  .state-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--surface-100);
+
+    i {
+      font-size: 1.5rem;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+    max-width: 320px;
+  }
+
+  .state-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .state-example {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--surface-300);
+    border-radius: 8px;
+    background: var(--surface-ground);
+    color: var(--text-color);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--primary-50);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+  }
+}
+
+// ==================== INTERACTIVE LEGEND ====================
+
+.interactive-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+    color: var(--text-color);
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    &.legend-hidden {
+      opacity: 0.4;
+      text-decoration: line-through;
+    }
+
+    &:hover {
+      background: var(--surface-100);
+    }
   }
 }
 
@@ -821,6 +1857,14 @@
     }
   }
 
+  .alcance-summary {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: var(--blue-400);
+
+    .alcance-icon { color: var(--blue-400); }
+  }
+
   .preview-info-box {
     background: rgba(59, 130, 246, 0.1);
     border-color: rgba(59, 130, 246, 0.3);
@@ -829,12 +1873,72 @@
     strong { color: var(--blue-400); }
   }
 
+  .fuente-chip {
+    border-color: var(--surface-600);
+    background: var(--surface-800);
+    color: var(--text-color);
+
+    &:hover {
+      border-color: var(--primary-400);
+      background: rgba(var(--primary-color-rgb), 0.15);
+    }
+
+    &.selected {
+      border-color: var(--primary-400);
+      background: rgba(var(--primary-color-rgb), 0.2);
+    }
+  }
+
+  .ia-trigger-btn {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .chart-type-selector .chart-type-dropdown {
+    background: var(--surface-800);
+    border-color: var(--surface-600);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  .fuentes-resumen {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: var(--blue-400);
+
+    i { color: var(--blue-400); }
+  }
+
   .type-card:hover,
   .type-card.selected,
   .vis-card:hover,
   .vis-card.selected,
-  .example-btn:hover {
+  .example-btn:hover,
+  .prompt-suggestion-btn:hover,
+  .state-example:hover {
     background: rgba(var(--primary-color-rgb), 0.15);
+  }
+
+  .progreso-etapa.active .etapa-icon {
+    box-shadow: 0 0 0 4px rgba(var(--primary-color-rgb), 0.2);
+  }
+
+  .chart-type-overlay-content {
+    background: var(--surface-800);
+    border-color: var(--surface-600);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .alcance-resumen {
+    background: var(--surface-800);
+    border-color: var(--surface-600);
+  }
+
+  .state-datos-insuficientes .state-icon,
+  .state-prompt-invalido .state-icon {
+    background: var(--surface-700);
+  }
+
+  .chart-empty-state .chart-empty-icon {
+    background: var(--surface-700);
   }
 }
 
@@ -852,14 +1956,14 @@
 
   .config-stepper {
     .stepper-item {
-      min-width: 60px;
+      min-width: 55px;
 
       .stepper-indicator .stepper-line {
-        width: 30px;
+        width: 20px;
       }
 
       .stepper-label {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
       }
     }
   }
@@ -879,5 +1983,25 @@
 
   .visualization-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .fuente-chip {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.625rem;
+  }
+
+  .chart-ia-overlay {
+    top: 8px;
+    right: 8px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1279px) {
+  .config-stepper .stepper-item {
+    min-width: 60px;
+
+    .stepper-indicator .stepper-line {
+      width: 30px;
+    }
   }
 }

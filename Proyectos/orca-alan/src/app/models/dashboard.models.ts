@@ -146,7 +146,8 @@ export type TipoWidget =
   | 'table-mini'            // W3: Tabla de datos
   | 'actividad-reciente'    // W4: Últimas actividades con filtros
   | 'calendario'            // W6: Calendario de eventos
-  | 'analisis-inteligente'; // W7: Análisis con NLP + ML
+  | 'analisis-inteligente' // W7: Análisis con NLP + ML
+  | 'tprm-panel';          // W8: Panel TPRM de proveedores
 
 // Tamaños predefinidos para widgets
 export type TamanoWidget = 'small' | 'medium' | 'large' | 'wide' | 'tall' | 'full';
@@ -225,6 +226,12 @@ export interface WidgetConfig {
   graficaMostrarLeyenda?: boolean;
   graficaMostrarDataLabels?: boolean;
   graficaTema?: 'light' | 'dark';
+
+  // Configuración TPRM
+  tprmView?: 'semaforo-overview' | 'severity-bars' | 'quarterly-comparison'
+           | 'impact-services' | 'actions-table' | 'controls-reduction'
+           | 'risk-heatmap' | 'supplier-detail' | 'resumen-inteligente';
+  tprmPeriodo?: 'Q4-2025' | 'Q1-2026' | 'ambos';
 
   // Configuración general
   refreshInterval?: number; // en segundos, 0 = sin refresh
@@ -400,6 +407,18 @@ export const WIDGET_CATALOG: WidgetCatalogItem[] = [
     tamanoDefault: 'large',
     minCols: 1, minRows: 2, maxCols: 4, maxRows: 4,
     configDefault: { showHeader: false }
+  },
+
+  // W8: Panel TPRM de Proveedores
+  {
+    tipo: 'tprm-panel',
+    nombre: 'Panel TPRM',
+    descripcion: 'Monitoreo de proveedores: semáforo, severidad, heatmap, acciones',
+    icono: 'pi pi-shield',
+    categoria: 'otros',
+    tamanoDefault: 'medium',
+    minCols: 1, minRows: 1, maxCols: 4, maxRows: 4,
+    configDefault: { showHeader: true, tprmView: 'semaforo-overview', tprmPeriodo: 'ambos' }
   }
 ];
 
@@ -587,6 +606,110 @@ export const GALLERY_DASHBOARD_CONFIG: DashboardConfig = {
   rowHeight: 150,
   gap: 12,
   widgets: galeriaWidgets,
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
+// ============================================================================
+// DASHBOARD TPRM - MONITOREO DE PROVEEDORES
+// ============================================================================
+
+export const TPRM_DASHBOARD_CONFIG: DashboardConfig = {
+  id: 'tprm-proveedores',
+  nombre: 'Monitoreo TPRM - Proveedores',
+  descripcion: 'Dashboard de monitoreo de proveedores con semáforos, severidad, heatmap de riesgo, impacto en servicios y acciones derivadas',
+  isDefault: false,
+  isLocked: false,
+  columns: 4,
+  rowHeight: 120,
+  gap: 16,
+  widgets: [
+    // Fila 0: Semáforo Overview (4 cols × 1 row)
+    {
+      id: 'tprm-semaforo',
+      tipo: 'tprm-panel',
+      titulo: 'Semáforo de Salud - Proveedores',
+      icono: 'pi pi-circle-fill',
+      x: 0, y: 0, cols: 4, rows: 1,
+      minItemCols: 2, minItemRows: 1, maxItemCols: 4, maxItemRows: 2,
+      config: { tprmView: 'semaforo-overview', tprmPeriodo: 'ambos', showHeader: true }
+    },
+    // Fila 1-2: Severity Bars (2×2) + Quarterly Comparison (2×2)
+    {
+      id: 'tprm-severity',
+      tipo: 'tprm-panel',
+      titulo: 'Incidentes por Proveedor',
+      subtitulo: 'Umbrales: >1 amarillo, >2 rojo',
+      icono: 'pi pi-chart-bar',
+      x: 0, y: 1, cols: 2, rows: 2,
+      minItemCols: 1, minItemRows: 2, maxItemCols: 4, maxItemRows: 3,
+      config: { tprmView: 'severity-bars', tprmPeriodo: 'ambos', showHeader: true }
+    },
+    {
+      id: 'tprm-quarterly',
+      tipo: 'tprm-panel',
+      titulo: 'Comparativo Trimestral',
+      subtitulo: 'Q4-2025 vs Q1-2026',
+      icono: 'pi pi-chart-line',
+      x: 2, y: 1, cols: 2, rows: 2,
+      minItemCols: 1, minItemRows: 2, maxItemCols: 4, maxItemRows: 3,
+      config: { tprmView: 'quarterly-comparison', tprmPeriodo: 'ambos', showHeader: true }
+    },
+    // Fila 3-4: Risk Heatmap (2×2) + Controls Reduction (2×2)
+    {
+      id: 'tprm-heatmap',
+      tipo: 'tprm-panel',
+      titulo: 'Matriz de Riesgo',
+      subtitulo: 'Probabilidad × Impacto',
+      icono: 'pi pi-th-large',
+      x: 0, y: 3, cols: 2, rows: 2,
+      minItemCols: 1, minItemRows: 2, maxItemCols: 4, maxItemRows: 3,
+      config: { tprmView: 'risk-heatmap', tprmPeriodo: 'Q1-2026', showHeader: true }
+    },
+    {
+      id: 'tprm-controls',
+      tipo: 'tprm-panel',
+      titulo: 'Reducción de Riesgo por Controles',
+      subtitulo: 'Inherente → Residual',
+      icono: 'pi pi-shield',
+      x: 2, y: 3, cols: 2, rows: 2,
+      minItemCols: 1, minItemRows: 2, maxItemCols: 4, maxItemRows: 3,
+      config: { tprmView: 'controls-reduction', tprmPeriodo: 'Q1-2026', showHeader: true }
+    },
+    // Fila 5-6: Impact Services (4 cols × 2 rows)
+    {
+      id: 'tprm-impact',
+      tipo: 'tprm-panel',
+      titulo: 'Impacto en Servicios Internos',
+      subtitulo: 'Servicio contratado → Servicio afectado → Objetivo de negocio',
+      icono: 'pi pi-sitemap',
+      x: 0, y: 5, cols: 4, rows: 2,
+      minItemCols: 2, minItemRows: 2, maxItemCols: 4, maxItemRows: 3,
+      config: { tprmView: 'impact-services', tprmPeriodo: 'ambos', showHeader: true }
+    },
+    // Fila 7-8: Actions Table (4 cols × 2 rows)
+    {
+      id: 'tprm-actions',
+      tipo: 'tprm-panel',
+      titulo: 'Acciones Derivadas',
+      subtitulo: 'Penalizaciones, pagos, contratos y alternos',
+      icono: 'pi pi-list-check',
+      x: 0, y: 7, cols: 4, rows: 2,
+      minItemCols: 2, minItemRows: 2, maxItemCols: 4, maxItemRows: 3,
+      config: { tprmView: 'actions-table', tprmPeriodo: 'ambos', showHeader: true }
+    },
+    // Fila 9-11: Supplier Detail (4 cols × 3 rows)
+    {
+      id: 'tprm-detail',
+      tipo: 'tprm-panel',
+      titulo: 'Detalle de Proveedores',
+      subtitulo: 'Tabla expandible con drill-down',
+      icono: 'pi pi-users',
+      x: 0, y: 9, cols: 4, rows: 3,
+      minItemCols: 2, minItemRows: 2, maxItemCols: 4, maxItemRows: 4,
+      config: { tprmView: 'supplier-detail', tprmPeriodo: 'ambos', showHeader: true }
+    }
+  ],
   createdAt: new Date(),
   updatedAt: new Date()
 };

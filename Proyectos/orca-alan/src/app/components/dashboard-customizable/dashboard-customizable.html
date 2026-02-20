@@ -454,6 +454,15 @@
                 </div>
               }
 
+              @case ('tprm-panel') {
+                <div class="widget-tprm-panel" style="width:100%;height:100%">
+                  <app-tprm-panel [config]="widget.config"
+                    (supplierClick)="abrirSupplierDrilldown($event)"
+                    (tomarAccion)="abrirTomarAccion($event.supplier, $event.evento)">
+                  </app-tprm-panel>
+                </div>
+              }
+
               @default {
                 <div class="widget-placeholder">
                   <i class="pi pi-box"></i>
@@ -1990,6 +1999,367 @@
       </div>
     }
   </div>
+</p-drawer>
+
+<!-- ============================================================================
+     DRAWER: SUPPLIER DRILLDOWN (3 niveles)
+     ============================================================================ -->
+<p-drawer [(visible)]="showSupplierDrilldown" position="right" [style]="{width: '50vw'}" styleClass="supplier-drilldown-drawer">
+  <ng-template pTemplate="header">
+    <div class="supplier-drilldown-header-bar">
+      <span class="drawer-title-icon"><i class="pi pi-shield"></i></span>
+      <span class="drawer-title-text">{{ supplierDrilldownData()?.nombre || 'Proveedor' }}</span>
+    </div>
+  </ng-template>
+
+  @if (supplierDrilldownData(); as supplier) {
+    <div class="supplier-drilldown-content">
+      <!-- Breadcrumb -->
+      <div class="sd-breadcrumb">
+        <span class="sd-breadcrumb-item" [class.active]="supplierDrilldownLevel() === 1" (click)="supplierDrilldownGoToLevel(1)">
+          <i class="pi pi-home"></i> Overview
+        </span>
+        @if (supplierDrilldownLevel() >= 2) {
+          <i class="pi pi-chevron-right sd-breadcrumb-sep"></i>
+          <span class="sd-breadcrumb-item" [class.active]="supplierDrilldownLevel() === 2" (click)="supplierDrilldownGoToLevel(2)">
+            <i class="pi pi-clock"></i> Timeline
+          </span>
+        }
+        @if (supplierDrilldownLevel() === 3 && supplierDrilldownEvento()) {
+          <i class="pi pi-chevron-right sd-breadcrumb-sep"></i>
+          <span class="sd-breadcrumb-item active">
+            <i class="pi pi-file"></i> {{ supplierDrilldownEvento()!.titulo | slice:0:30 }}...
+          </span>
+        }
+      </div>
+
+      <!-- ==================== NIVEL 1: OVERVIEW ==================== -->
+      @if (supplierDrilldownLevel() === 1) {
+        <!-- Header con info del proveedor -->
+        <div class="sd-supplier-header">
+          <div class="sd-supplier-info">
+            <span class="sd-supplier-pais"><i class="pi pi-globe"></i> {{ supplier.pais }}</span>
+            <span class="sd-supplier-servicio">{{ supplier.servicio }}</span>
+          </div>
+          <span class="health-badge-lg" [ngClass]="supplier.healthStatus">
+            <span class="health-dot-lg"></span>
+            {{ supplier.healthStatus === 'verde' ? 'Saludable' : supplier.healthStatus === 'amarillo' ? 'En Riesgo' : 'Critico' }}
+          </span>
+        </div>
+
+        <!-- 4 Stat cards -->
+        <div class="sd-stats-grid">
+          <div class="sd-stat-card">
+            <span class="sd-stat-value" [style.color]="supplier.riskScore > 75 ? '#dc2626' : supplier.riskScore > 55 ? '#ea580c' : '#16a34a'">{{ supplier.riskScore }}</span>
+            <span class="sd-stat-label">Risk Score</span>
+          </div>
+          <div class="sd-stat-card">
+            <span class="sd-stat-value" [style.color]="supplier.slaCompliance < 90 ? '#dc2626' : supplier.slaCompliance < 95 ? '#ea580c' : '#16a34a'">{{ supplier.slaCompliance }}%</span>
+            <span class="sd-stat-label">SLA Compliance</span>
+          </div>
+          <div class="sd-stat-card">
+            <span class="sd-stat-value">{{ supplier.incidentesQ4 + supplier.incidentesQ1 }}</span>
+            <span class="sd-stat-label">Incidentes Total</span>
+          </div>
+          @if (supplierDrilldownCosto(); as costo) {
+            <div class="sd-stat-card">
+              <span class="sd-stat-value">{{ formatCurrency(costo.costoTotal) }}</span>
+              <span class="sd-stat-label">Costo Acumulado</span>
+              <span class="sd-stat-trend" [ngClass]="costo.tendenciaCosto">
+                <i class="pi" [ngClass]="costo.tendenciaCosto === 'up' ? 'pi-arrow-up' : costo.tendenciaCosto === 'down' ? 'pi-arrow-down' : 'pi-minus'"></i>
+              </span>
+            </div>
+          }
+        </div>
+
+        <!-- Resumen inteligente -->
+        @if (supplierDrilldownResumen(); as resumen) {
+          <div class="sd-resumen-card" [ngClass]="'urgencia-' + resumen.nivelUrgencia">
+            <div class="sd-resumen-title">
+              <i class="pi pi-sparkles"></i> Resumen Inteligente
+              <span class="sd-resumen-badge" [ngClass]="resumen.nivelUrgencia">{{ resumen.nivelUrgencia | uppercase }}</span>
+            </div>
+            <div class="sd-resumen-section">
+              <strong>Situacion:</strong> {{ resumen.quePasa }}
+            </div>
+            <div class="sd-resumen-section">
+              <strong>Recomendacion:</strong> {{ resumen.queHacer }}
+            </div>
+            <div class="sd-resumen-section warning">
+              <strong>Riesgo de inaccion:</strong> {{ resumen.siNoActuas }}
+            </div>
+          </div>
+        }
+
+        <!-- Riesgos asociados -->
+        <div class="sd-section-title"><i class="pi pi-exclamation-circle"></i> Riesgos Asociados</div>
+        @for (risk of supplierDrilldownGetRisks(); track risk.id) {
+          <div class="sd-risk-item">
+            <div class="sd-risk-desc">{{ risk.descripcion }}</div>
+            <div class="sd-risk-bars">
+              <div class="sd-risk-bar-group">
+                <span class="sd-risk-bar-label">Inherente</span>
+                <div class="sd-risk-bar-track">
+                  <div class="sd-risk-bar-fill inherente" [style.width.%]="risk.scoreInherenteQ1 * 10"></div>
+                </div>
+                <span class="sd-risk-bar-value">{{ risk.scoreInherenteQ1 }}</span>
+              </div>
+              <div class="sd-risk-bar-group">
+                <span class="sd-risk-bar-label">Residual</span>
+                <div class="sd-risk-bar-track">
+                  <div class="sd-risk-bar-fill residual" [style.width.%]="risk.scoreResidualQ1 * 10"></div>
+                </div>
+                <span class="sd-risk-bar-value">{{ risk.scoreResidualQ1 }}</span>
+              </div>
+            </div>
+            <span class="sd-risk-trend" [ngClass]="risk.tendencia">
+              <i class="pi" [ngClass]="risk.tendencia === 'mejora' ? 'pi-arrow-down' : risk.tendencia === 'deterioro' ? 'pi-arrow-up' : 'pi-minus'"></i>
+              {{ risk.tendencia }}
+            </span>
+          </div>
+        }
+
+        <!-- Botón ir a Timeline -->
+        <div class="sd-actions">
+          <p-button label="Ver Timeline de Eventos" icon="pi pi-clock" (onClick)="supplierDrilldownGoToTimeline()" [outlined]="true" size="small"></p-button>
+          <p-button label="Tomar Accion" icon="pi pi-bolt" (onClick)="abrirTomarAccion(supplier)" severity="warn" size="small"></p-button>
+        </div>
+      }
+
+      <!-- ==================== NIVEL 2: TIMELINE ==================== -->
+      @if (supplierDrilldownLevel() === 2) {
+        <div class="sd-section-title"><i class="pi pi-clock"></i> Timeline de Eventos</div>
+
+        <!-- Sparkline de costo -->
+        @if (supplierDrilldownCosto(); as costo) {
+          <div class="sd-costo-sparkline">
+            <span class="sd-costo-title">Costo Mensual</span>
+            <div class="sd-costo-bars">
+              @for (mes of costo.historicoCostoMensual; track mes.mes) {
+                <div class="sd-costo-bar-item" [pTooltip]="mes.mes + ': $' + (mes.monto / 1000).toFixed(0) + 'K'">
+                  <div class="sd-costo-bar" [style.height.%]="(mes.monto / 300000) * 100"></div>
+                  <span class="sd-costo-label">{{ mes.mes.slice(0, 3) }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Servicios afectados -->
+        <div class="sd-impacted-services">
+          <span class="sd-subsection-title">Servicios Afectados</span>
+          @for (impact of supplierDrilldownGetImpacts(); track impact.id) {
+            <div class="sd-impact-item">
+              <span class="impact-badge" [ngClass]="impact.nivelImpacto">{{ impact.nivelImpacto | uppercase }}</span>
+              <span class="sd-impact-text">{{ impact.servicioAfectado }}</span>
+              <span class="sd-impact-prob">{{ impact.probabilidadInterrupcion }}%</span>
+            </div>
+          }
+        </div>
+
+        <!-- Timeline -->
+        <div class="sd-timeline">
+          @for (evento of supplierDrilldownTimeline(); track evento.id) {
+            <div class="sd-timeline-item" (click)="supplierDrilldownSelectEvento(evento)">
+              <div class="sd-timeline-marker" [style.background]="getTimelineEventColor(evento.tipo)">
+                <i [class]="getTimelineEventIcon(evento.tipo)" style="font-size:0.7rem;color:#fff"></i>
+              </div>
+              <div class="sd-timeline-connector"></div>
+              <div class="sd-timeline-content">
+                <div class="sd-timeline-date">{{ evento.fecha }}</div>
+                <div class="sd-timeline-title">{{ evento.titulo }}</div>
+                <div class="sd-timeline-meta">
+                  <span class="impact-badge" [ngClass]="getSeveridadClass(evento.severidad)">{{ evento.severidad | uppercase }}</span>
+                  @if (evento.costoImpacto) {
+                    <span class="sd-timeline-cost">{{ formatCurrency(evento.costoImpacto) }}</span>
+                  }
+                  <span class="status-badge" [ngClass]="evento.estado">{{ evento.estado }}</span>
+                </div>
+                <div class="sd-timeline-actions">
+                  <button class="tprm-action-btn-sm" (click)="abrirTomarAccion(supplier, evento); $event.stopPropagation()">
+                    <i class="pi pi-bolt"></i> Tomar Accion
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+          @if (supplierDrilldownTimeline().length === 0) {
+            <div class="sd-empty">Sin eventos registrados para este proveedor.</div>
+          }
+        </div>
+      }
+
+      <!-- ==================== NIVEL 3: EVENTO ESPECIFICO ==================== -->
+      @if (supplierDrilldownLevel() === 3 && supplierDrilldownEvento(); as evento) {
+        <div class="sd-evento-detail">
+          <div class="sd-evento-header">
+            <div class="sd-evento-tipo-badge" [style.background]="getTimelineEventColor(evento.tipo)">
+              <i [class]="getTimelineEventIcon(evento.tipo)" style="color:#fff"></i>
+              {{ evento.tipo }}
+            </div>
+            <span class="impact-badge" [ngClass]="getSeveridadClass(evento.severidad)">{{ evento.severidad | uppercase }}</span>
+            <span class="status-badge" [ngClass]="evento.estado">{{ evento.estado }}</span>
+          </div>
+
+          <h3 class="sd-evento-titulo">{{ evento.titulo }}</h3>
+          <p class="sd-evento-desc">{{ evento.descripcion }}</p>
+
+          <div class="sd-evento-meta-grid">
+            <div class="sd-evento-meta-item">
+              <span class="sd-evento-meta-label">Fecha</span>
+              <span class="sd-evento-meta-value">{{ evento.fecha }}</span>
+            </div>
+            @if (evento.costoImpacto) {
+              <div class="sd-evento-meta-item">
+                <span class="sd-evento-meta-label">Costo Impacto</span>
+                <span class="sd-evento-meta-value cost">{{ formatCurrency(evento.costoImpacto) }}</span>
+              </div>
+            }
+            <div class="sd-evento-meta-item">
+              <span class="sd-evento-meta-label">Estado</span>
+              <span class="sd-evento-meta-value">{{ evento.estado }}</span>
+            </div>
+          </div>
+
+          <!-- Acciones previas del proveedor -->
+          <div class="sd-section-title"><i class="pi pi-list-check"></i> Acciones Tomadas</div>
+          @for (accion of supplierDrilldownGetActions(); track accion.id) {
+            <div class="sd-action-item">
+              <span class="action-type-badge" [ngClass]="accion.tipo">{{ formatTipoAccion(accion.tipo) }}</span>
+              <span class="sd-action-desc">{{ accion.descripcion }}</span>
+              <span class="status-badge" [ngClass]="accion.estado">{{ accion.estado }}</span>
+            </div>
+          }
+
+          <div class="sd-actions">
+            <p-button label="Tomar Nueva Accion" icon="pi pi-bolt" (onClick)="abrirTomarAccion(supplier, evento)" severity="warn" size="small"></p-button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</p-drawer>
+
+<!-- ============================================================================
+     DRAWER: TOMAR ACCION
+     ============================================================================ -->
+<p-drawer [(visible)]="showTomarAccion" position="right" [style]="{width: '450px'}" styleClass="tomar-accion-drawer">
+  <ng-template pTemplate="header">
+    <div class="tomar-accion-header-bar">
+      <span class="drawer-title-icon"><i class="pi pi-bolt"></i></span>
+      <span class="drawer-title-text">Tomar Accion — {{ tomarAccionSupplier()?.nombre }}</span>
+    </div>
+  </ng-template>
+
+  @if (tomarAccionSupplier(); as supplier) {
+    <div class="tomar-accion-content">
+      <!-- Seccion 1: Contexto -->
+      <div class="ta-context-section">
+        <div class="ta-section-title">Contexto</div>
+        <div class="ta-context-grid">
+          <div class="ta-context-item">
+            <span class="ta-context-label">Proveedor</span>
+            <span class="ta-context-value">{{ supplier.nombre }}</span>
+          </div>
+          <div class="ta-context-item">
+            <span class="ta-context-label">Risk Score</span>
+            <span class="ta-context-value" [style.color]="supplier.riskScore > 75 ? '#dc2626' : supplier.riskScore > 55 ? '#ea580c' : '#16a34a'">{{ supplier.riskScore }}</span>
+          </div>
+          <div class="ta-context-item">
+            <span class="ta-context-label">SLA</span>
+            <span class="ta-context-value">{{ supplier.slaCompliance }}%</span>
+          </div>
+          @if (tomarAccionEvento(); as evento) {
+            <div class="ta-context-item full-width">
+              <span class="ta-context-label">Evento</span>
+              <span class="ta-context-value">{{ evento.titulo }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Seccion 2: Acciones sugeridas -->
+      <div class="ta-suggested-section">
+        <div class="ta-section-title">Acciones Sugeridas</div>
+        <div class="ta-suggested-cards">
+          @for (sug of tomarAccionSugerencias(); track sug.tipo) {
+            <div class="ta-suggested-card" (click)="seleccionarAccionSugerida(sug)"
+                 [class.selected]="tomarAccionFormData().tipo === sug.tipo">
+              <div class="ta-sug-header">
+                <span class="ta-sug-tipo">{{ sug.etiqueta }}</span>
+                <span class="impact-badge" [ngClass]="getSeveridadClass(sug.prioridadSugerida)">{{ sug.prioridadSugerida | uppercase }}</span>
+              </div>
+              <p class="ta-sug-desc">{{ sug.descripcion }}</p>
+              <div class="ta-sug-meta">
+                <span class="ta-sug-reason"><i class="pi pi-info-circle"></i> {{ sug.razon }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <!-- Seccion 3: Formulario -->
+      <div class="ta-form-section">
+        <div class="ta-section-title">Detalles de la Accion</div>
+
+        <div class="ta-form-field">
+          <label>Tipo de Accion</label>
+          <p-select [options]="tiposAccionOptions" [ngModel]="tomarAccionFormData().tipo"
+                    (ngModelChange)="updateTomarAccionField('tipo', $event)"
+                    optionLabel="label" optionValue="value" [style]="{width: '100%'}" placeholder="Seleccionar tipo">
+          </p-select>
+        </div>
+
+        <div class="ta-form-field">
+          <label>Descripcion</label>
+          <textarea pTextarea [ngModel]="tomarAccionFormData().descripcion"
+                    (ngModelChange)="updateTomarAccionField('descripcion', $event)"
+                    [rows]="3" [style]="{width: '100%'}" placeholder="Describe la accion a tomar..."></textarea>
+        </div>
+
+        <div class="ta-form-row">
+          <div class="ta-form-field">
+            <label>Prioridad</label>
+            <p-select [options]="prioridadOptions" [ngModel]="tomarAccionFormData().prioridad"
+                      (ngModelChange)="updateTomarAccionField('prioridad', $event)"
+                      optionLabel="label" optionValue="value" [style]="{width: '100%'}">
+            </p-select>
+          </div>
+          <div class="ta-form-field">
+            <label>Fecha Limite</label>
+            <input pInputText type="date" [ngModel]="tomarAccionFormData().fechaLimite"
+                   (ngModelChange)="updateTomarAccionField('fechaLimite', $event)"
+                   [style]="{width: '100%'}">
+          </div>
+        </div>
+
+        <div class="ta-form-row">
+          <div class="ta-form-field">
+            <label>Responsable</label>
+            <input pInputText [ngModel]="tomarAccionFormData().responsable"
+                   (ngModelChange)="updateTomarAccionField('responsable', $event)"
+                   [style]="{width: '100%'}" placeholder="Nombre del responsable">
+          </div>
+          <div class="ta-form-field">
+            <label>Area Responsable</label>
+            <input pInputText [ngModel]="tomarAccionFormData().areaResponsable"
+                   (ngModelChange)="updateTomarAccionField('areaResponsable', $event)"
+                   [style]="{width: '100%'}" placeholder="Area o departamento">
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="ta-footer">
+        <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true" (onClick)="showTomarAccion.set(false)"></p-button>
+        <p-button label="Confirmar Accion" icon="pi pi-check" severity="warn" (onClick)="confirmarAccion()"></p-button>
+      </div>
+    </div>
+  }
 </p-drawer>
 
 <!-- Dialogs -->

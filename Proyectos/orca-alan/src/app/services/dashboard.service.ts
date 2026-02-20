@@ -17,6 +17,7 @@ import {
   WIDGET_CATALOG,
   DEFAULT_DASHBOARD_CONFIG,
   GALLERY_DASHBOARD_CONFIG,
+  TPRM_DASHBOARD_CONFIG,
   generateWidgetId,
   createWidgetFromCatalog,
   TipoWidget
@@ -35,7 +36,8 @@ const VALID_WIDGET_TYPES: TipoWidget[] = [
   'table-mini',
   'actividad-reciente',
   'calendario',
-  'analisis-inteligente'
+  'analisis-inteligente',
+  'tprm-panel'
 ];
 
 // Migración de tipos de widget antiguos a los nuevos
@@ -331,6 +333,11 @@ export class DashboardService {
       // Agregar dashboard de galería de gráficas si no existe (para pruebas)
       if (!configuraciones.find(c => c.id === 'galeria-graficas')) {
         configuraciones.push({ ...GALLERY_DASHBOARD_CONFIG });
+      }
+
+      // Agregar dashboard TPRM de proveedores si no existe
+      if (!configuraciones.find(c => c.id === 'tprm-proveedores')) {
+        configuraciones.push({ ...TPRM_DASHBOARD_CONFIG });
       }
 
       // Cargar el estado guardado (última configuración usada)
